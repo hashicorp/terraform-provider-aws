@@ -23,7 +23,7 @@ func DataSourceRule() *schema.Resource {
 }
 
 func dataSourceRuleRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFConn
+	conn := meta.(*conns.AWSClient).WAFConn()
 	name := d.Get("name").(string)
 
 	rules := make([]*waf.RuleSummary, 0)

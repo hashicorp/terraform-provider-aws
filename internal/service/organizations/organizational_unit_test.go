@@ -156,7 +156,7 @@ func testAccOrganizationalUnit_Tags(t *testing.T) {
 }
 
 func testAccCheckOrganizationalUnitDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_organizations_organizational_unit" {
@@ -185,7 +185,6 @@ func testAccCheckOrganizationalUnitDestroy(s *terraform.State) error {
 	}
 
 	return nil
-
 }
 
 func testAccCheckOrganizationalUnitExists(n string, ou *organizations.OrganizationalUnit) resource.TestCheckFunc {
@@ -195,7 +194,7 @@ func testAccCheckOrganizationalUnitExists(n string, ou *organizations.Organizati
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn()
 		params := &organizations.DescribeOrganizationalUnitInput{
 			OrganizationalUnitId: &rs.Primary.ID,
 		}

@@ -201,7 +201,7 @@ func testAccCheckHostExists(n string, v *ec2.Host) resource.TestCheckFunc {
 			return fmt.Errorf("No EC2 Host ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		output, err := tfec2.FindHostByID(conn, rs.Primary.ID)
 
@@ -216,7 +216,7 @@ func testAccCheckHostExists(n string, v *ec2.Host) resource.TestCheckFunc {
 }
 
 func testAccCheckHostDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ec2_host" {
@@ -242,7 +242,7 @@ func testAccCheckHostDestroy(s *terraform.State) error {
 func testAccHostConfig_basic() string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), `
 resource "aws_ec2_host" "test" {
-  availability_zone = data.aws_availability_zones.available.names[0]
+  availability_zone = data.aws_availability_zones.available.names[1]
   instance_type     = "a1.large"
 }
 `)

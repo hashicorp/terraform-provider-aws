@@ -1716,7 +1716,7 @@ func testAccCheckSpotFleetRequestExists(n string, v *ec2.SpotFleetRequestConfig)
 			return errors.New("No EC2 Spot Fleet Request ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		output, err := tfec2.FindSpotFleetRequestByID(conn, rs.Primary.ID)
 
@@ -1731,7 +1731,7 @@ func testAccCheckSpotFleetRequestExists(n string, v *ec2.SpotFleetRequestConfig)
 }
 
 func testAccCheckSpotFleetRequestDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_spot_fleet_request" {
@@ -1801,11 +1801,10 @@ func testAccCheckSpotFleetRequest_PlacementAttributes(
 
 		return nil
 	}
-
 }
 
 func testAccPreCheckSpotFleetRequest(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	_, err := tfec2.FindSpotFleetRequests(conn, &ec2.DescribeSpotFleetRequestsInput{})
 

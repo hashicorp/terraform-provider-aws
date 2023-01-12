@@ -282,7 +282,7 @@ func ResourceTaskSet() *schema.Resource {
 }
 
 func resourceTaskSetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECSConn
+	conn := meta.(*conns.AWSClient).ECSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -375,7 +375,7 @@ func resourceTaskSetCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceTaskSetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECSConn
+	conn := meta.(*conns.AWSClient).ECSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -469,7 +469,7 @@ func resourceTaskSetRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceTaskSetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECSConn
+	conn := meta.(*conns.AWSClient).ECSConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		taskSetId, service, cluster, err := TaskSetParseID(d.Id())
@@ -519,7 +519,7 @@ func resourceTaskSetUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceTaskSetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECSConn
+	conn := meta.(*conns.AWSClient).ECSConn()
 
 	taskSetId, service, cluster, err := TaskSetParseID(d.Id())
 

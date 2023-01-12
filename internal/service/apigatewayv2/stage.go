@@ -187,7 +187,7 @@ func ResourceStage() *schema.Resource {
 }
 
 func resourceStageCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -242,7 +242,7 @@ func resourceStageCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceStageRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -332,7 +332,7 @@ func resourceStageRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceStageUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
 
 	if d.HasChanges("access_log_settings", "auto_deploy", "client_certificate_id",
 		"default_route_settings", "deployment_id", "description",
@@ -426,7 +426,7 @@ func resourceStageUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceStageDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 stage (%s)", d.Id())
 	_, err := conn.DeleteStage(&apigatewayv2.DeleteStageInput{
@@ -452,7 +452,7 @@ func resourceStageImport(d *schema.ResourceData, meta interface{}) ([]*schema.Re
 	apiId := parts[0]
 	stageName := parts[1]
 
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
 
 	resp, err := conn.GetStage(&apigatewayv2.GetStageInput{
 		ApiId:     aws.String(apiId),

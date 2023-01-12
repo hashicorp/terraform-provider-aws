@@ -274,7 +274,7 @@ func TestAccRDSOrderableInstanceDataSource_supportsStorageEncryption(t *testing.
 }
 
 func testAccOrderableInstancePreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
 
 	input := &rds.DescribeOrderableDBInstanceOptionsInput{
 		Engine:          aws.String("mysql"),

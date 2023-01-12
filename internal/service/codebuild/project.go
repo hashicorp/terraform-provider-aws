@@ -732,7 +732,7 @@ func ResourceProject() *schema.Resource {
 }
 
 func resourceProjectCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeBuildConn
+	conn := meta.(*conns.AWSClient).CodeBuildConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -841,7 +841,6 @@ func resourceProjectCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(aws.StringValue(resp.Project.Arn))
 
 	if v, ok := d.GetOk("project_visibility"); ok && v.(string) != codebuild.ProjectVisibilityTypePrivate {
-
 		visInput := &codebuild.UpdateProjectVisibilityInput{
 			ProjectArn:        aws.String(d.Id()),
 			ProjectVisibility: aws.String(v.(string)),
@@ -876,7 +875,6 @@ func expandProjectSecondarySourceVersions(ssv *schema.Set) []*codebuild.ProjectS
 }
 
 func expandProjectSourceVersion(data map[string]interface{}) codebuild.ProjectSourceVersion {
-
 	sourceVersion := codebuild.ProjectSourceVersion{
 		SourceIdentifier: aws.String(data["source_identifier"].(string)),
 		SourceVersion:    aws.String(data["source_version"].(string)),
@@ -1338,7 +1336,7 @@ func expandProjectSourceData(data map[string]interface{}) codebuild.ProjectSourc
 }
 
 func resourceProjectRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeBuildConn
+	conn := meta.(*conns.AWSClient).CodeBuildConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -1433,12 +1431,11 @@ func resourceProjectRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceProjectUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeBuildConn
+	conn := meta.(*conns.AWSClient).CodeBuildConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	if d.HasChanges("project_visibility", "resource_access_role") {
-
 		visInput := &codebuild.UpdateProjectVisibilityInput{
 			ProjectArn:        aws.String(d.Id()),
 			ProjectVisibility: aws.String(d.Get("project_visibility").(string)),
@@ -1455,7 +1452,6 @@ func resourceProjectUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChangesExcept("project_visibility", "resource_access_role") {
-
 		params := &codebuild.UpdateProjectInput{
 			Name: aws.String(d.Get("name").(string)),
 		}
@@ -1601,7 +1597,7 @@ func resourceProjectUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceProjectDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeBuildConn
+	conn := meta.(*conns.AWSClient).CodeBuildConn()
 
 	_, err := conn.DeleteProject(&codebuild.DeleteProjectInput{
 		Name: aws.String(d.Id()),
@@ -1992,7 +1988,6 @@ func resourceProjectArtifactsHash(v interface{}) int {
 }
 
 func environmentVariablesToMap(environmentVariables []*codebuild.EnvironmentVariable) []interface{} {
-
 	envVariables := []interface{}{}
 	if len(environmentVariables) > 0 {
 		for _, env := range environmentVariables {
@@ -2010,7 +2005,6 @@ func environmentVariablesToMap(environmentVariables []*codebuild.EnvironmentVari
 }
 
 func sourceAuthToMap(sourceAuth *codebuild.SourceAuth) map[string]interface{} {
-
 	auth := map[string]interface{}{}
 	auth["type"] = aws.StringValue(sourceAuth.Type)
 

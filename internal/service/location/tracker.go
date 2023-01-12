@@ -67,7 +67,7 @@ func ResourceTracker() *schema.Resource {
 }
 
 func resourceTrackerCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LocationConn
+	conn := meta.(*conns.AWSClient).LocationConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -109,7 +109,7 @@ func resourceTrackerCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceTrackerRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LocationConn
+	conn := meta.(*conns.AWSClient).LocationConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -156,7 +156,7 @@ func resourceTrackerRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceTrackerUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LocationConn
+	conn := meta.(*conns.AWSClient).LocationConn()
 
 	if d.HasChanges("description", "position_filtering") {
 		input := &locationservice.UpdateTrackerInput{
@@ -190,7 +190,7 @@ func resourceTrackerUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceTrackerDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LocationConn
+	conn := meta.(*conns.AWSClient).LocationConn()
 
 	input := &locationservice.DeleteTrackerInput{
 		TrackerName: aws.String(d.Id()),

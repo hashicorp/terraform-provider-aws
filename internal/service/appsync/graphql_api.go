@@ -262,7 +262,7 @@ func ResourceGraphQLAPI() *schema.Resource {
 }
 
 func resourceGraphQLAPICreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppSyncConn
+	conn := meta.(*conns.AWSClient).AppSyncConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -314,7 +314,7 @@ func resourceGraphQLAPICreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceGraphQLAPIRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppSyncConn
+	conn := meta.(*conns.AWSClient).AppSyncConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -381,7 +381,7 @@ func resourceGraphQLAPIRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceGraphQLAPIUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppSyncConn
+	conn := meta.(*conns.AWSClient).AppSyncConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -436,7 +436,7 @@ func resourceGraphQLAPIUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceGraphQLAPIDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppSyncConn
+	conn := meta.(*conns.AWSClient).AppSyncConn()
 
 	input := &appsync.DeleteGraphqlApiInput{
 		ApiId: aws.String(d.Id()),
@@ -701,7 +701,7 @@ func flattenGraphQLAPICognitoUserPoolConfig(userPoolConfig *appsync.CognitoUserP
 }
 
 func resourceSchemaPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppSyncConn
+	conn := meta.(*conns.AWSClient).AppSyncConn()
 
 	if v, ok := d.GetOk("schema"); ok {
 		input := &appsync.StartSchemaCreationInput{

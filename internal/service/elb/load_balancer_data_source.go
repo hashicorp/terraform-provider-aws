@@ -1,6 +1,7 @@
 package elb
 
 import (
+	"context"
 	"fmt"
 	"log"
 
@@ -204,7 +205,7 @@ func DataSourceLoadBalancer() *schema.Resource {
 }
 
 func dataSourceLoadBalancerRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBConn
+	conn := meta.(*conns.AWSClient).ELBConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	lbName := d.Get("name").(string)
@@ -233,7 +234,7 @@ func dataSourceLoadBalancerRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("arn", arn.String())
 
 	lb := resp.LoadBalancerDescriptions[0]
-	ec2conn := meta.(*conns.AWSClient).EC2Conn
+	ec2conn := meta.(*conns.AWSClient).EC2Conn()
 
 	describeAttrsOpts := &elb.DescribeLoadBalancerAttributesInput{
 		LoadBalancerName: aws.String(d.Id()),
@@ -269,7 +270,7 @@ func dataSourceLoadBalancerRead(d *schema.ResourceData, meta interface{}) error 
 		var elbVpc string
 		if lb.VPCId != nil {
 			elbVpc = aws.StringValue(lb.VPCId)
-			sg, err := tfec2.FindSecurityGroupByNameAndVPCID(ec2conn, aws.StringValue(lb.SourceSecurityGroup.GroupName), elbVpc)
+			sg, err := tfec2.FindSecurityGroupByNameAndVPCID(context.TODO(), ec2conn, aws.StringValue(lb.SourceSecurityGroup.GroupName), elbVpc)
 			if err != nil {
 				return fmt.Errorf("looking up ELB Security Group ID: %w", err)
 			} else {

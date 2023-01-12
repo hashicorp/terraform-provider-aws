@@ -408,7 +408,7 @@ func TestAccElastiCacheParameterGroup_tags(t *testing.T) {
 }
 
 func testAccCheckParameterGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_elasticache_parameter_group" {
@@ -440,7 +440,6 @@ func testAccCheckParameterGroupDestroy(s *terraform.State) error {
 
 func testAccCheckParameterGroupAttributes(v *elasticache.CacheParameterGroup, rName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-
 		if *v.CacheParameterGroupName != rName {
 			return fmt.Errorf("bad name: %#v", v.CacheParameterGroupName)
 		}
@@ -464,7 +463,7 @@ func testAccCheckParameterGroupExists(n string, v *elasticache.CacheParameterGro
 			return fmt.Errorf("No Cache Parameter Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn()
 
 		opts := elasticache.DescribeCacheParameterGroupsInput{
 			CacheParameterGroupName: aws.String(rs.Primary.ID),
@@ -567,6 +566,8 @@ resource "aws_elasticache_parameter_group" "test" {
 }
 
 func TestFlattenParameters(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Input  []*elasticache.Parameter
 		Output []map[string]interface{}
@@ -596,6 +597,8 @@ func TestFlattenParameters(t *testing.T) {
 }
 
 func TestExpandParameters(t *testing.T) {
+	t.Parallel()
+
 	expanded := []interface{}{
 		map[string]interface{}{
 			"name":         "activerehashing",
@@ -619,6 +622,8 @@ func TestExpandParameters(t *testing.T) {
 }
 
 func TestParameterChanges(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Name                string
 		Old                 *schema.Set

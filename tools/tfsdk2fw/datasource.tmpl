@@ -3,46 +3,57 @@
 package {{ .PackageName }}
 
 import (
-    "context"
+	"context"
 
-    {{if .ImportFrameworkAttr }}"github.com/hashicorp/terraform-plugin-framework/attr"{{- end}}
-    "github.com/hashicorp/terraform-plugin-framework/datasource"
-    "github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/provider"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
-    "github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
+	{{if .ImportFrameworkAttr }}"github.com/hashicorp/terraform-plugin-framework/attr"{{- end}}
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	{{if .ImportProviderFrameworkTypes }}fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"{{- end}}
 )
 
 func init() {
-    // registerDataSourceTypeFactory("{{ .TFTypeName }}", newDataSource{{ .Name }}Type)
+    _sp.registerFrameworkDataSourceFactory(newDataSource{{ .Name }})
 }
 
-// newDataSource{{ .Name }}Type instantiates a new DataSourceType for the {{ .TFTypeName }} data source.
-func newDataSource{{ .Name }}Type(ctx context.Context) (provider.DataSourceType, error) {
-	return &dataSource{{ .Name }}Type{}, nil
+// newDataSource{{ .Name }} instantiates a new DataSource for the {{ .TFTypeName }} data source.
+func newDataSource{{ .Name }}(context.Context) (datasource.DataSourceWithConfigure, error) {
+	d := &dataSource{{ .Name }}{}
+	d.SetMigratedFromPluginSDK(true)
+
+	return d, nil
 }
 
-type dataSource{{ .Name }}Type struct {}
-
-// GetSchema returns the schema for this data source.
-func (t *dataSource{{ .Name }}Type) GetSchema(context.Context) (tfsdk.Schema, diag.Diagnostics) {
-    schema := {{ .Schema }}
-
-    return schema, nil
+type dataSource{{ .Name }} struct {
+	framework.DataSourceWithConfigure
 }
 
-// NewDataSource instantiates a new DataSource of this DataSourceType.
-func (t *dataSource{{ .Name }}Type) NewDataSource(ctx context.Context, provider provider.Provider) (datasource.DataSource, diag.Diagnostics) {
-    return &dataSource{{ .Name }}{}, nil
+// Metadata should return the full name of the data source, such as
+// examplecloud_thing.
+func (d *dataSource{{ .Name }}) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
+	response.TypeName = "{{ .TFTypeName }}"
 }
 
-type dataSource{{ .Name }} struct {}
+// Schema returns the schema for this data source.
+func (d *dataSource{{ .Name }}) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
+    response.Schema = {{ .Schema }}
+}
 
 // Read is called when the provider must read data source values in order to update state.
 // Config values should be read from the ReadRequest and new state values set on the ReadResponse.
 func (d *dataSource{{ .Name }}) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
-    tflog.Trace(ctx, "dataSource{{ .Name }}.Read enter")
+	var data dataSource{{ .Name }}Data
+
+	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
+
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	data.ID = types.StringValue("TODO")
+
+    response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
 type dataSource{{ .Name }}Data struct {

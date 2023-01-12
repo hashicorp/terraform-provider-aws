@@ -572,7 +572,7 @@ func testAccCheckDevEndpointExists(n string, v *glue.DevEndpoint) resource.TestC
 			return fmt.Errorf("No Glue Dev Endpoint ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
 
 		output, err := tfglue.FindDevEndpointByName(conn, rs.Primary.ID)
 
@@ -587,7 +587,7 @@ func testAccCheckDevEndpointExists(n string, v *glue.DevEndpoint) resource.TestC
 }
 
 func testAccCheckDevEndpointDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_glue_dev_endpoint" {

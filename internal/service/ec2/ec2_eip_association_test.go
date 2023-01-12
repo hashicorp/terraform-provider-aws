@@ -156,7 +156,7 @@ func testAccCheckEIPAssociationExists(n string, v *ec2.Address) resource.TestChe
 			return fmt.Errorf("No EC2 EIP Association ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		var err error
 		var output *ec2.Address
@@ -178,7 +178,7 @@ func testAccCheckEIPAssociationExists(n string, v *ec2.Address) resource.TestChe
 }
 
 func testAccCheckEIPAssociationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_eip_association" {

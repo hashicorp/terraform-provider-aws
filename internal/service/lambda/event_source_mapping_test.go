@@ -213,6 +213,37 @@ func TestAccLambdaEventSourceMapping_DynamoDB_functionResponseTypes(t *testing.T
 	})
 }
 
+func TestAccLambdaEventSourceMapping_DynamoDB_streamAdded(t *testing.T) {
+	var conf lambda.EventSourceMappingConfiguration
+	resourceName := "aws_dynamodb_table.test"
+	mappingResourceName := "aws_lambda_event_source_mapping.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEventSourceMappingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDynamoDBStreamConfig(rName, false),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"last_modified"},
+			},
+			{
+				Config: testAccEventSourceMappingDynamoDBStreamEnabled(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEventSourceMappingExists(mappingResourceName, &conf),
+				),
+			},
+		},
+	})
+}
+
 func TestAccLambdaEventSourceMapping_SQS_batchWindow(t *testing.T) {
 	var conf lambda.EventSourceMappingConfiguration
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1054,7 +1085,7 @@ func TestAccLambdaEventSourceMapping_SQS_filterCriteria(t *testing.T) {
 
 func testAccCheckEventSourceMappingIsBeingDisabled(conf *lambda.EventSourceMappingConfiguration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn()
 		// Disable enabled state
 		err := resource.Retry(10*time.Minute, func() *resource.RetryError {
 			params := &lambda.UpdateEventSourceMappingInput{
@@ -1095,17 +1126,15 @@ func testAccCheckEventSourceMappingIsBeingDisabled(conf *lambda.EventSourceMappi
 			if *newConf.State != "Disabled" {
 				return resource.RetryableError(fmt.Errorf(
 					"Waiting to get Lambda Event Source Mapping to be fully enabled, it's currently %s: %v", *newConf.State, conf.UUID))
-
 			}
 
 			return nil
 		})
-
 	}
 }
 
 func testAccCheckEventSourceMappingDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lambda_event_source_mapping" {
@@ -1139,7 +1168,7 @@ func testAccCheckEventSourceMappingExists(n string, v *lambda.EventSourceMapping
 			return fmt.Errorf("no Lambda Event Source Mapping ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn()
 
 		eventSourceMappingConfiguration, err := tflambda.FindEventSourceMappingConfigurationByID(conn, rs.Primary.ID)
 
@@ -1326,6 +1355,78 @@ resource "aws_lambda_function" "test" {
   runtime       = "nodejs16.x"
 }
 `, rName)
+}
+
+func testAccDynamoDBStreamConfig(rName string, streamEnabled bool) string {
+	var streamStatus string
+	var streamViewType string
+	if streamEnabled {
+		streamStatus = "stream_enabled   = true"
+		streamViewType = "stream_view_type = \"KEYS_ONLY\""
+	} else {
+		streamStatus = ""
+		streamViewType = ""
+	}
+
+	return fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Action": "sts:AssumeRole",
+    "Principal": {
+      "Service": "lambda.amazonaws.com"
+    },
+    "Effect": "Allow"
+  }]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "test" {
+  role = aws_iam_role.test.name
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:*"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_dynamodb_table" "test" {
+  name           = %[1]q
+  read_capacity  = 1
+  write_capacity = 2
+  hash_key       = "TestTableHashKey"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+  %[2]s
+  %[3]s
+}
+
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = %[1]q
+  handler       = "exports.example"
+  role          = aws_iam_role.test.arn
+  runtime       = "nodejs12.x"
+}
+`, rName, streamStatus, streamViewType)
 }
 
 func testAccEventSourceMappingConfig_kafkaBase(rName string) string {
@@ -1873,7 +1974,7 @@ resource "aws_lambda_event_source_mapping" "test" {
   }
 
   dynamic "source_access_configuration" {
-    for_each = aws_subnet.test.*.id
+    for_each = aws_subnet.test[*].id
     content {
       type = "VPC_SUBNET"
       uri  = "subnet:${source_access_configuration.value}"
@@ -1912,7 +2013,7 @@ resource "aws_lambda_event_source_mapping" "test" {
   }
 
   dynamic "source_access_configuration" {
-    for_each = aws_subnet.test.*.id
+    for_each = aws_subnet.test[*].id
     content {
       type = "VPC_SUBNET"
       uri  = "subnet:${source_access_configuration.value}"
@@ -1959,6 +2060,18 @@ resource "aws_lambda_event_source_mapping" "test" {
 
 func testAccEventSourceMappingConfig_dynamoDBNoFunctionResponseTypes(rName string) string {
 	return acctest.ConfigCompose(testAccEventSourceMappingConfig_dynamoDBBase(rName), `
+resource "aws_lambda_event_source_mapping" "test" {
+  batch_size        = 150
+  enabled           = true
+  event_source_arn  = aws_dynamodb_table.test.stream_arn
+  function_name     = aws_lambda_function.test.function_name
+  starting_position = "LATEST"
+}
+`)
+}
+
+func testAccEventSourceMappingDynamoDBStreamEnabled(rName string) string {
+	return acctest.ConfigCompose(testAccDynamoDBStreamConfig(rName, true), `
 resource "aws_lambda_event_source_mapping" "test" {
   batch_size        = 150
   enabled           = true
@@ -2017,7 +2130,7 @@ resource "aws_lambda_event_source_mapping" "test" {
 }
 
 func testAccPreCheckMQ(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).MQConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).MQConn()
 
 	input := &mq.ListBrokersInput{}
 
@@ -2033,7 +2146,7 @@ func testAccPreCheckMQ(t *testing.T) {
 }
 
 func testAccPreCheckMSK(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn()
 
 	input := &kafka.ListClustersInput{}
 
@@ -2049,7 +2162,7 @@ func testAccPreCheckMSK(t *testing.T) {
 }
 
 func testAccPreCheckSecretsManager(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerConn()
 
 	input := &secretsmanager.ListSecretsInput{}
 

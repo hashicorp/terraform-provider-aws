@@ -31,7 +31,7 @@ func ResourceGlobalSettings() *schema.Resource {
 }
 
 func resourceGlobalSettingsUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BackupConn
+	conn := meta.(*conns.AWSClient).BackupConn()
 
 	input := &backup.UpdateGlobalSettingsInput{
 		GlobalSettings: flex.ExpandStringMap(d.Get("global_settings").(map[string]interface{})),
@@ -48,7 +48,7 @@ func resourceGlobalSettingsUpdate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceGlobalSettingsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BackupConn
+	conn := meta.(*conns.AWSClient).BackupConn()
 
 	resp, err := conn.DescribeGlobalSettings(&backup.DescribeGlobalSettingsInput{})
 	if err != nil {

@@ -135,7 +135,7 @@ func ResourceVirtualService() *schema.Resource {
 }
 
 func resourceVirtualServiceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppMeshConn
+	conn := meta.(*conns.AWSClient).AppMeshConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -161,7 +161,7 @@ func resourceVirtualServiceCreate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceVirtualServiceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppMeshConn
+	conn := meta.(*conns.AWSClient).AppMeshConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -253,7 +253,7 @@ func resourceVirtualServiceRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceVirtualServiceUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppMeshConn
+	conn := meta.(*conns.AWSClient).AppMeshConn()
 
 	if d.HasChange("spec") {
 		_, v := d.GetChange("spec")
@@ -286,9 +286,9 @@ func resourceVirtualServiceUpdate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceVirtualServiceDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppMeshConn
+	conn := meta.(*conns.AWSClient).AppMeshConn()
 
-	log.Printf("[DEBUG] Deleting App Mesh virtual service: %s", d.Id())
+	log.Printf("[DEBUG] Deleting App Mesh Virtual Service: %s", d.Id())
 	_, err := conn.DeleteVirtualService(&appmesh.DeleteVirtualServiceInput{
 		MeshName:           aws.String(d.Get("mesh_name").(string)),
 		VirtualServiceName: aws.String(d.Get("name").(string)),
@@ -313,7 +313,7 @@ func resourceVirtualServiceImport(d *schema.ResourceData, meta interface{}) ([]*
 	name := parts[1]
 	log.Printf("[DEBUG] Importing App Mesh virtual service %s from mesh %s", name, mesh)
 
-	conn := meta.(*conns.AWSClient).AppMeshConn
+	conn := meta.(*conns.AWSClient).AppMeshConn()
 
 	resp, err := conn.DescribeVirtualService(&appmesh.DescribeVirtualServiceInput{
 		MeshName:           aws.String(mesh),

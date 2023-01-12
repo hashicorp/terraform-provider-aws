@@ -64,7 +64,7 @@ func ResourceS3BucketAssociation() *schema.Resource {
 }
 
 func resourceS3BucketAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).MacieConn
+	conn := meta.(*conns.AWSClient).MacieConn()
 
 	req := &macie.AssociateS3ResourcesInput{
 		S3Resources: []*macie.S3ResourceClassification{
@@ -95,7 +95,7 @@ func resourceS3BucketAssociationCreate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceS3BucketAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).MacieConn
+	conn := meta.(*conns.AWSClient).MacieConn()
 
 	req := &macie.ListS3ResourcesInput{}
 	if v, ok := d.GetOk("member_account_id"); ok {
@@ -134,7 +134,7 @@ func resourceS3BucketAssociationRead(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceS3BucketAssociationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).MacieConn
+	conn := meta.(*conns.AWSClient).MacieConn()
 
 	if d.HasChange("classification_type") {
 		req := &macie.UpdateS3ResourcesInput{
@@ -166,7 +166,7 @@ func resourceS3BucketAssociationUpdate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceS3BucketAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).MacieConn
+	conn := meta.(*conns.AWSClient).MacieConn()
 
 	log.Printf("[DEBUG] Deleting Macie S3 bucket association: %s", d.Id())
 

@@ -309,7 +309,7 @@ func TestAccAthenaDatabase_disppears(t *testing.T) {
 }
 
 func testAccCheckDatabaseDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AthenaConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AthenaConn()
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_athena_database" {
 			continue
@@ -335,7 +335,6 @@ func testAccCheckDatabaseDestroy(s *terraform.State) error {
 		if database != nil {
 			return fmt.Errorf("Athena database (%s) still exists", rs.Primary.ID)
 		}
-
 	}
 	return nil
 }
@@ -357,7 +356,7 @@ func testAccDatabaseCreateTables(dbName string) resource.TestCheckFunc {
 			return err
 		}
 
-		athenaconn := acctest.Provider.Meta().(*conns.AWSClient).AthenaConn
+		athenaconn := acctest.Provider.Meta().(*conns.AWSClient).AthenaConn()
 
 		input := &athena.StartQueryExecutionInput{
 			QueryExecutionContext: &athena.QueryExecutionContext{
@@ -387,7 +386,7 @@ func testAccDatabaseDestroyTables(dbName string) resource.TestCheckFunc {
 			return err
 		}
 
-		athenaconn := acctest.Provider.Meta().(*conns.AWSClient).AthenaConn
+		athenaconn := acctest.Provider.Meta().(*conns.AWSClient).AthenaConn()
 
 		input := &athena.StartQueryExecutionInput{
 			QueryExecutionContext: &athena.QueryExecutionContext{
@@ -416,7 +415,7 @@ func testAccCheckDatabaseDropFails(dbName string) resource.TestCheckFunc {
 			return err
 		}
 
-		athenaconn := acctest.Provider.Meta().(*conns.AWSClient).AthenaConn
+		athenaconn := acctest.Provider.Meta().(*conns.AWSClient).AthenaConn()
 
 		input := &athena.StartQueryExecutionInput{
 			QueryExecutionContext: &athena.QueryExecutionContext{

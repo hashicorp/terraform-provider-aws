@@ -574,7 +574,7 @@ func testAccCheckTriggerExists(resourceName string, trigger *glue.Trigger) resou
 			return fmt.Errorf("No Glue Trigger ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
 
 		output, err := tfglue.FindTriggerByName(conn, rs.Primary.ID)
 		if err != nil {
@@ -600,7 +600,7 @@ func testAccCheckTriggerDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
 
 		output, err := tfglue.FindTriggerByName(conn, rs.Primary.ID)
 
@@ -608,7 +608,6 @@ func testAccCheckTriggerDestroy(s *terraform.State) error {
 			if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 				return nil
 			}
-
 		}
 
 		trigger := output.Trigger

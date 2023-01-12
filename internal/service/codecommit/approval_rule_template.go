@@ -74,7 +74,7 @@ func ResourceApprovalRuleTemplate() *schema.Resource {
 }
 
 func resourceApprovalRuleTemplateCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeCommitConn
+	conn := meta.(*conns.AWSClient).CodeCommitConn()
 
 	name := d.Get("name").(string)
 
@@ -98,7 +98,7 @@ func resourceApprovalRuleTemplateCreate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceApprovalRuleTemplateRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeCommitConn
+	conn := meta.(*conns.AWSClient).CodeCommitConn()
 
 	input := &codecommit.GetApprovalRuleTemplateInput{
 		ApprovalRuleTemplateName: aws.String(d.Id()),
@@ -135,7 +135,7 @@ func resourceApprovalRuleTemplateRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceApprovalRuleTemplateUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeCommitConn
+	conn := meta.(*conns.AWSClient).CodeCommitConn()
 
 	if d.HasChange("description") {
 		input := &codecommit.UpdateApprovalRuleTemplateDescriptionInput{
@@ -185,7 +185,7 @@ func resourceApprovalRuleTemplateUpdate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceApprovalRuleTemplateDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeCommitConn
+	conn := meta.(*conns.AWSClient).CodeCommitConn()
 
 	input := &codecommit.DeleteApprovalRuleTemplateInput{
 		ApprovalRuleTemplateName: aws.String(d.Id()),

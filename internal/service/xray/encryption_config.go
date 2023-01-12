@@ -41,7 +41,7 @@ func ResourceEncryptionConfig() *schema.Resource {
 }
 
 func resourceEncryptionPutConfig(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).XRayConn
+	conn := meta.(*conns.AWSClient).XRayConn()
 
 	input := &xray.PutEncryptionConfigInput{
 		Type: aws.String(d.Get("type").(string)),
@@ -66,7 +66,7 @@ func resourceEncryptionPutConfig(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceEncryptionConfigRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).XRayConn
+	conn := meta.(*conns.AWSClient).XRayConn()
 
 	config, err := conn.GetEncryptionConfig(&xray.GetEncryptionConfigInput{})
 

@@ -149,7 +149,7 @@ func testAccCheckObservabilityConfigurationDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn()
 
 		input := &apprunner.DescribeObservabilityConfigurationInput{
 			ObservabilityConfigurationArn: aws.String(rs.Primary.ID),
@@ -184,7 +184,7 @@ func testAccCheckObservabilityConfigurationExists(n string) resource.TestCheckFu
 			return fmt.Errorf("No App Runner Service ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn()
 
 		input := &apprunner.DescribeObservabilityConfigurationInput{
 			ObservabilityConfigurationArn: aws.String(rs.Primary.ID),

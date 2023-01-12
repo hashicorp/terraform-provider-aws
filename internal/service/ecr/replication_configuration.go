@@ -88,7 +88,7 @@ func ResourceReplicationConfiguration() *schema.Resource {
 }
 
 func resourceReplicationConfigurationPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECRConn
+	conn := meta.(*conns.AWSClient).ECRConn()
 
 	input := ecr.PutReplicationConfigurationInput{
 		ReplicationConfiguration: expandReplicationConfigurationReplicationConfiguration(d.Get("replication_configuration").([]interface{})),
@@ -105,7 +105,7 @@ func resourceReplicationConfigurationPut(d *schema.ResourceData, meta interface{
 }
 
 func resourceReplicationConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECRConn
+	conn := meta.(*conns.AWSClient).ECRConn()
 
 	log.Printf("[DEBUG] Reading ECR Replication Configuration %s", d.Id())
 	out, err := conn.DescribeRegistry(&ecr.DescribeRegistryInput{})
@@ -123,7 +123,7 @@ func resourceReplicationConfigurationRead(d *schema.ResourceData, meta interface
 }
 
 func resourceReplicationConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECRConn
+	conn := meta.(*conns.AWSClient).ECRConn()
 
 	input := ecr.PutReplicationConfigurationInput{
 		ReplicationConfiguration: &ecr.ReplicationConfiguration{
@@ -180,7 +180,6 @@ func expandReplicationConfigurationReplicationConfigurationRules(data []interfac
 		}
 
 		rules = append(rules, config)
-
 	}
 	return rules
 }

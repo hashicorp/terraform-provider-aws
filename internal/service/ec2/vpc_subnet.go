@@ -143,7 +143,7 @@ func ResourceSubnet() *schema.Resource {
 }
 
 func resourceSubnetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -213,7 +213,7 @@ func resourceSubnetCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceSubnetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -284,7 +284,7 @@ func resourceSubnetRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceSubnetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -358,7 +358,7 @@ func resourceSubnetUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceSubnetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	log.Printf("[INFO] Deleting EC2 Subnet: %s", d.Id())
 

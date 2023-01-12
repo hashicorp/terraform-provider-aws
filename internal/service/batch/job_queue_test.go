@@ -263,7 +263,7 @@ func testAccCheckJobQueueExists(n string, jq *batch.JobQueueDetail) resource.Tes
 			return fmt.Errorf("No Batch Job Queue ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn()
 		name := rs.Primary.Attributes["name"]
 		queue, err := tfbatch.GetJobQueue(conn, name)
 		if err != nil {
@@ -283,7 +283,7 @@ func testAccCheckJobQueueDestroy(s *terraform.State) error {
 		if rs.Type != "aws_batch_job_queue" {
 			continue
 		}
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn()
 		jq, err := tfbatch.GetJobQueue(conn, rs.Primary.Attributes["name"])
 		if err == nil {
 			if jq != nil {
@@ -297,7 +297,7 @@ func testAccCheckJobQueueDestroy(s *terraform.State) error {
 
 func testAccCheckJobQueueDisappears(jobQueue *batch.JobQueueDetail) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn()
 		name := aws.StringValue(jobQueue.JobQueueName)
 
 		err := tfbatch.DisableJobQueue(name, conn)
@@ -315,7 +315,7 @@ func testAccCheckJobQueueDisappears(jobQueue *batch.JobQueueDetail) resource.Tes
 // For example, Terraform may set a single Compute Environment with Order 0, but the console updates it to 1.
 func testAccCheckJobQueueComputeEnvironmentOrderUpdate(jobQueue *batch.JobQueueDetail) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn()
 
 		input := &batch.UpdateJobQueueInput{
 			ComputeEnvironmentOrder: jobQueue.ComputeEnvironmentOrder,
@@ -554,7 +554,7 @@ resource "aws_batch_job_queue" "test" {
 }
 
 func testAccCheckLaunchTemplateDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_launch_template" {

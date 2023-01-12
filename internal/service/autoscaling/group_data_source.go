@@ -32,6 +32,10 @@ func DataSourceGroup() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
+			"desired_capacity_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"enabled_metrics": {
 				Type:     schema.TypeSet,
 				Computed: true,
@@ -129,7 +133,7 @@ func DataSourceGroup() *schema.Resource {
 }
 
 func dataSourceGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AutoScalingConn
+	conn := meta.(*conns.AWSClient).AutoScalingConn()
 
 	groupName := d.Get("name").(string)
 	group, err := FindGroupByName(conn, groupName)
@@ -143,6 +147,7 @@ func dataSourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("availability_zones", aws.StringValueSlice(group.AvailabilityZones))
 	d.Set("default_cooldown", group.DefaultCooldown)
 	d.Set("desired_capacity", group.DesiredCapacity)
+	d.Set("desired_capacity_type", group.DesiredCapacityType)
 	d.Set("enabled_metrics", flattenEnabledMetrics(group.EnabledMetrics))
 	d.Set("health_check_grace_period", group.HealthCheckGracePeriod)
 	d.Set("health_check_type", group.HealthCheckType)

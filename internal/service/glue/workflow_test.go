@@ -222,7 +222,7 @@ func TestAccGlueWorkflow_disappears(t *testing.T) {
 }
 
 func testAccPreCheckWorkflow(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
 
 	_, err := conn.ListWorkflows(&glue.ListWorkflowsInput{})
 
@@ -247,7 +247,7 @@ func testAccCheckWorkflowExists(resourceName string, workflow *glue.Workflow) re
 			return fmt.Errorf("No Glue Workflow ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
 
 		output, err := conn.GetWorkflow(&glue.GetWorkflowInput{
 			Name: aws.String(rs.Primary.ID),
@@ -275,7 +275,7 @@ func testAccCheckWorkflowDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
 
 		output, err := conn.GetWorkflow(&glue.GetWorkflowInput{
 			Name: aws.String(rs.Primary.ID),
@@ -285,7 +285,6 @@ func testAccCheckWorkflowDestroy(s *terraform.State) error {
 			if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 				return nil
 			}
-
 		}
 
 		workflow := output.Workflow

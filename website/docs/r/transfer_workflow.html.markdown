@@ -12,6 +12,8 @@ Provides a AWS Transfer Workflow resource.
 
 ## Example Usage
 
+### Basic single step example
+
 ```terraform
 resource "aws_transfer_workflow" "example" {
   steps {
@@ -20,6 +22,34 @@ resource "aws_transfer_workflow" "example" {
       source_file_location = "$${original.file}"
     }
     type = "DELETE"
+  }
+}
+```
+
+### Multistep example
+
+```terraform
+resource "aws_transfer_workflow" "example" {
+  steps {
+    custom_step_details {
+      name                 = "example"
+      source_file_location = "$${original.file}"
+      target               = aws_lambda_function.example.arn
+      timeout_seconds      = 60
+    }
+    type = "CUSTOM"
+  }
+
+  steps {
+    tag_step_details {
+      name                 = "example"
+      source_file_location = "$${original.file}"
+      tags {
+        key   = "Name"
+        value = "Hello World"
+      }
+    }
+    type = "TAG"
   }
 }
 ```

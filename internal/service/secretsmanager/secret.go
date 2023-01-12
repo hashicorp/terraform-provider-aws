@@ -151,7 +151,7 @@ func ResourceSecret() *schema.Resource {
 }
 
 func resourceSecretCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecretsManagerConn
+	conn := meta.(*conns.AWSClient).SecretsManagerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -263,7 +263,7 @@ func resourceSecretCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceSecretRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecretsManagerConn
+	conn := meta.(*conns.AWSClient).SecretsManagerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -336,7 +336,7 @@ func resourceSecretRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceSecretUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecretsManagerConn
+	conn := meta.(*conns.AWSClient).SecretsManagerConn()
 
 	if d.HasChange("replica") {
 		o, n := d.GetChange("replica")
@@ -461,7 +461,7 @@ func resourceSecretUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceSecretDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecretsManagerConn
+	conn := meta.(*conns.AWSClient).SecretsManagerConn()
 
 	if v, ok := d.GetOk("replica"); ok && v.(*schema.Set).Len() > 0 {
 		err := removeSecretReplicas(conn, d.Id(), v.(*schema.Set).List())

@@ -70,7 +70,7 @@ func TestAccIoTThingPrincipalAttachment_basic(t *testing.T) {
 }
 
 func testAccCheckThingPrincipalAttachmentDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iot_thing_principal_attachment" {
@@ -107,7 +107,7 @@ func testAccCheckThingPrincipalAttachmentExists(n string) resource.TestCheckFunc
 			return fmt.Errorf("No attachment")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn()
 		thing := rs.Primary.Attributes["thing"]
 		principal := rs.Primary.Attributes["principal"]
 
@@ -127,7 +127,7 @@ func testAccCheckThingPrincipalAttachmentExists(n string) resource.TestCheckFunc
 
 func testAccCheckThingPrincipalAttachmentStatus(thingName string, exists bool, principals []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn()
 
 		principalARNs := make(map[string]string)
 

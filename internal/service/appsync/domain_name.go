@@ -16,7 +16,6 @@ import (
 )
 
 func ResourceDomainName() *schema.Resource {
-
 	return &schema.Resource{
 		Create: resourceDomainNameCreate,
 		Read:   resourceDomainNameRead,
@@ -55,7 +54,7 @@ func ResourceDomainName() *schema.Resource {
 }
 
 func resourceDomainNameCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppSyncConn
+	conn := meta.(*conns.AWSClient).AppSyncConn()
 
 	params := &appsync.CreateDomainNameInput{
 		CertificateArn: aws.String(d.Get("certificate_arn").(string)),
@@ -74,7 +73,7 @@ func resourceDomainNameCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDomainNameRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppSyncConn
+	conn := meta.(*conns.AWSClient).AppSyncConn()
 
 	domainName, err := FindDomainNameByID(conn, d.Id())
 	if domainName == nil && !d.IsNewResource() {
@@ -97,7 +96,7 @@ func resourceDomainNameRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDomainNameUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppSyncConn
+	conn := meta.(*conns.AWSClient).AppSyncConn()
 
 	params := &appsync.UpdateDomainNameInput{
 		DomainName: aws.String(d.Id()),
@@ -113,11 +112,10 @@ func resourceDomainNameUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	return resourceDomainNameRead(d, meta)
-
 }
 
 func resourceDomainNameDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppSyncConn
+	conn := meta.(*conns.AWSClient).AppSyncConn()
 
 	input := &appsync.DeleteDomainNameInput{
 		DomainName: aws.String(d.Id()),

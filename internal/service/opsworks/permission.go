@@ -62,7 +62,7 @@ func resourcePermissionDelete(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourcePermissionRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*conns.AWSClient).OpsWorksConn
+	client := meta.(*conns.AWSClient).OpsWorksConn()
 
 	req := &opsworks.DescribePermissionsInput{
 		IamUserArn: aws.String(d.Get("user_arn").(string)),
@@ -97,7 +97,6 @@ func resourcePermissionRead(d *schema.ResourceData, meta interface{}) error {
 			d.Set("stack_id", permission.StackId)
 			d.Set("level", permission.Level)
 		}
-
 	}
 
 	if !found {
@@ -109,7 +108,7 @@ func resourcePermissionRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceSetPermission(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*conns.AWSClient).OpsWorksConn
+	client := meta.(*conns.AWSClient).OpsWorksConn()
 
 	req := &opsworks.SetPermissionInput{
 		AllowSudo:  aws.Bool(d.Get("allow_sudo").(bool)),
@@ -125,7 +124,6 @@ func resourceSetPermission(d *schema.ResourceData, meta interface{}) error {
 	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
 		_, err := client.SetPermission(req)
 		if err != nil {
-
 			if tfawserr.ErrMessageContains(err, opsworks.ErrCodeResourceNotFoundException, "Unable to find user with ARN") {
 				return resource.RetryableError(err)
 			}

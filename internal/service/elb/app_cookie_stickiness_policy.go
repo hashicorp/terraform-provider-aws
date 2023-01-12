@@ -62,7 +62,7 @@ func ResourceAppCookieStickinessPolicy() *schema.Resource {
 }
 
 func resourceAppCookieStickinessPolicyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBConn
+	conn := meta.(*conns.AWSClient).ELBConn()
 
 	// Provision the AppStickinessPolicy
 	acspOpts := &elb.CreateAppCookieStickinessPolicyInput{
@@ -93,7 +93,7 @@ func resourceAppCookieStickinessPolicyCreate(d *schema.ResourceData, meta interf
 }
 
 func resourceAppCookieStickinessPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBConn
+	conn := meta.(*conns.AWSClient).ELBConn()
 
 	lbName, lbPort, policyName := AppCookieStickinessPolicyParseID(d.Id())
 
@@ -189,7 +189,7 @@ func resourceSticknessPolicyAssigned(policyName, lbName, lbPort string, conn *el
 }
 
 func resourceAppCookieStickinessPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBConn
+	conn := meta.(*conns.AWSClient).ELBConn()
 
 	lbName, _, policyName := AppCookieStickinessPolicyParseID(d.Id())
 

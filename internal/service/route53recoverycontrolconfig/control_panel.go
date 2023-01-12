@@ -52,7 +52,7 @@ func ResourceControlPanel() *schema.Resource {
 }
 
 func resourceControlPanelCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn
+	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn()
 
 	input := &r53rcc.CreateControlPanelInput{
 		ClientToken:      aws.String(resource.UniqueId()),
@@ -81,7 +81,7 @@ func resourceControlPanelCreate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceControlPanelRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn
+	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn()
 
 	input := &r53rcc.DescribeControlPanelInput{
 		ControlPanelArn: aws.String(d.Id()),
@@ -115,7 +115,7 @@ func resourceControlPanelRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceControlPanelUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn
+	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn()
 
 	input := &r53rcc.UpdateControlPanelInput{
 		ControlPanelName: aws.String(d.Get("name").(string)),
@@ -132,7 +132,7 @@ func resourceControlPanelUpdate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceControlPanelDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn
+	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn()
 
 	log.Printf("[INFO] Deleting Route53 Recovery Control Config Control Panel: %s", d.Id())
 	_, err := conn.DeleteControlPanel(&r53rcc.DeleteControlPanelInput{

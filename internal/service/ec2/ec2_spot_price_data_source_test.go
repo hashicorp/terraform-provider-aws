@@ -52,7 +52,7 @@ func TestAccEC2SpotPriceDataSource_filter(t *testing.T) {
 }
 
 func testAccPreCheckSpotPrice(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	input := &ec2.DescribeSpotPriceHistoryInput{
 		MaxResults: aws.Int64(5),

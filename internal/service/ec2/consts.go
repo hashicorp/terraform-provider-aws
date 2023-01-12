@@ -2,6 +2,7 @@ package ec2
 
 import (
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/internal/slices"
 )
 
 const (
@@ -24,7 +25,7 @@ const (
 
 func FleetOnDemandAllocationStrategy_Values() []string {
 	return append(
-		removeFirstOccurrenceFromStringSlice(ec2.FleetOnDemandAllocationStrategy_Values(), ec2.FleetOnDemandAllocationStrategyLowestPrice),
+		slices.RemoveAll(ec2.FleetOnDemandAllocationStrategy_Values(), ec2.FleetOnDemandAllocationStrategyLowestPrice),
 		FleetOnDemandAllocationStrategyLowestPrice,
 	)
 }
@@ -36,7 +37,7 @@ const (
 
 func SpotAllocationStrategy_Values() []string {
 	return append(
-		removeFirstOccurrenceFromStringSlice(ec2.SpotAllocationStrategy_Values(), ec2.SpotAllocationStrategyLowestPrice),
+		slices.RemoveAll(ec2.SpotAllocationStrategy_Values(), ec2.SpotAllocationStrategyLowestPrice),
 		SpotAllocationStrategyLowestPrice,
 	)
 }
@@ -252,16 +253,6 @@ const (
 	TargetStorageTierStandard = "standard"
 )
 
-func removeFirstOccurrenceFromStringSlice(slice []string, s string) []string {
-	for i, v := range slice {
-		if v == s {
-			return append(slice[:i], slice[i+1:]...)
-		}
-	}
-
-	return slice
-}
-
 const (
 	OutsideIPAddressTypePrivateIPv4 = "PrivateIpv4"
 	OutsideIPAddressTypePublicIPv4  = "PublicIpv4"
@@ -285,3 +276,8 @@ func securityGroupRuleType_Values() []string {
 		securityGroupRuleTypeIngress,
 	}
 }
+
+const (
+	ResInstance      = "Instance"
+	ResInstanceState = "Instance State"
+)

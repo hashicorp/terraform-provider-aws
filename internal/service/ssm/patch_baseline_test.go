@@ -333,6 +333,42 @@ func TestAccSSMPatchBaseline_rejectPatchesAction(t *testing.T) {
 	})
 }
 
+// testAccSSMPatchBaseline_deleteDefault needs to be serialized with the other
+// Default Patch Baseline acceptance tests because it sets the default patch baseline
+func testAccSSMPatchBaseline_deleteDefault(t *testing.T) {
+	var ssmPatch ssm.PatchBaselineIdentity
+	name := sdkacctest.RandString(10)
+	resourceName := "aws_ssm_patch_baseline.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPatchBaselineDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPatchBaselineConfig_basic(name),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPatchBaselineExists(resourceName, &ssmPatch),
+				),
+			},
+			{
+				PreConfig: func() {
+					conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn()
+
+					input := &ssm.RegisterDefaultPatchBaselineInput{
+						BaselineId: ssmPatch.BaselineId,
+					}
+					if _, err := conn.RegisterDefaultPatchBaseline(input); err != nil {
+						t.Fatalf("registering Default Patch Baseline (%s): %s", aws.StringValue(ssmPatch.BaselineId), err)
+					}
+				},
+				Config: "# Empty config", // Deletes the patch baseline
+			},
+		},
+	})
+}
+
 func testAccCheckPatchBaselineRecreated(t *testing.T,
 	before, after *ssm.PatchBaselineIdentity) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -354,7 +390,7 @@ func testAccCheckPatchBaselineExists(n string, patch *ssm.PatchBaselineIdentity)
 			return fmt.Errorf("No SSM Patch Baseline ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn()
 
 		resp, err := conn.DescribePatchBaselines(&ssm.DescribePatchBaselinesInput{
 			Filters: []*ssm.PatchOrchestratorFilter{
@@ -380,7 +416,7 @@ func testAccCheckPatchBaselineExists(n string, patch *ssm.PatchBaselineIdentity)
 }
 
 func testAccCheckPatchBaselineDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ssm_patch_baseline" {

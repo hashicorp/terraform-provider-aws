@@ -34,6 +34,12 @@ func TestAccVPCNetworkInterfaceSgAttachment_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "security_group_id", securityGroupResourceName, "id"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccVPCNetworkInterfaceSGAttachmentImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -134,7 +140,7 @@ func testAccCheckNetworkInterfaceSGAttachmentExists(resourceName string) resourc
 			return fmt.Errorf("No EC2 Network Interface Security Group Attachment ID is set: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		_, err := tfec2.FindNetworkInterfaceSecurityGroup(conn, rs.Primary.Attributes["network_interface_id"], rs.Primary.Attributes["security_group_id"])
 
@@ -143,7 +149,7 @@ func testAccCheckNetworkInterfaceSGAttachmentExists(resourceName string) resourc
 }
 
 func testAccCheckNetworkInterfaceSGAttachmentDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_network_interface_sg_attachment" {
@@ -301,7 +307,25 @@ resource "aws_security_group" "test" {
 resource "aws_network_interface_sg_attachment" "test" {
   count                = 4
   network_interface_id = aws_network_interface.test.id
-  security_group_id    = aws_security_group.test.*.id[count.index]
+  security_group_id    = aws_security_group.test[count.index].id
 }
 `, rName)
+}
+
+func testAccVPCNetworkInterfaceSGAttachmentImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+
+		if !ok {
+			return "", fmt.Errorf("not found: %s", resourceName)
+		}
+
+		var networkInterfaceID string
+		var securityGroupID string
+
+		networkInterfaceID = rs.Primary.Attributes["network_interface_id"]
+		securityGroupID = rs.Primary.Attributes["security_group_id"]
+
+		return fmt.Sprintf("%s_%s", networkInterfaceID, securityGroupID), nil
+	}
 }

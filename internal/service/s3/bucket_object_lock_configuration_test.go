@@ -202,7 +202,7 @@ func TestAccS3BucketObjectLockConfiguration_noRule(t *testing.T) {
 }
 
 func testAccCheckBucketObjectLockConfigurationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_s3_bucket_object_lock_configuration" {
@@ -251,7 +251,7 @@ func testAccCheckBucketObjectLockConfigurationExists(resourceName string) resour
 			return fmt.Errorf("Resource (%s) ID not set", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
 
 		bucket, expectedBucketOwner, err := tfs3.ParseResourceID(rs.Primary.ID)
 		if err != nil {

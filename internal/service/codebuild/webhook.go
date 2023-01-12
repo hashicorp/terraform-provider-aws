@@ -93,7 +93,7 @@ func ResourceWebhook() *schema.Resource {
 }
 
 func resourceWebhookCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeBuildConn
+	conn := meta.(*conns.AWSClient).CodeBuildConn()
 
 	input := &codebuild.CreateWebhookInput{
 		ProjectName:  aws.String(d.Get("project_name").(string)),
@@ -160,7 +160,7 @@ func expandWebhookFilterData(data map[string]interface{}) []*codebuild.WebhookFi
 }
 
 func resourceWebhookRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeBuildConn
+	conn := meta.(*conns.AWSClient).CodeBuildConn()
 
 	resp, err := conn.BatchGetProjects(&codebuild.BatchGetProjectsInput{
 		Names: []*string{
@@ -212,7 +212,7 @@ func resourceWebhookRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceWebhookUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeBuildConn
+	conn := meta.(*conns.AWSClient).CodeBuildConn()
 
 	var err error
 	filterGroups := expandWebhookFilterGroups(d)
@@ -246,7 +246,7 @@ func resourceWebhookUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceWebhookDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeBuildConn
+	conn := meta.(*conns.AWSClient).CodeBuildConn()
 
 	_, err := conn.DeleteWebhook(&codebuild.DeleteWebhookInput{
 		ProjectName: aws.String(d.Id()),

@@ -87,7 +87,7 @@ func testAccCheckCustomDomainAssociationDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn()
 
 		domainName, serviceArn, err := tfapprunner.CustomDomainAssociationParseID(rs.Primary.ID)
 
@@ -130,7 +130,7 @@ func testAccCheckCustomDomainAssociationExists(n string) resource.TestCheckFunc 
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn()
 
 		customDomain, err := tfapprunner.FindCustomDomain(context.Background(), conn, domainName, serviceArn)
 

@@ -204,7 +204,7 @@ func testAccCheckEventSubscriptionDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn()
 
 		resp, err := conn.DescribeEventSubscriptions(&dms.DescribeEventSubscriptionsInput{
 			SubscriptionName: aws.String(rs.Primary.ID),
@@ -254,7 +254,7 @@ func testAccCheckEventSubscriptionExists(n string, eventSubscription *dms.EventS
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn()
 		resp, err := conn.DescribeEventSubscriptions(&dms.DescribeEventSubscriptionsInput{
 			SubscriptionName: aws.String(rs.Primary.ID),
 		})
@@ -395,7 +395,7 @@ resource "aws_dms_event_subscription" "test" {
 }
 
 func testAccPreCheckEKS(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn()
 
 	input := &eks.ListClustersInput{}
 

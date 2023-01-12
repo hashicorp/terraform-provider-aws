@@ -511,7 +511,7 @@ func TestAccS3Bucket_Tags_withSystemTags(t *testing.T) {
 			testAccCheckBucketDestroy,
 			func(s *terraform.State) error {
 				// Tear down CF stack.
-				conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn
+				conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn()
 
 				requestToken := resource.UniqueId()
 				req := &cloudformation.DeleteStackInput{
@@ -1904,7 +1904,7 @@ func TestAccS3Bucket_Security_corsUpdate(t *testing.T) {
 				return fmt.Errorf("Not found: %s", n)
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
+			conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
 			_, err := conn.PutBucketCors(&s3.PutBucketCorsInput{
 				Bucket: aws.String(rs.Primary.ID),
 				CORSConfiguration: &s3.CORSConfiguration{
@@ -1989,7 +1989,7 @@ func TestAccS3Bucket_Security_corsDelete(t *testing.T) {
 				return fmt.Errorf("Not found: %s", n)
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
+			conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
 			_, err := conn.DeleteBucketCors(&s3.DeleteBucketCorsInput{
 				Bucket: aws.String(rs.Primary.ID),
 			})
@@ -2411,6 +2411,8 @@ func TestAccS3Bucket_Web_routingRules(t *testing.T) {
 }
 
 func TestBucketName(t *testing.T) {
+	t.Parallel()
+
 	validDnsNames := []string{
 		"foobar",
 		"foo.bar",
@@ -2473,6 +2475,8 @@ func TestBucketName(t *testing.T) {
 }
 
 func TestBucketRegionalDomainName(t *testing.T) {
+	t.Parallel()
+
 	const bucket = "bucket-name"
 
 	var testCases = []struct {
@@ -2527,6 +2531,8 @@ func TestBucketRegionalDomainName(t *testing.T) {
 }
 
 func TestWebsiteEndpoint(t *testing.T) {
+	t.Parallel()
+
 	// https://docs.aws.amazon.com/AmazonS3/latest/dev/WebsiteEndpoints.html
 	testCases := []struct {
 		TestingClient      *conns.AWSClient
@@ -2692,7 +2698,7 @@ func testAccCheckBucketDestroy(s *terraform.State) error {
 }
 
 func testAccCheckBucketDestroyWithProvider(s *terraform.State, provider *schema.Provider) error {
-	conn := provider.Meta().(*conns.AWSClient).S3Conn
+	conn := provider.Meta().(*conns.AWSClient).S3Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_s3_bucket" {
@@ -2746,7 +2752,7 @@ func testAccCheckBucketExistsWithProvider(n string, providerF func() *schema.Pro
 
 		provider := providerF()
 
-		conn := provider.Meta().(*conns.AWSClient).S3Conn
+		conn := provider.Meta().(*conns.AWSClient).S3Conn()
 		_, err := conn.HeadBucket(&s3.HeadBucketInput{
 			Bucket: aws.String(rs.Primary.ID),
 		})
@@ -2758,14 +2764,13 @@ func testAccCheckBucketExistsWithProvider(n string, providerF func() *schema.Pro
 			return err
 		}
 		return nil
-
 	}
 }
 
 func testAccCheckBucketAddObjects(n string, keys ...string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ConnURICleaningDisabled
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ConnURICleaningDisabled()
 
 		for _, key := range keys {
 			_, err := conn.PutObject(&s3.PutObjectInput{
@@ -2785,7 +2790,7 @@ func testAccCheckBucketAddObjects(n string, keys ...string) resource.TestCheckFu
 func testAccCheckBucketAddObjectsWithLegalHold(n string, keys ...string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
 
 		for _, key := range keys {
 			_, err := conn.PutObject(&s3.PutObjectInput{
@@ -2806,7 +2811,7 @@ func testAccCheckBucketAddObjectsWithLegalHold(n string, keys ...string) resourc
 // Create an S3 bucket via a CF stack so that it has system tags.
 func testAccCheckBucketCreateViaCloudFormation(n string, stackID *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn()
 		stackName := sdkacctest.RandomWithPrefix("tf-acc-test-s3tags")
 		templateBody := fmt.Sprintf(`{
   "Resources": {
@@ -2849,7 +2854,7 @@ func testAccCheckBucketCreateViaCloudFormation(n string, stackID *string) resour
 func testAccCheckBucketTagKeys(n string, keys ...string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
 
 		got, err := tfs3.BucketListTags(conn, rs.Primary.Attributes["bucket"])
 		if err != nil {
@@ -2884,7 +2889,7 @@ func testAccCheckBucketDomainName(resourceName string, attributeName string, buc
 func testAccCheckBucketPolicy(n string, policy string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
 
 		out, err := conn.GetBucketPolicy(&s3.GetBucketPolicyInput{
 			Bucket: aws.String(rs.Primary.ID),
@@ -2948,7 +2953,7 @@ func testAccCheckBucketWebsiteEndpoint(resourceName string, attributeName string
 func testAccCheckBucketUpdateTags(n string, oldTags, newTags map[string]string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
 
 		return tfs3.BucketUpdateTags(conn, rs.Primary.Attributes["bucket"], oldTags, newTags)
 	}
@@ -2957,7 +2962,7 @@ func testAccCheckBucketUpdateTags(n string, oldTags, newTags map[string]string) 
 func testAccCheckBucketCheckTags(n string, expectedTags map[string]string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
 
 		got, err := tfs3.BucketListTags(conn, rs.Primary.Attributes["bucket"])
 		if err != nil {

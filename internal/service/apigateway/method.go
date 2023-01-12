@@ -106,7 +106,7 @@ func ResourceMethod() *schema.Resource {
 }
 
 func resourceMethodCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 
 	input := apigateway.PutMethodInput{
 		AuthorizationType: aws.String(d.Get("authorization").(string)),
@@ -164,7 +164,7 @@ func resourceMethodCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceMethodRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 
 	log.Printf("[DEBUG] Reading API Gateway Method %s", d.Id())
 	out, err := conn.GetMethod(&apigateway.GetMethodInput{
@@ -206,7 +206,7 @@ func resourceMethodRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceMethodUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 
 	log.Printf("[DEBUG] Reading API Gateway Method %s", d.Id())
 	operations := make([]*apigateway.PatchOperation, 0)
@@ -333,7 +333,7 @@ func resourceMethodUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceMethodDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 	log.Printf("[DEBUG] Deleting API Gateway Method: %s", d.Id())
 
 	_, err := conn.DeleteMethod(&apigateway.DeleteMethodInput{

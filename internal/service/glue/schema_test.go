@@ -316,7 +316,7 @@ func TestAccGlueSchema_Disappears_registry(t *testing.T) {
 }
 
 func testAccPreCheckSchema(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
 
 	_, err := conn.ListRegistries(&glue.ListRegistriesInput{})
 
@@ -341,7 +341,7 @@ func testAccCheckSchemaExists(resourceName string, schema *glue.GetSchemaOutput)
 			return fmt.Errorf("No Glue Schema ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
 		output, err := tfglue.FindSchemaByID(conn, rs.Primary.ID)
 		if err != nil {
 			return err
@@ -366,13 +366,12 @@ func testAccCheckSchemaDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
 		output, err := tfglue.FindSchemaByID(conn, rs.Primary.ID)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 				return nil
 			}
-
 		}
 
 		if output != nil && aws.StringValue(output.SchemaArn) == rs.Primary.ID {

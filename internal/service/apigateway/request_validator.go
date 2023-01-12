@@ -60,7 +60,7 @@ func ResourceRequestValidator() *schema.Resource {
 }
 
 func resourceRequestValidatorCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 
 	input := apigateway.CreateRequestValidatorInput{
 		Name:                      aws.String(d.Get("name").(string)),
@@ -80,7 +80,7 @@ func resourceRequestValidatorCreate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceRequestValidatorRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 
 	input := apigateway.GetRequestValidatorInput{
 		RequestValidatorId: aws.String(d.Id()),
@@ -105,7 +105,7 @@ func resourceRequestValidatorRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceRequestValidatorUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 	log.Printf("[DEBUG] Updating Request Validator %s", d.Id())
 
 	operations := make([]*apigateway.PatchOperation, 0)
@@ -151,7 +151,7 @@ func resourceRequestValidatorUpdate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceRequestValidatorDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 	log.Printf("[DEBUG] Deleting Request Validator %s", d.Id())
 
 	_, err := conn.DeleteRequestValidator(&apigateway.DeleteRequestValidatorInput{

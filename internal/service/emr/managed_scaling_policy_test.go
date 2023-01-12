@@ -164,7 +164,7 @@ func testAccCheckManagedScalingPolicyExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No EMR Managed Scaling Policy ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn()
 		resp, err := conn.GetManagedScalingPolicy(&emr.GetManagedScalingPolicyInput{
 			ClusterId: aws.String(rs.Primary.ID),
 		})
@@ -180,7 +180,7 @@ func testAccCheckManagedScalingPolicyExists(n string) resource.TestCheckFunc {
 }
 
 func testAccCheckManagedScalingPolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn()
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_emr_managed_scaling_policy" {
 			continue

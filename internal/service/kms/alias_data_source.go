@@ -34,7 +34,7 @@ func DataSourceAlias() *schema.Resource {
 }
 
 func dataSourceAliasRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KMSConn
+	conn := meta.(*conns.AWSClient).KMSConn()
 
 	target := d.Get("name").(string)
 

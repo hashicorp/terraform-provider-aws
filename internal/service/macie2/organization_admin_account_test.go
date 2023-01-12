@@ -78,7 +78,7 @@ func testAccCheckOrganizationAdminAccountExists(resourceName string) resource.Te
 			return fmt.Errorf("not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn()
 
 		adminAccount, err := tfmacie2.GetOrganizationAdminAccount(conn, rs.Primary.ID)
 
@@ -95,7 +95,7 @@ func testAccCheckOrganizationAdminAccountExists(resourceName string) resource.Te
 }
 
 func testAccCheckOrganizationAdminAccountDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_macie2_organization_admin_account" {
@@ -121,7 +121,6 @@ func testAccCheckOrganizationAdminAccountDestroy(s *terraform.State) error {
 	}
 
 	return nil
-
 }
 
 func testAccOrganizationAdminAccountConfig_basic() string {

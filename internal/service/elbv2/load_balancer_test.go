@@ -7,20 +7,18 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/aws/aws-sdk-go/service/elbv2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func init() {
 	acctest.RegisterServiceErrorCheckFunc(elbv2.EndpointsID, testAccErrorCheckSkip)
-
 }
 
 func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
@@ -32,6 +30,8 @@ func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 }
 
 func TestLBCloudWatchSuffixFromARN(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		name   string
 		arn    *string
@@ -162,6 +162,29 @@ func TestAccELBV2LoadBalancer_LoadBalancerType_gateway(t *testing.T) {
 					"enable_waf_fail_open",
 					"idle_timeout",
 				},
+			},
+		},
+	})
+}
+
+func TestAccELBV2LoadBalancer_disappears(t *testing.T) {
+	var conf elbv2.LoadBalancer
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lb.lb_test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLoadBalancerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLoadBalancerConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLoadBalancerExists(resourceName, &conf),
+					acctest.CheckResourceDisappears(acctest.Provider, tfelbv2.ResourceLoadBalancer(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -1310,7 +1333,7 @@ func testAccChecklbARNs(pre, post *elbv2.LoadBalancer) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckLoadBalancerExists(n string, res *elbv2.LoadBalancer) resource.TestCheckFunc {
+func testAccCheckLoadBalancerExists(n string, v *elbv2.LoadBalancer) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -1318,23 +1341,20 @@ func testAccCheckLoadBalancerExists(n string, res *elbv2.LoadBalancer) resource.
 		}
 
 		if rs.Primary.ID == "" {
-			return errors.New("No LB ID is set")
+			return errors.New("No ELBv2 Load Balancer ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn()
 
-		lb, err := tfelbv2.FindLoadBalancerByARN(conn, rs.Primary.ID)
+		output, err := tfelbv2.FindLoadBalancerByARN(conn, rs.Primary.ID)
 
 		if err != nil {
-			return fmt.Errorf("reading LB (%s): %w", rs.Primary.ID, err)
+			return err
 		}
 
-		if lb != nil {
-			*res = *lb
-			return nil
-		}
+		*v = *output
 
-		return fmt.Errorf("LB (%s) not found", rs.Primary.ID)
+		return nil
 	}
 }
 
@@ -1349,7 +1369,7 @@ func testAccCheckLoadBalancerAttribute(n, key, value string) resource.TestCheckF
 			return errors.New("No LB ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn()
 		attributesResp, err := conn.DescribeLoadBalancerAttributes(&elbv2.DescribeLoadBalancerAttributesInput{
 			LoadBalancerArn: aws.String(rs.Primary.ID),
 		})
@@ -1370,33 +1390,31 @@ func testAccCheckLoadBalancerAttribute(n, key, value string) resource.TestCheckF
 }
 
 func testAccCheckLoadBalancerDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lb" && rs.Type != "aws_alb" {
 			continue
 		}
 
-		lb, err := tfelbv2.FindLoadBalancerByARN(conn, rs.Primary.ID)
+		_, err := tfelbv2.FindLoadBalancerByARN(conn, rs.Primary.ID)
 
-		if tfawserr.ErrCodeContains(err, elb.ErrCodeAccessPointNotFoundException) {
+		if tfresource.NotFound(err) {
 			continue
 		}
 
 		if err != nil {
-			return fmt.Errorf("Unexpected error checking LB (%s) destroyed: %w", rs.Primary.ID, err)
+			return err
 		}
 
-		if lb != nil && aws.StringValue(lb.LoadBalancerArn) == rs.Primary.ID {
-			return fmt.Errorf("LB %q still exists", rs.Primary.ID)
-		}
+		return fmt.Errorf("ELBv2 Load Balancer %s still exists", rs.Primary.ID)
 	}
 
 	return nil
 }
 
 func testAccPreCheckGatewayLoadBalancer(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn()
 
 	input := &elbv2.DescribeAccountLimitsInput{}
 
@@ -1659,7 +1677,7 @@ resource "aws_lb" "lb_test" {
   name            = %[1]q
   internal        = true
   security_groups = [aws_security_group.alb_test.id]
-  subnets         = aws_subnet.alb_test.*.id
+  subnets         = aws_subnet.alb_test[*].id
 
   idle_timeout               = 30
   enable_deletion_protection = false
@@ -1815,7 +1833,7 @@ resource "aws_lb" "lb_test" {
   name            = %[1]q
   internal        = true
   security_groups = [aws_security_group.alb_test.id]
-  subnets         = aws_subnet.alb_test.*.id
+  subnets         = aws_subnet.alb_test[*].id
 
   idle_timeout               = 30
   enable_deletion_protection = false
@@ -2022,7 +2040,7 @@ resource "aws_lb" "lb_test" {
   name            = %[1]q
   internal        = true
   security_groups = [aws_security_group.alb_test.id]
-  subnets         = aws_subnet.alb_test.*.id
+  subnets         = aws_subnet.alb_test[*].id
 
   idle_timeout               = 30
   enable_deletion_protection = %[2]t
@@ -2091,7 +2109,7 @@ resource "aws_lb" "lb_test" {
   name            = %[1]q
   internal        = true
   security_groups = [aws_security_group.alb_test.id]
-  subnets         = aws_subnet.alb_test.*.id
+  subnets         = aws_subnet.alb_test[*].id
 
   idle_timeout               = 30
   enable_deletion_protection = false
@@ -2482,7 +2500,7 @@ resource "aws_alb" "lb_test" {
   name            = %[1]q
   internal        = true
   security_groups = [aws_security_group.alb_test.id]
-  subnets         = aws_subnet.alb_test.*.id
+  subnets         = aws_subnet.alb_test[*].id
 
   idle_timeout               = 30
   enable_deletion_protection = false
@@ -2549,7 +2567,7 @@ resource "aws_lb" "lb_test" {
   name            = %[1]q
   internal        = true
   security_groups = [aws_security_group.alb_test.id]
-  subnets         = aws_subnet.alb_test.*.id
+  subnets         = aws_subnet.alb_test[*].id
 
   idle_timeout               = 30
   enable_deletion_protection = false
@@ -2617,7 +2635,7 @@ func testAccLoadBalancerConfig_generatedName(rName string) string {
 resource "aws_lb" "lb_test" {
   internal        = true
   security_groups = [aws_security_group.alb_test.id]
-  subnets         = aws_subnet.alb_test.*.id
+  subnets         = aws_subnet.alb_test[*].id
 
   idle_timeout               = 30
   enable_deletion_protection = false
@@ -2694,7 +2712,7 @@ resource "aws_lb" "lb_test" {
   name            = ""
   internal        = true
   security_groups = [aws_security_group.alb_test.id]
-  subnets         = aws_subnet.alb_test.*.id
+  subnets         = aws_subnet.alb_test[*].id
 
   idle_timeout               = 30
   enable_deletion_protection = false
@@ -2776,7 +2794,7 @@ resource "aws_lb" "lb_test" {
   name_prefix     = "tf-lb-"
   internal        = true
   security_groups = [aws_security_group.alb_test.id]
-  subnets         = aws_subnet.alb_test.*.id
+  subnets         = aws_subnet.alb_test[*].id
 
   idle_timeout               = 30
   enable_deletion_protection = false
@@ -2843,7 +2861,7 @@ resource "aws_lb" "lb_test" {
   name            = %[1]q
   internal        = true
   security_groups = [aws_security_group.alb_test.id]
-  subnets         = aws_subnet.alb_test.*.id
+  subnets         = aws_subnet.alb_test[*].id
 
   idle_timeout               = 30
   enable_deletion_protection = false
@@ -2959,7 +2977,7 @@ func testAccLoadBalancerConfig_albAccessLogs(enabled bool, rName, bucketPrefix s
 resource "aws_lb" "test" {
   internal = true
   name     = %[1]q
-  subnets  = aws_subnet.alb_test.*.id
+  subnets  = aws_subnet.alb_test[*].id
 
   access_logs {
     bucket  = aws_s3_bucket_policy.test.bucket
@@ -2975,7 +2993,7 @@ func testAccLoadBalancerConfig_albAccessLogsNoBlocks(rName string) string {
 resource "aws_lb" "test" {
   internal = true
   name     = %[1]q
-  subnets  = aws_subnet.alb_test.*.id
+  subnets  = aws_subnet.alb_test[*].id
 }
 `, rName))
 }
@@ -3046,7 +3064,7 @@ resource "aws_lb" "test" {
   internal           = true
   load_balancer_type = "network"
   name               = %[1]q
-  subnets            = aws_subnet.alb_test.*.id
+  subnets            = aws_subnet.alb_test[*].id
 
   access_logs {
     bucket  = aws_s3_bucket_policy.test.bucket
@@ -3063,7 +3081,7 @@ resource "aws_lb" "test" {
   internal           = true
   load_balancer_type = "network"
   name               = %[1]q
-  subnets            = aws_subnet.alb_test.*.id
+  subnets            = aws_subnet.alb_test[*].id
 }
 `, rName))
 }
@@ -3073,7 +3091,7 @@ func testAccLoadBalancerConfig_nosg(rName string) string {
 resource "aws_lb" "lb_test" {
   name     = %[1]q
   internal = true
-  subnets  = aws_subnet.alb_test.*.id
+  subnets  = aws_subnet.alb_test[*].id
 
   idle_timeout               = 30
   enable_deletion_protection = false
@@ -3116,7 +3134,7 @@ resource "aws_lb" "lb_test" {
   name            = %[1]q
   internal        = true
   security_groups = [aws_security_group.alb_test.id, aws_security_group.alb_test_2.id]
-  subnets         = aws_subnet.alb_test.*.id
+  subnets         = aws_subnet.alb_test[*].id
 
   idle_timeout               = 30
   enable_deletion_protection = false
@@ -3200,7 +3218,7 @@ resource "aws_lb" "lb_test" {
   name            = %[1]q
   internal        = true
   security_groups = [aws_security_group.alb_test.id]
-  subnets         = aws_subnet.alb_test.*.id
+  subnets         = aws_subnet.alb_test[*].id
 
   idle_timeout               = 30
   enable_deletion_protection = false

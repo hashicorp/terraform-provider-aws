@@ -158,7 +158,7 @@ func TestAccElasticBeanstalkApplication_BeanstalkApp_tags(t *testing.T) {
 }
 
 func testAccCheckApplicationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticBeanstalkConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticBeanstalkConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_elastic_beanstalk_application" {
@@ -196,7 +196,7 @@ func testAccCheckApplicationExists(n string, app *elasticbeanstalk.ApplicationDe
 			return fmt.Errorf("Elastic Beanstalk app ID is not set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticBeanstalkConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticBeanstalkConn()
 		DescribeBeanstalkAppOpts := &elasticbeanstalk.DescribeApplicationsInput{
 			ApplicationNames: []*string{aws.String(rs.Primary.ID)},
 		}

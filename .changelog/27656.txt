@@ -1,0 +1,4 @@
+```release-note:breaking-change
+resource/aws_secretsmanager_secret_rotation: Remove unused `tags` attribute
+```
+

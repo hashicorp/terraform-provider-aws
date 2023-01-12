@@ -204,7 +204,7 @@ func testAccCheckSecurityProfileExists(resourceName string, function *connect.De
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn()
 
 		params := &connect.DescribeSecurityProfileInput{
 			InstanceId:        aws.String(instanceID),
@@ -228,7 +228,7 @@ func testAccCheckSecurityProfileDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn()
 
 		instanceID, securityProfileID, err := tfconnect.SecurityProfileParseID(rs.Primary.ID)
 

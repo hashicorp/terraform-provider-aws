@@ -53,7 +53,7 @@ func ResourceNamedQuery() *schema.Resource {
 }
 
 func resourceNamedQueryCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AthenaConn
+	conn := meta.(*conns.AWSClient).AthenaConn()
 
 	input := &athena.CreateNamedQueryInput{
 		Database:    aws.String(d.Get("database").(string)),
@@ -76,7 +76,7 @@ func resourceNamedQueryCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceNamedQueryRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AthenaConn
+	conn := meta.(*conns.AWSClient).AthenaConn()
 
 	input := &athena.GetNamedQueryInput{
 		NamedQueryId: aws.String(d.Id()),
@@ -101,7 +101,7 @@ func resourceNamedQueryRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceNamedQueryDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AthenaConn
+	conn := meta.(*conns.AWSClient).AthenaConn()
 
 	input := &athena.DeleteNamedQueryInput{
 		NamedQueryId: aws.String(d.Id()),

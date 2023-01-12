@@ -111,7 +111,7 @@ func TestAccRedshiftServerlessWorkgroup_disappears(t *testing.T) {
 }
 
 func testAccCheckWorkgroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftServerlessConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftServerlessConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_redshiftserverless_workgroup" {
@@ -144,7 +144,7 @@ func testAccCheckWorkgroupExists(name string) resource.TestCheckFunc {
 			return fmt.Errorf("Redshift Serverless Workgroup ID is not set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftServerlessConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftServerlessConn()
 
 		_, err := tfredshiftserverless.FindWorkgroupByName(conn, rs.Primary.ID)
 

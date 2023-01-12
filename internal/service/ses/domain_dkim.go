@@ -35,7 +35,7 @@ func ResourceDomainDKIM() *schema.Resource {
 }
 
 func resourceDomainDKIMCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	domainName := d.Get("domain").(string)
 
@@ -54,7 +54,7 @@ func resourceDomainDKIMCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDomainDKIMRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	domainName := d.Id()
 	d.Set("domain", domainName)
@@ -83,6 +83,5 @@ func resourceDomainDKIMRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDomainDKIMDelete(d *schema.ResourceData, meta interface{}) error {
-
 	return nil
 }

@@ -61,7 +61,7 @@ func ResourceUserGroup() *schema.Resource {
 }
 
 func resourceUserGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
+	conn := meta.(*conns.AWSClient).CognitoIDPConn()
 
 	params := &cognitoidentityprovider.CreateGroupInput{
 		GroupName:  aws.String(d.Get("name").(string)),
@@ -93,7 +93,7 @@ func resourceUserGroupCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceUserGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
+	conn := meta.(*conns.AWSClient).CognitoIDPConn()
 
 	params := &cognitoidentityprovider.GetGroupInput{
 		GroupName:  aws.String(d.Get("name").(string)),
@@ -121,7 +121,7 @@ func resourceUserGroupRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceUserGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
+	conn := meta.(*conns.AWSClient).CognitoIDPConn()
 
 	params := &cognitoidentityprovider.UpdateGroupInput{
 		GroupName:  aws.String(d.Get("name").(string)),
@@ -151,7 +151,7 @@ func resourceUserGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceUserGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
+	conn := meta.(*conns.AWSClient).CognitoIDPConn()
 
 	params := &cognitoidentityprovider.DeleteGroupInput{
 		GroupName:  aws.String(d.Get("name").(string)),

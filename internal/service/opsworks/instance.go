@@ -450,7 +450,7 @@ func resourceInstanceValidate(d *schema.ResourceData) error {
 }
 
 func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OpsWorksConn
+	conn := meta.(*conns.AWSClient).OpsWorksConn()
 
 	req := &opsworks.DescribeInstancesInput{
 		InstanceIds: []*string{
@@ -558,7 +558,7 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OpsWorksConn
+	conn := meta.(*conns.AWSClient).OpsWorksConn()
 
 	err := resourceInstanceValidate(d)
 	if err != nil {
@@ -721,7 +721,7 @@ func resourceInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OpsWorksConn
+	conn := meta.(*conns.AWSClient).OpsWorksConn()
 
 	err := resourceInstanceValidate(d)
 	if err != nil {
@@ -802,7 +802,7 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceInstanceDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OpsWorksConn
+	conn := meta.(*conns.AWSClient).OpsWorksConn()
 
 	if v, ok := d.GetOk("status"); ok && v.(string) != instanceStatusStopped {
 		err := stopInstance(d, meta, d.Timeout(schema.TimeoutDelete))
@@ -847,7 +847,7 @@ func resourceInstanceImport(
 }
 
 func startInstance(d *schema.ResourceData, meta interface{}, wait bool, timeout time.Duration) error {
-	conn := meta.(*conns.AWSClient).OpsWorksConn
+	conn := meta.(*conns.AWSClient).OpsWorksConn()
 
 	req := &opsworks.StartInstanceInput{
 		InstanceId: aws.String(d.Id()),
@@ -873,7 +873,7 @@ func startInstance(d *schema.ResourceData, meta interface{}, wait bool, timeout 
 }
 
 func stopInstance(d *schema.ResourceData, meta interface{}, timeout time.Duration) error {
-	conn := meta.(*conns.AWSClient).OpsWorksConn
+	conn := meta.(*conns.AWSClient).OpsWorksConn()
 
 	req := &opsworks.StopInstanceInput{
 		InstanceId: aws.String(d.Id()),
@@ -897,7 +897,6 @@ func stopInstance(d *schema.ResourceData, meta interface{}, timeout time.Duratio
 }
 
 func readBlockDevices(instance *opsworks.Instance) map[string]interface{} {
-
 	blockDevices := make(map[string]interface{})
 	blockDevices["ebs"] = make([]map[string]interface{}, 0)
 	blockDevices["ephemeral"] = make([]map[string]interface{}, 0)

@@ -164,7 +164,7 @@ func testAccCheckServiceSpecificCredentialExists(n string, cred *iam.ServiceSpec
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("No Server Cert ID is set")
 		}
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
 		serviceName, userName, credId, err := tfiam.DecodeServiceSpecificCredentialId(rs.Primary.ID)
 		if err != nil {
@@ -183,7 +183,7 @@ func testAccCheckServiceSpecificCredentialExists(n string, cred *iam.ServiceSpec
 }
 
 func testAccCheckServiceSpecificCredentialDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iam_service_specific_credential" {
@@ -204,7 +204,6 @@ func testAccCheckServiceSpecificCredentialDestroy(s *terraform.State) error {
 		if output != nil {
 			return fmt.Errorf("IAM Service Specific Credential (%s) still exists", rs.Primary.ID)
 		}
-
 	}
 
 	return nil

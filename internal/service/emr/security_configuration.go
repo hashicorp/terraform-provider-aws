@@ -55,7 +55,7 @@ func ResourceSecurityConfiguration() *schema.Resource {
 }
 
 func resourceSecurityConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EMRConn
+	conn := meta.(*conns.AWSClient).EMRConn()
 
 	var emrSCName string
 	if v, ok := d.GetOk("name"); ok {
@@ -82,7 +82,7 @@ func resourceSecurityConfigurationCreate(d *schema.ResourceData, meta interface{
 }
 
 func resourceSecurityConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EMRConn
+	conn := meta.(*conns.AWSClient).EMRConn()
 
 	resp, err := conn.DescribeSecurityConfiguration(&emr.DescribeSecurityConfigurationInput{
 		Name: aws.String(d.Id()),
@@ -104,7 +104,7 @@ func resourceSecurityConfigurationRead(d *schema.ResourceData, meta interface{})
 }
 
 func resourceSecurityConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EMRConn
+	conn := meta.(*conns.AWSClient).EMRConn()
 
 	_, err := conn.DeleteSecurityConfiguration(&emr.DeleteSecurityConfigurationInput{
 		Name: aws.String(d.Id()),

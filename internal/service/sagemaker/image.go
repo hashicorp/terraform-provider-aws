@@ -66,7 +66,7 @@ func ResourceImage() *schema.Resource {
 }
 
 func resourceImageCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -105,7 +105,7 @@ func resourceImageCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceImageRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -117,7 +117,6 @@ func resourceImageRead(d *schema.ResourceData, meta interface{}) error {
 			return nil
 		}
 		return fmt.Errorf("reading SageMaker Image (%s): %w", d.Id(), err)
-
 	}
 
 	arn := aws.StringValue(image.ImageArn)
@@ -148,7 +147,7 @@ func resourceImageRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceImageUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 	needsUpdate := false
 
 	input := &sagemaker.UpdateImageInput{
@@ -201,7 +200,7 @@ func resourceImageUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceImageDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	input := &sagemaker.DeleteImageInput{
 		ImageName: aws.String(d.Id()),

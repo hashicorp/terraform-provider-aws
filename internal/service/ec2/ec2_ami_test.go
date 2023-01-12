@@ -581,7 +581,7 @@ func TestAccEC2AMI_imdsSupport(t *testing.T) {
 }
 
 func testAccCheckAMIDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	for n, rs := range s.RootModule().Resources {
 		// The configuration may contain aws_ami data sources.
@@ -622,7 +622,7 @@ func testAccCheckAMIExists(n string, v *ec2.Image) resource.TestCheckFunc {
 			return fmt.Errorf("No EC2 AMI ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		output, err := tfec2.FindImageByID(conn, rs.Primary.ID)
 

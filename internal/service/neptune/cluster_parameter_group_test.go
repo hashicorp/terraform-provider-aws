@@ -280,7 +280,7 @@ func TestAccNeptuneClusterParameterGroup_tags(t *testing.T) {
 }
 
 func testAccCheckClusterParameterGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_neptune_cluster_parameter_group" {
@@ -335,7 +335,7 @@ func testAccCheckClusterParameterGroupExists(n string, v *neptune.DBClusterParam
 			return errors.New("No Neptune Cluster Parameter Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn()
 
 		opts := neptune.DescribeDBClusterParameterGroupsInput{
 			DBClusterParameterGroupName: aws.String(rs.Primary.ID),

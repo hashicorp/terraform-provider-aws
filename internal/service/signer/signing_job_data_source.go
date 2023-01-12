@@ -144,7 +144,7 @@ func DataSourceSigningJob() *schema.Resource {
 }
 
 func dataSourceSigningJobRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SignerConn
+	conn := meta.(*conns.AWSClient).SignerConn()
 	jobId := d.Get("job_id").(string)
 
 	describeSigningJobOutput, err := conn.DescribeSigningJob(&signer.DescribeSigningJobInput{

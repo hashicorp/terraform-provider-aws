@@ -1017,7 +1017,6 @@ func OriginCustomHeaderHash(v interface{}) int {
 }
 
 func ExpandCustomOriginConfig(m map[string]interface{}) *cloudfront.CustomOriginConfig {
-
 	customOrigin := &cloudfront.CustomOriginConfig{
 		OriginProtocolPolicy:   aws.String(m["origin_protocol_policy"].(string)),
 		HTTPPort:               aws.Int64(int64(m["http_port"].(int))),
@@ -1031,7 +1030,6 @@ func ExpandCustomOriginConfig(m map[string]interface{}) *cloudfront.CustomOrigin
 }
 
 func FlattenCustomOriginConfig(cor *cloudfront.CustomOriginConfig) map[string]interface{} {
-
 	customOrigin := map[string]interface{}{
 		"origin_protocol_policy":   aws.StringValue(cor.OriginProtocolPolicy),
 		"http_port":                int(aws.Int64Value(cor.HTTPPort)),

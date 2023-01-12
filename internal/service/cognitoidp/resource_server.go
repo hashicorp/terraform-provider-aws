@@ -75,7 +75,7 @@ func ResourceResourceServer() *schema.Resource {
 }
 
 func resourceResourceServerCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
+	conn := meta.(*conns.AWSClient).CognitoIDPConn()
 
 	identifier := d.Get("identifier").(string)
 	userPoolID := d.Get("user_pool_id").(string)
@@ -105,7 +105,7 @@ func resourceResourceServerCreate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceResourceServerRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
+	conn := meta.(*conns.AWSClient).CognitoIDPConn()
 
 	userPoolID, identifier, err := DecodeResourceServerID(d.Id())
 	if err != nil {
@@ -152,7 +152,6 @@ func resourceResourceServerRead(d *schema.ResourceData, meta interface{}) error 
 
 	var scopeIdentifiers []string
 	for _, elem := range scopes {
-
 		scopeIdentifier := fmt.Sprintf("%s/%s", aws.StringValue(resp.ResourceServer.Identifier), elem["scope_name"].(string))
 		scopeIdentifiers = append(scopeIdentifiers, scopeIdentifier)
 	}
@@ -163,7 +162,7 @@ func resourceResourceServerRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceResourceServerUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
+	conn := meta.(*conns.AWSClient).CognitoIDPConn()
 
 	userPoolID, identifier, err := DecodeResourceServerID(d.Id())
 	if err != nil {
@@ -188,7 +187,7 @@ func resourceResourceServerUpdate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceResourceServerDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
+	conn := meta.(*conns.AWSClient).CognitoIDPConn()
 
 	userPoolID, identifier, err := DecodeResourceServerID(d.Id())
 	if err != nil {

@@ -86,7 +86,6 @@ func TestAccRedshiftSnapshotSchedule_withMultipleDefinition(t *testing.T) {
 			},
 		},
 	})
-
 }
 
 func TestAccRedshiftSnapshotSchedule_withIdentifierPrefix(t *testing.T) {
@@ -229,7 +228,7 @@ func testAccCheckSnapshotScheduleDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn()
 		resp, err := conn.DescribeSnapshotSchedules(&redshift.DescribeSnapshotSchedulesInput{
 			ScheduleIdentifier: aws.String(rs.Primary.ID),
 		})
@@ -261,7 +260,7 @@ func testAccCheckSnapshotScheduleExists(n string, v *redshift.SnapshotSchedule) 
 			return fmt.Errorf("No Redshift Cluster Snapshot Schedule ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn()
 		resp, err := conn.DescribeSnapshotSchedules(&redshift.DescribeSnapshotSchedulesInput{
 			ScheduleIdentifier: aws.String(rs.Primary.ID),
 		})
@@ -283,7 +282,7 @@ func testAccCheckSnapshotScheduleExists(n string, v *redshift.SnapshotSchedule) 
 
 func testAccCheckSnapshotScheduleCreateSnapshotScheduleAssociation(cluster *redshift.Cluster, snapshotSchedule *redshift.SnapshotSchedule) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn()
 
 		if _, err := conn.ModifyClusterSnapshotSchedule(&redshift.ModifyClusterSnapshotScheduleInput{
 			ClusterIdentifier:    cluster.ClusterIdentifier,

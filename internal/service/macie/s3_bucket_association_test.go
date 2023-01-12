@@ -73,7 +73,7 @@ func TestAccMacieS3BucketAssociation_accountIdAndPrefix(t *testing.T) {
 }
 
 func testAccCheckS3BucketAssociationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).MacieConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).MacieConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_macie_s3_bucket_association" {
@@ -110,7 +110,7 @@ func testAccCheckS3BucketAssociationDestroy(s *terraform.State) error {
 
 func testAccCheckS3BucketAssociationExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MacieConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MacieConn()
 
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -147,7 +147,7 @@ func testAccCheckS3BucketAssociationExists(name string) resource.TestCheckFunc {
 }
 
 func testAccPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).MacieConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).MacieConn()
 
 	input := &macie.ListS3ResourcesInput{}
 

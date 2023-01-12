@@ -27,7 +27,7 @@ func TestAccFISExperimentTemplate_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, fis.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccExperimentTemplateDestroy,
+		CheckDestroy:             testAccCheckExperimentTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccExperimentTemplateConfig_basic(rName, "An experiment template for testing", "test-action-1", "", "aws:ec2:terminate-instances", "Instances", "to-terminate-1", "aws:ec2:instance", "COUNT(1)", "env", "test"),
@@ -76,7 +76,7 @@ func TestAccFISExperimentTemplate_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, fis.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccExperimentTemplateDestroy,
+		CheckDestroy:             testAccCheckExperimentTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccExperimentTemplateConfig_basic(rName, "An experiment template for testing", "test-action-1", "", "aws:ec2:terminate-instances", "Instances", "to-terminate-1", "aws:ec2:instance", "COUNT(1)", "env", "test"),
@@ -99,7 +99,7 @@ func TestAccFISExperimentTemplate_update(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, fis.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccExperimentTemplateDestroy,
+		CheckDestroy:             testAccCheckExperimentTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccExperimentTemplateConfig_basic(rName, "An experiment template for testing", "test-action-1", "", "aws:ec2:terminate-instances", "Instances", "to-terminate-1", "aws:ec2:instance", "COUNT(1)", "env", "test"),
@@ -168,7 +168,7 @@ func TestAccFISExperimentTemplate_spot(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, fis.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccExperimentTemplateDestroy,
+		CheckDestroy:             testAccCheckExperimentTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccExperimentTemplateConfig_actionParameter(rName, "Send Spot Instance Interruptions", "Send-Spot-Instance-Interruptions", "Send Spot Instance Interruptions", "aws:ec2:send-spot-instance-interruptions", "SpotInstances", "send-spot-instance-interruptions-target", "durationBeforeInterruption", "PT2M", "aws:ec2:spot-instance", "PERCENT(25)", "env", "test"),
@@ -212,7 +212,7 @@ func testAccExperimentTemplateExists(resourceName string, config *types.Experime
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FISConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FISClient()
 		out, err := conn.GetExperimentTemplate(context.Background(), &fis.GetExperimentTemplateInput{Id: aws.String(rs.Primary.ID)})
 
 		if err != nil {
@@ -229,8 +229,8 @@ func testAccExperimentTemplateExists(resourceName string, config *types.Experime
 	}
 }
 
-func testAccExperimentTemplateDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).FISConn
+func testAccCheckExperimentTemplateDestroy(s *terraform.State) error {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).FISClient()
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_fis_experiment_template" {
 			continue

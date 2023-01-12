@@ -110,7 +110,7 @@ func ResourceEndpointAccess() *schema.Resource {
 }
 
 func resourceEndpointAccessCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 
 	createOpts := redshift.CreateEndpointAccessInput{
 		EndpointName:    aws.String(d.Get("endpoint_name").(string)),
@@ -145,7 +145,7 @@ func resourceEndpointAccessCreate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceEndpointAccessRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 
 	endpoint, err := FindEndpointAccessByName(conn, d.Id())
 
@@ -175,7 +175,7 @@ func resourceEndpointAccessRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceEndpointAccessUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 
 	if d.HasChanges("vpc_security_group_ids") {
 		_, n := d.GetChange("vpc_security_group_ids")
@@ -207,7 +207,7 @@ func resourceEndpointAccessUpdate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceEndpointAccessDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 
 	_, err := conn.DeleteEndpointAccess(&redshift.DeleteEndpointAccessInput{
 		EndpointName: aws.String(d.Id()),

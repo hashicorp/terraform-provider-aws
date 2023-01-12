@@ -90,7 +90,7 @@ func ResourceDefaultNetworkACL() *schema.Resource {
 }
 
 func resourceDefaultNetworkACLCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	naclID := d.Get("default_network_acl_id").(string)
 	nacl, err := FindNetworkACLByID(conn, naclID)
@@ -130,7 +130,7 @@ func resourceDefaultNetworkACLCreate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceDefaultNetworkACLUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	// Subnets *must* belong to a Network ACL. Subnets are not "removed" from
 	// Network ACLs, instead their association is replaced. In a normal

@@ -20,10 +20,10 @@ import (
 
 func ResourceRouteCalculator() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceRouteCalculatorCreate,
-		ReadContext:   resourceRouteCalculatorRead,
-		UpdateContext: resourceRouteCalculatorUpdate,
-		DeleteContext: resourceRouteCalculatorDelete,
+		CreateWithoutTimeout: resourceRouteCalculatorCreate,
+		ReadWithoutTimeout:   resourceRouteCalculatorRead,
+		UpdateWithoutTimeout: resourceRouteCalculatorUpdate,
+		DeleteWithoutTimeout: resourceRouteCalculatorDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -73,7 +73,7 @@ func ResourceRouteCalculator() *schema.Resource {
 }
 
 func resourceRouteCalculatorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LocationConn
+	conn := meta.(*conns.AWSClient).LocationConn()
 
 	in := &locationservice.CreateRouteCalculatorInput{
 		CalculatorName: aws.String(d.Get("calculator_name").(string)),
@@ -106,7 +106,7 @@ func resourceRouteCalculatorCreate(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceRouteCalculatorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LocationConn
+	conn := meta.(*conns.AWSClient).LocationConn()
 
 	out, err := findRouteCalculatorByName(ctx, conn, d.Id())
 
@@ -148,7 +148,7 @@ func resourceRouteCalculatorRead(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceRouteCalculatorUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LocationConn
+	conn := meta.(*conns.AWSClient).LocationConn()
 
 	update := false
 
@@ -183,7 +183,7 @@ func resourceRouteCalculatorUpdate(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceRouteCalculatorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LocationConn
+	conn := meta.(*conns.AWSClient).LocationConn()
 
 	log.Printf("[INFO] Deleting Location Service Route Calculator %s", d.Id())
 

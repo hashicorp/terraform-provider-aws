@@ -132,7 +132,7 @@ func TestAccSecretsManagerSecretVersion_versionStages(t *testing.T) {
 }
 
 func testAccCheckSecretVersionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_secretsmanager_secret_version" {
@@ -177,7 +177,6 @@ func testAccCheckSecretVersionDestroy(s *terraform.State) error {
 	}
 
 	return nil
-
 }
 
 func testAccCheckSecretVersionExists(resourceName string, version *secretsmanager.GetSecretValueOutput) resource.TestCheckFunc {
@@ -192,7 +191,7 @@ func testAccCheckSecretVersionExists(resourceName string, version *secretsmanage
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerConn()
 
 		input := &secretsmanager.GetSecretValueInput{
 			SecretId:  aws.String(secretID),

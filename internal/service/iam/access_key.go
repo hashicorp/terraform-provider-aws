@@ -29,7 +29,7 @@ func ResourceAccessKey() *schema.Resource {
 			//   ValidationError: Must specify userName when calling with non-User credentials
 			// To prevent import from requiring this extra information, use GetAccessKeyLastUsed.
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-				conn := meta.(*conns.AWSClient).IAMConn
+				conn := meta.(*conns.AWSClient).IAMConn()
 
 				input := &iam.GetAccessKeyLastUsedInput{
 					AccessKeyId: aws.String(d.Id()),
@@ -99,7 +99,7 @@ func ResourceAccessKey() *schema.Resource {
 }
 
 func resourceAccessKeyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	request := &iam.CreateAccessKeyInput{
 		UserName: aws.String(d.Get("user").(string)),
@@ -180,7 +180,7 @@ func resourceAccessKeyCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAccessKeyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	username := d.Get("user").(string)
 
@@ -224,7 +224,7 @@ func resourceAccessKeyReadResult(d *schema.ResourceData, key *iam.AccessKeyMetad
 }
 
 func resourceAccessKeyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	if d.HasChange("status") {
 		if err := resourceAccessKeyStatusUpdate(conn, d); err != nil {
@@ -236,7 +236,7 @@ func resourceAccessKeyUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAccessKeyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	request := &iam.DeleteAccessKeyInput{
 		AccessKeyId: aws.String(d.Id()),

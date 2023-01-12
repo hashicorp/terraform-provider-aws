@@ -52,7 +52,7 @@ func DataSourceExport() *schema.Resource {
 }
 
 func dataSourceExportRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
 
 	apiId := d.Get("api_id").(string)
 

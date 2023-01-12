@@ -143,7 +143,7 @@ func DataSourceOrganization() *schema.Resource {
 }
 
 func dataSourceOrganizationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OrganizationsConn
+	conn := meta.(*conns.AWSClient).OrganizationsConn()
 
 	org, err := conn.DescribeOrganization(&organizations.DescribeOrganizationInput{})
 	if err != nil {
@@ -225,7 +225,6 @@ func dataSourceOrganizationRead(d *schema.ResourceData, meta interface{}) error 
 		if err := d.Set("roots", FlattenRoots(roots)); err != nil {
 			return fmt.Errorf("error setting roots: %w", err)
 		}
-
 	}
 	return nil
 }

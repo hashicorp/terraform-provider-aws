@@ -115,7 +115,7 @@ func testAccCheckDeliveryChannelExists(n string, obj *configservice.DeliveryChan
 			return fmt.Errorf("No delivery channel ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn()
 		out, err := conn.DescribeDeliveryChannels(&configservice.DescribeDeliveryChannelsInput{
 			DeliveryChannelNames: []*string{aws.String(rs.Primary.Attributes["name"])},
 		})
@@ -134,7 +134,7 @@ func testAccCheckDeliveryChannelExists(n string, obj *configservice.DeliveryChan
 }
 
 func testAccCheckDeliveryChannelDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_config_delivery_channel" {

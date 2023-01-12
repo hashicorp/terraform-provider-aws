@@ -69,7 +69,7 @@ func ResourceAnalyzer() *schema.Resource {
 }
 
 func resourceAnalyzerCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AccessAnalyzerConn
+	conn := meta.(*conns.AWSClient).AccessAnalyzerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 	analyzerName := d.Get("analyzer_name").(string)
@@ -110,7 +110,7 @@ func resourceAnalyzerCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAnalyzerRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AccessAnalyzerConn
+	conn := meta.(*conns.AWSClient).AccessAnalyzerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -154,7 +154,7 @@ func resourceAnalyzerRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAnalyzerUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AccessAnalyzerConn
+	conn := meta.(*conns.AWSClient).AccessAnalyzerConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -167,7 +167,7 @@ func resourceAnalyzerUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAnalyzerDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AccessAnalyzerConn
+	conn := meta.(*conns.AWSClient).AccessAnalyzerConn()
 
 	log.Printf("[DEBUG] Deleting Access Analyzer Analyzer: (%s)", d.Id())
 	_, err := conn.DeleteAnalyzer(&accessanalyzer.DeleteAnalyzerInput{

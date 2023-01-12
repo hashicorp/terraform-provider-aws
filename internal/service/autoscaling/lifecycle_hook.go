@@ -66,7 +66,7 @@ func ResourceLifecycleHook() *schema.Resource {
 }
 
 func resourceLifecycleHookPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AutoScalingConn
+	conn := meta.(*conns.AWSClient).AutoScalingConn()
 
 	input := getPutLifecycleHookInput(d)
 	name := d.Get("name").(string)
@@ -88,7 +88,7 @@ func resourceLifecycleHookPut(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceLifecycleHookRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AutoScalingConn
+	conn := meta.(*conns.AWSClient).AutoScalingConn()
 
 	p, err := FindLifecycleHook(conn, d.Get("autoscaling_group_name").(string), d.Id())
 
@@ -114,7 +114,7 @@ func resourceLifecycleHookRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceLifecycleHookDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AutoScalingConn
+	conn := meta.(*conns.AWSClient).AutoScalingConn()
 
 	log.Printf("[INFO] Deleting Auto Scaling Lifecycle Hook: %s", d.Id())
 	_, err := conn.DeleteLifecycleHook(&autoscaling.DeleteLifecycleHookInput{

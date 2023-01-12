@@ -86,7 +86,7 @@ func ResourceDeviceFleet() *schema.Resource {
 }
 
 func resourceDeviceFleetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -122,7 +122,7 @@ func resourceDeviceFleetCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDeviceFleetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -172,7 +172,7 @@ func resourceDeviceFleetRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDeviceFleetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &sagemaker.UpdateDeviceFleetInput{
@@ -205,7 +205,7 @@ func resourceDeviceFleetUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDeviceFleetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	input := &sagemaker.DeleteDeviceFleetInput{
 		DeviceFleetName: aws.String(d.Id()),

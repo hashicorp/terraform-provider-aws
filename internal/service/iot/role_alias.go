@@ -45,7 +45,7 @@ func ResourceRoleAlias() *schema.Resource {
 }
 
 func resourceRoleAliasCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
+	conn := meta.(*conns.AWSClient).IoTConn()
 
 	roleAlias := d.Get("alias").(string)
 	roleArn := d.Get("role_arn").(string)
@@ -66,7 +66,6 @@ func resourceRoleAliasCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func GetRoleAliasDescription(conn *iot.IoT, alias string) (*iot.RoleAliasDescription, error) {
-
 	roleAliasDescriptionOutput, err := conn.DescribeRoleAlias(&iot.DescribeRoleAliasInput{
 		RoleAlias: aws.String(alias),
 	})
@@ -83,7 +82,7 @@ func GetRoleAliasDescription(conn *iot.IoT, alias string) (*iot.RoleAliasDescrip
 }
 
 func resourceRoleAliasRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
+	conn := meta.(*conns.AWSClient).IoTConn()
 
 	var roleAliasDescription *iot.RoleAliasDescription
 
@@ -108,7 +107,7 @@ func resourceRoleAliasRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceRoleAliasDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
+	conn := meta.(*conns.AWSClient).IoTConn()
 
 	alias := d.Get("alias").(string)
 
@@ -124,7 +123,7 @@ func resourceRoleAliasDelete(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceRoleAliasUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
+	conn := meta.(*conns.AWSClient).IoTConn()
 
 	if d.HasChange("credential_duration") {
 		roleAliasInput := &iot.UpdateRoleAliasInput{

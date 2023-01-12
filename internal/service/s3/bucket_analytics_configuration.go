@@ -128,7 +128,7 @@ func ResourceBucketAnalyticsConfiguration() *schema.Resource {
 var filterAtLeastOneOfKeys = []string{"filter.0.prefix", "filter.0.tags"}
 
 func resourceBucketAnalyticsConfigurationPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket := d.Get("bucket").(string)
 	name := d.Get("name").(string)
@@ -174,7 +174,7 @@ func resourceBucketAnalyticsConfigurationPut(d *schema.ResourceData, meta interf
 }
 
 func resourceBucketAnalyticsConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket, name, err := BucketAnalyticsConfigurationParseID(d.Id())
 	if err != nil {
@@ -224,7 +224,7 @@ func resourceBucketAnalyticsConfigurationRead(d *schema.ResourceData, meta inter
 }
 
 func resourceBucketAnalyticsConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket, name, err := BucketAnalyticsConfigurationParseID(d.Id())
 	if err != nil {

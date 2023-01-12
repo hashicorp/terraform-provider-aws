@@ -5,6 +5,8 @@ import (
 )
 
 func TestValidateKMSKeyARN(t *testing.T) {
+	t.Parallel()
+
 	testcases := map[string]struct {
 		in    any
 		valid bool
@@ -32,7 +34,10 @@ func TestValidateKMSKeyARN(t *testing.T) {
 	}
 
 	for name, testcase := range testcases {
+		testcase := testcase
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			aWs, aEs := validateKMSKeyARN(testcase.in, "field")
 			if len(aWs) != 0 {
 				t.Errorf("expected no warnings, got %v", aWs)

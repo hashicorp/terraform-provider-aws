@@ -176,7 +176,7 @@ func TestAccLocationGeofenceCollection_tags(t *testing.T) {
 }
 
 func testAccCheckGeofenceCollectionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).LocationConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).LocationConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_location_geofence_collection" {
@@ -212,7 +212,7 @@ func testAccCheckGeofenceCollectionExists(name string) resource.TestCheckFunc {
 			return create.Error(names.Location, create.ErrActionCheckingExistence, tflocation.ResNameGeofenceCollection, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LocationConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LocationConn()
 		_, err := conn.DescribeGeofenceCollection(&locationservice.DescribeGeofenceCollectionInput{
 			CollectionName: aws.String(rs.Primary.ID),
 		})

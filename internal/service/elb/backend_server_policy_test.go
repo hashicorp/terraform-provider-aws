@@ -17,11 +17,11 @@ import (
 )
 
 func TestAccELBBackendServerPolicy_basic(t *testing.T) {
-	privateKey1 := acctest.TLSRSAPrivateKeyPEM(2048)
-	privateKey2 := acctest.TLSRSAPrivateKeyPEM(2048)
-	publicKey1 := acctest.TLSRSAPublicKeyPEM(privateKey1)
-	publicKey2 := acctest.TLSRSAPublicKeyPEM(privateKey2)
-	certificate1 := acctest.TLSRSAX509SelfSignedCertificatePEM(privateKey1, "example.com")
+	privateKey1 := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	privateKey2 := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	publicKey1 := acctest.TLSRSAPublicKeyPEM(t, privateKey1)
+	publicKey2 := acctest.TLSRSAPublicKeyPEM(t, privateKey2)
+	certificate1 := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKey1, "example.com")
 	rString := sdkacctest.RandString(8)
 	lbName := fmt.Sprintf("tf-acc-lb-bsp-basic-%s", rString)
 
@@ -68,7 +68,7 @@ func policyInBackendServerPolicies(str string, list []string) bool {
 }
 
 func testAccCheckBackendServerPolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn()
 
 	for _, rs := range s.RootModule().Resources {
 		switch {
@@ -121,7 +121,7 @@ func testAccCheckBackendServerPolicyDestroy(s *terraform.State) error {
 
 func testAccCheckBackendServerPolicyState(loadBalancerName string, loadBalancerBackendAuthPolicyName string, assigned bool) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn()
 
 		loadBalancerDescription, err := conn.DescribeLoadBalancers(&elb.DescribeLoadBalancersInput{
 			LoadBalancerNames: []*string{aws.String(loadBalancerName)},

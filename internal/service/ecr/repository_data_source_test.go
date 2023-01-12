@@ -66,7 +66,6 @@ func TestAccECRRepositoryDataSource_encryption(t *testing.T) {
 }
 
 func TestAccECRRepositoryDataSource_nonExistent(t *testing.T) {
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ecr.EndpointsID),

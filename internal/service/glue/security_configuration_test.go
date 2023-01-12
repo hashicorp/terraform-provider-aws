@@ -190,7 +190,7 @@ func testAccCheckSecurityConfigurationExists(resourceName string, securityConfig
 			return fmt.Errorf("No Glue Security Configuration ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
 
 		output, err := conn.GetSecurityConfiguration(&glue.GetSecurityConfigurationInput{
 			Name: aws.String(rs.Primary.ID),
@@ -218,7 +218,7 @@ func testAccCheckSecurityConfigurationDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
 
 		output, err := conn.GetSecurityConfiguration(&glue.GetSecurityConfigurationInput{
 			Name: aws.String(rs.Primary.ID),

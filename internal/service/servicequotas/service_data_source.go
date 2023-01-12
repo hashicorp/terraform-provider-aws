@@ -27,7 +27,7 @@ func DataSourceService() *schema.Resource {
 }
 
 func dataSourceServiceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceQuotasConn
+	conn := meta.(*conns.AWSClient).ServiceQuotasConn()
 
 	serviceName := d.Get("service_name").(string)
 

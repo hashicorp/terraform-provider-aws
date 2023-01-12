@@ -8,6 +8,8 @@ import (
 )
 
 func TestFlattenThrottleSettings(t *testing.T) {
+	t.Parallel()
+
 	expectedBurstLimit := int64(140)
 	expectedRateLimit := 120.0
 

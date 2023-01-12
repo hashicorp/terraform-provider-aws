@@ -60,7 +60,7 @@ func TestAccELBAttachment_drift(t *testing.T) {
 	resourceName := "aws_elb.test"
 
 	testAccAttachmentConfig_deregInstance := func() {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn()
 
 		deRegisterInstancesOpts := elb.DeregisterInstancesFromLoadBalancerInput{
 			LoadBalancerName: conf.LoadBalancerName,
@@ -73,7 +73,6 @@ func TestAccELBAttachment_drift(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failure deregistering instances from ELB: %s", err)
 		}
-
 	}
 
 	resource.ParallelTest(t, resource.TestCase{

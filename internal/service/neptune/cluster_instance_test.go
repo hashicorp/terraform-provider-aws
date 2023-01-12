@@ -208,7 +208,7 @@ func testAccCheckClusterInstanceExists(n string, v *neptune.DBInstance) resource
 			return fmt.Errorf("No Neptune Instance ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn()
 		resp, err := conn.DescribeDBInstances(&neptune.DescribeDBInstancesInput{
 			DBInstanceIdentifier: aws.String(rs.Primary.ID),
 		})

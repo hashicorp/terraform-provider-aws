@@ -96,7 +96,7 @@ func DataSourceResources() *schema.Resource {
 }
 
 func dataSourceResourcesRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ResourceGroupsTaggingAPIConn
+	conn := meta.(*conns.AWSClient).ResourceGroupsTaggingAPIConn()
 
 	input := &resourcegroupstaggingapi.GetResourcesInput{}
 

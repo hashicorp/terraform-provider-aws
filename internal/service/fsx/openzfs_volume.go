@@ -186,7 +186,7 @@ func ResourceOpenzfsVolume() *schema.Resource {
 }
 
 func resourceOepnzfsVolumeCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FSxConn
+	conn := meta.(*conns.AWSClient).FSxConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -265,7 +265,7 @@ func resourceOepnzfsVolumeCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceOpenzfsVolumeRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FSxConn
+	conn := meta.(*conns.AWSClient).FSxConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -335,7 +335,7 @@ func resourceOpenzfsVolumeRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceOpenzfsVolumeUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FSxConn
+	conn := meta.(*conns.AWSClient).FSxConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -393,14 +393,13 @@ func resourceOpenzfsVolumeUpdate(d *schema.ResourceData, meta interface{}) error
 		if _, err := waitVolumeUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return fmt.Errorf("error waiting for FSx OpenZFS Volume (%s) update: %w", d.Id(), err)
 		}
-
 	}
 
 	return resourceOpenzfsVolumeRead(d, meta)
 }
 
 func resourceOpenzfsVolumeDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FSxConn
+	conn := meta.(*conns.AWSClient).FSxConn()
 
 	log.Printf("[DEBUG] Deleting FSx OpenZFS Volume: %s", d.Id())
 	_, err := conn.DeleteVolume(&fsx.DeleteVolumeInput{
@@ -433,7 +432,6 @@ func expandOpenzfsVolumeUserAndGroupQuotas(cfg []interface{}) []*fsx.OpenZFSUser
 	}
 
 	return quotas
-
 }
 
 func expandOpenzfsVolumeUserAndGroupQuota(conf map[string]interface{}) *fsx.OpenZFSUserOrGroupQuota {
@@ -456,7 +454,6 @@ func expandOpenzfsVolumeUserAndGroupQuota(conf map[string]interface{}) *fsx.Open
 	}
 
 	return &out
-
 }
 
 func expandOpenzfsVolumeNFSExports(cfg []interface{}) []*fsx.OpenZFSNfsExport {
@@ -470,7 +467,6 @@ func expandOpenzfsVolumeNFSExports(cfg []interface{}) []*fsx.OpenZFSNfsExport {
 	}
 
 	return exports
-
 }
 
 func expandOpenzfsVolumeNFSExport(cfg map[string]interface{}) *fsx.OpenZFSNfsExport {
@@ -494,7 +490,6 @@ func expandOpenzfsVolumeClinetConfigurations(cfg []interface{}) []*fsx.OpenZFSCl
 	}
 
 	return configurations
-
 }
 
 func expandOpenzfsVolumeClientConfiguration(conf map[string]interface{}) *fsx.OpenZFSClientConfiguration {

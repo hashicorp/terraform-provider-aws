@@ -39,7 +39,6 @@ func TestAccSignerSigningJob_basic(t *testing.T) {
 			},
 		},
 	})
-
 }
 
 func testAccSigningJobConfig_basic(rName string) string {
@@ -107,7 +106,7 @@ func testAccCheckSigningJobExists(res string, job *signer.DescribeSigningJobOutp
 			return fmt.Errorf("Signing job with that ID does not exist")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SignerConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SignerConn()
 
 		params := &signer.DescribeSigningJobInput{
 			JobId: aws.String(rs.Primary.ID),

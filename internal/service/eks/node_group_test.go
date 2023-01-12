@@ -18,7 +18,6 @@ import (
 
 func init() {
 	acctest.RegisterServiceErrorCheckFunc(eks.EndpointsID, testAccErrorCheckSkip)
-
 }
 
 func TestAccEKSNodeGroup_basic(t *testing.T) {
@@ -977,7 +976,7 @@ func testAccCheckNodeGroupExists(resourceName string, nodeGroup *eks.Nodegroup) 
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn()
 
 		output, err := tfeks.FindNodegroupByClusterNameAndNodegroupName(conn, clusterName, nodeGroupName)
 
@@ -992,7 +991,7 @@ func testAccCheckNodeGroupExists(resourceName string, nodeGroup *eks.Nodegroup) 
 }
 
 func testAccCheckNodeGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_eks_node_group" {

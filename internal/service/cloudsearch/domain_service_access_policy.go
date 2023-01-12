@@ -34,10 +34,11 @@ func ResourceDomainServiceAccessPolicy() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"access_policy": {
-				Type:             schema.TypeString,
-				Required:         true,
-				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
-				ValidateFunc:     validation.StringIsJSON,
+				Type:                  schema.TypeString,
+				Required:              true,
+				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+				DiffSuppressOnRefresh: true,
+				ValidateFunc:          validation.StringIsJSON,
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
@@ -52,7 +53,7 @@ func ResourceDomainServiceAccessPolicy() *schema.Resource {
 }
 
 func resourceDomainServiceAccessPolicyPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudSearchConn
+	conn := meta.(*conns.AWSClient).CloudSearchConn()
 
 	domainName := d.Get("domain_name").(string)
 	input := &cloudsearch.UpdateServiceAccessPoliciesInput{
@@ -87,7 +88,7 @@ func resourceDomainServiceAccessPolicyPut(d *schema.ResourceData, meta interface
 }
 
 func resourceDomainServiceAccessPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudSearchConn
+	conn := meta.(*conns.AWSClient).CloudSearchConn()
 
 	accessPolicy, err := FindAccessPolicyByName(conn, d.Id())
 
@@ -114,7 +115,7 @@ func resourceDomainServiceAccessPolicyRead(d *schema.ResourceData, meta interfac
 }
 
 func resourceDomainServiceAccessPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudSearchConn
+	conn := meta.(*conns.AWSClient).CloudSearchConn()
 
 	input := &cloudsearch.UpdateServiceAccessPoliciesInput{
 		AccessPolicies: aws.String(""),

@@ -18,6 +18,8 @@ import (
 )
 
 func TestAccVPCDefaultVPCAndSubnet_serial(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]map[string]func(t *testing.T){
 		"VPC": {
 			"existing.basic":                        testAccDefaultVPC_Existing_basic,
@@ -37,17 +39,7 @@ func TestAccVPCDefaultVPCAndSubnet_serial(t *testing.T) {
 		},
 	}
 
-	for group, m := range testCases {
-		m := m
-		t.Run(group, func(t *testing.T) {
-			for name, tc := range m {
-				tc := tc
-				t.Run(name, func(t *testing.T) {
-					tc(t)
-				})
-			}
-		})
-	}
+	acctest.RunSerialTests2Levels(t, testCases, 0)
 }
 
 func testAccPreCheckDefaultVPCExists(t *testing.T) {
@@ -327,7 +319,7 @@ func testAccDefaultVPC_NotFound_forceDestroy(t *testing.T) {
 // testAccCheckDefaultVPCDestroyExists runs after all resources are destroyed.
 // It verifies that the default VPC still exists.
 func testAccCheckDefaultVPCDestroyExists(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_default_vpc" {
@@ -348,7 +340,7 @@ func testAccCheckDefaultVPCDestroyExists(s *terraform.State) error {
 // It verifies that the default VPC does not exist.
 // A new default VPC is then created.
 func testAccCheckDefaultVPCDestroyNotFound(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_default_vpc" {
@@ -386,7 +378,7 @@ func testAccCheckDefaultVPCEmpty(v *ec2.Vpc) resource.TestCheckFunc {
 
 // testAccEmptyDefaultVPC empties a default VPC so that it can be deleted.
 func testAccEmptyDefaultVPC(vpcID string) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	// Delete the default IGW.
 	igw, err := tfec2.FindInternetGateway(conn, &ec2.DescribeInternetGatewaysInput{

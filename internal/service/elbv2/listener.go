@@ -383,7 +383,7 @@ func suppressIfDefaultActionTypeNot(t string) schema.SchemaDiffSuppressFunc {
 }
 
 func resourceListenerCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBV2Conn
+	conn := meta.(*conns.AWSClient).ELBV2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -474,7 +474,10 @@ func resourceListenerCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceListenerRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBV2Conn
+	const (
+		loadBalancerListenerReadTimeout = 2 * time.Minute
+	)
+	conn := meta.(*conns.AWSClient).ELBV2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -566,7 +569,10 @@ func resourceListenerRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceListenerUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBV2Conn
+	const (
+		loadBalancerListenerUpdateTimeout = 5 * time.Minute
+	)
+	conn := meta.(*conns.AWSClient).ELBV2Conn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		params := &elbv2.ModifyListenerInput{
@@ -665,7 +671,7 @@ func resourceListenerUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceListenerDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBV2Conn
+	conn := meta.(*conns.AWSClient).ELBV2Conn()
 
 	_, err := conn.DeleteListener(&elbv2.DeleteListenerInput{
 		ListenerArn: aws.String(d.Id()),
@@ -678,6 +684,9 @@ func resourceListenerDelete(d *schema.ResourceData, meta interface{}) error {
 }
 
 func retryListenerCreate(conn *elbv2.ELBV2, params *elbv2.CreateListenerInput) (*elbv2.CreateListenerOutput, error) {
+	const (
+		loadBalancerListenerCreateTimeout = 5 * time.Minute
+	)
 	var output *elbv2.CreateListenerOutput
 
 	err := resource.Retry(loadBalancerListenerCreateTimeout, func() *resource.RetryError {
@@ -929,7 +938,6 @@ func expandLbListenerActionForwardConfigTargetGroups(l []interface{}) []*elbv2.T
 		tfMap, ok := tfMapRaw.(map[string]interface{})
 		if !ok {
 			continue
-
 		}
 
 		group := &elbv2.TargetGroupTuple{

@@ -109,7 +109,7 @@ func testAccCheckPipelineDefinitionExists(resourceName string, datapipelineOutpu
 			return fmt.Errorf("not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataPipelineConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DataPipelineConn()
 		resp, err := conn.GetPipelineDefinitionWithContext(context.Background(), &datapipeline.GetPipelineDefinitionInput{PipelineId: aws.String(rs.Primary.ID)})
 		if err != nil {
 			return fmt.Errorf("problem checking for DataPipeline Pipeline Definition existence: %w", err)
@@ -126,7 +126,7 @@ func testAccCheckPipelineDefinitionExists(resourceName string, datapipelineOutpu
 }
 
 func testAccCheckPipelineDefinitionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DataPipelineConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DataPipelineConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_datapipeline_pipeline_definition" {

@@ -142,7 +142,6 @@ func TestAccEC2EBSSnapshotCopy_withRegions(t *testing.T) {
 			},
 		},
 	})
-
 }
 
 func TestAccEC2EBSSnapshotCopy_withKMS(t *testing.T) {

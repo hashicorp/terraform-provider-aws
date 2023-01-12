@@ -42,7 +42,7 @@ func ResourceConfigurationRecorderStatus() *schema.Resource {
 }
 
 func resourceConfigurationRecorderStatusPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigServiceConn
+	conn := meta.(*conns.AWSClient).ConfigServiceConn()
 
 	name := d.Get("name").(string)
 	d.SetId(name)
@@ -74,7 +74,7 @@ func resourceConfigurationRecorderStatusPut(d *schema.ResourceData, meta interfa
 }
 
 func resourceConfigurationRecorderStatusRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigServiceConn
+	conn := meta.(*conns.AWSClient).ConfigServiceConn()
 
 	name := d.Id()
 	statusInput := configservice.DescribeConfigurationRecorderStatusInput{
@@ -113,7 +113,7 @@ func resourceConfigurationRecorderStatusRead(d *schema.ResourceData, meta interf
 }
 
 func resourceConfigurationRecorderStatusDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigServiceConn
+	conn := meta.(*conns.AWSClient).ConfigServiceConn()
 	input := configservice.StopConfigurationRecorderInput{
 		ConfigurationRecorderName: aws.String(d.Get("name").(string)),
 	}

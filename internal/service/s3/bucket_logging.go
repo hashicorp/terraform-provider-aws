@@ -19,10 +19,10 @@ import (
 
 func ResourceBucketLogging() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceBucketLoggingCreate,
-		ReadContext:   resourceBucketLoggingRead,
-		UpdateContext: resourceBucketLoggingUpdate,
-		DeleteContext: resourceBucketLoggingDelete,
+		CreateWithoutTimeout: resourceBucketLoggingCreate,
+		ReadWithoutTimeout:   resourceBucketLoggingRead,
+		UpdateWithoutTimeout: resourceBucketLoggingUpdate,
+		DeleteWithoutTimeout: resourceBucketLoggingDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -96,7 +96,7 @@ func ResourceBucketLogging() *schema.Resource {
 }
 
 func resourceBucketLoggingCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket := d.Get("bucket").(string)
 	expectedBucketOwner := d.Get("expected_bucket_owner").(string)
@@ -135,7 +135,7 @@ func resourceBucketLoggingCreate(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceBucketLoggingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
@@ -190,7 +190,7 @@ func resourceBucketLoggingRead(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceBucketLoggingUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
@@ -229,7 +229,7 @@ func resourceBucketLoggingUpdate(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceBucketLoggingDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
@@ -278,7 +278,6 @@ func expandBucketLoggingTargetGrants(l []interface{}) []*s3.TargetGrant {
 		}
 
 		grants = append(grants, grant)
-
 	}
 
 	return grants
