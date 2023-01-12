@@ -106,11 +106,11 @@ func resourceBucketPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		create.Error(names.S3, create.ErrActionReading, "Bucket Policy", d.Id(), err)
+		return create.Error(names.S3, create.ErrActionReading, "Bucket Policy", d.Id(), err)
 	}
 
 	if pol.Policy == nil {
-		create.Error(names.S3, create.ErrActionReading, "Bucket Policy", d.Id(), errors.New("empty policy returned"))
+		return create.Error(names.S3, create.ErrActionReading, "Bucket Policy", d.Id(), errors.New("empty policy returned"))
 	}
 
 	policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.StringValue(pol.Policy))
