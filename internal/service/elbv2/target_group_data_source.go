@@ -150,8 +150,6 @@ func dataSourceTargetGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ELBV2Conn
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	tagsToMatch := tftags.New(d.Get("tags").(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-	
 	input := &elbv2.DescribeTargetGroupsInput{}
 
 	if v, ok := d.GetOk("arn"); ok {
@@ -175,32 +173,6 @@ func dataSourceTargetGroupRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return fmt.Errorf("error retrieving LB Target Group: %w", err)
 	}
-
-	if len(tagsToMatch) > 0 {
-		var targetGroups []*elbv2.TargetGroup
-
-		for _, targetGroup := range results {
-			arn := aws.StringValue(targetGroup.TargetGroupArn)
-			tags, err := ListTags(conn, arn)
-
-			if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeTargetGroupNotFoundException) {
-				continue
-			}
-
-			if err != nil {
-				return fmt.Errorf("error listing tags for (%s): %w", arn, err)
-			}
-
-			if !tags.ContainsAll(tagsToMatch) {
-				continue
-			}
-
-			targetGroups = append(targetGroups, targetGroup)
-		}
-
-		results = targetGroups
-	}
-
 	if len(results) != 1 {
 		return fmt.Errorf("Search returned %d results, please revise so only one is returned", len(results))
 	}
