@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/scheduler"
 	"github.com/aws/aws-sdk-go-v2/service/scheduler/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -183,7 +182,7 @@ func TestAccSchedulerSchedule_basic(t *testing.T) {
 	}
 
 	var schedule scheduler.GetScheduleOutput
-	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -241,7 +240,7 @@ func TestAccSchedulerSchedule_disappears(t *testing.T) {
 	}
 
 	var schedule scheduler.GetScheduleOutput
-	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -272,7 +271,7 @@ func TestAccSchedulerSchedule_description(t *testing.T) {
 	}
 
 	var schedule scheduler.GetScheduleOutput
-	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -331,7 +330,7 @@ func TestAccSchedulerSchedule_endDate(t *testing.T) {
 	}
 
 	var schedule scheduler.GetScheduleOutput
-	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -390,7 +389,7 @@ func TestAccSchedulerSchedule_flexibleTimeWindow(t *testing.T) {
 	}
 
 	var schedule scheduler.GetScheduleOutput
-	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -452,7 +451,7 @@ func TestAccSchedulerSchedule_groupName(t *testing.T) {
 	}
 
 	var schedule scheduler.GetScheduleOutput
-	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -487,7 +486,7 @@ func TestAccSchedulerSchedule_kmsKeyARN(t *testing.T) {
 	}
 
 	var schedule scheduler.GetScheduleOutput
-	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -616,7 +615,7 @@ func TestAccSchedulerSchedule_scheduleExpression(t *testing.T) {
 	}
 
 	var schedule scheduler.GetScheduleOutput
-	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -663,7 +662,7 @@ func TestAccSchedulerSchedule_scheduleExpressionTimezone(t *testing.T) {
 	}
 
 	var schedule scheduler.GetScheduleOutput
-	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -722,7 +721,7 @@ func TestAccSchedulerSchedule_startDate(t *testing.T) {
 	}
 
 	var schedule scheduler.GetScheduleOutput
-	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -781,7 +780,7 @@ func TestAccSchedulerSchedule_state(t *testing.T) {
 	}
 
 	var schedule scheduler.GetScheduleOutput
-	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -840,7 +839,7 @@ func TestAccSchedulerSchedule_targetARN(t *testing.T) {
 	}
 
 	var schedule scheduler.GetScheduleOutput
-	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -887,7 +886,7 @@ func TestAccSchedulerSchedule_targetDeadLetterConfig(t *testing.T) {
 	}
 
 	var schedule scheduler.GetScheduleOutput
-	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -946,7 +945,7 @@ func TestAccSchedulerSchedule_targetECSParameters(t *testing.T) {
 	}
 
 	var schedule scheduler.GetScheduleOutput
-	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1120,8 +1119,8 @@ func TestAccSchedulerSchedule_targetEventBridgeParameters(t *testing.T) {
 	}
 
 	var schedule scheduler.GetScheduleOutput
-	scheduleName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	eventBusName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	scheduleName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	eventBusName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1182,7 +1181,7 @@ func TestAccSchedulerSchedule_targetInput(t *testing.T) {
 	}
 
 	var schedule scheduler.GetScheduleOutput
-	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
 	var queueUrl string
 
@@ -1246,8 +1245,8 @@ func TestAccSchedulerSchedule_targetKinesisParameters(t *testing.T) {
 	}
 
 	var schedule scheduler.GetScheduleOutput
-	scheduleName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	streamName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	scheduleName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	streamName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1306,7 +1305,7 @@ func TestAccSchedulerSchedule_targetRetryPolicy(t *testing.T) {
 	}
 
 	var schedule scheduler.GetScheduleOutput
-	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1368,7 +1367,7 @@ func TestAccSchedulerSchedule_targetRoleARN(t *testing.T) {
 	}
 
 	var schedule scheduler.GetScheduleOutput
-	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1415,7 +1414,7 @@ func TestAccSchedulerSchedule_targetSageMakerPipelineParameters(t *testing.T) {
 	}
 
 	var schedule scheduler.GetScheduleOutput
-	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1510,7 +1509,7 @@ func TestAccSchedulerSchedule_targetSQSParameters(t *testing.T) {
 	}
 
 	var schedule scheduler.GetScheduleOutput
-	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
