@@ -155,13 +155,13 @@ func resourceLocationFSxWindowsFileSystemRead(d *schema.ResourceData, meta inter
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading DataSync Location Fsx Windows (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading DataSync Location Fsx Windows (%s): %w", d.Id(), err)
 	}
 
 	subdirectory, err := SubdirectoryFromLocationURI(aws.StringValue(output.LocationUri))
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading DataSync Location Fsx Windows (%s): %w", d.Id(), err)
 	}
 
 	d.Set("arn", output.LocationArn)

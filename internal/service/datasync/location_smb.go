@@ -164,13 +164,13 @@ func resourceLocationSMBRead(d *schema.ResourceData, meta interface{}) error {
 	tagsOutput, err := conn.ListTagsForResource(tagsInput)
 
 	if err != nil {
-		return fmt.Errorf("error reading DataSync Location SMB (%s) tags: %w", d.Id(), err)
+		return fmt.Errorf("reading DataSync Location SMB (%s) tags: %w", d.Id(), err)
 	}
 
 	subdirectory, err := SubdirectoryFromLocationURI(aws.StringValue(output.LocationUri))
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading DataSync Location SMB (%s) tags: %w", d.Id(), err)
 	}
 
 	d.Set("agent_arns", flex.FlattenStringSet(output.AgentArns))
