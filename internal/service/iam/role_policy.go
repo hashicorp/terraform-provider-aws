@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -41,7 +42,7 @@ func ResourceRolePolicy() *schema.Resource {
 				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
 				DiffSuppressOnRefresh: true,
 				StateFunc: func(v interface{}) string {
-					json, _ := verify.LegacyPolicyNormalize(v)
+					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
 			},
@@ -73,7 +74,7 @@ func ResourceRolePolicy() *schema.Resource {
 func resourceRolePolicyPut(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn()
 
-	policy, err := verify.LegacyPolicyNormalize(d.Get("policy").(string))
+	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
 	if err != nil {
 		return fmt.Errorf("policy (%s) is invalid JSON: %w", policy, err)
 	}
@@ -155,7 +156,7 @@ func resourceRolePolicyRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	policyToSet, err := verify.LegacyPolicyToSet(d.Get("policy").(string), policy)
+	policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), policy)
 	if err != nil {
 		return fmt.Errorf("while setting policy (%s), encountered: %w", policyToSet, err)
 	}
