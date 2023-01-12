@@ -127,7 +127,7 @@ func TestAccELBV2TargetGroup_backwardsCompatibility(t *testing.T) {
 }
 
 func TestAccELBV2TargetGroup_ProtocolVersion_basic(t *testing.T) {
-	var conf elbv2.TargetGroup
+	var before, after elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_target_group.test"
 
@@ -138,9 +138,9 @@ func TestAccELBV2TargetGroup_ProtocolVersion_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTargetGroupConfig_protocolVersion(rName),
+				Config: testAccTargetGroupConfig_protocolVersion(rName, "HTTP2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &conf),
+					testAccCheckTargetGroupExists(resourceName, &before),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "port", "443"),
@@ -165,6 +165,14 @@ func TestAccELBV2TargetGroup_ProtocolVersion_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.matcher", "200-299"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
+				),
+			},
+			{
+				Config: testAccTargetGroupConfig_protocolVersion(rName, "HTTP1"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupExists(resourceName, &after),
+					testAccCheckTargetGroupRecreated(&after, &before),
+					resource.TestCheckResourceAttr(resourceName, "protocol_version", "HTTP1"),
 				),
 			},
 		},
@@ -473,6 +481,7 @@ func TestAccELBV2TargetGroup_ForceNew_name(t *testing.T) {
 				Config: testAccTargetGroupConfig_basic(rNameAfter, 200),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(resourceName, &after),
+					testAccCheckTargetGroupRecreated(&after, &before),
 					resource.TestCheckResourceAttr(resourceName, "name", rNameAfter),
 				),
 			},
@@ -502,6 +511,7 @@ func TestAccELBV2TargetGroup_ForceNew_port(t *testing.T) {
 				Config: testAccTargetGroupConfig_updatedPort(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(resourceName, &after),
+					testAccCheckTargetGroupRecreated(&after, &before),
 					resource.TestCheckResourceAttr(resourceName, "port", "442"),
 				),
 			},
@@ -531,6 +541,7 @@ func TestAccELBV2TargetGroup_ForceNew_protocol(t *testing.T) {
 				Config: testAccTargetGroupConfig_updatedProtocol(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(resourceName, &after),
+					testAccCheckTargetGroupRecreated(&after, &before),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTP"),
 				),
 			},
@@ -558,6 +569,7 @@ func TestAccELBV2TargetGroup_ForceNew_vpc(t *testing.T) {
 			{
 				Config: testAccTargetGroupConfig_updatedVPC(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupRecreated(&after, &before),
 					testAccCheckTargetGroupExists(resourceName, &after),
 				),
 			},
@@ -2440,13 +2452,13 @@ resource "aws_vpc" "test" {
 `, rName)
 }
 
-func testAccTargetGroupConfig_protocolVersion(rName string) string {
+func testAccTargetGroupConfig_protocolVersion(rName, protocolVersion string) string {
 	return fmt.Sprintf(`
 resource "aws_lb_target_group" "test" {
   name             = %[1]q
   port             = 443
   protocol         = "HTTPS"
-  protocol_version = "HTTP2"
+  protocol_version = %[2]q
   vpc_id           = aws_vpc.test.id
 
   deregistration_delay = 200
@@ -2480,7 +2492,7 @@ resource "aws_vpc" "test" {
     Name = %[1]q
   }
 }
-`, rName)
+`, rName, protocolVersion)
 }
 
 func testAccTargetGroupConfig_ipAddressType(rName string) string {
@@ -3266,7 +3278,17 @@ func testAccCheckTargetGroupExists(n string, res *elbv2.TargetGroup) resource.Te
 func testAccCheckTargetGroupNotRecreated(i, j *elbv2.TargetGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.StringValue(i.TargetGroupArn) != aws.StringValue(j.TargetGroupArn) {
-			return fmt.Errorf("ELBv2 Target Group (%s) unexpectedly recreated (%s)", aws.StringValue(i.TargetGroupArn), aws.StringValue(j.TargetGroupArn))
+			return errors.New("ELBv2 Target Group was recreated")
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckTargetGroupRecreated(i, j *elbv2.TargetGroup) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if aws.StringValue(i.TargetGroupArn) == aws.StringValue(j.TargetGroupArn) {
+			return errors.New("ELBv2 Target Group was not recreated")
 		}
 
 		return nil
