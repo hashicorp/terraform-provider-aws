@@ -419,7 +419,7 @@ func resourcePolicyCreate(d *schema.ResourceData, meta interface{}) error {
 	input, err := getPutScalingPolicyInput(d)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("creating Auto Scaling Policy (%s): %w", name, err)
 	}
 
 	log.Printf("[DEBUG] Creating Auto Scaling Policy: %s", input)
@@ -482,7 +482,7 @@ func resourcePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 	input, err := getPutScalingPolicyInput(d)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("updating Auto Scaling Policy (%s): %w", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Updating Auto Scaling Policy: %s", input)
