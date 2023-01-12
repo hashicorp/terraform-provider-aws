@@ -172,20 +172,10 @@ func dataSourceTargetGroupRead(d *schema.ResourceData, meta interface{}) error {
 		input.Names = aws.StringSlice([]string{v.(string)})
 	}
 
-	var results []*elbv2.TargetGroup
-
-	err := conn.DescribeTargetGroupsPages(input, func(page *elbv2.DescribeTargetGroupsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		results = append(results, page.TargetGroups...)
-
-		return !lastPage
-	})
+	results, err := FindTargetGroups(conn, input)
 
 	if err != nil {
-		return fmt.Errorf("retrieving LB Target Group: %w", err)
+		return fmt.Errorf("reading ELBv2 Target Groups: %w", err)
 	}
 
 	if len(tagsToMatch) > 0 {
@@ -200,7 +190,7 @@ func dataSourceTargetGroupRead(d *schema.ResourceData, meta interface{}) error {
 			}
 
 			if err != nil {
-				return fmt.Errorf("listing tags for (%s): %w", arn, err)
+				return fmt.Errorf("listing tags for ELBv2 Target Group (%s): %w", arn, err)
 			}
 
 			if !tags.ContainsAll(tagsToMatch) {
@@ -308,7 +298,7 @@ func dataSourceTargetGroupRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("listing tags for LB Target Group (%s): %w", d.Id(), err)
+		return fmt.Errorf("listing tags for ELBv2 Target Group (%s): %w", d.Id(), err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
