@@ -244,7 +244,11 @@ func vcrProviderConfigureContextFunc(provider *schema.Provider, testName string)
 		// As the HTTP client is used in the provider's ConfigureContextFunc
 		// we must do this setup before calling the ConfigureContextFunc.
 		httpClient.Transport = r
-		meta = new(conns.AWSClient)
+		if v, ok := provider.Meta().(*conns.AWSClient); ok {
+			meta = v
+		} else {
+			meta = new(conns.AWSClient)
+		}
 		meta.SetHTTPClient(httpClient)
 		provider.SetMeta(meta)
 

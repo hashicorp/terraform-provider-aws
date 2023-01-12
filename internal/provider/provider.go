@@ -2399,7 +2399,13 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 		}
 	}
 
-	meta, diags := config.ConfigureProvider(ctx, provider.Meta().(*conns.AWSClient))
+	var meta *conns.AWSClient
+	if v, ok := provider.Meta().(*conns.AWSClient); ok {
+		meta = v
+	} else {
+		meta = new(conns.AWSClient)
+	}
+	meta, diags := config.ConfigureProvider(ctx, meta)
 
 	if diags.HasError() {
 		return nil, diags
