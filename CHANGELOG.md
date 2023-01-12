@@ -7,6 +7,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* data-source/aws_lb_target_group: Support querying by `tags` ([#27261](https://github.com/hashicorp/terraform-provider-aws/issues/27261))
 * resource/aws_redshiftdata_statement: Add `workgroup_name` argument ([#28751](https://github.com/hashicorp/terraform-provider-aws/issues/28751))
 * resource/aws_service_discovery_service: Add `type` argument ([#28778](https://github.com/hashicorp/terraform-provider-aws/issues/28778))
 
@@ -47,6 +48,8 @@ BUG FIXES:
 * resource/aws_iam_user_policy: Improve refresh to avoid unnecessary diffs in `policy` ([#28777](https://github.com/hashicorp/terraform-provider-aws/issues/28777))
 * resource/aws_iam_user_policy: Improve refresh to avoid unnecessary diffs in `policy` ([#28836](https://github.com/hashicorp/terraform-provider-aws/issues/28836))
 * resource/aws_iot_policy: Improve refresh to avoid unnecessary diffs in `policy` ([#28838](https://github.com/hashicorp/terraform-provider-aws/issues/28838))
+* resource/aws_kms_external_key: Improve refresh to avoid unnecessary diffs in `policy` ([#28853](https://github.com/hashicorp/terraform-provider-aws/issues/28853))
+* resource/aws_kms_key: Improve refresh to avoid unnecessary diffs in `policy` ([#28853](https://github.com/hashicorp/terraform-provider-aws/issues/28853))
 * resource/aws_lb_target_group: Change `protocol_version` to [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew) ([#17845](https://github.com/hashicorp/terraform-provider-aws/issues/17845))
 * resource/aws_lb_target_group: When creating a new target group, return an error if there is an existing target group with the same name. Use [`terraform import`](https://developer.hashicorp.com/terraform/cli/commands/import) for existing target groups ([#26977](https://github.com/hashicorp/terraform-provider-aws/issues/26977))
 * resource/aws_mq_configuration: Improve refresh to avoid unnecessary diffs in `data` ([#28837](https://github.com/hashicorp/terraform-provider-aws/issues/28837))
