@@ -290,14 +290,6 @@ resource "aws_security_group" "test" {
     Name = %[1]q
   }
 }
-
-data "aws_lb_target_group" "alb_tg_test_with_arn" {
-  arn = aws_lb_target_group.test.arn
-}
-
-data "aws_lb_target_group" "alb_tg_test_with_name" {
-  name = aws_lb_target_group.test.name
-}
 `, rName))
 }
 
