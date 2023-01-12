@@ -367,6 +367,11 @@ func writeSeedToFile(seed int64, fileName string) error {
 
 // closeVCRRecorder closes the VCR recorder, saving the cassette and randomness seed.
 func closeVCRRecorder(t *testing.T) {
+	// Don't close the recorder if we're running because of a panic.
+	if p := recover(); p != nil {
+		panic(p)
+	}
+
 	testName := t.Name()
 	providerMetas.Lock()
 	meta, ok := providerMetas[testName]
