@@ -27,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	"gopkg.in/dnaeon/go-vcr.v3/cassette"
 	"gopkg.in/dnaeon/go-vcr.v3/recorder"
@@ -273,8 +274,8 @@ func vcrProviderConfigureContextFunc(provider *schema.Provider, configureContext
 		// TODO Use []*client.Client?
 		// TODO AWS SDK for Go v2 API clients.
 		meta.LogsConn().Handlers.AfterRetry.PushFront(func(r *request.Request) {
-			// if errors.Is(r.Error, cassette.ErrInteractionNotFound) {
-			if err := r.Error; err != nil && strings.Contains(err.Error(), cassette.ErrInteractionNotFound.Error()) {
+			// We have to use 'Contains' rather than 'errors.Is' because 'awserr.Error' doesn't implement 'Unwrap'.
+			if errs.Contains(r.Error, cassette.ErrInteractionNotFound.Error()) {
 				r.Retryable = aws.Bool(false)
 			}
 		})
