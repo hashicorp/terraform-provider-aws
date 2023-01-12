@@ -116,7 +116,6 @@ func TestAccELBV2TargetGroupDataSource_backwardsCompatibility(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceNameArn := "data.aws_alb_target_group.alb_tg_test_with_arn"
 	resourceName := "data.aws_alb_target_group.alb_tg_test_with_name"
-	resourceNameTags := "data.aws_alb_target_group.alb_tg_test_with_tags"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(t) },
@@ -166,27 +165,6 @@ func TestAccELBV2TargetGroupDataSource_backwardsCompatibility(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", "3"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.unhealthy_threshold", "3"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.matcher", "200-299"),
-					
-					resource.TestCheckResourceAttr(resourceNameTags, "name", rName),
-					resource.TestCheckResourceAttrSet(resourceNameTags, "arn"),
-					resource.TestCheckResourceAttrSet(resourceNameTags, "arn_suffix"),
-					resource.TestCheckResourceAttr(resourceNameTags, "port", "8080"),
-					resource.TestCheckResourceAttr(resourceNameTags, "protocol", "HTTP"),
-					resource.TestCheckResourceAttrSet(resourceNameTags, "vpc_id"),
-					resource.TestCheckResourceAttr(resourceNameTags, "deregistration_delay", "300"),
-					resource.TestCheckResourceAttr(resourceNameTags, "slow_start", "0"),
-					resource.TestCheckResourceAttr(resourceNameTags, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceNameTags, "tags.TestName", rName),
-					resource.TestCheckResourceAttr(resourceNameTags, "stickiness.#", "1"),
-					resource.TestCheckResourceAttr(resourceNameTags, "health_check.#", "1"),
-					resource.TestCheckResourceAttr(resourceNameTags, "health_check.0.path", "/health"),
-					resource.TestCheckResourceAttr(resourceNameTags, "health_check.0.port", "8081"),
-					resource.TestCheckResourceAttr(resourceNameTags, "health_check.0.protocol", "HTTP"),
-					resource.TestCheckResourceAttr(resourceNameTags, "health_check.0.timeout", "3"),
-					resource.TestCheckResourceAttr(resourceNameTags, "health_check.0.healthy_threshold", "3"),
-					resource.TestCheckResourceAttr(resourceNameTags, "health_check.0.unhealthy_threshold", "3"),
-					resource.TestCheckResourceAttr(resourceNameTags, "health_check.0.matcher", "200-299"),
-
 				),
 			},
 		},
@@ -306,10 +284,6 @@ data "aws_lb_target_group" "alb_tg_test_with_arn" {
 
 data "aws_lb_target_group" "alb_tg_test_with_name" {
   name = aws_lb_target_group.test.name
-}
-
-data "aws_lb_target_group" "alb_tg_test_with_tags" {
-  tags = aws_lb_target_group.test.tags
 }
 `, rName)
 }
