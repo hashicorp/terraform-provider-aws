@@ -419,13 +419,13 @@ func dataSourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] aws_instance - Single Instance ID found: %s", aws.StringValue(instance.InstanceId))
 	if err := instanceDescriptionAttributes(d, instance, conn, ignoreTagsConfig); err != nil {
-		return err
+		return fmt.Errorf("reading EC2 Instance (%s): %w", aws.StringValue(instance.InstanceId), err)
 	}
 
 	if d.Get("get_password_data").(bool) {
 		passwordData, err := getInstancePasswordData(aws.StringValue(instance.InstanceId), conn)
 		if err != nil {
-			return err
+			return fmt.Errorf("reading EC2 Instance (%s): %w", aws.StringValue(instance.InstanceId), err)
 		}
 		d.Set("password_data", passwordData)
 	}
@@ -544,12 +544,12 @@ func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instanc
 
 	// Security Groups
 	if err := readSecurityGroups(d, instance, conn); err != nil {
-		return err
+		return fmt.Errorf("reading EC2 Instance (%s): %w", aws.StringValue(instance.InstanceId), err)
 	}
 
 	// Block devices
 	if err := readBlockDevices(d, instance, conn); err != nil {
-		return err
+		return fmt.Errorf("reading EC2 Instance (%s): %w", aws.StringValue(instance.InstanceId), err)
 	}
 	if _, ok := d.GetOk("ephemeral_block_device"); !ok {
 		d.Set("ephemeral_block_device", []interface{}{})
@@ -562,7 +562,7 @@ func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instanc
 			InstanceId: aws.String(d.Id()),
 		})
 		if err != nil {
-			return err
+			return fmt.Errorf("getting attribute (%s): %w", ec2.InstanceAttributeNameDisableApiStop, err)
 		}
 		d.Set("disable_api_stop", attr.DisableApiStop.Value)
 	}
@@ -572,7 +572,7 @@ func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instanc
 			InstanceId: aws.String(d.Id()),
 		})
 		if err != nil {
-			return err
+			return fmt.Errorf("getting attribute (%s): %w", ec2.InstanceAttributeNameDisableApiTermination, err)
 		}
 		d.Set("disable_api_termination", attr.DisableApiTermination.Value)
 	}
@@ -582,7 +582,7 @@ func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instanc
 			InstanceId: aws.String(d.Id()),
 		})
 		if err != nil {
-			return err
+			return fmt.Errorf("getting attribute (%s): %w", ec2.InstanceAttributeNameUserData, err)
 		}
 		if attr != nil && attr.UserData != nil && attr.UserData.Value != nil {
 			d.Set("user_data", userDataHashSum(aws.StringValue(attr.UserData.Value)))

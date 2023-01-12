@@ -784,7 +784,7 @@ func dataSourceLaunchTemplateRead(d *schema.ResourceData, meta interface{}) erro
 	ltv, err := FindLaunchTemplateVersionByTwoPartKey(conn, d.Id(), version)
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 Launch Template (%s) Version (%s): %w", d.Id(), version, err)
+		return fmt.Errorf("reading EC2 Launch Template (%s) Version (%s): %w", d.Id(), version, err)
 	}
 
 	arn := arn.ARN{
@@ -801,11 +801,11 @@ func dataSourceLaunchTemplateRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("name", lt.LaunchTemplateName)
 
 	if err := flattenResponseLaunchTemplateData(conn, d, ltv.LaunchTemplateData); err != nil {
-		return err
+		return fmt.Errorf("reading EC2 Launch Template (%s): %w", d.Id(), err)
 	}
 
 	if err := d.Set("tags", KeyValueTags(lt.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("reading EC2 Launch Template (%s): setting tags: %w", d.Id(), err)
 	}
 
 	return nil

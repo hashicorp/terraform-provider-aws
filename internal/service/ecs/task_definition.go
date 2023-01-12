@@ -760,8 +760,6 @@ func resourceTaskDefinitionDelete(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("deleting ECS Task Definition (%s): %w", d.Id(), err)
 	}
 
-	log.Printf("[DEBUG] Task definition %q deregistered.", d.Get("arn").(string))
-
 	return nil
 }
 

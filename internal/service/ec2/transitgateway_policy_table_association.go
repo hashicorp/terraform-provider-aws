@@ -107,7 +107,7 @@ func resourceTransitGatewayPolicyTableAssociationRead(d *schema.ResourceData, me
 	transitGatewayPolicyTableID, transitGatewayAttachmentID, err := TransitGatewayPolicyTableAssociationParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading EC2 Transit Gateway Policy Table Association (%s): %w", d.Id(), err)
 	}
 
 	transitGatewayPolicyTableAssociation, err := FindTransitGatewayPolicyTableAssociationByTwoPartKey(conn, transitGatewayPolicyTableID, transitGatewayAttachmentID)
@@ -136,7 +136,7 @@ func resourceTransitGatewayPolicyTableAssociationDelete(d *schema.ResourceData, 
 	transitGatewayPolicyTableID, transitGatewayAttachmentID, err := TransitGatewayPolicyTableAssociationParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting EC2 Transit Gateway Policy Table Association (%s): %w", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Deleting EC2 Transit Gateway Policy Table Association: %s", d.Id())

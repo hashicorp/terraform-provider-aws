@@ -1600,7 +1600,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			"aws_guardduty_organization_admin_account": guardduty.ResourceOrganizationAdminAccount(),
 			"aws_guardduty_organization_configuration": guardduty.ResourceOrganizationConfiguration(),
 			"aws_guardduty_publishing_destination":     guardduty.ResourcePublishingDestination(),
-			"aws_guardduty_threatintelset":             guardduty.ResourceThreatintelset(),
+			"aws_guardduty_threatintelset":             guardduty.ResourceThreatIntelSet(),
 
 			"aws_iam_access_key":                  iam.ResourceAccessKey(),
 			"aws_iam_account_alias":               iam.ResourceAccountAlias(),

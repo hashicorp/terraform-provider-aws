@@ -849,7 +849,7 @@ func resourceSpotFleetRequestCreate(d *schema.ResourceData, meta interface{}) er
 	if launchSpecificationOk {
 		launchSpecs, err := buildSpotFleetLaunchSpecifications(d, meta)
 		if err != nil {
-			return err
+			return fmt.Errorf("creating EC2 Spot Fleet Request: %w", err)
 		}
 		spotFleetConfig.LaunchSpecifications = launchSpecs
 	}

@@ -232,12 +232,12 @@ func resourceVPCEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.Get("auto_accept").(bool) && aws.StringValue(vpce.State) == vpcEndpointStatePendingAcceptance {
 		if err := vpcEndpointAccept(conn, d.Id(), aws.StringValue(vpce.ServiceName), d.Timeout(schema.TimeoutCreate)); err != nil {
-			return err
+			return fmt.Errorf("creating EC2 VPC Endpoint (%s): %w", serviceName, err)
 		}
 	}
 
 	if _, err = WaitVPCEndpointAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("waiting for EC2 VPC Endpoint (%s) create: %w", d.Id(), err)
+		return fmt.Errorf("creating EC2 VPC Endpoint (%s): waiting for completion: %w", serviceName, err)
 	}
 
 	return resourceVPCEndpointRead(d, meta)
@@ -342,7 +342,7 @@ func resourceVPCEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("auto_accept") && d.Get("auto_accept").(bool) && d.Get("state").(string) == vpcEndpointStatePendingAcceptance {
 		if err := vpcEndpointAccept(conn, d.Id(), d.Get("service_name").(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return err
+			return fmt.Errorf("updating EC2 VPC Endpoint (%s): %w", d.Get("service_name").(string), err)
 		}
 	}
 
