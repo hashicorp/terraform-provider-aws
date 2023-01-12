@@ -3,6 +3,7 @@ package acctest
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
@@ -19,6 +20,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/request"
+	cleanhttp "github.com/hashicorp/go-cleanhttp"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -113,7 +115,7 @@ func vcrEnabledProtoV5ProviderFactories(t *testing.T, input map[string]func() (t
 				return nil, err
 			}
 
-			primary.ConfigureContextFunc = vcrProviderConfigureContextFunc(primary.ConfigureContextFunc, t.Name())
+			primary.ConfigureContextFunc = vcrProviderConfigureContextFunc(primary, t.Name())
 
 			return providerServerFactory(), nil
 		}
@@ -128,7 +130,7 @@ func vcrEnabledProtoV5ProviderFactories(t *testing.T, input map[string]func() (t
 // vcrProviderConfigureContextFunc returns a provider configuration function returning cached provider instance state.
 // This is necessary as ConfigureContextFunc is called multiple times for a given test, each time creating a new HTTP client.
 // VCR requires a single HTTP client to handle all interactions.
-func vcrProviderConfigureContextFunc(configureFunc schema.ConfigureContextFunc, testName string) schema.ConfigureContextFunc {
+func vcrProviderConfigureContextFunc(provider *schema.Provider, testName string) schema.ConfigureContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
 		providerMetas.Lock()
 		meta, ok := providerMetas[testName]
@@ -138,35 +140,30 @@ func vcrProviderConfigureContextFunc(configureFunc schema.ConfigureContextFunc, 
 			return meta, nil
 		}
 
-		if v, diags := configureFunc(ctx, d); diags.HasError() {
-			return nil, diags
-		} else {
-			meta = v.(*conns.AWSClient)
-		}
-
 		vcrMode, err := vcrMode()
 
 		if err != nil {
 			return nil, diag.FromErr(err)
 		}
 
+		// Cribbed from aws-sdk-go-base.
+		httpClient := cleanhttp.DefaultPooledClient()
+		transport := httpClient.Transport.(*http.Transport)
+		transport.MaxIdleConnsPerHost = 10
+		tlsConfig := transport.TLSClientConfig
+		if tlsConfig == nil {
+			tlsConfig = &tls.Config{}
+			transport.TLSClientConfig = tlsConfig
+		}
+		tlsConfig.MinVersion = tls.VersionTLS12
+
 		path := filepath.Join(os.Getenv(envVarVCRPath), vcrFileName(testName))
 
-		// Don't retry requests if a recorded interaction isn't found.
-		// TODO Need to loop through all API clients to do this.
-		// TODO Use []*client.Client?
-		// TODO AWS SDK for Go v2 API clients.
-		meta.LogsConn().Handlers.AfterRetry.PushFront(func(r *request.Request) {
-			// if errors.Is(r.Error, cassette.ErrInteractionNotFound) {
-			if err := r.Error; err != nil && strings.Contains(err.Error(), cassette.ErrInteractionNotFound.Error()) {
-				r.Retryable = aws.Bool(false)
-			}
-		})
-
+		// Create a VCR recorder around a default HTTP client.
 		r, err := recorder.NewWithOptions(&recorder.Options{
 			CassetteName:  path,
 			Mode:          vcrMode,
-			RealTransport: meta.Session.Config.HTTPClient.Transport,
+			RealTransport: httpClient.Transport,
 		})
 
 		if err != nil {
@@ -243,7 +240,30 @@ func vcrProviderConfigureContextFunc(configureFunc schema.ConfigureContextFunc, 
 			return false
 		})
 
-		meta.Session.Config.HTTPClient.Transport = r
+		// Use the wrapped HTTP Client for AWS APIs.
+		// As the HTTP client is used in the provider's ConfigureContextFunc
+		// we must do this setup before calling the ConfigureContextFunc.
+		httpClient.Transport = r
+		meta = new(conns.AWSClient)
+		meta.SetHTTPClient(httpClient)
+		provider.SetMeta(meta)
+
+		if v, diags := provider.ConfigureContextFunc(ctx, d); diags.HasError() {
+			return nil, diags
+		} else {
+			meta = v.(*conns.AWSClient)
+		}
+
+		// Don't retry requests if a recorded interaction isn't found.
+		// TODO Need to loop through all API clients to do this.
+		// TODO Use []*client.Client?
+		// TODO AWS SDK for Go v2 API clients.
+		meta.LogsConn().Handlers.AfterRetry.PushFront(func(r *request.Request) {
+			// if errors.Is(r.Error, cassette.ErrInteractionNotFound) {
+			if err := r.Error; err != nil && strings.Contains(err.Error(), cassette.ErrInteractionNotFound.Error()) {
+				r.Retryable = aws.Bool(false)
+			}
+		})
 
 		providerMetas[testName] = meta
 
