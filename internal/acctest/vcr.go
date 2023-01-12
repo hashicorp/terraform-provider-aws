@@ -115,7 +115,7 @@ func vcrEnabledProtoV5ProviderFactories(t *testing.T, input map[string]func() (t
 				return nil, err
 			}
 
-			primary.ConfigureContextFunc = vcrProviderConfigureContextFunc(primary, t.Name())
+			primary.ConfigureContextFunc = vcrProviderConfigureContextFunc(primary, primary.ConfigureContextFunc, t.Name())
 
 			return providerServerFactory(), nil
 		}
@@ -130,7 +130,7 @@ func vcrEnabledProtoV5ProviderFactories(t *testing.T, input map[string]func() (t
 // vcrProviderConfigureContextFunc returns a provider configuration function returning cached provider instance state.
 // This is necessary as ConfigureContextFunc is called multiple times for a given test, each time creating a new HTTP client.
 // VCR requires a single HTTP client to handle all interactions.
-func vcrProviderConfigureContextFunc(provider *schema.Provider, testName string) schema.ConfigureContextFunc {
+func vcrProviderConfigureContextFunc(provider *schema.Provider, configureContextFunc schema.ConfigureContextFunc, testName string) schema.ConfigureContextFunc {
 	return func(ctx context.Context, d *schema.ResourceData) (interface{}, diag.Diagnostics) {
 		providerMetas.Lock()
 		meta, ok := providerMetas[testName]
@@ -252,7 +252,7 @@ func vcrProviderConfigureContextFunc(provider *schema.Provider, testName string)
 		meta.SetHTTPClient(httpClient)
 		provider.SetMeta(meta)
 
-		if v, diags := provider.ConfigureContextFunc(ctx, d); diags.HasError() {
+		if v, diags := configureContextFunc(ctx, d); diags.HasError() {
 			return nil, diags
 		} else {
 			meta = v.(*conns.AWSClient)
