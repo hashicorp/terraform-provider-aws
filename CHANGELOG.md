@@ -71,6 +71,8 @@ BUG FIXES:
 * resource/aws_sns_topic_policy: Improve refresh to avoid unnecessary diffs in `policy` ([#28860](https://github.com/hashicorp/terraform-provider-aws/issues/28860))
 * resource/aws_sqs_queue: Improve refresh to avoid unnecessary diffs in `policy` ([#28840](https://github.com/hashicorp/terraform-provider-aws/issues/28840))
 * resource/aws_sqs_queue_policy: Improve refresh to avoid unnecessary diffs in `policy` ([#28840](https://github.com/hashicorp/terraform-provider-aws/issues/28840))
+* resource/aws_transfer_access: Improve refresh to avoid unnecessary diffs in `policy` ([#28859](https://github.com/hashicorp/terraform-provider-aws/issues/28859))
+* resource/aws_transfer_user: Improve refresh to avoid unnecessary diffs in `policy` ([#28859](https://github.com/hashicorp/terraform-provider-aws/issues/28859))
 * resource/aws_vpc_endpoint: Improve refresh to avoid unnecessary diffs in `policy` ([#28798](https://github.com/hashicorp/terraform-provider-aws/issues/28798))
 * resource/aws_vpc_endpoint_policy: Improve refresh to avoid unnecessary diffs in `policy` ([#28798](https://github.com/hashicorp/terraform-provider-aws/issues/28798))
 
