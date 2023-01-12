@@ -8,7 +8,6 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io"
-	"log"
 	"math/rand"
 	"net/http"
 	"os"
@@ -22,6 +21,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/request"
 	cleanhttp "github.com/hashicorp/go-cleanhttp"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -191,7 +191,9 @@ func vcrProviderConfigureContextFunc(provider *schema.Provider, configureContext
 
 			var b bytes.Buffer
 			if _, err := b.ReadFrom(r.Body); err != nil {
-				log.Printf("[DEBUG] Failed to read request body from cassette: %v", err)
+				tflog.Debug(ctx, "Failed to read request body from cassette", map[string]interface{}{
+					"error": err,
+				})
 				return false
 			}
 
@@ -209,12 +211,16 @@ func vcrProviderConfigureContextFunc(provider *schema.Provider, configureContext
 				var requestJson, cassetteJson interface{}
 
 				if err := json.Unmarshal([]byte(body), &requestJson); err != nil {
-					log.Printf("[DEBUG] Failed to unmarshal request JSON: %v", err)
+					tflog.Debug(ctx, "Failed to unmarshal request JSON", map[string]interface{}{
+						"error": err,
+					})
 					return false
 				}
 
 				if err := json.Unmarshal([]byte(i.Body), &cassetteJson); err != nil {
-					log.Printf("[DEBUG] Failed to unmarshal cassette JSON: %v", err)
+					tflog.Debug(ctx, "Failed to unmarshal cassette JSON", map[string]interface{}{
+						"error": err,
+					})
 					return false
 				}
 
@@ -225,12 +231,16 @@ func vcrProviderConfigureContextFunc(provider *schema.Provider, configureContext
 				var requestXml, cassetteXml interface{}
 
 				if err := xml.Unmarshal([]byte(body), &requestXml); err != nil {
-					log.Printf("[DEBUG] Failed to unmarshal request XML: %v", err)
+					tflog.Debug(ctx, "Failed to unmarshal request XML", map[string]interface{}{
+						"error": err,
+					})
 					return false
 				}
 
 				if err := xml.Unmarshal([]byte(i.Body), &cassetteXml); err != nil {
-					log.Printf("[DEBUG] Failed to unmarshal cassette XML: %v", err)
+					tflog.Debug(ctx, "Failed to unmarshal cassette XML", map[string]interface{}{
+						"error": err,
+					})
 					return false
 				}
 
@@ -379,14 +389,14 @@ func closeVCRRecorder(t *testing.T) {
 
 	if ok {
 		if !t.Failed() {
-			log.Print("[DEBUG] stopping VCR recorder")
+			t.Logf(" %s stopping VCR recorder", testName)
 			roundTripper := meta.HTTPClient().Transport
 			if v, ok := roundTripper.(*recorder.Recorder); ok {
 				if err := v.Stop(); err != nil {
 					t.Error(err)
 				}
 			} else {
-				t.Logf("provider meta RoundTripper type: %T", roundTripper)
+				t.Logf("%s meta RoundTripper: %T", testName, roundTripper)
 			}
 
 		}
@@ -401,7 +411,7 @@ func closeVCRRecorder(t *testing.T) {
 
 	if ok {
 		if !t.Failed() {
-			log.Print("[DEBUG] persisting randomness seed")
+			t.Logf("%s persisting randomness seed", testName)
 			if err := writeSeedToFile(s.seed, vcrSeedFile(os.Getenv(envVarVCRPath), t.Name())); err != nil {
 				t.Error(err)
 			}
@@ -413,12 +423,14 @@ func closeVCRRecorder(t *testing.T) {
 
 // ParallelTest wraps resource.ParallelTest, initializing VCR if enabled.
 func ParallelTest(t *testing.T, c resource.TestCase) {
+	testName := t.Name()
+
 	if isVCREnabled() {
-		log.Print("[DEBUG] initializing VCR")
+		t.Logf("%s initializing VCR", testName)
 		c.ProtoV5ProviderFactories = vcrEnabledProtoV5ProviderFactories(t, c.ProtoV5ProviderFactories)
 		defer closeVCRRecorder(t)
 	} else {
-		log.Printf("[DEBUG] %s or %s not set, skipping VCR", envVarVCRMode, envVarVCRPath)
+		t.Logf("%s %s or %s not set, skipping VCR", testName, envVarVCRMode, envVarVCRPath)
 	}
 
 	resource.ParallelTest(t, c)
@@ -426,12 +438,14 @@ func ParallelTest(t *testing.T, c resource.TestCase) {
 
 // Test wraps resource.Test, initializing VCR if enabled.
 func Test(t *testing.T, c resource.TestCase) {
+	testName := t.Name()
+
 	if isVCREnabled() {
-		log.Print("[DEBUG] initializing VCR")
+		t.Logf("%s initializing VCR", testName)
 		c.ProtoV5ProviderFactories = vcrEnabledProtoV5ProviderFactories(t, c.ProtoV5ProviderFactories)
 		defer closeVCRRecorder(t)
 	} else {
-		log.Printf("[DEBUG] %s or %s not set, skipping VCR", envVarVCRMode, envVarVCRPath)
+		t.Logf("%s %s or %s not set, skipping VCR", testName, envVarVCRMode, envVarVCRPath)
 	}
 
 	resource.Test(t, c)
