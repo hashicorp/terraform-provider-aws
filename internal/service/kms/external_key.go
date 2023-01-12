@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -85,10 +86,11 @@ func ResourceExternalKey() *schema.Resource {
 				ForceNew: true,
 			},
 			"policy": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				Type:                  schema.TypeString,
+				Optional:              true,
+				Computed:              true,
+				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+				DiffSuppressOnRefresh: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(0, 32768),
 					validation.StringIsJSON,
@@ -125,7 +127,12 @@ func resourceExternalKeyCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("policy"); ok {
-		input.Policy = aws.String(v.(string))
+		p, err := structure.NormalizeJsonString(v.(string))
+		if err != nil {
+			return fmt.Errorf("policy (%s) is invalid JSON: %w", p, err)
+		}
+
+		input.Policy = aws.String(p)
 	}
 
 	if len(tags) > 0 {
@@ -227,8 +234,7 @@ func resourceExternalKeyRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("key_usage", key.metadata.KeyUsage)
 	d.Set("multi_region", key.metadata.MultiRegion)
 
-	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), key.policy)
-
+	policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), key.policy)
 	if err != nil {
 		return fmt.Errorf("while setting policy (%s), encountered: %w", key.policy, err)
 	}

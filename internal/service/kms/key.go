@@ -435,7 +435,6 @@ func updateKeyEnabled(conn *kms.KMS, keyID string, enabled bool) error {
 
 func updateKeyPolicy(conn *kms.KMS, keyID string, policy string, bypassPolicyLockoutSafetyCheck bool) error {
 	policy, err := structure.NormalizeJsonString(policy)
-
 	if err != nil {
 		return fmt.Errorf("policy contains invalid JSON: %w", err)
 	}
@@ -457,14 +456,12 @@ func updateKeyPolicy(conn *kms.KMS, keyID string, policy string, bypassPolicyLoc
 	}
 
 	_, err = tfresource.RetryWhenAWSErrCodeEquals(PropagationTimeout, updateFunc, kms.ErrCodeNotFoundException, kms.ErrCodeMalformedPolicyDocumentException)
-
 	if err != nil {
 		return fmt.Errorf("error updating KMS Key (%s) policy: %w", keyID, err)
 	}
 
 	// Wait for propagation since KMS is eventually consistent.
 	err = WaitKeyPolicyPropagated(conn, keyID, policy)
-
 	if err != nil {
 		return fmt.Errorf("error waiting for KMS Key (%s) policy propagation: %w", keyID, err)
 	}
