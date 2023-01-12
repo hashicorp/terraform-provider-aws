@@ -185,6 +185,7 @@ func ResourceTargetGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 				StateFunc: func(v interface{}) string {
 					return strings.ToUpper(v.(string))
 				},
