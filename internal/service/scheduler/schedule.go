@@ -21,13 +21,18 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceSchedule() *schema.Resource {
+func init() {
+	_sp.registerSDKResourceFactory("aws_scheduler_schedule", resourceSchedule)
+}
+
+func resourceSchedule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceScheduleCreate,
 		ReadWithoutTimeout:   resourceScheduleRead,
@@ -639,19 +644,20 @@ func resourceScheduleDelete(ctx context.Context, d *schema.ResourceData, meta in
 
 func findScheduleByTwoPartKey(ctx context.Context, conn *scheduler.Client, groupName, scheduleName string) (*scheduler.GetScheduleOutput, error) {
 	in := &scheduler.GetScheduleInput{
-		Name:      aws.String(scheduleName),
 		GroupName: aws.String(groupName),
+		Name:      aws.String(scheduleName),
 	}
-	out, err := conn.GetSchedule(ctx, in)
-	if err != nil {
-		var nfe *types.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return nil, &resource.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
 
+	out, err := conn.GetSchedule(ctx, in)
+
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
 		return nil, err
 	}
 
