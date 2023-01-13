@@ -613,7 +613,7 @@ resource "aws_iam_role_policy" "test_policy" {
         Action = [
           "ssm:GetParameters",
         ]
-        Effect   = "Allow"
+        Effect = "Allow"
         Resource = [
           aws_ssm_parameter.test.arn
         ]
