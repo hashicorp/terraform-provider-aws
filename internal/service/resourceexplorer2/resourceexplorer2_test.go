@@ -17,7 +17,9 @@ func TestAccResourceExplorer2_serial(t *testing.T) {
 			"type":       testAccIndex_type,
 		},
 		"View": {
-			"basic": testAccView_basic,
+			"basic":      testAccView_basic,
+			"disappears": testAccView_disappears,
+			"tags":       testAccView_tags,
 		},
 	}
 
