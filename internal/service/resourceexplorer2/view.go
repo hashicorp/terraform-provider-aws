@@ -157,7 +157,7 @@ func (r *resourceView) Read(ctx context.Context, request resource.ReadRequest, r
 	defaultTagsConfig := r.Meta().DefaultTagsConfig
 	ignoreTagsConfig := r.Meta().IgnoreTagsConfig
 
-	output, err := findViewByARN(ctx, conn, data.ARN.ValueString())
+	output, err := findViewByARN(ctx, conn, data.ID.ValueString())
 
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
