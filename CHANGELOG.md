@@ -1,4 +1,8 @@
 ## 3.76.2 (Unreleased)
+
+NOTES:
+resource/aws_fsx_ontap_storage_virtual_machine: The `subtype` attribute is set to the value returned from AWS ([#28882](https://github.com/terraform-providers/terraform-provider-aws/issues/28882))
+
 ## 3.76.1 (January 05, 2023)
 
 ENHANCEMENTS:
