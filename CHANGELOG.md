@@ -1,4 +1,9 @@
 ## 4.51.0 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_opensearch_domain: Omit `throughput` and `iops` for unsupported volume types ([#28862](https://github.com/hashicorp/terraform-provider-aws/issues/28862))
+
 ## 4.50.0 (January 13, 2023)
 
 FEATURES:
