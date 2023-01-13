@@ -187,6 +187,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	client.Region = c.Region
 	client.ReverseDNSPrefix = ReverseDNS(DNSSuffix)
 	client.Session = sess
+	client.httpClient = client.Session.Config.HTTPClient
 	client.TerraformVersion = c.TerraformVersion
 
 	// API clients (generated).
