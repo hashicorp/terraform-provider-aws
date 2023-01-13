@@ -1078,7 +1078,6 @@ func expandScalingConfig(tfMap map[string]interface{}) *lambda.ScalingConfig {
 	apiObject := &lambda.ScalingConfig{}
 
 	if v, ok := tfMap["maximum_concurrency"].(int); ok && v != 0 {
-		// The API permits patterns of length >= 0, so accept the empty string.
 		apiObject.MaximumConcurrency = aws.Int64(int64(v))
 	}
 
