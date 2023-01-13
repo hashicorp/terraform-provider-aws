@@ -9,7 +9,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.21
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.23.0
 	github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.11.0
-	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.18.0
+	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.19.0
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.21.0
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.20.0
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.77.0
@@ -17,7 +17,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.16.0
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.11.0
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.3.0
-	github.com/aws/aws-sdk-go-v2/service/kendra v1.37.0
+	github.com/aws/aws-sdk-go-v2/service/kendra v1.38.0
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.28.0
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.1.0
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.1.0
