@@ -456,7 +456,7 @@ type propertyName string
 
 // Enum values for propertyName.
 const (
-	propertyNameTags propertyName = "tags"
+	propertyNameTags propertyName = "Tags"
 )
 
 func (propertyName) Values() []propertyName {
