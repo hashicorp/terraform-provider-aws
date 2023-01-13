@@ -390,14 +390,11 @@ func closeVCRRecorder(t *testing.T) {
 
 	if ok {
 		if !t.Failed() {
-			t.Logf("%s stopping VCR recorder", testName)
-			roundTripper := meta.HTTPClient().Transport
-			if v, ok := roundTripper.(*recorder.Recorder); ok {
+			if v, ok := meta.HTTPClient().Transport.(*recorder.Recorder); ok {
+				t.Log("stopping VCR recorder")
 				if err := v.Stop(); err != nil {
 					t.Error(err)
 				}
-			} else {
-				t.Logf("%s meta RoundTripper: %T", testName, roundTripper)
 			}
 
 		}
@@ -412,7 +409,7 @@ func closeVCRRecorder(t *testing.T) {
 
 	if ok {
 		if !t.Failed() {
-			t.Logf("%s persisting randomness seed", testName)
+			t.Log("persisting randomness seed")
 			if err := writeSeedToFile(s.seed, vcrSeedFile(os.Getenv(envVarVCRPath), t.Name())); err != nil {
 				t.Error(err)
 			}
@@ -424,14 +421,9 @@ func closeVCRRecorder(t *testing.T) {
 
 // ParallelTest wraps resource.ParallelTest, initializing VCR if enabled.
 func ParallelTest(t *testing.T, c resource.TestCase) {
-	testName := t.Name()
-
 	if isVCREnabled() {
-		t.Logf("%s initializing VCR", testName)
 		c.ProtoV5ProviderFactories = vcrEnabledProtoV5ProviderFactories(t, c.ProtoV5ProviderFactories)
 		defer closeVCRRecorder(t)
-	} else {
-		t.Logf("%s %s or %s not set, skipping VCR", testName, envVarVCRMode, envVarVCRPath)
 	}
 
 	resource.ParallelTest(t, c)
@@ -439,14 +431,10 @@ func ParallelTest(t *testing.T, c resource.TestCase) {
 
 // Test wraps resource.Test, initializing VCR if enabled.
 func Test(t *testing.T, c resource.TestCase) {
-	testName := t.Name()
 
 	if isVCREnabled() {
-		t.Logf("%s initializing VCR", testName)
 		c.ProtoV5ProviderFactories = vcrEnabledProtoV5ProviderFactories(t, c.ProtoV5ProviderFactories)
 		defer closeVCRRecorder(t)
-	} else {
-		t.Logf("%s %s or %s not set, skipping VCR", testName, envVarVCRMode, envVarVCRPath)
 	}
 
 	resource.Test(t, c)
