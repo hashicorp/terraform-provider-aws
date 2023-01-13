@@ -34,14 +34,15 @@ func validMemcachedVersionString(v interface{}, k string) (ws []string, errors [
 
 const (
 	redisVersionPreV6RegexpPattern  = `^[1-5](\.[[:digit:]]+){2}$`
-	redisVersionPostV6RegexpPattern = `^((6)\.x)|([6-9]\.[[:digit:]]+)$`
+	redisVersionPostV6RegexpPattern = `^(?:((6)\.x)|([6-9]\.[[:digit:]]+))$`
 
-	redisVersionRegexpPattern = redisVersionPreV6RegexpPattern + "|" + redisVersionPostV6RegexpPattern
+	redisVersionRegexpPattern =  "^(?:" + redisVersionPreV6RegexpPattern + "|" + redisVersionPostV6RegexpPattern + ")$"
 )
 
 var (
 	redisVersionRegexp       = regexp.MustCompile(redisVersionRegexpPattern)
 	redisVersionPostV6Regexp = regexp.MustCompile(redisVersionPostV6RegexpPattern)
+	sixVersionConstraint, _  = gversion.NewConstraint("~> 6.0")
 )
 
 func validRedisVersionString(v interface{}, k string) (ws []string, errors []error) {
@@ -100,6 +101,15 @@ func engineVersionIsDowngrade(diff getChangeDiffer) (bool, error) {
 	nVersion, err := normalizeEngineVersion(n.(string))
 	if err != nil {
 		return false, fmt.Errorf("parsing new engine_version: %w", err)
+	}
+
+	sixMaxVersion := fmt.Sprintf("%s.%d", "6", math.MaxInt)
+	sixMaxVersionComp, _ := gversion.NewVersion(sixMaxVersion)
+	sixMaxVersionCompString := sixMaxVersionComp.String()
+
+	// When both major are 6 and one of them is 6.x
+	if (sixVersionConstraint.Check(nVersion) && sixVersionConstraint.Check(oVersion)) && (oVersion.String() == sixMaxVersionCompString || nVersion.String() == sixMaxVersionCompString) {
+		return false, nil
 	}
 
 	return nVersion.LessThan(oVersion), nil

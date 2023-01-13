@@ -342,6 +342,17 @@ func TestCustomizeDiffEngineVersionIsDowngrade(t *testing.T) {
 			new:      "6.0",
 			expected: false,
 		},
+		"upgrade major 3.0": {
+			old:      "2.8.12",
+			new:      "3.0.5",
+			expected: false,
+		},
+
+		"upgrade minor 6.x": {
+			old:      "6.x",
+			new:      "6.2",
+			expected: false,
+		},
 
 		"downgrade minor versions": {
 			old:      "1.3.5",
