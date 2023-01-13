@@ -74,7 +74,6 @@ func resourceObjectLambdaAccessPointPolicyCreate(ctx context.Context, d *schema.
 	resourceID := ObjectLambdaAccessPointCreateResourceID(accountID, name)
 
 	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
-
 	if err != nil {
 		return diag.Errorf("policy (%s) is invalid JSON: %s", d.Get("policy").(string), err)
 	}
@@ -123,7 +122,6 @@ func resourceObjectLambdaAccessPointPolicyRead(ctx context.Context, d *schema.Re
 
 	if policy != "" {
 		policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), policy)
-
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -146,7 +144,6 @@ func resourceObjectLambdaAccessPointPolicyUpdate(ctx context.Context, d *schema.
 	}
 
 	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
-
 	if err != nil {
 		return diag.Errorf("policy (%s) is invalid JSON: %s", d.Get("policy").(string), err)
 	}
