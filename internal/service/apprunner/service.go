@@ -304,6 +304,14 @@ func ResourceService() *schema.Resource {
 																	ValidateFunc: validation.StringLenBetween(0, 51200),
 																},
 															},
+															"runtime_environment_secrets": {
+																Type:     schema.TypeMap,
+																Optional: true,
+																Elem: &schema.Schema{
+																	Type:         schema.TypeString,
+																	ValidateFunc: validation.StringLenBetween(0, 2048),
+																},
+															},
 															"start_command": {
 																Type:         schema.TypeString,
 																Optional:     true,
@@ -372,6 +380,14 @@ func ResourceService() *schema.Resource {
 													Elem: &schema.Schema{
 														Type:         schema.TypeString,
 														ValidateFunc: validation.StringLenBetween(0, 51200),
+													},
+												},
+												"runtime_environment_secrets": {
+													Type:     schema.TypeMap,
+													Optional: true,
+													Elem: &schema.Schema{
+														Type:         schema.TypeString,
+														ValidateFunc: validation.StringLenBetween(0, 2048),
 													},
 												},
 												"start_command": {
@@ -922,6 +938,10 @@ func expandServiceImageConfiguration(l []interface{}) *apprunner.ImageConfigurat
 		result.RuntimeEnvironmentVariables = flex.ExpandStringMap(v)
 	}
 
+	if v, ok := tfMap["runtime_environment_secrets"].(map[string]interface{}); ok && len(v) > 0 {
+		result.RuntimeEnvironmentSecrets = flex.ExpandStringMap(v)
+	}
+
 	if v, ok := tfMap["start_command"].(string); ok && v != "" {
 		result.StartCommand = aws.String(v)
 	}
@@ -1036,6 +1056,10 @@ func expandServiceCodeConfigurationValues(l []interface{}) *apprunner.CodeConfig
 
 	if v, ok := tfMap["runtime_environment_variables"].(map[string]interface{}); ok && len(v) > 0 {
 		result.RuntimeEnvironmentVariables = flex.ExpandStringMap(v)
+	}
+
+	if v, ok := tfMap["runtime_environment_secrets"].(map[string]interface{}); ok && len(v) > 0 {
+		result.RuntimeEnvironmentSecrets = flex.ExpandStringMap(v)
 	}
 
 	if v, ok := tfMap["start_command"].(string); ok && v != "" {
@@ -1200,6 +1224,7 @@ func flattenServiceCodeConfigurationValues(values *apprunner.CodeConfigurationVa
 		"port":                          aws.StringValue(values.Port),
 		"runtime":                       aws.StringValue(values.Runtime),
 		"runtime_environment_variables": aws.StringValueMap(values.RuntimeEnvironmentVariables),
+		"runtime_environment_secrets":   aws.StringValueMap(values.RuntimeEnvironmentSecrets),
 		"start_command":                 aws.StringValue(values.StartCommand),
 	}
 
@@ -1255,6 +1280,7 @@ func flattenServiceImageConfiguration(config *apprunner.ImageConfiguration) []in
 	m := map[string]interface{}{
 		"port":                          aws.StringValue(config.Port),
 		"runtime_environment_variables": aws.StringValueMap(config.RuntimeEnvironmentVariables),
+		"runtime_environment_secrets":   aws.StringValueMap(config.RuntimeEnvironmentSecrets),
 		"start_command":                 aws.StringValue(config.StartCommand),
 	}
 

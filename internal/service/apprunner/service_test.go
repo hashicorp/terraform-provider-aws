@@ -378,6 +378,37 @@ func TestAccAppRunnerService_ImageRepository_runtimeEnvironmentVars(t *testing.T
 	})
 }
 
+func TestAccAppRunnerService_ImageRepository_runtimeEnvironmentSecrets(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_apprunner_service.test"
+	ssmParameterResourceName := "aws_ssm_parameter.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apprunner.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceConfig_ImageRepository_runtimeEnvSecrets(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "source_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source_configuration.0.image_repository.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source_configuration.0.image_repository.0.image_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source_configuration.0.image_repository.0.image_configuration.0.runtime_environment_secrets.%", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "source_configuration.0.image_repository.0.image_configuration.0.runtime_environment_secrets.SSM_PARAMETER", ssmParameterResourceName, "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAppRunnerService_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_apprunner_service.test"
@@ -559,6 +590,60 @@ resource "aws_apprunner_service" "test" {
   }
 }
 `, rName)
+}
+
+func testAccServiceConfig_ImageRepository_runtimeEnvSecrets(rName string) string {
+	return acctest.ConfigCompose(
+		testAccIAMRole(rName),
+		fmt.Sprintf(`
+resource "aws_ssm_parameter" "test" {
+  name  = %[1]q
+  type  = "String"
+  value = "test"
+}
+
+resource "aws_iam_role_policy" "test_policy" {
+  name = %[1]q
+  role = aws_iam_role.test.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = [
+          "ssm:GetParameters",
+        ]
+        Effect   = "Allow"
+        Resource = [
+          aws_ssm_parameter.test.arn
+        ]
+      },
+    ]
+  })
+}
+
+resource "aws_apprunner_service" "test" {
+  service_name = %[1]q
+  source_configuration {
+    auto_deployments_enabled = false
+    image_repository {
+      image_configuration {
+        port = "80"
+        runtime_environment_secrets = {
+          SSM_PARAMETER = aws_ssm_parameter.test.arn
+        }
+      }
+      image_identifier      = "public.ecr.aws/nginx/nginx:latest"
+      image_repository_type = "ECR_PUBLIC"
+    }
+  }
+  instance_configuration {
+    cpu               = "1 vCPU"
+    instance_role_arn = aws_iam_role.test.arn
+    memory            = "3 GB"
+  }
+}
+`, rName))
 }
 
 func testAccServiceConfig_ImageRepository_autoScalingConfiguration(rName string) string {
