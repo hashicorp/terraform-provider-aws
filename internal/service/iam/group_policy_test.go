@@ -444,6 +444,7 @@ resource "aws_iam_group_policy" "test" {
   name  = %[1]q
   group = aws_iam_group.test.id
 
+  # tflint-ignore: terraform_deprecated_interpolation
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{

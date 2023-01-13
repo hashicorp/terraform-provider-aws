@@ -768,6 +768,7 @@ resource "aws_iam_role_policy" "test" {
   name = %[1]q
   role = aws_iam_role.test.id
 
+  # tflint-ignore: terraform_deprecated_interpolation
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
