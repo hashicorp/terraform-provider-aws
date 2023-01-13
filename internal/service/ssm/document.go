@@ -526,7 +526,7 @@ func setDocumentPermissions(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if err := modifyDocumentPermissions(conn, d.Get("name").(string), accountIdsToAdd, accountIdsToRemove); err != nil {
-			return err // nosemgrep:bare-error-returns
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
 

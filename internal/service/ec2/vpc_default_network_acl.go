@@ -109,11 +109,11 @@ func resourceDefaultNetworkACLCreate(d *schema.ResourceData, meta interface{}) e
 
 	// Revoke all default and pre-existing rules on the default network ACL.
 	if err := deleteNetworkACLEntries(conn, d.Id(), nacl.Entries); err != nil {
-		return err // nosemgrep:bare-error-returns
+		return err // nosemgrep:ci.bare-error-returns
 	}
 
 	if err := modifyNetworkACLAttributesOnCreate(conn, d); err != nil {
-		return err // nosemgrep:bare-error-returns
+		return err // nosemgrep:ci.bare-error-returns
 	}
 
 	// Configure tags.

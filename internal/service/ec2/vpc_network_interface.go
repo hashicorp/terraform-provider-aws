@@ -471,7 +471,7 @@ func resourceNetworkInterfaceCreate(d *schema.ResourceData, meta interface{}) er
 		_, err := attachNetworkInterface(conn, d.Id(), attachment["instance"].(string), attachment["device_index"].(int), networkInterfaceAttachedTimeout)
 
 		if err != nil {
-			return err // nosemgrep:bare-error-returns
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
 
@@ -577,7 +577,7 @@ func resourceNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{}) er
 			err := DetachNetworkInterface(conn, d.Id(), attachment["attachment_id"].(string), NetworkInterfaceDetachedTimeout)
 
 			if err != nil {
-				return err // nosemgrep:bare-error-returns
+				return err // nosemgrep:ci.bare-error-returns
 			}
 		}
 
@@ -587,7 +587,7 @@ func resourceNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{}) er
 			_, err := attachNetworkInterface(conn, d.Id(), attachment["instance"].(string), attachment["device_index"].(int), networkInterfaceAttachedTimeout)
 
 			if err != nil {
-				return err // nosemgrep:bare-error-returns
+				return err // nosemgrep:ci.bare-error-returns
 			}
 		}
 	}
@@ -1055,7 +1055,7 @@ func resourceNetworkInterfaceDelete(d *schema.ResourceData, meta interface{}) er
 		err := DetachNetworkInterface(conn, d.Id(), attachment["attachment_id"].(string), NetworkInterfaceDetachedTimeout)
 
 		if err != nil {
-			return err // nosemgrep:bare-error-returns
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
 

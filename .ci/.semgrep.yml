@@ -854,3 +854,20 @@ rules:
     patterns:
       - pattern-regex: '(Create|Read|Update|Delete)Context:'
     severity: ERROR
+
+  - id: bare-error-returns
+    languages: [go]
+    message: API errors should be wrapped with the CRUD info
+    paths: 
+      include:
+        - internal/service
+    patterns: 
+      - pattern: return $ERR
+      - pattern-inside: |
+          func $FUNC($D *schema.ResourceData, ...) error {
+            ...
+          }
+      - metavariable-regex:
+          metavariable: $ERR
+          regex: "[Ee]rr(?!ors\\.)"
+    severity: ERROR

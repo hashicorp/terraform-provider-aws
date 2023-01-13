@@ -318,7 +318,7 @@ func readInstance(d *schema.ResourceData, meta interface{}) error {
 	instance, err := FindInstanceByID(conn, d.Get("spot_instance_id").(string))
 
 	if err != nil {
-		return err // nosemgrep:bare-error-returns
+		return err // nosemgrep:ci.bare-error-returns
 	}
 
 	d.Set("public_dns", instance.PublicDnsName)
@@ -340,7 +340,7 @@ func readInstance(d *schema.ResourceData, meta interface{}) error {
 		})
 	}
 	if err := readBlockDevices(d, instance, conn); err != nil {
-		return err // nosemgrep:bare-error-returns
+		return err // nosemgrep:ci.bare-error-returns
 	}
 
 	var ipv6Addresses []string
@@ -373,7 +373,7 @@ func readInstance(d *schema.ResourceData, meta interface{}) error {
 	if d.Get("get_password_data").(bool) {
 		passwordData, err := getInstancePasswordData(*instance.InstanceId, conn)
 		if err != nil {
-			return err // nosemgrep:bare-error-returns
+			return err // nosemgrep:ci.bare-error-returns
 		}
 		d.Set("password_data", passwordData)
 	} else {
@@ -412,7 +412,7 @@ func resourceSpotInstanceRequestDelete(d *schema.ResourceData, meta interface{})
 
 	if instanceId := d.Get("spot_instance_id").(string); instanceId != "" {
 		if err := terminateInstance(conn, instanceId, d.Timeout(schema.TimeoutDelete)); err != nil {
-			return err // nosemgrep:bare-error-returns
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
 

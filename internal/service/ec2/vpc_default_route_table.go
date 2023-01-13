@@ -160,7 +160,7 @@ func resourceDefaultRouteTableCreate(d *schema.ResourceData, meta interface{}) e
 	// Remove all existing VGW associations.
 	for _, v := range routeTable.PropagatingVgws {
 		if err := routeTableDisableVGWRoutePropagation(conn, d.Id(), aws.StringValue(v.GatewayId)); err != nil {
-			return err // nosemgrep:bare-error-returns
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
 
@@ -226,7 +226,7 @@ func resourceDefaultRouteTableCreate(d *schema.ResourceData, meta interface{}) e
 			v := v.(string)
 
 			if err := routeTableEnableVGWRoutePropagation(conn, d.Id(), v, d.Timeout(schema.TimeoutCreate)); err != nil {
-				return err // nosemgrep:bare-error-returns
+				return err // nosemgrep:ci.bare-error-returns
 			}
 		}
 	}
@@ -237,7 +237,7 @@ func resourceDefaultRouteTableCreate(d *schema.ResourceData, meta interface{}) e
 			v := v.(map[string]interface{})
 
 			if err := routeTableAddRoute(conn, d.Id(), v, d.Timeout(schema.TimeoutCreate)); err != nil {
-				return err // nosemgrep:bare-error-returns
+				return err // nosemgrep:ci.bare-error-returns
 			}
 		}
 	}

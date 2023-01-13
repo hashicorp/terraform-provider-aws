@@ -59,7 +59,7 @@ func resourceNetworkInterfaceAttachmentCreate(d *schema.ResourceData, meta inter
 	)
 
 	if err != nil {
-		return err // nosemgrep:bare-error-returns
+		return err // nosemgrep:ci.bare-error-returns
 	}
 
 	if attachmentID != "" {

@@ -45,7 +45,7 @@ func resourceVPNGatewayRoutePropagationEnable(d *schema.ResourceData, meta inter
 	err := routeTableEnableVGWRoutePropagation(conn, routeTableID, gatewayID, d.Timeout(schema.TimeoutCreate))
 
 	if err != nil {
-		return err // nosemgrep:bare-error-returns
+		return err // nosemgrep:ci.bare-error-returns
 	}
 
 	d.SetId(VPNGatewayRoutePropagationCreateID(routeTableID, gatewayID))
@@ -59,7 +59,7 @@ func resourceVPNGatewayRoutePropagationDisable(d *schema.ResourceData, meta inte
 	routeTableID, gatewayID, err := VPNGatewayRoutePropagationParseID(d.Id())
 
 	if err != nil {
-		return err // nosemgrep:bare-error-returns
+		return err // nosemgrep:ci.bare-error-returns
 	}
 
 	err = routeTableDisableVGWRoutePropagation(conn, routeTableID, gatewayID)
@@ -68,7 +68,7 @@ func resourceVPNGatewayRoutePropagationDisable(d *schema.ResourceData, meta inte
 		return nil
 	}
 
-	return err // nosemgrep:bare-error-returns
+	return err // nosemgrep:ci.bare-error-returns
 }
 
 func resourceVPNGatewayRoutePropagationRead(d *schema.ResourceData, meta interface{}) error {
@@ -77,7 +77,7 @@ func resourceVPNGatewayRoutePropagationRead(d *schema.ResourceData, meta interfa
 	routeTableID, gatewayID, err := VPNGatewayRoutePropagationParseID(d.Id())
 
 	if err != nil {
-		return err // nosemgrep:bare-error-returns
+		return err // nosemgrep:ci.bare-error-returns
 	}
 
 	err = FindVPNGatewayRoutePropagationExists(conn, routeTableID, gatewayID)

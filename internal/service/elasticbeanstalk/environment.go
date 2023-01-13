@@ -683,7 +683,7 @@ func resourceEnvironmentSettingsRead(d *schema.ResourceData, meta interface{}) e
 
 	allSettings, err := fetchEnvironmentSettings(d, meta)
 	if err != nil {
-		return err // nosemgrep:bare-error-returns
+		return err // nosemgrep:ci.bare-error-returns
 	}
 
 	settings := d.Get("setting").(*schema.Set)
@@ -701,11 +701,11 @@ func resourceEnvironmentSettingsRead(d *schema.ResourceData, meta interface{}) e
 	updatedSettings := schema.NewSet(optionSettingValueHash, updatedSettingsKeySet.List())
 
 	if err := d.Set("all_settings", allSettings.List()); err != nil {
-		return err // nosemgrep:bare-error-returns
+		return err // nosemgrep:ci.bare-error-returns
 	}
 
 	if err := d.Set("setting", updatedSettings.List()); err != nil {
-		return err // nosemgrep:bare-error-returns
+		return err // nosemgrep:ci.bare-error-returns
 	}
 
 	return nil

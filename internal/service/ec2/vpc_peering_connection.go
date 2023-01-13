@@ -150,12 +150,12 @@ func resourceVPCPeeringConnectionCreate(d *schema.ResourceData, meta interface{}
 		vpcPeeringConnection, err = acceptVPCPeeringConnection(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 
 		if err != nil {
-			return err // nosemgrep:bare-error-returns
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
 
 	if err := modifyVPCPeeringConnectionOptions(conn, d, vpcPeeringConnection, true); err != nil {
-		return err // nosemgrep:bare-error-returns
+		return err // nosemgrep:ci.bare-error-returns
 	}
 
 	return resourceVPCPeeringConnectionRead(d, meta)
@@ -236,13 +236,13 @@ func resourceVPCPeeringConnectionUpdate(d *schema.ResourceData, meta interface{}
 		vpcPeeringConnection, err = acceptVPCPeeringConnection(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 
 		if err != nil {
-			return err // nosemgrep:bare-error-returns
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
 
 	if d.HasChanges("accepter", "requester") {
 		if err := modifyVPCPeeringConnectionOptions(conn, d, vpcPeeringConnection, true); err != nil {
-			return err // nosemgrep:bare-error-returns
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
 

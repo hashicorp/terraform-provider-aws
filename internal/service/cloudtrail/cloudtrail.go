@@ -326,19 +326,19 @@ func resourceCloudTrailCreate(d *schema.ResourceData, meta interface{}) error { 
 	// Event Selectors
 	if _, ok := d.GetOk("event_selector"); ok {
 		if err := setEventSelectors(conn, d); err != nil {
-			return err // nosemgrep:bare-error-returns
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
 
 	if _, ok := d.GetOk("advanced_event_selector"); ok {
 		if err := setAdvancedEventSelectors(conn, d); err != nil {
-			return err // nosemgrep:bare-error-returns
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
 
 	if _, ok := d.GetOk("insight_selector"); ok {
 		if err := setInsightSelectors(conn, d); err != nil {
-			return err // nosemgrep:bare-error-returns
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
 

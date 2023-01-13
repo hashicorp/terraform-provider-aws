@@ -42,7 +42,7 @@ func resourceNetworkACLAssociationCreate(d *schema.ResourceData, meta interface{
 	associationID, err := networkACLAssociationCreate(conn, d.Get("network_acl_id").(string), d.Get("subnet_id").(string))
 
 	if err != nil {
-		return err // nosemgrep:bare-error-returns
+		return err // nosemgrep:ci.bare-error-returns
 	}
 
 	d.SetId(associationID)
@@ -94,7 +94,7 @@ func resourceNetworkACLAssociationDelete(d *schema.ResourceData, meta interface{
 	}
 
 	if err := networkACLAssociationDelete(conn, d.Id(), aws.StringValue(defaultNACL.NetworkAclId)); err != nil {
-		return err // nosemgrep:bare-error-returns
+		return err // nosemgrep:ci.bare-error-returns
 	}
 
 	return nil

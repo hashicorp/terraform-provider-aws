@@ -1834,7 +1834,7 @@ func resourceInstanceDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err := terminateInstance(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return err // nosemgrep:bare-error-returns
+		return err // nosemgrep:ci.bare-error-returns
 	}
 
 	return nil
@@ -1948,20 +1948,20 @@ func readBlockDevices(d *schema.ResourceData, instance *ec2.Instance, conn *ec2.
 	}
 
 	if err := d.Set("ebs_block_device", ibds["ebs"]); err != nil {
-		return err // nosemgrep:bare-error-returns
+		return err // nosemgrep:ci.bare-error-returns
 	}
 
 	// This handles the import case which needs to be defaulted to empty
 	if _, ok := d.GetOk("root_block_device"); !ok {
 		if err := d.Set("root_block_device", []interface{}{}); err != nil {
-			return err // nosemgrep:bare-error-returns
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
 
 	if ibds["root"] != nil {
 		roots := []interface{}{ibds["root"]}
 		if err := d.Set("root_block_device", roots); err != nil {
-			return err // nosemgrep:bare-error-returns
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
 
@@ -2431,11 +2431,11 @@ func readSecurityGroups(d *schema.ResourceData, instance *ec2.Instance, conn *ec
 		}
 		log.Printf("[DEBUG] Setting Security Group IDs: %#v", sgs)
 		if err := d.Set("vpc_security_group_ids", sgs); err != nil {
-			return err // nosemgrep:bare-error-returns
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	} else {
 		if err := d.Set("vpc_security_group_ids", []string{}); err != nil {
-			return err // nosemgrep:bare-error-returns
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
 	if useName {
@@ -2445,11 +2445,11 @@ func readSecurityGroups(d *schema.ResourceData, instance *ec2.Instance, conn *ec
 		}
 		log.Printf("[DEBUG] Setting Security Group Names: %#v", sgs)
 		if err := d.Set("security_groups", sgs); err != nil {
-			return err // nosemgrep:bare-error-returns
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	} else {
 		if err := d.Set("security_groups", []string{}); err != nil {
-			return err // nosemgrep:bare-error-returns
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
 	return nil

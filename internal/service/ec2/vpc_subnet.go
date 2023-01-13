@@ -206,7 +206,7 @@ func resourceSubnetCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err := modifySubnetAttributesOnCreate(conn, d, subnet, false); err != nil {
-		return err // nosemgrep:bare-error-returns
+		return err // nosemgrep:ci.bare-error-returns
 	}
 
 	return resourceSubnetRead(d, meta)
@@ -300,57 +300,57 @@ func resourceSubnetUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChanges("customer_owned_ipv4_pool", "map_customer_owned_ip_on_launch") {
 		if err := modifySubnetOutpostRackAttributes(conn, d.Id(), d.Get("customer_owned_ipv4_pool").(string), d.Get("map_customer_owned_ip_on_launch").(bool)); err != nil {
-			return err // nosemgrep:bare-error-returns
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
 
 	if d.HasChange("enable_dns64") {
 		if err := modifySubnetEnableDNS64(conn, d.Id(), d.Get("enable_dns64").(bool)); err != nil {
-			return err // nosemgrep:bare-error-returns
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
 
 	if d.HasChange("enable_resource_name_dns_aaaa_record_on_launch") {
 		if err := modifySubnetEnableResourceNameDNSAAAARecordOnLaunch(conn, d.Id(), d.Get("enable_resource_name_dns_aaaa_record_on_launch").(bool)); err != nil {
-			return err // nosemgrep:bare-error-returns
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
 
 	if d.HasChange("enable_resource_name_dns_a_record_on_launch") {
 		if err := modifySubnetEnableResourceNameDNSARecordOnLaunch(conn, d.Id(), d.Get("enable_resource_name_dns_a_record_on_launch").(bool)); err != nil {
-			return err // nosemgrep:bare-error-returns
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
 
 	if d.HasChange("map_public_ip_on_launch") {
 		if err := modifySubnetMapPublicIPOnLaunch(conn, d.Id(), d.Get("map_public_ip_on_launch").(bool)); err != nil {
-			return err // nosemgrep:bare-error-returns
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
 
 	if d.HasChange("private_dns_hostname_type_on_launch") {
 		if err := modifySubnetPrivateDNSHostnameTypeOnLaunch(conn, d.Id(), d.Get("private_dns_hostname_type_on_launch").(string)); err != nil {
-			return err // nosemgrep:bare-error-returns
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
 
 	// If we're disabling IPv6 assignment for new ENIs, do that before modifying the IPv6 CIDR block.
 	if d.HasChange("assign_ipv6_address_on_creation") && !d.Get("assign_ipv6_address_on_creation").(bool) {
 		if err := modifySubnetAssignIPv6AddressOnCreation(conn, d.Id(), false); err != nil {
-			return err // nosemgrep:bare-error-returns
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
 
 	if d.HasChange("ipv6_cidr_block") {
 		if err := modifySubnetIPv6CIDRBlockAssociation(conn, d.Id(), d.Get("ipv6_cidr_block_association_id").(string), d.Get("ipv6_cidr_block").(string)); err != nil {
-			return err // nosemgrep:bare-error-returns
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
 
 	// If we're enabling IPv6 assignment for new ENIs, do that after modifying the IPv6 CIDR block.
 	if d.HasChange("assign_ipv6_address_on_creation") && d.Get("assign_ipv6_address_on_creation").(bool) {
 		if err := modifySubnetAssignIPv6AddressOnCreation(conn, d.Id(), true); err != nil {
-			return err // nosemgrep:bare-error-returns
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
 

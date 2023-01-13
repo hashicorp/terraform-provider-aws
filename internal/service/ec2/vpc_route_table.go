@@ -194,7 +194,7 @@ func resourceRouteTableCreate(d *schema.ResourceData, meta interface{}) error {
 			v := v.(string)
 
 			if err := routeTableEnableVGWRoutePropagation(conn, d.Id(), v, d.Timeout(schema.TimeoutCreate)); err != nil {
-				return err // nosemgrep:bare-error-returns
+				return err // nosemgrep:ci.bare-error-returns
 			}
 		}
 	}
@@ -204,7 +204,7 @@ func resourceRouteTableCreate(d *schema.ResourceData, meta interface{}) error {
 			v := v.(map[string]interface{})
 
 			if err := routeTableAddRoute(conn, d.Id(), v, d.Timeout(schema.TimeoutCreate)); err != nil {
-				return err // nosemgrep:bare-error-returns
+				return err // nosemgrep:ci.bare-error-returns
 			}
 		}
 	}
@@ -283,7 +283,7 @@ func resourceRouteTableUpdate(d *schema.ResourceData, meta interface{}) error {
 			v := v.(string)
 
 			if err := routeTableDisableVGWRoutePropagation(conn, d.Id(), v); err != nil {
-				return err // nosemgrep:bare-error-returns
+				return err // nosemgrep:ci.bare-error-returns
 			}
 		}
 
@@ -291,7 +291,7 @@ func resourceRouteTableUpdate(d *schema.ResourceData, meta interface{}) error {
 			v := v.(string)
 
 			if err := routeTableEnableVGWRoutePropagation(conn, d.Id(), v, d.Timeout(schema.TimeoutCreate)); err != nil {
-				return err // nosemgrep:bare-error-returns
+				return err // nosemgrep:ci.bare-error-returns
 			}
 		}
 	}
@@ -318,7 +318,7 @@ func resourceRouteTableUpdate(d *schema.ResourceData, meta interface{}) error {
 
 					if oldTarget != newTarget {
 						if err := routeTableUpdateRoute(conn, d.Id(), vNew, d.Timeout(schema.TimeoutUpdate)); err != nil {
-							return err // nosemgrep:bare-error-returns
+							return err // nosemgrep:ci.bare-error-returns
 						}
 					}
 				}
@@ -326,7 +326,7 @@ func resourceRouteTableUpdate(d *schema.ResourceData, meta interface{}) error {
 
 			if addRoute {
 				if err := routeTableAddRoute(conn, d.Id(), vNew, d.Timeout(schema.TimeoutUpdate)); err != nil {
-					return err // nosemgrep:bare-error-returns
+					return err // nosemgrep:ci.bare-error-returns
 				}
 			}
 		}
@@ -350,7 +350,7 @@ func resourceRouteTableUpdate(d *schema.ResourceData, meta interface{}) error {
 
 			if delRoute {
 				if err := routeTableDeleteRoute(conn, d.Id(), vOld, d.Timeout(schema.TimeoutUpdate)); err != nil {
-					return err // nosemgrep:bare-error-returns
+					return err // nosemgrep:ci.bare-error-returns
 				}
 			}
 		}

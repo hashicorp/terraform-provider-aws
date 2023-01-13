@@ -586,7 +586,7 @@ func setFromCacheCluster(d *schema.ResourceData, c *elasticache.CacheCluster) er
 	d.Set("engine", c.Engine)
 	if aws.StringValue(c.Engine) == engineRedis {
 		if err := setEngineVersionRedis(d, c.EngineVersion); err != nil {
-			return err // nosemgrep:bare-error-returns
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	} else {
 		setEngineVersionMemcached(d, c.EngineVersion)

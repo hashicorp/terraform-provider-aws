@@ -86,7 +86,7 @@ func resourceVPCEndpointSecurityGroupAssociationCreate(d *schema.ResourceData, m
 	err := createVPCEndpointSecurityGroupAssociation(conn, vpcEndpointID, securityGroupID)
 
 	if err != nil {
-		return err // nosemgrep:bare-error-returns
+		return err // nosemgrep:ci.bare-error-returns
 	}
 
 	d.SetId(VPCEndpointSecurityGroupAssociationCreateID(vpcEndpointID, securityGroupID))
@@ -94,7 +94,7 @@ func resourceVPCEndpointSecurityGroupAssociationCreate(d *schema.ResourceData, m
 	if replaceDefaultAssociation {
 		// Delete the existing VPC endpoint/default security group association.
 		if err := deleteVPCEndpointSecurityGroupAssociation(conn, vpcEndpointID, defaultSecurityGroupID); err != nil {
-			return err // nosemgrep:bare-error-returns
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
 
@@ -150,7 +150,7 @@ func resourceVPCEndpointSecurityGroupAssociationDelete(d *schema.ResourceData, m
 		err = createVPCEndpointSecurityGroupAssociation(conn, vpcEndpointID, aws.StringValue(defaultSecurityGroup.GroupId))
 
 		if err != nil {
-			return err // nosemgrep:bare-error-returns
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
 

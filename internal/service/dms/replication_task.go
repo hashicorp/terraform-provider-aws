@@ -156,7 +156,7 @@ func resourceReplicationTaskCreate(d *schema.ResourceData, meta interface{}) err
 
 	if d.Get("start_replication_task").(bool) {
 		if err := startReplicationTask(d.Id(), conn); err != nil {
-			return err // nosemgrep:bare-error-returns
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
 
@@ -251,7 +251,7 @@ func resourceReplicationTaskUpdate(d *schema.ResourceData, meta interface{}) err
 		if status == replicationTaskStatusRunning {
 			log.Println("[DEBUG] stopping DMS replication task:", input)
 			if err := stopReplicationTask(d.Id(), conn); err != nil {
-				return err // nosemgrep:bare-error-returns
+				return err // nosemgrep:ci.bare-error-returns
 			}
 		}
 
@@ -268,7 +268,7 @@ func resourceReplicationTaskUpdate(d *schema.ResourceData, meta interface{}) err
 		if d.Get("start_replication_task").(bool) {
 			err := startReplicationTask(d.Id(), conn)
 			if err != nil {
-				return err // nosemgrep:bare-error-returns
+				return err // nosemgrep:ci.bare-error-returns
 			}
 		}
 	}
@@ -278,13 +278,13 @@ func resourceReplicationTaskUpdate(d *schema.ResourceData, meta interface{}) err
 		if d.Get("start_replication_task").(bool) {
 			if status != replicationTaskStatusRunning {
 				if err := startReplicationTask(d.Id(), conn); err != nil {
-					return err // nosemgrep:bare-error-returns
+					return err // nosemgrep:ci.bare-error-returns
 				}
 			}
 		} else {
 			if status == replicationTaskStatusRunning {
 				if err := stopReplicationTask(d.Id(), conn); err != nil {
-					return err // nosemgrep:bare-error-returns
+					return err // nosemgrep:ci.bare-error-returns
 				}
 			}
 		}
@@ -307,7 +307,7 @@ func resourceReplicationTaskDelete(d *schema.ResourceData, meta interface{}) err
 
 	if status := d.Get("status").(string); status == replicationTaskStatusRunning {
 		if err := stopReplicationTask(d.Id(), conn); err != nil {
-			return err // nosemgrep:bare-error-returns
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
 

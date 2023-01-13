@@ -96,7 +96,7 @@ func resourceVPCDHCPOptionsAssociationDelete(d *schema.ResourceData, meta interf
 	dhcpOptionsID, vpcID, err := VPCDHCPOptionsAssociationParseResourceID(d.Id())
 
 	if err != nil {
-		return err // nosemgrep:bare-error-returns
+		return err // nosemgrep:ci.bare-error-returns
 	}
 
 	if dhcpOptionsID == DefaultDHCPOptionsID {

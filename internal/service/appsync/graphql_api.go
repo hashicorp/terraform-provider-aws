@@ -709,7 +709,7 @@ func resourceSchemaPut(d *schema.ResourceData, meta interface{}) error {
 			Definition: ([]byte)(v.(string)),
 		}
 		if _, err := conn.StartSchemaCreation(input); err != nil {
-			return err // nosemgrep:bare-error-returns
+			return err // nosemgrep:ci.bare-error-returns
 		}
 
 		activeSchemaConfig := &resource.StateChangeConf{
