@@ -61,6 +61,7 @@ require (
 	golang.org/x/crypto v0.0.0-20220517005047-85d78b3ac167
 	golang.org/x/exp v0.0.0-20220722155223-a9213eeb770e
 	golang.org/x/tools v0.1.12
+	gopkg.in/dnaeon/go-vcr.v3 v3.1.2
 	gopkg.in/yaml.v2 v2.4.0
 	syreclabs.com/go/faker v1.2.3
 )
@@ -127,4 +128,5 @@ require (
 	google.golang.org/genproto v0.0.0-20200711021454-869866162049 // indirect
 	google.golang.org/grpc v1.51.0 // indirect
 	google.golang.org/protobuf v1.28.1 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
