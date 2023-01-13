@@ -783,7 +783,7 @@ resource "aws_iam_role_policy" "test" {
         "s3:PutObject",
       ]
       Resource = [
-        "${aws_s3_bucket.test.arn}",
+        aws_s3_bucket.test.arn,
         "${aws_s3_bucket.test.arn}/*"
       ]
     }]
