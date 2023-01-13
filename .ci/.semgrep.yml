@@ -858,10 +858,10 @@ rules:
   - id: bare-error-returns
     languages: [go]
     message: API errors should be wrapped with the CRUD info
-    paths: 
+    paths:
       include:
         - internal/service
-    patterns: 
+    patterns:
       - pattern: return $ERR
       - pattern-inside: |
           func $FUNC($D *schema.ResourceData, ...) error {
