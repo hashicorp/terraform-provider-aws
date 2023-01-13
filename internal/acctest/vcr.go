@@ -393,7 +393,6 @@ func closeVCRRecorder(t *testing.T) {
 					t.Error(err)
 				}
 			}
-
 		}
 
 		delete(providerMetas, testName)
@@ -428,7 +427,6 @@ func ParallelTest(t *testing.T, c resource.TestCase) {
 
 // Test wraps resource.Test, initializing VCR if enabled.
 func Test(t *testing.T, c resource.TestCase) {
-
 	if isVCREnabled() {
 		c.ProtoV5ProviderFactories = vcrEnabledProtoV5ProviderFactories(t, c.ProtoV5ProviderFactories)
 		defer closeVCRRecorder(t)
