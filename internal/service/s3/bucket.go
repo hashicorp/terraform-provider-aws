@@ -136,12 +136,17 @@ func ResourceBucket() *schema.Resource {
 			},
 
 			"policy": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				Deprecated:       "Use the aws_s3_bucket_policy resource instead",
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				Type:                  schema.TypeString,
+				Optional:              true,
+				Computed:              true,
+				Deprecated:            "Use the aws_s3_bucket_policy resource instead",
+				ValidateFunc:          validation.StringIsJSON,
+				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+				DiffSuppressOnRefresh: true,
+				StateFunc: func(v interface{}) string {
+					json, _ := structure.NormalizeJsonString(v)
+					return json
+				},
 			},
 
 			"cors_rule": {
@@ -987,7 +992,12 @@ func resourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if output, ok := pol.(*s3.GetBucketPolicyOutput); ok {
-		d.Set("policy", output.Policy)
+		policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.StringValue(output.Policy))
+		if err != nil {
+			return fmt.Errorf("while setting policy (%s), encountered: %w", aws.StringValue(output.Policy), err)
+		}
+
+		d.Set("policy", policyToSet)
 	} else {
 		d.Set("policy", nil)
 	}
@@ -1927,7 +1937,6 @@ func resourceBucketInternalObjectLockConfigurationUpdate(conn *s3.S3, d *schema.
 
 func resourceBucketInternalPolicyUpdate(conn *s3.S3, d *schema.ResourceData) error {
 	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
-
 	if err != nil {
 		return fmt.Errorf("policy (%s) is an invalid JSON: %w", policy, err)
 	}

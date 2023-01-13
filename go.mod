@@ -4,12 +4,12 @@ go 1.19
 
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20210428141323-04723f9f07d7
-	github.com/aws/aws-sdk-go v1.44.176
+	github.com/aws/aws-sdk-go v1.44.179
 	github.com/aws/aws-sdk-go-v2 v1.17.3
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.21
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.23.0
 	github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.11.0
-	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.18.0
+	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.19.0
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.21.0
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.20.0
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.77.0
@@ -17,11 +17,11 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.16.0
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.11.0
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.3.0
-	github.com/aws/aws-sdk-go-v2/service/kendra v1.37.0
+	github.com/aws/aws-sdk-go-v2/service/kendra v1.38.0
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.28.0
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.1.0
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.1.0
-	github.com/aws/aws-sdk-go-v2/service/rds v1.39.0
+	github.com/aws/aws-sdk-go-v2/service/rds v1.40.0
 	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.2.0
 	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.1.0
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.14.0
@@ -44,10 +44,10 @@ require (
 	github.com/hashicorp/go-uuid v1.0.3
 	github.com/hashicorp/go-version v1.6.0
 	github.com/hashicorp/hcl/v2 v2.15.0
-	github.com/hashicorp/terraform-plugin-framework v1.0.1
+	github.com/hashicorp/terraform-plugin-framework v1.1.0
 	github.com/hashicorp/terraform-plugin-framework-timeouts v0.3.0
 	github.com/hashicorp/terraform-plugin-framework-validators v0.9.0
-	github.com/hashicorp/terraform-plugin-go v0.14.2
+	github.com/hashicorp/terraform-plugin-go v0.14.3
 	github.com/hashicorp/terraform-plugin-log v0.7.0
 	github.com/hashicorp/terraform-plugin-mux v0.8.0
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.24.1
@@ -93,7 +93,7 @@ require (
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-checkpoint v0.5.0 // indirect
 	github.com/hashicorp/go-hclog v1.2.1 // indirect
-	github.com/hashicorp/go-plugin v1.4.6 // indirect
+	github.com/hashicorp/go-plugin v1.4.8 // indirect
 	github.com/hashicorp/hc-install v0.4.0 // indirect
 	github.com/hashicorp/logutils v1.0.0 // indirect
 	github.com/hashicorp/terraform-exec v0.17.3 // indirect
