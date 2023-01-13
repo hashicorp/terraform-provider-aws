@@ -1549,7 +1549,7 @@ func TestAccOpenSearchDomain_VolumeType_update(t *testing.T) {
 // support the throughput and iops input values (ex. gp2)
 //
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/27467
-func TestAccOpenSearchDomain_VolumeType_GP3ToGP2(t *testing.T) {
+func TestAccOpenSearchDomain_VolumeType_gp3ToGP2(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -2348,7 +2348,7 @@ resource "aws_opensearch_domain" "test" {
 
   ebs_options {
     ebs_enabled = true
-    volume_size = %d
+    volume_size = %[2]d
     volume_type = "gp3"
   }
 
@@ -2366,7 +2366,7 @@ resource "aws_opensearch_domain" "test" {
 
   ebs_options {
     ebs_enabled = true
-    volume_size = %d
+    volume_size = %[2]d
     volume_type = "gp2"
   }
 
