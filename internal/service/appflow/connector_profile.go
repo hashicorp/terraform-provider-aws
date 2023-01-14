@@ -23,7 +23,7 @@ func ResourceConnectorProfile() *schema.Resource {
 		UpdateWithoutTimeout: resourceConnectorProfileUpdate,
 		DeleteWithoutTimeout: resourceConnectorProfileDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -1426,7 +1426,7 @@ func resourceConnectorProfileCreate(ctx context.Context, d *schema.ResourceData,
 		createConnectorProfileInput.KmsArn = aws.String(v)
 	}
 
-	out, err := conn.CreateConnectorProfile(&createConnectorProfileInput)
+	out, err := conn.CreateConnectorProfileWithContext(ctx, &createConnectorProfileInput)
 
 	if err != nil {
 		return diag.Errorf("creating AppFlow Connector Profile: %s", err)
@@ -1485,7 +1485,7 @@ func resourceConnectorProfileUpdate(ctx context.Context, d *schema.ResourceData,
 		ConnectorProfileName:   aws.String(name),
 	}
 
-	_, err := conn.UpdateConnectorProfile(&updateConnectorProfileInput)
+	_, err := conn.UpdateConnectorProfileWithContext(ctx, &updateConnectorProfileInput)
 
 	if err != nil {
 		return diag.Errorf("updating AppFlow Connector Profile (%s): %s", d.Id(), err)

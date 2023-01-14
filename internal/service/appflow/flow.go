@@ -26,7 +26,7 @@ func ResourceFlow() *schema.Resource {
 		UpdateWithoutTimeout: resourceFlowUpdate,
 		DeleteWithoutTimeout: resourceFlowDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -1299,7 +1299,7 @@ func resourceFlowRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		d.Set("trigger_config", nil)
 	}
 
-	tags, err := ListTags(conn, d.Id())
+	tags, err := ListTags(ctx, conn, d.Id())
 
 	if err != nil {
 		return diag.Errorf("listing tags for AppFlow Flow (%s): %s", d.Id(), err)
@@ -1337,7 +1337,7 @@ func resourceFlowUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	log.Printf("[DEBUG] Updating AppFlow Flow (%s): %#v", d.Id(), in)
-	_, err := conn.UpdateFlow(in)
+	_, err := conn.UpdateFlowWithContext(ctx, in)
 
 	if err != nil {
 		return diag.Errorf("updating AppFlow Flow (%s): %s", d.Id(), err)
@@ -1347,7 +1347,7 @@ func resourceFlowUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, arn, o, n); err != nil {
+		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
 			return diag.Errorf("error updating tags: %s", err)
 		}
 	}
