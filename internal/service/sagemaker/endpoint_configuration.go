@@ -312,8 +312,7 @@ func ResourceEndpointConfiguration() *schema.Resource {
 						},
 						"variant_name": {
 							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
+							Required: true,
 							ForceNew: true,
 						},
 						"volume_size_in_gb": {
@@ -427,6 +426,10 @@ func ResourceEndpointConfiguration() *schema.Resource {
 							Optional: true,
 							Computed: true,
 							ForceNew: true,
+							ValidateFunc: validation.All(
+								validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9](-*[a-zA-Z0-9])+$`), ""),
+								validation.StringLenBetween(1, 63),
+							),
 						},
 						"volume_size_in_gb": {
 							Type:         schema.TypeInt,
@@ -589,7 +592,8 @@ func expandProductionVariants(configured []interface{}) []*sagemaker.ProductionV
 		data := lRaw.(map[string]interface{})
 
 		l := &sagemaker.ProductionVariant{
-			ModelName: aws.String(data["model_name"].(string)),
+			ModelName:   aws.String(data["model_name"].(string)),
+			VariantName: aws.String(data["variant_name"].(string)),
 		}
 
 		if v, ok := data["initial_instance_count"].(int); ok && v > 0 {
@@ -610,12 +614,6 @@ func expandProductionVariants(configured []interface{}) []*sagemaker.ProductionV
 
 		if v, ok := data["instance_type"].(string); ok && v != "" {
 			l.InstanceType = aws.String(v)
-		}
-
-		if v, ok := data["variant_name"]; ok {
-			l.VariantName = aws.String(v.(string))
-		} else {
-			l.VariantName = aws.String(resource.UniqueId())
 		}
 
 		if v, ok := data["initial_variant_weight"]; ok {
