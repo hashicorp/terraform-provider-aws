@@ -24,7 +24,7 @@ func ResourceWorkspace() *schema.Resource {
 		DeleteWithoutTimeout: resourceWorkspaceDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -150,7 +150,7 @@ func resourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta int
 		}
 	}
 
-	tags, err := ListTagsWithContext(ctx, conn, arn)
+	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
 		return diag.Errorf("listing tags for Prometheus Workspace (%s): %s", arn, err)
@@ -225,7 +225,7 @@ func resourceWorkspaceUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		o, n := d.GetChange("tags_all")
 		arn := d.Get("arn").(string)
 
-		if err := UpdateTagsWithContext(ctx, conn, arn, o, n); err != nil {
+		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
 			return diag.Errorf("updating Prometheus Workspace (%s) tags: %s", arn, err)
 		}
 	}
