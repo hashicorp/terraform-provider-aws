@@ -716,7 +716,7 @@ func resourceSchemaPut(ctx context.Context, d *schema.ResourceData, meta interfa
 			Definition: ([]byte)(v.(string)),
 		}
 		if _, err := conn.StartSchemaCreationWithContext(ctx, input); err != nil {
-			return err // nosemgrep:ci.bare-error-returns
+			return err
 		}
 
 		activeSchemaConfig := &resource.StateChangeConf{
