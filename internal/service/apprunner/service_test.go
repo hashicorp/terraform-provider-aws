@@ -394,20 +394,21 @@ func TestAccAppRunnerService_ImageRepository_runtimeEnvironmentVars(t *testing.T
 }
 
 func TestAccAppRunnerService_ImageRepository_runtimeEnvironmentSecrets(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_apprunner_service.test"
 	ssmParameterResourceName := "aws_ssm_parameter.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, apprunner.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckServiceDestroy,
+		CheckDestroy:             testAccCheckServiceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceConfig_ImageRepository_runtimeEnvSecrets(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceExists(resourceName),
+					testAccCheckServiceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "source_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source_configuration.0.image_repository.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source_configuration.0.image_repository.0.image_configuration.#", "1"),

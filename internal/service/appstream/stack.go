@@ -346,7 +346,7 @@ func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta interfa
 			return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream Stack (%s): %w", "user_settings", d.Id(), err))
 		}
 
-		tg, err := conn.ListTagsForResource(&appstream.ListTagsForResourceInput{
+		tg, err := conn.ListTagsForResourceWithContext(ctx, &appstream.ListTagsForResourceInput{
 			ResourceArn: v.Arn,
 		})
 		if err != nil {
@@ -401,7 +401,7 @@ func resourceStackUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.UserSettings = expandUserSettings(d.Get("user_settings").(*schema.Set).List())
 	}
 
-	resp, err := conn.UpdateStack(input)
+	resp, err := conn.UpdateStackWithContext(ctx, input)
 
 	if err != nil {
 		diag.FromErr(fmt.Errorf("error updating Appstream Stack (%s): %w", d.Id(), err))
@@ -411,7 +411,7 @@ func resourceStackUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		arn := aws.StringValue(resp.Stack.Arn)
 
 		o, n := d.GetChange("tags")
-		if err := UpdateTags(conn, arn, o, n); err != nil {
+		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
 			return diag.FromErr(fmt.Errorf("error updating Appstream Stack tags (%s): %w", d.Id(), err))
 		}
 	}
