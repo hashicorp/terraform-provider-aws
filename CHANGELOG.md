@@ -1,4 +1,15 @@
-## 4.50.0 (Unreleased)
+## 4.51.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/aws_apprunner_service: Add `source_configuration.code_repository.code_configuration.runtime_environment_secrets` and `source_configuration.image_repository.image_configuration.runtime_environment_secrets` argument ([#28871](https://github.com/hashicorp/terraform-provider-aws/issues/28871))
+* resource/aws_lambda_event_source_mapping: Add `scaling_config` argument ([#28876](https://github.com/hashicorp/terraform-provider-aws/issues/28876))
+
+BUG FIXES:
+
+* resource/aws_opensearch_domain: Omit `throughput` and `iops` for unsupported volume types ([#28862](https://github.com/hashicorp/terraform-provider-aws/issues/28862))
+
+## 4.50.0 (January 13, 2023)
 
 FEATURES:
 
@@ -39,14 +50,18 @@ BUG FIXES:
 * resource/aws_glacier_vault: Improve refresh to avoid unnecessary diffs in `access_policy` ([#28804](https://github.com/hashicorp/terraform-provider-aws/issues/28804))
 * resource/aws_glacier_vault_lock: Improve refresh to avoid unnecessary diffs in `policy` ([#28804](https://github.com/hashicorp/terraform-provider-aws/issues/28804))
 * resource/aws_glue_resource_policy: Improve refresh to avoid unnecessary diffs in `policy` ([#28807](https://github.com/hashicorp/terraform-provider-aws/issues/28807))
+* resource/aws_iam_group_policy: Fixed issue that could result in "inconsistent final plan" errors ([#28868](https://github.com/hashicorp/terraform-provider-aws/issues/28868))
 * resource/aws_iam_group_policy: Improve refresh to avoid unnecessary diffs in `policy` ([#28777](https://github.com/hashicorp/terraform-provider-aws/issues/28777))
 * resource/aws_iam_group_policy: Improve refresh to avoid unnecessary diffs in `policy` ([#28836](https://github.com/hashicorp/terraform-provider-aws/issues/28836))
 * resource/aws_iam_policy: Improve refresh to avoid unnecessary diffs in `policy` ([#28777](https://github.com/hashicorp/terraform-provider-aws/issues/28777))
 * resource/aws_iam_policy: Improve refresh to avoid unnecessary diffs in `policy`, `tags` ([#28836](https://github.com/hashicorp/terraform-provider-aws/issues/28836))
+* resource/aws_iam_role: Fixed issue that could result in "inconsistent final plan" errors ([#28868](https://github.com/hashicorp/terraform-provider-aws/issues/28868))
 * resource/aws_iam_role: Improve refresh to avoid unnecessary diffs in `assume_role_policy` and `inline_policy` `policy` ([#28777](https://github.com/hashicorp/terraform-provider-aws/issues/28777))
 * resource/aws_iam_role: Improve refresh to avoid unnecessary diffs in `inline_policy.*.policy`, `tags` ([#28836](https://github.com/hashicorp/terraform-provider-aws/issues/28836))
+* resource/aws_iam_role_policy: Fixed issue that could result in "inconsistent final plan" errors ([#28868](https://github.com/hashicorp/terraform-provider-aws/issues/28868))
 * resource/aws_iam_role_policy: Improve refresh to avoid unnecessary diffs in `policy` ([#28777](https://github.com/hashicorp/terraform-provider-aws/issues/28777))
 * resource/aws_iam_role_policy: Improve refresh to avoid unnecessary diffs in `policy` ([#28836](https://github.com/hashicorp/terraform-provider-aws/issues/28836))
+* resource/aws_iam_user_policy: Fixed issue that could result in "inconsistent final plan" errors ([#28868](https://github.com/hashicorp/terraform-provider-aws/issues/28868))
 * resource/aws_iam_user_policy: Improve refresh to avoid unnecessary diffs in `policy` ([#28777](https://github.com/hashicorp/terraform-provider-aws/issues/28777))
 * resource/aws_iam_user_policy: Improve refresh to avoid unnecessary diffs in `policy` ([#28836](https://github.com/hashicorp/terraform-provider-aws/issues/28836))
 * resource/aws_iot_policy: Improve refresh to avoid unnecessary diffs in `policy` ([#28838](https://github.com/hashicorp/terraform-provider-aws/issues/28838))
