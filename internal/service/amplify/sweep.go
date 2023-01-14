@@ -22,6 +22,7 @@ func init() {
 }
 
 func sweepApps(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -30,7 +31,7 @@ func sweepApps(region string) error {
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	input := &amplify.ListAppsInput{}
-	err = listAppsPages(conn, input, func(page *amplify.ListAppsOutput, lastPage bool) bool {
+	err = listAppsPages(ctx, conn, input, func(page *amplify.ListAppsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -54,7 +55,7 @@ func sweepApps(region string) error {
 		return fmt.Errorf("error listing Amplify Apps: %w", err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Amplify Apps (%s): %w", region, err)
