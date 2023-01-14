@@ -1,6 +1,7 @@
 package appautoscaling
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strconv"
@@ -10,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/applicationautoscaling"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -25,12 +27,12 @@ const (
 
 func ResourcePolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourcePolicyCreate,
-		Read:   resourcePolicyRead,
-		Update: resourcePolicyUpdate,
-		Delete: resourcePolicyDelete,
+		CreateWithoutTimeout: resourcePolicyCreate,
+		ReadWithoutTimeout:   resourcePolicyRead,
+		UpdateWithoutTimeout: resourcePolicyUpdate,
+		DeleteWithoutTimeout: resourcePolicyDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourcePolicyImport,
+			StateContext: resourcePolicyImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -210,16 +212,17 @@ func ResourcePolicy() *schema.Resource {
 	}
 }
 
-func resourcePolicyCreate(d *schema.ResourceData, meta interface{}) error {
+func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppAutoScalingConn()
 
 	params := getPutScalingPolicyInput(d)
 
 	log.Printf("[DEBUG] ApplicationAutoScaling PutScalingPolicy: %#v", params)
 	var resp *applicationautoscaling.PutScalingPolicyOutput
-	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
+	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
 		var err error
-		resp, err = conn.PutScalingPolicy(&params)
+		resp, err = conn.PutScalingPolicyWithContext(ctx, &params)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, applicationautoscaling.ErrCodeFailedResourceAccessException, "Rate exceeded") {
 				return resource.RetryableError(err)
@@ -238,25 +241,26 @@ func resourcePolicyCreate(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		resp, err = conn.PutScalingPolicy(&params)
+		resp, err = conn.PutScalingPolicyWithContext(ctx, &params)
 	}
 	if err != nil {
-		return create.Error(names.AppAutoScaling, create.ErrActionCreating, ResNamePolicy, d.Get("name").(string), err)
+		return create.DiagError(names.AppAutoScaling, create.ErrActionCreating, ResNamePolicy, d.Get("name").(string), err)
 	}
 
 	d.Set("arn", resp.PolicyARN)
 	d.SetId(d.Get("name").(string))
 	log.Printf("[INFO] ApplicationAutoScaling scaling PolicyARN: %s", d.Get("arn").(string))
 
-	return resourcePolicyRead(d, meta)
+	return append(diags, resourcePolicyRead(ctx, d, meta)...)
 }
 
-func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
+func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	var p *applicationautoscaling.ScalingPolicy
 
-	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+	err := resource.RetryContext(ctx, 2*time.Minute, func() *resource.RetryError {
 		var err error
-		p, err = getPolicy(d, meta)
+		p, err = getPolicy(ctx, d, meta)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, applicationautoscaling.ErrCodeFailedResourceAccessException) {
 				return resource.RetryableError(err)
@@ -269,16 +273,16 @@ func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		p, err = getPolicy(d, meta)
+		p, err = getPolicy(ctx, d, meta)
 	}
 	if err != nil {
-		return create.Error(names.AppAutoScaling, create.ErrActionReading, ResNamePolicy, d.Id(), err)
+		return create.DiagError(names.AppAutoScaling, create.ErrActionReading, ResNamePolicy, d.Id(), err)
 	}
 
 	if p == nil && !d.IsNewResource() {
 		log.Printf("[WARN] Application AutoScaling Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	log.Printf("[DEBUG] Read ApplicationAutoScaling policy: %s, SP: %s, Obj: %s", d.Get("name"), d.Get("name"), p)
@@ -296,22 +300,23 @@ func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("service_namespace", p.ServiceNamespace)
 
 	if err := d.Set("step_scaling_policy_configuration", flattenStepScalingPolicyConfiguration(p.StepScalingPolicyConfiguration)); err != nil {
-		return create.SettingError(names.AppAutoScaling, ResNamePolicy, d.Id(), "step_scaling_policy_configuration", err)
+		return create.DiagSettingError(names.AppAutoScaling, ResNamePolicy, d.Id(), "step_scaling_policy_configuration", err)
 	}
 	if err := d.Set("target_tracking_scaling_policy_configuration", flattenTargetTrackingScalingPolicyConfiguration(p.TargetTrackingScalingPolicyConfiguration)); err != nil {
-		return create.SettingError(names.AppAutoScaling, ResNamePolicy, d.Id(), "target_tracking_scaling_policy_configuration", err)
+		return create.DiagSettingError(names.AppAutoScaling, ResNamePolicy, d.Id(), "target_tracking_scaling_policy_configuration", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourcePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppAutoScalingConn()
 
 	params := getPutScalingPolicyInput(d)
 
-	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
-		_, err := conn.PutScalingPolicy(&params)
+	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+		_, err := conn.PutScalingPolicyWithContext(ctx, &params)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, applicationautoscaling.ErrCodeFailedResourceAccessException) {
 				return resource.RetryableError(err)
@@ -324,23 +329,24 @@ func resourcePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		_, err = conn.PutScalingPolicy(&params)
+		_, err = conn.PutScalingPolicyWithContext(ctx, &params)
 	}
 	if err != nil {
-		return create.Error(names.AppAutoScaling, create.ErrActionUpdating, ResNamePolicy, d.Id(), err)
+		return create.DiagError(names.AppAutoScaling, create.ErrActionUpdating, ResNamePolicy, d.Id(), err)
 	}
 
-	return resourcePolicyRead(d, meta)
+	return append(diags, resourcePolicyRead(ctx, d, meta)...)
 }
 
-func resourcePolicyDelete(d *schema.ResourceData, meta interface{}) error {
+func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppAutoScalingConn()
-	p, err := getPolicy(d, meta)
+	p, err := getPolicy(ctx, d, meta)
 	if err != nil {
-		return create.Error(names.AppAutoScaling, create.ErrActionDeleting, ResNamePolicy, d.Id(), err)
+		return create.DiagError(names.AppAutoScaling, create.ErrActionDeleting, ResNamePolicy, d.Id(), err)
 	}
 	if p == nil {
-		return nil
+		return diags
 	}
 
 	params := applicationautoscaling.DeleteScalingPolicyInput{
@@ -350,8 +356,8 @@ func resourcePolicyDelete(d *schema.ResourceData, meta interface{}) error {
 		ServiceNamespace:  aws.String(d.Get("service_namespace").(string)),
 	}
 	log.Printf("[DEBUG] Deleting Application AutoScaling Policy opts: %#v", params)
-	err = resource.Retry(propagationTimeout, func() *resource.RetryError {
-		_, err = conn.DeleteScalingPolicy(&params)
+	err = resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+		_, err = conn.DeleteScalingPolicyWithContext(ctx, &params)
 
 		if tfawserr.ErrCodeEquals(err, applicationautoscaling.ErrCodeFailedResourceAccessException) {
 			return resource.RetryableError(err)
@@ -368,17 +374,17 @@ func resourcePolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteScalingPolicy(&params)
+		_, err = conn.DeleteScalingPolicyWithContext(ctx, &params)
 	}
 
 	if err != nil {
-		return create.Error(names.AppAutoScaling, create.ErrActionDeleting, ResNamePolicy, d.Id(), err)
+		return create.DiagError(names.AppAutoScaling, create.ErrActionDeleting, ResNamePolicy, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourcePolicyImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourcePolicyImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	idParts, err := ValidPolicyImportInput(d.Id())
 	if err != nil {
 		return nil, create.Error(names.AppAutoScaling, create.ErrActionImporting, ResNamePolicy, d.Id(), err)
@@ -589,7 +595,7 @@ func getPutScalingPolicyInput(d *schema.ResourceData) applicationautoscaling.Put
 	return params
 }
 
-func getPolicy(d *schema.ResourceData, meta interface{}) (*applicationautoscaling.ScalingPolicy, error) {
+func getPolicy(ctx context.Context, d *schema.ResourceData, meta interface{}) (*applicationautoscaling.ScalingPolicy, error) {
 	conn := meta.(*conns.AWSClient).AppAutoScalingConn()
 
 	params := applicationautoscaling.DescribeScalingPoliciesInput{
@@ -600,7 +606,7 @@ func getPolicy(d *schema.ResourceData, meta interface{}) (*applicationautoscalin
 	}
 
 	log.Printf("[DEBUG] Application AutoScaling Policy Describe Params: %#v", params)
-	resp, err := conn.DescribeScalingPolicies(&params)
+	resp, err := conn.DescribeScalingPoliciesWithContext(ctx, &params)
 	if err != nil {
 		return nil, fmt.Errorf("describing scaling policies: %s", err)
 	}
