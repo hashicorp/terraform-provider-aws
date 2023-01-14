@@ -966,17 +966,17 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	if v := instance.Placement; v != nil {
 		d.Set("availability_zone", v.AvailabilityZone)
 
-		d.Set("placement_group", v)
+		d.Set("placement_group", v.GroupName)
 
-		d.Set("host_id", v)
+		d.Set("host_id", v.HostId)
 
 		if v := v.HostResourceGroupArn; v != nil {
 			d.Set("host_resource_group_arn", instance.Placement.HostResourceGroupArn)
 		}
 
-		d.Set("placement_partition_number", v)
+		d.Set("placement_partition_number", v.PartitionNumber)
 
-		d.Set("tenancy", v)
+		d.Set("tenancy", v.Tenancy)
 	}
 
 	if v := instance.CpuOptions; v != nil {
