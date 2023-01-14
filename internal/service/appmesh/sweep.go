@@ -65,6 +65,7 @@ func init() {
 }
 
 func sweepMeshes(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -73,7 +74,7 @@ func sweepMeshes(region string) error {
 	input := &appmesh.ListMeshesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListMeshesPages(input, func(page *appmesh.ListMeshesOutput, lastPage bool) bool {
+	err = conn.ListMeshesPagesWithContext(ctx, input, func(page *appmesh.ListMeshesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -98,7 +99,7 @@ func sweepMeshes(region string) error {
 		return fmt.Errorf("error listing App Mesh Service Meshes (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping App Mesh Service Meshes (%s): %w", region, err)
@@ -108,6 +109,7 @@ func sweepMeshes(region string) error {
 }
 
 func sweepVirtualGateways(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -117,7 +119,7 @@ func sweepVirtualGateways(region string) error {
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	input := &appmesh.ListMeshesInput{}
-	err = conn.ListMeshesPages(input, func(page *appmesh.ListMeshesOutput, lastPage bool) bool {
+	err = conn.ListMeshesPagesWithContext(ctx, input, func(page *appmesh.ListMeshesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -128,7 +130,7 @@ func sweepVirtualGateways(region string) error {
 				MeshName: aws.String(meshName),
 			}
 
-			err := conn.ListVirtualGatewaysPages(input, func(page *appmesh.ListVirtualGatewaysOutput, lastPage bool) bool {
+			err := conn.ListVirtualGatewaysPagesWithContext(ctx, input, func(page *appmesh.ListVirtualGatewaysOutput, lastPage bool) bool {
 				if page == nil {
 					return !lastPage
 				}
@@ -168,13 +170,13 @@ func sweepVirtualGateways(region string) error {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing App Mesh Service Meshes (%s): %w", region, err))
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping App Mesh Virtual Gateways (%s): %w", region, err))
 	}
 
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping App Mesh Virtual Gateways: %w", err))
 	}
 
@@ -182,6 +184,7 @@ func sweepVirtualGateways(region string) error {
 }
 
 func sweepVirtualNodes(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -191,7 +194,7 @@ func sweepVirtualNodes(region string) error {
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListMeshesPages(input, func(page *appmesh.ListMeshesOutput, lastPage bool) bool {
+	err = conn.ListMeshesPagesWithContext(ctx, input, func(page *appmesh.ListMeshesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -202,7 +205,7 @@ func sweepVirtualNodes(region string) error {
 				MeshName: aws.String(meshName),
 			}
 
-			err := conn.ListVirtualNodesPages(input, func(page *appmesh.ListVirtualNodesOutput, lastPage bool) bool {
+			err := conn.ListVirtualNodesPagesWithContext(ctx, input, func(page *appmesh.ListVirtualNodesOutput, lastPage bool) bool {
 				if page == nil {
 					return !lastPage
 				}
@@ -242,7 +245,7 @@ func sweepVirtualNodes(region string) error {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing App Mesh Service Meshes (%s): %w", region, err))
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping App Mesh Virtual Nodes (%s): %w", region, err))
@@ -252,6 +255,7 @@ func sweepVirtualNodes(region string) error {
 }
 
 func sweepVirtualRouters(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -261,7 +265,7 @@ func sweepVirtualRouters(region string) error {
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListMeshesPages(input, func(page *appmesh.ListMeshesOutput, lastPage bool) bool {
+	err = conn.ListMeshesPagesWithContext(ctx, input, func(page *appmesh.ListMeshesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -272,7 +276,7 @@ func sweepVirtualRouters(region string) error {
 				MeshName: aws.String(meshName),
 			}
 
-			err := conn.ListVirtualRoutersPages(input, func(page *appmesh.ListVirtualRoutersOutput, lastPage bool) bool {
+			err := conn.ListVirtualRoutersPagesWithContext(ctx, input, func(page *appmesh.ListVirtualRoutersOutput, lastPage bool) bool {
 				if page == nil {
 					return !lastPage
 				}
@@ -312,7 +316,7 @@ func sweepVirtualRouters(region string) error {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing App Mesh Service Meshes (%s): %w", region, err))
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping App Mesh Virtual Routers (%s): %w", region, err))
@@ -322,6 +326,7 @@ func sweepVirtualRouters(region string) error {
 }
 
 func sweepVirtualServices(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -331,7 +336,7 @@ func sweepVirtualServices(region string) error {
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListMeshesPages(input, func(page *appmesh.ListMeshesOutput, lastPage bool) bool {
+	err = conn.ListMeshesPagesWithContext(ctx, input, func(page *appmesh.ListMeshesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -342,7 +347,7 @@ func sweepVirtualServices(region string) error {
 				MeshName: aws.String(meshName),
 			}
 
-			err := conn.ListVirtualServicesPages(input, func(page *appmesh.ListVirtualServicesOutput, lastPage bool) bool {
+			err := conn.ListVirtualServicesPagesWithContext(ctx, input, func(page *appmesh.ListVirtualServicesOutput, lastPage bool) bool {
 				if page == nil {
 					return !lastPage
 				}
@@ -382,7 +387,7 @@ func sweepVirtualServices(region string) error {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing App Mesh Service Meshes (%s): %w", region, err))
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping App Mesh Virtual Services (%s): %w", region, err))
@@ -392,6 +397,7 @@ func sweepVirtualServices(region string) error {
 }
 
 func sweepGatewayRoutes(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -401,7 +407,7 @@ func sweepGatewayRoutes(region string) error {
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListMeshesPages(input, func(page *appmesh.ListMeshesOutput, lastPage bool) bool {
+	err = conn.ListMeshesPagesWithContext(ctx, input, func(page *appmesh.ListMeshesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -412,7 +418,7 @@ func sweepGatewayRoutes(region string) error {
 				MeshName: aws.String(meshName),
 			}
 
-			err := conn.ListVirtualGatewaysPages(input, func(page *appmesh.ListVirtualGatewaysOutput, lastPage bool) bool {
+			err := conn.ListVirtualGatewaysPagesWithContext(ctx, input, func(page *appmesh.ListVirtualGatewaysOutput, lastPage bool) bool {
 				if page == nil {
 					return !lastPage
 				}
@@ -424,7 +430,7 @@ func sweepGatewayRoutes(region string) error {
 						VirtualGatewayName: aws.String(virtualGatewayName),
 					}
 
-					err := conn.ListGatewayRoutesPages(input, func(page *appmesh.ListGatewayRoutesOutput, lastPage bool) bool {
+					err := conn.ListGatewayRoutesPagesWithContext(ctx, input, func(page *appmesh.ListGatewayRoutesOutput, lastPage bool) bool {
 						if page == nil {
 							return !lastPage
 						}
@@ -477,7 +483,7 @@ func sweepGatewayRoutes(region string) error {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing App Mesh Service Meshes (%s): %w", region, err))
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping App Mesh Gateway Routes (%s): %w", region, err))
@@ -487,6 +493,7 @@ func sweepGatewayRoutes(region string) error {
 }
 
 func sweepRoutes(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -496,7 +503,7 @@ func sweepRoutes(region string) error {
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListMeshesPages(input, func(page *appmesh.ListMeshesOutput, lastPage bool) bool {
+	err = conn.ListMeshesPagesWithContext(ctx, input, func(page *appmesh.ListMeshesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -507,7 +514,7 @@ func sweepRoutes(region string) error {
 				MeshName: aws.String(meshName),
 			}
 
-			err := conn.ListVirtualRoutersPages(input, func(page *appmesh.ListVirtualRoutersOutput, lastPage bool) bool {
+			err := conn.ListVirtualRoutersPagesWithContext(ctx, input, func(page *appmesh.ListVirtualRoutersOutput, lastPage bool) bool {
 				if page == nil {
 					return !lastPage
 				}
@@ -519,7 +526,7 @@ func sweepRoutes(region string) error {
 						VirtualRouterName: aws.String(virtualRouterName),
 					}
 
-					err := conn.ListRoutesPages(input, func(page *appmesh.ListRoutesOutput, lastPage bool) bool {
+					err := conn.ListRoutesPagesWithContext(ctx, input, func(page *appmesh.ListRoutesOutput, lastPage bool) bool {
 						if page == nil {
 							return !lastPage
 						}
@@ -572,7 +579,7 @@ func sweepRoutes(region string) error {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing App Mesh Service Meshes (%s): %w", region, err))
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping App Mesh Routes (%s): %w", region, err))
