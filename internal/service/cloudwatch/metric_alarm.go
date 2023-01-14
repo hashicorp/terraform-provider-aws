@@ -415,7 +415,7 @@ func resourceMetricAlarmRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("threshold_metric_id", resp.ThresholdMetricId)
 	d.Set("unit", resp.Unit)
 	d.Set("extended_statistic", resp.ExtendedStatistic)
-	if resp.TreatMissingData != nil {
+	if resp.TreatMissingData != nil { // nosemgrep: ci.helper-schema-ResourceData-Set-extraneous-nil-check
 		d.Set("treat_missing_data", resp.TreatMissingData)
 	} else {
 		d.Set("treat_missing_data", missingDataMissing)

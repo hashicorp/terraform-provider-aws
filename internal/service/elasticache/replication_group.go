@@ -689,16 +689,11 @@ func resourceReplicationGroupRead(d *schema.ResourceData, meta interface{}) erro
 
 		if rgp.NodeGroups[0].PrimaryEndpoint != nil {
 			log.Printf("[DEBUG] ElastiCache Replication Group (%s) Primary Endpoint is not nil", d.Id())
-			if rgp.NodeGroups[0].PrimaryEndpoint.Port != nil {
-				d.Set("port", rgp.NodeGroups[0].PrimaryEndpoint.Port)
-			}
-
-			if rgp.NodeGroups[0].PrimaryEndpoint.Address != nil {
-				d.Set("primary_endpoint_address", rgp.NodeGroups[0].PrimaryEndpoint.Address)
-			}
+			d.Set("port", rgp.NodeGroups[0].PrimaryEndpoint.Port)
+			d.Set("primary_endpoint_address", rgp.NodeGroups[0].PrimaryEndpoint.Address)
 		}
 
-		if rgp.NodeGroups[0].ReaderEndpoint != nil && rgp.NodeGroups[0].ReaderEndpoint.Address != nil {
+		if rgp.NodeGroups[0].ReaderEndpoint != nil {
 			d.Set("reader_endpoint_address", rgp.NodeGroups[0].ReaderEndpoint.Address)
 		}
 	}

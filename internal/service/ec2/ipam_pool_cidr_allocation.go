@@ -148,15 +148,9 @@ func resourceIPAMPoolCIDRAllocationRead(d *schema.ResourceData, meta interface{}
 	d.Set("cidr", allocation.Cidr)
 	d.Set("ipam_pool_allocation_id", allocation.IpamPoolAllocationId)
 	d.Set("ipam_pool_id", poolID)
-	if v := allocation.ResourceId; v != nil {
-		d.Set("resource_id", v)
-	}
-	if v := allocation.ResourceOwner; v != nil {
-		d.Set("resource_owner", v)
-	}
-	if v := allocation.ResourceType; v != nil {
-		d.Set("resource_type", v)
-	}
+	d.Set("resource_id", allocation.ResourceId)
+	d.Set("resource_owner", allocation.ResourceOwner)
+	d.Set("resource_type", allocation.ResourceType)
 
 	return nil
 }
