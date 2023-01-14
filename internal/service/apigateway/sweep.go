@@ -53,21 +53,22 @@ func init() {
 }
 
 func sweepRestAPIs(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
 	conn := client.(*conns.AWSClient).APIGatewayConn()
 
-	err = conn.GetRestApisPages(&apigateway.GetRestApisInput{}, func(page *apigateway.GetRestApisOutput, lastPage bool) bool {
+	err = conn.GetRestApisPagesWithContext(ctx, &apigateway.GetRestApisInput{}, func(page *apigateway.GetRestApisOutput, lastPage bool) bool {
 		for _, item := range page.Items {
 			input := &apigateway.DeleteRestApiInput{
 				RestApiId: item.Id,
 			}
 			log.Printf("[INFO] Deleting API Gateway REST API: %s", input)
 			// TooManyRequestsException: Too Many Requests can take over a minute to resolve itself
-			err := resource.Retry(2*time.Minute, func() *resource.RetryError {
-				_, err := conn.DeleteRestApi(input)
+			err := resource.RetryContext(ctx, 2*time.Minute, func() *resource.RetryError {
+				_, err := conn.DeleteRestApiWithContext(ctx, input)
 				if err != nil {
 					if tfawserr.ErrCodeEquals(err, apigateway.ErrCodeTooManyRequestsException) {
 						return resource.RetryableError(err)
@@ -95,6 +96,7 @@ func sweepRestAPIs(region string) error {
 }
 
 func sweepVPCLinks(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
@@ -104,7 +106,7 @@ func sweepVPCLinks(region string) error {
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
 
-	err = conn.GetVpcLinksPages(&apigateway.GetVpcLinksInput{}, func(page *apigateway.GetVpcLinksOutput, lastPage bool) bool {
+	err = conn.GetVpcLinksPagesWithContext(ctx, &apigateway.GetVpcLinksInput{}, func(page *apigateway.GetVpcLinksOutput, lastPage bool) bool {
 		for _, item := range page.Items {
 			id := aws.StringValue(item.Id)
 
@@ -124,7 +126,7 @@ func sweepVPCLinks(region string) error {
 		return fmt.Errorf("retrieving API Gateway VPC Links: %w", err)
 	}
 
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("sweeping API Gateway VPC Links: %w", err))
 	}
 
@@ -132,6 +134,7 @@ func sweepVPCLinks(region string) error {
 }
 
 func sweepClientCertificates(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
@@ -141,7 +144,7 @@ func sweepClientCertificates(region string) error {
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
-	err = conn.GetClientCertificatesPages(&apigateway.GetClientCertificatesInput{}, func(page *apigateway.GetClientCertificatesOutput, lastPage bool) bool {
+	err = conn.GetClientCertificatesPagesWithContext(ctx, &apigateway.GetClientCertificatesInput{}, func(page *apigateway.GetClientCertificatesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -161,7 +164,7 @@ func sweepClientCertificates(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("describing API Gateway Client Certificates for %s: %w", region, err))
 	}
 
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("sweeping API Gateway Client Certificates for %s: %w", region, err))
 	}
 
@@ -174,6 +177,7 @@ func sweepClientCertificates(region string) error {
 }
 
 func sweepUsagePlans(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
@@ -185,7 +189,7 @@ func sweepUsagePlans(region string) error {
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
-	err = conn.GetUsagePlansPages(&apigateway.GetUsagePlansInput{}, func(page *apigateway.GetUsagePlansOutput, lastPage bool) bool {
+	err = conn.GetUsagePlansPagesWithContext(ctx, &apigateway.GetUsagePlansInput{}, func(page *apigateway.GetUsagePlansOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -208,7 +212,7 @@ func sweepUsagePlans(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("describing API Gateway Usage Plans for %s: %w", region, err))
 	}
 
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("sweeping API Gateway Usage Plans for %s: %w", region, err))
 	}
 
@@ -221,6 +225,7 @@ func sweepUsagePlans(region string) error {
 }
 
 func sweepAPIKeys(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
@@ -232,7 +237,7 @@ func sweepAPIKeys(region string) error {
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
-	err = conn.GetApiKeysPages(&apigateway.GetApiKeysInput{}, func(page *apigateway.GetApiKeysOutput, lastPage bool) bool {
+	err = conn.GetApiKeysPagesWithContext(ctx, &apigateway.GetApiKeysInput{}, func(page *apigateway.GetApiKeysOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -254,7 +259,7 @@ func sweepAPIKeys(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("describing API Gateway API Keys for %s: %w", region, err))
 	}
 
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("sweeping API Gateway API Keys for %s: %w", region, err))
 	}
 
@@ -267,6 +272,7 @@ func sweepAPIKeys(region string) error {
 }
 
 func sweepDomainNames(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
@@ -278,7 +284,7 @@ func sweepDomainNames(region string) error {
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
-	err = conn.GetDomainNamesPages(&apigateway.GetDomainNamesInput{}, func(page *apigateway.GetDomainNamesOutput, lastPage bool) bool {
+	err = conn.GetDomainNamesPagesWithContext(ctx, &apigateway.GetDomainNamesInput{}, func(page *apigateway.GetDomainNamesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -300,7 +306,7 @@ func sweepDomainNames(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("describing API Gateway Domain Names for %s: %w", region, err))
 	}
 
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("sweeping API Gateway Domain Names for %s: %w", region, err))
 	}
 
