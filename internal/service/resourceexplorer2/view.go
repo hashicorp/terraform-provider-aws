@@ -315,8 +315,8 @@ func (r *resourceView) expandSearchFilter(ctx context.Context, tfList types.List
 }
 
 func (r *resourceView) flattenSearchFilter(ctx context.Context, apiObject *awstypes.SearchFilter) types.List {
-	elementType := elementType[viewSearchFilterData]()
-	attributeTypes := attributeTypes[viewSearchFilterData]()
+	elementType, _ := framework.ElementType[viewSearchFilterData](ctx)
+	attributeTypes, _ := framework.AttributeTypes[viewSearchFilterData](ctx)
 
 	// The default is
 	//
@@ -366,7 +366,7 @@ func (r *resourceView) expandIncludedProperty(ctx context.Context, data viewIncl
 }
 
 func (r *resourceView) flattenIncludedProperties(ctx context.Context, apiObjects []awstypes.IncludedProperty) types.List {
-	elementType := elementType[viewIncludedPropertyData]()
+	elementType, _ := framework.ElementType[viewIncludedPropertyData](ctx)
 
 	if len(apiObjects) == 0 {
 		return types.ListNull(elementType)
@@ -382,7 +382,8 @@ func (r *resourceView) flattenIncludedProperties(ctx context.Context, apiObjects
 }
 
 func (r *resourceView) flattenIncludedProperty(ctx context.Context, apiObject awstypes.IncludedProperty) types.Object {
-	return types.ObjectValueMust(attributeTypes[viewIncludedPropertyData](), map[string]attr.Value{
+	attributeTypes, _ := framework.AttributeTypes[viewIncludedPropertyData](ctx)
+	return types.ObjectValueMust(attributeTypes, map[string]attr.Value{
 		"name": flex.StringToFramework(ctx, apiObject.Name),
 	})
 }
@@ -401,31 +402,8 @@ type viewSearchFilterData struct {
 	FilterString types.String `tfsdk:"filter_string"`
 }
 
-func (d viewSearchFilterData) AttributeTypes() map[string]attr.Type {
-	return map[string]attr.Type{
-		"filter_string": types.StringType,
-	}
-}
-
-// TODO: Move these to a shared package.
-// TODO: Use reflection to generate.
-func attributeTypes[T interface{ AttributeTypes() map[string]attr.Type }]() map[string]attr.Type {
-	var t T
-	return t.AttributeTypes()
-}
-
-func elementType[T interface{ AttributeTypes() map[string]attr.Type }]() types.ObjectType {
-	return types.ObjectType{AttrTypes: attributeTypes[T]()}
-}
-
 type viewIncludedPropertyData struct {
 	Name types.String `tfsdk:"name"`
-}
-
-func (d viewIncludedPropertyData) AttributeTypes() map[string]attr.Type {
-	return map[string]attr.Type{
-		"name": types.StringType,
-	}
 }
 
 func findViewByARN(ctx context.Context, conn *resourceexplorer2.Client, arn string) (*resourceexplorer2.GetViewOutput, error) {
