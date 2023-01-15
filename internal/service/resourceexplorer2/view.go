@@ -315,8 +315,8 @@ func (r *resourceView) expandSearchFilter(ctx context.Context, tfList types.List
 }
 
 func (r *resourceView) flattenSearchFilter(ctx context.Context, apiObject *awstypes.SearchFilter) types.List {
-	elementType := ElementType[viewSearchFilterData]()
-	attributeTypes := AttributeTypes[viewSearchFilterData]()
+	elementType := elementType[viewSearchFilterData]()
+	attributeTypes := attributeTypes[viewSearchFilterData]()
 
 	// The default is
 	//
@@ -366,7 +366,7 @@ func (r *resourceView) expandIncludedProperty(ctx context.Context, data viewIncl
 }
 
 func (r *resourceView) flattenIncludedProperties(ctx context.Context, apiObjects []awstypes.IncludedProperty) types.List {
-	elementType := ElementType[viewIncludedPropertyData]()
+	elementType := elementType[viewIncludedPropertyData]()
 
 	if len(apiObjects) == 0 {
 		return types.ListNull(elementType)
@@ -382,7 +382,7 @@ func (r *resourceView) flattenIncludedProperties(ctx context.Context, apiObjects
 }
 
 func (r *resourceView) flattenIncludedProperty(ctx context.Context, apiObject awstypes.IncludedProperty) types.Object {
-	return types.ObjectValueMust(AttributeTypes[viewIncludedPropertyData](), map[string]attr.Value{
+	return types.ObjectValueMust(attributeTypes[viewIncludedPropertyData](), map[string]attr.Value{
 		"name": flex.StringToFramework(ctx, apiObject.Name),
 	})
 }
@@ -408,13 +408,14 @@ func (d viewSearchFilterData) AttributeTypes() map[string]attr.Type {
 }
 
 // TODO: Move these to a shared package.
-func AttributeTypes[T interface{ AttributeTypes() map[string]attr.Type }]() map[string]attr.Type {
+// TODO: Use reflection to generate.
+func attributeTypes[T interface{ AttributeTypes() map[string]attr.Type }]() map[string]attr.Type {
 	var t T
 	return t.AttributeTypes()
 }
 
-func ElementType[T interface{ AttributeTypes() map[string]attr.Type }]() types.ObjectType {
-	return types.ObjectType{AttrTypes: AttributeTypes[T]()}
+func elementType[T interface{ AttributeTypes() map[string]attr.Type }]() types.ObjectType {
+	return types.ObjectType{AttrTypes: attributeTypes[T]()}
 }
 
 type viewIncludedPropertyData struct {
