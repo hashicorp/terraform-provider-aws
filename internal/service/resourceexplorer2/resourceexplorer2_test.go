@@ -2,6 +2,7 @@ package resourceexplorer2_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
@@ -24,5 +25,5 @@ func TestAccResourceExplorer2_serial(t *testing.T) {
 		},
 	}
 
-	acctest.RunSerialTests2Levels(t, testCases, 0)
+	acctest.RunSerialTests2Levels(t, testCases, 5*time.Second)
 }
