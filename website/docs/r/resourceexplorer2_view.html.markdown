@@ -45,7 +45,7 @@ The following arguments are supported:
 
 The `filters` block supports the following:
 
-* `filter_string` - (Required) The string that contains the search keywords, prefixes, and operators to control the results that can be returned by a search operation. For more details, see [Search query syntax](https://docs.aws.amazon.com/resource-explorer/latest/APIReference/about-query-syntax.html).
+* `filter_string` - (Required) The string that contains the search keywords, prefixes, and operators to control the results that can be returned by a search operation. For more details, see [Search query syntax](https://docs.aws.amazon.com/resource-explorer/latest/userguide/using-search-query-syntax.html).
 
 ### Included Properties
 
