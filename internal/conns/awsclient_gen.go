@@ -2,6 +2,8 @@
 package conns
 
 import (
+	"net/http"
+
 	"github.com/aws/aws-sdk-go-v2/service/auditmanager"
 	"github.com/aws/aws-sdk-go-v2/service/cloudcontrol"
 	cloudwatchlogs_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
@@ -333,7 +335,7 @@ type AWSClient struct {
 	Session                 *session.Session
 	TerraformVersion        string
 
-	s3ConnURICleaningDisabled *s3.S3
+	httpClient *http.Client
 
 	ec2Client       lazyClient[*ec2_sdkv2.Client]
 	logsClient      lazyClient[*cloudwatchlogs_sdkv2.Client]
@@ -649,6 +651,8 @@ type AWSClient struct {
 	workspacesConn                   *workspaces.WorkSpaces
 	workspaceswebConn                *workspacesweb.WorkSpacesWeb
 	xrayConn                         *xray.XRay
+
+	s3ConnURICleaningDisabled *s3.S3
 }
 
 func (client *AWSClient) ACMConn() *acm.ACM {

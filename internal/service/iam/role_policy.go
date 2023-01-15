@@ -40,6 +40,10 @@ func ResourceRolePolicy() *schema.Resource {
 				ValidateFunc:          verify.ValidIAMPolicyJSON,
 				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
 				DiffSuppressOnRefresh: true,
+				StateFunc: func(v interface{}) string {
+					json, _ := verify.LegacyPolicyNormalize(v)
+					return json
+				},
 			},
 			"name": {
 				Type:          schema.TypeString,
@@ -69,9 +73,14 @@ func ResourceRolePolicy() *schema.Resource {
 func resourceRolePolicyPut(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn()
 
+	policy, err := verify.LegacyPolicyNormalize(d.Get("policy").(string))
+	if err != nil {
+		return fmt.Errorf("policy (%s) is invalid JSON: %w", policy, err)
+	}
+
 	request := &iam.PutRolePolicyInput{
 		RoleName:       aws.String(d.Get("role").(string)),
-		PolicyDocument: aws.String(d.Get("policy").(string)),
+		PolicyDocument: aws.String(policy),
 	}
 
 	var policyName string
@@ -146,8 +155,7 @@ func resourceRolePolicyRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), policy)
-
+	policyToSet, err := verify.LegacyPolicyToSet(d.Get("policy").(string), policy)
 	if err != nil {
 		return fmt.Errorf("while setting policy (%s), encountered: %w", policyToSet, err)
 	}

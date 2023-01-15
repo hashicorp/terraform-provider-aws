@@ -8,7 +8,7 @@ import (
 func TestMutexKVLock(t *testing.T) {
 	t.Parallel()
 
-	mkv := NewMutexKV()
+	mkv := newMutexKV()
 
 	mkv.Lock("foo")
 
@@ -30,7 +30,7 @@ func TestMutexKVLock(t *testing.T) {
 func TestMutexKVUnlock(t *testing.T) {
 	t.Parallel()
 
-	mkv := NewMutexKV()
+	mkv := newMutexKV()
 
 	mkv.Lock("foo")
 	mkv.Unlock("foo")
@@ -53,7 +53,7 @@ func TestMutexKVUnlock(t *testing.T) {
 func TestMutexKVDifferentKeys(t *testing.T) {
 	t.Parallel()
 
-	mkv := NewMutexKV()
+	mkv := newMutexKV()
 
 	mkv.Lock("foo")
 

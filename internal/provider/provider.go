@@ -654,6 +654,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			"aws_alb_listener":      elbv2.DataSourceListener(),
 			"aws_alb_target_group":  elbv2.DataSourceTargetGroup(),
 			"aws_lb":                elbv2.DataSourceLoadBalancer(),
+			"aws_lbs":               elbv2.DataSourceLoadBalancers(),
 			"aws_lb_hosted_zone_id": elbv2.DataSourceHostedZoneID(),
 			"aws_lb_listener":       elbv2.DataSourceListener(),
 			"aws_lb_target_group":   elbv2.DataSourceTargetGroup(),
@@ -2032,7 +2033,6 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			"aws_sagemaker_workforce":                                 sagemaker.ResourceWorkforce(),
 			"aws_sagemaker_workteam":                                  sagemaker.ResourceWorkteam(),
 
-			"aws_scheduler_schedule":       scheduler.ResourceSchedule(),
 			"aws_scheduler_schedule_group": scheduler.ResourceScheduleGroup(),
 
 			"aws_schemas_discoverer":      schemas.ResourceDiscoverer(),
@@ -2296,9 +2296,14 @@ func New(ctx context.Context) (*schema.Provider, error) {
 	// Set the provider Meta (instance data) here.
 	// It will be overwritten by the result of the call to ConfigureContextFunc,
 	// but can be used pre-configuration by other (non-primary) provider servers.
-	provider.SetMeta(&conns.AWSClient{
-		ServicePackages: servicePackages,
-	})
+	var meta *conns.AWSClient
+	if v, ok := provider.Meta().(*conns.AWSClient); ok {
+		meta = v
+	} else {
+		meta = new(conns.AWSClient)
+	}
+	meta.ServicePackages = servicePackages
+	provider.SetMeta(meta)
 
 	return provider, nil
 }
@@ -2394,7 +2399,13 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 		}
 	}
 
-	meta, diags := config.ConfigureProvider(ctx, provider.Meta().(*conns.AWSClient))
+	var meta *conns.AWSClient
+	if v, ok := provider.Meta().(*conns.AWSClient); ok {
+		meta = v
+	} else {
+		meta = new(conns.AWSClient)
+	}
+	meta, diags := config.ConfigureProvider(ctx, meta)
 
 	if diags.HasError() {
 		return nil, diags

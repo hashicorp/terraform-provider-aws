@@ -36,6 +36,10 @@ func ResourceGroupPolicy() *schema.Resource {
 				ValidateFunc:          verify.ValidIAMPolicyJSON,
 				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
 				DiffSuppressOnRefresh: true,
+				StateFunc: func(v interface{}) string {
+					json, _ := verify.LegacyPolicyNormalize(v)
+					return json
+				},
 			},
 			"name": {
 				Type:          schema.TypeString,
@@ -62,9 +66,14 @@ func ResourceGroupPolicy() *schema.Resource {
 func resourceGroupPolicyPut(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn()
 
+	policyDoc, err := verify.LegacyPolicyNormalize(d.Get("policy").(string))
+	if err != nil {
+		return fmt.Errorf("policy (%s) is invalid JSON: %w", policyDoc, err)
+	}
+
 	request := &iam.PutGroupPolicyInput{
 		GroupName:      aws.String(d.Get("group").(string)),
-		PolicyDocument: aws.String(d.Get("policy").(string)),
+		PolicyDocument: aws.String(policyDoc),
 	}
 
 	var policyName string
@@ -139,8 +148,7 @@ func resourceGroupPolicyRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), policy)
-
+	policyToSet, err := verify.LegacyPolicyToSet(d.Get("policy").(string), policy)
 	if err != nil {
 		return fmt.Errorf("while setting policy (%s), encountered: %w", policyToSet, err)
 	}

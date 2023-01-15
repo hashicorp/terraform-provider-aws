@@ -20,6 +20,58 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+func TestEBSVolumeTypePermitsIopsInput(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name       string
+		volumeType string
+		want       bool
+	}{
+		{"empty", "", false},
+		{"gp2", opensearchservice.VolumeTypeGp2, false},
+		{"gp3", opensearchservice.VolumeTypeGp3, true},
+		{"io1", opensearchservice.VolumeTypeIo1, true},
+		{"standard", opensearchservice.VolumeTypeStandard, false},
+	}
+	for _, testCase := range testCases {
+		testCase := testCase
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			if got := tfopensearch.EBSVolumeTypePermitsIopsInput(testCase.volumeType); got != testCase.want {
+				t.Errorf("EBSVolumeTypePermitsIopsInput() = %v, want %v", got, testCase.want)
+			}
+		})
+	}
+}
+
+func TestEBSVolumeTypePermitsThroughputInput(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name       string
+		volumeType string
+		want       bool
+	}{
+		{"empty", "", false},
+		{"gp2", opensearchservice.VolumeTypeGp2, false},
+		{"gp3", opensearchservice.VolumeTypeGp3, true},
+		{"io1", opensearchservice.VolumeTypeIo1, false},
+		{"standard", opensearchservice.VolumeTypeStandard, false},
+	}
+	for _, testCase := range testCases {
+		testCase := testCase
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			if got := tfopensearch.EBSVolumeTypePermitsThroughputInput(testCase.volumeType); got != testCase.want {
+				t.Errorf("EBSVolumeTypePermitsThroughputInput() = %v, want %v", got, testCase.want)
+			}
+		})
+	}
+}
+
 func TestParseEngineVersion(t *testing.T) {
 	t.Parallel()
 
@@ -1493,6 +1545,54 @@ func TestAccOpenSearchDomain_VolumeType_update(t *testing.T) {
 		}})
 }
 
+// Verifies that EBS volume_type can be changed from gp3 to a type which does not
+// support the throughput and iops input values (ex. gp2)
+//
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/27467
+func TestAccOpenSearchDomain_VolumeType_gp3ToGP2(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var input opensearchservice.DomainStatus
+	rName := testAccRandomDomainName()
+	resourceName := "aws_opensearch_domain.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRole(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_clusterEBSVolumeGP3DefaultIopsThroughput(rName, 10),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(resourceName, &input),
+					resource.TestCheckResourceAttr(resourceName, "ebs_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_options.0.ebs_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_options.0.volume_size", "10"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_options.0.volume_type", "gp3"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateId:     rName,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDomainConfig_clusterEBSVolumeGP2(rName, 10),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(resourceName, &input),
+					resource.TestCheckResourceAttr(resourceName, "ebs_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_options.0.ebs_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_options.0.volume_size", "10"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_options.0.volume_type", "gp2"),
+				),
+			},
+		}})
+}
+
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/13867
 func TestAccOpenSearchDomain_VolumeType_missing(t *testing.T) {
 	if testing.Short() {
@@ -2239,6 +2339,42 @@ resource "aws_opensearch_domain" "test" {
   }
 }
 `, rName, volumeSize, volumeThroughput, volumeIops)
+}
+
+func testAccDomainConfig_clusterEBSVolumeGP3DefaultIopsThroughput(rName string, volumeSize int) string {
+	return fmt.Sprintf(`
+resource "aws_opensearch_domain" "test" {
+  domain_name = %[1]q
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = %[2]d
+    volume_type = "gp3"
+  }
+
+  cluster_config {
+    instance_type = "t3.small.search"
+  }
+}
+`, rName, volumeSize)
+}
+
+func testAccDomainConfig_clusterEBSVolumeGP2(rName string, volumeSize int) string {
+	return fmt.Sprintf(`
+resource "aws_opensearch_domain" "test" {
+  domain_name = %[1]q
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = %[2]d
+    volume_type = "gp2"
+  }
+
+  cluster_config {
+    instance_type = "t3.small.search"
+  }
+}
+`, rName, volumeSize)
 }
 
 func testAccDomainConfig_clusterUpdateVersion(rName, version string) string {

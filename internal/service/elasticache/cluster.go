@@ -528,9 +528,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("port", c.CacheNodes[0].Endpoint.Port)
 	}
 
-	if c.ReplicationGroupId != nil {
-		d.Set("replication_group_id", c.ReplicationGroupId)
-	}
+	d.Set("replication_group_id", c.ReplicationGroupId)
 
 	if c.NotificationConfiguration != nil {
 		if aws.StringValue(c.NotificationConfiguration.TopicStatus) == "active" {
