@@ -26,7 +26,11 @@ resource "aws_glue_connection" "example" {
 }
 ```
 
+<<<<<<< HEAD
 ### Non-VPC Connection with secret manager reference 
+=======
+### Non-VPC Connection with secret manager integration 
+>>>>>>> main
 
 ```terraform
 
@@ -37,7 +41,11 @@ data "aws_secretmanager_secret" "example" {
 resource "aws_glue_connection" "example" {
   connection_properties = {
     JDBC_CONNECTION_URL = "jdbc:mysql://example.com/exampledatabase"
+<<<<<<< HEAD
     SECRET_ID           = data.aws_secretmanager_secret.example.name
+=======
+    SECRET_ID            = data.aws_secretmanager_secret.example.name
+>>>>>>> main
   }
 
   name = "example"
