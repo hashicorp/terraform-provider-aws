@@ -39,8 +39,7 @@ func Trim(s string) string {
 	return strings.Trim(s, "\"")
 }
 
-func getReplicationSetArn(ctx context.Context, conn *ssmincidents.Client, meta any) (string, error) {
-
+func getReplicationSetArn(ctx context.Context, conn *ssmincidents.Client) (string, error) {
 	replicationSets, err := conn.ListReplicationSets(ctx, &ssmincidents.ListReplicationSetsInput{})
 
 	if err != nil {
@@ -53,11 +52,9 @@ func getReplicationSetArn(ctx context.Context, conn *ssmincidents.Client, meta a
 
 	// currently only one replication set is supported
 	return replicationSets.ReplicationSetArns[0], nil
-
 }
 
 func expandRegions(regions []interface{}) map[string]types.RegionMapInputValue {
-
 	if len(regions) == 0 {
 		return nil
 	}
@@ -79,14 +76,12 @@ func expandRegions(regions []interface{}) map[string]types.RegionMapInputValue {
 }
 
 func flattenRegions(regions map[string]types.RegionInfo) []interface{} {
-
 	if len(regions) == 0 {
 		return nil
 	}
 
 	ret := make([]interface{}, 0)
 	for name, v := range regions {
-
 		region := make(map[string]interface{})
 
 		region["name"] = name

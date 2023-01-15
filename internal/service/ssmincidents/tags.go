@@ -30,7 +30,6 @@ func listResourceTags(ctx context.Context, conn *ssmincidents.Client, arn string
 
 // gets all tags via get request and sets them in terraform state for a ssmincidents resource
 func GetSetResourceTags(ctx context.Context, d *schema.ResourceData, meta interface{}, conn *ssmincidents.Client, resourceName string) diag.Diagnostics {
-
 	tags, err := listResourceTags(ctx, conn, d.Id())
 	if err != nil {
 		return create.DiagError(names.SSMIncidents, create.ErrActionReading, resourceName, d.Id(), err)
@@ -52,7 +51,6 @@ func GetSetResourceTags(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func UpdateResourceTags(ctx context.Context, conn *ssmincidents.Client, d *schema.ResourceData) error {
-
 	o, n := d.GetChange("tags_all")
 
 	oldTags := tftags.New(o)
@@ -93,11 +91,9 @@ func UpdateResourceTags(ctx context.Context, conn *ssmincidents.Client, d *schem
 	}
 
 	return nil
-
 }
 
 func updateResourceTag(ctx context.Context, conn *ssmincidents.Client, arn string, removedTags, updatedTags tftags.KeyValueTags) error {
-
 	if len(removedTags) > 0 {
 		input := &ssmincidents.UntagResourceInput{
 			ResourceArn: aws.String(arn),
@@ -106,7 +102,6 @@ func updateResourceTag(ctx context.Context, conn *ssmincidents.Client, arn strin
 		if _, err := conn.UntagResource(ctx, input); err != nil {
 			return err
 		}
-
 	}
 
 	if len(updatedTags) > 0 {
@@ -118,9 +113,7 @@ func updateResourceTag(ctx context.Context, conn *ssmincidents.Client, arn strin
 		if _, err := conn.TagResource(ctx, input); err != nil {
 			return err
 		}
-
 	}
 
 	return nil
-
 }

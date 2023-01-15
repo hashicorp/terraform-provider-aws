@@ -14,9 +14,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-
 	tfssmincidents "github.com/hashicorp/terraform-provider-aws/internal/service/ssmincidents"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -468,13 +467,14 @@ func testAccCheckReplicationSetExists(name string) resource.TestCheckFunc {
 func testAccReplicationSetConfig_basicTwoRegion(region1, region2 string) string {
 	return fmt.Sprintf(`
 
+
 resource "aws_ssmincidents_replication_set" "test" {
   region {
-	name = %[1]q
+    name = %[1]q
   }
 
   region {
-	name = %[2]q
+    name = %[2]q
   }
 
 }
@@ -484,9 +484,10 @@ resource "aws_ssmincidents_replication_set" "test" {
 func testAccReplicationSetConfig_basicOneRegion(region1 string) string {
 	return fmt.Sprintf(`
 
+
 resource "aws_ssmincidents_replication_set" "test" {
   region {
-	name = %[1]q
+    name = %[1]q
   }
 
 }
@@ -496,13 +497,14 @@ resource "aws_ssmincidents_replication_set" "test" {
 func testAccReplicationSetConfig_oneTag(tagKey, tagVal string) string {
 	return fmt.Sprintf(`
 
+
 resource "aws_ssmincidents_replication_set" "test" {
   region {
-	name = %[3]q
+    name = %[3]q
   }
 
   tags = {
-	%[1]q = %[2]q
+    %[1]q = %[2]q
   }
 }
 `, tfssmincidents.Trim(tagKey), tagVal, acctest.Region())
@@ -511,14 +513,15 @@ resource "aws_ssmincidents_replication_set" "test" {
 func testAccReplicationSetConfig_twoTags(tag1Key, tag1Val, tag2Key, tag2Val string) string {
 	return fmt.Sprintf(`
 
+
 resource "aws_ssmincidents_replication_set" "test" {
   region {
-	name = %[5]q
+    name = %[5]q
   }
 
   tags = {
-	%[1]q = %[2]q
-	%[3]q = %[4]q
+    %[1]q = %[2]q
+    %[3]q = %[4]q
   }
 }
 `, tfssmincidents.Trim(tag1Key), tag1Val, tfssmincidents.Trim(tag2Key), tag2Val, acctest.Region())
@@ -526,14 +529,14 @@ resource "aws_ssmincidents_replication_set" "test" {
 
 func testAccReplicationSetConfigBaseKey1() string {
 	return `
-resource "aws_kms_key" "default" {}	
+resource "aws_kms_key" "default" {}
 `
 }
 
 func testAccReplicationSetConfigBaseKey2() string {
 	return acctest.ConfigMultipleRegionProvider(2) + `
 resource "aws_kms_key" "alternate" {
-	provider = awsalternate
+  provider = awsalternate
 }
 `
 }
@@ -544,10 +547,10 @@ func testAccReplicationSetConfig_oneRegionCMK() string {
 		testAccReplicationSetConfigBaseKey2(),
 		fmt.Sprintf(`
 resource "aws_ssmincidents_replication_set" "test" {
-	region {
-		name = %[1]q
-		kms_key_arn = aws_kms_key.default.arn
-	}
+  region {
+    name        = %[1]q
+    kms_key_arn = aws_kms_key.default.arn
+  }
 }
 `, acctest.Region()))
 }
@@ -558,15 +561,15 @@ func testAccReplicationSetConfig_twoRegionCMK() string {
 		testAccReplicationSetConfigBaseKey2(),
 		fmt.Sprintf(`
 resource "aws_ssmincidents_replication_set" "test" {
-	region {
-		name = %[1]q
-		kms_key_arn = aws_kms_key.default.arn
-	}
+  region {
+    name        = %[1]q
+    kms_key_arn = aws_kms_key.default.arn
+  }
 
-	region {
-		name = %[2]q
-		kms_key_arn = aws_kms_key.alternate.arn
-	}
+  region {
+    name        = %[2]q
+    kms_key_arn = aws_kms_key.alternate.arn
+  }
 }
 `, acctest.Region(), acctest.AlternateRegion()))
 }

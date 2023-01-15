@@ -106,7 +106,7 @@ func ResourceReplicationSet() *schema.Resource {
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 				conn := meta.(*conns.AWSClient).SSMIncidentsClient()
 
-				arn, err := getReplicationSetArn(ctx, conn, meta)
+				arn, err := getReplicationSetArn(ctx, conn)
 
 				if err != nil {
 					return nil, err
@@ -127,7 +127,6 @@ func ResourceReplicationSet() *schema.Resource {
 }
 
 func resourceReplicationSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-
 	conn := meta.(*conns.AWSClient).SSMIncidentsClient()
 
 	in := &ssmincidents.CreateReplicationSetInput{
@@ -161,7 +160,6 @@ func resourceReplicationSetCreate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceReplicationSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-
 	conn := meta.(*conns.AWSClient).SSMIncidentsClient()
 
 	out, err := FindReplicationSetByID(ctx, conn, d.Id())
@@ -196,17 +194,15 @@ func resourceReplicationSetRead(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceReplicationSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-
 	conn := meta.(*conns.AWSClient).SSMIncidentsClient()
 
 	if d.HasChanges("region") {
-
 		in := &ssmincidents.UpdateReplicationSetInput{
 			Arn:         aws.String(d.Id()),
 			ClientToken: aws.String(GenerateClientToken()),
 		}
 
-		if err := updateRegionsInput(conn, d, in); err != nil {
+		if err := updateRegionsInput(d, in); err != nil {
 			return create.DiagError(names.SSMIncidents, create.ErrActionUpdating, ResNameReplicationSet, d.Id(), err)
 		}
 
@@ -223,20 +219,17 @@ func resourceReplicationSetUpdate(ctx context.Context, d *schema.ResourceData, m
 
 	// tags can have a change without tags_all having a change when value of tag is ""
 	if d.HasChanges("tags_all", "tags") {
-
 		log.Printf("[DEBUG] Updating SSMIncidents ReplicationSet tags")
 
 		if err := UpdateResourceTags(ctx, conn, d); err != nil {
 			return create.DiagError(names.SSMIncidents, create.ErrActionUpdating, ResNameReplicationSet, d.Id(), err)
 		}
-
 	}
 
 	return resourceReplicationSetRead(ctx, d, meta)
 }
 
 func resourceReplicationSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-
 	conn := meta.(*conns.AWSClient).SSMIncidentsClient()
 
 	log.Printf("[INFO] Deleting SSMIncidents ReplicationSet %s", d.Id())
@@ -325,10 +318,8 @@ func statusReplicationSet(ctx context.Context, conn *ssmincidents.Client, id str
 }
 
 func regionListToMap(list []interface{}) map[string]map[string]interface{} {
-
 	ret := make(map[string]map[string]interface{})
 	for _, val := range list {
-
 		curr := val.(map[string]interface{})
 		regionName := curr["name"].(string)
 		delete(curr, "name")
@@ -340,14 +331,12 @@ func regionListToMap(list []interface{}) map[string]map[string]interface{} {
 
 // updates UpdateReplicationSetInput to include any required actions
 // invalid updates return errors from AWS Api
-func updateRegionsInput(conn *ssmincidents.Client, d *schema.ResourceData, in *ssmincidents.UpdateReplicationSetInput) error {
-
+func updateRegionsInput(d *schema.ResourceData, in *ssmincidents.UpdateReplicationSetInput) error {
 	o, n := d.GetChange("region")
 	oldRegions := regionListToMap(o.(*schema.Set).List())
 	newRegions := regionListToMap(n.(*schema.Set).List())
 
 	for region, oldVal := range oldRegions {
-
 		if newVal, ok := newRegions[region]; !ok {
 			// this region has been destroyed
 
@@ -365,13 +354,10 @@ func updateRegionsInput(conn *ssmincidents.Client, d *schema.ResourceData, in *s
 			if oldcmk != newcmk {
 				return fmt.Errorf("error: modifying the KMS key of a region must be split into two separate updates")
 			}
-
 		}
-
 	}
 
 	for region, newVal := range newRegions {
-
 		if _, ok := oldRegions[region]; !ok {
 			newcmk := newVal["kms_key_arn"].(string)
 
@@ -392,5 +378,4 @@ func updateRegionsInput(conn *ssmincidents.Client, d *schema.ResourceData, in *s
 	}
 
 	return nil
-
 }

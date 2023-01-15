@@ -8,10 +8,9 @@ description: |-
 
 # Resource: aws_ssmincidents_replication_set
 
-Terraform resource for managing an AWS SSM Incident Manager Incidents Replication Set. 
+Terraform resource for managing an AWS SSM Incident Manager Incidents Replication Set.
 
 ~> **NOTE:** Deleting a Replication Set will delete all associated Response Plans.
-
 
 ## Example Usage
 
@@ -21,13 +20,13 @@ Creating a new Replication Set:
 
 ```terraform
 resource "aws_ssmincidents_replication_set" "replicationSetName" {
-    region {
-        name = "us-west-2"
-    }
+  region {
+    name = "us-west-2"
+  }
 
-    tags = {
-        exampleTag = "exampleValue"
-    }
+  tags = {
+    exampleTag = "exampleValue"
+  }
 }
 ```
 
@@ -35,13 +34,13 @@ Adding a region (make sure only one new region is added at once):
 
 ```terraform
 resource "aws_ssmincidents_replication_set" "replicationSetName" {
-    region {
-        name = "us-west-2"
-    }
+  region {
+    name = "us-west-2"
+  }
 
-    region {
-        name = "ap-southeast-2"
-    }
+  region {
+    name = "ap-southeast-2"
+  }
 }
 ```
 
@@ -49,12 +48,11 @@ Deleting a region (make sure only one region is deleted at once):
 
 ```terraform
 resource "aws_ssmincidents_replication_set" "replicationSetName" {
-    region {
-        name = "us-west-2"
-    }
+  region {
+    name = "us-west-2"
+  }
 }
 ```
-
 
 ## Argument Reference
 
@@ -73,7 +71,6 @@ The `region` configuration block is required and supports the following argument
 * `name` - (Required) name of region.
 * `kms_key_arn` - (Optional) ARN of KMS Encryption Key. If this is not provided, AWS will manage your KMS keys for you and this will be denoted with a default value of `DefaultKey`.
 
-
 The following arguments are optional:
 
 * `tags` - (Optional) Tags associated with the Replication Set.
@@ -91,13 +88,13 @@ In addition to all arguments above, the following attributes are exported:
 * `deletion_protected` - If enabled, the last region in a Replication Set cannot be deleted.
 * `last_modified_by` - Who last modified the Replication Set.
 * `last_modified_time` - When the Replication Set was last modified
-* `status` - Overall status of a replication Set. The status will be one of: `ACTIVE`, `CREATING`, `UPDATING`, `DELETING` or `FAILED`. 
+* `status` - Overall status of a replication Set. The status will be one of: `ACTIVE`, `CREATING`, `UPDATING`, `DELETING` or `FAILED`.
 
 In addition to the arguments above, The `region` configuration block exports the following attributes for each region:
-* `status` - Region Status.
-* `status_update_time` - Last time Region Status was updated. 
-* `status_message` - More information about the status of a region. 
 
+* `status` - Region Status.
+* `status_update_time` - Last time Region Status was updated.
+* `status_message` - More information about the status of a region.
 
 ## Timeouts
 
