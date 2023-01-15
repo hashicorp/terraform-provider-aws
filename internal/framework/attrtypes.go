@@ -6,6 +6,7 @@ import (
 	"reflect"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 // AttributeTypes returns a map of attribute types for the specified type T.
@@ -39,4 +40,15 @@ func AttributeTypes[T any](ctx context.Context) (map[string]attr.Type, error) {
 	}
 
 	return attributeTypes, nil
+}
+
+// ElementType returns a type suitable for use as the List/Map/Set element type.
+func ElementType[T any](ctx context.Context) (attr.Type, error) {
+	attrTypes, err := AttributeTypes[T](ctx)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return types.ObjectType{AttrTypes: attrTypes}, nil
 }
