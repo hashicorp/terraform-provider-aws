@@ -25,7 +25,7 @@ resource "aws_resourceexplorer2_view" "example" {
   }
 
   included_property {
-    name = "Tags"
+    name = "tags"
   }
 
   depends_on = [aws_resourceexplorer2_index.example]
@@ -51,7 +51,7 @@ The `filters` block supports the following:
 
 The `included_property` block supports the following:
 
-* `name` - (Required) The name of the property that is included in this view. Valid values: `Tags`.
+* `name` - (Required) The name of the property that is included in this view. Valid values: `tags`.
 
 ## Attributes Reference
 

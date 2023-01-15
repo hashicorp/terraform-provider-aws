@@ -19,6 +19,7 @@ func TestAccResourceExplorer2_serial(t *testing.T) {
 		"View": {
 			"basic":      testAccView_basic,
 			"disappears": testAccView_disappears,
+			"filter":     testAccView_filter,
 			"tags":       testAccView_tags,
 		},
 	}

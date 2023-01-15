@@ -228,15 +228,9 @@ func (r *resourceView) Update(ctx context.Context, request resource.UpdateReques
 
 	if !new.Filters.Equal(old.Filters) || !new.IncludedProperties.Equal(old.IncludedProperties) {
 		input := &resourceexplorer2.UpdateViewInput{
-			ViewArn: flex.StringFromFramework(ctx, new.ID),
-		}
-
-		if !new.Filters.Equal(old.Filters) {
-			input.Filters = r.expandSearchFilter(ctx, new.Filters)
-		}
-
-		if !new.IncludedProperties.Equal(old.IncludedProperties) {
-			input.IncludedProperties = r.expandIncludedProperties(ctx, new.IncludedProperties)
+			Filters:            r.expandSearchFilter(ctx, new.Filters),
+			IncludedProperties: r.expandIncludedProperties(ctx, new.IncludedProperties),
+			ViewArn:            flex.StringFromFramework(ctx, new.ID),
 		}
 
 		_, err := conn.UpdateView(ctx, input)
@@ -315,8 +309,8 @@ func (r *resourceView) expandSearchFilter(ctx context.Context, tfList types.List
 }
 
 func (r *resourceView) flattenSearchFilter(ctx context.Context, apiObject *awstypes.SearchFilter) types.List {
-	elementType, _ := framework.ElementType[viewSearchFilterData](ctx)
 	attributeTypes, _ := framework.AttributeTypes[viewSearchFilterData](ctx)
+	elementType := types.ObjectType{AttrTypes: attributeTypes}
 
 	// The default is
 	//
@@ -366,7 +360,8 @@ func (r *resourceView) expandIncludedProperty(ctx context.Context, data viewIncl
 }
 
 func (r *resourceView) flattenIncludedProperties(ctx context.Context, apiObjects []awstypes.IncludedProperty) types.List {
-	elementType, _ := framework.ElementType[viewIncludedPropertyData](ctx)
+	attributeTypes, _ := framework.AttributeTypes[viewIncludedPropertyData](ctx)
+	elementType := types.ObjectType{AttrTypes: attributeTypes}
 
 	if len(apiObjects) == 0 {
 		return types.ListNull(elementType)
@@ -435,7 +430,7 @@ type propertyName string
 
 // Enum values for propertyName.
 const (
-	propertyNameTags propertyName = "Tags"
+	propertyNameTags propertyName = "tags"
 )
 
 func (propertyName) Values() []propertyName {
