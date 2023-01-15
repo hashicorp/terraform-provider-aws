@@ -37,7 +37,7 @@ data "aws_secretmanager_secret" "example" {
 resource "aws_glue_connection" "example" {
   connection_properties = {
     JDBC_CONNECTION_URL = "jdbc:mysql://example.com/exampledatabase"
-    SECRET_ID            = data.aws_secretmanager_secret.example.name
+    SECRET_ID           = data.aws_secretmanager_secret.example.name
   }
 
   name = "example"
