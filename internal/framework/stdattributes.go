@@ -15,7 +15,7 @@ func IDAttribute() schema.StringAttribute {
 	}
 }
 
-func ARNAttribute() schema.StringAttribute {
+func ARNAttributeComputedOnly() schema.StringAttribute {
 	return schema.StringAttribute{
 		Computed: true,
 		PlanModifiers: []planmodifier.String{

@@ -17,6 +17,8 @@ import (
 )
 
 func TestDiffPortSettings(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		Old           []interface{}
 		New           []interface{}

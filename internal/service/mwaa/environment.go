@@ -753,19 +753,19 @@ func flattenLastUpdate(lastUpdate *mwaa.LastUpdate) []interface{} {
 	return []interface{}{m}
 }
 
-func flattenLastUpdateError(error *mwaa.UpdateError) []interface{} {
-	if error == nil {
+func flattenLastUpdateError(apiObject *mwaa.UpdateError) []interface{} {
+	if apiObject == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{}
 
-	if error.ErrorCode != nil {
-		m["error_code"] = error.ErrorCode
+	if apiObject.ErrorCode != nil {
+		m["error_code"] = apiObject.ErrorCode
 	}
 
-	if error.ErrorMessage != nil {
-		m["error_message"] = error.ErrorMessage
+	if apiObject.ErrorMessage != nil {
+		m["error_message"] = apiObject.ErrorMessage
 	}
 
 	return []interface{}{m}

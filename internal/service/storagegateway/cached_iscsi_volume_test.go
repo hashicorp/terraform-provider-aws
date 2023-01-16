@@ -17,6 +17,8 @@ import (
 )
 
 func TestParseVolumeGatewayARNAndTargetNameFromARN(t *testing.T) {
+	t.Parallel()
+
 	var testCases = []struct {
 		Input              string
 		ExpectedGatewayARN string

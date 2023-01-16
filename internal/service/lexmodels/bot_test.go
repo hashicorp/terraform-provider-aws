@@ -81,6 +81,8 @@ func TestAccLexModelsBot_basic(t *testing.T) {
 }
 
 func TestAccLexModelsBot_Version_serial(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]func(t *testing.T){
 		"LexBot_createVersion":         testAccBot_createVersion,
 		"LexBotAlias_botVersion":       testAccBotAlias_botVersion,
@@ -88,12 +90,7 @@ func TestAccLexModelsBot_Version_serial(t *testing.T) {
 		"DataSourceLexBotAlias_basic":  testAccBotAliasDataSource_basic,
 	}
 
-	for name, tc := range testCases {
-		tc := tc
-		t.Run(name, func(t *testing.T) {
-			tc(t)
-		})
-	}
+	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
 func testAccBot_createVersion(t *testing.T) {

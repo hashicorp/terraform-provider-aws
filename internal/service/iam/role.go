@@ -36,19 +36,22 @@ func ResourceRole() *schema.Resource {
 		Read:   resourceRoleRead,
 		Update: resourceRoleUpdate,
 		Delete: resourceRoleDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: resourceRoleImport,
 		},
+
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"assume_role_policy": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				Type:                  schema.TypeString,
+				Required:              true,
+				ValidateFunc:          validation.StringIsJSON,
+				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+				DiffSuppressOnRefresh: true,
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
@@ -87,10 +90,15 @@ func ResourceRole() *schema.Resource {
 							),
 						},
 						"policy": {
-							Type:             schema.TypeString,
-							Optional:         true, // semantically required but syntactically optional to allow empty inline_policy
-							ValidateFunc:     verify.ValidIAMPolicyJSON,
-							DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+							Type:                  schema.TypeString,
+							Optional:              true, // semantically required but syntactically optional to allow empty inline_policy
+							ValidateFunc:          verify.ValidIAMPolicyJSON,
+							DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+							DiffSuppressOnRefresh: true,
+							StateFunc: func(v interface{}) string {
+								json, _ := verify.LegacyPolicyNormalize(v)
+								return json
+							},
 						},
 					},
 				},
@@ -168,7 +176,6 @@ func resourceRoleCreate(d *schema.ResourceData, meta interface{}) error {
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	assumeRolePolicy, err := structure.NormalizeJsonString(d.Get("assume_role_policy").(string))
-
 	if err != nil {
 		return fmt.Errorf("assume_role_policy (%s) is invalid JSON: %w", assumeRolePolicy, err)
 	}
@@ -285,13 +292,11 @@ func resourceRoleRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("unique_id", role.RoleId)
 
 	assumeRolePolicy, err := url.QueryUnescape(aws.StringValue(role.AssumeRolePolicyDocument))
-
 	if err != nil {
 		return err
 	}
 
 	policyToSet, err := verify.PolicyToSet(d.Get("assume_role_policy").(string), assumeRolePolicy)
-
 	if err != nil {
 		return err
 	}
@@ -339,7 +344,6 @@ func resourceRoleUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("assume_role_policy") {
 		assumeRolePolicy, err := structure.NormalizeJsonString(d.Get("assume_role_policy").(string))
-
 		if err != nil {
 			return fmt.Errorf("assume_role_policy (%s) is invalid JSON: %w", assumeRolePolicy, err)
 		}
@@ -855,23 +859,19 @@ func readRoleInlinePolicies(roleName string, meta interface{}) ([]*iam.PutRolePo
 			return nil, err
 		}
 
+		p, err := verify.LegacyPolicyNormalize(policy)
+		if err != nil {
+			return nil, fmt.Errorf("policy (%s) is invalid JSON: %w", p, err)
+		}
+
 		apiObject := &iam.PutRolePolicyInput{
 			RoleName:       aws.String(roleName),
-			PolicyDocument: aws.String(policy),
+			PolicyDocument: aws.String(p),
 			PolicyName:     policyName,
 		}
 
 		apiObjects = append(apiObjects, apiObject)
 	}
-
-	/*
-		if len(apiObjects) == 0 {
-			apiObjects = append(apiObjects, &iam.PutRolePolicyInput{
-				PolicyDocument: aws.String(""),
-				PolicyName:     aws.String(""),
-			})
-		}
-	*/
 
 	return apiObjects, nil
 }

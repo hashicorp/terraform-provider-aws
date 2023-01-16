@@ -24,7 +24,7 @@ func TestAccSSMServiceSetting_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccServiceSettingDestroy,
+		CheckDestroy:             testAccCheckServiceSettingDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceSettingConfig_basic("false"),
@@ -49,7 +49,7 @@ func TestAccSSMServiceSetting_basic(t *testing.T) {
 	})
 }
 
-func testAccServiceSettingDestroy(s *terraform.State) error {
+func testAccCheckServiceSettingDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn()
 
 	for _, rs := range s.RootModule().Resources {

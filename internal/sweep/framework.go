@@ -5,7 +5,6 @@ package sweep
 
 import (
 	"context"
-	"errors"
 	"log"
 	"strings"
 	"time"
@@ -70,14 +69,7 @@ func DeleteFrameworkResource(factory func(context.Context) (fwresource.ResourceW
 	resource.Configure(ctx, fwresource.ConfigureRequest{ProviderData: meta}, &fwresource.ConfigureResponse{})
 
 	schemaResp := fwresource.SchemaResponse{}
-	if v, ok := resource.(fwresource.ResourceWithSchema); ok {
-		v.Schema(ctx, fwresource.SchemaRequest{}, &schemaResp)
-		if schemaResp.Diagnostics.HasError() {
-			return fwdiag.DiagnosticsError(schemaResp.Diagnostics)
-		}
-	} else {
-		return errors.New("resource does not implement Schema method")
-	}
+	resource.Schema(ctx, fwresource.SchemaRequest{}, &schemaResp)
 
 	// Simple Terraform State that contains just the resource ID.
 	state := tfsdk.State{

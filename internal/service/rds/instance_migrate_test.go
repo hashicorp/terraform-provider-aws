@@ -9,6 +9,8 @@ import (
 )
 
 func TestInstanceStateUpgradeV0(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		Description   string
 		InputState    map[string]interface{}
@@ -45,8 +47,9 @@ func TestInstanceStateUpgradeV0(t *testing.T) {
 
 	for _, testCase := range testCases {
 		testCase := testCase
-
 		t.Run(testCase.Description, func(t *testing.T) {
+			t.Parallel()
+
 			got, err := tfrds.InstanceStateUpgradeV0(context.Background(), testCase.InputState, nil)
 
 			if err != nil {

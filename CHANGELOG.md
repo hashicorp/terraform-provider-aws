@@ -1,30 +1,141 @@
-## 4.49.0 (Unreleased)
+## 4.51.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/aws_apprunner_service: Add `source_configuration.code_repository.code_configuration.runtime_environment_secrets` and `source_configuration.image_repository.image_configuration.runtime_environment_secrets` argument ([#28871](https://github.com/hashicorp/terraform-provider-aws/issues/28871))
+* resource/aws_lambda_event_source_mapping: Add `scaling_config` argument ([#28876](https://github.com/hashicorp/terraform-provider-aws/issues/28876))
+
+BUG FIXES:
+
+* resource/aws_opensearch_domain: Omit `throughput` and `iops` for unsupported volume types ([#28862](https://github.com/hashicorp/terraform-provider-aws/issues/28862))
+
+## 4.50.0 (January 13, 2023)
+
+FEATURES:
+
+* **New Data Source:** `aws_lbs` ([#27161](https://github.com/hashicorp/terraform-provider-aws/issues/27161))
+* **New Resource:** `aws_sesv2_configuration_set_event_destination` ([#27565](https://github.com/hashicorp/terraform-provider-aws/issues/27565))
+
+ENHANCEMENTS:
+
+* data-source/aws_lb_target_group: Support querying by `tags` ([#27261](https://github.com/hashicorp/terraform-provider-aws/issues/27261))
+* resource/aws_redshiftdata_statement: Add `workgroup_name` argument ([#28751](https://github.com/hashicorp/terraform-provider-aws/issues/28751))
+* resource/aws_service_discovery_service: Add `type` argument ([#28778](https://github.com/hashicorp/terraform-provider-aws/issues/28778))
+
+BUG FIXES:
+
+* resource/aws_acmpca_policy: Improve refresh to avoid unnecessary diffs in `policy` ([#28788](https://github.com/hashicorp/terraform-provider-aws/issues/28788))
+* resource/aws_api_gateway_rest_api: Improve refresh to avoid unnecessary diffs in `policy` ([#28789](https://github.com/hashicorp/terraform-provider-aws/issues/28789))
+* resource/aws_api_gateway_rest_api_policy: Improve refresh to avoid unnecessary diffs in `policy` ([#28789](https://github.com/hashicorp/terraform-provider-aws/issues/28789))
+* resource/aws_apprunner_service: `observability_configuration_arn` is optional ([#28620](https://github.com/hashicorp/terraform-provider-aws/issues/28620))
+* resource/aws_apprunner_vpc_connector: Fix `default_tags` not handled correctly ([#28736](https://github.com/hashicorp/terraform-provider-aws/issues/28736))
+* resource/aws_appstream_stack: Fix panic on user_settings update ([#28766](https://github.com/hashicorp/terraform-provider-aws/issues/28766))
+* resource/aws_appstream_stack: Prevent unnecessary replacements on update ([#28766](https://github.com/hashicorp/terraform-provider-aws/issues/28766))
+* resource/aws_backup_vault_policy: Improve refresh to avoid unnecessary diffs in `policy` ([#28791](https://github.com/hashicorp/terraform-provider-aws/issues/28791))
+* resource/aws_cloudsearch_domain_service_access_policy: Improve refresh to avoid unnecessary diffs in `access_policy` ([#28792](https://github.com/hashicorp/terraform-provider-aws/issues/28792))
+* resource/aws_cloudwatch_event_bus_policy: Improve refresh to avoid unnecessary diffs in `policy` ([#28802](https://github.com/hashicorp/terraform-provider-aws/issues/28802))
+* resource/aws_codeartifact_domain_permissions_policy: Improve refresh to avoid unnecessary diffs in `policy_document` ([#28794](https://github.com/hashicorp/terraform-provider-aws/issues/28794))
+* resource/aws_codeartifact_repository_permissions_policy: Improve refresh to avoid unnecessary diffs in `policy_document` ([#28794](https://github.com/hashicorp/terraform-provider-aws/issues/28794))
+* resource/aws_codebuild_resource_policy: Improve refresh to avoid unnecessary diffs in `policy` ([#28796](https://github.com/hashicorp/terraform-provider-aws/issues/28796))
+* resource/aws_dms_replication_subnet_group: Fix error ("Provider produced inconsistent result") when an error is encountered during creation ([#28748](https://github.com/hashicorp/terraform-provider-aws/issues/28748))
+* resource/aws_dms_replication_task: Allow updates to `aws_dms_replication_task` even when `migration_type` and `table_mappings` have not changed ([#28047](https://github.com/hashicorp/terraform-provider-aws/issues/28047))
+* resource/aws_dms_replication_task: Fix error with `cdc_path` when used with `aws_dms_s3_endpoint` ([#28704](https://github.com/hashicorp/terraform-provider-aws/issues/28704))
+* resource/aws_dms_s3_endpoint: Fix error with `cdc_path` when used with `aws_dms_replication_task` ([#28704](https://github.com/hashicorp/terraform-provider-aws/issues/28704))
+* resource/aws_ecr_registry_policy: Improve refresh to avoid unnecessary diffs in `policy` ([#28799](https://github.com/hashicorp/terraform-provider-aws/issues/28799))
+* resource/aws_ecr_repository_policy: Improve refresh to avoid unnecessary diffs in `policy` ([#28799](https://github.com/hashicorp/terraform-provider-aws/issues/28799))
+* resource/aws_ecrpublic_repository_policy: Improve refresh to avoid unnecessary diffs in `policy` ([#28799](https://github.com/hashicorp/terraform-provider-aws/issues/28799))
+* resource/aws_efs_file_system_policy: Improve refresh to avoid unnecessary diffs in `policy` ([#28800](https://github.com/hashicorp/terraform-provider-aws/issues/28800))
+* resource/aws_elasticsearch_domain: Improve refresh to avoid unnecessary diffs in `access_policies` ([#28801](https://github.com/hashicorp/terraform-provider-aws/issues/28801))
+* resource/aws_elasticsearch_domain_policy: Improve refresh to avoid unnecessary diffs in `access_policies` ([#28801](https://github.com/hashicorp/terraform-provider-aws/issues/28801))
+* resource/aws_glacier_vault: Improve refresh to avoid unnecessary diffs in `access_policy` ([#28804](https://github.com/hashicorp/terraform-provider-aws/issues/28804))
+* resource/aws_glacier_vault_lock: Improve refresh to avoid unnecessary diffs in `policy` ([#28804](https://github.com/hashicorp/terraform-provider-aws/issues/28804))
+* resource/aws_glue_resource_policy: Improve refresh to avoid unnecessary diffs in `policy` ([#28807](https://github.com/hashicorp/terraform-provider-aws/issues/28807))
+* resource/aws_iam_group_policy: Fixed issue that could result in "inconsistent final plan" errors ([#28868](https://github.com/hashicorp/terraform-provider-aws/issues/28868))
+* resource/aws_iam_group_policy: Improve refresh to avoid unnecessary diffs in `policy` ([#28777](https://github.com/hashicorp/terraform-provider-aws/issues/28777))
+* resource/aws_iam_group_policy: Improve refresh to avoid unnecessary diffs in `policy` ([#28836](https://github.com/hashicorp/terraform-provider-aws/issues/28836))
+* resource/aws_iam_policy: Improve refresh to avoid unnecessary diffs in `policy` ([#28777](https://github.com/hashicorp/terraform-provider-aws/issues/28777))
+* resource/aws_iam_policy: Improve refresh to avoid unnecessary diffs in `policy`, `tags` ([#28836](https://github.com/hashicorp/terraform-provider-aws/issues/28836))
+* resource/aws_iam_role: Fixed issue that could result in "inconsistent final plan" errors ([#28868](https://github.com/hashicorp/terraform-provider-aws/issues/28868))
+* resource/aws_iam_role: Improve refresh to avoid unnecessary diffs in `assume_role_policy` and `inline_policy` `policy` ([#28777](https://github.com/hashicorp/terraform-provider-aws/issues/28777))
+* resource/aws_iam_role: Improve refresh to avoid unnecessary diffs in `inline_policy.*.policy`, `tags` ([#28836](https://github.com/hashicorp/terraform-provider-aws/issues/28836))
+* resource/aws_iam_role_policy: Fixed issue that could result in "inconsistent final plan" errors ([#28868](https://github.com/hashicorp/terraform-provider-aws/issues/28868))
+* resource/aws_iam_role_policy: Improve refresh to avoid unnecessary diffs in `policy` ([#28777](https://github.com/hashicorp/terraform-provider-aws/issues/28777))
+* resource/aws_iam_role_policy: Improve refresh to avoid unnecessary diffs in `policy` ([#28836](https://github.com/hashicorp/terraform-provider-aws/issues/28836))
+* resource/aws_iam_user_policy: Fixed issue that could result in "inconsistent final plan" errors ([#28868](https://github.com/hashicorp/terraform-provider-aws/issues/28868))
+* resource/aws_iam_user_policy: Improve refresh to avoid unnecessary diffs in `policy` ([#28777](https://github.com/hashicorp/terraform-provider-aws/issues/28777))
+* resource/aws_iam_user_policy: Improve refresh to avoid unnecessary diffs in `policy` ([#28836](https://github.com/hashicorp/terraform-provider-aws/issues/28836))
+* resource/aws_iot_policy: Improve refresh to avoid unnecessary diffs in `policy` ([#28838](https://github.com/hashicorp/terraform-provider-aws/issues/28838))
+* resource/aws_kms_external_key: Improve refresh to avoid unnecessary diffs in `policy` ([#28853](https://github.com/hashicorp/terraform-provider-aws/issues/28853))
+* resource/aws_kms_key: Improve refresh to avoid unnecessary diffs in `policy` ([#28853](https://github.com/hashicorp/terraform-provider-aws/issues/28853))
+* resource/aws_lb_target_group: Change `protocol_version` to [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew) ([#17845](https://github.com/hashicorp/terraform-provider-aws/issues/17845))
+* resource/aws_lb_target_group: When creating a new target group, return an error if there is an existing target group with the same name. Use [`terraform import`](https://developer.hashicorp.com/terraform/cli/commands/import) for existing target groups ([#26977](https://github.com/hashicorp/terraform-provider-aws/issues/26977))
+* resource/aws_mq_configuration: Improve refresh to avoid unnecessary diffs in `data` ([#28837](https://github.com/hashicorp/terraform-provider-aws/issues/28837))
+* resource/aws_s3_access_point: Improve refresh to avoid unnecessary diffs in `policy` ([#28866](https://github.com/hashicorp/terraform-provider-aws/issues/28866))
+* resource/aws_s3_bucket: Improve refresh to avoid unnecessary diffs in `policy` ([#28855](https://github.com/hashicorp/terraform-provider-aws/issues/28855))
+* resource/aws_s3_bucket_policy: Improve refresh to avoid unnecessary diffs in `policy` ([#28855](https://github.com/hashicorp/terraform-provider-aws/issues/28855))
+* resource/aws_s3control_access_point_policy: Improve refresh to avoid unnecessary diffs in `policy` ([#28866](https://github.com/hashicorp/terraform-provider-aws/issues/28866))
+* resource/aws_s3control_bucket_policy: Improve refresh to avoid unnecessary diffs in `policy` ([#28866](https://github.com/hashicorp/terraform-provider-aws/issues/28866))
+* resource/aws_s3control_multi_region_access_point_policy: Improve refresh to avoid unnecessary diffs in `details` `policy` ([#28866](https://github.com/hashicorp/terraform-provider-aws/issues/28866))
+* resource/aws_s3control_object_lambda_access_point_policy: Improve refresh to avoid unnecessary diffs in `policy` ([#28866](https://github.com/hashicorp/terraform-provider-aws/issues/28866))
+* resource/aws_sagemaker_model_package_group_policy: Improve refresh to avoid unnecessary diffs in `resource_policy` ([#28865](https://github.com/hashicorp/terraform-provider-aws/issues/28865))
+* resource/aws_schemas_registry_policy: Improve refresh to avoid unnecessary diffs in `policy` ([#28864](https://github.com/hashicorp/terraform-provider-aws/issues/28864))
+* resource/aws_secretsmanager_secret: Improve refresh to avoid unnecessary diffs in `policy` ([#28863](https://github.com/hashicorp/terraform-provider-aws/issues/28863))
+* resource/aws_secretsmanager_secret_policy: Improve refresh to avoid unnecessary diffs in `policy` ([#28863](https://github.com/hashicorp/terraform-provider-aws/issues/28863))
+* resource/aws_ses_identity_policy: Improve refresh to avoid unnecessary diffs in `policy` ([#28861](https://github.com/hashicorp/terraform-provider-aws/issues/28861))
+* resource/aws_sns_topic: Improve refresh to avoid unnecessary diffs in `policy` ([#28860](https://github.com/hashicorp/terraform-provider-aws/issues/28860))
+* resource/aws_sns_topic_policy: Improve refresh to avoid unnecessary diffs in `policy` ([#28860](https://github.com/hashicorp/terraform-provider-aws/issues/28860))
+* resource/aws_sqs_queue: Improve refresh to avoid unnecessary diffs in `policy` ([#28840](https://github.com/hashicorp/terraform-provider-aws/issues/28840))
+* resource/aws_sqs_queue_policy: Improve refresh to avoid unnecessary diffs in `policy` ([#28840](https://github.com/hashicorp/terraform-provider-aws/issues/28840))
+* resource/aws_transfer_access: Improve refresh to avoid unnecessary diffs in `policy` ([#28859](https://github.com/hashicorp/terraform-provider-aws/issues/28859))
+* resource/aws_transfer_user: Improve refresh to avoid unnecessary diffs in `policy` ([#28859](https://github.com/hashicorp/terraform-provider-aws/issues/28859))
+* resource/aws_vpc_endpoint: Improve refresh to avoid unnecessary diffs in `policy` ([#28798](https://github.com/hashicorp/terraform-provider-aws/issues/28798))
+* resource/aws_vpc_endpoint_policy: Improve refresh to avoid unnecessary diffs in `policy` ([#28798](https://github.com/hashicorp/terraform-provider-aws/issues/28798))
+
+## 4.49.0 (January  5, 2023)
 
 NOTES:
 
+* resource/aws_dms_endpoint: For `s3_settings` `cdc_min_file_size`, AWS changed the multiplier to kilobytes instead of megabytes. In other words, prior to the change, a value of `32` represented 32 MiB. After the change, a value of `32` represents 32 KB. Change your configuration accordingly. ([#28578](https://github.com/hashicorp/terraform-provider-aws/issues/28578))
 * resource/aws_fsx_ontap_storage_virtual_machine: The `subtype` attribute is no longer deprecated ([#28567](https://github.com/hashicorp/terraform-provider-aws/issues/28567))
 
 FEATURES:
 
 * **New Data Source:** `aws_s3control_multi_region_access_point` ([#28373](https://github.com/hashicorp/terraform-provider-aws/issues/28373))
 * **New Resource:** `aws_appsync_type` ([#28437](https://github.com/hashicorp/terraform-provider-aws/issues/28437))
+* **New Resource:** `aws_auditmanager_assessment` ([#28643](https://github.com/hashicorp/terraform-provider-aws/issues/28643))
+* **New Resource:** `aws_auditmanager_assessment_report` ([#28663](https://github.com/hashicorp/terraform-provider-aws/issues/28663))
+* **New Resource:** `aws_ec2_instance_state` ([#28639](https://github.com/hashicorp/terraform-provider-aws/issues/28639))
+* **New Resource:** `aws_lightsail_bucket` ([#28585](https://github.com/hashicorp/terraform-provider-aws/issues/28585))
+* **New Resource:** `aws_ssoadmin_instance_access_control_attributes` ([#23317](https://github.com/hashicorp/terraform-provider-aws/issues/23317))
 
 ENHANCEMENTS:
 
+* data-source/aws_autoscaling_group: Add `desired_capacity_type` attribute ([#28658](https://github.com/hashicorp/terraform-provider-aws/issues/28658))
+* data-source/aws_kms_secrets: Add `encryption_algorithm` and `key_id` arguments in support of [asymmetric keys](https://docs.aws.amazon.com/kms/latest/developerguide/symmetric-asymmetric.html) ([#21054](https://github.com/hashicorp/terraform-provider-aws/issues/21054))
 * resource/aws_appflow_connector_profile: Add support for `connector_type` CustomConnector. Add `cluster_identifier`, `database_name`, and `data_api_role_arn` attributes for `redshift` `connection_profile_properties` ([#26766](https://github.com/hashicorp/terraform-provider-aws/issues/26766))
 * resource/aws_appsync_resolver: Add `runtime` and `code` arguments ([#28436](https://github.com/hashicorp/terraform-provider-aws/issues/28436))
 * resource/aws_appsync_resolver: Add plan time validation for `caching_config.ttl` ([#28436](https://github.com/hashicorp/terraform-provider-aws/issues/28436))
+* resource/aws_athena_workgroup: Add `configuration.execution_role` argument ([#28420](https://github.com/hashicorp/terraform-provider-aws/issues/28420))
+* resource/aws_autoscaling_group: Add `desired_capacity_type` argument ([#28658](https://github.com/hashicorp/terraform-provider-aws/issues/28658))
+* resource/aws_dms_endpoint: Change `s3_settings` `cdc_min_file_size` default to 32000 in order to align with AWS's change from megabytes to kilobytes for this setting ([#28578](https://github.com/hashicorp/terraform-provider-aws/issues/28578))
+* resource/aws_ecs_service: Add `alarms` argument ([#28521](https://github.com/hashicorp/terraform-provider-aws/issues/28521))
+* resource/aws_lightsail_instance: Add `add_on` configuration block. ([#28602](https://github.com/hashicorp/terraform-provider-aws/issues/28602))
 * resource/aws_lightsail_instance_public_ports: Add `cidr_list_aliases` argument ([#28376](https://github.com/hashicorp/terraform-provider-aws/issues/28376))
 * resource/aws_s3_access_point: Add `bucket_account_id` argument ([#28564](https://github.com/hashicorp/terraform-provider-aws/issues/28564))
 * resource/aws_s3control_storage_lens_configuration: Add `advanced_cost_optimization_metrics`, `advanced_data_protection_metrics`, and `detailed_status_code_metrics` arguments to the `storage_lens_configuration.account_level` and `storage_lens_configuration.account_level.bucket_level` configuration blocks ([#28564](https://github.com/hashicorp/terraform-provider-aws/issues/28564))
 * resource/aws_wafv2_rule_group: Add `rule.action.captcha` argument ([#28435](https://github.com/hashicorp/terraform-provider-aws/issues/28435))
 * resource/aws_wafv2_web_acl: Add `rule.action.challenge` argument ([#28305](https://github.com/hashicorp/terraform-provider-aws/issues/28305))
+* resource/aws_wafv2_web_acl: Add support for ManagedRuleGroupConfig ([#28594](https://github.com/hashicorp/terraform-provider-aws/issues/28594))
 
 BUG FIXES:
 
 * data-source/aws_cloudwatch_log_group: Restore use of `ListTagsLogGroup` API ([#28492](https://github.com/hashicorp/terraform-provider-aws/issues/28492))
 * resource/aws_cloudwatch_log_group: Restore use of `ListTagsLogGroup`, `TagLogGroup` and `UntagLogGroup` APIs ([#28492](https://github.com/hashicorp/terraform-provider-aws/issues/28492))
+* resource/aws_dms_endpoint: Add s3 setting `ignore_header_rows` and deprecate misspelled `ignore_headers_row`. ([#28579](https://github.com/hashicorp/terraform-provider-aws/issues/28579))
+* resource/aws_elasticache_user_group_association: Retry on `InvalidUserGroupState` errors to handle concurrent updates ([#28689](https://github.com/hashicorp/terraform-provider-aws/issues/28689))
 * resource/aws_lambda_function_url: Fix removal of `cors` configuration block ([#28439](https://github.com/hashicorp/terraform-provider-aws/issues/28439))
+* resource/aws_lightsail_database: The `availability_zone` attribute is now optional/computed to support HA `bundle_id`s ([#28590](https://github.com/hashicorp/terraform-provider-aws/issues/28590))
+* resource/aws_lightsail_disk_attachment: Resolves a panic when an attachment fails and attempts to display the error returned by AWS. ([#28593](https://github.com/hashicorp/terraform-provider-aws/issues/28593))
 
 ## 4.48.0 (December 19, 2022)
 
@@ -2158,6 +2269,12 @@ BUG FIXES:
 * resource/aws_vpc_ipam: Correct update of `description` ([#22863](https://github.com/hashicorp/terraform-provider-aws/issues/22863))
 * resource/aws_waf_rule_group: Prevent panic when expanding the rule group's set of `activated_rule` ([#22978](https://github.com/hashicorp/terraform-provider-aws/issues/22978))
 * resource/aws_wafregional_rule_group: Prevent panic when expanding the rule group's set of `activated_rule` ([#22978](https://github.com/hashicorp/terraform-provider-aws/issues/22978))
+
+## 3.76.1 (January 05, 2023)
+
+ENHANCEMENTS:
+
+* resource/aws_s3_bucket: Mark `server_side_encryption_configuration` as Computed in support of [S3 object encryption by default](https://aws.amazon.com/blogs/aws/amazon-s3-encrypts-new-objects-by-default/) ([#28702](https://github.com/terraform-providers/terraform-provider-aws/issues/28702))
 
 ## 3.76.0 (December 15, 2022)
 
@@ -5343,5 +5460,5 @@ BUG FIXES
 
 For information on prior major releases, see their changelogs:
 
-* [3.74 and earlier](https://github.com/hashicorp/terraform-provider-aws/blob/release/3.x/CHANGELOG.md)
+* [3.76 and earlier](https://github.com/hashicorp/terraform-provider-aws/blob/release/3.x/CHANGELOG.md)
 * [2.70 and earlier](https://github.com/hashicorp/terraform-provider-aws/blob/release/2.x/CHANGELOG.md)

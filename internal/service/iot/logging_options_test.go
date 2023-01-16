@@ -11,17 +11,14 @@ import (
 )
 
 func TestAccIoTLoggingOptions_serial(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]func(t *testing.T){
 		"basic":  testAccLoggingOptions_basic,
 		"update": testAccLoggingOptions_update,
 	}
 
-	for name, tc := range testCases {
-		tc := tc
-		t.Run(name, func(t *testing.T) {
-			tc(t)
-		})
-	}
+	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
 func testAccLoggingOptions_basic(t *testing.T) {

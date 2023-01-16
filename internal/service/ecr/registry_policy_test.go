@@ -15,18 +15,14 @@ import (
 )
 
 func TestAccECRRegistryPolicy_serial(t *testing.T) {
-	testFuncs := map[string]func(t *testing.T){
+	t.Parallel()
+
+	testCases := map[string]func(t *testing.T){
 		"basic":      testAccRegistryPolicy_basic,
 		"disappears": testAccRegistryPolicy_disappears,
 	}
 
-	for name, testFunc := range testFuncs {
-		testFunc := testFunc
-
-		t.Run(name, func(t *testing.T) {
-			testFunc(t)
-		})
-	}
+	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
 func testAccRegistryPolicy_basic(t *testing.T) {

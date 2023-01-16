@@ -474,9 +474,7 @@ func resourcePipelineRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("arn", pipeline.Arn)
 
-	if arn := pipeline.AwsKmsKeyArn; arn != nil {
-		d.Set("aws_kms_key_arn", arn)
-	}
+	d.Set("aws_kms_key_arn", pipeline.AwsKmsKeyArn)
 
 	if pipeline.ContentConfig != nil {
 		err := d.Set("content_config", flattenETPipelineOutputConfig(pipeline.ContentConfig))
@@ -496,10 +494,8 @@ func resourcePipelineRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", pipeline.Name)
 
 	notifications := flattenETNotifications(pipeline.Notifications)
-	if notifications != nil {
-		if err := d.Set("notifications", notifications); err != nil {
-			return fmt.Errorf("error setting notifications: %s", err)
-		}
+	if err := d.Set("notifications", notifications); err != nil {
+		return fmt.Errorf("error setting notifications: %s", err)
 	}
 
 	d.Set("role", pipeline.Role)
@@ -518,9 +514,7 @@ func resourcePipelineRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if pipeline.OutputBucket != nil {
-		d.Set("output_bucket", pipeline.OutputBucket)
-	}
+	d.Set("output_bucket", pipeline.OutputBucket)
 
 	return nil
 }

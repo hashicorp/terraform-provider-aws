@@ -21,6 +21,8 @@ const (
 )
 
 func TestContainerServiceDeploymentVersionParseResourceID(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		TestName            string
 		Input               string
@@ -66,7 +68,10 @@ func TestContainerServiceDeploymentVersionParseResourceID(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.TestName, func(t *testing.T) {
+			t.Parallel()
+
 			gotServiceName, gotVersion, err := tflightsail.ContainerServiceDeploymentVersionParseResourceID(testCase.Input)
 
 			if err != nil && !testCase.Error {

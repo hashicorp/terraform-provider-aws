@@ -160,7 +160,7 @@ docscheck:
 	@tfproviderdocs check \
 		-allowed-resource-subcategories-file website/allowed-subcategories.txt \
 		-enable-contents-check \
-		-ignore-file-missing-data-sources aws_alb,aws_alb_listener,aws_alb_target_group \
+		-ignore-file-missing-data-sources aws_alb,aws_alb_listener,aws_alb_target_group,aws_albs \
 		-ignore-file-missing-resources aws_alb,aws_alb_listener,aws_alb_listener_certificate,aws_alb_listener_rule,aws_alb_target_group,aws_alb_target_group_attachment \
 		-provider-name=aws \
 		-require-resource-subcategory
@@ -270,6 +270,7 @@ semall:
 		--config .ci/.semgrep-service-name1.yml \
 		--config .ci/.semgrep-service-name2.yml \
 		--config .ci/.semgrep-service-name3.yml \
+		--config .ci/semgrep/acctest/ \
 		--config 'r/dgryski.semgrep-go.badnilguard' \
 		--config 'r/dgryski.semgrep-go.errnilcheck' \
     	--config 'r/dgryski.semgrep-go.marshaljson' \

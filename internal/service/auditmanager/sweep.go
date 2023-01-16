@@ -19,6 +19,16 @@ import (
 )
 
 func init() {
+	resource.AddTestSweepers("aws_auditmanager_assessment", &resource.Sweeper{
+		Name: "aws_auditmanager_assessment",
+		F:    sweepAssessments,
+		Dependencies: []string{
+			"aws_auditmanager_control",
+			"aws_auditmanager_framework",
+			"aws_iam_role",
+			"aws_s3_bucket",
+		},
+	})
 	resource.AddTestSweepers("aws_auditmanager_control", &resource.Sweeper{
 		Name: "aws_auditmanager_control",
 		F:    sweepControls,
@@ -40,6 +50,49 @@ func isCompleteSetupError(err error) bool {
 		return true
 	}
 	return false
+}
+
+func sweepAssessments(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		fmt.Errorf("error getting client: %s", err)
+	}
+
+	ctx := context.Background()
+	conn := client.(*conns.AWSClient).AuditManagerClient()
+	sweepResources := make([]sweep.Sweepable, 0)
+	in := &auditmanager.ListAssessmentsInput{}
+	var errs *multierror.Error
+
+	pages := auditmanager.NewListAssessmentsPaginator(conn, in)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if sweep.SkipSweepError(err) || isCompleteSetupError(err) {
+			log.Printf("[WARN] Skipping AuditManager Controls sweep for %s: %s", region, err)
+			return nil
+		}
+		if err != nil {
+			return fmt.Errorf("error retrieving AuditManager Assessments: %w", err)
+		}
+
+		for _, assessment := range page.AssessmentMetadata {
+			id := aws.ToString(assessment.Id)
+
+			log.Printf("[INFO] Deleting AuditManager Assessment: %s", id)
+			sweepResources = append(sweepResources, sweep.NewSweepFrameworkResource(newResourceAssessment, id, client))
+		}
+	}
+
+	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping AuditManager Assessments for %s: %w", region, err))
+	}
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping AuditManager Assessments sweep for %s: %s", region, errs)
+		return nil
+	}
+
+	return errs.ErrorOrNil()
 }
 
 func sweepControls(region string) error {

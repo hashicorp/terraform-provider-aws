@@ -2440,6 +2440,8 @@ func TestAccCodeBuildProject_SecondarySources_codeCommit(t *testing.T) {
 }
 
 func TestProject_nameValidation(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Value    string
 		ErrCount int

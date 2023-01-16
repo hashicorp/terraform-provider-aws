@@ -7,6 +7,8 @@ import (
 )
 
 func TestValidCustomEventBusSourceName(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Value   string
 		IsValid bool
@@ -52,6 +54,8 @@ func TestValidCustomEventBusSourceName(t *testing.T) {
 }
 
 func TestValidCustomEventBusName(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Value   string
 		IsValid bool
@@ -97,6 +101,8 @@ func TestValidCustomEventBusName(t *testing.T) {
 }
 
 func TestValidBusNameOrARN(t *testing.T) {
+	t.Parallel()
+
 	validNames := []string{
 		"HelloWorl_d",
 		"hello-world",
@@ -124,6 +130,8 @@ func TestValidBusNameOrARN(t *testing.T) {
 }
 
 func TestValidRuleName(t *testing.T) {
+	t.Parallel()
+
 	validNames := []string{
 		"HelloWorl_d",
 		"hello-world",

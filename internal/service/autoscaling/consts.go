@@ -44,6 +44,20 @@ const (
 )
 
 const (
+	DesiredCapacityTypeMemoryMiB = "memory-mib"
+	DesiredCapacityTypeUnits     = "units"
+	DesiredCapacityTypeVCPU      = "vcpu"
+)
+
+func DesiredCapacityType_Values() []string {
+	return []string{
+		DesiredCapacityTypeMemoryMiB,
+		DesiredCapacityTypeUnits,
+		DesiredCapacityTypeVCPU,
+	}
+}
+
+const (
 	PolicyTypePredictiveScaling     = "PredictiveScaling"
 	PolicyTypeSimpleScaling         = "SimpleScaling"
 	PolicyTypeStepScaling           = "StepScaling"

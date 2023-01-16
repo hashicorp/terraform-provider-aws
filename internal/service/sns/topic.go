@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -137,11 +138,12 @@ var (
 			Computed: true,
 		},
 		"policy": {
-			Type:             schema.TypeString,
-			Optional:         true,
-			Computed:         true,
-			ValidateFunc:     validation.StringIsJSON,
-			DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+			Type:                  schema.TypeString,
+			Optional:              true,
+			Computed:              true,
+			ValidateFunc:          validation.StringIsJSON,
+			DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+			DiffSuppressOnRefresh: true,
 			StateFunc: func(v interface{}) string {
 				json, _ := structure.NormalizeJsonString(v)
 				return json
@@ -459,6 +461,9 @@ func putTopicAttributes(ctx context.Context, conn *sns.SNS, arn string, attribut
 }
 
 func putTopicAttribute(ctx context.Context, conn *sns.SNS, arn string, name, value string) error {
+	const (
+		topicPutAttributeTimeout = 2 * time.Minute
+	)
 	input := &sns.SetTopicAttributesInput{
 		AttributeName:  aws.String(name),
 		AttributeValue: aws.String(value),

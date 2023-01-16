@@ -7,6 +7,8 @@ import (
 )
 
 func TestParseResourceID(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		TestName            string
 		InputID             string
@@ -39,7 +41,10 @@ func TestParseResourceID(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.TestName, func(t *testing.T) {
+			t.Parallel()
+
 			gotBucket, gotExpectedBucketOwner, err := tfs3.ParseResourceID(testCase.InputID)
 
 			if err == nil && testCase.ExpectError {

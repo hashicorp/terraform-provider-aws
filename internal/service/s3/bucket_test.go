@@ -409,7 +409,7 @@ func TestAccS3Bucket_Duplicate_UsEast1AltAccount(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccBucketConfig_duplicateAltAccount(endpoints.UsEast1RegionID, bucketName),
-				ExpectError: regexp.MustCompile(s3.ErrCodeBucketAlreadyExists),
+				ExpectError: regexp.MustCompile(s3.ErrCodeBucketAlreadyOwnedByYou),
 			},
 		},
 	})
@@ -2411,6 +2411,8 @@ func TestAccS3Bucket_Web_routingRules(t *testing.T) {
 }
 
 func TestBucketName(t *testing.T) {
+	t.Parallel()
+
 	validDnsNames := []string{
 		"foobar",
 		"foo.bar",
@@ -2473,6 +2475,8 @@ func TestBucketName(t *testing.T) {
 }
 
 func TestBucketRegionalDomainName(t *testing.T) {
+	t.Parallel()
+
 	const bucket = "bucket-name"
 
 	var testCases = []struct {
@@ -2527,6 +2531,8 @@ func TestBucketRegionalDomainName(t *testing.T) {
 }
 
 func TestWebsiteEndpoint(t *testing.T) {
+	t.Parallel()
+
 	// https://docs.aws.amazon.com/AmazonS3/latest/dev/WebsiteEndpoints.html
 	testCases := []struct {
 		TestingClient      *conns.AWSClient

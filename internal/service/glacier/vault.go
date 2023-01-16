@@ -52,10 +52,11 @@ func ResourceVault() *schema.Resource {
 			},
 
 			"access_policy": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				Type:                  schema.TypeString,
+				Optional:              true,
+				ValidateFunc:          validation.StringIsJSON,
+				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+				DiffSuppressOnRefresh: true,
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
@@ -240,7 +241,7 @@ func resourceVaultRead(d *schema.ResourceData, meta interface{}) error {
 func resourceVaultDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlacierConn()
 
-	log.Printf("[DEBUG] Glacier Delete Vault: %s", d.Id())
+	log.Printf("[DEBUG] Deleting Glacier Vault: %s", d.Id())
 	_, err := conn.DeleteVault(&glacier.DeleteVaultInput{
 		VaultName: aws.String(d.Id()),
 	})

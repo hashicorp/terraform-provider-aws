@@ -15,6 +15,8 @@ import (
 )
 
 func TestAccBackupFramework_serial(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]map[string]func(t *testing.T){
 		"Resource": {
 			"basic":                        testAccFramework_basic,
@@ -30,17 +32,7 @@ func TestAccBackupFramework_serial(t *testing.T) {
 		},
 	}
 
-	for group, m := range testCases {
-		m := m
-		t.Run(group, func(t *testing.T) {
-			for name, tc := range m {
-				tc := tc
-				t.Run(name, func(t *testing.T) {
-					tc(t)
-				})
-			}
-		})
-	}
+	acctest.RunSerialTests2Levels(t, testCases, 0)
 }
 
 func testAccFramework_basic(t *testing.T) {

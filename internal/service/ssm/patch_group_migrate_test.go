@@ -27,6 +27,8 @@ func testResourcePatchGroupStateDataV1() map[string]interface{} {
 }
 
 func TestPatchGroupStateUpgradeV0(t *testing.T) {
+	t.Parallel()
+
 	expected := testResourcePatchGroupStateDataV1()
 	actual, err := tfssm.PatchGroupStateUpgradeV0(context.Background(), testResourcePatchGroupStateDataV0(), nil)
 	if err != nil {

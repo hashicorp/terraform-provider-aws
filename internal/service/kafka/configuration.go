@@ -177,6 +177,7 @@ func resourceConfigurationDelete(d *schema.ResourceData, meta interface{}) error
 		Arn: aws.String(d.Id()),
 	}
 
+	log.Printf("[DEBUG] Deleting MSK Configuration: %s", d.Id())
 	_, err := conn.DeleteConfiguration(input)
 
 	if err != nil {

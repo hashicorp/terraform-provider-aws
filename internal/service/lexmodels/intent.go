@@ -413,17 +413,13 @@ func resourceIntentRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("fulfillment_activity", flattenFulfilmentActivity(resp.FulfillmentActivity))
 	}
 
-	if resp.ParentIntentSignature != nil {
-		d.Set("parent_intent_signature", resp.ParentIntentSignature)
-	}
+	d.Set("parent_intent_signature", resp.ParentIntentSignature)
 
 	if resp.RejectionStatement != nil {
 		d.Set("rejection_statement", flattenStatement(resp.RejectionStatement))
 	}
 
-	if resp.SampleUtterances != nil {
-		d.Set("sample_utterances", resp.SampleUtterances)
-	}
+	d.Set("sample_utterances", resp.SampleUtterances)
 
 	if resp.Slots != nil {
 		d.Set("slot", flattenSlots(resp.Slots))

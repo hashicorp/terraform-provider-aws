@@ -30,10 +30,15 @@ func ResourceUserPolicy() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"policy": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateFunc:     verify.ValidIAMPolicyJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				Type:                  schema.TypeString,
+				Required:              true,
+				ValidateFunc:          verify.ValidIAMPolicyJSON,
+				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+				DiffSuppressOnRefresh: true,
+				StateFunc: func(v interface{}) string {
+					json, _ := verify.LegacyPolicyNormalize(v)
+					return json
+				},
 			},
 			"name": {
 				Type:          schema.TypeString,
@@ -60,13 +65,17 @@ func ResourceUserPolicy() *schema.Resource {
 func resourceUserPolicyPut(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn()
 
+	p, err := verify.LegacyPolicyNormalize(d.Get("policy").(string))
+	if err != nil {
+		return fmt.Errorf("policy (%s) is invalid JSON: %w", p, err)
+	}
+
 	request := &iam.PutUserPolicyInput{
 		UserName:       aws.String(d.Get("user").(string)),
-		PolicyDocument: aws.String(d.Get("policy").(string)),
+		PolicyDocument: aws.String(p),
 	}
 
 	var policyName string
-	var err error
 	if !d.IsNewResource() {
 		_, policyName, err = UserPolicyParseID(d.Id())
 		if err != nil {
@@ -143,8 +152,7 @@ func resourceUserPolicyRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), policy)
-
+	policyToSet, err := verify.LegacyPolicyToSet(d.Get("policy").(string), policy)
 	if err != nil {
 		return fmt.Errorf("while setting policy (%s), encountered: %w", policyToSet, err)
 	}
