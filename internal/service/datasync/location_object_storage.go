@@ -23,6 +23,7 @@ func ResourceLocationObjectStorage() *schema.Resource {
 		Read:   resourceLocationObjectStorageRead,
 		Update: resourceLocationObjectStorageUpdate,
 		Delete: resourceLocationObjectStorageDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -130,10 +131,10 @@ func resourceLocationObjectStorageCreate(d *schema.ResourceData, meta interface{
 		input.ServerCertificate = []byte(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating DataSync Location Object Storage: %s", input)
 	output, err := conn.CreateLocationObjectStorage(input)
+
 	if err != nil {
-		return fmt.Errorf("error creating DataSync Location Object Storage: %w", err)
+		return fmt.Errorf("creating DataSync Location Object Storage: %w", err)
 	}
 
 	d.SetId(aws.StringValue(output.LocationArn))
@@ -149,13 +150,13 @@ func resourceLocationObjectStorageRead(d *schema.ResourceData, meta interface{})
 	output, err := FindLocationObjectStorageByARN(conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] DataSync Location ObjectStorage (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] DataSync Location Object Storage (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading DataSync Location ObjectStorage (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading DataSync Location Object Storage (%s): %w", d.Id(), err)
 	}
 
 	subdirectory, err := SubdirectoryFromLocationURI(aws.StringValue(output.LocationUri))
@@ -175,6 +176,7 @@ func resourceLocationObjectStorageRead(d *schema.ResourceData, meta interface{})
 	uri := aws.StringValue(output.LocationUri)
 
 	hostname, bucketName, err := decodeObjectStorageURI(uri)
+
 	if err != nil {
 		return err
 	}
@@ -187,18 +189,18 @@ func resourceLocationObjectStorageRead(d *schema.ResourceData, meta interface{})
 	tags, err := ListTags(conn, d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for DataSync Location Object Storage (%s): %w", d.Id(), err)
+		return fmt.Errorf("listing tags for DataSync Location Object Storage (%s): %w", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	return nil
@@ -237,8 +239,9 @@ func resourceLocationObjectStorageUpdate(d *schema.ResourceData, meta interface{
 		}
 
 		_, err := conn.UpdateLocationObjectStorage(input)
+
 		if err != nil {
-			return fmt.Errorf("error updating DataSync Location Object Storage (%s): %w", d.Id(), err)
+			return fmt.Errorf("updating DataSync Location Object Storage (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -246,9 +249,10 @@ func resourceLocationObjectStorageUpdate(d *schema.ResourceData, meta interface{
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating Datasync Object Storage location (%s) tags: %w", d.Id(), err)
+			return fmt.Errorf("updating DataSync Location Object Storage (%s) tags: %w", d.Id(), err)
 		}
 	}
+
 	return resourceLocationObjectStorageRead(d, meta)
 }
 
@@ -259,7 +263,7 @@ func resourceLocationObjectStorageDelete(d *schema.ResourceData, meta interface{
 		LocationArn: aws.String(d.Id()),
 	}
 
-	log.Printf("[DEBUG] Deleting DataSync Location Object Storage: %s", input)
+	log.Printf("[DEBUG] Deleting DataSync Location Object Storage: %s", d.Id())
 	_, err := conn.DeleteLocation(input)
 
 	if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "not found") {
@@ -267,7 +271,7 @@ func resourceLocationObjectStorageDelete(d *schema.ResourceData, meta interface{
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting DataSync Location Object Storage (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting DataSync Location Object Storage (%s): %w", d.Id(), err)
 	}
 
 	return nil

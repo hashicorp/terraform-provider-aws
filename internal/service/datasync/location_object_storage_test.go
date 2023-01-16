@@ -255,17 +255,17 @@ resource "aws_datasync_agent" "test" {
 }
 
 func testAccLocationObjectStorageConfig_basic(rName string) string {
-	return testAccLocationObjectStorageBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccLocationObjectStorageBaseConfig(rName), fmt.Sprintf(`
 resource "aws_datasync_location_object_storage" "test" {
   agent_arns      = [aws_datasync_agent.test.arn]
   server_hostname = %[1]q
   bucket_name     = %[1]q
 }
-`, rName)
+`, rName))
 }
 
 func testAccLocationObjectStorageConfig_tags1(rName, key1, value1 string) string {
-	return testAccLocationObjectStorageBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccLocationObjectStorageBaseConfig(rName), fmt.Sprintf(`
 resource "aws_datasync_location_object_storage" "test" {
   agent_arns      = [aws_datasync_agent.test.arn]
   server_hostname = %[1]q
@@ -275,11 +275,11 @@ resource "aws_datasync_location_object_storage" "test" {
     %[2]q = %[3]q
   }
 }
-`, rName, key1, value1)
+`, rName, key1, value1))
 }
 
 func testAccLocationObjectStorageConfig_tags2(rName, key1, value1, key2, value2 string) string {
-	return testAccLocationObjectStorageBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccLocationObjectStorageBaseConfig(rName), fmt.Sprintf(`
 resource "aws_datasync_location_object_storage" "test" {
   agent_arns      = [aws_datasync_agent.test.arn]
   server_hostname = %[1]q
@@ -290,5 +290,5 @@ resource "aws_datasync_location_object_storage" "test" {
     %[4]q = %[5]q
   }
 }
-`, rName, key1, value1, key2, value2)
+`, rName, key1, value1, key2, value2))
 }
