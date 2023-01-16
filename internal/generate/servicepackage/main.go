@@ -18,6 +18,7 @@ import (
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 	"github.com/hashicorp/terraform-provider-aws/names"
+	"golang.org/x/exp/slices"
 )
 
 func main() {
@@ -59,6 +60,8 @@ func main() {
 			continue
 		}
 
+		// Look for Terraform Plugin Framework and SDK resource and data source annotations.
+		// These annotations are implemented as comments on factory functions.
 		v := &visitor{
 			g: g,
 
@@ -81,6 +84,14 @@ func main() {
 			SDKDataSources:       v.sdkDataSources,
 			SDKResources:         v.sdkResources,
 		}
+
+		sort.SliceStable(s.FrameworkDataSources, func(i, j int) bool {
+			return s.FrameworkDataSources[i] < s.FrameworkDataSources[j]
+		})
+		sort.SliceStable(s.FrameworkResources, func(i, j int) bool {
+			return s.FrameworkResources[i] < s.FrameworkResources[j]
+		})
+
 		d := g.NewGoFileDestination(fmt.Sprintf("../../service/%s/%s", p, spdFile))
 
 		if err := d.WriteTemplate("servicepackagedata", spdTmpl, s); err != nil {
@@ -186,11 +197,19 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		line := line.Text
 
 		if m := frameworkDataSourceAnnotation.FindStringSubmatch(line); len(m) > 0 {
-			v.frameworkDataSources = append(v.frameworkDataSources, v.functionName)
+			if slices.Contains(v.frameworkDataSources, v.functionName) {
+				v.err = multierror.Append(v.err, fmt.Errorf("duplicate Framework Data Source: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+			} else {
+				v.frameworkDataSources = append(v.frameworkDataSources, v.functionName)
+			}
 
 			break
 		} else if m := frameworkResourceAnnotation.FindStringSubmatch(line); len(m) > 0 {
-			v.frameworkResources = append(v.frameworkResources, v.functionName)
+			if slices.Contains(v.frameworkResources, v.functionName) {
+				v.err = multierror.Append(v.err, fmt.Errorf("duplicate Framework Resource: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+			} else {
+				v.frameworkResources = append(v.frameworkResources, v.functionName)
+			}
 
 			break
 		} else if m := sdkDataSourceAnnotation.FindStringSubmatch(line); len(m) > 0 {

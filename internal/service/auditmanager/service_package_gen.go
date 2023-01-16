@@ -20,10 +20,10 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []func(contex
 func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.Context) (resource.ResourceWithConfigure, error) {
 	return []func(context.Context) (resource.ResourceWithConfigure, error){
 		newResourceAccountRegistration,
+		newResourceAssessment,
 		newResourceAssessmentReport,
 		newResourceControl,
 		newResourceFramework,
-		newResourceAssessment,
 	}
 }
 

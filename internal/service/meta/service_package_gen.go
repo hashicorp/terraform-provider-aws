@@ -15,14 +15,14 @@ type servicePackage struct{}
 
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []func(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return []func(context.Context) (datasource.DataSourceWithConfigure, error){
+		newDataSourceARN,
 		newDataSourceBillingServiceAccount,
 		newDataSourceDefaultTags,
+		newDataSourceIPRanges,
 		newDataSourcePartition,
 		newDataSourceRegion,
-		newDataSourceService,
-		newDataSourceARN,
-		newDataSourceIPRanges,
 		newDataSourceRegions,
+		newDataSourceService,
 	}
 }
 
