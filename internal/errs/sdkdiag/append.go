@@ -16,3 +16,10 @@ func AppendWarningf(diags diag.Diagnostics, format string, a ...any) diag.Diagno
 func AppendErrorf(diags diag.Diagnostics, format string, a ...any) diag.Diagnostics {
 	return append(diags, diag.Errorf(format, a...)...)
 }
+
+func AppendFromErr(diags diag.Diagnostics, err error) diag.Diagnostics {
+	if err == nil {
+		return diags
+	}
+	return append(diags, diag.FromErr(err)...)
+}
