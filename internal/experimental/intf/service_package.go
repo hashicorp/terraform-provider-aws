@@ -9,16 +9,9 @@ import (
 )
 
 type ServicePackage interface {
-	Configure(context.Context, any) error
 	FrameworkDataSources(context.Context) []func(context.Context) (datasource.DataSourceWithConfigure, error)
 	FrameworkResources(context.Context) []func(context.Context) (resource.ResourceWithConfigure, error)
-	SDKDataSources(context.Context) []struct {
-		TypeName string
-		Factory  func() *schema.Resource
-	}
-	SDKResources(context.Context) []struct {
-		TypeName string
-		Factory  func() *schema.Resource
-	}
+	SDKDataSources(context.Context) map[string]func() *schema.Resource
+	SDKResources(context.Context) map[string]func() *schema.Resource
 	ServicePackageName() string
 }

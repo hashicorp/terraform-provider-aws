@@ -49,6 +49,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidentity"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidp"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/comprehend"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/computeoptimizer"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/configservice"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/connect"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/controltower"
@@ -140,6 +141,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/outposts"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/pinpoint"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/pipes"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/pricing"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/qldb"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
@@ -241,6 +243,7 @@ func servicePackages(context.Context) []intf.ServicePackage {
 		cognitoidentity.ServicePackage,
 		cognitoidp.ServicePackage,
 		comprehend.ServicePackage,
+		computeoptimizer.ServicePackage,
 		configservice.ServicePackage,
 		connect.ServicePackage,
 		controltower.ServicePackage,
@@ -332,6 +335,7 @@ func servicePackages(context.Context) []intf.ServicePackage {
 		organizations.ServicePackage,
 		outposts.ServicePackage,
 		pinpoint.ServicePackage,
+		pipes.ServicePackage,
 		pricing.ServicePackage,
 		qldb.ServicePackage,
 		quicksight.ServicePackage,

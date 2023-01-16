@@ -2233,15 +2233,13 @@ func New(ctx context.Context) (*schema.Provider, error) {
 	servicePackages := servicePackages(ctx)
 
 	for _, sp := range servicePackages {
-		for _, v := range sp.SDKDataSources(ctx) {
-			typeName := v.TypeName
-
+		for typeName, v := range sp.SDKDataSources(ctx) {
 			if _, ok := provider.DataSourcesMap[typeName]; ok {
 				errs = multierror.Append(errs, fmt.Errorf("duplicate data source: %s", typeName))
 				continue
 			}
 
-			ds := v.Factory()
+			ds := v()
 
 			if v := ds.ReadWithoutTimeout; v != nil {
 				ds.ReadWithoutTimeout = wrappedReadContextFunc(v)
@@ -2250,15 +2248,13 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			provider.DataSourcesMap[typeName] = ds
 		}
 
-		for _, v := range sp.SDKResources(ctx) {
-			typeName := v.TypeName
-
+		for typeName, v := range sp.SDKResources(ctx) {
 			if _, ok := provider.ResourcesMap[typeName]; ok {
 				errs = multierror.Append(errs, fmt.Errorf("duplicate resource: %s", typeName))
 				continue
 			}
 
-			r := v.Factory()
+			r := v()
 
 			if v := r.CreateWithoutTimeout; v != nil {
 				r.CreateWithoutTimeout = wrappedCreateContextFunc(v)
@@ -2403,8 +2399,13 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 
 	// Configure each service.
 	for _, v := range meta.ServicePackages {
-		if err := v.Configure(ctx, meta); err != nil {
-			diags = append(diags, diag.FromErr(err)...)
+		// Optional method.
+		if v, ok := v.(interface {
+			Configure(context.Context, any) error
+		}); ok {
+			if err := v.Configure(ctx, meta); err != nil {
+				diags = append(diags, diag.FromErr(err)...)
+			}
 		}
 	}
 
