@@ -10,15 +10,15 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 )
 
-type struct1 struct{}
-type struct2 struct {
-	ARN             types.String `tfsdk:"arn"`
-	ID              types.Int64  `tfsdk:"id"`
-	IncludeProperty types.Bool   `tfsdk:"include_property"`
-}
-
 func TestAttributeTypes(t *testing.T) {
 	t.Parallel()
+
+	type struct1 struct{} //nolint:unused // Used as a type parameter.
+	type struct2 struct { //nolint:unused // Used as a type parameter.
+		ARN             types.String `tfsdk:"arn"`
+		ID              types.Int64  `tfsdk:"id"`
+		IncludeProperty types.Bool   `tfsdk:"include_property"`
+	}
 
 	ctx := context.Background()
 	got, err := framework.AttributeTypes[struct1](ctx)
