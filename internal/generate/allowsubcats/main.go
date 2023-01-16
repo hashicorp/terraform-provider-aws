@@ -32,7 +32,7 @@ func main() {
 	data, err := common.ReadAllCSVData(namesDataFile)
 
 	if err != nil {
-		g.Fatalf("error reading %s: %s", namesDataFile, err.Error())
+		g.Fatalf("error reading %s: %s", namesDataFile, err)
 	}
 
 	td := TemplateData{}
