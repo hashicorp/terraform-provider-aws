@@ -184,23 +184,22 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 
 	for _, line := range funcDecl.Doc.List {
 		line := line.Text
-		functionName := fmt.Sprintf("%s.%s", v.packageName, v.functionName)
 
 		if m := frameworkDataSourceAnnotation.FindStringSubmatch(line); len(m) > 0 {
-			v.frameworkDataSources = append(v.frameworkDataSources, functionName)
+			v.frameworkDataSources = append(v.frameworkDataSources, v.functionName)
 
 			break
 		} else if m := frameworkResourceAnnotation.FindStringSubmatch(line); len(m) > 0 {
-			v.frameworkResources = append(v.frameworkResources, functionName)
+			v.frameworkResources = append(v.frameworkResources, v.functionName)
 
 			break
 		} else if m := sdkDataSourceAnnotation.FindStringSubmatch(line); len(m) > 0 {
 			name := m[1]
 
 			if _, ok := v.sdkDataSources[name]; ok {
-				v.err = multierror.Append(v.err, fmt.Errorf("duplicate SDK Data Source (%s): %s", name, functionName))
+				v.err = multierror.Append(v.err, fmt.Errorf("duplicate SDK Data Source (%s): %s", name, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 			} else {
-				v.sdkDataSources[name] = functionName
+				v.sdkDataSources[name] = v.functionName
 			}
 
 			break
@@ -208,9 +207,9 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 			name := m[1]
 
 			if _, ok := v.sdkResources[name]; ok {
-				v.err = multierror.Append(v.err, fmt.Errorf("duplicate SDK Resource (%s): %s", name, functionName))
+				v.err = multierror.Append(v.err, fmt.Errorf("duplicate SDK Resource (%s): %s", name, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 			} else {
-				v.sdkResources[name] = functionName
+				v.sdkResources[name] = v.functionName
 			}
 
 			break

@@ -22,11 +22,25 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_cloudwatch_log_data_protection_policy_document": dataSourceDataProtectionPolicyDocument,
+		"aws_cloudwatch_log_group":                           dataSourceGroup,
+		"aws_cloudwatch_log_groups":                          dataSourceGroups,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_cloudwatch_log_data_protection_policy": resourceDataProtectionPolicy,
+		"aws_cloudwatch_log_destination":            resourceDestination,
+		"aws_cloudwatch_log_destination_policy":     resourceDestinationPolicy,
+		"aws_cloudwatch_log_group":                  resourceGroup,
+		"aws_cloudwatch_log_metric_filter":          resourceMetricFilter,
+		"aws_cloudwatch_log_resource_policy":        resourceResourcePolicy,
+		"aws_cloudwatch_log_stream":                 resourceStream,
+		"aws_cloudwatch_log_subscription_filter":    resourceSubscriptionFilter,
+		"aws_cloudwatch_query_definition":           resourceQueryDefinition,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

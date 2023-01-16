@@ -17,10 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func init() {
-	_sp.registerSDKResourceFactory("aws_cloudwatch_log_stream", resourceStream)
-}
-
+// @SDKResource("aws_cloudwatch_log_stream")
 func resourceStream() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStreamCreate,

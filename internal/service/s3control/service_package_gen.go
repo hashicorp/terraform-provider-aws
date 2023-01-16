@@ -22,11 +22,26 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_s3_account_public_access_block":      dataSourceAccountPublicAccessBlock,
+		"aws_s3control_multi_region_access_point": dataSourceMultiRegionAccessPoint,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_s3_access_point":                             resourceAccessPoint,
+		"aws_s3_account_public_access_block":              resourceAccountPublicAccessBlock,
+		"aws_s3control_access_point_policy":               resourceAccessPointPolicy,
+		"aws_s3control_bucket":                            resourceBucket,
+		"aws_s3control_bucket_lifecycle_configuration":    resourceBucketLifecycleConfiguration,
+		"aws_s3control_bucket_policy":                     resourceBucketPolicy,
+		"aws_s3control_multi_region_access_point":         resourceMultiRegionAccessPoint,
+		"aws_s3control_multi_region_access_point_policy":  resourceMultiRegionAccessPointPolicy,
+		"aws_s3control_object_lambda_access_point":        resourceObjectLambdaAccessPoint,
+		"aws_s3control_object_lambda_access_point_policy": resourceObjectLambdaAccessPointPolicy,
+		"aws_s3control_storage_lens_configuration":        resourceStorageLensConfiguration,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {
