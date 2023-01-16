@@ -166,7 +166,9 @@ func resourceScheduleRead(d *schema.ResourceData, meta interface{}) error {
 	} else {
 		d.Set("desired_capacity", sa.DesiredCapacity)
 	}
-	d.Set("end_time", sa.EndTime.Format(ScheduleTimeLayout))
+	if sa.EndTime != nil {
+		d.Set("end_time", sa.EndTime.Format(ScheduleTimeLayout))
+	}
 	if sa.MaxSize == nil {
 		d.Set("max_size", -1)
 	} else {
@@ -178,7 +180,9 @@ func resourceScheduleRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("min_size", sa.MinSize)
 	}
 	d.Set("recurrence", sa.Recurrence)
-	d.Set("start_time", sa.StartTime.Format(ScheduleTimeLayout))
+	if sa.StartTime != nil {
+		d.Set("start_time", sa.StartTime.Format(ScheduleTimeLayout))
+	}
 	d.Set("time_zone", sa.TimeZone)
 
 	return nil

@@ -1008,8 +1008,12 @@ func resourceSpotFleetRequestRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("target_capacity", config.TargetCapacity)
 	d.Set("target_capacity_unit_type", config.TargetCapacityUnitType)
 	d.Set("terminate_instances_with_expiration", config.TerminateInstancesWithExpiration)
-	d.Set("valid_from", aws.TimeValue(config.ValidFrom).Format(time.RFC3339))
-	d.Set("valid_until", aws.TimeValue(config.ValidUntil).Format(time.RFC3339))
+	if config.ValidFrom != nil {
+		d.Set("valid_from", aws.TimeValue(config.ValidFrom).Format(time.RFC3339))
+	}
+	if config.ValidUntil != nil {
+		d.Set("valid_until", aws.TimeValue(config.ValidUntil).Format(time.RFC3339))
+	}
 
 	launchSpec, err := launchSpecsToSet(conn, config.LaunchSpecifications)
 
