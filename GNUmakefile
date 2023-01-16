@@ -78,6 +78,9 @@ gen:
 	rm -f .ci/.semgrep-service-name*.yml
 	$(GO_VER) generate ./...
 
+servicepackage:
+	$(GO_VER) generate ./internal/generate/servicepackage
+
 sweep:
 	# make sweep SWEEPARGS=-sweep-run=aws_example_thing
 	# set SWEEPARGS=-sweep-allow-failures to continue after first failure
