@@ -34,6 +34,31 @@ func ResourceCustomRoutingAccelerator() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"attributes": {
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"flow_logs_enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						"flow_logs_s3_bucket": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringLenBetween(0, 255),
+						},
+						"flow_logs_s3_prefix": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringLenBetween(0, 255),
+						},
+					},
+				},
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -90,7 +115,7 @@ func ResourceCustomRoutingAccelerator() *schema.Resource {
 }
 
 func resourceCustomRoutingAcceleratorCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn
+	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -120,7 +145,7 @@ func resourceCustomRoutingAcceleratorCreate(d *schema.ResourceData, meta interfa
 	}
 
 	if v, ok := d.GetOk("attributes"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input := expandGlobalAcceleratorUpdateAcceleratorAttributesInput(v.([]interface{})[0].(map[string]interface{}))
+		input := expandUpdateAcceleratorAttributesInput(v.([]interface{})[0].(map[string]interface{}))
 		input.AcceleratorArn = aws.String(d.Id())
 
 		log.Printf("[DEBUG] Updating Global Accelerator Accelerator attributes: %s", input)
@@ -137,7 +162,7 @@ func resourceCustomRoutingAcceleratorCreate(d *schema.ResourceData, meta interfa
 }
 
 func resourceCustomRoutingAcceleratorRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn
+	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -155,11 +180,11 @@ func resourceCustomRoutingAcceleratorRead(d *schema.ResourceData, meta interface
 
 	d.Set("enabled", accelerator.Enabled)
 	d.Set("dns_name", accelerator.DnsName)
-	d.Set("hosted_zone_id", globalAcceleratorRoute53ZoneID)
+	d.Set("hosted_zone_id", route53ZoneID)
 	d.Set("name", accelerator.Name)
 	d.Set("ip_address_type", accelerator.IpAddressType)
 
-	if err := d.Set("ip_sets", flattenGlobalAcceleratorIpSets(accelerator.IpSets)); err != nil {
+	if err := d.Set("ip_sets", flattenIPSets(accelerator.IpSets)); err != nil {
 		return fmt.Errorf("error setting ip_sets: %w", err)
 	}
 
@@ -169,7 +194,7 @@ func resourceCustomRoutingAcceleratorRead(d *schema.ResourceData, meta interface
 		return fmt.Errorf("error reading Global Accelerator Custom Routing Accelerator (%s) attributes: %w", d.Id(), err)
 	}
 
-	if err := d.Set("attributes", []interface{}{flattenGlobalAcceleratorCustomRoutingAcceleratorAttributes(acceleratorAttributes)}); err != nil {
+	if err := d.Set("attributes", []interface{}{flattenCustomRoutingAcceleratorAttributes(acceleratorAttributes)}); err != nil {
 		return fmt.Errorf("error setting attributes: %w", err)
 	}
 
@@ -193,7 +218,7 @@ func resourceCustomRoutingAcceleratorRead(d *schema.ResourceData, meta interface
 }
 
 func resourceCustomRoutingAcceleratorUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn
+	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn()
 
 	if d.HasChanges("name", "ip_address_type", "enabled") {
 		input := &globalaccelerator.UpdateCustomRoutingAcceleratorInput{
@@ -220,9 +245,9 @@ func resourceCustomRoutingAcceleratorUpdate(d *schema.ResourceData, meta interfa
 		o, n := d.GetChange("attributes")
 		if len(o.([]interface{})) > 0 && o.([]interface{})[0] != nil {
 			if len(n.([]interface{})) > 0 && n.([]interface{})[0] != nil {
-				oInput := expandGlobalAcceleratorUpdateCustomRoutingAcceleratorAttributesInput(o.([]interface{})[0].(map[string]interface{}))
+				oInput := expandUpdateCustomRoutingAcceleratorAttributesInput(o.([]interface{})[0].(map[string]interface{}))
 				oInput.AcceleratorArn = aws.String(d.Id())
-				nInput := expandGlobalAcceleratorUpdateCustomRoutingAcceleratorAttributesInput(n.([]interface{})[0].(map[string]interface{}))
+				nInput := expandUpdateCustomRoutingAcceleratorAttributesInput(n.([]interface{})[0].(map[string]interface{}))
 				nInput.AcceleratorArn = aws.String(d.Id())
 
 				// To change flow logs bucket and prefix attributes while flows are enabled, first disable flow logs.
@@ -263,7 +288,7 @@ func resourceCustomRoutingAcceleratorUpdate(d *schema.ResourceData, meta interfa
 }
 
 func resourceCustomRoutingAcceleratorDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn
+	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn()
 
 	{
 		input := &globalaccelerator.UpdateCustomRoutingAcceleratorInput{
@@ -307,10 +332,10 @@ func resourceCustomRoutingAcceleratorDelete(d *schema.ResourceData, meta interfa
 	return nil
 }
 
-func expandGlobalAcceleratorUpdateCustomRoutingAcceleratorAttributesInput(tfMap map[string]interface{}) *globalaccelerator.UpdateCustomRoutingAcceleratorAttributesInput {
-	return (*globalaccelerator.UpdateCustomRoutingAcceleratorAttributesInput)(expandGlobalAcceleratorUpdateAcceleratorAttributesInput(tfMap))
+func expandUpdateCustomRoutingAcceleratorAttributesInput(tfMap map[string]interface{}) *globalaccelerator.UpdateCustomRoutingAcceleratorAttributesInput {
+	return (*globalaccelerator.UpdateCustomRoutingAcceleratorAttributesInput)(expandUpdateAcceleratorAttributesInput(tfMap))
 }
 
-func flattenGlobalAcceleratorCustomRoutingAcceleratorAttributes(apiObject *globalaccelerator.CustomRoutingAcceleratorAttributes) map[string]interface{} {
-	return flattenGlobalAcceleratorAcceleratorAttributes((*globalaccelerator.AcceleratorAttributes)(apiObject))
+func flattenCustomRoutingAcceleratorAttributes(apiObject *globalaccelerator.CustomRoutingAcceleratorAttributes) map[string]interface{} {
+	return flattenAcceleratorAttributes((*globalaccelerator.AcceleratorAttributes)(apiObject))
 }

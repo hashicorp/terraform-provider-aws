@@ -14,10 +14,10 @@ func TestAccGlobalAcceleratorCustomRoutingListener_basic(t *testing.T) {
 	resourceName := "aws_globalaccelerator_custom_routing_listener.test"
 	accName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckGlobalAccelerator(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGlobalAcceleratorCustomRoutingAcceleratorDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGlobalAcceleratorCustomRoutingAcceleratorDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlobalAcceleratorCustomRoutingListenerConfig(accName),

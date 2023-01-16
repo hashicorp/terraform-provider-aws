@@ -22,10 +22,10 @@ func TestAccGlobalAcceleratorCustomRoutingAccelerator_basic(t *testing.T) {
 	dnsNameRegex := regexp.MustCompile(`^a[a-f0-9]{16}\.awsglobalaccelerator\.com$`)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckGlobalAccelerator(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGlobalAcceleratorCustomRoutingAcceleratorDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGlobalAcceleratorCustomRoutingAcceleratorDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlobalAcceleratorCustomRoutingAcceleratorConfig(rName),
@@ -62,7 +62,7 @@ resource "aws_globalaccelerator_custom_routing_accelerator" "test" {
 
 func testAccCheckGlobalAcceleratorCustomRoutingAcceleratorExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorConn()
 
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -84,7 +84,7 @@ func testAccCheckGlobalAcceleratorCustomRoutingAcceleratorExists(name string) re
 }
 
 func testAccCheckGlobalAcceleratorCustomRoutingAcceleratorDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_globalaccelerator_custom_routing_accelerator" {

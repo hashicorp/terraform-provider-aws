@@ -63,13 +63,13 @@ func ResourceCustomRoutingListener() *schema.Resource {
 }
 
 func resourceCustomRoutingListenerCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn
+	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn()
 	acceleratorARN := d.Get("accelerator_arn").(string)
 
 	opts := &globalaccelerator.CreateCustomRoutingListenerInput{
 		AcceleratorArn:   aws.String(acceleratorARN),
 		IdempotencyToken: aws.String(resource.UniqueId()),
-		PortRanges:       resourceListenerExpandPortRanges(d.Get("port_range").(*schema.Set).List()),
+		PortRanges:       expandPortRanges(d.Get("port_range").(*schema.Set).List()),
 	}
 
 	log.Printf("[DEBUG] Create Global Accelerator custom routing listener: %s", opts)
@@ -90,7 +90,7 @@ func resourceCustomRoutingListenerCreate(d *schema.ResourceData, meta interface{
 }
 
 func resourceCustomRoutingListenerRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn
+	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn()
 
 	listener, err := FindCustomRoutingListenerByARN(conn, d.Id())
 
@@ -111,7 +111,7 @@ func resourceCustomRoutingListenerRead(d *schema.ResourceData, meta interface{})
 	}
 
 	d.Set("accelerator_arn", acceleratorARN)
-	if err := d.Set("port_range", resourceListenerFlattenPortRanges(listener.PortRanges)); err != nil {
+	if err := d.Set("port_range", flattenPortRanges(listener.PortRanges)); err != nil {
 		return fmt.Errorf("error setting port_range: %w", err)
 	}
 
@@ -119,12 +119,12 @@ func resourceCustomRoutingListenerRead(d *schema.ResourceData, meta interface{})
 }
 
 func resourceCustomRoutingListenerUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn
+	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn()
 	acceleratorARN := d.Get("accelerator_arn").(string)
 
 	input := &globalaccelerator.UpdateCustomRoutingListenerInput{
 		ListenerArn: aws.String(d.Id()),
-		PortRanges:  resourceListenerExpandPortRanges(d.Get("port_range").(*schema.Set).List()),
+		PortRanges:  expandPortRanges(d.Get("port_range").(*schema.Set).List()),
 	}
 
 	log.Printf("[DEBUG] Updating Global Accelerator custom routing listener: %s", input)
@@ -141,7 +141,7 @@ func resourceCustomRoutingListenerUpdate(d *schema.ResourceData, meta interface{
 }
 
 func resourceCustomRoutingListenerDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn
+	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn()
 	acceleratorARN := d.Get("accelerator_arn").(string)
 
 	input := &globalaccelerator.DeleteCustomRoutingListenerInput{

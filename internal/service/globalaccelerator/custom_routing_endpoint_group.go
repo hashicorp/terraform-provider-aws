@@ -2,11 +2,11 @@ package globalaccelerator
 
 import (
 	"fmt"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/globalaccelerator"
 	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -69,7 +69,7 @@ func ResourceCustomRoutingEndpointGroup() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
-								ValidateFunc: validation.StringInSlice(ec2.TransportProtocol_Values(), false),
+								ValidateFunc: validation.StringInSlice(globalaccelerator.CustomRoutingProtocol_Values(), false),
 							},
 						},
 					},
@@ -102,7 +102,7 @@ func ResourceCustomRoutingEndpointGroup() *schema.Resource {
 }
 
 func resourceCustomRoutingEndpointGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn
+	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn()
 	region := meta.(*conns.AWSClient).Region
 
 	opts := &globalaccelerator.CreateCustomRoutingEndpointGroupInput{
@@ -112,7 +112,7 @@ func resourceCustomRoutingEndpointGroupCreate(d *schema.ResourceData, meta inter
 	}
 
 	if v, ok := d.GetOk("destination_configuration"); ok {
-		opts.DestinationConfigurations = expandGlobalAcceleratorCustomRoutingDestinationConfigurations(v.(*schema.Set).List())
+		opts.DestinationConfigurations = expandCustomRoutingDestinationConfigurations(v.(*schema.Set).List())
 	}
 
 	log.Printf("[DEBUG] Create Global Accelerator custom routing endpoint group: %s", opts)
@@ -138,7 +138,7 @@ func resourceCustomRoutingEndpointGroupCreate(d *schema.ResourceData, meta inter
 	if v, ok := d.GetOk("endpoint_configuration"); ok {
 		optsEndpoints := &globalaccelerator.AddCustomRoutingEndpointsInput{
 			EndpointGroupArn:       resp.EndpointGroup.EndpointGroupArn,
-			EndpointConfigurations: expandGlobalAcceleratorCustomRoutingEndpointConfigurations(v.(*schema.Set).List()),
+			EndpointConfigurations: expandCustomRoutingEndpointConfigurations(v.(*schema.Set).List()),
 		}
 
 		_, err := conn.AddCustomRoutingEndpoints(optsEndpoints)
@@ -155,7 +155,7 @@ func resourceCustomRoutingEndpointGroupCreate(d *schema.ResourceData, meta inter
 }
 
 func resourceCustomRoutingEndpointGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn
+	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn()
 
 	endpointGroup, err := FindCustomRoutingEndpointGroupByARN(conn, d.Id())
 
@@ -176,11 +176,11 @@ func resourceCustomRoutingEndpointGroupRead(d *schema.ResourceData, meta interfa
 	}
 
 	d.Set("arn", endpointGroup.EndpointGroupArn)
-	if err := d.Set("destination_configuration", flattenGlobalAcceleratorCustomRoutingDestinationDescriptions(endpointGroup.DestinationDescriptions)); err != nil {
+	if err := d.Set("destination_configuration", flattenCustomRoutingDestinationDescriptions(endpointGroup.DestinationDescriptions)); err != nil {
 		return fmt.Errorf("error setting destination_configuration: %w", err)
 	}
 	d.Set("endpoint_group_region", endpointGroup.EndpointGroupRegion)
-	if err := d.Set("endpoint_configuration", flattenGlobalAcceleratorCustomRoutingEndpointDescriptions(endpointGroup.EndpointDescriptions)); err != nil {
+	if err := d.Set("endpoint_configuration", flattenCustomRoutingEndpointDescriptions(endpointGroup.EndpointDescriptions)); err != nil {
 		return fmt.Errorf("error setting endpoint_configuration: %w", err)
 	}
 	d.Set("listener_arn", listenerARN)
@@ -189,7 +189,7 @@ func resourceCustomRoutingEndpointGroupRead(d *schema.ResourceData, meta interfa
 }
 
 func resourceCustomRoutingEndpointGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn
+	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn()
 
 	input := &globalaccelerator.DeleteCustomRoutingEndpointGroupInput{
 		EndpointGroupArn: aws.String(d.Id()),
@@ -219,24 +219,55 @@ func resourceCustomRoutingEndpointGroupDelete(d *schema.ResourceData, meta inter
 	return nil
 }
 
-func expandGlobalAcceleratorCustomRoutingDestinationConfigurations(configurations []interface{}) []*globalaccelerator.CustomRoutingDestinationConfiguration {
-	out := make([]*globalaccelerator.CustomRoutingDestinationConfiguration, len(configurations))
-
-	for i, raw := range configurations {
-		configuration := raw.(map[string]interface{})
-		m := globalaccelerator.CustomRoutingDestinationConfiguration{}
-
-		m.FromPort = aws.Int64(int64(configuration["from_port"].(int)))
-		m.ToPort = aws.Int64(int64(configuration["to_port"].(int)))
-		m.Protocols = aws.StringSlice(configuration["protocols"].([]string))
-
-		out[i] = &m
+func expandCustomRoutingDestinationConfigurations(configurations []interface{}) []*globalaccelerator.CustomRoutingDestinationConfiguration {
+	if len(configurations) == 0 {
+		return nil
 	}
 
-	return out
+	var apiObjects []*globalaccelerator.CustomRoutingDestinationConfiguration
+
+	for _, tfMapRaw := range configurations {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		apiObject := expandCustomRoutingEndpointDestinationConfiguration(tfMap)
+
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
 }
 
-func expandGlobalAcceleratorCustomRoutingEndpointConfigurations(configurations []interface{}) []*globalaccelerator.CustomRoutingEndpointConfiguration {
+func expandCustomRoutingEndpointDestinationConfiguration(tfMap map[string]interface{}) *globalaccelerator.CustomRoutingDestinationConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &globalaccelerator.CustomRoutingDestinationConfiguration{}
+
+	if v, ok := tfMap["from_port"].(int64); ok {
+		apiObject.FromPort = aws.Int64(v)
+	}
+
+	if v, ok := tfMap["to_port"].(int64); ok {
+		apiObject.ToPort = aws.Int64(v)
+	}
+
+	if v, ok := tfMap["protocols"].(*schema.Set); ok {
+		apiObject.Protocols = flex.ExpandStringSet(v)
+	}
+
+	return apiObject
+}
+
+func expandCustomRoutingEndpointConfigurations(configurations []interface{}) []*globalaccelerator.CustomRoutingEndpointConfiguration {
 	out := make([]*globalaccelerator.CustomRoutingEndpointConfiguration, len(configurations))
 
 	for i, raw := range configurations {
@@ -251,7 +282,7 @@ func expandGlobalAcceleratorCustomRoutingEndpointConfigurations(configurations [
 	return out
 }
 
-func flattenGlobalAcceleratorCustomRoutingEndpointDescriptions(configurations []*globalaccelerator.CustomRoutingEndpointDescription) []interface{} {
+func flattenCustomRoutingEndpointDescriptions(configurations []*globalaccelerator.CustomRoutingEndpointDescription) []interface{} {
 	out := make([]interface{}, len(configurations))
 
 	for i, configuration := range configurations {
@@ -265,7 +296,7 @@ func flattenGlobalAcceleratorCustomRoutingEndpointDescriptions(configurations []
 	return out
 }
 
-func flattenGlobalAcceleratorCustomRoutingDestinationDescriptions(configurations []*globalaccelerator.CustomRoutingDestinationDescription) []interface{} {
+func flattenCustomRoutingDestinationDescriptions(configurations []*globalaccelerator.CustomRoutingDestinationDescription) []interface{} {
 	out := make([]interface{}, len(configurations))
 
 	for i, configuration := range configurations {

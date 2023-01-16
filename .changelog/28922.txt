@@ -1,0 +1,11 @@
+```release-note:new-resource
+aws_globalaccelerator_custom_routing_accelerator
+```
+
+```release-note:new-resource
+aws_globalaccelerator_custom_routing_listener
+```
+
+```release-note:new-resource
+aws_globalaccelerator_custom_routing_endpoint_group
+```

@@ -667,7 +667,6 @@ func New(ctx context.Context) (*schema.Provider, error) {
 
 			"aws_fsx_openzfs_snapshot": fsx.DataSourceOpenzfsSnapshot(),
 
-			"aws_globalaccelerator_accelerator":                globalaccelerator.DataSourceAccelerator(),
 			"aws_globalaccelerator_custom_routing_accelerator": globalaccelerator.DataSourceCustomRoutingAccelerator(),
 
 			"aws_glue_catalog_table":                    glue.DataSourceCatalogTable(),

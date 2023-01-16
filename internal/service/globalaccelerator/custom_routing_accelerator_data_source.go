@@ -85,7 +85,7 @@ func DataSourceCustomRoutingAccelerator() *schema.Resource {
 }
 
 func dataSourceCustomRoutingAcceleratorRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn
+	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	var results []*globalaccelerator.CustomRoutingAccelerator
@@ -127,17 +127,17 @@ func dataSourceCustomRoutingAcceleratorRead(d *schema.ResourceData, meta interfa
 	d.Set("arn", accelerator.AcceleratorArn)
 	d.Set("enabled", accelerator.Enabled)
 	d.Set("dns_name", accelerator.DnsName)
-	d.Set("hosted_zone_id", globalAcceleratorRoute53ZoneID)
+	d.Set("hosted_zone_id", route53ZoneID)
 	d.Set("name", accelerator.Name)
 	d.Set("ip_address_type", accelerator.IpAddressType)
-	d.Set("ip_sets", flattenGlobalAcceleratorIpSets(accelerator.IpSets))
+	d.Set("ip_sets", flattenIPSets(accelerator.IpSets))
 
 	acceleratorAttributes, err := FindCustomRoutingAcceleratorAttributesByARN(conn, d.Id())
 	if err != nil {
 		return fmt.Errorf("error reading Global Accelerator Custom Routing Accelerator (%s) attributes: %w", d.Id(), err)
 	}
 
-	if err := d.Set("attributes", []interface{}{flattenGlobalAcceleratorCustomRoutingAcceleratorAttributes(acceleratorAttributes)}); err != nil {
+	if err := d.Set("attributes", []interface{}{flattenCustomRoutingAcceleratorAttributes(acceleratorAttributes)}); err != nil {
 		return fmt.Errorf("error setting attributes: %w", err)
 	}
 

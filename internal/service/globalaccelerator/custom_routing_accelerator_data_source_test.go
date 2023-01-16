@@ -15,10 +15,10 @@ func TestAccGlobalAcceleratorCustomRoutingAcceleratorDataSource_basic(t *testing
 	dataSourceName2 := "data.aws_globalaccelerator_custom_routing_accelerator.test_by_name"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); testAccPreCheckGlobalAccelerator(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGlobalAcceleratorCustomRoutingAcceleratorDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGlobalAcceleratorCustomRoutingAcceleratorDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGlobalAcceleratorCustomRoutingAcceleratorDataSourceConfig(resourceName),
