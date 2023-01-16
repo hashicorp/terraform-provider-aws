@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -106,7 +107,7 @@ func ResourceReplicationSet() *schema.Resource {
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 				conn := meta.(*conns.AWSClient).SSMIncidentsClient()
 
-				arn, err := getReplicationSetArn(ctx, conn)
+				arn, err := GetReplicationSetARN(ctx, conn)
 
 				if err != nil {
 					return nil, err
@@ -130,7 +131,7 @@ func resourceReplicationSetCreate(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).SSMIncidentsClient()
 
 	in := &ssmincidents.CreateReplicationSetInput{
-		Regions:     expandRegions(d.Get("region").(*schema.Set).List()),
+		Regions:     ExpandRegions(d.Get("region").(*schema.Set).List()),
 		ClientToken: aws.String(GenerateClientToken()),
 	}
 
@@ -182,7 +183,7 @@ func resourceReplicationSetRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("last_modified_time", out.LastModifiedTime.String())
 	d.Set("status", out.Status)
 
-	if err := d.Set("region", flattenRegions(out.RegionMap)); err != nil {
+	if err := d.Set("region", FlattenRegions(out.RegionMap)); err != nil {
 		return create.DiagError(names.SSMIncidents, create.ErrActionSetting, ResNameReplicationSet, d.Id(), err)
 	}
 
@@ -217,7 +218,7 @@ func resourceReplicationSetUpdate(ctx context.Context, d *schema.ResourceData, m
 		}
 	}
 
-	// tags can have a change without tags_all having a change when value of tag is ""
+	// tags_all does not detect changes when tag value is "" while this change is detected by tags
 	if d.HasChanges("tags_all", "tags") {
 		log.Printf("[DEBUG] Updating SSMIncidents ReplicationSet tags")
 
@@ -256,8 +257,8 @@ func resourceReplicationSetDelete(ctx context.Context, d *schema.ResourceData, m
 
 func waitReplicationSetCreated(ctx context.Context, conn *ssmincidents.Client, id string, timeout time.Duration) (*types.ReplicationSet, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{string(types.ReplicationSetStatusCreating)},
-		Target:  []string{string(types.ReplicationSetStatusActive)},
+		Pending: enum.Slice(types.ReplicationSetStatusCreating),
+		Target:  enum.Slice(types.ReplicationSetStatusActive),
 		Refresh: statusReplicationSet(ctx, conn, id),
 		Timeout: timeout,
 	}
@@ -272,8 +273,8 @@ func waitReplicationSetCreated(ctx context.Context, conn *ssmincidents.Client, i
 
 func waitReplicationSetUpdated(ctx context.Context, conn *ssmincidents.Client, id string, timeout time.Duration) (*types.ReplicationSet, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{string(types.ReplicationSetStatusUpdating)},
-		Target:  []string{string(types.ReplicationSetStatusActive)},
+		Pending: enum.Slice(types.ReplicationSetStatusUpdating),
+		Target:  enum.Slice(types.ReplicationSetStatusActive),
 		Refresh: statusReplicationSet(ctx, conn, id),
 		Timeout: timeout,
 	}
@@ -288,7 +289,7 @@ func waitReplicationSetUpdated(ctx context.Context, conn *ssmincidents.Client, i
 
 func waitReplicationSetDeleted(ctx context.Context, conn *ssmincidents.Client, id string, timeout time.Duration) (*types.ReplicationSet, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{string(types.ReplicationSetStatusDeleting)},
+		Pending: enum.Slice(types.ReplicationSetStatusDeleting),
 		Target:  []string{},
 		Refresh: statusReplicationSet(ctx, conn, id),
 		Timeout: timeout,
