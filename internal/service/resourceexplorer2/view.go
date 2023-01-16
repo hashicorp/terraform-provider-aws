@@ -399,7 +399,7 @@ func findViewByARN(ctx context.Context, conn *resourceexplorer2.Client, arn stri
 
 	output, err := conn.GetView(ctx, input)
 
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) || errs.IsA[*awstypes.UnauthorizedException](err) {
 		return nil, &sdkresource.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
