@@ -263,7 +263,7 @@ func main() {
 	}
 
 	templateBody := newTemplateBody(*sdkVersion, *kvtValues)
-	d := g.NewGoFileAppenderDestination(filename)
+	d := g.NewGoFileDestination(filename)
 
 	if *getTag || *listTags || *serviceTagsMap || *serviceTagsSlice || *updateTags {
 		// If you intend to only generate Tags and KeyValueTags helper methods,
@@ -306,6 +306,10 @@ func main() {
 		if err := d.WriteTemplate("updatetags", templateBody.updateTags, templateData); err != nil {
 			g.Fatalf("generating file (%s): %s", filename, err)
 		}
+	}
+
+	if err := d.Write(); err != nil {
+		g.Fatalf("generating file (%s): %s", filename, err)
 	}
 }
 

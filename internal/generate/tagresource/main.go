@@ -81,13 +81,21 @@ func main() {
 	d := g.NewGoFileDestination(resourceFilename)
 
 	if err := d.WriteTemplate("taggen", resourceTemplateBody, templateData); err != nil {
-		g.Fatalf("error: %s", err.Error())
+		g.Fatalf("generating file (%s): %s", resourceFilename, err)
+	}
+
+	if err := d.Write(); err != nil {
+		g.Fatalf("generating file (%s): %s", resourceFilename, err)
 	}
 
 	d = g.NewGoFileDestination(resourceTestFilename)
 
 	if err := d.WriteTemplate("taggen", resourceTestTemplateBody, templateData); err != nil {
-		g.Fatalf("error: %s", err.Error())
+		g.Fatalf("generating file (%s): %s", resourceTestFilename, err)
+	}
+
+	if err := d.Write(); err != nil {
+		g.Fatalf("generating file (%s): %s", resourceTestFilename, err)
 	}
 }
 
