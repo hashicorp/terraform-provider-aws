@@ -43,6 +43,8 @@ func TestAccCloudFrontResponseHeadersPolicyDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSource1Name, "etag", resourceName, "etag"),
 					resource.TestCheckResourceAttrPair(dataSource1Name, "id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(dataSource1Name, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(dataSource1Name, "remove_headers_config.#", resourceName, "remove_headers_config.#"),
+					resource.TestCheckResourceAttrPair(dataSource1Name, "remove_headers_config.0.items.#", resourceName, "remove_headers_config.0.items.#"),
 					resource.TestCheckResourceAttrPair(dataSource1Name, "security_headers_config.#", resourceName, "security_headers_config.#"),
 					resource.TestCheckResourceAttrPair(dataSource1Name, "security_headers_config.0.content_security_policy.#", resourceName, "security_headers_config.0.content_security_policy.#"),
 					resource.TestCheckResourceAttrPair(dataSource1Name, "security_headers_config.0.frame_options.#", resourceName, "security_headers_config.0.frame_options.#"),
@@ -71,6 +73,8 @@ func TestAccCloudFrontResponseHeadersPolicyDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSource2Name, "etag", resourceName, "etag"),
 					resource.TestCheckResourceAttrPair(dataSource2Name, "id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(dataSource2Name, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(dataSource2Name, "remove_headers_config.#", resourceName, "remove_headers_config.#"),
+					resource.TestCheckResourceAttrPair(dataSource2Name, "remove_headers_config.0.items.#", resourceName, "remove_headers_config.0.items.#"),
 					resource.TestCheckResourceAttrPair(dataSource2Name, "security_headers_config.#", resourceName, "security_headers_config.#"),
 					resource.TestCheckResourceAttrPair(dataSource2Name, "security_headers_config.0.content_security_policy.#", resourceName, "security_headers_config.0.content_security_policy.#"),
 					resource.TestCheckResourceAttrPair(dataSource2Name, "security_headers_config.0.frame_options.#", resourceName, "security_headers_config.0.frame_options.#"),
@@ -130,6 +134,16 @@ resource "aws_cloudfront_response_headers_policy" "test" {
       override = true
       value    = "value1"
     }
+  }
+
+  remove_headers_config {
+	items {
+		header = "X-Header3"
+	}
+
+	items {
+		header = "X-Header4"
+	}	
   }
 
   security_headers_config {
