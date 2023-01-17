@@ -814,10 +814,10 @@ resource "aws_docdb_cluster" "test" {
 }
 
 func testAccCheckClusterDestroy(s *terraform.State) error {
-	return testAccCheckClusterDestroyProvider(s, acctest.Provider)
+	return testAccCheckClusterDestroyWithProvider(s, acctest.Provider)
 }
 
-func testAccCheckClusterDestroyProvider(s *terraform.State, provider *schema.Provider) error {
+func testAccCheckClusterDestroyWithProvider(s *terraform.State, provider *schema.Provider) error {
 	conn := provider.Meta().(*conns.AWSClient).DocDBConn()
 
 	for _, rs := range s.RootModule().Resources {

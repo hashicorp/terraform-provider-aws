@@ -447,10 +447,10 @@ func TestAccRoute53Zone_VPC_updates(t *testing.T) {
 }
 
 func testAccCheckZoneDestroy(s *terraform.State) error {
-	return testAccCheckZoneDestroyProvider(s, acctest.Provider)
+	return testAccCheckZoneDestroyWithProvider(s, acctest.Provider)
 }
 
-func testAccCheckZoneDestroyProvider(s *terraform.State, provider *schema.Provider) error {
+func testAccCheckZoneDestroyWithProvider(s *terraform.State, provider *schema.Provider) error {
 	conn := provider.Meta().(*conns.AWSClient).Route53Conn()
 
 	for _, rs := range s.RootModule().Resources {
