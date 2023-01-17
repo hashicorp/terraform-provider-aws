@@ -1,8 +1,13 @@
 ## 4.51.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_datasync_location_object_storage` ([#23154](https://github.com/hashicorp/terraform-provider-aws/issues/23154))
+
 ENHANCEMENTS:
 
 * resource/aws_apprunner_service: Add `source_configuration.code_repository.code_configuration.runtime_environment_secrets` and `source_configuration.image_repository.image_configuration.runtime_environment_secrets` argument ([#28871](https://github.com/hashicorp/terraform-provider-aws/issues/28871))
+* resource/aws_imagbuilder_component: Add `skip_destroy` argument ([#28905](https://github.com/hashicorp/terraform-provider-aws/issues/28905))
 * resource/aws_lambda_event_source_mapping: Add `scaling_config` argument ([#28876](https://github.com/hashicorp/terraform-provider-aws/issues/28876))
 
 BUG FIXES:
