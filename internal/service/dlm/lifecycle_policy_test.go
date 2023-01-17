@@ -24,7 +24,7 @@ func TestAccDLMLifecyclePolicy_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dlm.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             lifecyclePolicyDestroy,
+		CheckDestroy:             testAccCheckLifecyclePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLifecyclePolicyConfig_basic(rName),
@@ -66,7 +66,7 @@ func TestAccDLMLifecyclePolicy_event(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dlm.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             lifecyclePolicyDestroy,
+		CheckDestroy:             testAccCheckLifecyclePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLifecyclePolicyConfig_event(rName),
@@ -114,7 +114,7 @@ func TestAccDLMLifecyclePolicy_cron(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dlm.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             lifecyclePolicyDestroy,
+		CheckDestroy:             testAccCheckLifecyclePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLifecyclePolicyConfig_cron(rName),
@@ -141,7 +141,7 @@ func TestAccDLMLifecyclePolicy_retainInterval(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dlm.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             lifecyclePolicyDestroy,
+		CheckDestroy:             testAccCheckLifecyclePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLifecyclePolicyConfig_retainInterval(rName),
@@ -168,7 +168,7 @@ func TestAccDLMLifecyclePolicy_deprecate(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dlm.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             lifecyclePolicyDestroy,
+		CheckDestroy:             testAccCheckLifecyclePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLifecyclePolicyConfig_deprecate(rName),
@@ -195,7 +195,7 @@ func TestAccDLMLifecyclePolicy_fastRestore(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dlm.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             lifecyclePolicyDestroy,
+		CheckDestroy:             testAccCheckLifecyclePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLifecyclePolicyConfig_fastRestore(rName),
@@ -223,7 +223,7 @@ func TestAccDLMLifecyclePolicy_shareRule(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dlm.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             lifecyclePolicyDestroy,
+		CheckDestroy:             testAccCheckLifecyclePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLifecyclePolicyConfig_shareRule(rName),
@@ -250,7 +250,7 @@ func TestAccDLMLifecyclePolicy_parameters_instance(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dlm.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             lifecyclePolicyDestroy,
+		CheckDestroy:             testAccCheckLifecyclePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLifecyclePolicyConfig_parametersInstance(rName),
@@ -278,7 +278,7 @@ func TestAccDLMLifecyclePolicy_parameters_volume(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dlm.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             lifecyclePolicyDestroy,
+		CheckDestroy:             testAccCheckLifecyclePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLifecyclePolicyConfig_parametersVolume(rName),
@@ -306,7 +306,7 @@ func TestAccDLMLifecyclePolicy_variableTags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dlm.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             lifecyclePolicyDestroy,
+		CheckDestroy:             testAccCheckLifecyclePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLifecyclePolicyConfig_variableTags(rName),
@@ -332,7 +332,7 @@ func TestAccDLMLifecyclePolicy_full(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dlm.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             lifecyclePolicyDestroy,
+		CheckDestroy:             testAccCheckLifecyclePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLifecyclePolicyConfig_full(rName),
@@ -391,7 +391,7 @@ func TestAccDLMLifecyclePolicy_crossRegionCopyRule(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, dlm.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
-		CheckDestroy:             lifecyclePolicyDestroy,
+		CheckDestroy:             testAccCheckLifecyclePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLifecyclePolicyConfig_crossRegionCopyRule(rName),
@@ -446,7 +446,7 @@ func TestAccDLMLifecyclePolicy_tags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dlm.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             lifecyclePolicyDestroy,
+		CheckDestroy:             testAccCheckLifecyclePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLifecyclePolicyConfig_tags1(rName, "key1", "value1"),
@@ -490,7 +490,7 @@ func TestAccDLMLifecyclePolicy_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dlm.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             lifecyclePolicyDestroy,
+		CheckDestroy:             testAccCheckLifecyclePolicyDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLifecyclePolicyConfig_basic(rName),
@@ -505,7 +505,7 @@ func TestAccDLMLifecyclePolicy_disappears(t *testing.T) {
 	})
 }
 
-func lifecyclePolicyDestroy(s *terraform.State) error {
+func testAccCheckLifecyclePolicyDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).DLMConn()
 
 	for _, rs := range s.RootModule().Resources {

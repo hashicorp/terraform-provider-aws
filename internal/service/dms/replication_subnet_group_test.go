@@ -22,7 +22,7 @@ func TestAccDMSReplicationSubnetGroup_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             replicationSubnetGroupDestroy,
+		CheckDestroy:             testAccCheckReplicationSubnetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationSubnetGroupConfig_basic(randId),
@@ -87,7 +87,7 @@ func checkReplicationSubnetGroupExistsProviders(n string, providers *[]*schema.P
 	}
 }
 
-func replicationSubnetGroupDestroy(s *terraform.State) error {
+func testAccCheckReplicationSubnetGroupDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_dms_replication_subnet_group" {
 			continue
