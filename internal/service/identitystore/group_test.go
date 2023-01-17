@@ -6,9 +6,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/identitystore"
-	"github.com/aws/aws-sdk-go-v2/service/identitystore/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -16,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfidentitystore "github.com/hashicorp/terraform-provider-aws/internal/service/identitystore"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -88,47 +87,43 @@ func testAccCheckGroupDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := conn.DescribeGroup(ctx, &identitystore.DescribeGroupInput{
-			GroupId:         aws.String(rs.Primary.Attributes["group_id"]),
-			IdentityStoreId: aws.String(rs.Primary.Attributes["identity_store_id"]),
-		})
+		_, err := tfidentitystore.FindGroupByTwoPartKey(ctx, conn, rs.Primary.Attributes["identity_store_id"], rs.Primary.Attributes["group_id"])
+
+		if tfresource.NotFound(err) {
+			continue
+		}
+
 		if err != nil {
-			var nfe *types.ResourceNotFoundException
-			if errors.As(err, &nfe) {
-				return nil
-			}
 			return err
 		}
 
-		return create.Error(names.IdentityStore, create.ErrActionCheckingDestroyed, tfidentitystore.ResNameGroup, rs.Primary.ID, errors.New("not destroyed"))
+		return fmt.Errorf("IdentityStore Group %s still exists", rs.Primary.ID)
 	}
 
 	return nil
 }
 
-func testAccCheckGroupExists(name string, group *identitystore.DescribeGroupOutput) resource.TestCheckFunc {
+func testAccCheckGroupExists(n string, v *identitystore.DescribeGroupOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.IdentityStore, create.ErrActionCheckingExistence, tfidentitystore.ResNameGroup, name, errors.New("not found"))
+			return create.Error(names.IdentityStore, create.ErrActionCheckingExistence, tfidentitystore.ResNameGroup, n, errors.New("not found"))
 		}
 
 		if rs.Primary.ID == "" {
-			return create.Error(names.IdentityStore, create.ErrActionCheckingExistence, tfidentitystore.ResNameGroup, name, errors.New("not set"))
+			return create.Error(names.IdentityStore, create.ErrActionCheckingExistence, tfidentitystore.ResNameGroup, n, errors.New("not set"))
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IdentityStoreClient()
 		ctx := context.Background()
-		resp, err := conn.DescribeGroup(ctx, &identitystore.DescribeGroupInput{
-			GroupId:         aws.String(rs.Primary.Attributes["group_id"]),
-			IdentityStoreId: aws.String(rs.Primary.Attributes["identity_store_id"]),
-		})
+
+		output, err := tfidentitystore.FindGroupByTwoPartKey(ctx, conn, rs.Primary.Attributes["identity_store_id"], rs.Primary.Attributes["group_id"])
 
 		if err != nil {
-			return create.Error(names.IdentityStore, create.ErrActionCheckingExistence, tfidentitystore.ResNameGroup, rs.Primary.ID, err)
+			return err
 		}
 
-		*group = *resp
+		*v = *output
 
 		return nil
 	}
