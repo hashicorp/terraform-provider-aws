@@ -100,7 +100,7 @@ func resourceGraphRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("created_time", aws.TimeValue(resp.CreatedTime).Format(time.RFC3339))
 	d.Set("graph_arn", resp.Arn)
 
-	tags, err := ListTags(conn, aws.StringValue(resp.Arn))
+	tags, err := ListTags(ctx, conn, aws.StringValue(resp.Arn))
 
 	if err != nil {
 		return diag.Errorf("error listing tags for Detective Graph (%s): %s", d.Id(), err)
@@ -124,7 +124,7 @@ func resourceGraphUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
 			return diag.Errorf("error updating detective Graph tags (%s): %s", d.Id(), err)
 		}
 	}
