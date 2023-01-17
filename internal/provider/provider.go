@@ -1647,6 +1647,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			"aws_inspector2_delegated_admin_account":    inspector2.ResourceDelegatedAdminAccount(),
 			"aws_inspector2_enabler":                    inspector2.ResourceEnabler(),
 			"aws_inspector2_organization_configuration": inspector2.ResourceOrganizationConfiguration(),
+			"aws_inspector2_member_association":         inspector2.ResourceMemberAssociation(),
 
 			"aws_iot_authorizer":                 iot.ResourceAuthorizer(),
 			"aws_iot_certificate":                iot.ResourceCertificate(),
