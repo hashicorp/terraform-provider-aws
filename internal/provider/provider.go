@@ -2397,10 +2397,6 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 		return nil, diags
 	}
 
-	if diags.HasError() {
-		return nil, diags
-	}
-
 	return meta, diags
 }
 
