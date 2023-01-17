@@ -169,12 +169,8 @@ func resourceWorkspaceCreate(d *schema.ResourceData, meta interface{}) error {
 		Tags:                    Tags(tags.IgnoreAWS()),
 	}
 
-	if v, ok := d.GetOk("organization_role_name"); ok {
-		input.OrganizationRoleName = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("stack_set_name"); ok {
-		input.StackSetName = aws.String(v.(string))
+	if v, ok := d.GetOk("configuration"); ok {
+		input.Configuration = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("data_sources"); ok {
@@ -193,6 +189,10 @@ func resourceWorkspaceCreate(d *schema.ResourceData, meta interface{}) error {
 		input.WorkspaceNotificationDestinations = flex.ExpandStringList(v.([]interface{}))
 	}
 
+	if v, ok := d.GetOk("organization_role_name"); ok {
+		input.OrganizationRoleName = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("organizational_units"); ok {
 		input.WorkspaceOrganizationalUnits = flex.ExpandStringList(v.([]interface{}))
 	}
@@ -201,8 +201,8 @@ func resourceWorkspaceCreate(d *schema.ResourceData, meta interface{}) error {
 		input.WorkspaceRoleArn = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("configuration"); ok {
-		input.Configuration = aws.String(v.(string))
+	if v, ok := d.GetOk("stack_set_name"); ok {
+		input.StackSetName = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("vpc_configuration"); ok {
@@ -288,7 +288,7 @@ func resourceWorkspaceRead(d *schema.ResourceData, meta interface{}) error {
 	output, err := conn.DescribeWorkspaceConfiguration(input)
 
 	if err != nil {
-		return fmt.Errorf("error describing Grafana Workspace Configuration: %w", err)
+		return fmt.Errorf("error reading Grafana Workspace (%s) configuration: %w", d.Id(), err)
 	}
 
 	d.Set("configuration", output.Configuration)
@@ -368,7 +368,7 @@ func resourceWorkspaceUpdate(d *schema.ResourceData, meta interface{}) error {
 		_, err := conn.UpdateWorkspaceConfiguration(input)
 
 		if err != nil {
-			return fmt.Errorf("error updating Grafana Workspace Configuration (%s): %w", d.Id(), err)
+			return fmt.Errorf("error updating Grafana Workspace (%s) configuration: %w", d.Id(), err)
 		}
 
 		if _, err := waitWorkspaceUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
