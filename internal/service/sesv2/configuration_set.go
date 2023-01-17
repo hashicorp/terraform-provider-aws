@@ -572,8 +572,12 @@ func expandSuppressionOptions(tfMap map[string]interface{}) *types.SuppressionOp
 
 	a := &types.SuppressionOptions{}
 
-	if v, ok := tfMap["suppressed_reasons"].([]interface{}); ok && len(v) > 0 {
-		a.SuppressedReasons = expandSuppressedReasons(v)
+	if v, ok := tfMap["suppressed_reasons"].([]interface{}); ok {
+		if len(v) > 0 {
+			a.SuppressedReasons = expandSuppressedReasons(v)
+		} else {
+			a.SuppressedReasons = make([]types.SuppressionListReason, 0)
+		}
 	}
 
 	return a
