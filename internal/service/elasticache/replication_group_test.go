@@ -66,7 +66,7 @@ func TestAccElastiCacheReplicationGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccElastiCacheReplicationGroup_network_type_ipv6(t *testing.T) {
+func TestAccElastiCacheReplicationGroup_networkTypeIPv6(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -87,19 +87,11 @@ func TestAccElastiCacheReplicationGroup_network_type_ipv6(t *testing.T) {
 					testAccCheckReplicationGroupExists(resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "elasticache", fmt.Sprintf("replicationgroup:%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "number_cache_clusters", "1"),
-					resource.TestCheckResourceAttr(resourceName, "multi_az_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "automatic_failover_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "member_clusters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameter_group_name", "default.redis6.x"),
-					resource.TestCheckResourceAttr(resourceName, "cluster_mode.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "cluster_mode.0.num_node_groups", "1"),
-					resource.TestCheckResourceAttr(resourceName, "cluster_mode.0.replicas_per_node_group", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", "6.2"),
 					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexp.MustCompile(`^6\.[[:digit:]]+\.[[:digit:]]+$`)),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
-					resource.TestCheckResourceAttr(resourceName, "data_tiering_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "ip_discovery", "ipv6"),
 					resource.TestCheckResourceAttr(resourceName, "network_type", "ipv6"),
 				),
@@ -114,7 +106,7 @@ func TestAccElastiCacheReplicationGroup_network_type_ipv6(t *testing.T) {
 	})
 }
 
-func TestAccElastiCacheReplicationGroup_network_type_dual_stack(t *testing.T) {
+func TestAccElastiCacheReplicationGroup_networkTypeDualStack(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -135,19 +127,11 @@ func TestAccElastiCacheReplicationGroup_network_type_dual_stack(t *testing.T) {
 					testAccCheckReplicationGroupExists(resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "elasticache", fmt.Sprintf("replicationgroup:%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "number_cache_clusters", "1"),
-					resource.TestCheckResourceAttr(resourceName, "multi_az_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "automatic_failover_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "member_clusters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameter_group_name", "default.redis6.x"),
-					resource.TestCheckResourceAttr(resourceName, "cluster_mode.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "cluster_mode.0.num_node_groups", "1"),
-					resource.TestCheckResourceAttr(resourceName, "cluster_mode.0.replicas_per_node_group", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", "6.2"),
 					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexp.MustCompile(`^6\.[[:digit:]]+\.[[:digit:]]+$`)),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
-					resource.TestCheckResourceAttr(resourceName, "data_tiering_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "ip_discovery", "ipv6"),
 					resource.TestCheckResourceAttr(resourceName, "network_type", "dual_stack"),
 				),

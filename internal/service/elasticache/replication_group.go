@@ -697,10 +697,8 @@ func resourceReplicationGroupRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("replication_group_id", rgp.ReplicationGroupId)
 	d.Set("arn", rgp.ARN)
 	d.Set("data_tiering_enabled", aws.StringValue(rgp.DataTiering) == elasticache.DataTieringStatusEnabled)
-
 	d.Set("ip_discovery", rgp.IpDiscovery)
 	d.Set("network_type", rgp.NetworkType)
-
 	d.Set("log_delivery_configuration", flattenLogDeliveryConfigurations(rgp.LogDeliveryConfigurations))
 	d.Set("snapshot_window", rgp.SnapshotWindow)
 	d.Set("snapshot_retention_limit", rgp.SnapshotRetentionLimit)
@@ -846,7 +844,7 @@ func resourceReplicationGroupUpdate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if d.HasChange("network_type") {
-		req.IpDiscovery = aws.String(d.Get("network_type").(string))
+		params.IpDiscovery = aws.String(d.Get("network_type").(string))
 		requestUpdate = true
 	}
 
