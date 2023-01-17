@@ -270,7 +270,7 @@ func resourcePartitionUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	catalogID, dbName, tableName, values, err := readPartitionID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("updating Glue Partition (%s): %w", d.Id(), err)
 	}
 
 	input := &glue.UpdatePartitionInput{
@@ -281,9 +281,8 @@ func resourcePartitionUpdate(d *schema.ResourceData, meta interface{}) error {
 		PartitionValueList: aws.StringSlice(values),
 	}
 
-	log.Printf("[DEBUG] Updating Glue Partition: %#v", input)
 	if _, err := conn.UpdatePartition(input); err != nil {
-		return fmt.Errorf("error updating Glue Partition: %w", err)
+		return fmt.Errorf("updating Glue Partition (%s): %w", d.Id(), err)
 	}
 
 	return resourcePartitionRead(d, meta)

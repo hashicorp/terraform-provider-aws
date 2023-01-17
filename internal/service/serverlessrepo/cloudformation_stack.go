@@ -257,21 +257,18 @@ func resourceCloudFormationStackDelete(d *schema.ResourceData, meta interface{})
 		StackName:          aws.String(d.Id()),
 		ClientRequestToken: aws.String(requestToken),
 	}
-	log.Printf("[DEBUG] Deleting Serverless Application Repository CloudFormation stack %s", input)
 	_, err := conn.DeleteStack(input)
 	if tfawserr.ErrCodeEquals(err, "ValidationError") {
 		return nil
 	}
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting Serverless Application Repository CloudFormation Stack (%s): %w", d.Id(), err)
 	}
 
 	_, err = tfcloudformation.WaitStackDeleted(conn, d.Id(), requestToken, d.Timeout(schema.TimeoutDelete))
 	if err != nil {
-		return fmt.Errorf("error waiting for Serverless Application Repository CloudFormation Stack deletion: %w", err)
+		return fmt.Errorf("deleting Serverless Application Repository CloudFormation Stack (%s): waiting for completion: %w", d.Id(), err)
 	}
-
-	log.Printf("[INFO] Serverless Application Repository CloudFormation stack (%s) deleted", d.Id())
 
 	return nil
 }

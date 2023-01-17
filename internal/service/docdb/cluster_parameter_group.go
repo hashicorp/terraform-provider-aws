@@ -256,7 +256,7 @@ func resourceClusterParameterGroupDelete(d *schema.ResourceData, meta interface{
 		if tfawserr.ErrCodeEquals(err, docdb.ErrCodeDBParameterGroupNotFoundFault) {
 			return nil
 		}
-		return err
+		return fmt.Errorf("deleting DocumentDB Cluster Parameter Group (%s): %w", d.Id(), err)
 	}
 
 	return WaitForClusterParameterGroupDeletion(conn, d.Id())

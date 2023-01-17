@@ -124,7 +124,7 @@ func resourceLagCreate(d *schema.ResourceData, meta interface{}) error {
 		err = deleteConnection(conn, aws.StringValue(output.Connections[0].ConnectionId), waitConnectionDeleted)
 
 		if err != nil {
-			return err
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
 
@@ -227,12 +227,12 @@ func resourceLagDelete(d *schema.ResourceData, meta interface{}) error {
 			err = deleteConnection(conn, aws.StringValue(connection.ConnectionId), waitConnectionDeleted)
 
 			if err != nil {
-				return err
+				return err // nosemgrep:ci.bare-error-returns
 			}
 		}
 	} else if v, ok := d.GetOk("connection_id"); ok {
 		if err := deleteConnectionLAGAssociation(conn, v.(string), d.Id()); err != nil {
-			return err
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
 

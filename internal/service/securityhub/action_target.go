@@ -58,7 +58,7 @@ func resourceActionTargetCreate(d *schema.ResourceData, meta interface{}) error 
 	name := d.Get("name").(string)
 	identifier := d.Get("identifier").(string)
 
-	log.Printf("[DEBUG] Creating Security Hub custom action target %s", identifier)
+	log.Printf("[DEBUG] Creating Security Hub Action Target %s", identifier)
 
 	resp, err := conn.CreateActionTarget(&securityhub.CreateActionTargetInput{
 		Description: aws.String(description),
@@ -67,7 +67,7 @@ func resourceActionTargetCreate(d *schema.ResourceData, meta interface{}) error 
 	})
 
 	if err != nil {
-		return fmt.Errorf("Error creating Security Hub custom action target %s: %s", identifier, err)
+		return fmt.Errorf("creating Security Hub Action Target %s: %s", identifier, err)
 	}
 
 	d.SetId(aws.StringValue(resp.ActionTargetArn))
@@ -88,22 +88,22 @@ func resourceActionTargetParseIdentifier(identifier string) (string, error) {
 func resourceActionTargetRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SecurityHubConn()
 
-	log.Printf("[DEBUG] Reading Security Hub custom action targets to find %s", d.Id())
+	log.Printf("[DEBUG] Reading Security Hub Action Targets to find %s", d.Id())
 
 	actionTargetIdentifier, err := resourceActionTargetParseIdentifier(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading Security Hub Action Targets (%s): %s", d.Id(), err)
 	}
 
 	actionTarget, err := ActionTargetCheckExists(conn, d.Id())
 
 	if err != nil {
-		return fmt.Errorf("Error reading Security Hub custom action targets to find %s: %s", d.Id(), err)
+		return fmt.Errorf("reading Security Hub Action Targets (%s): %s", d.Id(), err)
 	}
 
 	if actionTarget == nil {
-		log.Printf("[WARN] Security Hub custom action target (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] Security Hub Action Target (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
@@ -154,14 +154,14 @@ func ActionTargetCheckExists(conn *securityhub.SecurityHub, actionTargetArn stri
 
 func resourceActionTargetDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SecurityHubConn()
-	log.Printf("[DEBUG] Deleting Security Hub custom action target %s", d.Id())
+	log.Printf("[DEBUG] Deleting Security Hub Action Target %s", d.Id())
 
 	_, err := conn.DeleteActionTarget(&securityhub.DeleteActionTargetInput{
 		ActionTargetArn: aws.String(d.Id()),
 	})
 
 	if err != nil {
-		return fmt.Errorf("Error deleting Security Hub custom action target %s: %s", d.Id(), err)
+		return fmt.Errorf("deleting Security Hub Action Target %s: %s", d.Id(), err)
 	}
 
 	return nil

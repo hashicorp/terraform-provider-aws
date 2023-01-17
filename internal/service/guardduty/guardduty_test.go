@@ -44,8 +44,8 @@ func TestAccGuardDuty_serial(t *testing.T) {
 			"malwareProtection": testAccOrganizationConfiguration_malwareprotection,
 		},
 		"ThreatIntelSet": {
-			"basic": testAccThreatintelset_basic,
-			"tags":  testAccThreatintelset_tags,
+			"basic": testAccThreatIntelSet_basic,
+			"tags":  testAccThreatIntelSet_tags,
 		},
 		"Member": {
 			"basic":              testAccMember_basic,

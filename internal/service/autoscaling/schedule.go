@@ -183,9 +183,7 @@ func resourceScheduleRead(d *schema.ResourceData, meta interface{}) error {
 	if sa.StartTime != nil {
 		d.Set("start_time", sa.StartTime.Format(ScheduleTimeLayout))
 	}
-	if sa.TimeZone != nil {
-		d.Set("time_zone", sa.TimeZone)
-	}
+	d.Set("time_zone", sa.TimeZone)
 
 	return nil
 }

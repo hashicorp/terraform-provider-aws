@@ -3,6 +3,7 @@ package emr
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -1093,9 +1094,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("termination_protection", cluster.TerminationProtected)
 	d.Set("step_concurrency_level", cluster.StepConcurrencyLevel)
 
-	if cluster.CustomAmiId != nil {
-		d.Set("custom_ami_id", cluster.CustomAmiId)
-	}
+	d.Set("custom_ami_id", cluster.CustomAmiId)
 
 	if err := d.Set("applications", flattenApplications(cluster.Applications)); err != nil {
 		return fmt.Errorf("error setting EMR Applications for cluster (%s): %w", d.Id(), err)
@@ -1191,13 +1190,12 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EMRConn()
 
 	if d.HasChange("visible_to_all_users") {
-		_, errModify := conn.SetVisibleToAllUsers(&emr.SetVisibleToAllUsersInput{
+		_, err := conn.SetVisibleToAllUsers(&emr.SetVisibleToAllUsersInput{
 			JobFlowIds:        []*string{aws.String(d.Id())},
 			VisibleToAllUsers: aws.Bool(d.Get("visible_to_all_users").(bool)),
 		})
-		if errModify != nil {
-			log.Printf("[ERROR] %s", errModify)
-			return errModify
+		if err != nil {
+			return fmt.Errorf("updating EMR Cluster (%s): setting visibility: %w", d.Id(), err)
 		}
 	}
 
@@ -1206,35 +1204,32 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		if len(n.([]interface{})) > 0 {
 			log.Printf("[DEBUG] Putting EMR cluster Auto Termination Policy")
 
-			_, errModify := conn.PutAutoTerminationPolicy(&emr.PutAutoTerminationPolicyInput{
+			_, err := conn.PutAutoTerminationPolicy(&emr.PutAutoTerminationPolicyInput{
 				AutoTerminationPolicy: expandAutoTerminationPolicy(n.([]interface{})),
 				ClusterId:             aws.String(d.Id()),
 			})
-			if errModify != nil {
-				log.Printf("[ERROR] %s", errModify)
-				return errModify
+			if err != nil {
+				return fmt.Errorf("updating EMR Cluster (%s): setting auto termination policy: %w", d.Id(), err)
 			}
 		} else {
 			log.Printf("[DEBUG] Removing EMR cluster Auto Termination Policy")
 
-			_, errModify := conn.RemoveAutoTerminationPolicy(&emr.RemoveAutoTerminationPolicyInput{
+			_, err := conn.RemoveAutoTerminationPolicy(&emr.RemoveAutoTerminationPolicyInput{
 				ClusterId: aws.String(d.Id()),
 			})
-			if errModify != nil {
-				log.Printf("[ERROR] %s", errModify)
-				return errModify
+			if err != nil {
+				return fmt.Errorf("updating EMR Cluster (%s): removing auto termination policy: %w", d.Id(), err)
 			}
 		}
 	}
 
 	if d.HasChange("termination_protection") {
-		_, errModify := conn.SetTerminationProtection(&emr.SetTerminationProtectionInput{
+		_, err := conn.SetTerminationProtection(&emr.SetTerminationProtectionInput{
 			JobFlowIds:           []*string{aws.String(d.Id())},
 			TerminationProtected: aws.Bool(d.Get("termination_protection").(bool)),
 		})
-		if errModify != nil {
-			log.Printf("[ERROR] %s", errModify)
-			return errModify
+		if err != nil {
+			return fmt.Errorf("updating EMR Cluster (%s): setting termination protection: %w", d.Id(), err)
 		}
 	}
 
@@ -1256,7 +1251,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 
 			if _, err := conn.PutAutoScalingPolicy(input); err != nil {
-				return fmt.Errorf("error updating EMR Cluster (%s) Instance Group (%s) Auto Scaling Policy: %s", d.Id(), instanceGroupID, err)
+				return fmt.Errorf("updating EMR Cluster (%s): setting autoscaling policy: %w", d.Id(), err)
 			}
 		} else {
 			input := &emr.RemoveAutoScalingPolicyInput{
@@ -1265,7 +1260,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 
 			if _, err := conn.RemoveAutoScalingPolicy(input); err != nil {
-				return fmt.Errorf("error removing EMR Cluster (%s) Instance Group (%s) Auto Scaling Policy: %s", d.Id(), instanceGroupID, err)
+				return fmt.Errorf("updating EMR Cluster (%s): removing autoscaling policy: %w", d.Id(), err)
 			}
 
 			// RemoveAutoScalingPolicy seems to have eventual consistency.
@@ -1278,7 +1273,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 				}
 
 				if autoscalingPolicy != nil {
-					return resource.RetryableError(fmt.Errorf("EMR Cluster (%s) Instance Group (%s) Auto Scaling Policy still exists", d.Id(), instanceGroupID))
+					return resource.RetryableError(errors.New("still exists"))
 				}
 
 				return nil
@@ -1290,12 +1285,12 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 				autoscalingPolicy, err = getCoreInstanceGroupAutoScalingPolicy(conn, d.Id())
 
 				if autoscalingPolicy != nil {
-					err = fmt.Errorf("EMR Cluster (%s) Instance Group (%s) Auto Scaling Policy still exists", d.Id(), instanceGroupID)
+					err = errors.New("still exists")
 				}
 			}
 
 			if err != nil {
-				return fmt.Errorf("error waiting for EMR Cluster (%s) Instance Group (%s) Auto Scaling Policy removal: %s", d.Id(), instanceGroupID, err)
+				return fmt.Errorf("updating EMR Cluster (%s): removing autoscaling policy: waiting for completion: %w", d.Id(), err)
 			}
 		}
 	}
@@ -1381,18 +1376,17 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating EMR Cluster (%s) tags: %s", d.Id(), err)
+			return fmt.Errorf("updating EMR Cluster (%s): setting tags: %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("step_concurrency_level") {
-		_, errModify := conn.ModifyCluster(&emr.ModifyClusterInput{
+		_, err := conn.ModifyCluster(&emr.ModifyClusterInput{
 			ClusterId:            aws.String(d.Id()),
 			StepConcurrencyLevel: aws.Int64(int64(d.Get("step_concurrency_level").(int))),
 		})
-		if errModify != nil {
-			log.Printf("[ERROR] %s", errModify)
-			return errModify
+		if err != nil {
+			return fmt.Errorf("updating EMR Cluster (%s): updating step concurrency level: %w", d.Id(), err)
 		}
 	}
 
@@ -1511,13 +1505,13 @@ func flattenAutoScalingPolicyDescription(policy *emr.AutoScalingPolicyDescriptio
 	}
 	autoscalingPolicyConstraintsBytes, err := json.Marshal(tmpAutoScalingPolicy.Constraints)
 	if err != nil {
-		return "", fmt.Errorf("error parsing EMR Cluster Instance Groups AutoScalingPolicy Constraints: %w", err)
+		return "", fmt.Errorf("parsing EMR Cluster Instance Groups AutoScalingPolicy Constraints: %w", err)
 	}
 	autoscalingPolicyConstraintsString := string(autoscalingPolicyConstraintsBytes)
 
 	autoscalingPolicyRulesBytes, err := json.Marshal(tmpAutoScalingPolicy.Rules)
 	if err != nil {
-		return "", fmt.Errorf("error parsing EMR Cluster Instance Groups AutoScalingPolicy Rules: %w", err)
+		return "", fmt.Errorf("parsing EMR Cluster Instance Groups AutoScalingPolicy Rules: %w", err)
 	}
 
 	var rules []map[string]interface{}

@@ -109,7 +109,7 @@ func resourceResourceServerRead(d *schema.ResourceData, meta interface{}) error 
 
 	userPoolID, identifier, err := DecodeResourceServerID(d.Id())
 	if err != nil {
-		return err
+		return create.Error(names.CognitoIDP, create.ErrActionReading, ResNameResourceServer, d.Id(), err)
 	}
 
 	params := &cognitoidentityprovider.DescribeResourceServerInput{
@@ -166,7 +166,7 @@ func resourceResourceServerUpdate(d *schema.ResourceData, meta interface{}) erro
 
 	userPoolID, identifier, err := DecodeResourceServerID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("updating Cognito Resource Server (%s): %s", d.Id(), err)
 	}
 
 	params := &cognitoidentityprovider.UpdateResourceServerInput{
@@ -180,7 +180,7 @@ func resourceResourceServerUpdate(d *schema.ResourceData, meta interface{}) erro
 
 	_, err = conn.UpdateResourceServer(params)
 	if err != nil {
-		return fmt.Errorf("Error updating Cognito Resource Server: %s", err)
+		return fmt.Errorf("updating Cognito Resource Server (%s): %s", d.Id(), err)
 	}
 
 	return resourceResourceServerRead(d, meta)
@@ -191,7 +191,7 @@ func resourceResourceServerDelete(d *schema.ResourceData, meta interface{}) erro
 
 	userPoolID, identifier, err := DecodeResourceServerID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting Cognito Resource Server (%s): %s", d.Id(), err)
 	}
 
 	params := &cognitoidentityprovider.DeleteResourceServerInput{
@@ -199,15 +199,13 @@ func resourceResourceServerDelete(d *schema.ResourceData, meta interface{}) erro
 		UserPoolId: aws.String(userPoolID),
 	}
 
-	log.Printf("[DEBUG] Deleting Resource Server: %s", params)
-
 	_, err = conn.DeleteResourceServer(params)
 
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
 			return nil
 		}
-		return fmt.Errorf("Error deleting Resource Server: %s", err)
+		return fmt.Errorf("deleting Cognito Resource Server (%s): %s", d.Id(), err)
 	}
 
 	return nil

@@ -77,6 +77,7 @@ import (
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/glacier"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/globalaccelerator"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	_ "github.com/hashicorp/terraform-provider-aws/internal/service/grafana"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	_ "github.com/hashicorp/terraform-provider-aws/internal/service/imagebuilder"

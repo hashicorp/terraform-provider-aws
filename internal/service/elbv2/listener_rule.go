@@ -805,7 +805,7 @@ func resourceListenerRuleUpdate(d *schema.ResourceData, meta interface{}) error 
 
 		_, err := conn.SetRulePriorities(params)
 		if err != nil {
-			return err
+			return fmt.Errorf("updating ELB v2 Listener Rule (%s): setting priority: %w", d.Id(), err)
 		}
 	}
 

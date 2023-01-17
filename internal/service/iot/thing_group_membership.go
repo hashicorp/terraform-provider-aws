@@ -75,7 +75,7 @@ func resourceThingGroupMembershipRead(d *schema.ResourceData, meta interface{}) 
 	thingGroupName, thingName, err := ThingGroupMembershipParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading IoT Thing Group Membership (%s): %w", d.Id(), err)
 	}
 
 	err = FindThingGroupMembership(conn, thingGroupName, thingName)
@@ -87,7 +87,7 @@ func resourceThingGroupMembershipRead(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading IoT Thing Group Membership (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading IoT Thing Group Membership (%s): %w", d.Id(), err)
 	}
 
 	d.Set("thing_group_name", thingGroupName)
@@ -102,7 +102,7 @@ func resourceThingGroupMembershipDelete(d *schema.ResourceData, meta interface{}
 	thingGroupName, thingName, err := ThingGroupMembershipParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting IoT Thing Group Membership (%s): %w", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Deleting IoT Thing Group Membership: %s", d.Id())
@@ -116,7 +116,7 @@ func resourceThingGroupMembershipDelete(d *schema.ResourceData, meta interface{}
 	}
 
 	if err != nil {
-		return fmt.Errorf("error removing IoT Thing (%s) from IoT Thing Group (%s): %w", thingName, thingGroupName, err)
+		return fmt.Errorf("deleting IoT Thing Group Membership (%s): %w", d.Id(), err)
 	}
 
 	return nil

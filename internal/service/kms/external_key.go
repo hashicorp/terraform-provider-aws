@@ -148,14 +148,12 @@ func resourceExternalKeyCreate(d *schema.ResourceData, meta interface{}) error {
 	// KMS will report this error until it can validate the policy itself.
 	// They acknowledge this here:
 	// http://docs.aws.amazon.com/kms/latest/APIReference/API_CreateKey.html
-	log.Printf("[DEBUG] Creating KMS External Key: %s", input)
-
 	outputRaw, err := WaitIAMPropagation(func() (interface{}, error) {
 		return conn.CreateKey(input)
 	})
 
 	if err != nil {
-		return fmt.Errorf("error creating KMS External Key: %w", err)
+		return fmt.Errorf("creating KMS External Key: %w", err)
 	}
 
 	d.SetId(aws.StringValue(outputRaw.(*kms.CreateKeyOutput).KeyMetadata.KeyId))
@@ -164,22 +162,22 @@ func resourceExternalKeyCreate(d *schema.ResourceData, meta interface{}) error {
 		validTo := d.Get("valid_to").(string)
 
 		if err := importExternalKeyMaterial(conn, d.Id(), v.(string), validTo); err != nil {
-			return fmt.Errorf("error importing KMS External Key (%s) material: %w", d.Id(), err)
+			return fmt.Errorf("importing KMS External Key (%s) material: %w", d.Id(), err)
 		}
 
 		if _, err := WaitKeyMaterialImported(conn, d.Id()); err != nil {
-			return fmt.Errorf("error waiting for KMS External Key (%s) material import: %w", d.Id(), err)
+			return fmt.Errorf("waiting for KMS External Key (%s) material import: %w", d.Id(), err)
 		}
 
 		if err := WaitKeyValidToPropagated(conn, d.Id(), validTo); err != nil {
-			return fmt.Errorf("error waiting for KMS External Key (%s) valid_to propagation: %w", d.Id(), err)
+			return fmt.Errorf("waiting for KMS External Key (%s) valid_to propagation: %w", d.Id(), err)
 		}
 
 		// The key can only be disabled if key material has been imported, else:
 		// "KMSInvalidStateException: arn:aws:kms:us-west-2:123456789012:key/47e3edc1-945f-413b-88b1-e7341c2d89f7 is pending import."
 		if enabled := d.Get("enabled").(bool); !enabled {
 			if err := updateKeyEnabled(conn, d.Id(), enabled); err != nil {
-				return err
+				return fmt.Errorf("creating KMS External Key (%s): %w", d.Id(), err)
 			}
 		}
 	}
@@ -187,13 +185,13 @@ func resourceExternalKeyCreate(d *schema.ResourceData, meta interface{}) error {
 	// Wait for propagation since KMS is eventually consistent.
 	if v, ok := d.GetOk("policy"); ok {
 		if err := WaitKeyPolicyPropagated(conn, d.Id(), v.(string)); err != nil {
-			return fmt.Errorf("error waiting for KMS External Key (%s) policy propagation: %w", d.Id(), err)
+			return fmt.Errorf("waiting for KMS External Key (%s) policy propagation: %w", d.Id(), err)
 		}
 	}
 
 	if len(tags) > 0 {
 		if err := WaitTagsPropagated(conn, d.Id(), tags); err != nil {
-			return fmt.Errorf("error waiting for KMS External Key (%s) tag propagation: %w", d.Id(), err)
+			return fmt.Errorf("waiting for KMS External Key (%s) tag propagation: %w", d.Id(), err)
 		}
 	}
 
@@ -214,7 +212,7 @@ func resourceExternalKeyRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading KMS External Key (%s): %w", d.Id(), err)
 	}
 
 	if keyManager := aws.StringValue(key.metadata.KeyManager); keyManager != kms.KeyManagerTypeCustomer {
@@ -255,11 +253,11 @@ func resourceExternalKeyRead(d *schema.ResourceData, meta interface{}) error {
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	return nil
@@ -271,19 +269,19 @@ func resourceExternalKeyUpdate(d *schema.ResourceData, meta interface{}) error {
 	if hasChange, enabled, state := d.HasChange("enabled"), d.Get("enabled").(bool), d.Get("key_state").(string); hasChange && enabled && state != kms.KeyStatePendingImport {
 		// Enable before any attributes are modified.
 		if err := updateKeyEnabled(conn, d.Id(), enabled); err != nil {
-			return err
+			return fmt.Errorf("updating KMS External Key (%s): %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("description") {
 		if err := updateKeyDescription(conn, d.Id(), d.Get("description").(string)); err != nil {
-			return err
+			return fmt.Errorf("updating KMS External Key (%s): %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("policy") {
 		if err := updateKeyPolicy(conn, d.Id(), d.Get("policy").(string), d.Get("bypass_policy_lockout_safety_check").(bool)); err != nil {
-			return err
+			return fmt.Errorf("updating KMS External Key (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -291,22 +289,22 @@ func resourceExternalKeyUpdate(d *schema.ResourceData, meta interface{}) error {
 		validTo := d.Get("valid_to").(string)
 
 		if err := importExternalKeyMaterial(conn, d.Id(), d.Get("key_material_base64").(string), validTo); err != nil {
-			return fmt.Errorf("error importing KMS External Key (%s) material: %s", d.Id(), err)
+			return fmt.Errorf("importing KMS External Key (%s) material: %s", d.Id(), err)
 		}
 
 		if _, err := WaitKeyMaterialImported(conn, d.Id()); err != nil {
-			return fmt.Errorf("error waiting for KMS External Key (%s) material import: %w", d.Id(), err)
+			return fmt.Errorf("waiting for KMS External Key (%s) material import: %w", d.Id(), err)
 		}
 
 		if err := WaitKeyValidToPropagated(conn, d.Id(), validTo); err != nil {
-			return fmt.Errorf("error waiting for KMS External Key (%s) valid_to propagation: %w", d.Id(), err)
+			return fmt.Errorf("waiting for KMS External Key (%s) valid_to propagation: %w", d.Id(), err)
 		}
 	}
 
 	if hasChange, enabled, state := d.HasChange("enabled"), d.Get("enabled").(bool), d.Get("key_state").(string); hasChange && !enabled && state != kms.KeyStatePendingImport {
 		// Only disable after all attributes have been modified because we cannot modify disabled keys.
 		if err := updateKeyEnabled(conn, d.Id(), enabled); err != nil {
-			return err
+			return fmt.Errorf("updating KMS External Key (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -314,11 +312,11 @@ func resourceExternalKeyUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating KMS External Key (%s) tags: %w", d.Id(), err)
+			return fmt.Errorf("updating KMS External Key (%s) tags: %w", d.Id(), err)
 		}
 
 		if err := WaitTagsPropagated(conn, d.Id(), tftags.New(n)); err != nil {
-			return fmt.Errorf("error waiting for KMS External Key (%s) tag propagation: %w", d.Id(), err)
+			return fmt.Errorf("waiting for KMS External Key (%s) tag propagation: %w", d.Id(), err)
 		}
 	}
 
@@ -348,11 +346,11 @@ func resourceExternalKeyDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting KMS External Key (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting KMS External Key (%s): %w", d.Id(), err)
 	}
 
 	if _, err := WaitKeyDeleted(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for KMS External Key (%s) to delete: %w", d.Id(), err)
+		return fmt.Errorf("waiting for KMS External Key (%s) to delete: %w", d.Id(), err)
 	}
 
 	return nil
@@ -369,7 +367,7 @@ func importExternalKeyMaterial(conn *kms.KMS, keyID, keyMaterialBase64, validTo 
 	}, kms.ErrCodeNotFoundException)
 
 	if err != nil {
-		return fmt.Errorf("error getting parameters for import: %w", err)
+		return fmt.Errorf("getting parameters for import: %w", err)
 	}
 
 	output := outputRaw.(*kms.GetParametersForImportOutput)
@@ -377,19 +375,19 @@ func importExternalKeyMaterial(conn *kms.KMS, keyID, keyMaterialBase64, validTo 
 	keyMaterial, err := base64.StdEncoding.DecodeString(keyMaterialBase64)
 
 	if err != nil {
-		return fmt.Errorf("error Base64 decoding key material: %w", err)
+		return fmt.Errorf("Base64 decoding key material: %w", err)
 	}
 
 	publicKey, err := x509.ParsePKIXPublicKey(output.PublicKey)
 
 	if err != nil {
-		return fmt.Errorf("error parsing public key: %w", err)
+		return fmt.Errorf("parsing public key: %w", err)
 	}
 
 	encryptedKeyMaterial, err := rsa.EncryptOAEP(sha256.New(), rand.Reader, publicKey.(*rsa.PublicKey), keyMaterial, []byte{})
 
 	if err != nil {
-		return fmt.Errorf("error encrypting key material: %w", err)
+		return fmt.Errorf("encrypting key material: %w", err)
 	}
 
 	input := &kms.ImportKeyMaterialInput{
@@ -403,7 +401,7 @@ func importExternalKeyMaterial(conn *kms.KMS, keyID, keyMaterialBase64, validTo 
 		t, err := time.Parse(time.RFC3339, validTo)
 
 		if err != nil {
-			return fmt.Errorf("error parsing valid_to timestamp: %w", err)
+			return fmt.Errorf("parsing valid_to timestamp: %w", err)
 		}
 
 		input.ExpirationModel = aws.String(kms.ExpirationModelTypeKeyMaterialExpires)
@@ -416,7 +414,7 @@ func importExternalKeyMaterial(conn *kms.KMS, keyID, keyMaterialBase64, validTo 
 	}, kms.ErrCodeNotFoundException)
 
 	if err != nil {
-		return fmt.Errorf("error importing key material: %w", err)
+		return fmt.Errorf("importing key material: %w", err)
 	}
 
 	return nil

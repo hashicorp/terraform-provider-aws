@@ -99,7 +99,7 @@ func resourcePolicyAttachmentRead(d *schema.ResourceData, meta interface{}) erro
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("error reading IAM Policy Attachment (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading IAM Policy Attachment (%s): %w", d.Id(), err)
 	}
 
 	ul := make([]string, 0)
@@ -124,7 +124,7 @@ func resourcePolicyAttachmentRead(d *schema.ResourceData, meta interface{}) erro
 		return true
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("reading IAM Policy Attachment (%s): %w", d.Id(), err)
 	}
 
 	userErr := d.Set("users", ul)

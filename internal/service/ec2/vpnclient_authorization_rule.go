@@ -112,7 +112,7 @@ func resourceClientVPNAuthorizationRuleRead(d *schema.ResourceData, meta interfa
 	endpointID, targetNetworkCIDR, accessGroupID, err := ClientVPNAuthorizationRuleParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading EC2 Client VPN Authorization Rule (%s): %w", d.Id(), err)
 	}
 
 	rule, err := FindClientVPNAuthorizationRuleByThreePartKey(conn, endpointID, targetNetworkCIDR, accessGroupID)
@@ -124,7 +124,7 @@ func resourceClientVPNAuthorizationRuleRead(d *schema.ResourceData, meta interfa
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 Client VPN Authorization Rule (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading EC2 Client VPN Authorization Rule (%s): %w", d.Id(), err)
 	}
 
 	d.Set("access_group_id", rule.GroupId)
@@ -142,7 +142,7 @@ func resourceClientVPNAuthorizationRuleDelete(d *schema.ResourceData, meta inter
 	endpointID, targetNetworkCIDR, accessGroupID, err := ClientVPNAuthorizationRuleParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting EC2 Client VPN Authorization Rule (%s): %w", d.Id(), err)
 	}
 
 	input := &ec2.RevokeClientVpnIngressInput{
@@ -162,11 +162,11 @@ func resourceClientVPNAuthorizationRuleDelete(d *schema.ResourceData, meta inter
 	}
 
 	if err != nil {
-		return fmt.Errorf("error revoking EC2 Client VPN Authorization Rule (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting EC2 Client VPN Authorization Rule (%s): %w", d.Id(), err)
 	}
 
 	if _, err := WaitClientVPNAuthorizationRuleDeleted(conn, endpointID, targetNetworkCIDR, accessGroupID, d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("error waiting for EC2 Client VPN Authorization Rule (%s) delete: %w", d.Id(), err)
+		return fmt.Errorf("deleting EC2 Client VPN Authorization Rule (%s): waiting for completion: %w", d.Id(), err)
 	}
 
 	return nil

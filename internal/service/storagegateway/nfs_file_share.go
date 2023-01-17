@@ -217,7 +217,7 @@ func resourceNFSFileShareCreate(d *schema.ResourceData, meta interface{}) error 
 	fileShareDefaults, err := expandNFSFileShareDefaults(d.Get("nfs_file_share_defaults").([]interface{}))
 
 	if err != nil {
-		return err
+		return fmt.Errorf("creating Storage Gateway NFS File Share: %w", err)
 	}
 
 	input := &storagegateway.CreateNFSFileShareInput{
@@ -348,7 +348,7 @@ func resourceNFSFileShareUpdate(d *schema.ResourceData, meta interface{}) error 
 		fileShareDefaults, err := expandNFSFileShareDefaults(d.Get("nfs_file_share_defaults").([]interface{}))
 
 		if err != nil {
-			return err
+			return fmt.Errorf("updating Storage Gateway NFS File Share (%s): %w", d.Id(), err)
 		}
 
 		input := &storagegateway.UpdateNFSFileShareInput{

@@ -849,7 +849,7 @@ func resourceSpotFleetRequestCreate(d *schema.ResourceData, meta interface{}) er
 	if launchSpecificationOk {
 		launchSpecs, err := buildSpotFleetLaunchSpecifications(d, meta)
 		if err != nil {
-			return err
+			return fmt.Errorf("creating EC2 Spot Fleet Request: %w", err)
 		}
 		spotFleetConfig.LaunchSpecifications = launchSpecs
 	}
@@ -998,52 +998,21 @@ func resourceSpotFleetRequestRead(d *schema.ResourceData, meta interface{}) erro
 
 	config := output.SpotFleetRequestConfig
 
-	if config.AllocationStrategy != nil {
-		d.Set("allocation_strategy", config.AllocationStrategy)
-	}
-
-	if config.InstancePoolsToUseCount != nil {
-		d.Set("instance_pools_to_use_count", config.InstancePoolsToUseCount)
-	}
-
-	if config.ClientToken != nil {
-		d.Set("client_token", config.ClientToken)
-	}
-
-	if config.ExcessCapacityTerminationPolicy != nil {
-		d.Set("excess_capacity_termination_policy", config.ExcessCapacityTerminationPolicy)
-	}
-
-	if config.IamFleetRole != nil {
-		d.Set("iam_fleet_role", config.IamFleetRole)
-	}
-
+	d.Set("allocation_strategy", config.AllocationStrategy)
+	d.Set("instance_pools_to_use_count", config.InstancePoolsToUseCount)
+	d.Set("client_token", config.ClientToken)
+	d.Set("excess_capacity_termination_policy", config.ExcessCapacityTerminationPolicy)
+	d.Set("iam_fleet_role", config.IamFleetRole)
 	d.Set("spot_maintenance_strategies", flattenSpotMaintenanceStrategies(config.SpotMaintenanceStrategies))
-
-	if config.SpotPrice != nil {
-		d.Set("spot_price", config.SpotPrice)
-	}
-
-	if config.TargetCapacity != nil {
-		d.Set("target_capacity", config.TargetCapacity)
-	}
-
-	if config.TargetCapacityUnitType != nil {
-		d.Set("target_capacity_unit_type", config.TargetCapacityUnitType)
-	}
-
-	if config.TerminateInstancesWithExpiration != nil {
-		d.Set("terminate_instances_with_expiration", config.TerminateInstancesWithExpiration)
-	}
-
+	d.Set("spot_price", config.SpotPrice)
+	d.Set("target_capacity", config.TargetCapacity)
+	d.Set("target_capacity_unit_type", config.TargetCapacityUnitType)
+	d.Set("terminate_instances_with_expiration", config.TerminateInstancesWithExpiration)
 	if config.ValidFrom != nil {
-		d.Set("valid_from",
-			aws.TimeValue(config.ValidFrom).Format(time.RFC3339))
+		d.Set("valid_from", aws.TimeValue(config.ValidFrom).Format(time.RFC3339))
 	}
-
 	if config.ValidUntil != nil {
-		d.Set("valid_until",
-			aws.TimeValue(config.ValidUntil).Format(time.RFC3339))
+		d.Set("valid_until", aws.TimeValue(config.ValidUntil).Format(time.RFC3339))
 	}
 
 	launchSpec, err := launchSpecsToSet(conn, config.LaunchSpecifications)

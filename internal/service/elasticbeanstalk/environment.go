@@ -285,10 +285,9 @@ func resourceEnvironmentCreate(d *schema.ResourceData, meta interface{}) error {
 
 	// Get the current time to filter getEnvironmentErrors messages
 	t := time.Now()
-	log.Printf("[DEBUG] Elastic Beanstalk Environment create opts: %s", createOpts)
 	resp, err := conn.CreateEnvironment(&createOpts)
 	if err != nil {
-		return err
+		return fmt.Errorf("creating Elastic Beanstalk Environment (%s): %w", name, err)
 	}
 
 	// Assign the application name as the resource ID
@@ -296,7 +295,7 @@ func resourceEnvironmentCreate(d *schema.ResourceData, meta interface{}) error {
 
 	waitForReadyTimeOut, err := time.ParseDuration(d.Get("wait_for_ready_timeout").(string))
 	if err != nil {
-		return err
+		return fmt.Errorf("creating Elastic Beanstalk Environment (%s): %w", name, err)
 	}
 
 	pollInterval, err := time.ParseDuration(d.Get("poll_interval").(string))
@@ -307,12 +306,12 @@ func resourceEnvironmentCreate(d *schema.ResourceData, meta interface{}) error {
 
 	err = waitForEnvironmentReady(conn, d.Id(), waitForReadyTimeOut, pollInterval, t)
 	if err != nil {
-		return fmt.Errorf("Error waiting for Elastic Beanstalk Environment (%s) to become ready: %w", d.Id(), err)
+		return fmt.Errorf("creating Elastic Beanstalk Environment (%s): waiting for completion: %w", name, err)
 	}
 
 	envErrors, err := getEnvironmentErrors(conn, d.Id(), t)
 	if err != nil {
-		return err
+		return fmt.Errorf("creating Elastic Beanstalk Environment (%s): %w", name, err)
 	}
 	if envErrors != nil {
 		return envErrors
@@ -432,15 +431,14 @@ func resourceEnvironmentUpdate(d *schema.ResourceData, meta interface{}) error {
 	if hasChange {
 		// Get the current time to filter getEnvironmentErrors messages
 		t := time.Now()
-		log.Printf("[DEBUG] Elastic Beanstalk Environment update opts: %s", updateOpts)
 		_, err := conn.UpdateEnvironment(&updateOpts)
 		if err != nil {
-			return err
+			return fmt.Errorf("updating Elastic Beanstalk Environment (%s): %w", d.Id(), err)
 		}
 
 		waitForReadyTimeOut, err := time.ParseDuration(d.Get("wait_for_ready_timeout").(string))
 		if err != nil {
-			return err
+			return fmt.Errorf("updating Elastic Beanstalk Environment (%s): %w", d.Id(), err)
 		}
 		pollInterval, err := time.ParseDuration(d.Get("poll_interval").(string))
 		if err != nil {
@@ -450,14 +448,12 @@ func resourceEnvironmentUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		err = waitForEnvironmentReady(conn, d.Id(), waitForReadyTimeOut, pollInterval, t)
 		if err != nil {
-			return fmt.Errorf(
-				"Error waiting for Elastic Beanstalk Environment (%s) to become ready: %s",
-				d.Id(), err)
+			return fmt.Errorf("updating Elastic Beanstalk Environment (%s): waiting for completion: %w", d.Id(), err)
 		}
 
 		envErrors, err := getEnvironmentErrors(conn, d.Id(), t)
 		if err != nil {
-			return err
+			return fmt.Errorf("updating Elastic Beanstalk Environment (%s): %w", d.Id(), err)
 		}
 		if envErrors != nil {
 			return envErrors
@@ -471,12 +467,12 @@ func resourceEnvironmentUpdate(d *schema.ResourceData, meta interface{}) error {
 		// Get the current time to filter getEnvironmentErrors messages
 		t := time.Now()
 		if err := UpdateTags(conn, arn, o, n); err != nil {
-			return fmt.Errorf("error updating Elastic Beanstalk environment (%s) tags: %s", arn, err)
+			return fmt.Errorf("updating Elastic Beanstalk environment (%s): updating tags: %s", arn, err)
 		}
 
 		waitForReadyTimeOut, err := time.ParseDuration(d.Get("wait_for_ready_timeout").(string))
 		if err != nil {
-			return err
+			return fmt.Errorf("updating Elastic Beanstalk Environment (%s): %w", d.Id(), err)
 		}
 		pollInterval, err := time.ParseDuration(d.Get("poll_interval").(string))
 		if err != nil {
@@ -486,12 +482,12 @@ func resourceEnvironmentUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		err = waitForEnvironmentReady(conn, d.Id(), waitForReadyTimeOut, pollInterval, t)
 		if err != nil {
-			return fmt.Errorf("error waiting for Elastic Beanstalk Environment %q to become ready: %w", d.Id(), err)
+			return fmt.Errorf("updating Elastic Beanstalk Environment (%s): waiting for completion: %w", d.Id(), err)
 		}
 
 		envErrors, err := getEnvironmentErrors(conn, d.Id(), t)
 		if err != nil {
-			return err
+			return fmt.Errorf("updating Elastic Beanstalk Environment (%s): %w", d.Id(), err)
 		}
 		if envErrors != nil {
 			return envErrors
@@ -515,7 +511,7 @@ func resourceEnvironmentRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading Elastic Beanstalk Environment (%s): %w", d.Id(), err)
 	}
 
 	if len(resp.Environments) == 0 {
@@ -541,35 +537,23 @@ func resourceEnvironmentRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading Elastic Beanstalk Environment (%s): %w", d.Id(), err)
 	}
 
 	arn := aws.StringValue(env.EnvironmentArn)
 	d.Set("arn", arn)
 
-	if err := d.Set("name", env.EnvironmentName); err != nil {
-		return err
-	}
+	d.Set("name", env.EnvironmentName)
 
-	if err := d.Set("application", env.ApplicationName); err != nil {
-		return err
-	}
+	d.Set("application", env.ApplicationName)
 
-	if err := d.Set("description", env.Description); err != nil {
-		return err
-	}
+	d.Set("description", env.Description)
 
-	if err := d.Set("cname", env.CNAME); err != nil {
-		return err
-	}
+	d.Set("cname", env.CNAME)
 
-	if err := d.Set("version_label", env.VersionLabel); err != nil {
-		return err
-	}
+	d.Set("version_label", env.VersionLabel)
 
-	if err := d.Set("tier", env.Tier.Name); err != nil {
-		return err
-	}
+	d.Set("tier", env.Tier.Name)
 
 	if env.CNAME != nil {
 		beanstalkCnamePrefixRegexp := regexp.MustCompile(`(^[^.]+)(.\w{2}-\w{4,9}-\d)?\.(elasticbeanstalk\.com|eb\.amazonaws\.com\.cn)$`)
@@ -582,44 +566,36 @@ func resourceEnvironmentRead(d *schema.ResourceData, meta interface{}) error {
 			cnamePrefix = cnamePrefixMatch[1]
 		}
 
-		if err := d.Set("cname_prefix", cnamePrefix); err != nil {
-			return err
-		}
+		d.Set("cname_prefix", cnamePrefix)
 	} else {
-		if err := d.Set("cname_prefix", ""); err != nil {
-			return err
-		}
+		d.Set("cname_prefix", "")
 	}
 
-	if err := d.Set("solution_stack_name", env.SolutionStackName); err != nil {
-		return err
-	}
+	d.Set("solution_stack_name", env.SolutionStackName)
 
-	if err := d.Set("platform_arn", env.PlatformArn); err != nil {
-		return err
-	}
+	d.Set("platform_arn", env.PlatformArn)
 
 	if err := d.Set("autoscaling_groups", flattenASG(resources.EnvironmentResources.AutoScalingGroups)); err != nil {
-		return err
+		return fmt.Errorf("reading Elastic Beanstalk Environment (%s): %w", d.Id(), err)
 	}
 
 	if err := d.Set("instances", flattenInstances(resources.EnvironmentResources.Instances)); err != nil {
-		return err
+		return fmt.Errorf("reading Elastic Beanstalk Environment (%s): %w", d.Id(), err)
 	}
 	if err := d.Set("launch_configurations", flattenLc(resources.EnvironmentResources.LaunchConfigurations)); err != nil {
-		return err
+		return fmt.Errorf("reading Elastic Beanstalk Environment (%s): %w", d.Id(), err)
 	}
 	if err := d.Set("load_balancers", flattenELB(resources.EnvironmentResources.LoadBalancers)); err != nil {
-		return err
+		return fmt.Errorf("reading Elastic Beanstalk Environment (%s): %w", d.Id(), err)
 	}
 	if err := d.Set("queues", flattenSQS(resources.EnvironmentResources.Queues)); err != nil {
-		return err
+		return fmt.Errorf("reading Elastic Beanstalk Environment (%s): %w", d.Id(), err)
 	}
 	if err := d.Set("triggers", flattenTrigger(resources.EnvironmentResources.Triggers)); err != nil {
-		return err
+		return fmt.Errorf("reading Elastic Beanstalk Environment (%s): %w", d.Id(), err)
 	}
 	if err := d.Set("endpoint_url", env.EndpointURL); err != nil {
-		return err
+		return fmt.Errorf("reading Elastic Beanstalk Environment (%s): %w", d.Id(), err)
 	}
 
 	tags, err := ListTags(conn, arn)
@@ -639,7 +615,11 @@ func resourceEnvironmentRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting tags_all: %w", err)
 	}
 
-	return resourceEnvironmentSettingsRead(d, meta)
+	if err := resourceEnvironmentSettingsRead(d, meta); err != nil {
+		return fmt.Errorf("reading Elastic Beanstalk Environment (%s): %w", d.Id(), err)
+	}
+
+	return nil
 }
 
 func fetchEnvironmentSettings(d *schema.ResourceData, meta interface{}) (*schema.Set, error) {
@@ -703,13 +683,10 @@ func resourceEnvironmentSettingsRead(d *schema.ResourceData, meta interface{}) e
 
 	allSettings, err := fetchEnvironmentSettings(d, meta)
 	if err != nil {
-		return err
+		return err // nosemgrep:ci.bare-error-returns
 	}
 
 	settings := d.Get("setting").(*schema.Set)
-
-	log.Printf("[DEBUG] Elastic Beanstalk allSettings: %s", allSettings.GoString())
-	log.Printf("[DEBUG] Elastic Beanstalk settings: %s", settings.GoString())
 
 	// perform the set operation with only name/namespace as keys, excluding value
 	// this is so we override things in the settings resource data key with updated values
@@ -721,18 +698,14 @@ func resourceEnvironmentSettingsRead(d *schema.ResourceData, meta interface{}) e
 	settingsKeySet := schema.NewSet(optionSettingKeyHash, settings.List())
 	updatedSettingsKeySet := allSettingsKeySet.Intersection(settingsKeySet)
 
-	log.Printf("[DEBUG] Elastic Beanstalk updatedSettingsKeySet: %s", updatedSettingsKeySet.GoString())
-
 	updatedSettings := schema.NewSet(optionSettingValueHash, updatedSettingsKeySet.List())
 
-	log.Printf("[DEBUG] Elastic Beanstalk updatedSettings: %s", updatedSettings.GoString())
-
 	if err := d.Set("all_settings", allSettings.List()); err != nil {
-		return err
+		return err // nosemgrep:ci.bare-error-returns
 	}
 
 	if err := d.Set("setting", updatedSettings.List()); err != nil {
-		return err
+		return err // nosemgrep:ci.bare-error-returns
 	}
 
 	return nil
@@ -743,7 +716,7 @@ func resourceEnvironmentDelete(d *schema.ResourceData, meta interface{}) error {
 
 	waitForReadyTimeOut, err := time.ParseDuration(d.Get("wait_for_ready_timeout").(string))
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting Elastic Beanstalk Environment (%s): %w", d.Id(), err)
 	}
 	pollInterval, err := time.ParseDuration(d.Get("poll_interval").(string))
 	if err != nil {
@@ -754,10 +727,13 @@ func resourceEnvironmentDelete(d *schema.ResourceData, meta interface{}) error {
 	// The Environment needs to be in a Ready state before it can be terminated
 	err = waitForEnvironmentReadyIgnoreErrorEvents(conn, d.Id(), waitForReadyTimeOut, pollInterval)
 	if err != nil {
-		return fmt.Errorf("error waiting for Elastic Beanstalk Environment %q to be ready before terminating: %w", d.Id(), err)
+		return fmt.Errorf("deleting Elastic Beanstalk Environment (%s): waiting for ready state: %w", d.Id(), err)
 	}
 
-	return DeleteEnvironment(conn, d.Id(), waitForReadyTimeOut, pollInterval)
+	if err := DeleteEnvironment(conn, d.Id(), waitForReadyTimeOut, pollInterval); err != nil {
+		return fmt.Errorf("deleting Elastic Beanstalk Environment (%s): %w", d.Id(), err)
+	}
+	return nil
 }
 
 func DeleteEnvironment(conn *elasticbeanstalk.ElasticBeanstalk, id string, timeout, pollInterval time.Duration) error {
@@ -788,7 +764,7 @@ func DeleteEnvironment(conn *elasticbeanstalk.ElasticBeanstalk, id string, timeo
 
 	_, err = stateConf.WaitForState()
 	if err != nil {
-		return fmt.Errorf("error waiting for Elastic Beanstalk Environment %q to become terminated: %w", id, err)
+		return fmt.Errorf("waiting for completion: %w", err)
 	}
 
 	return nil
@@ -1041,7 +1017,7 @@ func getEnvironmentErrors(conn *elasticbeanstalk.ElasticBeanstalk, environmentId
 	})
 
 	if err != nil {
-		return nil, fmt.Errorf("unable to get Elastic Beanstalk Environment events: %w", err)
+		return nil, fmt.Errorf("getting events: %w", err)
 	}
 
 	var events beanstalkEnvironmentErrors

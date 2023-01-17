@@ -197,7 +197,7 @@ func resourcePermissionRead(d *schema.ResourceData, meta interface{}) error {
 		functionName, err := GetFunctionNameFromARN(statement.Resource)
 
 		if err != nil {
-			return err
+			return fmt.Errorf("reading Lambda Permission (%s/%s): %w", functionName, d.Id(), err)
 		}
 
 		d.Set("function_name", functionName)

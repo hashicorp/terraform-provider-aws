@@ -77,7 +77,7 @@ func resourceVPCEndpointConnectionAccepterRead(d *schema.ResourceData, meta inte
 	serviceID, vpcEndpointID, err := VPCEndpointConnectionAccepterParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading VPC Endpoint Connection (%s): %w", d.Id(), err)
 	}
 
 	vpcEndpointConnection, err := FindVPCEndpointConnectionByServiceIDAndVPCEndpointID(conn, serviceID, vpcEndpointID)
@@ -89,7 +89,7 @@ func resourceVPCEndpointConnectionAccepterRead(d *schema.ResourceData, meta inte
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading VPC Endpoint Connection (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading VPC Endpoint Connection (%s): %w", d.Id(), err)
 	}
 
 	d.Set("vpc_endpoint_id", vpcEndpointConnection.VpcEndpointId)
@@ -105,7 +105,7 @@ func resourceVPCEndpointConnectionAccepterDelete(d *schema.ResourceData, meta in
 	serviceID, vpcEndpointID, err := VPCEndpointConnectionAccepterParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting VPC Endpoint Connection (%s): %w", d.Id(), err)
 	}
 
 	input := &ec2.RejectVpcEndpointConnectionsInput{
@@ -120,7 +120,7 @@ func resourceVPCEndpointConnectionAccepterDelete(d *schema.ResourceData, meta in
 	}
 
 	if err != nil {
-		return fmt.Errorf("error rejecting VPC Endpoint Connection (%s): %w", d.Id(), err)
+		return fmt.Errorf("rejecting VPC Endpoint Connection (%s): %w", d.Id(), err)
 	}
 
 	return nil

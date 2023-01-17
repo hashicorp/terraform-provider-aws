@@ -222,7 +222,7 @@ func resourceDefaultSubnetCreate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if err := modifySubnetAttributesOnCreate(conn, d, subnet, computedIPv6CIDRBlock); err != nil {
-		return err
+		return err // nosemgrep:ci.bare-error-returns
 	}
 
 	// Configure tags.

@@ -315,13 +315,13 @@ func resourceRepositoryUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("image_tag_mutability") {
 		if err := resourceRepositoryUpdateImageTagMutability(conn, d); err != nil {
-			return err
+			return fmt.Errorf("updating ECR Repository (%s): %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("image_scanning_configuration") {
 		if err := resourceRepositoryUpdateImageScanningConfiguration(conn, d); err != nil {
-			return err
+			return fmt.Errorf("updating ECR Repository (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -337,7 +337,7 @@ func resourceRepositoryUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if err != nil {
-			return fmt.Errorf("failed updating tags for ECR Repository (%s): %w", d.Id(), err)
+			return fmt.Errorf("updating ECR Repository (%s): updating tags: %w", d.Id(), err)
 		}
 	}
 
@@ -403,7 +403,7 @@ func resourceRepositoryUpdateImageTagMutability(conn *ecr.ECR, d *schema.Resourc
 
 	_, err := conn.PutImageTagMutability(input)
 	if err != nil {
-		return fmt.Errorf("Error setting image tag mutability: %s", err.Error())
+		return fmt.Errorf("setting image tag mutability: %s", err)
 	}
 
 	return nil
@@ -427,7 +427,7 @@ func resourceRepositoryUpdateImageScanningConfiguration(conn *ecr.ECR, d *schema
 
 	_, err := conn.PutImageScanningConfiguration(input)
 	if err != nil {
-		return fmt.Errorf("Error setting image scanning configuration: %s", err.Error())
+		return fmt.Errorf("setting image scanning configuration: %s", err)
 	}
 
 	return nil

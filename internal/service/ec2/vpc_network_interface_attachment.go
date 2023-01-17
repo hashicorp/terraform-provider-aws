@@ -58,12 +58,12 @@ func resourceNetworkInterfaceAttachmentCreate(d *schema.ResourceData, meta inter
 		networkInterfaceAttachedTimeout,
 	)
 
-	if attachmentID != "" {
-		d.SetId(attachmentID)
+	if err != nil {
+		return err // nosemgrep:ci.bare-error-returns
 	}
 
-	if err != nil {
-		return err
+	if attachmentID != "" {
+		d.SetId(attachmentID)
 	}
 
 	return resourceNetworkInterfaceAttachmentRead(d, meta)

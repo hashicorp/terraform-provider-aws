@@ -249,12 +249,14 @@ func resourceSlotTypeDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Lex Slot Type (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting Lex Model Slot Type (%s): %w", d.Id(), err)
 	}
 
-	_, err = waitSlotTypeDeleted(conn, d.Id())
+	if _, err := waitSlotTypeDeleted(conn, d.Id()); err != nil {
+		return fmt.Errorf("deleting Lex Model Slot Type (%s): waiting for completion: %w", d.Id(), err)
+	}
 
-	return err
+	return nil
 }
 
 func flattenEnumerationValues(values []*lexmodelbuildingservice.EnumerationValue) (flattened []map[string]interface{}) {

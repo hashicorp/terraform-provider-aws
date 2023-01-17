@@ -72,7 +72,7 @@ func resourceVPNGatewayCreate(d *schema.ResourceData, meta interface{}) error {
 		v, err := strconv.ParseInt(v.(string), 10, 64)
 
 		if err != nil {
-			return err
+			return fmt.Errorf("creating EC2 VPN Gateway: %w", err)
 		}
 
 		input.AmazonSideAsn = aws.Int64(v)
@@ -82,14 +82,14 @@ func resourceVPNGatewayCreate(d *schema.ResourceData, meta interface{}) error {
 	output, err := conn.CreateVpnGateway(input)
 
 	if err != nil {
-		return fmt.Errorf("error creating EC2 VPN Gateway: %w", err)
+		return fmt.Errorf("creating EC2 VPN Gateway: %w", err)
 	}
 
 	d.SetId(aws.StringValue(output.VpnGateway.VpnGatewayId))
 
 	if v, ok := d.GetOk("vpc_id"); ok {
 		if err := attachVPNGatewayToVPC(conn, d.Id(), v.(string)); err != nil {
-			return err
+			return fmt.Errorf("creating EC2 VPN Gateway: %w", err)
 		}
 	}
 
@@ -112,7 +112,7 @@ func resourceVPNGatewayRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 VPN Gateway (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading EC2 VPN Gateway (%s): %w", d.Id(), err)
 	}
 
 	vpnGateway := outputRaw.(*ec2.VpnGateway)
@@ -141,11 +141,11 @@ func resourceVPNGatewayRead(d *schema.ResourceData, meta interface{}) error {
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	return nil
@@ -159,13 +159,13 @@ func resourceVPNGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		if vpcID, ok := o.(string); ok && vpcID != "" {
 			if err := detachVPNGatewayFromVPC(conn, d.Id(), vpcID); err != nil {
-				return err
+				return fmt.Errorf("updating EC2 VPN Gateway (%s): %w", d.Id(), err)
 			}
 		}
 
 		if vpcID, ok := n.(string); ok && vpcID != "" {
 			if err := attachVPNGatewayToVPC(conn, d.Id(), vpcID); err != nil {
-				return err
+				return fmt.Errorf("updating EC2 VPN Gateway (%s): %w", d.Id(), err)
 			}
 		}
 	}
@@ -174,7 +174,7 @@ func resourceVPNGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating EC2 VPN Gateway (%s) tags: %w", d.Id(), err)
+			return fmt.Errorf("updating EC2 VPN Gateway (%s) tags: %w", d.Id(), err)
 		}
 	}
 
@@ -186,7 +186,7 @@ func resourceVPNGatewayDelete(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("vpc_id"); ok {
 		if err := detachVPNGatewayFromVPC(conn, d.Id(), v.(string)); err != nil {
-			return err
+			return fmt.Errorf("deleting EC2 VPN Gateway (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -202,7 +202,7 @@ func resourceVPNGatewayDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting EC2 VPN Gateway (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting EC2 VPN Gateway (%s): %w", d.Id(), err)
 	}
 
 	return nil
@@ -220,13 +220,13 @@ func attachVPNGatewayToVPC(conn *ec2.EC2, vpnGatewayID, vpcID string) error {
 	}, errCodeInvalidVPNGatewayIDNotFound)
 
 	if err != nil {
-		return fmt.Errorf("error attaching EC2 VPN Gateway (%s) to VPC (%s): %w", vpnGatewayID, vpcID, err)
+		return fmt.Errorf("attaching to VPC (%s): %w", vpcID, err)
 	}
 
 	_, err = WaitVPNGatewayVPCAttachmentAttached(conn, vpnGatewayID, vpcID)
 
 	if err != nil {
-		return fmt.Errorf("error waiting for EC2 VPN Gateway (%s) to attach to VPC (%s): %w", vpnGatewayID, vpcID, err)
+		return fmt.Errorf("attaching to VPC (%s): waiting for completion: %w", vpcID, err)
 	}
 
 	return nil
@@ -246,13 +246,13 @@ func detachVPNGatewayFromVPC(conn *ec2.EC2, vpnGatewayID, vpcID string) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error detaching EC2 VPN Gateway (%s) from VPC (%s): %w", vpnGatewayID, vpcID, err)
+		return fmt.Errorf("detaching from VPC (%s): %w", vpcID, err)
 	}
 
 	_, err = WaitVPNGatewayVPCAttachmentDetached(conn, vpnGatewayID, vpcID)
 
 	if err != nil {
-		return fmt.Errorf("error waiting for EC2 VPN Gateway (%s) to detach from VPC (%s): %w", vpnGatewayID, vpcID, err)
+		return fmt.Errorf("detaching from VPC (%s): waiting for completion: %w", vpcID, err)
 	}
 
 	return nil

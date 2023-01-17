@@ -306,7 +306,7 @@ func dataSourceLoadBalancerRead(d *schema.ResourceData, meta interface{}) error 
 			elbal = nil
 		}
 		if err := d.Set("access_logs", flattenAccessLog(elbal)); err != nil {
-			return err
+			return fmt.Errorf("reading ELB Classic Load Balancer (%s): setting access_logs: %w", d.Id(), err)
 		}
 	}
 

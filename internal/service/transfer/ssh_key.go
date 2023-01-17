@@ -67,7 +67,7 @@ func resourceSSHKeyCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Error importing ssh public key: %s", err)
 	}
 
-	d.SetId(fmt.Sprintf("%s/%s/%s", serverID, userName, *resp.SshPublicKeyId))
+	d.SetId(fmt.Sprintf("%s/%s/%s", serverID, userName, aws.StringValue(resp.SshPublicKeyId)))
 
 	return nil
 }
@@ -84,8 +84,6 @@ func resourceSSHKeyRead(d *schema.ResourceData, meta interface{}) error {
 		ServerId: aws.String(serverID),
 	}
 
-	log.Printf("[DEBUG] Describe Transfer User Option: %#v", descOpts)
-
 	resp, err := conn.DescribeUser(descOpts)
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, transfer.ErrCodeResourceNotFoundException) {
@@ -93,7 +91,7 @@ func resourceSSHKeyRead(d *schema.ResourceData, meta interface{}) error {
 			d.SetId("")
 			return nil
 		}
-		return err
+		return fmt.Errorf("reading Transfer SSH Key (%s): %w", d.Id(), err)
 	}
 
 	var body string
@@ -128,14 +126,12 @@ func resourceSSHKeyDelete(d *schema.ResourceData, meta interface{}) error {
 		SshPublicKeyId: aws.String(sshKeyID),
 	}
 
-	log.Printf("[DEBUG] Delete Transfer SSH Public Key Option: %#v", delOpts)
-
 	_, err = conn.DeleteSshPublicKey(delOpts)
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, transfer.ErrCodeResourceNotFoundException) {
 			return nil
 		}
-		return fmt.Errorf("error deleting Transfer User Ssh Key (%s): %s", d.Id(), err)
+		return fmt.Errorf("error deleting Transfer User SSH Key (%s): %s", d.Id(), err)
 	}
 
 	return nil

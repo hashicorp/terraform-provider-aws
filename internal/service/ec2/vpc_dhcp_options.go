@@ -96,7 +96,7 @@ func resourceVPCDHCPOptionsCreate(d *schema.ResourceData, meta interface{}) erro
 	dhcpConfigurations, err := optionsMap.resourceDataToDHCPConfigurations(d)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("creating EC2 DHCP Options: %w", err)
 	}
 
 	input := &ec2.CreateDhcpOptionsInput{
@@ -107,7 +107,7 @@ func resourceVPCDHCPOptionsCreate(d *schema.ResourceData, meta interface{}) erro
 	output, err := conn.CreateDhcpOptions(input)
 
 	if err != nil {
-		return fmt.Errorf("error creating EC2 DHCP Options Set: %w", err)
+		return fmt.Errorf("creating EC2 DHCP Options: %w", err)
 	}
 
 	d.SetId(aws.StringValue(output.DhcpOptions.DhcpOptionsId))
@@ -131,7 +131,7 @@ func resourceVPCDHCPOptionsRead(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 DHCP Options Set (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading EC2 DHCP Options (%s): %w", d.Id(), err)
 	}
 
 	opts := outputRaw.(*ec2.DhcpOptions)
@@ -150,7 +150,7 @@ func resourceVPCDHCPOptionsRead(d *schema.ResourceData, meta interface{}) error 
 	err = optionsMap.dhcpConfigurationsToResourceData(opts.DhcpConfigurations, d)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading EC2 DHCP Options (%s): %w", d.Id(), err)
 	}
 
 	tags := KeyValueTags(opts.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)

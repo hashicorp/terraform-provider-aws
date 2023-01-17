@@ -65,6 +65,32 @@ func WaitNotebookInstanceInService(conn *sagemaker.SageMaker, notebookName strin
 	return nil, err
 }
 
+func WaitNotebookInstanceStarted(conn *sagemaker.SageMaker, notebookName string) (*sagemaker.DescribeNotebookInstanceOutput, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			sagemaker.NotebookInstanceStatusStopped,
+		},
+		Target: []string{
+			sagemaker.NotebookInstanceStatusInService,
+			sagemaker.NotebookInstanceStatusPending,
+		},
+		Refresh: StatusNotebookInstance(conn, notebookName),
+		Timeout: 30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*sagemaker.DescribeNotebookInstanceOutput); ok {
+		if status := aws.StringValue(output.NotebookInstanceStatus); status == sagemaker.NotebookInstanceStatusFailed {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.FailureReason)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
 // WaitNotebookInstanceStopped waits for a NotebookInstance to return Stopped
 func WaitNotebookInstanceStopped(conn *sagemaker.SageMaker, notebookName string) (*sagemaker.DescribeNotebookInstanceOutput, error) {
 	stateConf := &resource.StateChangeConf{

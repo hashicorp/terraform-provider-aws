@@ -277,7 +277,7 @@ func resourcePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		if err := policyPruneVersions(d.Id(), conn); err != nil {
-			return err
+			return fmt.Errorf("updating IAM policy %s: pruning versions: %w", d.Id(), err)
 		}
 
 		policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
@@ -292,7 +292,7 @@ func resourcePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if _, err := conn.CreatePolicyVersion(request); err != nil {
-			return fmt.Errorf("error updating IAM policy %s: %w", d.Id(), err)
+			return fmt.Errorf("updating IAM policy %s: %w", d.Id(), err)
 		}
 	}
 
@@ -318,8 +318,8 @@ func resourcePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourcePolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IAMConn()
 
-	if err := PolicyDeleteNondefaultVersions(d.Id(), conn); err != nil {
-		return err
+	if err := policyDeleteNonDefaultVersions(d.Id(), conn); err != nil {
+		return fmt.Errorf("deleting IAM policy (%s): deleting non-default versions: %w", d.Id(), err)
 	}
 
 	request := &iam.DeletePolicyInput{
@@ -333,7 +333,7 @@ func resourcePolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting IAM policy %s: %w", d.Id(), err)
+		return fmt.Errorf("deleting IAM policy (%s): %w", d.Id(), err)
 	}
 
 	return nil
@@ -367,18 +367,17 @@ func policyPruneVersions(arn string, conn *iam.IAM) error {
 		}
 	}
 
-	err1 := policyDeleteVersion(arn, aws.StringValue(oldestVersion.VersionId), conn)
-	return err1
+	return policyDeleteVersion(arn, aws.StringValue(oldestVersion.VersionId), conn)
 }
 
-func PolicyDeleteNondefaultVersions(arn string, conn *iam.IAM) error {
+func policyDeleteNonDefaultVersions(arn string, conn *iam.IAM) error {
 	versions, err := policyListVersions(arn, conn)
 	if err != nil {
 		return err
 	}
 
 	for _, version := range versions {
-		if *version.IsDefaultVersion {
+		if aws.BoolValue(version.IsDefaultVersion) {
 			continue
 		}
 		if err := policyDeleteVersion(arn, aws.StringValue(version.VersionId), conn); err != nil {
@@ -397,7 +396,7 @@ func policyDeleteVersion(arn, versionID string, conn *iam.IAM) error {
 
 	_, err := conn.DeletePolicyVersion(request)
 	if err != nil {
-		return fmt.Errorf("Error deleting version %s from IAM policy %s: %w", versionID, arn, err)
+		return fmt.Errorf("deleting policy version (%s): %w", versionID, err)
 	}
 	return nil
 }

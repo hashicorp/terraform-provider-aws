@@ -105,7 +105,7 @@ func dataSourceVPCDHCPOptionsRead(d *schema.ResourceData, meta interface{}) erro
 	err = optionsMap.dhcpConfigurationsToResourceData(opts.DhcpConfigurations, d)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading EC2 DHCP Options: %w", err)
 	}
 
 	if err := d.Set("tags", KeyValueTags(opts.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
