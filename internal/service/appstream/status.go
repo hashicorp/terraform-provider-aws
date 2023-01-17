@@ -42,20 +42,19 @@ func statusFleetState(ctx context.Context, conn *appstream.AppStream, name strin
 	}
 }
 
-// statusImageBuilderState fetches the ImageBuilder and its state
 func statusImageBuilderState(ctx context.Context, conn *appstream.AppStream, name string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		imageBuilder, err := FindImageBuilderByName(ctx, conn, name)
+		output, err := FindImageBuilderByName(ctx, conn, name)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
 
 		if err != nil {
 			return nil, "", err
 		}
 
-		if imageBuilder == nil {
-			return nil, "", nil
-		}
-
-		return imageBuilder, aws.StringValue(imageBuilder.State), nil
+		return output, aws.StringValue(output.State), nil
 	}
 }
 
