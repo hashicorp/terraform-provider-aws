@@ -38,6 +38,34 @@ func ResourceUser() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"authentication_mode": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"passwords": {
+							Type:      schema.TypeSet,
+							Optional:  true,
+							MinItems:  1,
+							Set:       schema.HashString,
+							Sensitive: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+						"password_count": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"type": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(elasticache.InputAuthenticationType_Values(), false),
+						},
+					},
+				},
+			},
 			"engine": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -83,7 +111,11 @@ func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &elasticache.CreateUserInput{
-		AccessString:       aws.String(d.Get("access_string").(string)),
+		AccessString: aws.String(d.Get("access_string").(string)),
+		AuthenticationMode: &elasticache.AuthenticationMode{
+			Passwords: flex.ExpandStringSet(d.Get("authentication_mode.0.passwords").(*schema.Set)),
+			Type:      aws.String(d.Get("authentication_mode.0.type").(string)),
+		},
 		Engine:             aws.String(d.Get("engine").(string)),
 		NoPasswordRequired: aws.Bool(d.Get("no_password_required").(bool)),
 		UserId:             aws.String(d.Get("user_id").(string)),
@@ -147,10 +179,23 @@ func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("access_string", resp.AccessString)
+	d.Set("arn", resp.ARN)
+
+	if v := resp.Authentication; v != nil {
+		authenticationMode := map[string]interface{}{
+			"passwords":      d.Get("authentication_mode.0.passwords"),
+			"password_count": aws.Int64Value(v.PasswordCount),
+			"type":           aws.StringValue(v.Type),
+		}
+
+		if err := d.Set("authentication_mode", []interface{}{authenticationMode}); err != nil {
+			return fmt.Errorf("failed to set authentication_mode of ElastiCache User (%s): %s", d.Id(), err)
+		}
+	}
+
 	d.Set("engine", resp.Engine)
 	d.Set("user_id", resp.UserId)
 	d.Set("user_name", resp.UserName)
-	d.Set("arn", resp.ARN)
 
 	tags, err := ListTags(conn, aws.StringValue(resp.ARN))
 
@@ -191,6 +236,13 @@ func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
 		if d.HasChange("access_string") {
 			req.AccessString = aws.String(d.Get("access_string").(string))
 			hasChange = true
+		}
+
+		if d.HasChange("authentication_mode") {
+			req.AuthenticationMode = &elasticache.AuthenticationMode{
+				Passwords: flex.ExpandStringSet(d.Get("authentication_mode.0.passwords").(*schema.Set)),
+				Type:      aws.String(d.Get("authentication_mode.0.type").(string)),
+			}
 		}
 
 		if d.HasChange("no_password_required") {

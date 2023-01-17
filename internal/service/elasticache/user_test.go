@@ -50,6 +50,99 @@ func TestAccElastiCacheUser_basic(t *testing.T) {
 	})
 }
 
+func TestAccElastiCacheUserWithPasswordAuthMode_basic(t *testing.T) {
+	var user elasticache.User
+	rName := sdkacctest.RandomWithPrefix("tf-acc")
+	resourceName := "aws_elasticache_user.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserConfigWithPasswordAuthMode_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(resourceName, &user),
+					resource.TestCheckResourceAttr(resourceName, "user_id", rName),
+					resource.TestCheckResourceAttr(resourceName, "user_name", "username1"),
+					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
+					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.password_count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.passwords.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "authentication_mode.0.passwords.*", "aaaaaaaaaaaaaaaa"),
+					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.type", "password"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccElastiCacheUserWithIamAuthMode_basic(t *testing.T) {
+	var user elasticache.User
+	rName := sdkacctest.RandomWithPrefix("tf-acc")
+	resourceName := "aws_elasticache_user.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserConfigWithIamAuthMode_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(resourceName, &user),
+					resource.TestCheckResourceAttr(resourceName, "user_id", rName),
+					resource.TestCheckResourceAttr(resourceName, "user_name", "username1"),
+					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
+					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.type", "iam"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccElastiCacheUserWithNoPassRequiredAuthMode_basic(t *testing.T) {
+	var user elasticache.User
+	rName := sdkacctest.RandomWithPrefix("tf-acc")
+	resourceName := "aws_elasticache_user.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserConfigWithNoPassRequiredAuthMode_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(resourceName, &user),
+					resource.TestCheckResourceAttr(resourceName, "user_id", rName),
+					resource.TestCheckResourceAttr(resourceName, "user_name", "username1"),
+					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
+					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.type", "no-password-required"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccElastiCacheUser_update(t *testing.T) {
 	var user elasticache.User
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
@@ -82,6 +175,40 @@ func TestAccElastiCacheUser_update(t *testing.T) {
 					"no_password_required",
 					"passwords",
 				},
+			},
+		},
+	})
+}
+
+func TestAccElastiCacheUserWithPasswordAuthMode_update_password(t *testing.T) {
+	var user elasticache.User
+	rName := sdkacctest.RandomWithPrefix("tf-acc")
+	resourceName := "aws_elasticache_user.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserConfigWithPasswordAuthMode_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(resourceName, &user),
+					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.password_count", "1"),
+				),
+			},
+			{
+				Config: testAccUserConfigWithPasswordAuthMode_update(rName, "bbbbbbbbbbbbbbbb", "cccccccccccc"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(resourceName, &user),
+					resource.TestCheckResourceAttr(resourceName, "authentication_mode.0.password_count", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -230,6 +357,52 @@ resource "aws_elasticache_user" "test" {
 `, rName))
 }
 
+func testAccUserConfigWithPasswordAuthMode_basic(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+resource "aws_elasticache_user" "test" {
+  user_id       = %[1]q
+  user_name     = "username1"
+  access_string = "on ~app::* -@all +@read +@hash +@bitmap +@geo -setbit -bitfield -hset -hsetnx -hmset -hincrby -hincrbyfloat -hdel -bitop -geoadd -georadius -georadiusbymember"
+  engine        = "REDIS"
+
+  authentication_mode {
+    type      = "password"
+    passwords = ["aaaaaaaaaaaaaaaa"]
+  }
+}
+`, rName))
+}
+
+func testAccUserConfigWithIamAuthMode_basic(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+resource "aws_elasticache_user" "test" {
+  user_id       = %[1]q
+  user_name     = "username1"
+  access_string = "on ~app::* -@all +@read +@hash +@bitmap +@geo -setbit -bitfield -hset -hsetnx -hmset -hincrby -hincrbyfloat -hdel -bitop -geoadd -georadius -georadiusbymember"
+  engine        = "REDIS"
+
+  authentication_mode {
+    type      = "iam"
+  }
+}
+`, rName))
+}
+
+func testAccUserConfigWithNoPassRequiredAuthMode_basic(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+resource "aws_elasticache_user" "test" {
+  user_id       = %[1]q
+  user_name     = "username1"
+  access_string = "on ~app::* -@all +@read +@hash +@bitmap +@geo -setbit -bitfield -hset -hsetnx -hmset -hincrby -hincrbyfloat -hdel -bitop -geoadd -georadius -georadiusbymember"
+  engine        = "REDIS"
+
+  authentication_mode {
+    type      = "no-password-required"
+  }
+}
+`, rName))
+}
+
 func testAccUserConfig_update(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_elasticache_user" "test" {
@@ -240,6 +413,22 @@ resource "aws_elasticache_user" "test" {
   passwords     = ["password234567891", "password345678912"]
 }
 `, rName))
+}
+
+func testAccUserConfigWithPasswordAuthMode_update(rName string, password1 string, password2 string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+resource "aws_elasticache_user" "test" {
+  user_id       = %[1]q
+  user_name     = "username1"
+  access_string = "on ~app::* -@all +@read +@hash +@bitmap +@geo -setbit -bitfield -hset -hsetnx -hmset -hincrby -hincrbyfloat -hdel -bitop -geoadd -georadius -georadiusbymember"
+  engine        = "REDIS"
+
+  authentication_mode {
+    type      = "password"
+    passwords = [%[2]q, %[3]q]
+  }	
+}
+`, rName, password1, password2))
 }
 
 func testAccUserConfig_tags(rName, tagKey, tagValue string) string {
