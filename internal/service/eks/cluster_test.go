@@ -1117,8 +1117,10 @@ data "aws_iam_role" "test" {
   name = "AmazonEKSLocalOutpostClusterRole"
 }
 
+data "aws_outposts_outposts" "test" {}
+
 data "aws_outposts_outpost" "test" {
-  id = "op-XXXXXXXX"
+  id = tolist(data.aws_outposts_outposts.test.ids)[0]
 }
 
 data "aws_subnets" test {
