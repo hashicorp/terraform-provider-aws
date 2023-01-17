@@ -41,6 +41,7 @@ func init() {
 }
 
 func sweepObjects(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
@@ -49,7 +50,7 @@ func sweepObjects(region string) error {
 	conn := client.(*conns.AWSClient).S3ConnURICleaningDisabled()
 	input := &s3.ListBucketsInput{}
 
-	output, err := conn.ListBuckets(input)
+	output, err := conn.ListBucketsWithContext(ctx, input)
 	if sweep.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping S3 Objects sweep for %s: %s", region, err)
 		return nil
@@ -79,7 +80,7 @@ func sweepObjects(region string) error {
 	for _, bucket := range buckets {
 		bucketName := aws.StringValue(bucket.Name)
 
-		objectLockEnabled, err := objectLockEnabled(conn, bucketName)
+		objectLockEnabled, err := objectLockEnabled(ctx, conn, bucketName)
 		if err != nil {
 			errs = multierror.Append(errs, fmt.Errorf("reading S3 Bucket (%s) object lock: %w", bucketName, err))
 			continue
@@ -92,7 +93,7 @@ func sweepObjects(region string) error {
 		})
 	}
 
-	if err := sweep.SweepOrchestrator(sweepables); err != nil {
+	if err := sweep.SweepOrchestratorWithContext(ctx, sweepables); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("sweeping DynamoDB Backups for %s: %w", region, err))
 	}
 
@@ -107,7 +108,7 @@ type objectSweeper struct {
 
 func (os objectSweeper) Delete(ctx context.Context, timeout time.Duration, optFns ...tfresource.OptionsFunc) error {
 	// Delete everything including locked objects
-	_, err := DeleteAllObjectVersions(os.conn, os.name, "", os.locked, true)
+	_, err := DeleteAllObjectVersions(ctx, os.conn, os.name, "", os.locked, true)
 	if err != nil {
 		return fmt.Errorf("deleting S3 Bucket (%s) contents: %w", os.name, err)
 	}
@@ -115,6 +116,7 @@ func (os objectSweeper) Delete(ctx context.Context, timeout time.Duration, optFn
 }
 
 func sweepBuckets(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
@@ -123,7 +125,7 @@ func sweepBuckets(region string) error {
 	conn := client.(*conns.AWSClient).S3Conn()
 	input := &s3.ListBucketsInput{}
 
-	output, err := conn.ListBuckets(input)
+	output, err := conn.ListBucketsWithContext(ctx, input)
 
 	if sweep.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping S3 Buckets sweep for %s: %s", region, err)
@@ -162,7 +164,7 @@ func sweepBuckets(region string) error {
 		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 	}
 
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("sweeping S3 Buckets for %s: %w", region, err))
 	}
 
@@ -184,14 +186,14 @@ func bucketRegion(conn *s3.S3, bucket string) (string, error) {
 	return region, nil
 }
 
-func objectLockEnabled(conn *s3.S3, bucket string) (bool, error) {
+func objectLockEnabled(ctx context.Context, conn *s3.S3, bucket string) (bool, error) {
 	input := &s3.GetObjectLockConfigurationInput{
 		Bucket: aws.String(bucket),
 	}
 
-	output, err := conn.GetObjectLockConfiguration(input)
+	output, err := conn.GetObjectLockConfigurationWithContext(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, "ObjectLockConfigurationNotFoundError") {
+	if tfawserr.ErrCodeEquals(err, ErrCodeObjectLockConfigurationNotFound) {
 		return false, nil
 	}
 

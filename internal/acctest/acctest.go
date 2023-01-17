@@ -1056,7 +1056,9 @@ func CheckResourceDisappears(provo *schema.Provider, resource *schema.Resource, 
 	}
 }
 
-func CheckWithProviders(f func(*terraform.State, *schema.Provider) error, providers *[]*schema.Provider) resource.TestCheckFunc {
+type TestCheckWithProviderFunc func(*terraform.State, *schema.Provider) error
+
+func CheckWithProviders(f TestCheckWithProviderFunc, providers *[]*schema.Provider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		numberOfProviders := len(*providers)
 		for i, provo := range *providers {
