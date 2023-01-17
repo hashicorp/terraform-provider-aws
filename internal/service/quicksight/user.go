@@ -139,7 +139,7 @@ func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
 
 	awsAccountID, namespace, userName, err := UserParseID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("reading QuickSight User (%s): %s", d.Id(), err)
 	}
 
 	descOpts := &quicksight.DescribeUserInput{
@@ -155,7 +155,7 @@ func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("Error describing QuickSight User (%s): %s", d.Id(), err)
+		return fmt.Errorf("reading QuickSight User (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", resp.User.Arn)
@@ -173,7 +173,7 @@ func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	awsAccountID, namespace, userName, err := UserParseID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("updating QuickSight User (%s): %s", d.Id(), err)
 	}
 
 	updateOpts := &quicksight.UpdateUserInput{
@@ -186,7 +186,7 @@ func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	_, err = conn.UpdateUser(updateOpts)
 	if err != nil {
-		return fmt.Errorf("Error updating QuickSight User %s: %s", d.Id(), err)
+		return fmt.Errorf("updating QuickSight User (%s): %s", d.Id(), err)
 	}
 
 	return resourceUserRead(d, meta)
@@ -197,7 +197,7 @@ func resourceUserDelete(d *schema.ResourceData, meta interface{}) error {
 
 	awsAccountID, namespace, userName, err := UserParseID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting QuickSight User (%s): %s", d.Id(), err)
 	}
 
 	deleteOpts := &quicksight.DeleteUserInput{
@@ -210,7 +210,7 @@ func resourceUserDelete(d *schema.ResourceData, meta interface{}) error {
 		if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
 			return nil
 		}
-		return fmt.Errorf("Error deleting QuickSight User %s: %s", d.Id(), err)
+		return fmt.Errorf("deleting QuickSight User (%s): %s", d.Id(), err)
 	}
 
 	return nil

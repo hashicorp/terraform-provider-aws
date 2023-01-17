@@ -157,5 +157,8 @@ func dataSourceRestAPIRead(d *schema.ResourceData, meta interface{}) error {
 		return !lastPage
 	})
 
-	return err
+	if err != nil {
+		return fmt.Errorf("reading API Gateway REST API (%s): %w", target, err)
+	}
+	return nil
 }

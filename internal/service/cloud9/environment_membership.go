@@ -78,7 +78,7 @@ func resourceEnvironmentMembershipRead(d *schema.ResourceData, meta interface{})
 
 	envId, userArn, err := DecodeEnviornmentMemberId(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("reading Cloud9 EC2 Environment (%s): %w", d.Id(), err)
 	}
 
 	env, err := FindEnvironmentMembershipByID(conn, envId, userArn)
@@ -90,7 +90,7 @@ func resourceEnvironmentMembershipRead(d *schema.ResourceData, meta interface{})
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Cloud9 EC2 Environment (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading Cloud9 EC2 Environment (%s): %w", d.Id(), err)
 	}
 
 	d.Set("environment_id", env.EnvironmentId)

@@ -118,7 +118,7 @@ func resourceMaintenanceWindowTargetCreate(d *schema.ResourceData, meta interfac
 
 	resp, err := conn.RegisterTargetWithMaintenanceWindow(params)
 	if err != nil {
-		return err
+		return fmt.Errorf("creating SSM Maintenance Window Target: %w", err)
 	}
 
 	d.SetId(aws.StringValue(resp.WindowTargetId))

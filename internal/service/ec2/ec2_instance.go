@@ -1154,7 +1154,7 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	if _, ok := d.GetOk("volume_tags"); ok && !blockDeviceTagsDefined(d) {
 		volumeTags, err := readVolumeTags(conn, d.Id())
 		if err != nil {
-			return err
+			return fmt.Errorf("reading EC2 Instance (%s): %w", d.Id(), err)
 		}
 
 		if err := d.Set("volume_tags", KeyValueTags(volumeTags).IgnoreAWS().Map()); err != nil {
@@ -1163,16 +1163,16 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err := readSecurityGroups(d, instance, conn); err != nil {
-		return err
+		return fmt.Errorf("reading EC2 Instance (%s): %w", d.Id(), err)
 	}
 
 	// Retrieve instance shutdown behavior
 	if err := readInstanceShutdownBehavior(d, conn); err != nil {
-		return err
+		return fmt.Errorf("reading EC2 Instance (%s): %w", d.Id(), err)
 	}
 
 	if err := readBlockDevices(d, instance, conn); err != nil {
-		return err
+		return fmt.Errorf("reading EC2 Instance (%s): %w", d.Id(), err)
 	}
 	if _, ok := d.GetOk("ephemeral_block_device"); !ok {
 		d.Set("ephemeral_block_device", []interface{}{})
@@ -1196,7 +1196,7 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 			InstanceId: aws.String(d.Id()),
 		})
 		if err != nil && !verify.ErrorISOUnsupported(meta.(*conns.AWSClient).Partition, err) {
-			return fmt.Errorf("reading EC2 Instance (%s) attribute: %w ", d.Id(), err)
+			return fmt.Errorf("getting attribute (%s): %w", ec2.InstanceAttributeNameDisableApiStop, err)
 		}
 		if !verify.ErrorISOUnsupported(meta.(*conns.AWSClient).Partition, err) {
 			d.Set("disable_api_stop", attr.DisableApiStop.Value)
@@ -1212,7 +1212,7 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 			})
 
 			if err != nil {
-				return fmt.Errorf("reading EC2 Instance (%s) attribute: %w ", d.Id(), err)
+				return fmt.Errorf("getting attribute (%s): %w", ec2.InstanceAttributeNameDisableApiTermination, err)
 			}
 
 			d.Set("disable_api_termination", output.DisableApiTermination.Value)
@@ -1224,7 +1224,7 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 			InstanceId: aws.String(d.Id()),
 		})
 		if err != nil {
-			return err
+			return fmt.Errorf("getting attribute (%s): %w", ec2.InstanceAttributeNameUserData, err)
 		}
 		if attr.UserData != nil && attr.UserData.Value != nil {
 			// Since user_data and user_data_base64 conflict with each other,
@@ -1267,7 +1267,7 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	if d.Get("get_password_data").(bool) {
 		passwordData, err := getInstancePasswordData(aws.StringValue(instance.InstanceId), conn)
 		if err != nil {
-			return err
+			return fmt.Errorf("reading EC2 Instance (%s): %w", d.Id(), err)
 		}
 		d.Set("password_data", passwordData)
 	} else {
@@ -1300,7 +1300,7 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("volume_tags") && !d.IsNewResource() {
 		volumeIds, err := getInstanceVolumeIDs(conn, d.Id())
 		if err != nil {
-			return err
+			return fmt.Errorf("updating EC2 Instance (%s): %w", d.Id(), err)
 		}
 
 		o, n := d.GetChange("volume_tags")
@@ -1324,7 +1324,7 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		resp, err := conn.DescribeIamInstanceProfileAssociations(request)
 		if err != nil {
-			return err
+			return fmt.Errorf("updating EC2 Instance (%s): %w", d.Id(), err)
 		}
 
 		// An Iam Instance Profile has been provided and is pending a change
@@ -1333,7 +1333,7 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 			// Does not have an Iam Instance Profile associated with it, need to associate
 			if len(resp.IamInstanceProfileAssociations) == 0 {
 				if err := associateInstanceProfile(d, conn); err != nil {
-					return err
+					return fmt.Errorf("updating EC2 Instance (%s): %w", d.Id(), err)
 				}
 			} else {
 				// Has an Iam Instance Profile associated with it, need to replace the association
@@ -1352,10 +1352,10 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 				if instanceState != "" {
 					if instanceState == ec2.InstanceStateNameStopped || instanceState == ec2.InstanceStateNameStopping || instanceState == ec2.InstanceStateNameShuttingDown {
 						if err := disassociateInstanceProfile(associationId, conn); err != nil {
-							return err
+							return fmt.Errorf("updating EC2 Instance (%s): %w", d.Id(), err)
 						}
 						if err := associateInstanceProfile(d, conn); err != nil {
-							return err
+							return fmt.Errorf("updating EC2 Instance (%s): %w", d.Id(), err)
 						}
 					} else {
 						err := resource.Retry(propagationTimeout, func() *resource.RetryError {
@@ -1372,7 +1372,7 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 							_, err = conn.ReplaceIamInstanceProfileAssociation(input)
 						}
 						if err != nil {
-							return fmt.Errorf("Error replacing instance profile association: %s", err)
+							return fmt.Errorf("updating EC2 Instance (%s): replacing instance profile: %w", d.Id(), err)
 						}
 					}
 				}
@@ -1383,7 +1383,7 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 				// Has an Iam Instance Profile associated with it, need to remove the association
 				associationId := resp.IamInstanceProfileAssociations[0].AssociationId
 				if err := disassociateInstanceProfile(associationId, conn); err != nil {
-					return err
+					return fmt.Errorf("updating EC2 Instance (%s): %w", d.Id(), err)
 				}
 			}
 		}
@@ -1500,7 +1500,7 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 				NetworkInterfaceId: primaryInterface.NetworkInterfaceId,
 				Groups:             groups,
 			}); err != nil {
-				return err
+				return fmt.Errorf("updating EC2 Instance (%s): modifying network interface: %w", d.Id(), err)
 			}
 		}
 	}
@@ -1578,13 +1578,13 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("disable_api_stop") && !d.IsNewResource() {
 		if err := disableInstanceAPIStop(conn, d.Id(), d.Get("disable_api_stop").(bool)); err != nil {
-			return err
+			return fmt.Errorf("updating EC2 Instance (%s): %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("disable_api_termination") && !d.IsNewResource() {
 		if err := disableInstanceAPITermination(conn, d.Id(), d.Get("disable_api_termination").(bool)); err != nil {
-			return err
+			return fmt.Errorf("updating EC2 Instance (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -1597,7 +1597,7 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 			},
 		})
 		if err != nil {
-			return err
+			return fmt.Errorf("updating EC2 Instance (%s): modifying InstanceInitiatedShutdownBehavior: %w", d.Id(), err)
 		}
 	}
 
@@ -1611,11 +1611,11 @@ func resourceInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 		})
 
 		if err != nil {
-			return err
+			return fmt.Errorf("updating EC2 Instance (%s): modifying maintenance options: %w", d.Id(), err)
 		}
 
 		if _, err := WaitInstanceMaintenanceOptionsAutoRecoveryUpdated(conn, d.Id(), autoRecovery, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return fmt.Errorf("waiting for EC2 Instance (%s) maintenance options update: %w", d.Id(), err)
+			return fmt.Errorf("updating EC2 Instance (%s): modifying maintenance options: waiting for completion: %w", d.Id(), err)
 		}
 	}
 
@@ -1826,7 +1826,7 @@ func resourceInstanceDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err := terminateInstance(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return err
+		return err // nosemgrep:ci.bare-error-returns
 	}
 
 	return nil
@@ -1846,7 +1846,7 @@ func disableInstanceAPIStop(conn *ec2.EC2, id string, disableAPIStop bool) error
 	}
 
 	if err != nil {
-		return fmt.Errorf("modifying EC2 Instance (%s) DisableApiStop attribute: %w", id, err)
+		return fmt.Errorf("modifying DisableApiStop: %w", err)
 	}
 
 	return nil
@@ -1866,7 +1866,7 @@ func disableInstanceAPITermination(conn *ec2.EC2, id string, disableAPITerminati
 	}
 
 	if err != nil {
-		return fmt.Errorf("modifying EC2 Instance (%s) DisableApiTermination attribute: %w", id, err)
+		return fmt.Errorf("modifying DisableApiTermination: %w", err)
 	}
 
 	return nil
@@ -1911,7 +1911,7 @@ func modifyInstanceAttributeWithStopStart(conn *ec2.EC2, input *ec2.ModifyInstan
 func readBlockDevices(d *schema.ResourceData, instance *ec2.Instance, conn *ec2.EC2) error {
 	ibds, err := readBlockDevicesFromInstance(d, instance, conn)
 	if err != nil {
-		return err
+		return fmt.Errorf("reading block devices: %w", err)
 	}
 
 	// Special handling for instances where the only block device is the root device:
@@ -1940,20 +1940,20 @@ func readBlockDevices(d *schema.ResourceData, instance *ec2.Instance, conn *ec2.
 	}
 
 	if err := d.Set("ebs_block_device", ibds["ebs"]); err != nil {
-		return err
+		return err // nosemgrep:ci.bare-error-returns
 	}
 
 	// This handles the import case which needs to be defaulted to empty
 	if _, ok := d.GetOk("root_block_device"); !ok {
 		if err := d.Set("root_block_device", []interface{}{}); err != nil {
-			return err
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
 
 	if ibds["root"] != nil {
 		roots := []interface{}{ibds["root"]}
 		if err := d.Set("root_block_device", roots); err != nil {
-			return err
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
 
@@ -1981,7 +1981,7 @@ func associateInstanceProfile(d *schema.ResourceData, conn *ec2.EC2) error {
 		_, err = conn.AssociateIamInstanceProfile(input)
 	}
 	if err != nil {
-		return fmt.Errorf("error associating instance with instance profile: %s", err)
+		return fmt.Errorf("associating instance profile: %s", err)
 	}
 	return nil
 }
@@ -1991,7 +1991,7 @@ func disassociateInstanceProfile(associationId *string, conn *ec2.EC2) error {
 		AssociationId: associationId,
 	})
 	if err != nil {
-		return fmt.Errorf("error disassociating instance with instance profile: %w", err)
+		return fmt.Errorf("disassociating instance profile: %w", err)
 	}
 	return nil
 }
@@ -2378,7 +2378,7 @@ func readBlockDeviceMappingsFromConfig(d *schema.ResourceData, conn *ec2.EC2) ([
 func readVolumeTags(conn *ec2.EC2, instanceId string) ([]*ec2.Tag, error) {
 	volumeIds, err := getInstanceVolumeIDs(conn, instanceId)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("getting tags for volumes (%s): %s", volumeIds, err)
 	}
 
 	resp, err := conn.DescribeTags(&ec2.DescribeTagsInput{
@@ -2387,7 +2387,7 @@ func readVolumeTags(conn *ec2.EC2, instanceId string) ([]*ec2.Tag, error) {
 		}),
 	})
 	if err != nil {
-		return nil, fmt.Errorf("error getting tags for volumes (%s): %s", volumeIds, err)
+		return nil, fmt.Errorf("getting tags for volumes (%s): %s", volumeIds, err)
 	}
 
 	return tagsFromTagDescriptions(resp.Tags), nil
@@ -2423,11 +2423,11 @@ func readSecurityGroups(d *schema.ResourceData, instance *ec2.Instance, conn *ec
 		}
 		log.Printf("[DEBUG] Setting Security Group IDs: %#v", sgs)
 		if err := d.Set("vpc_security_group_ids", sgs); err != nil {
-			return err
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	} else {
 		if err := d.Set("vpc_security_group_ids", []string{}); err != nil {
-			return err
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
 	if useName {
@@ -2437,11 +2437,11 @@ func readSecurityGroups(d *schema.ResourceData, instance *ec2.Instance, conn *ec
 		}
 		log.Printf("[DEBUG] Setting Security Group Names: %#v", sgs)
 		if err := d.Set("security_groups", sgs); err != nil {
-			return err
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	} else {
 		if err := d.Set("security_groups", []string{}); err != nil {
-			return err
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
 	return nil
@@ -2454,7 +2454,7 @@ func readInstanceShutdownBehavior(d *schema.ResourceData, conn *ec2.EC2) error {
 	})
 
 	if err != nil {
-		return fmt.Errorf("error while describing instance (%s) attribute (%s): %w", d.Id(), ec2.InstanceAttributeNameInstanceInitiatedShutdownBehavior, err)
+		return fmt.Errorf("getting attribute (%s): %w", ec2.InstanceAttributeNameInstanceInitiatedShutdownBehavior, err)
 	}
 
 	if output != nil && output.InstanceInitiatedShutdownBehavior != nil {
@@ -2492,10 +2492,10 @@ func getInstancePasswordData(instanceID string, conn *ec2.EC2) (string, error) {
 	if tfresource.TimedOut(err) {
 		resp, err = conn.GetPasswordData(input)
 		if err != nil {
-			return "", fmt.Errorf("Error getting password data: %s", err)
+			return "", fmt.Errorf("getting password data: %s", err)
 		}
 		if resp.PasswordData == nil || aws.StringValue(resp.PasswordData) == "" {
-			return "", fmt.Errorf("Password data is blank for instance ID: %s", instanceID)
+			return "", errors.New("password data is blank")
 		}
 		passwordData = strings.TrimSpace(aws.StringValue(resp.PasswordData))
 	}
@@ -2774,11 +2774,11 @@ func StopInstance(conn *ec2.EC2, id string, timeout time.Duration) error {
 	})
 
 	if err != nil {
-		return fmt.Errorf("stopping EC2 Instance (%s): %w", id, err)
+		return fmt.Errorf("stopping EC2 Instance: %w", err)
 	}
 
 	if _, err := WaitInstanceStopped(conn, id, timeout); err != nil {
-		return fmt.Errorf("waiting for EC2 Instance (%s) stop: %w", id, err)
+		return fmt.Errorf("stopping EC2 Instance: waiting for completion: %w", err)
 	}
 
 	return nil
@@ -2828,7 +2828,7 @@ func getInstanceVolumeIDs(conn *ec2.EC2, instanceId string) ([]string, error) {
 		}),
 	})
 	if err != nil {
-		return nil, fmt.Errorf("error getting volumes for instance (%s): %s", instanceId, err)
+		return nil, fmt.Errorf("getting volumes: %s", err)
 	}
 
 	for _, v := range resp.Volumes {

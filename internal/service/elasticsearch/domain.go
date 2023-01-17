@@ -723,7 +723,7 @@ func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Elasticsearch Domain (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading Elasticsearch Domain (%s): %w", d.Id(), err)
 	}
 
 	output, err := conn.DescribeElasticsearchDomainConfig(&elasticsearch.DescribeElasticsearchDomainConfigInput{
@@ -731,7 +731,7 @@ func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if err != nil {
-		return fmt.Errorf("error reading Elasticsearch Domain (%s) config: %w", d.Id(), err)
+		return fmt.Errorf("reading Elasticsearch Domain (%s) config: %w", d.Id(), err)
 	}
 
 	dc := output.DomainConfig
@@ -740,7 +740,7 @@ func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 		policies, err := verify.PolicyToSet(d.Get("access_policies").(string), v)
 
 		if err != nil {
-			return err
+			return fmt.Errorf("reading Elasticsearch Domain (%s) config: setting policy: %w", d.Id(), err)
 		}
 
 		d.Set("access_policies", policies)

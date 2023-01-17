@@ -711,7 +711,7 @@ func resourceVPNConnectionRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 VPN Connection (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading EC2 VPN Connection (%s): %w", d.Id(), err)
 	}
 
 	arn := arn.ARN{
@@ -783,7 +783,7 @@ func resourceVPNConnectionRead(d *schema.ResourceData, meta interface{}) error {
 		for i, prefix := range []string{"tunnel1_", "tunnel2_"} {
 			if len(v.TunnelOptions) > i {
 				if err := flattenTunnelOption(d, prefix, v.TunnelOptions[i]); err != nil {
-					return err
+					return fmt.Errorf("reading EC2 VPN Connection (%s): %w", d.Id(), err)
 				}
 			}
 		}

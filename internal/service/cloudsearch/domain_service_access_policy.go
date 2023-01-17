@@ -99,13 +99,13 @@ func resourceDomainServiceAccessPolicyRead(d *schema.ResourceData, meta interfac
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading CloudSearch Domain Service Access Policy (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading CloudSearch Domain Service Access Policy (%s): %w", d.Id(), err)
 	}
 
 	policyToSet, err := verify.PolicyToSet(d.Get("access_policy").(string), accessPolicy)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading CloudSearch Domain Service Access Policy (%s): %w", d.Id(), err)
 	}
 
 	d.Set("access_policy", policyToSet)

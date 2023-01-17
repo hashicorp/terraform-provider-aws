@@ -207,7 +207,7 @@ func resourceAccessRead(d *schema.ResourceData, meta interface{}) error {
 
 	policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.StringValue(access.Policy))
 	if err != nil {
-		return err
+		return fmt.Errorf("error reading Transfer Access (%s): %w", d.Id(), err)
 	}
 
 	d.Set("policy", policyToSet)

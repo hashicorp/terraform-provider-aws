@@ -112,7 +112,7 @@ func resourceTapePoolRead(d *schema.ResourceData, meta interface{}) error {
 	output, err := conn.ListTapePools(input)
 
 	if err != nil {
-		return fmt.Errorf("[ERROR] Listing Storage Gateway Tape Pools %w", err)
+		return fmt.Errorf("listing Storage Gateway Tape Pools: %w", err)
 	}
 
 	if output == nil || len(output.PoolInfos) == 0 || output.PoolInfos[0] == nil || aws.StringValue(output.PoolInfos[0].PoolARN) != d.Id() {

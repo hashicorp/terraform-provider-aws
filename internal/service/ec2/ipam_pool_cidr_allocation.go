@@ -130,7 +130,7 @@ func resourceIPAMPoolCIDRAllocationRead(d *schema.ResourceData, meta interface{}
 	allocationID, poolID, err := IPAMPoolCIDRAllocationParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading IPAM Pool CIDR Allocation (%s): %w", d.Id(), err)
 	}
 
 	allocation, err := FindIPAMPoolAllocationByTwoPartKey(conn, allocationID, poolID)
@@ -161,7 +161,7 @@ func resourceIPAMPoolCIDRAllocationDelete(d *schema.ResourceData, meta interface
 	allocationID, poolID, err := IPAMPoolCIDRAllocationParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting IPAM Pool CIDR Allocation (%s): %w", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Deleting IPAM Pool CIDR Allocation: %s", d.Id())

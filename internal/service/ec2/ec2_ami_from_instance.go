@@ -266,12 +266,12 @@ func resourceAMIFromInstanceCreate(d *schema.ResourceData, meta interface{}) err
 	d.Set("manage_ebs_snapshots", true)
 
 	if _, err := WaitImageAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("waiting for EC2 AMI (%s) create: %w", d.Id(), err)
+		return fmt.Errorf("creating EC2 AMI (%s) from EC2 Instance (%s): waiting for completion: %w", name, instanceID, err)
 	}
 
 	if v, ok := d.GetOk("deprecation_time"); ok {
 		if err := enableImageDeprecation(conn, d.Id(), v.(string)); err != nil {
-			return err
+			return fmt.Errorf("creating EC2 AMI (%s) from EC2 Instance (%s): %w", name, instanceID, err)
 		}
 	}
 

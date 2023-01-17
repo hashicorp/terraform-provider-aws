@@ -2,12 +2,11 @@ package elasticache
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func DataSourceUser() *schema.Resource {
@@ -49,21 +48,13 @@ func DataSourceUser() *schema.Resource {
 func dataSourceUserRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 
-	params := &elasticache.DescribeUsersInput{
-		UserId: aws.String(d.Get("user_id").(string)),
+	user, err := FindUserByID(conn, d.Get("user_id").(string))
+	if tfresource.NotFound(err) {
+		return fmt.Errorf("reading ElastiCache Cache Cluster (%s): Not found. Please change your search criteria and try again: %w", d.Get("user_id").(string), err)
 	}
-
-	log.Printf("[DEBUG] Reading ElastiCache User: %s", params)
-	response, err := conn.DescribeUsers(params)
 	if err != nil {
-		return err
+		return fmt.Errorf("reading ElastiCache Cache Cluster (%s): %w", d.Get("user_id").(string), err)
 	}
-
-	if len(response.Users) != 1 {
-		return fmt.Errorf("[ERROR] Query returned wrong number of results. Please change your search criteria and try again.")
-	}
-
-	user := response.Users[0]
 
 	d.SetId(aws.StringValue(user.UserId))
 

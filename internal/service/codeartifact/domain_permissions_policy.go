@@ -101,7 +101,7 @@ func resourceDomainPermissionsPolicyRead(d *schema.ResourceData, meta interface{
 
 	domainOwner, domainName, err := DecodeDomainID(d.Id())
 	if err != nil {
-		return err
+		return create.Error(names.CodeArtifact, create.ErrActionReading, ResNameDomainPermissionsPolicy, d.Id(), err)
 	}
 
 	dm, err := conn.GetDomainPermissionsPolicy(&codeartifact.GetDomainPermissionsPolicyInput{
@@ -146,7 +146,7 @@ func resourceDomainPermissionsPolicyDelete(d *schema.ResourceData, meta interfac
 
 	domainOwner, domainName, err := DecodeDomainID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting CodeArtifact Domain Permissions Policy (%s): %w", d.Id(), err)
 	}
 
 	input := &codeartifact.DeleteDomainPermissionsPolicyInput{
@@ -161,7 +161,7 @@ func resourceDomainPermissionsPolicyDelete(d *schema.ResourceData, meta interfac
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting CodeArtifact Domain Permissions Policy (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting CodeArtifact Domain Permissions Policy (%s): %w", d.Id(), err)
 	}
 
 	return nil

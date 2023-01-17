@@ -461,14 +461,12 @@ func resourcePipelineRead(d *schema.ResourceData, meta interface{}) error {
 
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, elastictranscoder.ErrCodeResourceNotFoundException) {
-			log.Printf("[WARN] No such resource found for Elastic Transcoder Pipeline (%s)", d.Id())
+			log.Printf("[WARN] Elastic Transcoder Pipeline (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
-		return err
+		return fmt.Errorf("reading Elastic Transcoder Pipeline (%s): %w", d.Id(), err)
 	}
-
-	log.Printf("[DEBUG] Elastic Transcoder Pipeline Read response: %#v", resp)
 
 	pipeline := resp.Pipeline
 

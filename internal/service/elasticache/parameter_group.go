@@ -136,7 +136,7 @@ func resourceParameterGroupRead(d *schema.ResourceData, meta interface{}) error 
 
 	describeParametersResp, err := conn.DescribeCacheParameters(&describeParametersOpts)
 	if err != nil {
-		return err
+		return fmt.Errorf("reading ElastiCache Parameter Group (%s): %w", d.Id(), err)
 	}
 
 	d.Set("parameter", FlattenParameters(describeParametersResp.Parameters))

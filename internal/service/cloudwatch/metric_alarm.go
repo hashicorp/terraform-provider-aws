@@ -300,7 +300,7 @@ func resourceMetricAlarmCreate(d *schema.ResourceData, meta interface{}) error {
 
 	err := validMetricAlarm(d)
 	if err != nil {
-		return err
+		return fmt.Errorf("creating CloudWatch Metric Alarm (%s): %w", d.Get("alarm_name").(string), err)
 	}
 	params := getPutMetricAlarmInput(d, meta)
 
@@ -316,7 +316,7 @@ func resourceMetricAlarmCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("failed creating CloudWatch Metric Alarm (%s): %w", d.Get("alarm_name").(string), err)
+		return fmt.Errorf("creating CloudWatch Metric Alarm (%s): %w", d.Get("alarm_name").(string), err)
 	}
 
 	d.SetId(d.Get("alarm_name").(string))

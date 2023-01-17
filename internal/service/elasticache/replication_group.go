@@ -622,7 +622,7 @@ func resourceReplicationGroupRead(d *schema.ResourceData, meta interface{}) erro
 		return nil
 	}
 	if err != nil {
-		return err
+		return fmt.Errorf("reading ElastiCache Replication Group (%s): %w", d.Id(), err)
 	}
 
 	if aws.StringValue(rgp.Status) == ReplicationGroupStatusDeleting {
@@ -745,7 +745,7 @@ func resourceReplicationGroupRead(d *schema.ResourceData, meta interface{}) erro
 			ShowCacheNodeInfo: aws.Bool(true),
 		})
 		if err != nil {
-			return err
+			return fmt.Errorf("reading ElastiCache Replication Group (%s): reading Cache Cluster (%s): %w", d.Id(), aws.StringValue(cacheCluster.CacheClusterId), err)
 		}
 
 		if len(res.CacheClusters) == 0 {
@@ -755,7 +755,7 @@ func resourceReplicationGroupRead(d *schema.ResourceData, meta interface{}) erro
 		c := res.CacheClusters[0]
 
 		if err := setFromCacheCluster(d, c); err != nil {
-			return err
+			return fmt.Errorf("reading ElastiCache Replication Group (%s): reading Cache Cluster (%s): %w", d.Id(), aws.StringValue(cacheCluster.CacheClusterId), err)
 		}
 
 		d.Set("at_rest_encryption_enabled", c.AtRestEncryptionEnabled)

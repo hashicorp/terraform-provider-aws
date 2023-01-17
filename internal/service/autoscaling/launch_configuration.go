@@ -385,7 +385,7 @@ func resourceLaunchConfigurationCreate(d *schema.ResourceData, meta interface{})
 	rootDeviceName, err := findImageRootDeviceName(ec2conn, d.Get("image_id").(string))
 
 	if err != nil {
-		return err
+		return fmt.Errorf("creating Auto Scaling Launch Configuration (%s): %w", lcName, err)
 	}
 
 	var blockDeviceMappings []*autoscaling.BlockDeviceMapping
@@ -500,7 +500,7 @@ func resourceLaunchConfigurationRead(d *schema.ResourceData, meta interface{}) e
 		// Don't block a refresh for a bad image.
 		rootDeviceName = ""
 	} else if err != nil {
-		return err
+		return fmt.Errorf("reading Auto Scaling Launch Configuration (%s): %w", d.Id(), err)
 	}
 
 	configuredEBSBlockDevices := make(map[string]map[string]interface{})

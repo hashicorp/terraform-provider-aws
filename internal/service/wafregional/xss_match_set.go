@@ -81,7 +81,7 @@ func resourceXSSMatchSetCreate(d *schema.ResourceData, meta interface{}) error {
 		return conn.CreateXssMatchSet(params)
 	})
 	if err != nil {
-		return fmt.Errorf("Failed creating regional WAF XSS Match Set: %w", err)
+		return fmt.Errorf("creating WAF Regional XSS Match Set: %w", err)
 	}
 	resp := out.(*waf.CreateXssMatchSetOutput)
 
@@ -90,7 +90,7 @@ func resourceXSSMatchSetCreate(d *schema.ResourceData, meta interface{}) error {
 	if v, ok := d.Get("xss_match_tuple").(*schema.Set); ok && v.Len() > 0 {
 		err := updateXSSMatchSetResourceWR(d.Id(), nil, v.List(), conn, region)
 		if err != nil {
-			return fmt.Errorf("Failed updating regional WAF XSS Match Set: %w", err)
+			return fmt.Errorf("updating WAF Regional XSS Match Set: %w", err)
 		}
 	}
 
@@ -99,7 +99,6 @@ func resourceXSSMatchSetCreate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceXSSMatchSetRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).WAFRegionalConn()
-	log.Printf("[INFO] Reading regional WAF XSS Match Set: %s", d.Get("name").(string))
 	params := &waf.GetXssMatchSetInput{
 		XssMatchSetId: aws.String(d.Id()),
 	}
@@ -112,13 +111,13 @@ func resourceXSSMatchSetRead(d *schema.ResourceData, meta interface{}) error {
 			return nil
 		}
 
-		return err
+		return fmt.Errorf("reading WAF Regional XSS Match Set: %w", err)
 	}
 
 	set := resp.XssMatchSet
 
 	if err := d.Set("xss_match_tuple", flattenXSSMatchTuples(set.XssMatchTuples)); err != nil {
-		return fmt.Errorf("error setting xss_match_tuple: %w", err)
+		return fmt.Errorf("setting xss_match_tuple: %w", err)
 	}
 	d.Set("name", set.Name)
 
@@ -152,7 +151,7 @@ func resourceXSSMatchSetDelete(d *schema.ResourceData, meta interface{}) error {
 			noTuples := []interface{}{}
 			err := updateXSSMatchSetResourceWR(d.Id(), oldTuples, noTuples, conn, region)
 			if err != nil {
-				return fmt.Errorf("Error updating regional WAF XSS Match Set: %w", err)
+				return fmt.Errorf("updating regional WAF XSS Match Set: %w", err)
 			}
 		}
 	}

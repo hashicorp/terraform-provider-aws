@@ -72,7 +72,7 @@ func resourceApprovalRuleTemplateAssociationRead(d *schema.ResourceData, meta in
 	approvalRuleTemplateName, repositoryName, err := ApprovalRuleTemplateAssociationParseID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading CodeCommit Approval Rule Template Association (%s): %w", d.Id(), err)
 	}
 
 	err = FindApprovalRuleTemplateAssociation(conn, approvalRuleTemplateName, repositoryName)
@@ -84,7 +84,7 @@ func resourceApprovalRuleTemplateAssociationRead(d *schema.ResourceData, meta in
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading CodeCommit Approval Rule Template Association (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading CodeCommit Approval Rule Template Association (%s): %w", d.Id(), err)
 	}
 
 	d.Set("approval_rule_template_name", approvalRuleTemplateName)
@@ -99,7 +99,7 @@ func resourceApprovalRuleTemplateAssociationDelete(d *schema.ResourceData, meta 
 	approvalRuleTemplateName, repositoryName, err := ApprovalRuleTemplateAssociationParseID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting CodeCommit Approval Rule Template (%s) from repository (%s): %w", approvalRuleTemplateName, repositoryName, err)
 	}
 
 	input := &codecommit.DisassociateApprovalRuleTemplateFromRepositoryInput{
@@ -114,7 +114,7 @@ func resourceApprovalRuleTemplateAssociationDelete(d *schema.ResourceData, meta 
 	}
 
 	if err != nil {
-		return fmt.Errorf("error disassociating CodeCommit Approval Rule Template (%s) from repository (%s): %w", approvalRuleTemplateName, repositoryName, err)
+		return fmt.Errorf("deleting CodeCommit Approval Rule Template (%s) from repository (%s): %w", approvalRuleTemplateName, repositoryName, err)
 	}
 
 	return nil

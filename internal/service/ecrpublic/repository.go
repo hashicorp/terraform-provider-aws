@@ -307,7 +307,7 @@ func resourceRepositoryUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("catalog_data") {
 		if err := resourceRepositoryUpdateCatalogData(conn, d); err != nil {
-			return err
+			return fmt.Errorf("updating ECR Public Repository (%s): %w", d.Id(), err)
 		}
 	}
 

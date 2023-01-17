@@ -523,12 +523,14 @@ func resourceIntentDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting intent %s: %w", d.Id(), err)
+		return fmt.Errorf("deleting Lex Model Intent (%s): %w", d.Id(), err)
 	}
 
-	_, err = waitIntentDeleted(conn, d.Id())
+	if _, err := waitIntentDeleted(conn, d.Id()); err != nil {
+		return fmt.Errorf("deleting Lex Model Intent (%s): waiting for completion: %w", d.Id(), err)
+	}
 
-	return err
+	return nil
 }
 
 var codeHookResource = &schema.Resource{

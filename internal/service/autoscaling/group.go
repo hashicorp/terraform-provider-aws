@@ -1478,7 +1478,7 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		if shouldRefreshInstances {
 			if err := startInstanceRefresh(conn, expandStartInstanceRefreshInput(d.Id(), tfMap)); err != nil {
-				return err
+				return err // nosemgrep:ci.bare-error-returns
 			}
 		}
 	}
@@ -1491,7 +1491,7 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 			forceDeleteWarmPool := d.Get("force_delete").(bool) || d.Get("force_delete_warm_pool").(bool)
 
 			if err := deleteWarmPool(conn, d.Id(), forceDeleteWarmPool, d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return err
+				return err // nosemgrep:ci.bare-error-returns
 			}
 		} else {
 			_, err := conn.PutWarmPool(expandPutWarmPoolInput(d.Id(), w[0].(map[string]interface{})))
@@ -1632,7 +1632,7 @@ func resourceGroupDelete(d *schema.ResourceData, meta interface{}) error {
 		err = deleteWarmPool(conn, d.Id(), forceDeleteWarmPool, d.Timeout(schema.TimeoutDelete))
 
 		if err != nil {
-			return err
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
 
@@ -1640,7 +1640,7 @@ func resourceGroupDelete(d *schema.ResourceData, meta interface{}) error {
 		err = drainGroup(conn, d.Id(), group.Instances, d.Timeout(schema.TimeoutDelete))
 
 		if err != nil {
-			return err
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
 

@@ -286,7 +286,7 @@ func resourceRoutingProfileUpdate(ctx context.Context, d *schema.ResourceData, m
 		inputConcurrency.MediaConcurrencies = mediaConcurrencies
 		_, err = conn.UpdateRoutingProfileConcurrencyWithContext(ctx, inputConcurrency)
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("[ERROR] Error updating RoutingProfile Media Concurrency (%s): %w", d.Id(), err))
+			return diag.FromErr(fmt.Errorf("updating RoutingProfile Media Concurrency (%s): %w", d.Id(), err))
 		}
 	}
 
@@ -301,7 +301,7 @@ func resourceRoutingProfileUpdate(ctx context.Context, d *schema.ResourceData, m
 		_, err = conn.UpdateRoutingProfileDefaultOutboundQueueWithContext(ctx, inputDefaultOutboundQueue)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("[ERROR] Error updating RoutingProfile Default Outbound Queue ID (%s): %w", d.Id(), err))
+			return diag.FromErr(fmt.Errorf("updating RoutingProfile Default Outbound Queue ID (%s): %w", d.Id(), err))
 		}
 	}
 
@@ -317,7 +317,7 @@ func resourceRoutingProfileUpdate(ctx context.Context, d *schema.ResourceData, m
 		_, err = conn.UpdateRoutingProfileNameWithContext(ctx, inputNameDesc)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("[ERROR] Error updating RoutingProfile Name (%s): %w", d.Id(), err))
+			return diag.FromErr(fmt.Errorf("updating RoutingProfile Name (%s): %w", d.Id(), err))
 		}
 	}
 
@@ -345,7 +345,7 @@ func resourceRoutingProfileUpdate(ctx context.Context, d *schema.ResourceData, m
 			inputQueueDisassociate.QueueReferences = currentAssociatedQueueReferences
 			_, err = conn.DisassociateRoutingProfileQueuesWithContext(ctx, inputQueueDisassociate)
 			if err != nil {
-				return diag.FromErr(fmt.Errorf("[ERROR] Error updating RoutingProfile Queue Configs, specifically disassociating queues from routing profile (%s): %w", d.Id(), err))
+				return diag.FromErr(fmt.Errorf("updating RoutingProfile Queue Configs, specifically disassociating queues from routing profile (%s): %w", d.Id(), err))
 			}
 		}
 		// re-associate the queues
@@ -354,7 +354,7 @@ func resourceRoutingProfileUpdate(ctx context.Context, d *schema.ResourceData, m
 			inputQueueAssociate.QueueConfigs = updatedQueueConfigs
 			_, err = conn.AssociateRoutingProfileQueuesWithContext(ctx, inputQueueAssociate)
 			if err != nil {
-				return diag.FromErr(fmt.Errorf("[ERROR] Error updating RoutingProfile Queue Configs, specifically associating queues to routing profile (%s): %w", d.Id(), err))
+				return diag.FromErr(fmt.Errorf("updating RoutingProfile Queue Configs, specifically associating queues to routing profile (%s): %w", d.Id(), err))
 			}
 		}
 	}

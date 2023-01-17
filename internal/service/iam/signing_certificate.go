@@ -90,7 +90,7 @@ func resourceSigningCertificateRead(d *schema.ResourceData, meta interface{}) er
 
 	certId, userName, err := DecodeSigningCertificateId(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("reading IAM Signing Certificate (%s): %w", d.Id(), err)
 	}
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(propagationTimeout, func() (interface{}, error) {
@@ -104,7 +104,7 @@ func resourceSigningCertificateRead(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading IAM Signing Certificate (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading IAM Signing Certificate (%s): %w", d.Id(), err)
 	}
 
 	resp := outputRaw.(*iam.SigningCertificate)
@@ -122,7 +122,7 @@ func resourceSigningCertificateUpdate(d *schema.ResourceData, meta interface{}) 
 
 	certId, userName, err := DecodeSigningCertificateId(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("updating IAM Signing Certificate (%s): %w", d.Id(), err)
 	}
 
 	updateInput := &iam.UpdateSigningCertificateInput{
@@ -133,7 +133,7 @@ func resourceSigningCertificateUpdate(d *schema.ResourceData, meta interface{}) 
 
 	_, err = conn.UpdateSigningCertificate(updateInput)
 	if err != nil {
-		return fmt.Errorf("error updating IAM Signing Certificate: %w", err)
+		return fmt.Errorf("updating IAM Signing Certificate (%s): %w", d.Id(), err)
 	}
 
 	return resourceSigningCertificateRead(d, meta)
@@ -145,7 +145,7 @@ func resourceSigningCertificateDelete(d *schema.ResourceData, meta interface{}) 
 
 	certId, userName, err := DecodeSigningCertificateId(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting IAM Signing Certificate (%s): %s", d.Id(), err)
 	}
 
 	input := &iam.DeleteSigningCertificateInput{
@@ -157,7 +157,7 @@ func resourceSigningCertificateDelete(d *schema.ResourceData, meta interface{}) 
 		if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 			return nil
 		}
-		return fmt.Errorf("Error deleting IAM Signing Certificate %s: %s", d.Id(), err)
+		return fmt.Errorf("deleting IAM Signing Certificate (%s): %s", d.Id(), err)
 	}
 
 	return nil
