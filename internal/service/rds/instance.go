@@ -2527,11 +2527,10 @@ func waitBlueGreenDeploymentSwitchoverCompleted(ctx context.Context, conn *rds_s
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.BlueGreenDeployment); ok {
-		if ues, ok := errs.As[*resource.UnexpectedStateError](err); ok {
-			if ues.State == "INVALID_CONFIGURATION" || ues.State == "SWITCHOVER_FAILED" {
-				err = errors.New(aws.StringValue(output.StatusDetails))
-			}
+		if status := aws.StringValue(output.Status); status == "INVALID_CONFIGURATION" || status == "SWITCHOVER_FAILED" {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.StatusDetails)))
 		}
+
 		return output, err
 	}
 

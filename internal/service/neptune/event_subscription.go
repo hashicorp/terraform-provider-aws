@@ -182,10 +182,7 @@ func resourceEventSubscriptionRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("sns_topic_arn", sub.SnsTopicArn)
 	d.Set("enabled", sub.Enabled)
 	d.Set("customer_aws_id", sub.CustomerAwsId)
-
-	if sub.SourceType != nil {
-		d.Set("source_type", sub.SourceType)
-	}
+	d.Set("source_type", sub.SourceType)
 
 	if sub.SourceIdsList != nil {
 		if err := d.Set("source_ids", flex.FlattenStringList(sub.SourceIdsList)); err != nil {

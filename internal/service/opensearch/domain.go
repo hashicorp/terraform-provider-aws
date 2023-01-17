@@ -1318,3 +1318,31 @@ func ParseEngineVersion(engineVersion string) (string, string, error) {
 
 	return parts[0], parts[1], nil
 }
+
+// EBSVolumeTypePermitsIopsInput returns true if the volume type supports the Iops input
+//
+// This check prevents a ValidationException when updating EBS volume types from a value
+// that supports IOPS (ex. gp3) to one that doesn't (ex. gp2).
+func EBSVolumeTypePermitsIopsInput(volumeType string) bool {
+	permittedTypes := []string{opensearchservice.VolumeTypeGp3, opensearchservice.VolumeTypeIo1}
+	for _, t := range permittedTypes {
+		if volumeType == t {
+			return true
+		}
+	}
+	return false
+}
+
+// EBSVolumeTypePermitsIopsInput returns true if the volume type supports the Throughput input
+//
+// This check prevents a ValidationException when updating EBS volume types from a value
+// that supports Throughput (ex. gp3) to one that doesn't (ex. gp2).
+func EBSVolumeTypePermitsThroughputInput(volumeType string) bool {
+	permittedTypes := []string{opensearchservice.VolumeTypeGp3}
+	for _, t := range permittedTypes {
+		if volumeType == t {
+			return true
+		}
+	}
+	return false
+}

@@ -1093,9 +1093,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("termination_protection", cluster.TerminationProtected)
 	d.Set("step_concurrency_level", cluster.StepConcurrencyLevel)
 
-	if cluster.CustomAmiId != nil {
-		d.Set("custom_ami_id", cluster.CustomAmiId)
-	}
+	d.Set("custom_ami_id", cluster.CustomAmiId)
 
 	if err := d.Set("applications", flattenApplications(cluster.Applications)); err != nil {
 		return fmt.Errorf("error setting EMR Applications for cluster (%s): %w", d.Id(), err)

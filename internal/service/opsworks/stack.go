@@ -393,9 +393,7 @@ func resourceStackRead(d *schema.ResourceData, meta interface{}) error {
 	} else {
 		d.Set("custom_cookbooks_source", nil)
 	}
-	if stack.CustomJson != nil {
-		d.Set("custom_json", stack.CustomJson)
-	}
+	d.Set("custom_json", stack.CustomJson)
 	d.Set("default_availability_zone", stack.DefaultAvailabilityZone)
 	d.Set("default_instance_profile_arn", stack.DefaultInstanceProfileArn)
 	d.Set("default_os", stack.DefaultOs)

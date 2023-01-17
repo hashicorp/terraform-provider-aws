@@ -458,9 +458,7 @@ func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("metric_aggregation_type", p.MetricAggregationType)
 	d.Set("name", p.PolicyName)
 	d.Set("policy_type", p.PolicyType)
-	if p.MinAdjustmentMagnitude != nil {
-		d.Set("min_adjustment_magnitude", p.MinAdjustmentMagnitude)
-	}
+	d.Set("min_adjustment_magnitude", p.MinAdjustmentMagnitude)
 
 	d.Set("scaling_adjustment", p.ScalingAdjustment)
 	if err := d.Set("predictive_scaling_configuration", flattenPredictiveScalingConfig(p.PredictiveScalingConfiguration)); err != nil {

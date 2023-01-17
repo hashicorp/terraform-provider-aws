@@ -333,10 +333,7 @@ func resourceOntapFileSystemRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("owner_id", filesystem.OwnerId)
 	d.Set("storage_capacity", filesystem.StorageCapacity)
 	d.Set("fsx_admin_password", d.Get("fsx_admin_password").(string))
-
-	if filesystem.KmsKeyId != nil {
-		d.Set("kms_key_id", filesystem.KmsKeyId)
-	}
+	d.Set("kms_key_id", filesystem.KmsKeyId)
 
 	if err := d.Set("network_interface_ids", aws.StringValueSlice(filesystem.NetworkInterfaceIds)); err != nil {
 		return fmt.Errorf("error setting network_interface_ids: %w", err)

@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/datasync"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -244,17 +245,16 @@ func resourceTaskCreate(d *schema.ResourceData, meta interface{}) error {
 		input.Schedule = expandTaskSchedule(v.([]interface{}))
 	}
 
-	log.Printf("[DEBUG] Creating DataSync Task: %s", input)
 	output, err := conn.CreateTask(input)
 
 	if err != nil {
-		return fmt.Errorf("error creating DataSync Task: %w", err)
+		return fmt.Errorf("creating DataSync Task: %w", err)
 	}
 
 	d.SetId(aws.StringValue(output.TaskArn))
 
 	if _, err := waitTaskAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("error waiting for DataSync Task (%s) creation: %w", d.Id(), err)
+		return fmt.Errorf("waiting for DataSync Task (%s) create: %w", d.Id(), err)
 	}
 
 	return resourceTaskRead(d, meta)
@@ -274,42 +274,42 @@ func resourceTaskRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading DataSync Task (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading DataSync Task (%s): %w", d.Id(), err)
 	}
 
 	d.Set("arn", output.TaskArn)
 	d.Set("cloudwatch_log_group_arn", output.CloudWatchLogGroupArn)
 	d.Set("destination_location_arn", output.DestinationLocationArn)
 	if err := d.Set("excludes", flattenFilterRules(output.Excludes)); err != nil {
-		return fmt.Errorf("error setting excludes: %w", err)
+		return fmt.Errorf("setting excludes: %w", err)
 	}
 	if err := d.Set("includes", flattenFilterRules(output.Includes)); err != nil {
-		return fmt.Errorf("error setting includes: %w", err)
+		return fmt.Errorf("setting includes: %w", err)
 	}
 	d.Set("name", output.Name)
 	if err := d.Set("options", flattenOptions(output.Options)); err != nil {
-		return fmt.Errorf("error setting options: %w", err)
+		return fmt.Errorf("setting options: %w", err)
 	}
 	if err := d.Set("schedule", flattenTaskSchedule(output.Schedule)); err != nil {
-		return fmt.Errorf("error setting schedule: %w", err)
+		return fmt.Errorf("setting schedule: %w", err)
 	}
 	d.Set("source_location_arn", output.SourceLocationArn)
 
 	tags, err := ListTags(conn, d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for DataSync Task (%s): %w", d.Id(), err)
+		return fmt.Errorf("listing tags for DataSync Task (%s): %w", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	return nil
@@ -347,9 +347,10 @@ func resourceTaskUpdate(d *schema.ResourceData, meta interface{}) error {
 			input.Schedule = expandTaskSchedule(d.Get("schedule").([]interface{}))
 		}
 
-		log.Printf("[DEBUG] Updating DataSync Task: %s", input)
-		if _, err := conn.UpdateTask(input); err != nil {
-			return fmt.Errorf("error updating DataSync Task (%s): %w", d.Id(), err)
+		_, err := conn.UpdateTask(input)
+
+		if err != nil {
+			return fmt.Errorf("updating DataSync Task (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -357,7 +358,7 @@ func resourceTaskUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating DataSync Task (%s) tags: %w", d.Id(), err)
+			return fmt.Errorf("updating DataSync Task (%s) tags: %w", d.Id(), err)
 		}
 	}
 
@@ -379,10 +380,47 @@ func resourceTaskDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting DataSync Task (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting DataSync Task (%s): %w", d.Id(), err)
 	}
 
 	return nil
+}
+
+func statusTask(conn *datasync.DataSync, arn string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindTaskByARN(conn, arn)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Status), nil
+	}
+}
+
+func waitTaskAvailable(conn *datasync.DataSync, arn string, timeout time.Duration) (*datasync.DescribeTaskOutput, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{datasync.TaskStatusCreating, datasync.TaskStatusUnavailable},
+		Target:  []string{datasync.TaskStatusAvailable, datasync.TaskStatusRunning},
+		Refresh: statusTask(conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*datasync.DescribeTaskOutput); ok {
+		if errorCode, errorDetail := aws.StringValue(output.ErrorCode), aws.StringValue(output.ErrorDetail); errorCode != "" && errorDetail != "" {
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", errorCode, errorDetail))
+		}
+
+		return output, err
+	}
+
+	return nil, err
 }
 
 func flattenOptions(options *datasync.Options) []interface{} {
