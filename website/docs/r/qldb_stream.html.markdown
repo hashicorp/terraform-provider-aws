@@ -21,7 +21,7 @@ resource "aws_qldb_stream" "example" {
 
   kinesis_configuration {
     aggregation_enabled = false
-    stream_arn         = "arn:aws:kinesis:us-east-1:xxxxxxxxxxxx:stream/example-kinesis-stream"
+    stream_arn          = "arn:aws:kinesis:us-east-1:xxxxxxxxxxxx:stream/example-kinesis-stream"
   }
 
   tags = {
