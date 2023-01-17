@@ -31,6 +31,7 @@ func init() {
 }
 
 func sweepBudgetActions(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -42,7 +43,7 @@ func sweepBudgetActions(region string) error {
 	}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeBudgetActionsForAccountPages(input, func(page *budgets.DescribeBudgetActionsForAccountOutput, lastPage bool) bool {
+	err = conn.DescribeBudgetActionsForAccountPagesWithContext(ctx, input, func(page *budgets.DescribeBudgetActionsForAccountOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -67,7 +68,7 @@ func sweepBudgetActions(region string) error {
 		return fmt.Errorf("error listing Budget Actions (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Budget Actions (%s): %w", region, err)
@@ -76,7 +77,9 @@ func sweepBudgetActions(region string) error {
 	return nil
 }
 
-func sweepBudgets(region string) error { // nosemgrep:ci.budgets-in-func-name
+func sweepBudgets(region string) error {
+	ctx := // nosemgrep:ci.budgets-in-func-name
+		sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -88,7 +91,7 @@ func sweepBudgets(region string) error { // nosemgrep:ci.budgets-in-func-name
 	}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeBudgetsPages(input, func(page *budgets.DescribeBudgetsOutput, lastPage bool) bool {
+	err = conn.DescribeBudgetsPagesWithContext(ctx, input, func(page *budgets.DescribeBudgetsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -119,7 +122,7 @@ func sweepBudgets(region string) error { // nosemgrep:ci.budgets-in-func-name
 		return fmt.Errorf("error listing Budgets (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Budgets (%s): %w", region, err)
