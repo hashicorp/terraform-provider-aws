@@ -33,6 +33,7 @@ func init() {
 }
 
 func sweepReportGroups(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -42,7 +43,7 @@ func sweepReportGroups(region string) error {
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	input := &codebuild.ListReportGroupsInput{}
-	err = conn.ListReportGroupsPages(input, func(page *codebuild.ListReportGroupsOutput, lastPage bool) bool {
+	err = conn.ListReportGroupsPagesWithContext(ctx, input, func(page *codebuild.ListReportGroupsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -69,7 +70,7 @@ func sweepReportGroups(region string) error {
 		return fmt.Errorf("error retrieving CodeBuild ReportGroups: %w", err)
 	}
 
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		return fmt.Errorf("error sweeping CodeBuild ReportGroups: %w", err)
 	}
 
@@ -77,6 +78,7 @@ func sweepReportGroups(region string) error {
 }
 
 func sweepProjects(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -86,7 +88,7 @@ func sweepProjects(region string) error {
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	input := &codebuild.ListProjectsInput{}
-	err = conn.ListProjectsPages(input, func(page *codebuild.ListProjectsOutput, lastPage bool) bool {
+	err = conn.ListProjectsPagesWithContext(ctx, input, func(page *codebuild.ListProjectsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -111,7 +113,7 @@ func sweepProjects(region string) error {
 		return fmt.Errorf("error retrieving CodeBuild Projects: %w", err)
 	}
 
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		return fmt.Errorf("error sweeping CodeBuild Projects: %w", err)
 	}
 
@@ -119,6 +121,7 @@ func sweepProjects(region string) error {
 }
 
 func sweepSourceCredentials(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -129,7 +132,7 @@ func sweepSourceCredentials(region string) error {
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	input := &codebuild.ListSourceCredentialsInput{}
-	creds, err := conn.ListSourceCredentials(input)
+	creds, err := conn.ListSourceCredentialsWithContext(ctx, input)
 
 	for _, cred := range creds.SourceCredentialsInfos {
 		id := aws.StringValue(cred.Arn)
@@ -148,7 +151,7 @@ func sweepSourceCredentials(region string) error {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving CodeBuild Source Credentials: %w", err))
 	}
 
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping CodeBuild Source Credentials: %w", err))
 	}
 
