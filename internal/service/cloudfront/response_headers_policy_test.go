@@ -501,11 +501,11 @@ resource "aws_cloudfront_response_headers_policy" "test" {
 
   remove_headers_config {
     items {
-      header   = "X-Header3"
+      header = "X-Header3"
     }
 
     items {
-      header   = "X-Header4"
+      header = "X-Header4"
     }
   }
 }
@@ -527,7 +527,7 @@ resource "aws_cloudfront_response_headers_policy" "test" {
 
   remove_headers_config {
     items {
-      header   = "X-Header3"
+      header = "X-Header3"
     }
   }
 
