@@ -38,7 +38,7 @@ func testAccCheckLayerExists(n string, v *opsworks.Layer) resource.TestCheckFunc
 	}
 }
 
-func testAccCheckLayerDestroy(resourceType string, s *terraform.State) error {
+func testAccCheckLayerDestroy(resourceType string, s *terraform.State) error { // nosemgrep:ci.semgrep.acctest.naming.destroy-check-signature
 	conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn()
 
 	for _, rs := range s.RootModule().Resources {

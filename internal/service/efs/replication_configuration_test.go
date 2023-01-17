@@ -29,7 +29,7 @@ func TestAccEFSReplicationConfiguration_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, efs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             acctest.CheckWithProviders(testAccCheckReplicationConfigurationDestroy, &providers),
+		CheckDestroy:             acctest.CheckWithProviders(testAccCheckReplicationConfigurationDestroyWithProvider, &providers),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationConfigurationConfig_basic(region),
@@ -67,7 +67,7 @@ func TestAccEFSReplicationConfiguration_disappears(t *testing.T) {
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, efs.EndpointsID),
 		ProviderFactories: acctest.FactoriesAlternate(t, &providers),
-		CheckDestroy:      acctest.CheckWithProviders(testAccCheckReplicationConfigurationDestroy, &providers),
+		CheckDestroy:      acctest.CheckWithProviders(testAccCheckReplicationConfigurationDestroyWithProvider, &providers),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationConfigurationConfig_basic(region),
@@ -99,7 +99,7 @@ func TestAccEFSReplicationConfiguration_allAttributes(t *testing.T) {
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, efs.EndpointsID),
 		ProviderFactories: acctest.FactoriesAlternate(t, &providers),
-		CheckDestroy:      acctest.CheckWithProviders(testAccCheckReplicationConfigurationDestroy, &providers),
+		CheckDestroy:      acctest.CheckWithProviders(testAccCheckReplicationConfigurationDestroyWithProvider, &providers),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationConfigurationConfig_full(alternateRegion),
@@ -141,7 +141,7 @@ func testAccCheckReplicationConfigurationExists(n string) resource.TestCheckFunc
 	}
 }
 
-func testAccCheckReplicationConfigurationDestroy(s *terraform.State, provider *schema.Provider) error {
+func testAccCheckReplicationConfigurationDestroyWithProvider(s *terraform.State, provider *schema.Provider) error {
 	conn := provider.Meta().(*conns.AWSClient).EFSConn()
 
 	for _, rs := range s.RootModule().Resources {

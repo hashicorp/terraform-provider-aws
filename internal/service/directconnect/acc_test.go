@@ -43,7 +43,7 @@ func testAccCheckVirtualInterfaceExists(name string, vif *directconnect.VirtualI
 	}
 }
 
-func testAccCheckVirtualInterfaceDestroy(s *terraform.State, t string) error {
+func testAccCheckVirtualInterfaceDestroy(s *terraform.State, t string) error { // nosemgrep:ci.semgrep.acctest.naming.destroy-check-signature
 	conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn()
 
 	for _, rs := range s.RootModule().Resources {

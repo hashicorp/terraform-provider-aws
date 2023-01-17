@@ -34,7 +34,7 @@ func TestAccS3BucketReplicationConfiguration_basic(t *testing.T) {
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
 		ProviderFactories: acctest.FactoriesAlternate(t, &providers),
-		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroy, &providers),
+		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroyWithProvider, &providers),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketReplicationConfigurationConfig_basic(rName, s3.StorageClassStandard),
@@ -131,7 +131,7 @@ func TestAccS3BucketReplicationConfiguration_multipleDestinationsEmptyFilter(t *
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
 		ProviderFactories: acctest.FactoriesAlternate(t, &providers),
-		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroy, &providers),
+		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroyWithProvider, &providers),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketReplicationConfigurationConfig_multipleDestinationsEmptyFilter(rName),
@@ -190,7 +190,7 @@ func TestAccS3BucketReplicationConfiguration_multipleDestinationsNonEmptyFilter(
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
 		ProviderFactories: acctest.FactoriesAlternate(t, &providers),
-		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroy, &providers),
+		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroyWithProvider, &providers),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketReplicationConfigurationConfig_multipleDestinationsNonEmptyFilter(rName),
@@ -255,7 +255,7 @@ func TestAccS3BucketReplicationConfiguration_twoDestination(t *testing.T) {
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
 		ProviderFactories: acctest.FactoriesAlternate(t, &providers),
-		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroy, &providers),
+		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroyWithProvider, &providers),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketReplicationConfigurationConfig_multipleDestinationsTwoDestination(rName),
@@ -309,7 +309,7 @@ func TestAccS3BucketReplicationConfiguration_configurationRuleDestinationAccessC
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
 		ProviderFactories: acctest.FactoriesAlternate(t, &providers),
-		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroy, &providers),
+		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroyWithProvider, &providers),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketReplicationConfigurationConfig_accessControlTranslation(rName),
@@ -386,7 +386,7 @@ func TestAccS3BucketReplicationConfiguration_configurationRuleDestinationAddAcce
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
 		ProviderFactories: acctest.FactoriesAlternate(t, &providers),
-		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroy, &providers),
+		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroyWithProvider, &providers),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketReplicationConfigurationConfig_rulesDestination(rName),
@@ -454,7 +454,7 @@ func TestAccS3BucketReplicationConfiguration_replicationTimeControl(t *testing.T
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
 		ProviderFactories: acctest.FactoriesAlternate(t, &providers),
-		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroy, &providers),
+		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroyWithProvider, &providers),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketReplicationConfigurationConfig_rtc(rName),
@@ -507,7 +507,7 @@ func TestAccS3BucketReplicationConfiguration_replicaModifications(t *testing.T) 
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
 		ProviderFactories: acctest.FactoriesAlternate(t, &providers),
-		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroy, &providers),
+		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroyWithProvider, &providers),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketReplicationConfigurationConfig_replicaMods(rName),
@@ -555,7 +555,7 @@ func TestAccS3BucketReplicationConfiguration_withoutId(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
 		ProviderFactories: acctest.FactoriesAlternate(t, &providers),
-		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroy, &providers),
+		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroyWithProvider, &providers),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketReplicationConfigurationConfig_prefixNoID(rName),
@@ -596,7 +596,7 @@ func TestAccS3BucketReplicationConfiguration_withoutStorageClass(t *testing.T) {
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
 		ProviderFactories: acctest.FactoriesAlternate(t, &providers),
-		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroy, &providers),
+		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroyWithProvider, &providers),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketReplicationConfigurationConfig_noStorageClass(rName),
@@ -638,7 +638,7 @@ func TestAccS3BucketReplicationConfiguration_schemaV2(t *testing.T) {
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
 		ProviderFactories: acctest.FactoriesAlternate(t, &providers),
-		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroy, &providers),
+		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroyWithProvider, &providers),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketReplicationConfigurationConfig_v2NoTags(rName),
@@ -682,7 +682,7 @@ func TestAccS3BucketReplicationConfiguration_schemaV2SameRegion(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
 		ProviderFactories: acctest.FactoriesAlternate(t, &providers),
-		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroy, &providers),
+		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroyWithProvider, &providers),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketReplicationConfigurationConfig_schemaV2SameRegion(rName, rNameDestination),
@@ -726,7 +726,7 @@ func TestAccS3BucketReplicationConfiguration_schemaV2DestinationMetrics(t *testi
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
 		ProviderFactories: acctest.FactoriesAlternate(t, &providers),
-		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroy, &providers),
+		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroyWithProvider, &providers),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketReplicationConfigurationConfig_schemaV2DestinationMetricsStatusOnly(rName, s3.StorageClassStandard),
@@ -765,7 +765,7 @@ func TestAccS3BucketReplicationConfiguration_existingObjectReplication(t *testin
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
 		ProviderFactories: acctest.FactoriesAlternate(t, &providers),
-		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroy, &providers),
+		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroyWithProvider, &providers),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketReplicationConfigurationConfig_existingObject(rName, rNameDestination),
@@ -811,7 +811,7 @@ func TestAccS3BucketReplicationConfiguration_filter_emptyConfigurationBlock(t *t
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
 		ProviderFactories: acctest.FactoriesAlternate(t, &providers),
-		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroy, &providers),
+		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroyWithProvider, &providers),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketReplicationConfigurationConfig_filterEmptyBlock(rName),
@@ -853,7 +853,7 @@ func TestAccS3BucketReplicationConfiguration_filter_emptyPrefix(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
 		ProviderFactories: acctest.FactoriesAlternate(t, &providers),
-		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroy, &providers),
+		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroyWithProvider, &providers),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketReplicationConfigurationConfig_filterEmptyPrefix(rName),
@@ -899,7 +899,7 @@ func TestAccS3BucketReplicationConfiguration_filter_tagFilter(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
 		ProviderFactories: acctest.FactoriesAlternate(t, &providers),
-		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroy, &providers),
+		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroyWithProvider, &providers),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketReplicationConfigurationConfig_filterTag(rName, "testkey", "testvalue"),
@@ -943,7 +943,7 @@ func TestAccS3BucketReplicationConfiguration_filter_andOperator(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
 		ProviderFactories: acctest.FactoriesAlternate(t, &providers),
-		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroy, &providers),
+		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroyWithProvider, &providers),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketReplicationConfigurationConfig_filterAndOperatorPrefixAndTags(rName, "testkey1", "testvalue1", "testkey2", "testvalue2"),
@@ -1018,7 +1018,7 @@ func TestAccS3BucketReplicationConfiguration_filter_withoutId(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
 		ProviderFactories: acctest.FactoriesAlternate(t, &providers),
-		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroy, &providers),
+		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroyWithProvider, &providers),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketReplicationConfigurationConfig_filterNoID(rName),
@@ -1055,7 +1055,7 @@ func TestAccS3BucketReplicationConfiguration_withoutPrefix(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
 		ProviderFactories: acctest.FactoriesAlternate(t, &providers),
-		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroy, &providers),
+		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroyWithProvider, &providers),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketReplicationConfigurationConfig_noPrefix(rName),
@@ -1085,7 +1085,7 @@ func TestAccS3BucketReplicationConfiguration_migrate_noChange(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
 		ProviderFactories: acctest.FactoriesAlternate(t, &providers),
-		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroy, &providers),
+		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroyWithProvider, &providers),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketConfig_replicationV2PrefixAndTags(rName),
@@ -1127,7 +1127,7 @@ func TestAccS3BucketReplicationConfiguration_migrate_withChange(t *testing.T) {
 		PreCheck:          func() { acctest.PreCheck(t) },
 		ErrorCheck:        acctest.ErrorCheck(t, s3.EndpointsID),
 		ProviderFactories: acctest.FactoriesAlternate(t, &providers),
-		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroy, &providers),
+		CheckDestroy:      acctest.CheckWithProviders(testAccCheckBucketReplicationConfigurationDestroyWithProvider, &providers),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketConfig_replicationV2PrefixAndTags(rName),
@@ -1154,7 +1154,7 @@ func TestAccS3BucketReplicationConfiguration_migrate_withChange(t *testing.T) {
 	})
 }
 
-func testAccCheckBucketReplicationConfigurationDestroy(s *terraform.State, provider *schema.Provider) error {
+func testAccCheckBucketReplicationConfigurationDestroyWithProvider(s *terraform.State, provider *schema.Provider) error {
 	conn := provider.Meta().(*conns.AWSClient).S3Conn()
 
 	for _, rs := range s.RootModule().Resources {
