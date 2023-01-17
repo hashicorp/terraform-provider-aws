@@ -6,13 +6,13 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/appstream"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfappstream "github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccAppStreamImageBuilder_basic(t *testing.T) {
@@ -219,26 +219,22 @@ func TestAccAppStreamImageBuilder_imageARN(t *testing.T) {
 	})
 }
 
-func testAccCheckImageBuilderExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckImageBuilderExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No AppStream ImageBuilder ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn()
 
-		imageBuilder, err := tfappstream.FindImageBuilderByName(context.Background(), conn, rs.Primary.ID)
+		_, err := tfappstream.FindImageBuilderByName(context.Background(), conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		if imageBuilder == nil {
-			return fmt.Errorf("appstream imageBuilder %q does not exist", rs.Primary.ID)
-		}
-
-		return nil
+		return err
 	}
 }
 
@@ -250,9 +246,9 @@ func testAccCheckImageBuilderDestroy(s *terraform.State) error {
 			continue
 		}
 
-		imageBuilder, err := tfappstream.FindImageBuilderByName(context.Background(), conn, rs.Primary.ID)
+		_, err := tfappstream.FindImageBuilderByName(context.Background(), conn, rs.Primary.ID)
 
-		if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
+		if tfresource.NotFound(err) {
 			continue
 		}
 
@@ -260,38 +256,24 @@ func testAccCheckImageBuilderDestroy(s *terraform.State) error {
 			return err
 		}
 
-		if imageBuilder != nil {
-			return fmt.Errorf("appstream imageBuilder %q still exists", rs.Primary.ID)
-		}
+		return fmt.Errorf("AppStream ImageBuilder %s still exists", rs.Primary.ID)
 	}
 
 	return nil
 }
 
-func testAccImageBuilderConfig_basic(instanceType, name string) string {
+func testAccImageBuilderConfig_basic(instanceType, rName string) string {
 	return fmt.Sprintf(`
 resource "aws_appstream_image_builder" "test" {
   image_name    = "AppStream-WinServer2019-07-12-2022"
   instance_type = %[1]q
   name          = %[2]q
 }
-`, instanceType, name)
+`, instanceType, rName)
 }
 
-func testAccImageBuilderConfig_complete(name, description, instanceType string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptIn(),
-		fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.1.0.0/16"
-}
-
-resource "aws_subnet" "test" {
-  availability_zone = data.aws_availability_zones.available.names[1]
-  cidr_block        = "10.1.0.0/24"
-  vpc_id            = aws_vpc.test.id
-}
-
+func testAccImageBuilderConfig_complete(rName, description, instanceType string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 resource "aws_appstream_image_builder" "test" {
   image_name                     = "AppStream-WinServer2019-07-12-2022"
   name                           = %[1]q
@@ -299,13 +281,13 @@ resource "aws_appstream_image_builder" "test" {
   enable_default_internet_access = false
   instance_type                  = %[3]q
   vpc_config {
-    subnet_ids = [aws_subnet.test.id]
+    subnet_ids = aws_subnet.test[*].id
   }
 }
-`, name, description, instanceType))
+`, rName, description, instanceType))
 }
 
-func testAccImageBuilderConfig_tags1(instanceType, name, key, value string) string {
+func testAccImageBuilderConfig_tags1(instanceType, rName, key, value string) string {
 	return fmt.Sprintf(`
 resource "aws_appstream_image_builder" "test" {
   image_name    = "AppStream-WinServer2019-07-12-2022"
@@ -316,10 +298,10 @@ resource "aws_appstream_image_builder" "test" {
     %[3]q = %[4]q
   }
 }
-`, instanceType, name, key, value)
+`, instanceType, rName, key, value)
 }
 
-func testAccImageBuilderConfig_tags2(instanceType, name, key1, value1, key2, value2 string) string {
+func testAccImageBuilderConfig_tags2(instanceType, rName, key1, value1, key2, value2 string) string {
 	return fmt.Sprintf(`
 resource "aws_appstream_image_builder" "test" {
   image_name    = "AppStream-WinServer2019-07-12-2022"
@@ -331,7 +313,7 @@ resource "aws_appstream_image_builder" "test" {
     %[5]q = %[6]q
   }
 }
-`, instanceType, name, key1, value1, key2, value2)
+`, instanceType, rName, key1, value1, key2, value2)
 }
 
 func testAccImageBuilderConfig_byARN(rName, imageName, instanceType string) string {
@@ -356,6 +338,7 @@ resource "aws_appstream_image_builder" "test" {
 }
 
 resource "aws_iam_role" "test" {
+  name               = %[1]q
   assume_role_policy = data.aws_iam_policy_document.test.json
 }
 
