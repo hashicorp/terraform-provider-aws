@@ -2397,18 +2397,6 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 		return nil, diags
 	}
 
-	// Configure each service.
-	for _, v := range meta.ServicePackages {
-		// Optional method.
-		if v, ok := v.(interface {
-			Configure(context.Context, any) error
-		}); ok {
-			if err := v.Configure(ctx, meta); err != nil {
-				diags = append(diags, diag.FromErr(err)...)
-			}
-		}
-	}
-
 	if diags.HasError() {
 		return nil, diags
 	}
