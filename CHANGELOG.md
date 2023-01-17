@@ -14,6 +14,8 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * data-source/aws_eks_cluster: Add `outpost_config.control_plane_placement` attribute ([#28924](https://github.com/hashicorp/terraform-provider-aws/issues/28924))
+* resource/aws_appstream_image_builder: Fix IAM eventual consistency error for optional role ([#26677](https://github.com/hashicorp/terraform-provider-aws/issues/26677))
+* resource/aws_appstream_image_builder: Fix refresh error when `domain_join_info` and `vpc_config` are not empty ([#26677](https://github.com/hashicorp/terraform-provider-aws/issues/26677))
 * resource/aws_elasticsearch_domain: Prevent persistent `iops` diff ([#28901](https://github.com/hashicorp/terraform-provider-aws/issues/28901))
 * resource/aws_grafana_workspace: Fix updating `vpc_configuration` ([#28569](https://github.com/hashicorp/terraform-provider-aws/issues/28569))
 * resource/aws_opensearch_domain: Omit `throughput` and `iops` for unsupported volume types ([#28862](https://github.com/hashicorp/terraform-provider-aws/issues/28862))
