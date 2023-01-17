@@ -12,7 +12,10 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* data-source/aws_eks_cluster: Add `outpost_config.control_plane_placement` attribute ([#28924](https://github.com/hashicorp/terraform-provider-aws/issues/28924))
+* resource/aws_elasticsearch_domain: Prevent persistent `iops` diff ([#28901](https://github.com/hashicorp/terraform-provider-aws/issues/28901))
 * resource/aws_opensearch_domain: Omit `throughput` and `iops` for unsupported volume types ([#28862](https://github.com/hashicorp/terraform-provider-aws/issues/28862))
+* resource/aws_sagemaker_app: Correctly list all apps so as not to lose track in an environment where there are many apps ([#28561](https://github.com/hashicorp/terraform-provider-aws/issues/28561))
 
 ## 4.50.0 (January 13, 2023)
 
