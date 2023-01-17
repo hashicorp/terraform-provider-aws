@@ -50,6 +50,7 @@ func init() {
 }
 
 func sweepComputeEnvironments(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -61,7 +62,7 @@ func sweepComputeEnvironments(region string) error {
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	input := &batch.DescribeComputeEnvironmentsInput{}
-	err = conn.DescribeComputeEnvironmentsPages(input, func(page *batch.DescribeComputeEnvironmentsOutput, lastPage bool) bool {
+	err = conn.DescribeComputeEnvironmentsPagesWithContext(ctx, input, func(page *batch.DescribeComputeEnvironmentsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -103,7 +104,7 @@ func sweepComputeEnvironments(region string) error {
 					RoleName:                 aws.String(serviceRoleName),
 				}
 
-				_, err = iamconn.CreateRole(iamCreateRoleInput)
+				_, err = iamconn.CreateRoleWithContext(ctx, iamCreateRoleInput)
 
 				if err != nil {
 					sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error creating IAM Role (%s) for INVALID Batch Compute Environment (%s): %w", serviceRoleName, name, err))
@@ -114,7 +115,7 @@ func sweepComputeEnvironments(region string) error {
 					RoleName: aws.String(serviceRoleName),
 				}
 
-				err = iamconn.WaitUntilRoleExists(iamGetRoleInput)
+				err = iamconn.WaitUntilRoleExistsWithContext(ctx, iamGetRoleInput)
 
 				if err != nil {
 					sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error waiting for IAM Role (%s) creation for INVALID Batch Compute Environment (%s): %w", serviceRoleName, name, err))
@@ -126,7 +127,7 @@ func sweepComputeEnvironments(region string) error {
 					RoleName:  aws.String(serviceRoleName),
 				}
 
-				_, err = iamconn.AttachRolePolicy(iamAttachRolePolicyInput)
+				_, err = iamconn.AttachRolePolicyWithContext(ctx, iamAttachRolePolicyInput)
 
 				if err != nil {
 					sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error attaching Batch IAM Policy (%s) to IAM Role (%s) for INVALID Batch Compute Environment (%s): %w", serviceRolePolicyARN, serviceRoleName, name, err))
@@ -153,13 +154,13 @@ func sweepComputeEnvironments(region string) error {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Batch Compute Environments (%s): %w", region, err))
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Batch Compute Environments (%s): %w", region, err))
 	}
 
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Batch Compute Environments: %w", err))
 	}
 
@@ -167,6 +168,7 @@ func sweepComputeEnvironments(region string) error {
 }
 
 func sweepJobDefinitions(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -177,7 +179,7 @@ func sweepJobDefinitions(region string) error {
 	conn := client.(*conns.AWSClient).BatchConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeJobDefinitionsPages(input, func(page *batch.DescribeJobDefinitionsOutput, lastPage bool) bool {
+	err = conn.DescribeJobDefinitionsPagesWithContext(ctx, input, func(page *batch.DescribeJobDefinitionsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -202,7 +204,7 @@ func sweepJobDefinitions(region string) error {
 		return fmt.Errorf("error listing Batch Job Definitions (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Batch Job Definitions (%s): %w", region, err)
@@ -212,6 +214,7 @@ func sweepJobDefinitions(region string) error {
 }
 
 func sweepJobQueues(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -220,7 +223,7 @@ func sweepJobQueues(region string) error {
 	conn := client.(*conns.AWSClient).BatchConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeJobQueuesPages(input, func(page *batch.DescribeJobQueuesOutput, lastPage bool) bool {
+	err = conn.DescribeJobQueuesPagesWithContext(ctx, input, func(page *batch.DescribeJobQueuesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -246,7 +249,7 @@ func sweepJobQueues(region string) error {
 		return fmt.Errorf("error listing Batch Job Queues (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Batch Job Queues (%s): %w", region, err)
@@ -256,6 +259,7 @@ func sweepJobQueues(region string) error {
 }
 
 func sweepSchedulingPolicies(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -264,7 +268,7 @@ func sweepSchedulingPolicies(region string) error {
 	conn := client.(*conns.AWSClient).BatchConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListSchedulingPoliciesPages(input, func(page *batch.ListSchedulingPoliciesOutput, lastPage bool) bool {
+	err = conn.ListSchedulingPoliciesPagesWithContext(ctx, input, func(page *batch.ListSchedulingPoliciesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -289,7 +293,7 @@ func sweepSchedulingPolicies(region string) error {
 		return fmt.Errorf("error listing Batch Scheduling Policies (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Batch Scheduling Policies (%s): %w", region, err)
