@@ -162,7 +162,7 @@ func resourceLocationObjectStorageRead(d *schema.ResourceData, meta interface{})
 	subdirectory, err := SubdirectoryFromLocationURI(aws.StringValue(output.LocationUri))
 
 	if err != nil {
-		return err
+		return fmt.Errorf("parsing DataSync Location Object Storage (%s) location URI: %w", d.Id(), err)
 	}
 
 	d.Set("agent_arns", flex.FlattenStringSet(output.AgentArns))
@@ -178,7 +178,7 @@ func resourceLocationObjectStorageRead(d *schema.ResourceData, meta interface{})
 	hostname, bucketName, err := decodeObjectStorageURI(uri)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("parsing DataSync Location Object Storage (%s) object-storage URI: %w", d.Id(), err)
 	}
 
 	d.Set("server_hostname", hostname)
