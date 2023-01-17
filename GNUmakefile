@@ -78,8 +78,8 @@ gen:
 	rm -f .ci/.semgrep-service-name*.yml
 	$(GO_VER) generate ./...
 
-servicepackage:
-	$(GO_VER) generate ./internal/generate/servicepackage
+servicepackages:
+	$(GO_VER) generate ./internal/generate/servicepackages
 
 sweep:
 	# make sweep SWEEPARGS=-sweep-run=aws_example_thing
@@ -293,6 +293,7 @@ yamllint:
 .PHONY: \
 	build \
 	gen \
+	servicepackages \
 	sweep \
 	test \
 	testacc \
