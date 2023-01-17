@@ -1249,6 +1249,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			"aws_datasync_location_fsx_windows_file_system": datasync.ResourceLocationFSxWindowsFileSystem(),
 			"aws_datasync_location_hdfs":                    datasync.ResourceLocationHDFS(),
 			"aws_datasync_location_nfs":                     datasync.ResourceLocationNFS(),
+			"aws_datasync_location_object_storage":          datasync.ResourceLocationObjectStorage(),
 			"aws_datasync_location_s3":                      datasync.ResourceLocationS3(),
 			"aws_datasync_location_smb":                     datasync.ResourceLocationSMB(),
 			"aws_datasync_task":                             datasync.ResourceTask(),
