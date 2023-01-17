@@ -385,6 +385,7 @@ func ResourceDomain() *schema.Resource {
 						"iops": {
 							Type:     schema.TypeInt,
 							Optional: true,
+							Computed: true,
 						},
 						"throughput": {
 							Type:         schema.TypeInt,
