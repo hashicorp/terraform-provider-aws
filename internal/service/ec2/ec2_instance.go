@@ -966,25 +966,17 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	if v := instance.Placement; v != nil {
 		d.Set("availability_zone", v.AvailabilityZone)
 
-		if v := v.GroupName; v != nil {
-			d.Set("placement_group", v)
-		}
+		d.Set("placement_group", v.GroupName)
 
-		if v := v.HostId; v != nil {
-			d.Set("host_id", v)
-		}
+		d.Set("host_id", v.HostId)
 
 		if v := v.HostResourceGroupArn; v != nil {
 			d.Set("host_resource_group_arn", instance.Placement.HostResourceGroupArn)
 		}
 
-		if v := v.PartitionNumber; v != nil {
-			d.Set("placement_partition_number", v)
-		}
+		d.Set("placement_partition_number", v.PartitionNumber)
 
-		if v := v.Tenancy; v != nil {
-			d.Set("tenancy", v)
-		}
+		d.Set("tenancy", v.Tenancy)
 	}
 
 	if v := instance.CpuOptions; v != nil {
@@ -1100,14 +1092,14 @@ func resourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		// If an instance is shutting down, network interfaces are detached, and attributes may be nil,
 		// need to protect against nil pointer dereferences
 		if primaryNetworkInterface != nil {
-			if primaryNetworkInterface.SubnetId != nil {
+			if primaryNetworkInterface.SubnetId != nil { // nosemgrep: ci.helper-schema-ResourceData-Set-extraneous-nil-check
 				d.Set("subnet_id", primaryNetworkInterface.SubnetId)
 			}
-			if primaryNetworkInterface.NetworkInterfaceId != nil {
+			if primaryNetworkInterface.NetworkInterfaceId != nil { // nosemgrep: ci.helper-schema-ResourceData-Set-extraneous-nil-check
 				d.Set("primary_network_interface_id", primaryNetworkInterface.NetworkInterfaceId)
 			}
 			d.Set("ipv6_address_count", len(primaryNetworkInterface.Ipv6Addresses))
-			if primaryNetworkInterface.SourceDestCheck != nil {
+			if primaryNetworkInterface.SourceDestCheck != nil { // nosemgrep: ci.helper-schema-ResourceData-Set-extraneous-nil-check
 				d.Set("source_dest_check", primaryNetworkInterface.SourceDestCheck)
 			}
 

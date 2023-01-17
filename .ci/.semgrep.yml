@@ -224,7 +224,7 @@ rules:
     message: Nil value check before `d.Set()` is extraneous
     paths:
       include:
-        - aws/
+        - internal/
     patterns:
       - pattern-either:
           - pattern: |
