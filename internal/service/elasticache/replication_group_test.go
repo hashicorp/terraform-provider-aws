@@ -82,7 +82,7 @@ func TestAccElastiCacheReplicationGroup_networkTypeIPv6(t *testing.T) {
 		CheckDestroy:             testAccCheckReplicationGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationGroupConfig_basic(rName),
+				Config: testAccReplicationGroupConfig_networkTypeIPv6(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
@@ -122,7 +122,7 @@ func TestAccElastiCacheReplicationGroup_networkTypeDualStack(t *testing.T) {
 		CheckDestroy:             testAccCheckReplicationGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationGroupConfig_basic(rName),
+				Config: testAccReplicationGroupConfig_networkTypeDualStack(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
@@ -3876,6 +3876,29 @@ data "aws_elasticache_replication_group" "test" {
 `, rName, enableClusterMode, slowLogDeliveryEnabled, slowDeliveryDestination, slowDeliveryFormat, engineLogDeliveryEnabled, engineDeliveryDestination, engineLogDeliveryFormat)
 }
 
+func testAccReplicationGroupConfig_networkTypeIPv6(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id          = %[1]q
+  replication_group_description = "test description"
+  node_type                     = "cache.t3.small"
+  ip_discovery					= "ipv6"
+  network_type					= "ipv6"
+}
+`, rName)
+}
+
+func testAccReplicationGroupConfig_networkTypeDualStack(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id          = %[1]q
+  replication_group_description = "test description"
+  node_type                     = "cache.t3.small"
+  ip_discovery					= "ipv6"
+  network_type					= "dual_stack"
+}
+`, rName)
+}
 func resourceReplicationGroupDisableAutomaticFailover(conn *elasticache.ElastiCache, replicationGroupID string, timeout time.Duration) error {
 	return resourceReplicationGroupModify(conn, timeout, &elasticache.ModifyReplicationGroupInput{
 		ReplicationGroupId:       aws.String(replicationGroupID),
