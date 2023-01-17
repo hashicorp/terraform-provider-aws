@@ -26,7 +26,7 @@ resource "aws_glue_connection" "example" {
 }
 ```
 
-### Non-VPC Connection with secret manager reference 
+### Non-VPC Connection with secret manager reference
 
 ```terraform
 
