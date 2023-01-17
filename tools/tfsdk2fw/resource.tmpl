@@ -35,11 +35,9 @@ func (r *resource{{ .Name }}) Metadata(_ context.Context, request resource.Metad
 	response.TypeName = "{{ .TFTypeName }}"
 }
 
-// GetSchema returns the schema for this resource.
-func (r *resource{{ .Name }}) GetSchema(context.Context) (tfsdk.Schema, diag.Diagnostics) {
-    schema := {{ .Schema }}
-
-    return schema, nil
+// Schema returns the schema for this resource.
+func (r *resource{{ .Name }}) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+    resp.Schema = {{ .Schema }}
 }
 
 // Create is called when the provider must create a new resource.

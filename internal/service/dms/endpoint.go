@@ -1294,7 +1294,7 @@ func resourceEndpointDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("deleting DMS Endpoint (%s): %w", d.Id(), err)
 	}
 
-	if _, err = waitEndpointDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if err = waitEndpointDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return fmt.Errorf("waiting for DMS Endpoint (%s) delete: %w", d.Id(), err)
 	}
 

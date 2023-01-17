@@ -33,11 +33,9 @@ func (d *dataSource{{ .Name }}) Metadata(_ context.Context, request datasource.M
 	response.TypeName = "{{ .TFTypeName }}"
 }
 
-// GetSchema returns the schema for this data source.
-func (d *dataSource{{ .Name }}) GetSchema(context.Context) (tfsdk.Schema, diag.Diagnostics) {
-    schema := {{ .Schema }}
-
-    return schema, nil
+// Schema returns the schema for this data source.
+func (d *dataSource{{ .Name }}) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+    resp.Schema = {{ .Schema }}
 }
 
 // Read is called when the provider must read data source values in order to update state.

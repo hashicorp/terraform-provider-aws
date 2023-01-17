@@ -796,10 +796,10 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		if _, ok := d.GetOk("character_set_name"); ok {
-			diags = errs.AppendErrorf(diags, `"character_set_name" doesn't work with with restores"`)
+			diags = errs.AppendErrorf(diags, `"character_set_name" doesn't work with restores"`)
 		}
 		if _, ok := d.GetOk("timezone"); ok {
-			diags = errs.AppendErrorf(diags, `"timezone" doesn't work with with restores"`)
+			diags = errs.AppendErrorf(diags, `"timezone" doesn't work with restores"`)
 		}
 		if diags.HasError() {
 			return diags

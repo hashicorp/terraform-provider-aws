@@ -28,6 +28,11 @@ func init() {
 		Name: "aws_dms_replication_task",
 		F:    sweepReplicationTasks,
 	})
+
+	resource.AddTestSweepers("aws_dms_endpoint", &resource.Sweeper{
+		Name: "aws_dms_endpoint",
+		F:    sweepEndpoints,
+	})
 }
 
 func sweepReplicationInstances(region string) error {
@@ -107,6 +112,46 @@ func sweepReplicationTasks(region string) error {
 
 	if sweep.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping DMS Replication Instance sweep for %s: %s", region, err)
+		return nil
+	}
+
+	return errs.ErrorOrNil()
+}
+
+func sweepEndpoints(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+
+	conn := client.(*conns.AWSClient).DMSConn
+	sweepResources := make([]sweep.Sweepable, 0)
+	var errs *multierror.Error
+
+	err = conn.DescribeEndpointsPages(&dms.DescribeEndpointsInput{}, func(page *dms.DescribeEndpointsOutput, lastPage bool) bool {
+		for _, ep := range page.Endpoints {
+			r := ResourceEndpoint()
+			d := r.Data(nil)
+			d.Set("endpoint_arn", ep.EndpointArn)
+			d.SetId(aws.StringValue(ep.EndpointIdentifier))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error describing DMS Endpoints: %w", err))
+	}
+
+	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping DMS Endpoints for %s: %w", region, err))
+	}
+
+	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+		log.Printf("[WARN] Skipping DMS Endpoint sweep for %s: %s", region, err)
 		return nil
 	}
 

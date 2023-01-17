@@ -1,17 +1,16 @@
 package framework
 
 import (
-	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
-	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 )
 
-func IDAttribute() tfsdk.Attribute {
-	return tfsdk.Attribute{
-		Type:     types.StringType,
+func IDAttribute() schema.StringAttribute {
+	return schema.StringAttribute{
 		Computed: true,
-		PlanModifiers: []tfsdk.AttributePlanModifier{
-			resource.UseStateForUnknown(),
+		PlanModifiers: []planmodifier.String{
+			stringplanmodifier.UseStateForUnknown(),
 		},
 	}
 }
