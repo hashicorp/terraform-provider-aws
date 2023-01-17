@@ -43,9 +43,8 @@ func testAccConfigRule_basic(t *testing.T) {
 	})
 }
 
-func testAccConfigRule_ownerAws(t *testing.T) {
-	ctx := // nosemgrep:ci.aws-in-func-name
-		acctest.Context(t)
+func testAccConfigRule_ownerAws(t *testing.T) { // nosemgrep:ci.aws-in-func-name
+	ctx := acctest.Context(t)
 	var cr configservice.ConfigRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_config_config_rule.test"

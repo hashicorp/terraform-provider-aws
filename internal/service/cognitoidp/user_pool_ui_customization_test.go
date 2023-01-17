@@ -69,9 +69,8 @@ func TestAccCognitoIDPUserPoolUICustomization_AllClients_CSS(t *testing.T) {
 	})
 }
 
-func TestAccCognitoIDPUserPoolUICustomization_AllClients_disappears(t *testing.T) {
-	ctx := // nosemgrep:ci.acceptance-test-naming-parent-disappears
-		acctest.Context(t)
+func TestAccCognitoIDPUserPoolUICustomization_AllClients_disappears(t *testing.T) { // nosemgrep:ci.acceptance-test-naming-parent-disappears
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_pool_ui_customization.test"
 
@@ -270,9 +269,8 @@ func TestAccCognitoIDPUserPoolUICustomization_Client_CSS(t *testing.T) {
 	})
 }
 
-func TestAccCognitoIDPUserPoolUICustomization_Client_disappears(t *testing.T) {
-	ctx := // nosemgrep:ci.acceptance-test-naming-parent-disappears
-		acctest.Context(t)
+func TestAccCognitoIDPUserPoolUICustomization_Client_disappears(t *testing.T) { // nosemgrep:ci.acceptance-test-naming-parent-disappears
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_pool_ui_customization.test"
 
