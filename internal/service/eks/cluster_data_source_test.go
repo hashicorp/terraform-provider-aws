@@ -70,7 +70,7 @@ func TestAccEKSClusterDataSource_outpost(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterDataSourceConfig_basic(rName),
+				Config: testAccClusterDataSourceConfig_outpost(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceResourceName, "arn"),
 					resource.TestCheckResourceAttr(dataSourceResourceName, "certificate_authority.#", "1"),
