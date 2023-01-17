@@ -20,6 +20,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+func init() {
+	acctest.RegisterServiceErrorCheckFunc(names.IdentityStoreEndpointID, testAccErrorCheckSkip)
+}
+
+func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
+	return acctest.ErrorCheckSkipMessagesContaining(t,
+		"is not authorized to perform: sso:ListInstances",
+	)
+}
+
 func TestAccIdentityStoreUser_basic(t *testing.T) {
 	var user identitystore.DescribeUserOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
