@@ -28,10 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func init() {
-	_sp.registerSDKResourceFactory("aws_scheduler_schedule", resourceSchedule)
-}
-
+// @SDKResource("aws_scheduler_schedule")
 func resourceSchedule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceScheduleCreate,
