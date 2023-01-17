@@ -59,7 +59,7 @@ func ResourceThing() *schema.Resource {
 }
 
 func resourceThingCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
+	conn := meta.(*conns.AWSClient).IoTConn()
 
 	name := d.Get("name").(string)
 	input := &iot.CreateThingInput{
@@ -89,7 +89,7 @@ func resourceThingCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceThingRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
+	conn := meta.(*conns.AWSClient).IoTConn()
 
 	output, err := FindThingByName(conn, d.Id())
 
@@ -114,7 +114,7 @@ func resourceThingRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceThingUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
+	conn := meta.(*conns.AWSClient).IoTConn()
 
 	input := &iot.UpdateThingInput{
 		ThingName: aws.String(d.Get("name").(string)),
@@ -151,7 +151,7 @@ func resourceThingUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceThingDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
+	conn := meta.(*conns.AWSClient).IoTConn()
 
 	log.Printf("[DEBUG] Deleting IoT Thing: %s", d.Id())
 	_, err := conn.DeleteThing(&iot.DeleteThingInput{

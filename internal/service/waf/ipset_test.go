@@ -236,6 +236,8 @@ func TestAccWAFIPSet_IPSetDescriptors_1000UpdateLimit(t *testing.T) {
 }
 
 func TestDiffIPSetDescriptors(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		Old             []interface{}
 		New             []interface{}
@@ -330,7 +332,10 @@ func TestDiffIPSetDescriptors(t *testing.T) {
 		},
 	}
 	for i, tc := range testCases {
+		tc := tc
 		t.Run(fmt.Sprintf("%d", i), func(t *testing.T) {
+			t.Parallel()
+
 			updates := tfwaf.DiffIPSetDescriptors(tc.Old, tc.New)
 			if !reflect.DeepEqual(updates, tc.ExpectedUpdates) {
 				t.Fatalf("IPSet updates don't match.\nGiven: %s\nExpected: %s",
@@ -368,7 +373,7 @@ func TestAccWAFIPSet_ipv6(t *testing.T) {
 
 func testAccCheckIPSetDisappears(v *waf.IPSet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn()
 
 		wr := tfwaf.NewRetryer(conn)
 		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
@@ -414,7 +419,7 @@ func testAccCheckIPSetDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn()
 		resp, err := conn.GetIPSet(
 			&waf.GetIPSetInput{
 				IPSetId: aws.String(rs.Primary.ID),
@@ -448,7 +453,7 @@ func testAccCheckIPSetExists(n string, v *waf.IPSet) resource.TestCheckFunc {
 			return fmt.Errorf("No WAF IPSet ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn()
 		resp, err := conn.GetIPSet(&waf.GetIPSetInput{
 			IPSetId: aws.String(rs.Primary.ID),
 		})

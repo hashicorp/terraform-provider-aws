@@ -1,0 +1,14 @@
+rules:
+  - id: destroy-check
+    languages: [go]
+    message: The check destroy function should match the pattern "testAccCheck<Resource>Destroy". See https://hashicorp.github.io/terraform-provider-aws/naming/#test-support-functions
+    paths:
+      include:
+        - "internal/**/*_test.go"
+    patterns:
+      - pattern: func $FUNCNAME(...) { ... }
+      - metavariable-regex:
+          metavariable: "$FUNCNAME"
+          regex: "^testAcc((?!Check)[a-zA-Z]+Destroy$|(Check)?Destroy)"
+          # regex: "^testAccCheckDestroy"
+    severity: WARNING

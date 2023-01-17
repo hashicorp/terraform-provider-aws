@@ -679,7 +679,7 @@ func testAccCheckClusterExists(resourceName string, cluster *eks.Cluster) resour
 			return fmt.Errorf("No EKS Cluster ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn()
 
 		output, err := tfeks.FindClusterByName(context.Background(), conn, rs.Primary.ID)
 
@@ -699,7 +699,7 @@ func testAccCheckClusterDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn()
 
 		_, err := tfeks.FindClusterByName(context.Background(), conn, rs.Primary.ID)
 
@@ -738,7 +738,7 @@ func testAccCheckClusterNotRecreated(i, j *eks.Cluster) resource.TestCheckFunc {
 }
 
 func testAccPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EKSConn()
 
 	input := &eks.ListClustersInput{}
 
@@ -1117,8 +1117,10 @@ data "aws_iam_role" "test" {
   name = "AmazonEKSLocalOutpostClusterRole"
 }
 
+data "aws_outposts_outposts" "test" {}
+
 data "aws_outposts_outpost" "test" {
-  id = "op-XXXXXXXX"
+  id = tolist(data.aws_outposts_outposts.test.ids)[0]
 }
 
 data "aws_subnets" test {

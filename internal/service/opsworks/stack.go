@@ -194,7 +194,7 @@ func ResourceStack() *schema.Resource {
 }
 
 func resourceStackCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OpsWorksConn
+	conn := meta.(*conns.AWSClient).OpsWorksConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -315,7 +315,7 @@ func resourceStackCreate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceStackRead(d *schema.ResourceData, meta interface{}) error {
 	var err error
-	conn := meta.(*conns.AWSClient).OpsWorksConn
+	conn := meta.(*conns.AWSClient).OpsWorksConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -393,9 +393,7 @@ func resourceStackRead(d *schema.ResourceData, meta interface{}) error {
 	} else {
 		d.Set("custom_cookbooks_source", nil)
 	}
-	if stack.CustomJson != nil {
-		d.Set("custom_json", stack.CustomJson)
-	}
+	d.Set("custom_json", stack.CustomJson)
 	d.Set("default_availability_zone", stack.DefaultAvailabilityZone)
 	d.Set("default_instance_profile_arn", stack.DefaultInstanceProfileArn)
 	d.Set("default_os", stack.DefaultOs)
@@ -432,7 +430,7 @@ func resourceStackRead(d *schema.ResourceData, meta interface{}) error {
 
 func resourceStackUpdate(d *schema.ResourceData, meta interface{}) error {
 	var err error
-	conn := meta.(*conns.AWSClient).OpsWorksConn
+	conn := meta.(*conns.AWSClient).OpsWorksConn()
 
 	if v, ok := d.GetOk("stack_endpoint"); ok {
 		conn, err = regionalConn(meta.(*conns.AWSClient), v.(string))
@@ -548,7 +546,7 @@ func resourceStackUpdate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceStackDelete(d *schema.ResourceData, meta interface{}) error {
 	var err error
-	conn := meta.(*conns.AWSClient).OpsWorksConn
+	conn := meta.(*conns.AWSClient).OpsWorksConn()
 
 	if v, ok := d.GetOk("stack_endpoint"); ok {
 		conn, err = regionalConn(meta.(*conns.AWSClient), v.(string))
@@ -695,7 +693,7 @@ func flattenSource(apiObject *opsworks.Source) map[string]interface{} {
 //   - https://github.com/hashicorp/terraform/pull/12688
 //   - https://github.com/hashicorp/terraform/issues/12842
 func regionalConn(client *conns.AWSClient, regionName string) (*opsworks.OpsWorks, error) {
-	conn := client.OpsWorksConn
+	conn := client.OpsWorksConn()
 
 	// Regions are the same, no need to reconfigure.
 	if aws.StringValue(conn.Config.Region) == regionName {

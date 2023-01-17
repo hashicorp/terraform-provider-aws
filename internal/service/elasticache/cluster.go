@@ -341,7 +341,7 @@ func ResourceCluster() *schema.Resource {
 }
 
 func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn
+	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -494,7 +494,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn
+	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -528,9 +528,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("port", c.CacheNodes[0].Endpoint.Port)
 	}
 
-	if c.ReplicationGroupId != nil {
-		d.Set("replication_group_id", c.ReplicationGroupId)
-	}
+	d.Set("replication_group_id", c.ReplicationGroupId)
 
 	if c.NotificationConfiguration != nil {
 		if aws.StringValue(c.NotificationConfiguration.TopicStatus) == "active" {
@@ -611,7 +609,7 @@ func setFromCacheCluster(d *schema.ResourceData, c *elasticache.CacheCluster) er
 }
 
 func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn
+	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 
 	req := &elasticache.ModifyCacheClusterInput{
 		CacheClusterId:   aws.String(d.Id()),
@@ -815,7 +813,7 @@ func (b byCacheNodeId) Less(i, j int) bool {
 }
 
 func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn
+	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 
 	var finalSnapshotID = d.Get("final_snapshot_identifier").(string)
 	err := DeleteCacheCluster(conn, d.Id(), finalSnapshotID)

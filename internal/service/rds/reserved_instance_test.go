@@ -63,7 +63,7 @@ func TestAccRDSReservedInstance_basic(t *testing.T) {
 
 func testAccReservedInstanceExists(n string, reservation *rds.ReservedDBInstance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
 
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {

@@ -81,6 +81,11 @@ func ResourceComponent() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(imagebuilder.Platform_Values(), false),
 			},
+			"skip_destroy": {
+				Type:     schema.TypeBool,
+				Default:  false,
+				Optional: true,
+			},
 			"supported_os_versions": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -117,7 +122,7 @@ func ResourceComponent() *schema.Resource {
 }
 
 func resourceComponentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ImageBuilderConn
+	conn := meta.(*conns.AWSClient).ImageBuilderConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -181,7 +186,7 @@ func resourceComponentCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceComponentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ImageBuilderConn
+	conn := meta.(*conns.AWSClient).ImageBuilderConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -237,7 +242,7 @@ func resourceComponentRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceComponentUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ImageBuilderConn
+	conn := meta.(*conns.AWSClient).ImageBuilderConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -251,7 +256,12 @@ func resourceComponentUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceComponentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ImageBuilderConn
+	if v, ok := d.GetOk("skip_destroy"); ok && v.(bool) {
+		log.Printf("[DEBUG] Retaining Imagebuilder Component version %q", d.Id())
+		return nil
+	}
+
+	conn := meta.(*conns.AWSClient).ImageBuilderConn()
 
 	input := &imagebuilder.DeleteComponentInput{
 		ComponentBuildVersionArn: aws.String(d.Id()),

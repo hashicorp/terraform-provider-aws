@@ -77,7 +77,7 @@ const (
 )
 
 func dataSourceRouterConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
 	routerTypeIdentifier := d.Get("router_type_identifier").(string)
 	virtualInterfaceId := d.Get("virtual_interface_id").(string)
@@ -90,9 +90,7 @@ func dataSourceRouterConfigurationRead(ctx context.Context, d *schema.ResourceDa
 	d.SetId(fmt.Sprintf("%s:%s", virtualInterfaceId, routerTypeIdentifier))
 
 	d.Set("customer_router_config", out.CustomerRouterConfig)
-	if router_type_out := out.Router.RouterTypeIdentifier; router_type_out != nil {
-		d.Set("router_type_identifier", router_type_out)
-	}
+	d.Set("router_type_identifier", out.Router.RouterTypeIdentifier)
 	d.Set("virtual_interface_id", out.VirtualInterfaceId)
 	d.Set("virtual_interface_name", out.VirtualInterfaceName)
 

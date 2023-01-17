@@ -123,7 +123,7 @@ func testAccCheckInstanceExists(
 			return fmt.Errorf("No Opsworks Instance is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn()
 
 		params := &opsworks.DescribeInstancesInput{
 			InstanceIds: []*string{&rs.Primary.ID},
@@ -171,7 +171,7 @@ func testAccCheckInstanceAttributes(
 }
 
 func testAccCheckInstanceDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn()
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_opsworks_instance" {
 			continue

@@ -170,7 +170,7 @@ func DataSourceCluster() *schema.Resource {
 }
 
 func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn
+	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	clusterID := d.Get("cluster_id").(string)
@@ -200,9 +200,7 @@ func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("parameter_group_name", cluster.CacheParameterGroup.CacheParameterGroupName)
 	}
 
-	if cluster.ReplicationGroupId != nil {
-		d.Set("replication_group_id", cluster.ReplicationGroupId)
-	}
+	d.Set("replication_group_id", cluster.ReplicationGroupId)
 
 	d.Set("log_delivery_configuration", flattenLogDeliveryConfigurations(cluster.LogDeliveryConfigurations))
 	d.Set("maintenance_window", cluster.PreferredMaintenanceWindow)

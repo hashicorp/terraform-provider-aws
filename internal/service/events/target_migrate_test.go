@@ -46,6 +46,8 @@ func testResourceTargetStateDataV1EventBusName() map[string]interface{} {
 }
 
 func TestTargetStateUpgradeV0(t *testing.T) {
+	t.Parallel()
+
 	expected := testResourceTargetStateDataV1()
 	actual, err := tfevents.TargetStateUpgradeV0(context.Background(), testResourceTargetStateDataV0(), nil)
 	if err != nil {
@@ -58,6 +60,8 @@ func TestTargetStateUpgradeV0(t *testing.T) {
 }
 
 func TestTargetStateUpgradeV0EventBusName(t *testing.T) {
+	t.Parallel()
+
 	expected := testResourceTargetStateDataV1EventBusName()
 	actual, err := tfevents.TargetStateUpgradeV0(context.Background(), testResourceTargetStateDataV0EventBusName(), nil)
 	if err != nil {

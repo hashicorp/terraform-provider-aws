@@ -47,7 +47,7 @@ func DataSourceUserSSHKey() *schema.Resource {
 }
 
 func dataSourceUserSSHKeyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	encoding := d.Get("encoding").(string)
 	sshPublicKeyId := d.Get("ssh_public_key_id").(string)

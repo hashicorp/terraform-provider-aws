@@ -16,7 +16,7 @@ import (
 
 func DataSourceFirewallPolicy() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceFirewallPolicyRead,
+		ReadWithoutTimeout: dataSourceFirewallPolicyRead,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:         schema.TypeString,
@@ -112,7 +112,7 @@ func DataSourceFirewallPolicy() *schema.Resource {
 }
 
 func dataSourceFirewallPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkFirewallConn
+	conn := meta.(*conns.AWSClient).NetworkFirewallConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	arn := d.Get("arn").(string)

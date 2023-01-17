@@ -115,7 +115,7 @@ func TestAccSageMakerHumanTaskUI_disappears(t *testing.T) {
 }
 
 func testAccCheckHumanTaskUIDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_sagemaker_human_task_ui" {
@@ -149,7 +149,7 @@ func testAccCheckHumanTaskUIExists(n string, humanTaskUi *sagemaker.DescribeHuma
 			return fmt.Errorf("No SageMaker HumanTaskUi ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
 
 		output, err := tfsagemaker.FindHumanTaskUIByName(conn, rs.Primary.ID)
 

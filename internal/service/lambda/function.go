@@ -430,7 +430,7 @@ func hasConfigChanges(d verify.ResourceDiffer) bool {
 // resourceAwsLambdaFunction maps to:
 // CreateFunction in the API / SDK
 func resourceFunctionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LambdaConn
+	conn := meta.(*conns.AWSClient).LambdaConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -696,7 +696,7 @@ func resourceFunctionCreate(d *schema.ResourceData, meta interface{}) error {
 // resourceFunctionRead maps to:
 // GetFunction in the API / SDK
 func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LambdaConn
+	conn := meta.(*conns.AWSClient).LambdaConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -957,7 +957,7 @@ func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 // resourceAwsLambdaFunction maps to:
 // DeleteFunction in the API / SDK
 func resourceFunctionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LambdaConn
+	conn := meta.(*conns.AWSClient).LambdaConn()
 
 	log.Printf("[INFO] Deleting Lambda Function: %s", d.Id())
 
@@ -991,7 +991,7 @@ func needsFunctionCodeUpdate(d verify.ResourceDiffer) bool {
 // resourceFunctionUpdate maps to:
 // UpdateFunctionCode in the API / SDK
 func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LambdaConn
+	conn := meta.(*conns.AWSClient).LambdaConn()
 
 	// If Code Signing Config is updated, calls PutFunctionCodeSigningConfig
 	// If removed, calls DeleteFunctionCodeSigningConfig

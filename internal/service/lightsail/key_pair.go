@@ -79,7 +79,7 @@ func ResourceKeyPair() *schema.Resource {
 }
 
 func resourceKeyPairCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LightsailConn
+	conn := meta.(*conns.AWSClient).LightsailConn()
 
 	var kName string
 	if v, ok := d.GetOk("name"); ok {
@@ -162,7 +162,7 @@ func resourceKeyPairCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceKeyPairRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LightsailConn
+	conn := meta.(*conns.AWSClient).LightsailConn()
 
 	resp, err := conn.GetKeyPair(&lightsail.GetKeyPairInput{
 		KeyPairName: aws.String(d.Id()),
@@ -189,7 +189,7 @@ func resourceKeyPairRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceKeyPairDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LightsailConn
+	conn := meta.(*conns.AWSClient).LightsailConn()
 	resp, err := conn.DeleteKeyPair(&lightsail.DeleteKeyPairInput{
 		KeyPairName: aws.String(d.Id()),
 	})

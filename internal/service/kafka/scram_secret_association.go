@@ -49,7 +49,7 @@ func ResourceScramSecretAssociation() *schema.Resource {
 }
 
 func resourceScramSecretAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KafkaConn
+	conn := meta.(*conns.AWSClient).KafkaConn()
 
 	clusterArn := d.Get("cluster_arn").(string)
 	secretArnList := flex.ExpandStringSet(d.Get("secret_arn_list").(*schema.Set))
@@ -69,7 +69,7 @@ func resourceScramSecretAssociationCreate(d *schema.ResourceData, meta interface
 }
 
 func resourceScramSecretAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KafkaConn
+	conn := meta.(*conns.AWSClient).KafkaConn()
 
 	secretArnList, err := FindScramSecrets(conn, d.Id())
 
@@ -91,7 +91,7 @@ func resourceScramSecretAssociationRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceScramSecretAssociationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KafkaConn
+	conn := meta.(*conns.AWSClient).KafkaConn()
 
 	o, n := d.GetChange("secret_arn_list")
 	oldSet, newSet := o.(*schema.Set), n.(*schema.Set)
@@ -126,7 +126,7 @@ func resourceScramSecretAssociationUpdate(d *schema.ResourceData, meta interface
 }
 
 func resourceScramSecretAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KafkaConn
+	conn := meta.(*conns.AWSClient).KafkaConn()
 
 	secretArnList, err := FindScramSecrets(conn, d.Id())
 

@@ -25,7 +25,7 @@ func DataSourceResourceTags() *schema.Resource {
 }
 
 func dataSourceResourceTagsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OrganizationsConn
+	conn := meta.(*conns.AWSClient).OrganizationsConn()
 
 	resource_id := d.Get("resource_id").(string)
 

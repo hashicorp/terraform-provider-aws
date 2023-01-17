@@ -192,8 +192,8 @@ func DataSourceLaunchConfiguration() *schema.Resource {
 }
 
 func dataSourceLaunchConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	autoscalingconn := meta.(*conns.AWSClient).AutoScalingConn
-	ec2conn := meta.(*conns.AWSClient).EC2Conn
+	autoscalingconn := meta.(*conns.AWSClient).AutoScalingConn()
+	ec2conn := meta.(*conns.AWSClient).EC2Conn()
 
 	name := d.Get("name").(string)
 	lc, err := FindLaunchConfigurationByName(autoscalingconn, name)

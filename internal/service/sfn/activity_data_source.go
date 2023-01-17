@@ -43,7 +43,7 @@ func DataSourceActivity() *schema.Resource {
 }
 
 func dataSourceActivityRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SFNConn
+	conn := meta.(*conns.AWSClient).SFNConn()
 
 	if v, ok := d.GetOk("name"); ok {
 		name := v.(string)

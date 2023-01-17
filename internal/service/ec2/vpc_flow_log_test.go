@@ -570,7 +570,7 @@ func testAccCheckFlowLogExists(n string, v *ec2.FlowLog) resource.TestCheckFunc 
 			return fmt.Errorf("No Flow Log ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		output, err := tfec2.FindFlowLogByID(conn, rs.Primary.ID)
 
@@ -585,7 +585,7 @@ func testAccCheckFlowLogExists(n string, v *ec2.FlowLog) resource.TestCheckFunc 
 }
 
 func testAccCheckFlowLogDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_flow_log" {

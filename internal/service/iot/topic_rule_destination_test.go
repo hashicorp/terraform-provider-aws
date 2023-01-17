@@ -119,7 +119,7 @@ func TestAccIoTTopicRuleDestination_enabled(t *testing.T) {
 }
 
 func testAccCheckTopicRuleDestinationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iot_topic_rule_destination" {
@@ -153,7 +153,7 @@ func testAccCheckTopicRuleDestinationExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No IoT Topic Rule Destination ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn()
 
 		_, err := tfiot.FindTopicRuleDestinationByARN(context.Background(), conn, rs.Primary.ID)
 

@@ -138,7 +138,7 @@ func TestAccNeptuneSubnetGroup_updateDescription(t *testing.T) {
 }
 
 func testAccCheckSubnetGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_neptune_subnet_group" {
@@ -180,7 +180,7 @@ func testAccCheckSubnetGroupExists(n string, v *neptune.DBSubnetGroup) resource.
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn()
 		resp, err := conn.DescribeDBSubnetGroups(
 			&neptune.DescribeDBSubnetGroupsInput{DBSubnetGroupName: aws.String(rs.Primary.ID)})
 		if err != nil {

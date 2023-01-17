@@ -488,7 +488,7 @@ func testAccCheckKeyHasPolicy(name string, expectedPolicyText string) resource.T
 			return fmt.Errorf("No KMS Key ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn()
 
 		out, err := conn.GetKeyPolicy(&kms.GetKeyPolicyInput{
 			KeyId:      aws.String(rs.Primary.ID),
@@ -514,7 +514,7 @@ func testAccCheckKeyHasPolicy(name string, expectedPolicyText string) resource.T
 }
 
 func testAccCheckKeyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_kms_key" {
@@ -548,7 +548,7 @@ func testAccCheckKeyExists(name string, key *kms.KeyMetadata) resource.TestCheck
 			return fmt.Errorf("No KMS Key ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn()
 
 		outputRaw, err := tfresource.RetryWhenNotFound(tfkms.PropagationTimeout, func() (interface{}, error) {
 			return tfkms.FindKeyByID(conn, rs.Primary.ID)

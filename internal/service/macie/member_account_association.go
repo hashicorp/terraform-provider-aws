@@ -30,7 +30,7 @@ func ResourceMemberAccountAssociation() *schema.Resource {
 }
 
 func resourceMemberAccountAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).MacieConn
+	conn := meta.(*conns.AWSClient).MacieConn()
 
 	memberAccountId := d.Get("member_account_id").(string)
 	req := &macie.AssociateMemberAccountInput{
@@ -48,7 +48,7 @@ func resourceMemberAccountAssociationCreate(d *schema.ResourceData, meta interfa
 }
 
 func resourceMemberAccountAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).MacieConn
+	conn := meta.(*conns.AWSClient).MacieConn()
 
 	req := &macie.ListMemberAccountsInput{}
 
@@ -77,7 +77,7 @@ func resourceMemberAccountAssociationRead(d *schema.ResourceData, meta interface
 }
 
 func resourceMemberAccountAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).MacieConn
+	conn := meta.(*conns.AWSClient).MacieConn()
 
 	log.Printf("[DEBUG] Deleting Macie member account association: %s", d.Id())
 

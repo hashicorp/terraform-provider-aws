@@ -448,7 +448,7 @@ func TestAccSecretsManagerSecret_policy(t *testing.T) {
 }
 
 func testAccCheckSecretDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_secretsmanager_secret" {
@@ -482,7 +482,7 @@ func testAccCheckSecretExists(n string, v *secretsmanager.DescribeSecretOutput) 
 			return fmt.Errorf("No Secrets Manager Secret ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerConn()
 
 		output, err := tfsecretsmanager.FindSecretByID(conn, rs.Primary.ID)
 
@@ -497,7 +497,7 @@ func testAccCheckSecretExists(n string, v *secretsmanager.DescribeSecretOutput) 
 }
 
 func testAccPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerConn()
 
 	input := &secretsmanager.ListSecretsInput{}
 

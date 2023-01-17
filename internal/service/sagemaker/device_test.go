@@ -128,7 +128,7 @@ func TestAccSageMakerDevice_disappears_fleet(t *testing.T) {
 }
 
 func testAccCheckDeviceDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_sagemaker_device" {
@@ -173,7 +173,7 @@ func testAccCheckDeviceExists(n string, device *sagemaker.DescribeDeviceOutput) 
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
 		resp, err := tfsagemaker.FindDeviceByName(conn, deviceFleetName, deviceName)
 		if err != nil {
 			return err

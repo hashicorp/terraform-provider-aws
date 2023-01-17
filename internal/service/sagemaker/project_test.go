@@ -163,7 +163,7 @@ func TestAccSageMakerProject_disappears(t *testing.T) {
 }
 
 func testAccCheckProjectDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_sagemaker_project" {
@@ -199,7 +199,7 @@ func testAccCheckProjectExists(n string, mpg *sagemaker.DescribeProjectOutput) r
 			return fmt.Errorf("No sagmaker Project ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
 		resp, err := tfsagemaker.FindProjectByName(conn, rs.Primary.ID)
 		if err != nil {
 			return err

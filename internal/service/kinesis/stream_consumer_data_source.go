@@ -49,7 +49,7 @@ func DataSourceStreamConsumer() *schema.Resource {
 }
 
 func dataSourceStreamConsumerRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KinesisConn
+	conn := meta.(*conns.AWSClient).KinesisConn()
 
 	streamArn := d.Get("stream_arn").(string)
 

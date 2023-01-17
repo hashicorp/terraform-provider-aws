@@ -193,7 +193,7 @@ func TestAccCodeBuildReportGroup_disappears(t *testing.T) {
 }
 
 func testAccPreCheckReportGroup(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildConn()
 
 	input := &codebuild.ListReportGroupsInput{}
 
@@ -209,7 +209,7 @@ func testAccPreCheckReportGroup(t *testing.T) {
 }
 
 func testAccCheckReportGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_codebuild_report_group" {
@@ -235,7 +235,7 @@ func testAccCheckReportGroupExists(name string, reportGroup *codebuild.ReportGro
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildConn()
 
 		resp, err := tfcodebuild.FindReportGroupByARN(conn, rs.Primary.ID)
 		if err != nil {

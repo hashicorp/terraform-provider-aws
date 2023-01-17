@@ -91,7 +91,7 @@ func ResourceEventSubscription() *schema.Resource {
 }
 
 func resourceEventSubscriptionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).NeptuneConn
+	conn := meta.(*conns.AWSClient).NeptuneConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -162,7 +162,7 @@ func resourceEventSubscriptionCreate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceEventSubscriptionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).NeptuneConn
+	conn := meta.(*conns.AWSClient).NeptuneConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -182,10 +182,7 @@ func resourceEventSubscriptionRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("sns_topic_arn", sub.SnsTopicArn)
 	d.Set("enabled", sub.Enabled)
 	d.Set("customer_aws_id", sub.CustomerAwsId)
-
-	if sub.SourceType != nil {
-		d.Set("source_type", sub.SourceType)
-	}
+	d.Set("source_type", sub.SourceType)
 
 	if sub.SourceIdsList != nil {
 		if err := d.Set("source_ids", flex.FlattenStringList(sub.SourceIdsList)); err != nil {
@@ -220,7 +217,7 @@ func resourceEventSubscriptionRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceEventSubscriptionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).NeptuneConn
+	conn := meta.(*conns.AWSClient).NeptuneConn()
 
 	requestUpdate := false
 
@@ -332,7 +329,7 @@ func resourceEventSubscriptionUpdate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceEventSubscriptionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).NeptuneConn
+	conn := meta.(*conns.AWSClient).NeptuneConn()
 
 	log.Printf("[DEBUG] Deleting Neptune Event Subscription: %s", d.Id())
 	_, err := conn.DeleteEventSubscription(&neptune.DeleteEventSubscriptionInput{

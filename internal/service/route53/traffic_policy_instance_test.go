@@ -123,7 +123,7 @@ func testAccCheckTrafficPolicyInstanceExists(n string, v *route53.TrafficPolicyI
 			return fmt.Errorf("No Route53 Traffic Policy Instance ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn()
 
 		output, err := tfroute53.FindTrafficPolicyInstanceByID(context.Background(), conn, rs.Primary.ID)
 
@@ -138,7 +138,7 @@ func testAccCheckTrafficPolicyInstanceExists(n string, v *route53.TrafficPolicyI
 }
 
 func testAccCheckTrafficPolicyInstanceDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_route53_traffic_policy_instance" {

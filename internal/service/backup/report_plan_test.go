@@ -242,7 +242,7 @@ func TestAccBackupReportPlan_disappears(t *testing.T) {
 }
 
 func testAccReportPlanPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn()
 
 	_, err := conn.ListReportPlans(&backup.ListReportPlansInput{})
 
@@ -256,7 +256,7 @@ func testAccReportPlanPreCheck(t *testing.T) {
 }
 
 func testAccCheckReportPlanDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_backup_report_plan" {
@@ -290,7 +290,7 @@ func testAccCheckReportPlanExists(n string, v *backup.ReportPlan) resource.TestC
 			return fmt.Errorf("No Backup Report Plan ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn()
 
 		output, err := tfbackup.FindReportPlanByName(conn, rs.Primary.ID)
 

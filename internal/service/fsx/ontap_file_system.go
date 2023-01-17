@@ -227,7 +227,7 @@ func ResourceOntapFileSystem() *schema.Resource {
 }
 
 func resourceOntapFileSystemCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FSxConn
+	conn := meta.(*conns.AWSClient).FSxConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -298,7 +298,7 @@ func resourceOntapFileSystemCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceOntapFileSystemRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FSxConn
+	conn := meta.(*conns.AWSClient).FSxConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -333,10 +333,7 @@ func resourceOntapFileSystemRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("owner_id", filesystem.OwnerId)
 	d.Set("storage_capacity", filesystem.StorageCapacity)
 	d.Set("fsx_admin_password", d.Get("fsx_admin_password").(string))
-
-	if filesystem.KmsKeyId != nil {
-		d.Set("kms_key_id", filesystem.KmsKeyId)
-	}
+	d.Set("kms_key_id", filesystem.KmsKeyId)
 
 	if err := d.Set("network_interface_ids", aws.StringValueSlice(filesystem.NetworkInterfaceIds)); err != nil {
 		return fmt.Errorf("error setting network_interface_ids: %w", err)
@@ -373,7 +370,7 @@ func resourceOntapFileSystemRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceOntapFileSystemUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FSxConn
+	conn := meta.(*conns.AWSClient).FSxConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -437,7 +434,7 @@ func resourceOntapFileSystemUpdate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceOntapFileSystemDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FSxConn
+	conn := meta.(*conns.AWSClient).FSxConn()
 
 	log.Printf("[DEBUG] Deleting FSx ONTAP File System: %s", d.Id())
 	_, err := conn.DeleteFileSystem(&fsx.DeleteFileSystemInput{

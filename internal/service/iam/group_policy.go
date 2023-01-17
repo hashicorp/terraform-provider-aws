@@ -31,10 +31,15 @@ func ResourceGroupPolicy() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"policy": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateFunc:     verify.ValidIAMPolicyJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				Type:                  schema.TypeString,
+				Required:              true,
+				ValidateFunc:          verify.ValidIAMPolicyJSON,
+				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+				DiffSuppressOnRefresh: true,
+				StateFunc: func(v interface{}) string {
+					json, _ := verify.LegacyPolicyNormalize(v)
+					return json
+				},
 			},
 			"name": {
 				Type:          schema.TypeString,
@@ -59,11 +64,16 @@ func ResourceGroupPolicy() *schema.Resource {
 }
 
 func resourceGroupPolicyPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
+
+	policyDoc, err := verify.LegacyPolicyNormalize(d.Get("policy").(string))
+	if err != nil {
+		return fmt.Errorf("policy (%s) is invalid JSON: %w", policyDoc, err)
+	}
 
 	request := &iam.PutGroupPolicyInput{
 		GroupName:      aws.String(d.Get("group").(string)),
-		PolicyDocument: aws.String(d.Get("policy").(string)),
+		PolicyDocument: aws.String(policyDoc),
 	}
 
 	var policyName string
@@ -85,7 +95,7 @@ func resourceGroupPolicyPut(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceGroupPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	group, name, err := GroupPolicyParseID(d.Id())
 	if err != nil {
@@ -138,8 +148,7 @@ func resourceGroupPolicyRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), policy)
-
+	policyToSet, err := verify.LegacyPolicyToSet(d.Get("policy").(string), policy)
 	if err != nil {
 		return fmt.Errorf("while setting policy (%s), encountered: %w", policyToSet, err)
 	}
@@ -158,7 +167,7 @@ func resourceGroupPolicyRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceGroupPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	group, name, err := GroupPolicyParseID(d.Id())
 	if err != nil {

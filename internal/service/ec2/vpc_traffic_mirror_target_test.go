@@ -190,7 +190,7 @@ func TestAccVPCTrafficMirrorTarget_gwlb(t *testing.T) {
 }
 
 func testAccCheckTrafficMirrorTargetDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ec2_traffic_mirror_target" {
@@ -224,7 +224,7 @@ func testAccCheckTrafficMirrorTargetExists(n string, v *ec2.TrafficMirrorTarget)
 			return fmt.Errorf("No EC2 Traffic Mirror Target ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		output, err := tfec2.FindTrafficMirrorTargetByID(conn, rs.Primary.ID)
 
@@ -335,7 +335,7 @@ resource "aws_ec2_traffic_mirror_target" "test" {
 }
 
 func testAccPreCheckTrafficMirrorTarget(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	_, err := conn.DescribeTrafficMirrorTargets(&ec2.DescribeTrafficMirrorTargetsInput{})
 

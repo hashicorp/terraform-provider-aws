@@ -828,7 +828,7 @@ func ResourceSpotFleetRequest() *schema.Resource {
 
 func resourceSpotFleetRequestCreate(d *schema.ResourceData, meta interface{}) error {
 	// http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_RequestSpotFleet.html
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -978,7 +978,7 @@ func resourceSpotFleetRequestCreate(d *schema.ResourceData, meta interface{}) er
 
 func resourceSpotFleetRequestRead(d *schema.ResourceData, meta interface{}) error {
 	// http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeSpotFleetRequests.html
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -998,52 +998,21 @@ func resourceSpotFleetRequestRead(d *schema.ResourceData, meta interface{}) erro
 
 	config := output.SpotFleetRequestConfig
 
-	if config.AllocationStrategy != nil {
-		d.Set("allocation_strategy", config.AllocationStrategy)
-	}
-
-	if config.InstancePoolsToUseCount != nil {
-		d.Set("instance_pools_to_use_count", config.InstancePoolsToUseCount)
-	}
-
-	if config.ClientToken != nil {
-		d.Set("client_token", config.ClientToken)
-	}
-
-	if config.ExcessCapacityTerminationPolicy != nil {
-		d.Set("excess_capacity_termination_policy", config.ExcessCapacityTerminationPolicy)
-	}
-
-	if config.IamFleetRole != nil {
-		d.Set("iam_fleet_role", config.IamFleetRole)
-	}
-
+	d.Set("allocation_strategy", config.AllocationStrategy)
+	d.Set("instance_pools_to_use_count", config.InstancePoolsToUseCount)
+	d.Set("client_token", config.ClientToken)
+	d.Set("excess_capacity_termination_policy", config.ExcessCapacityTerminationPolicy)
+	d.Set("iam_fleet_role", config.IamFleetRole)
 	d.Set("spot_maintenance_strategies", flattenSpotMaintenanceStrategies(config.SpotMaintenanceStrategies))
-
-	if config.SpotPrice != nil {
-		d.Set("spot_price", config.SpotPrice)
-	}
-
-	if config.TargetCapacity != nil {
-		d.Set("target_capacity", config.TargetCapacity)
-	}
-
-	if config.TargetCapacityUnitType != nil {
-		d.Set("target_capacity_unit_type", config.TargetCapacityUnitType)
-	}
-
-	if config.TerminateInstancesWithExpiration != nil {
-		d.Set("terminate_instances_with_expiration", config.TerminateInstancesWithExpiration)
-	}
-
+	d.Set("spot_price", config.SpotPrice)
+	d.Set("target_capacity", config.TargetCapacity)
+	d.Set("target_capacity_unit_type", config.TargetCapacityUnitType)
+	d.Set("terminate_instances_with_expiration", config.TerminateInstancesWithExpiration)
 	if config.ValidFrom != nil {
-		d.Set("valid_from",
-			aws.TimeValue(config.ValidFrom).Format(time.RFC3339))
+		d.Set("valid_from", aws.TimeValue(config.ValidFrom).Format(time.RFC3339))
 	}
-
 	if config.ValidUntil != nil {
-		d.Set("valid_until",
-			aws.TimeValue(config.ValidUntil).Format(time.RFC3339))
+		d.Set("valid_until", aws.TimeValue(config.ValidUntil).Format(time.RFC3339))
 	}
 
 	launchSpec, err := launchSpecsToSet(conn, config.LaunchSpecifications)
@@ -1105,7 +1074,7 @@ func resourceSpotFleetRequestRead(d *schema.ResourceData, meta interface{}) erro
 
 func resourceSpotFleetRequestUpdate(d *schema.ResourceData, meta interface{}) error {
 	// http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_ModifySpotFleetRequest.html
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &ec2.ModifySpotFleetRequestInput{
@@ -1148,7 +1117,7 @@ func resourceSpotFleetRequestUpdate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceSpotFleetRequestDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	terminateInstances := d.Get("terminate_instances_with_expiration").(bool)
 	// If terminate_instances_on_delete is not null, its value is used.
@@ -1204,7 +1173,7 @@ func resourceSpotFleetRequestDelete(d *schema.ResourceData, meta interface{}) er
 }
 
 func buildSpotFleetLaunchSpecification(d map[string]interface{}, meta interface{}) (*ec2.SpotFleetLaunchSpecification, error) {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	opts := &ec2.SpotFleetLaunchSpecification{
 		ImageId:      aws.String(d["ami"].(string)),

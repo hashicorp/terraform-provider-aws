@@ -404,7 +404,7 @@ func ResourceReplicationGroup() *schema.Resource {
 }
 
 func resourceReplicationGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn
+	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -611,7 +611,7 @@ func resourceReplicationGroupCreate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceReplicationGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn
+	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -689,16 +689,11 @@ func resourceReplicationGroupRead(d *schema.ResourceData, meta interface{}) erro
 
 		if rgp.NodeGroups[0].PrimaryEndpoint != nil {
 			log.Printf("[DEBUG] ElastiCache Replication Group (%s) Primary Endpoint is not nil", d.Id())
-			if rgp.NodeGroups[0].PrimaryEndpoint.Port != nil {
-				d.Set("port", rgp.NodeGroups[0].PrimaryEndpoint.Port)
-			}
-
-			if rgp.NodeGroups[0].PrimaryEndpoint.Address != nil {
-				d.Set("primary_endpoint_address", rgp.NodeGroups[0].PrimaryEndpoint.Address)
-			}
+			d.Set("port", rgp.NodeGroups[0].PrimaryEndpoint.Port)
+			d.Set("primary_endpoint_address", rgp.NodeGroups[0].PrimaryEndpoint.Address)
 		}
 
-		if rgp.NodeGroups[0].ReaderEndpoint != nil && rgp.NodeGroups[0].ReaderEndpoint.Address != nil {
+		if rgp.NodeGroups[0].ReaderEndpoint != nil {
 			d.Set("reader_endpoint_address", rgp.NodeGroups[0].ReaderEndpoint.Address)
 		}
 	}
@@ -775,7 +770,7 @@ func resourceReplicationGroupRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceReplicationGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn
+	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 
 	if d.HasChanges(
 		"cluster_mode.0.num_node_groups",
@@ -981,7 +976,7 @@ func resourceReplicationGroupUpdate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceReplicationGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn
+	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 
 	v, hasGlobalReplicationGroupID := d.GetOk("global_replication_group_id")
 	if hasGlobalReplicationGroupID {

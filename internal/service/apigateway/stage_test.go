@@ -530,7 +530,7 @@ func testAccCheckStageExists(n string, res *apigateway.Stage) resource.TestCheck
 			return fmt.Errorf("No API Gateway Stage ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
 		out, err := tfapigateway.FindStageByName(conn, rs.Primary.Attributes["rest_api_id"], rs.Primary.Attributes["stage_name"])
 		if err != nil {
 			return err
@@ -547,7 +547,7 @@ func testAccCheckStageExists(n string, res *apigateway.Stage) resource.TestCheck
 }
 
 func testAccCheckStageDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_api_gateway_stage" {

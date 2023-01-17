@@ -39,7 +39,7 @@ func DataSourceCertificate() *schema.Resource {
 }
 
 func dataSourceCertificateRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ACMPCAConn
+	conn := meta.(*conns.AWSClient).ACMPCAConn()
 	certificateARN := d.Get("arn").(string)
 
 	getCertificateInput := &acmpca.GetCertificateInput{

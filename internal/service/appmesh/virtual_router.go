@@ -127,7 +127,7 @@ func ResourceVirtualRouter() *schema.Resource {
 }
 
 func resourceVirtualRouterCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppMeshConn
+	conn := meta.(*conns.AWSClient).AppMeshConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -153,7 +153,7 @@ func resourceVirtualRouterCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceVirtualRouterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppMeshConn
+	conn := meta.(*conns.AWSClient).AppMeshConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -245,7 +245,7 @@ func resourceVirtualRouterRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceVirtualRouterUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppMeshConn
+	conn := meta.(*conns.AWSClient).AppMeshConn()
 
 	if d.HasChange("spec") {
 		_, v := d.GetChange("spec")
@@ -278,9 +278,9 @@ func resourceVirtualRouterUpdate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceVirtualRouterDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppMeshConn
+	conn := meta.(*conns.AWSClient).AppMeshConn()
 
-	log.Printf("[DEBUG] Deleting App Mesh virtual router: %s", d.Id())
+	log.Printf("[DEBUG] Deleting App Mesh Virtual Router: %s", d.Id())
 	_, err := conn.DeleteVirtualRouter(&appmesh.DeleteVirtualRouterInput{
 		MeshName:          aws.String(d.Get("mesh_name").(string)),
 		VirtualRouterName: aws.String(d.Get("name").(string)),
@@ -305,7 +305,7 @@ func resourceVirtualRouterImport(d *schema.ResourceData, meta interface{}) ([]*s
 	name := parts[1]
 	log.Printf("[DEBUG] Importing App Mesh virtual router %s from mesh %s", name, mesh)
 
-	conn := meta.(*conns.AWSClient).AppMeshConn
+	conn := meta.(*conns.AWSClient).AppMeshConn()
 
 	resp, err := conn.DescribeVirtualRouter(&appmesh.DescribeVirtualRouterInput{
 		MeshName:          aws.String(mesh),

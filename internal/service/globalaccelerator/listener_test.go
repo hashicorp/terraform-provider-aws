@@ -106,7 +106,7 @@ func TestAccGlobalAcceleratorListener_update(t *testing.T) {
 
 func testAccCheckListenerExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorConn()
 
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -124,7 +124,7 @@ func testAccCheckListenerExists(n string) resource.TestCheckFunc {
 }
 
 func testAccCheckListenerDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_globalaccelerator_listener" {

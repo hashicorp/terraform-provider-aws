@@ -33,7 +33,7 @@ func ResourceThingPrincipalAttachment() *schema.Resource {
 }
 
 func resourceThingPrincipalAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
+	conn := meta.(*conns.AWSClient).IoTConn()
 
 	principal := d.Get("principal").(string)
 	thing := d.Get("thing").(string)
@@ -71,7 +71,7 @@ func GetThingPricipalAttachment(conn *iot.IoT, thing, principal string) (bool, e
 }
 
 func resourceThingPrincipalAttachmentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
+	conn := meta.(*conns.AWSClient).IoTConn()
 
 	principal := d.Get("principal").(string)
 	thing := d.Get("thing").(string)
@@ -91,7 +91,7 @@ func resourceThingPrincipalAttachmentRead(d *schema.ResourceData, meta interface
 }
 
 func resourceThingPrincipalAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
+	conn := meta.(*conns.AWSClient).IoTConn()
 
 	principal := d.Get("principal").(string)
 	thing := d.Get("thing").(string)

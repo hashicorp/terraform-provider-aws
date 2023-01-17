@@ -572,6 +572,8 @@ func TestAccSSMDocument_disappears(t *testing.T) {
 }
 
 func TestValidateDocumentPermissions(t *testing.T) {
+	t.Parallel()
+
 	validValues := []map[string]interface{}{
 		{
 			"type":        "Share",
@@ -622,7 +624,7 @@ func testAccCheckDocumentExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No SSM Document ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn()
 
 		_, err := conn.DescribeDocument(&ssm.DescribeDocumentInput{
 			Name: aws.String(rs.Primary.ID),
@@ -633,7 +635,7 @@ func testAccCheckDocumentExists(n string) resource.TestCheckFunc {
 }
 
 func testAccCheckDocumentDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ssm_document" {

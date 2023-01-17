@@ -125,7 +125,7 @@ func TestAccAppConfigExtensionAssociation_disappears(t *testing.T) {
 }
 
 func testAccCheckExtensionAssociationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_appconfig_environment" {
@@ -165,7 +165,7 @@ func testAccCheckExtensionAssociationExists(resourceName string) resource.TestCh
 			return fmt.Errorf("Resource (%s) ID not set", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn()
 
 		in := &appconfig.GetExtensionAssociationInput{
 			ExtensionAssociationId: aws.String(rs.Primary.ID),

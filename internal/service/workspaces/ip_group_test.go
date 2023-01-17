@@ -167,7 +167,7 @@ func testAccCheckIPGroupDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesConn()
 		resp, err := conn.DescribeIpGroups(&workspaces.DescribeIpGroupsInput{
 			GroupIds: []*string{aws.String(rs.Primary.ID)},
 		})
@@ -200,7 +200,7 @@ func testAccCheckIPGroupExists(n string, v *workspaces.IpGroup) resource.TestChe
 			return fmt.Errorf("No Workpsaces IP Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesConn()
 		resp, err := conn.DescribeIpGroups(&workspaces.DescribeIpGroupsInput{
 			GroupIds: []*string{aws.String(rs.Primary.ID)},
 		})

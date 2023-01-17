@@ -98,7 +98,7 @@ func ResourceAuthorizer() *schema.Resource {
 }
 
 func resourceAuthorizerCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 	var postCreateOps []*apigateway.PatchOperation
 
 	input := apigateway.CreateAuthorizerInput{
@@ -164,7 +164,7 @@ func resourceAuthorizerCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAuthorizerRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 
 	log.Printf("[INFO] Reading API Gateway Authorizer %s", d.Id())
 
@@ -187,7 +187,7 @@ func resourceAuthorizerRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("authorizer_credentials", authorizer.AuthorizerCredentials)
 
-	if authorizer.AuthorizerResultTtlInSeconds != nil {
+	if authorizer.AuthorizerResultTtlInSeconds != nil { // nosemgrep:ci.helper-schema-ResourceData-Set-extraneous-nil-check
 		d.Set("authorizer_result_ttl_in_seconds", authorizer.AuthorizerResultTtlInSeconds)
 	} else {
 		d.Set("authorizer_result_ttl_in_seconds", DefaultAuthorizerTTL)
@@ -212,7 +212,7 @@ func resourceAuthorizerRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAuthorizerUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 
 	input := apigateway.UpdateAuthorizerInput{
 		AuthorizerId: aws.String(d.Id()),
@@ -305,7 +305,7 @@ func resourceAuthorizerUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAuthorizerDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 	input := apigateway.DeleteAuthorizerInput{
 		AuthorizerId: aws.String(d.Id()),
 		RestApiId:    aws.String(d.Get("rest_api_id").(string)),

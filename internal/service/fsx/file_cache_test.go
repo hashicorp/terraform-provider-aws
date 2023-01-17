@@ -21,6 +21,8 @@ import (
 )
 
 func TestAccFSxFileCache_serial(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]map[string]func(t *testing.T){
 		"FSxFileCache": {
 			"basic":      TestAccFSxFileCache_basic,
@@ -35,17 +37,7 @@ func TestAccFSxFileCache_serial(t *testing.T) {
 		},
 	}
 
-	for group, m := range testCases {
-		m := m
-		t.Run(group, func(t *testing.T) {
-			for name, tc := range m {
-				tc := tc
-				t.Run(name, func(t *testing.T) {
-					tc(t)
-				})
-			}
-		})
-	}
+	acctest.RunSerialTests2Levels(t, testCases, 0)
 }
 
 func TestAccFSxFileCache_basic(t *testing.T) {
@@ -384,7 +376,7 @@ func testAccFileCache_tags(t *testing.T) {
 // helper functions
 
 func testAccCheckFileCacheDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn()
 	ctx := context.Background()
 
 	for _, rs := range s.RootModule().Resources {
@@ -419,7 +411,7 @@ func testAccCheckFileCacheExists(name string, filecache *fsx.DescribeFileCachesO
 			return create.Error(names.FSx, create.ErrActionCheckingExistence, tffsx.ResNameFileCache, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn()
 		ctx := context.Background()
 
 		resp, err := conn.DescribeFileCachesWithContext(ctx, &fsx.DescribeFileCachesInput{

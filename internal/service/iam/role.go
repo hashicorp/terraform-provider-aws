@@ -36,19 +36,22 @@ func ResourceRole() *schema.Resource {
 		Read:   resourceRoleRead,
 		Update: resourceRoleUpdate,
 		Delete: resourceRoleDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: resourceRoleImport,
 		},
+
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"assume_role_policy": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				Type:                  schema.TypeString,
+				Required:              true,
+				ValidateFunc:          validation.StringIsJSON,
+				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+				DiffSuppressOnRefresh: true,
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
@@ -87,10 +90,15 @@ func ResourceRole() *schema.Resource {
 							),
 						},
 						"policy": {
-							Type:             schema.TypeString,
-							Optional:         true, // semantically required but syntactically optional to allow empty inline_policy
-							ValidateFunc:     verify.ValidIAMPolicyJSON,
-							DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+							Type:                  schema.TypeString,
+							Optional:              true, // semantically required but syntactically optional to allow empty inline_policy
+							ValidateFunc:          verify.ValidIAMPolicyJSON,
+							DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+							DiffSuppressOnRefresh: true,
+							StateFunc: func(v interface{}) string {
+								json, _ := verify.LegacyPolicyNormalize(v)
+								return json
+							},
 						},
 					},
 				},
@@ -163,12 +171,11 @@ func resourceRoleImport(d *schema.ResourceData, meta interface{}) ([]*schema.Res
 }
 
 func resourceRoleCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	assumeRolePolicy, err := structure.NormalizeJsonString(d.Get("assume_role_policy").(string))
-
 	if err != nil {
 		return fmt.Errorf("assume_role_policy (%s) is invalid JSON: %w", assumeRolePolicy, err)
 	}
@@ -247,7 +254,7 @@ func resourceRoleCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceRoleRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -285,13 +292,11 @@ func resourceRoleRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("unique_id", role.RoleId)
 
 	assumeRolePolicy, err := url.QueryUnescape(aws.StringValue(role.AssumeRolePolicyDocument))
-
 	if err != nil {
 		return err
 	}
 
 	policyToSet, err := verify.PolicyToSet(d.Get("assume_role_policy").(string), assumeRolePolicy)
-
 	if err != nil {
 		return err
 	}
@@ -335,11 +340,10 @@ func resourceRoleRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceRoleUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	if d.HasChange("assume_role_policy") {
 		assumeRolePolicy, err := structure.NormalizeJsonString(d.Get("assume_role_policy").(string))
-
 		if err != nil {
 			return fmt.Errorf("assume_role_policy (%s) is invalid JSON: %w", assumeRolePolicy, err)
 		}
@@ -506,7 +510,7 @@ func resourceRoleUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceRoleDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	hasInline := false
 	if v, ok := d.GetOk("inline_policy"); ok && v.(*schema.Set).Len() > 0 {
@@ -799,7 +803,7 @@ func expandRoleInlinePolicies(roleName string, tfList []interface{}) []*iam.PutR
 }
 
 func addRoleInlinePolicies(policies []*iam.PutRolePolicyInput, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	var errs *multierror.Error
 	for _, policy := range policies {
@@ -818,7 +822,7 @@ func addRoleInlinePolicies(policies []*iam.PutRolePolicyInput, meta interface{})
 }
 
 func addRoleManagedPolicies(roleName string, policies []*string, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	var errs *multierror.Error
 	for _, arn := range policies {
@@ -833,7 +837,7 @@ func addRoleManagedPolicies(roleName string, policies []*string, meta interface{
 }
 
 func readRoleInlinePolicies(roleName string, meta interface{}) ([]*iam.PutRolePolicyInput, error) {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	policyNames, err := readRolePolicyNames(conn, roleName)
 	if err != nil {
@@ -855,23 +859,19 @@ func readRoleInlinePolicies(roleName string, meta interface{}) ([]*iam.PutRolePo
 			return nil, err
 		}
 
+		p, err := verify.LegacyPolicyNormalize(policy)
+		if err != nil {
+			return nil, fmt.Errorf("policy (%s) is invalid JSON: %w", p, err)
+		}
+
 		apiObject := &iam.PutRolePolicyInput{
 			RoleName:       aws.String(roleName),
-			PolicyDocument: aws.String(policy),
+			PolicyDocument: aws.String(p),
 			PolicyName:     policyName,
 		}
 
 		apiObjects = append(apiObjects, apiObject)
 	}
-
-	/*
-		if len(apiObjects) == 0 {
-			apiObjects = append(apiObjects, &iam.PutRolePolicyInput{
-				PolicyDocument: aws.String(""),
-				PolicyName:     aws.String(""),
-			})
-		}
-	*/
 
 	return apiObjects, nil
 }

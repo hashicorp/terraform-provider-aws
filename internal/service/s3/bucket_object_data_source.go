@@ -130,7 +130,7 @@ func DataSourceBucketObject() *schema.Resource {
 }
 
 func dataSourceBucketObjectRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	bucket := d.Get("bucket").(string)
@@ -195,7 +195,7 @@ func dataSourceBucketObjectRead(d *schema.ResourceData, meta interface{}) error 
 	// The "STANDARD" (which is also the default) storage
 	// class when set would not be included in the results.
 	d.Set("storage_class", s3.StorageClassStandard)
-	if out.StorageClass != nil {
+	if out.StorageClass != nil { // nosemgrep: ci.helper-schema-ResourceData-Set-extraneous-nil-check
 		d.Set("storage_class", out.StorageClass)
 	}
 

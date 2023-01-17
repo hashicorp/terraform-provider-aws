@@ -102,7 +102,7 @@ func ResourceAccount() *schema.Resource {
 }
 
 func resourceAccountCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OrganizationsConn
+	conn := meta.(*conns.AWSClient).OrganizationsConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -166,7 +166,7 @@ func resourceAccountCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAccountRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OrganizationsConn
+	conn := meta.(*conns.AWSClient).OrganizationsConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -217,7 +217,7 @@ func resourceAccountRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAccountUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OrganizationsConn
+	conn := meta.(*conns.AWSClient).OrganizationsConn()
 
 	if d.HasChange("parent_id") {
 		o, n := d.GetChange("parent_id")
@@ -245,7 +245,7 @@ func resourceAccountUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAccountDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OrganizationsConn
+	conn := meta.(*conns.AWSClient).OrganizationsConn()
 
 	close := d.Get("close_on_deletion").(bool)
 	var err error

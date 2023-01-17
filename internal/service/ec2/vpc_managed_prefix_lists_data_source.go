@@ -28,7 +28,7 @@ func DataSourceManagedPrefixLists() *schema.Resource {
 }
 
 func dataSourceManagedPrefixListsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	input := &ec2.DescribeManagedPrefixListsInput{}
 

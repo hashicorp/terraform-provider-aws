@@ -228,7 +228,7 @@ func ResourcePipeline() *schema.Resource {
 }
 
 func resourcePipelineCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticTranscoderConn
+	conn := meta.(*conns.AWSClient).ElasticTranscoderConn()
 
 	req := &elastictranscoder.CreatePipelineInput{
 		AwsKmsKeyArn:    aws.String(d.Get("aws_kms_key_arn").(string)),
@@ -404,7 +404,7 @@ func flattenETPermList(perms []*elastictranscoder.Permission) []map[string]inter
 }
 
 func resourcePipelineUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticTranscoderConn
+	conn := meta.(*conns.AWSClient).ElasticTranscoderConn()
 
 	req := &elastictranscoder.UpdatePipelineInput{
 		Id: aws.String(d.Id()),
@@ -453,7 +453,7 @@ func resourcePipelineUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourcePipelineRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticTranscoderConn
+	conn := meta.(*conns.AWSClient).ElasticTranscoderConn()
 
 	resp, err := conn.ReadPipeline(&elastictranscoder.ReadPipelineInput{
 		Id: aws.String(d.Id()),
@@ -474,9 +474,7 @@ func resourcePipelineRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("arn", pipeline.Arn)
 
-	if arn := pipeline.AwsKmsKeyArn; arn != nil {
-		d.Set("aws_kms_key_arn", arn)
-	}
+	d.Set("aws_kms_key_arn", pipeline.AwsKmsKeyArn)
 
 	if pipeline.ContentConfig != nil {
 		err := d.Set("content_config", flattenETPipelineOutputConfig(pipeline.ContentConfig))
@@ -496,10 +494,8 @@ func resourcePipelineRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", pipeline.Name)
 
 	notifications := flattenETNotifications(pipeline.Notifications)
-	if notifications != nil {
-		if err := d.Set("notifications", notifications); err != nil {
-			return fmt.Errorf("error setting notifications: %s", err)
-		}
+	if err := d.Set("notifications", notifications); err != nil {
+		return fmt.Errorf("error setting notifications: %s", err)
 	}
 
 	d.Set("role", pipeline.Role)
@@ -518,15 +514,13 @@ func resourcePipelineRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if pipeline.OutputBucket != nil {
-		d.Set("output_bucket", pipeline.OutputBucket)
-	}
+	d.Set("output_bucket", pipeline.OutputBucket)
 
 	return nil
 }
 
 func resourcePipelineDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticTranscoderConn
+	conn := meta.(*conns.AWSClient).ElasticTranscoderConn()
 
 	log.Printf("[DEBUG] Elastic Transcoder Delete Pipeline: %s", d.Id())
 	_, err := conn.DeletePipeline(&elastictranscoder.DeletePipelineInput{

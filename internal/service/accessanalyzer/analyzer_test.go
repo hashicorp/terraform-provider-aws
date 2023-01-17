@@ -148,7 +148,7 @@ func testAccAnalyzer_Type_Organization(t *testing.T) {
 }
 
 func testAccCheckAnalyzerDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AccessAnalyzerConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AccessAnalyzerConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_accessanalyzer_analyzer" {
@@ -179,7 +179,7 @@ func testAccCheckAnalyzerDestroy(s *terraform.State) error {
 
 func testAccCheckAnalyzerDisappears(analyzer *accessanalyzer.AnalyzerSummary) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AccessAnalyzerConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AccessAnalyzerConn()
 
 		input := &accessanalyzer.DeleteAnalyzerInput{
 			AnalyzerName: analyzer.Name,
@@ -202,7 +202,7 @@ func testAccCheckAnalyzerExists(resourceName string, analyzer *accessanalyzer.An
 			return fmt.Errorf("resource (%s) ID not set", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AccessAnalyzerConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AccessAnalyzerConn()
 
 		input := &accessanalyzer.GetAnalyzerInput{
 			AnalyzerName: aws.String(rs.Primary.ID),

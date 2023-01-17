@@ -257,7 +257,7 @@ func ResourceEnvironment() *schema.Resource {
 }
 
 func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MWAAConn
+	conn := meta.(*conns.AWSClient).MWAAConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -354,7 +354,7 @@ func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MWAAConn
+	conn := meta.(*conns.AWSClient).MWAAConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -417,7 +417,7 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MWAAConn
+	conn := meta.(*conns.AWSClient).MWAAConn()
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &mwaa.UpdateEnvironmentInput{
 			Name: aws.String(d.Get("name").(string)),
@@ -520,7 +520,7 @@ func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceEnvironmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MWAAConn
+	conn := meta.(*conns.AWSClient).MWAAConn()
 
 	log.Printf("[INFO] Deleting MWAA Environment: %s", d.Id())
 	_, err := conn.DeleteEnvironmentWithContext(ctx, &mwaa.DeleteEnvironmentInput{
@@ -753,19 +753,19 @@ func flattenLastUpdate(lastUpdate *mwaa.LastUpdate) []interface{} {
 	return []interface{}{m}
 }
 
-func flattenLastUpdateError(error *mwaa.UpdateError) []interface{} {
-	if error == nil {
+func flattenLastUpdateError(apiObject *mwaa.UpdateError) []interface{} {
+	if apiObject == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{}
 
-	if error.ErrorCode != nil {
-		m["error_code"] = error.ErrorCode
+	if apiObject.ErrorCode != nil {
+		m["error_code"] = apiObject.ErrorCode
 	}
 
-	if error.ErrorMessage != nil {
-		m["error_message"] = error.ErrorMessage
+	if apiObject.ErrorMessage != nil {
+		m["error_message"] = apiObject.ErrorMessage
 	}
 
 	return []interface{}{m}

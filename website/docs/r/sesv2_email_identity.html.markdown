@@ -50,7 +50,7 @@ resource "tls_private_key" "example" {
   algorithm = "RSA"
 }
 
-resource "aws_sesv2_configuration_set" "example" {
+resource "aws_sesv2_email_identity" "example" {
   email_identity = "example.com"
 
   dkim_signing_attributes {

@@ -51,7 +51,7 @@ func ResourceTransitGatewayPolicyTable() *schema.Resource {
 }
 
 func resourceTransitGatewayPolicyTableCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -78,7 +78,7 @@ func resourceTransitGatewayPolicyTableCreate(d *schema.ResourceData, meta interf
 }
 
 func resourceTransitGatewayPolicyTableRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -120,7 +120,7 @@ func resourceTransitGatewayPolicyTableRead(d *schema.ResourceData, meta interfac
 }
 
 func resourceTransitGatewayPolicyTableUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -134,7 +134,7 @@ func resourceTransitGatewayPolicyTableUpdate(d *schema.ResourceData, meta interf
 }
 
 func resourceTransitGatewayPolicyTableDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	log.Printf("[DEBUG] Deleting EC2 Transit Gateway Policy Table: %s", d.Id())
 	_, err := conn.DeleteTransitGatewayPolicyTable(&ec2.DeleteTransitGatewayPolicyTableInput{

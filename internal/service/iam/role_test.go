@@ -175,6 +175,189 @@ func TestAccIAMRole_testNameChange(t *testing.T) {
 	})
 }
 
+// https://github.com/hashicorp/terraform-provider-aws/issues/23288
+// https://github.com/hashicorp/terraform-provider-aws/issues/28833
+func TestAccIAMRole_diffs(t *testing.T) {
+	var conf iam.Role
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_iam_role.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRoleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRoleConfig_diffs(rName, ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleExists(resourceName, &conf),
+				),
+			},
+			{
+				Config:   testAccRoleConfig_diffs(rName, ""),
+				PlanOnly: true,
+			},
+			{
+				Config: testAccRoleConfig_diffs(rName, ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleExists(resourceName, &conf),
+				),
+			},
+			{
+				Config:   testAccRoleConfig_diffs(rName, ""),
+				PlanOnly: true,
+			},
+			{
+				Config: testAccRoleConfig_diffs(rName, ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleExists(resourceName, &conf),
+				),
+			},
+			{
+				Config:   testAccRoleConfig_diffs(rName, ""),
+				PlanOnly: true,
+			},
+			{
+				Config: testAccRoleConfig_diffs(rName, ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleExists(resourceName, &conf),
+				),
+			},
+			{
+				Config:   testAccRoleConfig_diffs(rName, ""),
+				PlanOnly: true,
+			},
+			{
+				Config: testAccRoleConfig_diffs(rName, ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleExists(resourceName, &conf),
+				),
+			},
+			{
+				Config:   testAccRoleConfig_diffs(rName, ""),
+				PlanOnly: true,
+			},
+			{
+				Config: testAccRoleConfig_diffs(rName, ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleExists(resourceName, &conf),
+				),
+			},
+			{
+				Config:   testAccRoleConfig_diffs(rName, ""),
+				PlanOnly: true,
+			},
+			{
+				Config: testAccRoleConfig_diffs(rName, "tags = {}"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleExists(resourceName, &conf),
+				),
+			},
+			{
+				Config:   testAccRoleConfig_diffs(rName, "tags = {}"),
+				PlanOnly: true,
+			},
+			{
+				Config: testAccRoleConfig_diffs(rName, "tags = {}"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleExists(resourceName, &conf),
+				),
+			},
+			{
+				Config:   testAccRoleConfig_diffs(rName, "tags = {}"),
+				PlanOnly: true,
+			},
+			{
+				Config: testAccRoleConfig_diffs(rName, "tags = {}"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleExists(resourceName, &conf),
+				),
+			},
+			{
+				Config:   testAccRoleConfig_diffs(rName, "tags = {}"),
+				PlanOnly: true,
+			},
+			{
+				Config: testAccRoleConfig_diffs(rName, "tags = {}"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleExists(resourceName, &conf),
+				),
+			},
+			{
+				Config:   testAccRoleConfig_diffs(rName, "tags = {}"),
+				PlanOnly: true,
+			},
+			{
+				Config: testAccRoleConfig_diffs(rName, "tags = {}"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleExists(resourceName, &conf),
+				),
+			},
+			{
+				Config:   testAccRoleConfig_diffs(rName, "tags = {}"),
+				PlanOnly: true,
+			},
+			{
+				Config: testAccRoleConfig_diffs(rName, "tags = {}"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleExists(resourceName, &conf),
+				),
+			},
+			{
+				Config:   testAccRoleConfig_diffs(rName, "tags = {}"),
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
+// https://github.com/hashicorp/terraform-provider-aws/issues/28835
+func TestAccIAMRole_diffsCondition(t *testing.T) {
+	var conf iam.Role
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_iam_role.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRoleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRoleConfig_diffsCondition(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleExists(resourceName, &conf),
+				),
+			},
+			{
+				Config:   testAccRoleConfig_diffsCondition(rName),
+				PlanOnly: true,
+			},
+			{
+				Config: testAccRoleConfig_diffsCondition(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleExists(resourceName, &conf),
+				),
+			},
+			{
+				Config:   testAccRoleConfig_diffsCondition(rName),
+				PlanOnly: true,
+			},
+			{
+				Config: testAccRoleConfig_diffsCondition(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleExists(resourceName, &conf),
+				),
+			},
+			{
+				Config:   testAccRoleConfig_diffsCondition(rName),
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
 func TestAccIAMRole_badJSON(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -441,16 +624,16 @@ func TestAccIAMRole_InlinePolicy_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"inline_policy.0.policy"},
 			},
 		},
 	})
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/19444
-// This test currently fails but should not. A new PR will fix it.
 func TestAccIAMRole_InlinePolicy_ignoreOrder(t *testing.T) {
 	var role iam.Role
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -827,7 +1010,7 @@ func TestAccIAMRole_ManagedPolicy_outOfBandAdditionRemovedEmpty(t *testing.T) {
 }
 
 func testAccCheckRoleDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iam_role" {
@@ -861,7 +1044,7 @@ func testAccCheckRoleExists(n string, v *iam.Role) resource.TestCheckFunc {
 			return fmt.Errorf("No IAM Role ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
 		output, err := tfiam.FindRoleByName(conn, rs.Primary.ID)
 
@@ -886,7 +1069,7 @@ func testAccAddRolePolicy(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No Role name is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
 		input := &iam.PutRolePolicyInput{
 			RoleName: aws.String(rs.Primary.ID),
@@ -924,7 +1107,7 @@ func testAccCheckRolePermissionsBoundary(role *iam.Role, expectedPermissionsBoun
 
 func testAccCheckRolePolicyDetachManagedPolicy(role *iam.Role, policyName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
 		var managedARN string
 		input := &iam.ListAttachedRolePoliciesInput{
@@ -958,7 +1141,7 @@ func testAccCheckRolePolicyDetachManagedPolicy(role *iam.Role, policyName string
 
 func testAccCheckRolePolicyAttachManagedPolicy(role *iam.Role, policyName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
 		var managedARN string
 		input := &iam.ListPoliciesInput{
@@ -994,7 +1177,7 @@ func testAccCheckRolePolicyAttachManagedPolicy(role *iam.Role, policyName string
 
 func testAccCheckRolePolicyAddInlinePolicy(role *iam.Role, inlinePolicy string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
 		_, err := conn.PutRolePolicy(&iam.PutRolePolicyInput{
 			PolicyDocument: aws.String(testAccRolePolicyExtraInlineConfig()),
@@ -1008,7 +1191,7 @@ func testAccCheckRolePolicyAddInlinePolicy(role *iam.Role, inlinePolicy string) 
 
 func testAccCheckRolePolicyRemoveInlinePolicy(role *iam.Role, inlinePolicy string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
 		_, err := conn.DeleteRolePolicy(&iam.DeleteRolePolicyInput{
 			PolicyName: aws.String(inlinePolicy),
@@ -1081,6 +1264,103 @@ resource "aws_iam_role" "test" {
       Action = "sts:AssumeRole",
       Principal = {
         Service = "ec2.${data.aws_partition.current.dns_suffix}",
+      }
+      Effect = "Allow"
+      Sid    = ""
+    }]
+  })
+}
+`, rName)
+}
+
+func testAccRoleConfig_diffs(rName, tags string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_user" "user1" {
+  name = "%[1]s-baa204a2"
+  path = "/"
+}
+
+resource "aws_iam_user" "user2" {
+  name = "%[1]s-fee06121"
+  path = "/"
+}
+
+resource "aws_iam_user" "user3" {
+  name = "%[1]s-2f0d132b"
+  path = "/"
+}
+
+resource "aws_iam_user" "user4" {
+  name = "%[1]s-d1eaee06"
+  path = "/"
+}
+
+resource "aws_iam_user" "user5" {
+  name = "%[1]s-d4a38c26"
+  path = "/"
+}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+  path = "/"
+
+  assume_role_policy = jsonencode({
+    Id      = %[1]q
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Principal = {
+        AWS = [
+          aws_iam_user.user1.arn,
+          aws_iam_user.user2.arn,
+          aws_iam_user.user3.arn,
+          aws_iam_user.user4.arn,
+          aws_iam_user.user5.arn,
+        ]
+      }
+      Effect = "Allow"
+      Sid    = ""
+    }]
+  })
+
+  %[2]s
+}
+`, rName, tags)
+}
+
+func testAccRoleConfig_diffsCondition(rName string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_user" "user1" {
+  name = "%[1]s-cde2c453"
+  path = "/"
+}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+  path = "/"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRoleWithSAML"
+      Condition = {
+        IpAddress = {
+          "aws:SourceIp" = [
+            "0.0.0.0/0",
+          ]
+        }
+        StringEquals = {
+          "SAML:aud" = "https://signin.aws.amazon.com/saml"
+        }
+      }
+      Principal = {
+        AWS = [
+          aws_iam_user.user1.arn,
+        ]
       }
       Effect = "Allow"
       Sid    = ""

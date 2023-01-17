@@ -40,7 +40,7 @@ func ResourceFleetStackAssociation() *schema.Resource {
 }
 
 func resourceFleetStackAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppStreamConn
+	conn := meta.(*conns.AWSClient).AppStreamConn()
 	input := &appstream.AssociateFleetInput{
 		FleetName: aws.String(d.Get("fleet_name").(string)),
 		StackName: aws.String(d.Get("stack_name").(string)),
@@ -72,7 +72,7 @@ func resourceFleetStackAssociationCreate(ctx context.Context, d *schema.Resource
 }
 
 func resourceFleetStackAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppStreamConn
+	conn := meta.(*conns.AWSClient).AppStreamConn()
 
 	fleetName, stackName, err := DecodeStackFleetID(d.Id())
 	if err != nil {
@@ -98,7 +98,7 @@ func resourceFleetStackAssociationRead(ctx context.Context, d *schema.ResourceDa
 }
 
 func resourceFleetStackAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppStreamConn
+	conn := meta.(*conns.AWSClient).AppStreamConn()
 
 	fleetName, stackName, err := DecodeStackFleetID(d.Id())
 	if err != nil {

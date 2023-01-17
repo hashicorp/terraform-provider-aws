@@ -171,7 +171,7 @@ func ResourceImageBuilder() *schema.Resource {
 }
 
 func resourceImageBuilderCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppStreamConn
+	conn := meta.(*conns.AWSClient).AppStreamConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -255,7 +255,7 @@ func resourceImageBuilderCreate(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceImageBuilderRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppStreamConn
+	conn := meta.(*conns.AWSClient).AppStreamConn()
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -331,7 +331,7 @@ func resourceImageBuilderRead(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceImageBuilderUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	if d.HasChange("tags_all") {
-		conn := meta.(*conns.AWSClient).AppStreamConn
+		conn := meta.(*conns.AWSClient).AppStreamConn()
 
 		o, n := d.GetChange("tags_all")
 
@@ -344,7 +344,7 @@ func resourceImageBuilderUpdate(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceImageBuilderDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppStreamConn
+	conn := meta.(*conns.AWSClient).AppStreamConn()
 
 	log.Printf("[DEBUG] Deleting AppStream Image Builder: (%s)", d.Id())
 	_, err := conn.DeleteImageBuilderWithContext(ctx, &appstream.DeleteImageBuilderInput{

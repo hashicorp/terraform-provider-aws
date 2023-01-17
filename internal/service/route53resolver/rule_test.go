@@ -363,7 +363,7 @@ func testAccCheckRulesDifferent(before, after *route53resolver.ResolverRule) res
 }
 
 func testAccCheckRuleDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_route53_resolver_rule" {
@@ -396,7 +396,7 @@ func testAccCheckRuleExists(n string, v *route53resolver.ResolverRule) resource.
 			return fmt.Errorf("No Route53 Resolver Rule ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn()
 
 		output, err := tfroute53resolver.FindResolverRuleByID(context.Background(), conn, rs.Primary.ID)
 

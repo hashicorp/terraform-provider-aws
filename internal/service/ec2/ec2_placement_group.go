@@ -74,7 +74,7 @@ func ResourcePlacementGroup() *schema.Resource {
 }
 
 func resourcePlacementGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -112,7 +112,7 @@ func resourcePlacementGroupCreate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourcePlacementGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -159,7 +159,7 @@ func resourcePlacementGroupRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourcePlacementGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -173,7 +173,7 @@ func resourcePlacementGroupUpdate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourcePlacementGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	log.Printf("[DEBUG] Deleting EC2 Placement Group: %s", d.Id())
 	_, err := conn.DeletePlacementGroup(&ec2.DeletePlacementGroupInput{

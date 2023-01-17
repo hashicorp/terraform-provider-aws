@@ -310,7 +310,7 @@ func testAccReportDefinition_disappears(t *testing.T) {
 }
 
 func testAccCheckReportDefinitionDestroy(s *terraform.State) error {
-	conn := testAccProviderCur.Meta().(*conns.AWSClient).CURConn
+	conn := testAccProviderCur.Meta().(*conns.AWSClient).CURConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cur_report_definition" {
@@ -333,7 +333,7 @@ func testAccCheckReportDefinitionDestroy(s *terraform.State) error {
 
 func testAccCheckReportDefinitionExists(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := testAccProviderCur.Meta().(*conns.AWSClient).CURConn
+		conn := testAccProviderCur.Meta().(*conns.AWSClient).CURConn()
 
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -496,6 +496,8 @@ resource "aws_cur_report_definition" "test" {
 }
 
 func TestCheckDefinitionPropertyCombination(t *testing.T) {
+	t.Parallel()
+
 	type propertyCombinationTestCase struct {
 		additionalArtifacts []string
 		compression         string
@@ -691,7 +693,10 @@ func TestCheckDefinitionPropertyCombination(t *testing.T) {
 	}
 
 	for name, tCase := range testCases {
+		tCase := tCase
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			err := tfcur.CheckReportDefinitionPropertyCombination(
 				tCase.additionalArtifacts,
 				tCase.compression,

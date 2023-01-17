@@ -299,7 +299,7 @@ func ResourceEntityRecognizer() *schema.Resource {
 
 func resourceEntityRecognizerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	awsClient := meta.(*conns.AWSClient)
-	conn := awsClient.ComprehendClient
+	conn := awsClient.ComprehendClient()
 
 	var versionName *string
 	raw := d.GetRawConfig().GetAttr("version_name")
@@ -318,7 +318,7 @@ func resourceEntityRecognizerCreate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceEntityRecognizerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ComprehendClient
+	conn := meta.(*conns.AWSClient).ComprehendClient()
 
 	out, err := FindEntityRecognizerByID(ctx, conn, d.Id())
 
@@ -377,7 +377,7 @@ func resourceEntityRecognizerRead(ctx context.Context, d *schema.ResourceData, m
 
 func resourceEntityRecognizerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	awsClient := meta.(*conns.AWSClient)
-	conn := awsClient.ComprehendClient
+	conn := awsClient.ComprehendClient()
 
 	var diags diag.Diagnostics
 
@@ -407,7 +407,7 @@ func resourceEntityRecognizerUpdate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceEntityRecognizerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ComprehendClient
+	conn := meta.(*conns.AWSClient).ComprehendClient()
 
 	log.Printf("[INFO] Stopping Comprehend Entity Recognizer (%s)", d.Id())
 
@@ -462,7 +462,7 @@ func resourceEntityRecognizerDelete(ctx context.Context, d *schema.ResourceData,
 				return fmt.Errorf("waiting for version (%s) to be deleted: %s", aws.ToString(v.VersionName), err)
 			}
 
-			ec2Conn := meta.(*conns.AWSClient).EC2Conn
+			ec2Conn := meta.(*conns.AWSClient).EC2Conn()
 			networkInterfaces, err := tfec2.FindNetworkInterfacesWithContext(ctx, ec2Conn, &ec2.DescribeNetworkInterfacesInput{
 				Filters: []*ec2.Filter{
 					tfec2.NewFilter(fmt.Sprintf("tag:%s", entityRecognizerTagKey), []string{aws.ToString(v.EntityRecognizerArn)}),
@@ -593,7 +593,7 @@ func entityRecognizerPublishVersion(ctx context.Context, conn *comprehend.Client
 
 	if in.VpcConfig != nil {
 		g.Go(func() error {
-			ec2Conn := awsClient.EC2Conn
+			ec2Conn := awsClient.EC2Conn()
 			enis, err := findNetworkInterfaces(waitCtx, ec2Conn, in.VpcConfig.SecurityGroupIds, in.VpcConfig.Subnets)
 			if err != nil {
 				diags = errs.AppendWarningf(diags, "waiting for Amazon Comprehend Entity Recognizer (%s) %s: %s", d.Id(), tobe, err)
@@ -698,14 +698,11 @@ func waitEntityRecognizerCreated(ctx context.Context, conn *comprehend.Client, i
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*types.EntityRecognizerProperties); ok {
-		var ues *resource.UnexpectedStateError
-		if errors.As(err, &ues) {
-			if ues.State == string(types.ModelStatusInError) {
-				err = errors.New(aws.ToString(out.Message))
-			}
+	if output, ok := outputRaw.(*types.EntityRecognizerProperties); ok {
+		if output.Status == types.ModelStatusInError {
+			tfresource.SetLastError(err, errors.New(aws.ToString(output.Message)))
 		}
-		return out, err
+		return output, err
 	}
 
 	return nil, err

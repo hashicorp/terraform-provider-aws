@@ -1341,7 +1341,7 @@ func testAccCheckObjectVersionIdEquals(first, second *s3.GetObjectOutput) resour
 }
 
 func testAccCheckObjectDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_s3_object" {
@@ -1372,7 +1372,7 @@ func testAccCheckObjectExists(n string, obj *s3.GetObjectOutput) resource.TestCh
 			return fmt.Errorf("No S3 Object ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
 
 		input := &s3.GetObjectInput{
 			Bucket:  aws.String(rs.Primary.Attributes["bucket"]),
@@ -1431,7 +1431,7 @@ func testAccCheckObjectBody(obj *s3.GetObjectOutput, want string) resource.TestC
 func testAccCheckObjectACL(n string, expectedPerms []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
 
 		out, err := conn.GetObjectAcl(&s3.GetObjectAclInput{
 			Bucket: aws.String(rs.Primary.Attributes["bucket"]),
@@ -1459,7 +1459,7 @@ func testAccCheckObjectACL(n string, expectedPerms []string) resource.TestCheckF
 func testAccCheckObjectStorageClass(n, expectedClass string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
 
 		out, err := conn.HeadObject(&s3.HeadObjectInput{
 			Bucket: aws.String(rs.Primary.Attributes["bucket"]),
@@ -1489,7 +1489,7 @@ func testAccCheckObjectStorageClass(n, expectedClass string) resource.TestCheckF
 func testAccCheckObjectSSE(n, expectedSSE string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
 
 		out, err := conn.HeadObject(&s3.HeadObjectInput{
 			Bucket: aws.String(rs.Primary.Attributes["bucket"]),
@@ -1533,7 +1533,7 @@ func testAccObjectCreateTempFile(t *testing.T, data string) string {
 func testAccCheckObjectUpdateTags(n string, oldTags, newTags map[string]string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
 
 		return tfs3.ObjectUpdateTags(conn, rs.Primary.Attributes["bucket"], rs.Primary.Attributes["key"], oldTags, newTags)
 	}
@@ -1542,7 +1542,7 @@ func testAccCheckObjectUpdateTags(n string, oldTags, newTags map[string]string) 
 func testAccCheckObjectCheckTags(n string, expectedTags map[string]string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
 
 		got, err := tfs3.ObjectListTags(conn, rs.Primary.Attributes["bucket"], rs.Primary.Attributes["key"])
 		if err != nil {

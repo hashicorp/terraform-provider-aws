@@ -33,7 +33,7 @@ func DataSourceBucketPolicy() *schema.Resource {
 }
 
 func dataSourceBucketPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	name := d.Get("bucket").(string)
 

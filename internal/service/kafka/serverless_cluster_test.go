@@ -150,7 +150,7 @@ func TestAccKafkaServerlessCluster_securityGroup(t *testing.T) {
 }
 
 func testAccCheckServerlessClusterDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_msk_serverless_cluster" {
@@ -184,7 +184,7 @@ func testAccCheckServerlessClusterExists(n string, v *kafka.Cluster) resource.Te
 			return fmt.Errorf("No MSK Serverless Cluster ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn()
 
 		output, err := tfkafka.FindServerlessClusterByARN(context.Background(), conn, rs.Primary.ID)
 

@@ -47,6 +47,8 @@ func TestARNTypeValueFromTerraform(t *testing.T) {
 	for name, test := range tests {
 		name, test := name, test
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			ctx := context.Background()
 			val, err := fwtypes.ARNType.ValueFromTerraform(ctx, test.val)
 
@@ -94,6 +96,8 @@ func TestARNTypeValidate(t *testing.T) {
 	for name, test := range tests {
 		name, test := name, test
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			ctx := context.Background()
 
 			diags := fwtypes.ARNType.Validate(ctx, test.val, path.Root("test"))

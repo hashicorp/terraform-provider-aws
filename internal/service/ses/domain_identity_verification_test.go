@@ -91,7 +91,7 @@ func testAccCheckDomainIdentityVerificationPassed(n string) resource.TestCheckFu
 		}
 
 		domain := rs.Primary.ID
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn()
 
 		params := &ses.GetIdentityVerificationAttributesInput{
 			Identities: []*string{

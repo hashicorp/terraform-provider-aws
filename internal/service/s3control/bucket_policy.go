@@ -1,26 +1,33 @@
 package s3control
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/s3control"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func ResourceBucketPolicy() *schema.Resource {
+func init() {
+	_sp.registerSDKResourceFactory("aws_s3control_bucket_policy", resourceBucketPolicy)
+}
+
+func resourceBucketPolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceBucketPolicyCreate,
-		Read:   resourceBucketPolicyRead,
-		Update: resourceBucketPolicyUpdate,
-		Delete: resourceBucketPolicyDelete,
+		CreateWithoutTimeout: resourceBucketPolicyCreate,
+		ReadWithoutTimeout:   resourceBucketPolicyRead,
+		UpdateWithoutTimeout: resourceBucketPolicyUpdate,
+		DeleteWithoutTimeout: resourceBucketPolicyDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -34,10 +41,11 @@ func ResourceBucketPolicy() *schema.Resource {
 				ValidateFunc: verify.ValidARN,
 			},
 			"policy": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				Type:                  schema.TypeString,
+				Required:              true,
+				ValidateFunc:          validation.StringIsJSON,
+				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+				DiffSuppressOnRefresh: true,
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
@@ -47,15 +55,14 @@ func ResourceBucketPolicy() *schema.Resource {
 	}
 }
 
-func resourceBucketPolicyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3ControlConn
+func resourceBucketPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).S3ControlConn()
 
 	bucket := d.Get("bucket").(string)
 
 	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
-
 	if err != nil {
-		return fmt.Errorf("policy (%s) is invalid JSON: %w", d.Get("policy").(string), err)
+		return diag.Errorf("policy (%s) is invalid JSON: %s", d.Get("policy").(string), err)
 	}
 
 	input := &s3control.PutBucketPolicyInput{
@@ -63,70 +70,48 @@ func resourceBucketPolicyCreate(d *schema.ResourceData, meta interface{}) error 
 		Policy: aws.String(policy),
 	}
 
-	_, err = conn.PutBucketPolicy(input)
+	_, err = conn.PutBucketPolicyWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating S3 Control Bucket Policy (%s): %w", bucket, err)
+		return diag.Errorf("creating S3 Control Bucket Policy (%s): %s", bucket, err)
 	}
 
 	d.SetId(bucket)
 
-	return resourceBucketPolicyRead(d, meta)
+	return resourceBucketPolicyRead(ctx, d, meta)
 }
 
-func resourceBucketPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3ControlConn
+func resourceBucketPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).S3ControlConn()
 
 	parsedArn, err := arn.Parse(d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error parsing S3 Control Bucket ARN (%s): %w", d.Id(), err)
+		return diag.FromErr(err)
 	}
 
 	if parsedArn.AccountID == "" {
-		return fmt.Errorf("error parsing S3 Control Bucket ARN (%s): unknown format", d.Id())
+		return diag.Errorf("parsing S3 Control Bucket ARN (%s): unknown format", d.Id())
 	}
 
-	input := &s3control.GetBucketPolicyInput{
-		AccountId: aws.String(parsedArn.AccountID),
-		Bucket:    aws.String(d.Id()),
-	}
+	output, err := FindBucketPolicyByTwoPartKey(ctx, conn, parsedArn.AccountID, d.Id())
 
-	output, err := conn.GetBucketPolicy(input)
-
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, "NoSuchBucket") {
-		log.Printf("[WARN] S3 Control Bucket Policy (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, "NoSuchBucketPolicy") {
-		log.Printf("[WARN] S3 Control Bucket Policy (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, "NoSuchOutpost") {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] S3 Control Bucket Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading S3 Control Bucket Policy (%s): %w", d.Id(), err)
-	}
-
-	if output == nil {
-		return fmt.Errorf("error reading S3 Control Bucket Policy (%s): empty response", d.Id())
+		return diag.Errorf("reading S3 Control Bucket Policy (%s): %s", d.Id(), err)
 	}
 
 	d.Set("bucket", d.Id())
 
 	if output.Policy != nil {
 		policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.StringValue(output.Policy))
-
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 
 		d.Set("policy", policyToSet)
@@ -137,13 +122,12 @@ func resourceBucketPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceBucketPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3ControlConn
+func resourceBucketPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).S3ControlConn()
 
 	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
-
 	if err != nil {
-		return fmt.Errorf("policy (%s) is invalid JSON: %w", d.Get("policy").(string), err)
+		return diag.Errorf("policy (%s) is invalid JSON: %s", d.Get("policy").(string), err)
 	}
 
 	input := &s3control.PutBucketPolicyInput{
@@ -151,46 +135,63 @@ func resourceBucketPolicyUpdate(d *schema.ResourceData, meta interface{}) error 
 		Policy: aws.String(policy),
 	}
 
-	_, err = conn.PutBucketPolicy(input)
+	_, err = conn.PutBucketPolicyWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error updating S3 Control Bucket Policy (%s): %w", d.Id(), err)
+		return diag.Errorf("updating S3 Control Bucket Policy (%s): %s", d.Id(), err)
 	}
 
-	return resourceBucketPolicyRead(d, meta)
+	return resourceBucketPolicyRead(ctx, d, meta)
 }
 
-func resourceBucketPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3ControlConn
+func resourceBucketPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).S3ControlConn()
 
 	parsedArn, err := arn.Parse(d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error parsing S3 Control Bucket ARN (%s): %w", d.Id(), err)
+		return diag.FromErr(err)
 	}
 
-	input := &s3control.DeleteBucketPolicyInput{
+	log.Printf("[DEBUG] Deleting S3 Control Bucket Policy: %s", d.Id())
+	_, err = conn.DeleteBucketPolicyWithContext(ctx, &s3control.DeleteBucketPolicyInput{
 		AccountId: aws.String(parsedArn.AccountID),
 		Bucket:    aws.String(d.Id()),
-	}
+	})
 
-	_, err = conn.DeleteBucketPolicy(input)
-
-	if tfawserr.ErrCodeEquals(err, "NoSuchBucket") {
-		return nil
-	}
-
-	if tfawserr.ErrCodeEquals(err, "NoSuchBucketPolicy") {
-		return nil
-	}
-
-	if tfawserr.ErrCodeEquals(err, "NoSuchOutpost") {
+	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket, errCodeNoSuchBucketPolicy, errCodeNoSuchOutpost) {
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting S3 Control Bucket Policy (%s): %w", d.Id(), err)
+		return diag.Errorf("deleting S3 Control Bucket Policy (%s): %s", d.Id(), err)
 	}
 
 	return nil
+}
+
+func FindBucketPolicyByTwoPartKey(ctx context.Context, conn *s3control.S3Control, accountID, bucket string) (*s3control.GetBucketPolicyOutput, error) {
+	input := &s3control.GetBucketPolicyInput{
+		AccountId: aws.String(accountID),
+		Bucket:    aws.String(bucket),
+	}
+
+	output, err := conn.GetBucketPolicyWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket, errCodeNoSuchBucketPolicy, errCodeNoSuchOutpost) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }

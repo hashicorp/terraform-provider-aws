@@ -60,7 +60,7 @@ func ResourceStudioSessionMapping() *schema.Resource {
 }
 
 func resourceStudioSessionMappingCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EMRConn
+	conn := meta.(*conns.AWSClient).EMRConn()
 
 	var id string
 	studioId := d.Get("studio_id").(string)
@@ -92,7 +92,7 @@ func resourceStudioSessionMappingCreate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceStudioSessionMappingUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EMRConn
+	conn := meta.(*conns.AWSClient).EMRConn()
 
 	studioId, identityType, identityId, err := readStudioSessionMapping(d.Id())
 	if err != nil {
@@ -115,7 +115,7 @@ func resourceStudioSessionMappingUpdate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceStudioSessionMappingRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EMRConn
+	conn := meta.(*conns.AWSClient).EMRConn()
 
 	mapping, err := FindStudioSessionMappingByID(conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -138,7 +138,7 @@ func resourceStudioSessionMappingRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceStudioSessionMappingDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EMRConn
+	conn := meta.(*conns.AWSClient).EMRConn()
 	studioId, identityType, identityId, err := readStudioSessionMapping(d.Id())
 	if err != nil {
 		return err

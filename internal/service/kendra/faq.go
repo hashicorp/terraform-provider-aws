@@ -26,10 +26,10 @@ import (
 
 func ResourceFaq() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceFaqCreate,
-		ReadContext:   resourceFaqRead,
-		UpdateContext: resourceFaqUpdate,
-		DeleteContext: resourceFaqDelete,
+		CreateWithoutTimeout: resourceFaqCreate,
+		ReadWithoutTimeout:   resourceFaqRead,
+		UpdateWithoutTimeout: resourceFaqUpdate,
+		DeleteWithoutTimeout: resourceFaqDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -142,7 +142,7 @@ func ResourceFaq() *schema.Resource {
 }
 
 func resourceFaqCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraClient
+	conn := meta.(*conns.AWSClient).KendraClient()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -213,7 +213,7 @@ func resourceFaqCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 }
 
 func resourceFaqRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraClient
+	conn := meta.(*conns.AWSClient).KendraClient()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -278,7 +278,7 @@ func resourceFaqRead(ctx context.Context, d *schema.ResourceData, meta interface
 }
 
 func resourceFaqUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraClient
+	conn := meta.(*conns.AWSClient).KendraClient()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -292,7 +292,7 @@ func resourceFaqUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 }
 
 func resourceFaqDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraClient
+	conn := meta.(*conns.AWSClient).KendraClient()
 
 	log.Printf("[INFO] Deleting Kendra Faq %s", d.Id())
 

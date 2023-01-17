@@ -92,11 +92,16 @@ func ResourceKey() *schema.Resource {
 				ForceNew: true,
 			},
 			"policy": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
-				ValidateFunc:     validation.StringIsJSON,
+				Type:                  schema.TypeString,
+				Optional:              true,
+				Computed:              true,
+				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+				DiffSuppressOnRefresh: true,
+				ValidateFunc:          validation.StringIsJSON,
+				StateFunc: func(v interface{}) string {
+					json, _ := structure.NormalizeJsonString(v)
+					return json
+				},
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
@@ -105,7 +110,7 @@ func ResourceKey() *schema.Resource {
 }
 
 func resourceKeyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KMSConn
+	conn := meta.(*conns.AWSClient).KMSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -124,6 +129,11 @@ func resourceKeyCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("policy"); ok {
+		p, err := structure.NormalizeJsonString(v.(string))
+		if err != nil {
+			return fmt.Errorf("policy (%s) is invalid JSON: %w", p, err)
+		}
+
 		input.Policy = aws.String(v.(string))
 	}
 
@@ -181,7 +191,7 @@ func resourceKeyCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceKeyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KMSConn
+	conn := meta.(*conns.AWSClient).KMSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -212,8 +222,7 @@ func resourceKeyRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("key_usage", key.metadata.KeyUsage)
 	d.Set("multi_region", key.metadata.MultiRegion)
 
-	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), key.policy)
-
+	policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), key.policy)
 	if err != nil {
 		return fmt.Errorf("while setting policy (%s), encountered: %w", key.policy, err)
 	}
@@ -235,7 +244,7 @@ func resourceKeyRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceKeyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KMSConn
+	conn := meta.(*conns.AWSClient).KMSConn()
 
 	if hasChange, enabled := d.HasChange("is_enabled"), d.Get("is_enabled").(bool); hasChange && enabled {
 		// Enable before any attributes are modified.
@@ -285,7 +294,7 @@ func resourceKeyUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceKeyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KMSConn
+	conn := meta.(*conns.AWSClient).KMSConn()
 
 	input := &kms.ScheduleKeyDeletionInput{
 		KeyId: aws.String(d.Id()),
@@ -435,7 +444,6 @@ func updateKeyEnabled(conn *kms.KMS, keyID string, enabled bool) error {
 
 func updateKeyPolicy(conn *kms.KMS, keyID string, policy string, bypassPolicyLockoutSafetyCheck bool) error {
 	policy, err := structure.NormalizeJsonString(policy)
-
 	if err != nil {
 		return fmt.Errorf("policy contains invalid JSON: %w", err)
 	}
@@ -457,14 +465,12 @@ func updateKeyPolicy(conn *kms.KMS, keyID string, policy string, bypassPolicyLoc
 	}
 
 	_, err = tfresource.RetryWhenAWSErrCodeEquals(PropagationTimeout, updateFunc, kms.ErrCodeNotFoundException, kms.ErrCodeMalformedPolicyDocumentException)
-
 	if err != nil {
 		return fmt.Errorf("error updating KMS Key (%s) policy: %w", keyID, err)
 	}
 
 	// Wait for propagation since KMS is eventually consistent.
 	err = WaitKeyPolicyPropagated(conn, keyID, policy)
-
 	if err != nil {
 		return fmt.Errorf("error waiting for KMS Key (%s) policy propagation: %w", keyID, err)
 	}

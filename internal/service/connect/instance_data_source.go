@@ -16,7 +16,7 @@ import (
 
 func DataSourceInstance() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceInstanceRead,
+		ReadWithoutTimeout: dataSourceInstanceRead,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -87,7 +87,7 @@ func DataSourceInstance() *schema.Resource {
 }
 
 func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 
 	var matchedInstance *connect.Instance
 

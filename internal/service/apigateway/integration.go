@@ -173,7 +173,7 @@ func ResourceIntegration() *schema.Resource {
 }
 
 func resourceIntegrationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 
 	log.Print("[DEBUG] Creating API Gateway Integration")
 
@@ -250,7 +250,7 @@ func resourceIntegrationCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceIntegrationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 
 	log.Printf("[DEBUG] Reading API Gateway Integration: %s", d.Id())
 	integration, err := conn.GetIntegration(&apigateway.GetIntegrationInput{
@@ -274,9 +274,7 @@ func resourceIntegrationRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("cache_namespace", integration.CacheNamespace)
 	d.Set("connection_id", integration.ConnectionId)
 	d.Set("connection_type", apigateway.ConnectionTypeInternet)
-	if integration.ConnectionType != nil {
-		d.Set("connection_type", integration.ConnectionType)
-	}
+	d.Set("connection_type", integration.ConnectionType)
 	d.Set("content_handling", integration.ContentHandling)
 	d.Set("credentials", integration.Credentials)
 	d.Set("integration_http_method", integration.HttpMethod)
@@ -307,7 +305,7 @@ func resourceIntegrationRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceIntegrationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 
 	log.Printf("[DEBUG] Updating API Gateway Integration: %s", d.Id())
 	operations := make([]*apigateway.PatchOperation, 0)
@@ -496,7 +494,7 @@ func resourceIntegrationUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceIntegrationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 	log.Printf("[DEBUG] Deleting API Gateway Integration: %s", d.Id())
 
 	_, err := conn.DeleteIntegration(&apigateway.DeleteIntegrationInput{

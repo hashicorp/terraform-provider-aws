@@ -49,7 +49,7 @@ func DataSourceOutposts() *schema.Resource { // nosemgrep:ci.outposts-in-func-na
 }
 
 func dataSourceOutpostsRead(d *schema.ResourceData, meta interface{}) error { // nosemgrep:ci.outposts-in-func-name
-	conn := meta.(*conns.AWSClient).OutpostsConn
+	conn := meta.(*conns.AWSClient).OutpostsConn()
 
 	input := &outposts.ListOutpostsInput{}
 

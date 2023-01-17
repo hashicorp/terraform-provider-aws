@@ -53,7 +53,7 @@ func sweepIPSets(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).WAFV2Conn
+	conn := client.(*conns.AWSClient).WAFV2Conn()
 	input := &wafv2.ListIPSetsInput{
 		Scope: aws.String(wafv2.ScopeRegional),
 	}
@@ -101,7 +101,7 @@ func sweepRegexPatternSets(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).WAFV2Conn
+	conn := client.(*conns.AWSClient).WAFV2Conn()
 	input := &wafv2.ListRegexPatternSetsInput{
 		Scope: aws.String(wafv2.ScopeRegional),
 	}
@@ -149,7 +149,7 @@ func sweepRuleGroups(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).WAFV2Conn
+	conn := client.(*conns.AWSClient).WAFV2Conn()
 	input := &wafv2.ListRuleGroupsInput{
 		Scope: aws.String(wafv2.ScopeRegional),
 	}
@@ -197,7 +197,7 @@ func sweepWebACLs(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).WAFV2Conn
+	conn := client.(*conns.AWSClient).WAFV2Conn()
 	input := &wafv2.ListWebACLsInput{
 		Scope: aws.String(wafv2.ScopeRegional),
 	}

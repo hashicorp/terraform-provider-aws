@@ -119,7 +119,7 @@ func TestAccRAMResourceShareAccepter_resourceAssociation(t *testing.T) {
 }
 
 func testAccCheckResourceShareAccepterDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RAMConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RAMConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ram_resource_share_accepter" {
@@ -155,7 +155,7 @@ func testAccCheckResourceShareAccepterExists(name string) resource.TestCheckFunc
 			return fmt.Errorf("RAM resource share invitation not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RAMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RAMConn()
 
 		input := &ram.GetResourceSharesInput{
 			ResourceShareArns: []*string{aws.String(rs.Primary.Attributes["share_arn"])},

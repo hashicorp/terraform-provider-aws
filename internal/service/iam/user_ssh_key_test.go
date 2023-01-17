@@ -74,7 +74,7 @@ func TestAccIAMUserSSHKey_pemEncoding(t *testing.T) {
 }
 
 func testAccCheckUserSSHKeyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iam_user_ssh_key" {
@@ -116,7 +116,7 @@ func testAccCheckUserSSHKeyExists(n, status string, res *iam.GetSSHPublicKeyOutp
 			return fmt.Errorf("No SSHPublicKeyID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
 		username := rs.Primary.Attributes["username"]
 		encoding := rs.Primary.Attributes["encoding"]

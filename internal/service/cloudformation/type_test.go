@@ -149,7 +149,7 @@ func testAccCheckTypeExists(resourceName string) resource.TestCheckFunc {
 			return fmt.Errorf("No CloudFormation Type ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn()
 
 		_, err := tfcloudformation.FindTypeByARN(context.Background(), conn, rs.Primary.ID)
 
@@ -158,7 +158,7 @@ func testAccCheckTypeExists(resourceName string) resource.TestCheckFunc {
 }
 
 func testAccCheckTypeDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudformation_stack_set" {

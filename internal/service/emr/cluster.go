@@ -733,7 +733,7 @@ func instanceFleetConfigSchema() *schema.Resource {
 }
 
 func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EMRConn
+	conn := meta.(*conns.AWSClient).EMRConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -1010,7 +1010,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EMRConn
+	conn := meta.(*conns.AWSClient).EMRConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -1093,9 +1093,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("termination_protection", cluster.TerminationProtected)
 	d.Set("step_concurrency_level", cluster.StepConcurrencyLevel)
 
-	if cluster.CustomAmiId != nil {
-		d.Set("custom_ami_id", cluster.CustomAmiId)
-	}
+	d.Set("custom_ami_id", cluster.CustomAmiId)
 
 	if err := d.Set("applications", flattenApplications(cluster.Applications)); err != nil {
 		return fmt.Errorf("error setting EMR Applications for cluster (%s): %w", d.Id(), err)
@@ -1188,7 +1186,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EMRConn
+	conn := meta.(*conns.AWSClient).EMRConn()
 
 	if d.HasChange("visible_to_all_users") {
 		_, errModify := conn.SetVisibleToAllUsers(&emr.SetVisibleToAllUsersInput{
@@ -1400,9 +1398,9 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EMRConn
+	conn := meta.(*conns.AWSClient).EMRConn()
 
-	log.Printf("[DEBUG] Deleting EMR Cluster: (%s)", d.Id())
+	log.Printf("[DEBUG] Deleting EMR Cluster: %s", d.Id())
 	_, err := conn.TerminateJobFlows(&emr.TerminateJobFlowsInput{
 		JobFlowIds: []*string{
 			aws.String(d.Id()),

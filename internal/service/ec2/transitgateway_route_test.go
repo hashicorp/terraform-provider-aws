@@ -173,7 +173,7 @@ func testAccCheckTransitGatewayRouteExists(n string, v *ec2.TransitGatewayRoute)
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		output, err := tfec2.FindTransitGatewayRoute(conn, transitGatewayRouteTableID, destination)
 
@@ -188,7 +188,7 @@ func testAccCheckTransitGatewayRouteExists(n string, v *ec2.TransitGatewayRoute)
 }
 
 func testAccCheckTransitGatewayRouteDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ec2_transit_gateway_route" {

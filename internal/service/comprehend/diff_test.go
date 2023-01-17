@@ -5,6 +5,8 @@ import (
 )
 
 func TestDiffSuppressKMSKeyId(t *testing.T) {
+	t.Parallel()
+
 	testcases := map[string]struct {
 		old            string
 		new            string
@@ -56,7 +58,10 @@ func TestDiffSuppressKMSKeyId(t *testing.T) {
 	}
 
 	for name, testcase := range testcases {
+		testcase := testcase
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			actual := diffSuppressKMSKeyId("field", testcase.old, testcase.new, nil)
 
 			if e := testcase.expectSuppress; actual != e {

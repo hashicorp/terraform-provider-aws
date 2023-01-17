@@ -15,6 +15,8 @@ import (
 )
 
 func TestAccControlTowerControl_serial(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]map[string]func(t *testing.T){
 		"Control": {
 			"basic":      testAccControl_basic,
@@ -22,17 +24,7 @@ func TestAccControlTowerControl_serial(t *testing.T) {
 		},
 	}
 
-	for group, m := range testCases {
-		m := m
-		t.Run(group, func(t *testing.T) {
-			for name, tc := range m {
-				tc := tc
-				t.Run(name, func(t *testing.T) {
-					tc(t)
-				})
-			}
-		})
-	}
+	acctest.RunSerialTests2Levels(t, testCases, 0)
 }
 
 func testAccControl_basic(t *testing.T) {
@@ -106,7 +98,7 @@ func testAccCheckControlExists(n string, v *controltower.EnabledControlSummary) 
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ControlTowerConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ControlTowerConn()
 
 		output, err := tfcontroltower.FindEnabledControlByTwoPartKey(context.Background(), conn, targetIdentifier, controlIdentifier)
 
@@ -121,7 +113,7 @@ func testAccCheckControlExists(n string, v *controltower.EnabledControlSummary) 
 }
 
 func testAccCheckControlDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ControlTowerConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ControlTowerConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_controltower_control" {

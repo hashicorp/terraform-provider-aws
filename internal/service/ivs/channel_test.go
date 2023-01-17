@@ -209,7 +209,7 @@ func TestAccIVSChannel_recordingConfiguration(t *testing.T) {
 }
 
 func testAccCheckChannelDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IVSConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IVSConn()
 	ctx := context.Background()
 
 	for _, rs := range s.RootModule().Resources {
@@ -248,7 +248,7 @@ func testAccCheckChannelExists(name string, channel *ivs.Channel) resource.TestC
 			return create.Error(names.IVS, create.ErrActionCheckingExistence, tfivs.ResNameChannel, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IVSConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IVSConn()
 
 		output, err := tfivs.FindChannelByID(ctx, conn, rs.Primary.ID)
 
@@ -263,7 +263,7 @@ func testAccCheckChannelExists(name string, channel *ivs.Channel) resource.TestC
 }
 
 func testAccChannelPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IVSConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IVSConn()
 	ctx := context.Background()
 
 	input := &ivs.ListChannelsInput{}

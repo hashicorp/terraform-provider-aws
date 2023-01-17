@@ -30,7 +30,7 @@ func ResourceGatewayAssociationProposal() *schema.Resource {
 			// Accepting the proposal with overridden prefixes changes the returned RequestedAllowedPrefixesToDirectConnectGateway value (allowed_prefixes attribute).
 			// We only want to force a new resource if this value changes and the current proposal state is "requested".
 			customdiff.ForceNewIf("allowed_prefixes", func(_ context.Context, d *schema.ResourceDiff, meta interface{}) bool {
-				conn := meta.(*conns.AWSClient).DirectConnectConn
+				conn := meta.(*conns.AWSClient).DirectConnectConn()
 
 				log.Printf("[DEBUG] CustomizeDiff for Direct Connect Gateway Association Proposal (%s) allowed_prefixes", d.Id())
 
@@ -91,7 +91,7 @@ func ResourceGatewayAssociationProposal() *schema.Resource {
 }
 
 func resourceGatewayAssociationProposalCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
 	directConnectGatewayID := d.Get("dx_gateway_id").(string)
 	associatedGatewayID := d.Get("associated_gateway_id").(string)
@@ -118,7 +118,7 @@ func resourceGatewayAssociationProposalCreate(d *schema.ResourceData, meta inter
 }
 
 func resourceGatewayAssociationProposalRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
 	// First attempt to find by proposal ID.
 	output, err := FindGatewayAssociationProposalByID(conn, d.Id())
@@ -172,7 +172,7 @@ func resourceGatewayAssociationProposalRead(d *schema.ResourceData, meta interfa
 }
 
 func resourceGatewayAssociationProposalDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
 	log.Printf("[DEBUG] Deleting Direct Connect Gateway Association Proposal: %s", d.Id())
 	_, err := conn.DeleteDirectConnectGatewayAssociationProposal(&directconnect.DeleteDirectConnectGatewayAssociationProposalInput{

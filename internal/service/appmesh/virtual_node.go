@@ -1059,7 +1059,7 @@ func VirtualNodeClientPolicySchema() *schema.Schema {
 }
 
 func resourceVirtualNodeCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppMeshConn
+	conn := meta.(*conns.AWSClient).AppMeshConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -1086,7 +1086,7 @@ func resourceVirtualNodeCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceVirtualNodeRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppMeshConn
+	conn := meta.(*conns.AWSClient).AppMeshConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -1178,7 +1178,7 @@ func resourceVirtualNodeRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceVirtualNodeUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppMeshConn
+	conn := meta.(*conns.AWSClient).AppMeshConn()
 
 	if d.HasChange("spec") {
 		_, v := d.GetChange("spec")
@@ -1212,9 +1212,9 @@ func resourceVirtualNodeUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceVirtualNodeDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppMeshConn
+	conn := meta.(*conns.AWSClient).AppMeshConn()
 
-	log.Printf("[DEBUG] Deleting App Mesh virtual node: %s", d.Id())
+	log.Printf("[DEBUG] Deleting App Mesh Virtual Node: %s", d.Id())
 	_, err := conn.DeleteVirtualNode(&appmesh.DeleteVirtualNodeInput{
 		MeshName:        aws.String(d.Get("mesh_name").(string)),
 		VirtualNodeName: aws.String(d.Get("name").(string)),
@@ -1241,7 +1241,7 @@ func resourceVirtualNodeImport(d *schema.ResourceData, meta interface{}) ([]*sch
 	name := parts[1]
 	log.Printf("[DEBUG] Importing App Mesh virtual node %s from mesh %s", name, mesh)
 
-	conn := meta.(*conns.AWSClient).AppMeshConn
+	conn := meta.(*conns.AWSClient).AppMeshConn()
 
 	resp, err := conn.DescribeVirtualNode(&appmesh.DescribeVirtualNodeInput{
 		MeshName:        aws.String(mesh),

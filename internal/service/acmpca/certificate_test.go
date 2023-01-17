@@ -231,7 +231,7 @@ func TestAccACMPCACertificate_Validity_absolute(t *testing.T) {
 }
 
 func testAccCheckCertificateDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_acmpca_certificate" {
@@ -270,7 +270,7 @@ func testAccCheckCertificateExists(resourceName string) resource.TestCheckFunc {
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAConn()
 		input := &acmpca.GetCertificateInput{
 			CertificateArn:          aws.String(rs.Primary.ID),
 			CertificateAuthorityArn: aws.String(rs.Primary.Attributes["certificate_authority_arn"]),
@@ -454,6 +454,8 @@ data "aws_partition" "current" {}
 }
 
 func TestValidateTemplateARN(t *testing.T) {
+	t.Parallel()
+
 	validNames := []string{
 		"arn:aws:acm-pca:::template/EndEntityCertificate/V1",                     // lintignore:AWSAT005
 		"arn:aws:acm-pca:::template/SubordinateCACertificate_PathLen0/V1",        // lintignore:AWSAT005
@@ -483,6 +485,8 @@ func TestValidateTemplateARN(t *testing.T) {
 }
 
 func TestExpandValidityValue(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		Type     string
 		Value    string

@@ -1135,6 +1135,8 @@ func testAccCheckTaskDefinitionConstraintsAttrs(def *ecs.TaskDefinition) resourc
 }
 
 func TestValidTaskDefinitionContainerDefinitions(t *testing.T) {
+	t.Parallel()
+
 	validDefinitions := []string{
 		testValidTaskDefinitionValidContainerDefinitions,
 	}
@@ -1157,7 +1159,7 @@ func TestValidTaskDefinitionContainerDefinitions(t *testing.T) {
 }
 
 func testAccCheckTaskDefinitionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ecs_task_definition" {
@@ -1189,7 +1191,7 @@ func testAccCheckTaskDefinitionExists(name string, def *ecs.TaskDefinition) reso
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn()
 
 		out, err := conn.DescribeTaskDefinition(&ecs.DescribeTaskDefinitionInput{
 			TaskDefinition: aws.String(rs.Primary.Attributes["arn"]),

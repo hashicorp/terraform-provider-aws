@@ -123,7 +123,7 @@ func TestAccKinesisStreamConsumer_exceedMaxConcurrentConsumers(t *testing.T) {
 }
 
 func testAccCheckStreamConsumerDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_kinesis_stream_consumer" {
@@ -148,7 +148,7 @@ func testAccCheckStreamConsumerDestroy(s *terraform.State) error {
 
 func testAccStreamConsumerExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisConn()
 
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {

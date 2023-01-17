@@ -138,7 +138,7 @@ func DataSourceEngineVersion() *schema.Resource {
 }
 
 func dataSourceEngineVersionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	input := &rds.DescribeDBEngineVersionsInput{
 		ListSupportedCharacterSets: aws.Bool(true),

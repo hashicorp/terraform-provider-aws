@@ -48,7 +48,7 @@ func DataSourceDocument() *schema.Resource {
 }
 
 func dataDocumentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+	conn := meta.(*conns.AWSClient).SSMConn()
 
 	docInput := &ssm.GetDocumentInput{
 		Name:           aws.String(d.Get("name").(string)),

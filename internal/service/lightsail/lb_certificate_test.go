@@ -159,7 +159,7 @@ func testAccCheckLoadBalancerCertificateDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
 
 		_, err := tflightsail.FindLoadBalancerCertificateById(context.Background(), conn, rs.Primary.ID)
 
@@ -188,7 +188,7 @@ func testAccCheckLoadBalancerCertificateExists(n string, certificate *lightsail.
 			return errors.New("No Certificate ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
 
 		respCertificate, err := tflightsail.FindLoadBalancerCertificateById(context.Background(), conn, rs.Primary.ID)
 

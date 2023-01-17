@@ -16,7 +16,7 @@ import (
 
 func DataSourceSecurityProfile() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceSecurityProfileRead,
+		ReadWithoutTimeout: dataSourceSecurityProfileRead,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -60,7 +60,7 @@ func DataSourceSecurityProfile() *schema.Resource {
 }
 
 func dataSourceSecurityProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	instanceID := d.Get("instance_id").(string)

@@ -117,3 +117,27 @@ func FindCustomerManagedPolicy(conn *ssoadmin.SSOAdmin, policyName, policyPath, 
 
 	return attachedPolicy, nil
 }
+
+// FindPermissionsBoundary returns the permissions boundary attached to a permission set within a specified SSO instance.
+// Returns an error if no permissions boundary is found.
+func FindPermissionsBoundary(conn *ssoadmin.SSOAdmin, permissionSetArn, instanceArn string) (*ssoadmin.PermissionsBoundary, error) {
+	input := &ssoadmin.GetPermissionsBoundaryForPermissionSetInput{
+		PermissionSetArn: aws.String(permissionSetArn),
+		InstanceArn:      aws.String(instanceArn),
+	}
+
+	output, err := conn.GetPermissionsBoundaryForPermissionSet(input)
+
+	if tfawserr.ErrCodeEquals(err, ssoadmin.ErrCodeResourceNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output.PermissionsBoundary, nil
+}

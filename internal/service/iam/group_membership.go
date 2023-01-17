@@ -45,7 +45,7 @@ func ResourceGroupMembership() *schema.Resource {
 }
 
 func resourceGroupMembershipCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	group := d.Get("group").(string)
 	userList := flex.ExpandStringSet(d.Get("users").(*schema.Set))
@@ -59,7 +59,7 @@ func resourceGroupMembershipCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceGroupMembershipRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 	group := d.Get("group").(string)
 
 	input := &iam.GetGroupInput{
@@ -124,7 +124,7 @@ func resourceGroupMembershipRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceGroupMembershipUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	if d.HasChange("users") {
 		group := d.Get("group").(string)
@@ -155,7 +155,7 @@ func resourceGroupMembershipUpdate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceGroupMembershipDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 	userList := flex.ExpandStringSet(d.Get("users").(*schema.Set))
 	group := d.Get("group").(string)
 

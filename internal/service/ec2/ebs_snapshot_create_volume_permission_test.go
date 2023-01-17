@@ -26,7 +26,7 @@ func TestAccEC2EBSSnapshotCreateVolumePermission_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
-		CheckDestroy:             testAccSnapshotCreateVolumePermissionDestroy,
+		CheckDestroy:             testAccCheckSnapshotCreateVolumePermissionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEBSSnapshotCreateVolumePermissionConfig_basic(rName),
@@ -51,7 +51,7 @@ func TestAccEC2EBSSnapshotCreateVolumePermission_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
-		CheckDestroy:             testAccSnapshotCreateVolumePermissionDestroy,
+		CheckDestroy:             testAccCheckSnapshotCreateVolumePermissionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEBSSnapshotCreateVolumePermissionConfig_basic(rName),
@@ -72,7 +72,7 @@ func TestAccEC2EBSSnapshotCreateVolumePermission_snapshotOwnerExpectError(t *tes
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccSnapshotCreateVolumePermissionDestroy,
+		CheckDestroy:             testAccCheckSnapshotCreateVolumePermissionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccEBSSnapshotCreateVolumePermissionConfig_snapshotOwner(rName),
@@ -82,8 +82,8 @@ func TestAccEC2EBSSnapshotCreateVolumePermission_snapshotOwnerExpectError(t *tes
 	})
 }
 
-func testAccSnapshotCreateVolumePermissionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+func testAccCheckSnapshotCreateVolumePermissionDestroy(s *terraform.State) error {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_snapshot_create_volume_permission" {
@@ -129,7 +129,7 @@ func testAccSnapshotCreateVolumePermissionExists(n string) resource.TestCheckFun
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		_, err = tfec2.FindCreateSnapshotCreateVolumePermissionByTwoPartKey(conn, snapshotID, accountID)
 

@@ -78,7 +78,7 @@ func ResourcePartitionIndex() *schema.Resource {
 }
 
 func resourcePartitionIndexCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+	conn := meta.(*conns.AWSClient).GlueConn()
 	catalogID := createCatalogID(d, meta.(*conns.AWSClient).AccountID)
 	dbName := d.Get("database_name").(string)
 	tableName := d.Get("table_name").(string)
@@ -106,7 +106,7 @@ func resourcePartitionIndexCreate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourcePartitionIndexRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+	conn := meta.(*conns.AWSClient).GlueConn()
 
 	catalogID, dbName, tableName, _, tableErr := readPartitionIndexID(d.Id())
 	if tableErr != nil {
@@ -137,7 +137,7 @@ func resourcePartitionIndexRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourcePartitionIndexDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+	conn := meta.(*conns.AWSClient).GlueConn()
 
 	catalogID, dbName, tableName, partIndex, tableErr := readPartitionIndexID(d.Id())
 	if tableErr != nil {

@@ -136,7 +136,7 @@ func ResourceInstanceGroup() *schema.Resource {
 }
 
 func resourceInstanceGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EMRConn
+	conn := meta.(*conns.AWSClient).EMRConn()
 
 	instanceRole := emr.InstanceGroupTypeTask
 	groupConfig := &emr.InstanceGroupConfig{
@@ -203,7 +203,7 @@ func resourceInstanceGroupCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceInstanceGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EMRConn
+	conn := meta.(*conns.AWSClient).EMRConn()
 
 	ig, err := FetchInstanceGroup(conn, d.Get("cluster_id").(string), d.Id())
 
@@ -272,7 +272,7 @@ func resourceInstanceGroupRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceInstanceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EMRConn
+	conn := meta.(*conns.AWSClient).EMRConn()
 
 	log.Printf("[DEBUG] Modify EMR task group")
 	if d.HasChanges("instance_count", "configurations_json") {
@@ -334,7 +334,7 @@ func resourceInstanceGroupUpdate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceInstanceGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EMRConn
+	conn := meta.(*conns.AWSClient).EMRConn()
 
 	log.Printf("[WARN] AWS EMR Instance Group does not support DELETE; resizing cluster to zero before removing from state")
 	params := &emr.ModifyInstanceGroupsInput{

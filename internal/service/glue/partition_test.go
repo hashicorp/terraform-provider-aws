@@ -168,7 +168,7 @@ func TestAccGluePartition_Disappears_table(t *testing.T) {
 }
 
 func testAccCheckPartitionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_glue_partition" {
@@ -198,7 +198,7 @@ func testAccCheckPartitionExists(name string) resource.TestCheckFunc {
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
 		out, err := tfglue.FindPartitionByValues(conn, rs.Primary.ID)
 		if err != nil {
 			return err

@@ -292,9 +292,10 @@ func TestAccDMSS3Endpoint_sourceSimple(t *testing.T) {
 				PlanOnly: true,
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"compression_type", "date_partition_enabled", "parquet_timestamp_in_millisecond", "preserve_transactions", "use_csv_no_sup_value"},
 			},
 		},
 	})
@@ -330,7 +331,7 @@ func TestAccDMSS3Endpoint_source(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cdc_inserts_and_updates", "true"),
 					resource.TestCheckResourceAttr(resourceName, "cdc_max_batch_interval", "100"),
 					resource.TestCheckResourceAttr(resourceName, "cdc_min_file_size", "16"),
-					resource.TestCheckResourceAttr(resourceName, "compression_type", "GZIP"),
+					resource.TestCheckResourceAttr(resourceName, "compression_type", "NONE"),
 					resource.TestCheckResourceAttr(resourceName, "csv_null_value", "?"),
 					resource.TestCheckResourceAttr(resourceName, "data_page_size", "1100000"),
 					resource.TestCheckResourceAttr(resourceName, "date_partition_enabled", "true"),
@@ -683,7 +684,6 @@ resource "aws_dms_s3_endpoint" "test" {
   cdc_inserts_only                            = false
   cdc_max_batch_interval                      = 100
   cdc_min_file_size                           = 16
-  compression_type                            = "GZIP"
   csv_null_value                              = "?"
   data_page_size                              = 1100000
   date_partition_enabled                      = true
@@ -740,7 +740,6 @@ resource "aws_dms_s3_endpoint" "test" {
   cdc_inserts_only                            = true
   cdc_max_batch_interval                      = 101
   cdc_min_file_size                           = 17
-  compression_type                            = "NONE"
   csv_null_value                              = "0"
   data_page_size                              = 1000000
   date_partition_enabled                      = false

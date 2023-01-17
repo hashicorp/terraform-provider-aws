@@ -92,7 +92,6 @@ func TestAccLogsSubscriptionFilter_disappears(t *testing.T) {
 
 func TestAccLogsSubscriptionFilter_Disappears_logGroup(t *testing.T) {
 	var filter cloudwatchlogs.SubscriptionFilter
-	var logGroup cloudwatchlogs.LogGroup
 	logGroupResourceName := "aws_cloudwatch_log_group.test"
 	resourceName := "aws_cloudwatch_log_subscription_filter.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -107,7 +106,6 @@ func TestAccLogsSubscriptionFilter_Disappears_logGroup(t *testing.T) {
 				Config: testAccSubscriptionFilterConfig_destinationARNLambda(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubscriptionFilterExists(resourceName, &filter),
-					testAccCheckGroupExists(logGroupResourceName, &logGroup),
 					acctest.CheckResourceDisappears(acctest.Provider, tflogs.ResourceGroup(), logGroupResourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -247,7 +245,7 @@ func TestAccLogsSubscriptionFilter_roleARN(t *testing.T) {
 }
 
 func testAccCheckSubscriptionFilterDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudwatch_log_subscription_filter" {
@@ -281,7 +279,7 @@ func testAccCheckSubscriptionFilterExists(n string, v *cloudwatchlogs.Subscripti
 			return fmt.Errorf("No CloudWatch Logs Filter Subscription ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn()
 
 		output, err := tflogs.FindSubscriptionFilterByTwoPartKey(context.Background(), conn, rs.Primary.Attributes["log_group_name"], rs.Primary.Attributes["name"])
 

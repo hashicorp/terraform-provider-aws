@@ -441,7 +441,7 @@ func testAccCheckClassifierExists(resourceName string, classifier *glue.Classifi
 			return fmt.Errorf("No Glue Classifier ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
 
 		output, err := tfglue.FindClassifierByName(conn, rs.Primary.ID)
 
@@ -460,7 +460,7 @@ func testAccCheckClassifierDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn()
 
 		_, err := tfglue.FindClassifierByName(conn, rs.Primary.ID)
 

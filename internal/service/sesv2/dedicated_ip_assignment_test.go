@@ -19,17 +19,14 @@ import (
 )
 
 func TestAccSESV2DedicatedIPAssignment_serial(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]func(t *testing.T){
 		"basic":      testAccSESV2DedicatedIPAssignment_basic,
 		"disappears": testAccSESV2DedicatedIPAssignment_disappears,
 	}
 
-	for name, tc := range testCases {
-		tc := tc
-		t.Run(name, func(t *testing.T) {
-			tc(t)
-		})
-	}
+	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
 func testAccSESV2DedicatedIPAssignment_basic(t *testing.T) { // nosemgrep:ci.sesv2-in-func-name
@@ -92,7 +89,7 @@ func testAccSESV2DedicatedIPAssignment_disappears(t *testing.T) { // nosemgrep:c
 }
 
 func testAccCheckDedicatedIPAssignmentDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Client
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Client()
 	ctx := context.Background()
 
 	for _, rs := range s.RootModule().Resources {
@@ -129,7 +126,7 @@ func testAccCheckDedicatedIPAssignmentExists(name string) resource.TestCheckFunc
 			return create.Error(names.SESV2, create.ErrActionCheckingExistence, tfsesv2.ResNameDedicatedIPAssignment, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Client
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Client()
 		ctx := context.Background()
 		_, err := tfsesv2.FindDedicatedIPAssignmentByID(ctx, conn, rs.Primary.ID)
 		if err != nil {

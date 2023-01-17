@@ -170,7 +170,7 @@ func TestAccNeptuneParameterGroup_tags(t *testing.T) {
 }
 
 func testAccCheckParameterGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_neptune_parameter_group" {
@@ -223,7 +223,7 @@ func testAccCheckParameterGroupExists(n string, v *neptune.DBParameterGroup) res
 			return fmt.Errorf("No Neptune Parameter Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn()
 
 		opts := neptune.DescribeDBParameterGroupsInput{
 			DBParameterGroupName: aws.String(rs.Primary.ID),

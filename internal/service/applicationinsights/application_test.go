@@ -161,7 +161,7 @@ func TestAccApplicationInsightsApplication_disappears(t *testing.T) {
 }
 
 func testAccCheckApplicationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ApplicationInsightsConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ApplicationInsightsConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_applicationinsights_application" {
@@ -196,7 +196,7 @@ func testAccCheckApplicationExists(n string, app *applicationinsights.Applicatio
 			return fmt.Errorf("No applicationinsights Application ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ApplicationInsightsConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ApplicationInsightsConn()
 		resp, err := tfapplicationinsights.FindApplicationByName(conn, rs.Primary.ID)
 		if err != nil {
 			return err

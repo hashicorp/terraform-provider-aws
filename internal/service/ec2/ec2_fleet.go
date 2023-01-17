@@ -568,7 +568,7 @@ func ResourceFleet() *schema.Resource {
 }
 
 func resourceFleetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -629,7 +629,7 @@ func resourceFleetCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceFleetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -698,7 +698,7 @@ func resourceFleetRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceFleetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &ec2.ModifyFleetInput{
@@ -737,7 +737,7 @@ func resourceFleetUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceFleetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	log.Printf("[DEBUG] Deleting EC2 Fleet: %s", d.Id())
 	output, err := conn.DeleteFleets(&ec2.DeleteFleetsInput{

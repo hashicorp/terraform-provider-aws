@@ -46,7 +46,7 @@ func TestAccIAMAccountPasswordPolicy_basic(t *testing.T) {
 }
 
 func testAccCheckAccountPasswordPolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iam_account_password_policy" {
@@ -83,7 +83,7 @@ func testAccCheckAccountPasswordPolicyExists(n string, res *iam.GetAccountPasswo
 			return fmt.Errorf("No policy ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
 		resp, err := conn.GetAccountPasswordPolicy(&iam.GetAccountPasswordPolicyInput{})
 		if err != nil {

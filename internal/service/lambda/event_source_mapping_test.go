@@ -102,6 +102,7 @@ func TestAccLambdaEventSourceMapping_SQS_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "function_arn", functionResourceName, "arn"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "last_modified"),
 					resource.TestCheckResourceAttr(resourceName, "filter_criteria.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "scaling_config.#", "0"),
 				),
 			},
 			// batch_size became optional.  Ensure that if the user supplies the default
@@ -1083,9 +1084,67 @@ func TestAccLambdaEventSourceMapping_SQS_filterCriteria(t *testing.T) {
 	})
 }
 
+func TestAccLambdaEventSourceMapping_SQS_scalingConfig(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var conf lambda.EventSourceMappingConfiguration
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lambda_event_source_mapping.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEventSourceMappingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEventSourceMappingConfig_sqsScalingConfig1(rName, 10),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEventSourceMappingExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "scaling_config.0.maximum_concurrency", "10"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"last_modified"},
+			},
+			{
+				Config: testAccEventSourceMappingConfig_sqsScalingConfig1(rName, 15),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEventSourceMappingExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "scaling_config.0.maximum_concurrency", "15"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"last_modified"},
+			},
+			{
+				Config: testAccEventSourceMappingConfig_sqsScalingConfig2(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEventSourceMappingExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "scaling_config.#", "0"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"last_modified"},
+			},
+		},
+	})
+}
+
 func testAccCheckEventSourceMappingIsBeingDisabled(conf *lambda.EventSourceMappingConfiguration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn()
 		// Disable enabled state
 		err := resource.Retry(10*time.Minute, func() *resource.RetryError {
 			params := &lambda.UpdateEventSourceMappingInput{
@@ -1134,7 +1193,7 @@ func testAccCheckEventSourceMappingIsBeingDisabled(conf *lambda.EventSourceMappi
 }
 
 func testAccCheckEventSourceMappingDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lambda_event_source_mapping" {
@@ -1168,7 +1227,7 @@ func testAccCheckEventSourceMappingExists(n string, v *lambda.EventSourceMapping
 			return fmt.Errorf("no Lambda Event Source Mapping ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn()
 
 		eventSourceMappingConfiguration, err := tflambda.FindEventSourceMappingConfigurationByID(conn, rs.Primary.ID)
 
@@ -2130,7 +2189,7 @@ resource "aws_lambda_event_source_mapping" "test" {
 }
 
 func testAccPreCheckMQ(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).MQConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).MQConn()
 
 	input := &mq.ListBrokersInput{}
 
@@ -2146,7 +2205,7 @@ func testAccPreCheckMQ(t *testing.T) {
 }
 
 func testAccPreCheckMSK(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn()
 
 	input := &kafka.ListClustersInput{}
 
@@ -2162,7 +2221,7 @@ func testAccPreCheckMSK(t *testing.T) {
 }
 
 func testAccPreCheckSecretsManager(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerConn()
 
 	input := &secretsmanager.ListSecretsInput{}
 
@@ -2212,6 +2271,28 @@ resource "aws_lambda_event_source_mapping" "test" {
 }
 
 func testAccEventSourceMappingConfig_sqsFilterCriteria3(rName string) string {
+	return acctest.ConfigCompose(testAccEventSourceMappingConfig_sqsBase(rName), `
+resource "aws_lambda_event_source_mapping" "test" {
+  event_source_arn = aws_sqs_queue.test.arn
+  function_name    = aws_lambda_function.test.arn
+}
+`)
+}
+
+func testAccEventSourceMappingConfig_sqsScalingConfig1(rName string, maximumConcurrency int) string {
+	return acctest.ConfigCompose(testAccEventSourceMappingConfig_sqsBase(rName), fmt.Sprintf(`
+resource "aws_lambda_event_source_mapping" "test" {
+  event_source_arn = aws_sqs_queue.test.arn
+  function_name    = aws_lambda_function.test.arn
+
+  scaling_config {
+    maximum_concurrency = %[1]d
+  }
+}
+`, maximumConcurrency))
+}
+
+func testAccEventSourceMappingConfig_sqsScalingConfig2(rName string) string {
 	return acctest.ConfigCompose(testAccEventSourceMappingConfig_sqsBase(rName), `
 resource "aws_lambda_event_source_mapping" "test" {
   event_source_arn = aws_sqs_queue.test.arn

@@ -131,7 +131,7 @@ func TestAccRoute53ResolverFirewallRule_disappears(t *testing.T) {
 }
 
 func testAccCheckFirewallRuleDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_route53_resolver_firewall_rule" {
@@ -177,7 +177,7 @@ func testAccCheckFirewallRuleExists(n string, v *route53resolver.FirewallRule) r
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn()
 
 		output, err := tfroute53resolver.FindFirewallRuleByTwoPartKey(context.Background(), conn, firewallRuleGroupID, firewallDomainListID)
 

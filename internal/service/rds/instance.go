@@ -101,7 +101,7 @@ func ResourceInstance() *schema.Resource {
 			"apply_immediately": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Computed: true,
+				Default:  false,
 			},
 			"arn": {
 				Type:     schema.TypeString,
@@ -579,7 +579,7 @@ func ResourceInstance() *schema.Resource {
 
 func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -1539,7 +1539,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) (diags diag.Diagnostics) {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -1835,7 +1835,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			}
 
 			cleaupWaiters = append(cleaupWaiters, func(optFns ...tfresource.OptionsFunc) {
-				_, err = waitDBInstanceDeleted(ctx, meta.(*conns.AWSClient).RDSConn, sourceARN.Identifier, deadline.remaining(), optFns...)
+				_, err = waitDBInstanceDeleted(ctx, meta.(*conns.AWSClient).RDSConn(), sourceARN.Identifier, deadline.remaining(), optFns...)
 				if err != nil {
 					diags = errs.AppendErrorf(diags, "updating RDS DB Instance (%s): deleting Blue/Green Deployment source: waiting for completion: %s", d.Id(), err)
 				}
@@ -1875,7 +1875,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTagsWithContext(ctx, meta.(*conns.AWSClient).RDSConn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTagsWithContext(ctx, meta.(*conns.AWSClient).RDSConn(), d.Get("arn").(string), o, n); err != nil {
 			return errs.AppendErrorf(diags, "updating RDS DB Instance (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
@@ -1888,8 +1888,12 @@ func dbInstancePopulateModify(input *rds_sdkv2.ModifyDBInstanceInput, d *schema.
 
 	if d.HasChanges("allocated_storage", "iops") {
 		needsModify = true
-		input.Iops = aws.Int32(int32(d.Get("iops").(int)))
 		input.AllocatedStorage = aws.Int32(int32(d.Get("allocated_storage").(int)))
+
+		// Send Iops if it has changed or not (StorageType == "gp3" and AllocatedStorage < threshold).
+		if d.HasChange("iops") || !isStorageTypeGP3BelowAllocatedStorageThreshold(d) {
+			input.Iops = aws.Int32(int32(d.Get("iops").(int)))
+		}
 	}
 
 	if d.HasChange("auto_minor_version_upgrade") {
@@ -2108,7 +2112,7 @@ func dbInstanceModify(ctx context.Context, conn *rds_sdkv2.Client, input *rds_sd
 }
 
 func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) (diags diag.Diagnostics) {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	input := &rds.DeleteDBInstanceInput{
 		DBInstanceIdentifier:   aws.String(d.Id()),
@@ -2189,6 +2193,22 @@ func resourceInstanceImport(_ context.Context, d *schema.ResourceData, meta inte
 	d.Set("skip_final_snapshot", true)
 	d.Set("delete_automated_backups", true)
 	return []*schema.ResourceData{d}, nil
+}
+
+// See https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Storage.html#gp3-storage.
+func isStorageTypeGP3BelowAllocatedStorageThreshold(d *schema.ResourceData) bool {
+	if storageType := d.Get("storage_type").(string); storageType != storageTypeGP3 {
+		return false
+	}
+
+	switch allocatedStorage, engine := d.Get("allocated_storage").(int), d.Get("engine").(string); engine {
+	case InstanceEngineMariaDB, InstanceEngineMySQL, InstanceEnginePostgres:
+		return allocatedStorage < 400
+	case InstanceEngineOracleEnterprise, InstanceEngineOracleEnterpriseCDB, InstanceEngineOracleStandard2, InstanceEngineOracleStandard2CDB:
+		return allocatedStorage < 200
+	}
+
+	return false
 }
 
 func dbSetResourceDataEngineVersionFromInstance(d *schema.ResourceData, c *rds.DBInstance) {
@@ -2507,11 +2527,10 @@ func waitBlueGreenDeploymentSwitchoverCompleted(ctx context.Context, conn *rds_s
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*types.BlueGreenDeployment); ok {
-		if ues, ok := errs.As[*resource.UnexpectedStateError](err); ok {
-			if ues.State == "INVALID_CONFIGURATION" || ues.State == "SWITCHOVER_FAILED" {
-				err = errors.New(aws.StringValue(output.StatusDetails))
-			}
+		if status := aws.StringValue(output.Status); status == "INVALID_CONFIGURATION" || status == "SWITCHOVER_FAILED" {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.StatusDetails)))
 		}
+
 		return output, err
 	}
 

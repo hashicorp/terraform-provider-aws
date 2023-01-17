@@ -11,7 +11,7 @@ import (
 
 func DataSourcePipeline() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourcePipelineRead,
+		ReadWithoutTimeout: dataSourcePipelineRead,
 
 		Schema: map[string]*schema.Schema{
 			"pipeline_id": {
@@ -32,7 +32,7 @@ func DataSourcePipeline() *schema.Resource {
 }
 
 func dataSourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DataPipelineConn
+	conn := meta.(*conns.AWSClient).DataPipelineConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 

@@ -21,6 +21,8 @@ import (
 )
 
 func TestSuppressEquivalentTopicSubscriptionDeliveryPolicy(t *testing.T) {
+	t.Parallel()
+
 	var testCases = []struct {
 		old        string
 		new        string
@@ -625,7 +627,7 @@ func TestAccSNSTopicSubscription_Disappears_topic(t *testing.T) {
 }
 
 func testAccCheckTopicSubscriptionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_sns_topic_subscription" {
@@ -663,7 +665,7 @@ func testAccCheckTopicSubscriptionExists(n string, v *map[string]string) resourc
 			return fmt.Errorf("No SNS Topic Subscription ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn()
 
 		output, err := tfsns.FindSubscriptionAttributesByARN(context.Background(), conn, rs.Primary.ID)
 
@@ -1205,6 +1207,8 @@ resource "aws_sns_topic_subscription" "test" {
   protocol               = "https"
   endpoint               = replace(aws_api_gateway_deployment.test.invoke_url, "https://", "https://davematthews:granny@")
   endpoint_auto_confirms = true
+
+  confirmation_timeout_in_minutes = 3
 }
 `, rName)
 }

@@ -73,7 +73,7 @@ func ResourceProtectionGroup() *schema.Resource {
 }
 
 func resourceProtectionGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ShieldConn
+	conn := meta.(*conns.AWSClient).ShieldConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -106,7 +106,7 @@ func resourceProtectionGroupCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceProtectionGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ShieldConn
+	conn := meta.(*conns.AWSClient).ShieldConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -131,14 +131,8 @@ func resourceProtectionGroupRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("aggregation", resp.ProtectionGroup.Aggregation)
 	d.Set("protection_group_id", resp.ProtectionGroup.ProtectionGroupId)
 	d.Set("pattern", resp.ProtectionGroup.Pattern)
-
-	if resp.ProtectionGroup.Members != nil {
-		d.Set("members", resp.ProtectionGroup.Members)
-	}
-
-	if resp.ProtectionGroup.ResourceType != nil {
-		d.Set("resource_type", resp.ProtectionGroup.ResourceType)
-	}
+	d.Set("members", resp.ProtectionGroup.Members)
+	d.Set("resource_type", resp.ProtectionGroup.ResourceType)
 
 	tags, err := ListTags(conn, arn)
 
@@ -161,7 +155,7 @@ func resourceProtectionGroupRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceProtectionGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ShieldConn
+	conn := meta.(*conns.AWSClient).ShieldConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &shield.UpdateProtectionGroupInput{
@@ -197,7 +191,7 @@ func resourceProtectionGroupUpdate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceProtectionGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ShieldConn
+	conn := meta.(*conns.AWSClient).ShieldConn()
 
 	log.Printf("[DEBUG] Deletinh Shield Protection Group: %s", d.Id())
 	_, err := conn.DeleteProtectionGroup(&shield.DeleteProtectionGroupInput{

@@ -12,18 +12,14 @@ import (
 )
 
 func TestAccECRReplicationConfiguration_serial(t *testing.T) {
-	testFuncs := map[string]func(t *testing.T){
+	t.Parallel()
+
+	testCases := map[string]func(t *testing.T){
 		"basic":            testAccReplicationConfiguration_basic,
 		"repositoryFilter": testAccReplicationConfiguration_repositoryFilter,
 	}
 
-	for name, testFunc := range testFuncs {
-		testFunc := testFunc
-
-		t.Run(name, func(t *testing.T) {
-			testFunc(t)
-		})
-	}
+	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
 func testAccReplicationConfiguration_basic(t *testing.T) {
@@ -150,7 +146,7 @@ func testAccCheckReplicationConfigurationExists(name string) resource.TestCheckF
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn()
 		out, err := conn.DescribeRegistry(&ecr.DescribeRegistryInput{})
 		if err != nil {
 			return fmt.Errorf("ECR replication rules not found: %w", err)
@@ -165,7 +161,7 @@ func testAccCheckReplicationConfigurationExists(name string) resource.TestCheckF
 }
 
 func testAccCheckReplicationConfigurationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ecr_replication_configuration" {

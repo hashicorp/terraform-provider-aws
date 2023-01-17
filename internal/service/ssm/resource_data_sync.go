@@ -71,7 +71,7 @@ func ResourceResourceDataSync() *schema.Resource {
 }
 
 func resourceResourceDataSyncCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+	conn := meta.(*conns.AWSClient).SSMConn()
 
 	name := d.Get("name").(string)
 
@@ -103,7 +103,7 @@ func resourceResourceDataSyncCreate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceResourceDataSyncRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+	conn := meta.(*conns.AWSClient).SSMConn()
 
 	syncItem, err := FindResourceDataSyncItem(conn, d.Id())
 
@@ -123,7 +123,7 @@ func resourceResourceDataSyncRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceResourceDataSyncDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+	conn := meta.(*conns.AWSClient).SSMConn()
 
 	input := &ssm.DeleteResourceDataSyncInput{
 		SyncName: aws.String(d.Id()),

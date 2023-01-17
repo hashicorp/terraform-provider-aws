@@ -40,7 +40,7 @@ func ResourceDomainMailFrom() *schema.Resource {
 }
 
 func resourceDomainMailFromSet(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	behaviorOnMxFailure := d.Get("behavior_on_mx_failure").(string)
 	domainName := d.Get("domain").(string)
@@ -63,7 +63,7 @@ func resourceDomainMailFromSet(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDomainMailFromRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	domainName := d.Id()
 
@@ -99,7 +99,7 @@ func resourceDomainMailFromRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceDomainMailFromDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	domainName := d.Id()
 

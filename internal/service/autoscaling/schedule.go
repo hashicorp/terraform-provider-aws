@@ -85,7 +85,7 @@ func ResourceSchedule() *schema.Resource {
 }
 
 func resourceSchedulePut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AutoScalingConn
+	conn := meta.(*conns.AWSClient).AutoScalingConn()
 
 	name := d.Get("scheduled_action_name").(string)
 	input := &autoscaling.PutScheduledUpdateGroupActionInput{
@@ -145,7 +145,7 @@ func resourceSchedulePut(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceScheduleRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AutoScalingConn
+	conn := meta.(*conns.AWSClient).AutoScalingConn()
 
 	sa, err := FindScheduledUpdateGroupAction(conn, d.Get("autoscaling_group_name").(string), d.Id())
 
@@ -183,15 +183,13 @@ func resourceScheduleRead(d *schema.ResourceData, meta interface{}) error {
 	if sa.StartTime != nil {
 		d.Set("start_time", sa.StartTime.Format(ScheduleTimeLayout))
 	}
-	if sa.TimeZone != nil {
-		d.Set("time_zone", sa.TimeZone)
-	}
+	d.Set("time_zone", sa.TimeZone)
 
 	return nil
 }
 
 func resourceScheduleDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AutoScalingConn
+	conn := meta.(*conns.AWSClient).AutoScalingConn()
 
 	log.Printf("[INFO] Deleting Auto Scaling Scheduled Action: %s", d.Id())
 	_, err := conn.DeleteScheduledAction(&autoscaling.DeleteScheduledActionInput{

@@ -350,7 +350,7 @@ func TestAccElasticsearchDomain_duplicate(t *testing.T) {
 		ErrorCheck:               acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy: func(s *terraform.State) error {
-			conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticsearchConn
+			conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticsearchConn()
 			_, err := conn.DeleteElasticsearchDomain(&elasticsearch.DeleteElasticsearchDomainInput{
 				DomainName: aws.String(rName),
 			})
@@ -360,7 +360,7 @@ func TestAccElasticsearchDomain_duplicate(t *testing.T) {
 			{
 				PreConfig: func() {
 					// Create duplicate
-					conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticsearchConn
+					conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticsearchConn()
 					_, err := conn.CreateElasticsearchDomain(&elasticsearch.CreateElasticsearchDomainInput{
 						DomainName: aws.String(rName),
 						EBSOptions: &elasticsearch.EBSOptions{
@@ -1340,7 +1340,7 @@ func TestAccElasticsearchDomain_update(t *testing.T) {
 		}})
 }
 
-func TestAccElasticsearchDomain_UpdateVolume_type(t *testing.T) {
+func TestAccElasticsearchDomain_VolumeType_update(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1392,7 +1392,7 @@ func TestAccElasticsearchDomain_UpdateVolume_type(t *testing.T) {
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/13867
-func TestAccElasticsearchDomain_WithVolumeType_missing(t *testing.T) {
+func TestAccElasticsearchDomain_VolumeType_missing(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1675,7 +1675,7 @@ func testAccCheckDomainExists(n string, domain *elasticsearch.ElasticsearchDomai
 			return fmt.Errorf("No ES Domain ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticsearchConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticsearchConn()
 		resp, err := tfelasticsearch.FindDomainByName(conn, rs.Primary.Attributes["domain_name"])
 		if err != nil {
 			return fmt.Errorf("Error describing domain: %s", err.Error())
@@ -1695,7 +1695,7 @@ func testAccCheckDomainExists(n string, domain *elasticsearch.ElasticsearchDomai
 func testAccCheckDomainNotRecreated(domain1, domain2 *elasticsearch.ElasticsearchDomainStatus) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		/*
-			conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticsearchConn
+			conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticsearchConn()
 
 			ic, err := conn.DescribeElasticsearchDomainConfig(&elasticsearch.DescribeElasticsearchDomainConfigInput{
 				DomainName: domain1.DomainName,
@@ -1732,7 +1732,7 @@ func testAccCheckDomainDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticsearchConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticsearchConn()
 		_, err := tfelasticsearch.FindDomainByName(conn, rs.Primary.Attributes["domain_name"])
 
 		if tfresource.NotFound(err) {
@@ -2985,7 +2985,7 @@ resource "aws_elasticsearch_domain" "test" {
 }
 
 func testAccPreCheckCognitoIdentityProvider(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn()
 
 	input := &cognitoidentityprovider.ListUserPoolsInput{
 		MaxResults: aws.Int64(1),
@@ -3003,7 +3003,7 @@ func testAccPreCheckCognitoIdentityProvider(t *testing.T) {
 }
 
 func testAccCheckELBDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_elb" {

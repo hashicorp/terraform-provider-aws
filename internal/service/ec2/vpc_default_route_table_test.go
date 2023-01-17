@@ -517,7 +517,7 @@ func TestAccVPCDefaultRouteTable_revokeExistingRules(t *testing.T) {
 }
 
 func testAccCheckDefaultRouteTableDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_default_route_table" {
@@ -1219,7 +1219,7 @@ resource "aws_default_route_table" "test" {
 }
 
 func testAccPreCheckELBv2GatewayLoadBalancer(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn()
 
 	input := &elbv2.DescribeAccountLimitsInput{}
 

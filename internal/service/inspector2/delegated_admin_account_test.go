@@ -19,17 +19,14 @@ import (
 )
 
 func TestAccInspector2DelegatedAdminAccount_serial(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]func(t *testing.T){
 		"basic":      testAccDelegatedAdminAccount_basic,
 		"disappears": testAccDelegatedAdminAccount_disappears,
 	}
 
-	for name, tc := range testCases {
-		tc := tc
-		t.Run(name, func(t *testing.T) {
-			tc(t)
-		})
-	}
+	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
 func testAccDelegatedAdminAccount_basic(t *testing.T) {
@@ -109,7 +106,7 @@ func testAccDelegatedAdminAccount_disappears(t *testing.T) {
 }
 
 func testAccCheckDelegatedAdminAccountDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Client
+	conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Client()
 	ctx := context.Background()
 
 	for _, rs := range s.RootModule().Resources {
@@ -144,7 +141,7 @@ func testAccCheckDelegatedAdminAccountExists(name string) resource.TestCheckFunc
 			return create.Error(names.Inspector2, create.ErrActionCheckingExistence, tfinspector2.ResNameDelegatedAdminAccount, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Client
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Client()
 		ctx := context.Background()
 		_, _, err := tfinspector2.FindDelegatedAdminAccountStatusID(ctx, conn, rs.Primary.ID)
 
@@ -157,7 +154,7 @@ func testAccCheckDelegatedAdminAccountExists(name string) resource.TestCheckFunc
 }
 
 func testAccPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Client
+	conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Client()
 	ctx := context.Background()
 
 	_, err := conn.ListDelegatedAdminAccounts(ctx, &inspector2.ListDelegatedAdminAccountsInput{})

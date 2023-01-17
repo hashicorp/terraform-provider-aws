@@ -395,7 +395,7 @@ func TestAccRoute53HealthCheck_disappears(t *testing.T) {
 }
 
 func testAccCheckHealthCheckDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_route53_health_check" {
@@ -429,7 +429,7 @@ func testAccCheckHealthCheckExists(n string, v *route53.HealthCheck) resource.Te
 			return fmt.Errorf("No Route53 Health Check ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn()
 
 		output, err := tfroute53.FindHealthCheckByID(conn, rs.Primary.ID)
 

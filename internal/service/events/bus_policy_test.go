@@ -112,7 +112,7 @@ func testAccCheckBusPolicyExists(pr string) resource.TestCheckFunc {
 			Name: aws.String(eventBusName),
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn()
 		describedEventBus, err := conn.DescribeEventBus(input)
 
 		if err != nil {
@@ -143,7 +143,7 @@ func testAccBusPolicyDocument(pr string) resource.TestCheckFunc {
 			Name: aws.String(eventBusName),
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn()
 		describedEventBus, err := conn.DescribeEventBus(input)
 		if err != nil {
 			return fmt.Errorf("Reading EventBridge bus policy for '%s' failed: %w", pr, err)

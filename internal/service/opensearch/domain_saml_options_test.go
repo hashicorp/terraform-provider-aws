@@ -175,7 +175,7 @@ func testAccCheckESDomainSAMLOptionsDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchConn()
 		_, err := tfopensearch.FindDomainByName(conn, rs.Primary.Attributes["domain_name"])
 
 		if tfresource.NotFound(err) {
@@ -208,7 +208,7 @@ func testAccCheckESDomainSAMLOptions(esResource string, samlOptionsResource stri
 			return fmt.Errorf("Not found: %s", samlOptionsResource)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchConn()
 		_, err := tfopensearch.FindDomainByName(conn, options.Primary.Attributes["domain_name"])
 
 		return err

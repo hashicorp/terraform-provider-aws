@@ -21,6 +21,8 @@ const (
 )
 
 func TestContainerServiceDeploymentVersionParseResourceID(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		TestName            string
 		Input               string
@@ -66,7 +68,10 @@ func TestContainerServiceDeploymentVersionParseResourceID(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.TestName, func(t *testing.T) {
+			t.Parallel()
+
 			gotServiceName, gotVersion, err := tflightsail.ContainerServiceDeploymentVersionParseResourceID(testCase.Input)
 
 			if err != nil && !testCase.Error {
@@ -477,7 +482,7 @@ func testAccCheckContainerServiceDeploymentVersionExists(resourceName string) re
 			return fmt.Errorf("no Lightsail Container Service Deployment Version ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
 
 		serviceName, version, err := tflightsail.ContainerServiceDeploymentVersionParseResourceID(rs.Primary.ID)
 		if err != nil {

@@ -268,7 +268,7 @@ func ResourceOpenzfsFileSystem() *schema.Resource {
 }
 
 func resourceOepnzfsFileSystemCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FSxConn
+	conn := meta.(*conns.AWSClient).FSxConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -374,7 +374,7 @@ func resourceOepnzfsFileSystemCreate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceOpenzfsFileSystemRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FSxConn
+	conn := meta.(*conns.AWSClient).FSxConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -410,14 +410,9 @@ func resourceOpenzfsFileSystemRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("arn", filesystem.ResourceARN)
 	d.Set("dns_name", filesystem.DNSName)
 	d.Set("deployment_type", openzfsConfig.DeploymentType)
-	if openzfsConfig.ThroughputCapacity != nil {
-		d.Set("throughput_capacity", openzfsConfig.ThroughputCapacity)
-	}
+	d.Set("throughput_capacity", openzfsConfig.ThroughputCapacity)
 	d.Set("storage_type", filesystem.StorageType)
-
-	if filesystem.KmsKeyId != nil {
-		d.Set("kms_key_id", filesystem.KmsKeyId)
-	}
+	d.Set("kms_key_id", filesystem.KmsKeyId)
 
 	if err := d.Set("network_interface_ids", aws.StringValueSlice(filesystem.NetworkInterfaceIds)); err != nil {
 		return fmt.Errorf("error setting network_interface_ids: %w", err)
@@ -467,7 +462,7 @@ func resourceOpenzfsFileSystemRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceOpenzfsFileSystemUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FSxConn
+	conn := meta.(*conns.AWSClient).FSxConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -555,7 +550,7 @@ func resourceOpenzfsFileSystemUpdate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceOpenzfsFileSystemDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FSxConn
+	conn := meta.(*conns.AWSClient).FSxConn()
 
 	log.Printf("[DEBUG] Deleting FSx OpenZFS File System: %s", d.Id())
 	_, err := conn.DeleteFileSystem(&fsx.DeleteFileSystemInput{

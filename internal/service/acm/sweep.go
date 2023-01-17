@@ -45,7 +45,7 @@ func sweepCertificates(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).ACMConn
+	conn := client.(*conns.AWSClient).ACMConn()
 	var sweeperErrs *multierror.Error
 
 	err = conn.ListCertificatesPages(&acm.ListCertificatesInput{}, func(page *acm.ListCertificatesOutput, lastPage bool) bool {

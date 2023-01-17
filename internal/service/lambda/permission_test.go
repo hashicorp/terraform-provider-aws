@@ -17,6 +17,8 @@ import (
 )
 
 func TestPermissionUnmarshalling(t *testing.T) {
+	t.Parallel()
+
 	v := tflambda.Policy{}
 	err := json.Unmarshal(testPolicy, &v)
 	if err != nil {
@@ -58,6 +60,8 @@ func TestPermissionUnmarshalling(t *testing.T) {
 }
 
 func TestPermissionOrgUnmarshalling(t *testing.T) {
+	t.Parallel()
+
 	v := tflambda.Policy{}
 	err := json.Unmarshal(testOrgPolicy, &v)
 	if err != nil {
@@ -94,6 +98,8 @@ func TestPermissionOrgUnmarshalling(t *testing.T) {
 }
 
 func TestPermissionGetQualifierFromAliasOrVersionARN_alias(t *testing.T) {
+	t.Parallel()
+
 	arnWithAlias := "arn:aws:lambda:us-west-2:187636751137:function:lambda_function_name:testalias" // lintignore:AWSAT003,AWSAT005 // unit test
 	expectedQualifier := "testalias"
 	qualifier, err := tflambda.GetQualifierFromAliasOrVersionARN(arnWithAlias)
@@ -106,6 +112,8 @@ func TestPermissionGetQualifierFromAliasOrVersionARN_alias(t *testing.T) {
 }
 
 func TestPermissionGetQualifierFromAliasOrVersionARN_govcloud(t *testing.T) {
+	t.Parallel()
+
 	arnWithAlias := "arn:aws-us-gov:lambda:us-gov-west-1:187636751137:function:lambda_function_name:testalias" // lintignore:AWSAT003,AWSAT005 // unit test
 	expectedQualifier := "testalias"
 	qualifier, err := tflambda.GetQualifierFromAliasOrVersionARN(arnWithAlias)
@@ -118,6 +126,8 @@ func TestPermissionGetQualifierFromAliasOrVersionARN_govcloud(t *testing.T) {
 }
 
 func TestPermissionGetQualifierFromAliasOrVersionARN_version(t *testing.T) {
+	t.Parallel()
+
 	arnWithVersion := "arn:aws:lambda:us-west-2:187636751137:function:lambda_function_name:223" // lintignore:AWSAT003,AWSAT005 // unit test
 	expectedQualifier := "223"
 	qualifier, err := tflambda.GetQualifierFromAliasOrVersionARN(arnWithVersion)
@@ -130,6 +140,8 @@ func TestPermissionGetQualifierFromAliasOrVersionARN_version(t *testing.T) {
 }
 
 func TestPermissionGetQualifierFromAliasOrVersionARN_invalid(t *testing.T) {
+	t.Parallel()
+
 	invalidArn := "arn:aws:lambda:us-west-2:187636751137:function:lambda_function_name" // lintignore:AWSAT003,AWSAT005 // unit test
 	qualifier, err := tflambda.GetQualifierFromAliasOrVersionARN(invalidArn)
 	if err == nil {
@@ -151,6 +163,8 @@ func TestPermissionGetQualifierFromAliasOrVersionARN_invalid(t *testing.T) {
 }
 
 func TestPermissionGetFunctionNameFromARN_invalid(t *testing.T) {
+	t.Parallel()
+
 	invalidArn := "arn:aws:lambda:us-west-2:187636751137:function:" // lintignore:AWSAT003,AWSAT005 // unit test
 	fn, err := tflambda.GetFunctionNameFromARN(invalidArn)
 	if err == nil {
@@ -162,6 +176,8 @@ func TestPermissionGetFunctionNameFromARN_invalid(t *testing.T) {
 }
 
 func TestPermissionGetFunctionNameFromARN_valid(t *testing.T) {
+	t.Parallel()
+
 	validArn := "arn:aws:lambda:us-west-2:187636751137:function:lambda_function_name" // lintignore:AWSAT003,AWSAT005 // unit test
 	fn, err := tflambda.GetFunctionNameFromARN(validArn)
 	if err != nil {
@@ -187,6 +203,8 @@ func TestPermissionGetFunctionNameFromARN_valid(t *testing.T) {
 }
 
 func TestPermissionGetFunctionNameFromGovCloudARN(t *testing.T) {
+	t.Parallel()
+
 	validArn := "arn:aws-us-gov:lambda:us-gov-west-1:187636751137:function:lambda_function_name" // lintignore:AWSAT003,AWSAT005 // unit test
 	fn, err := tflambda.GetFunctionNameFromARN(validArn)
 	if err != nil {
@@ -683,7 +701,7 @@ func testAccCheckPermissionExists(n string, v *tflambda.PolicyStatement) resourc
 			return fmt.Errorf("No Lambda Permission ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn()
 
 		output, err := tflambda.FindPolicyStatementByTwoPartKey(conn, rs.Primary.Attributes["function_name"], rs.Primary.ID, rs.Primary.Attributes["qualifier"])
 
@@ -698,7 +716,7 @@ func testAccCheckPermissionExists(n string, v *tflambda.PolicyStatement) resourc
 }
 
 func testAccCheckPermissionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lambda_permission" {

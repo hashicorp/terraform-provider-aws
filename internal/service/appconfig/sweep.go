@@ -57,7 +57,7 @@ func sweepApplications(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).AppConfigConn
+	conn := client.(*conns.AWSClient).AppConfigConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -109,7 +109,7 @@ func sweepConfigurationProfiles(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).AppConfigConn
+	conn := client.(*conns.AWSClient).AppConfigConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -185,7 +185,7 @@ func sweepDeploymentStrategies(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).AppConfigConn
+	conn := client.(*conns.AWSClient).AppConfigConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -243,7 +243,7 @@ func sweepEnvironments(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).AppConfigConn
+	conn := client.(*conns.AWSClient).AppConfigConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -319,7 +319,7 @@ func sweepHostedConfigurationVersions(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).AppConfigConn
+	conn := client.(*conns.AWSClient).AppConfigConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 

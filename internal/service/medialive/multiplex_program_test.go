@@ -19,6 +19,8 @@ import (
 )
 
 func TestParseMultiplexProgramIDUnitTest(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		TestName    string
 		Input       string
@@ -43,7 +45,10 @@ func TestParseMultiplexProgramIDUnitTest(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.TestName, func(t *testing.T) {
+			t.Parallel()
+
 			pn, mid, err := tfmedialive.ParseMultiplexProgramID(testCase.Input)
 
 			if err != nil && !testCase.Error {
@@ -178,7 +183,7 @@ func testAccMultiplexProgram_disappears(t *testing.T) {
 }
 
 func testAccCheckMultiplexProgramDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveClient
+	conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveClient()
 	ctx := context.Background()
 
 	for _, rs := range s.RootModule().Resources {
@@ -219,7 +224,7 @@ func testAccCheckMultiplexProgramExists(name string, multiplexprogram *medialive
 			return create.Error(names.MediaLive, create.ErrActionCheckingExistence, tfmedialive.ResNameMultiplexProgram, rs.Primary.ID, err)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveClient
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveClient()
 		ctx := context.Background()
 		resp, err := tfmedialive.FindMultiplexProgramByID(ctx, conn, multiplexId, programName)
 

@@ -75,7 +75,7 @@ func TestAccRedshiftServerlessUsageLimit_disappears(t *testing.T) {
 }
 
 func testAccCheckUsageLimitDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftServerlessConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftServerlessConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_redshiftserverless_usage_limit" {
@@ -108,7 +108,7 @@ func testAccCheckUsageLimitExists(name string) resource.TestCheckFunc {
 			return fmt.Errorf("Redshift Serverless Usage Limit is not set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftServerlessConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftServerlessConn()
 
 		_, err := tfredshiftserverless.FindUsageLimitByName(conn, rs.Primary.ID)
 

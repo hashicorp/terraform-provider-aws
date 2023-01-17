@@ -315,7 +315,7 @@ func ResourceCertificateAuthority() *schema.Resource {
 }
 
 func resourceCertificateAuthorityCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ACMPCAConn
+	conn := meta.(*conns.AWSClient).ACMPCAConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -367,7 +367,7 @@ func resourceCertificateAuthorityCreate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceCertificateAuthorityRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ACMPCAConn
+	conn := meta.(*conns.AWSClient).ACMPCAConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -481,7 +481,7 @@ func resourceCertificateAuthorityRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceCertificateAuthorityUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ACMPCAConn
+	conn := meta.(*conns.AWSClient).ACMPCAConn()
 	updateCertificateAuthority := false
 
 	input := &acmpca.UpdateCertificateAuthorityInput{
@@ -521,7 +521,7 @@ func resourceCertificateAuthorityUpdate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceCertificateAuthorityDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ACMPCAConn
+	conn := meta.(*conns.AWSClient).ACMPCAConn()
 
 	// The Certificate Authority must be in PENDING_CERTIFICATE or DISABLED state before deleting.
 	updateInput := &acmpca.UpdateCertificateAuthorityInput{

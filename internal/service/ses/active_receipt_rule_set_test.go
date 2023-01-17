@@ -17,6 +17,8 @@ import (
 // Only one SES Receipt RuleSet can be active at a time, so run serially
 // locally and in TeamCity.
 func TestAccSESActiveReceiptRuleSet_serial(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]map[string]func(t *testing.T){
 		"Resource": {
 			"basic":      testAccActiveReceiptRuleSet_basic,
@@ -28,17 +30,7 @@ func TestAccSESActiveReceiptRuleSet_serial(t *testing.T) {
 		},
 	}
 
-	for group, m := range testCases {
-		m := m
-		t.Run(group, func(t *testing.T) {
-			for name, tc := range m {
-				tc := tc
-				t.Run(name, func(t *testing.T) {
-					tc(t)
-				})
-			}
-		})
-	}
+	acctest.RunSerialTests2Levels(t, testCases, 0)
 }
 
 func testAccActiveReceiptRuleSet_basic(t *testing.T) {
@@ -93,7 +85,7 @@ func testAccActiveReceiptRuleSet_disappears(t *testing.T) {
 }
 
 func testAccCheckActiveReceiptRuleSetDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ses_active_receipt_rule_set" {
@@ -124,7 +116,7 @@ func testAccCheckActiveReceiptRuleSetExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("SES Active Receipt Rule Set name not set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn()
 
 		response, err := conn.DescribeActiveReceiptRuleSet(&ses.DescribeActiveReceiptRuleSetInput{})
 		if err != nil {
