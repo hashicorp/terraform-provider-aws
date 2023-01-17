@@ -33,6 +33,7 @@ func testAccView_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckViewExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "resource-explorer-2", regexp.MustCompile(`view/+.`)),
+					resource.TestCheckResourceAttr(resourceName, "default_view", "false"),
 					resource.TestCheckResourceAttr(resourceName, "filters.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "included_property.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -43,6 +44,47 @@ func testAccView_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccView_defaultView(t *testing.T) {
+	var v resourceexplorer2.GetViewOutput
+	resourceName := "aws_resourceexplorer2_view.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(names.ResourceExplorer2EndpointID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ResourceExplorer2EndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckViewDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccViewConfig_defaultView(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckViewExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "default_view", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccViewConfig_defaultView(rName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckViewExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "default_view", "false"),
+				),
+			},
+			{
+				Config: testAccViewConfig_defaultView(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckViewExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "default_view", "true"),
+				),
 			},
 		},
 	})
@@ -87,6 +129,7 @@ func testAccView_filter(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckViewExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "resource-explorer-2", regexp.MustCompile(`view/+.`)),
+					resource.TestCheckResourceAttr(resourceName, "default_view", "false"),
 					resource.TestCheckResourceAttr(resourceName, "filters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filters.0.filter_string", "resourcetype:ec2:instance"),
 					resource.TestCheckResourceAttr(resourceName, "included_property.#", "1"),
@@ -105,6 +148,7 @@ func testAccView_filter(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckViewExists(resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "resource-explorer-2", regexp.MustCompile(`view/+.`)),
+					resource.TestCheckResourceAttr(resourceName, "default_view", "false"),
 					resource.TestCheckResourceAttr(resourceName, "filters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filters.0.filter_string", "region:global"),
 					resource.TestCheckResourceAttr(resourceName, "included_property.#", "1"),
@@ -226,6 +270,25 @@ resource "aws_resourceexplorer2_view" "test" {
   depends_on = [aws_resourceexplorer2_index.test]
 }
 `, rName)
+}
+
+func testAccViewConfig_defaultView(rName string, defaultView bool) string {
+	return fmt.Sprintf(`
+resource "aws_resourceexplorer2_index" "test" {
+  type = "LOCAL"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_resourceexplorer2_view" "test" {
+  name         = %[1]q
+  default_view = %[2]t
+
+  depends_on = [aws_resourceexplorer2_index.test]
+}
+`, rName, defaultView)
 }
 
 func testAccViewConfig_filter(rName, filter string) string {

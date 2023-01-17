@@ -27,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwboolplanmodifier "github.com/hashicorp/terraform-provider-aws/internal/framework/boolplanmodifier"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -54,6 +55,13 @@ func (r *resourceView) Schema(ctx context.Context, request resource.SchemaReques
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"default_view": schema.BoolAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					fwboolplanmodifier.DefaultValue(false),
 				},
 			},
 			"id": framework.IDAttribute(),
@@ -133,8 +141,23 @@ func (r *resourceView) Create(ctx context.Context, request resource.CreateReques
 		return
 	}
 
-	// Set values for unknowns.
 	arn := aws.ToString(output.View.ViewArn)
+
+	if data.DefaultView.ValueBool() {
+		input := &resourceexplorer2.AssociateDefaultViewInput{
+			ViewArn: aws.String(arn),
+		}
+
+		_, err := conn.AssociateDefaultView(ctx, input)
+
+		if err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("setting Resource Explorer View (%s) as the default", arn), err.Error())
+
+			return
+		}
+	}
+
+	// Set values for unknowns.
 	data.ARN = types.StringValue(arn)
 	data.ID = types.StringValue(arn)
 	data.TagsAll = r.FlattenTagsAll(ctx, tags)
@@ -168,8 +191,17 @@ func (r *resourceView) Read(ctx context.Context, request resource.ReadRequest, r
 		return
 	}
 
+	defaultViewARN, err := findDefaultViewARN(ctx, conn)
+
+	if err != nil {
+		response.Diagnostics.AddError("reading Resource Explorer Default View", err.Error())
+
+		return
+	}
+
 	view := output.View
 	data.ARN = flex.StringToFramework(ctx, view.ViewArn)
+	data.DefaultView = types.BoolValue(defaultViewARN == data.ARN.ValueString())
 	data.Filters = r.flattenSearchFilter(ctx, view.Filters)
 	data.IncludedProperties = r.flattenIncludedProperties(ctx, view.IncludedProperties)
 
@@ -238,6 +270,32 @@ func (r *resourceView) Update(ctx context.Context, request resource.UpdateReques
 			response.Diagnostics.AddError(fmt.Sprintf("updating Resource Explorer View (%s) tags", new.ID.ValueString()), err.Error())
 
 			return
+		}
+	}
+
+	if !new.DefaultView.Equal(old.DefaultView) {
+		if new.DefaultView.ValueBool() {
+			input := &resourceexplorer2.AssociateDefaultViewInput{
+				ViewArn: flex.StringFromFramework(ctx, new.ID),
+			}
+
+			_, err := conn.AssociateDefaultView(ctx, input)
+
+			if err != nil {
+				response.Diagnostics.AddError(fmt.Sprintf("setting Resource Explorer View (%s) as the default", new.ID.ValueString()), err.Error())
+
+				return
+			}
+		} else {
+			input := &resourceexplorer2.DisassociateDefaultViewInput{}
+
+			_, err := conn.DisassociateDefaultView(ctx, input)
+
+			if err != nil {
+				response.Diagnostics.AddError(fmt.Sprintf("unsetting Resource Explorer View (%s) as the default", new.ID.ValueString()), err.Error())
+
+				return
+			}
 		}
 	}
 
@@ -376,6 +434,7 @@ func (r *resourceView) flattenIncludedProperty(ctx context.Context, apiObject aw
 
 type resourceViewData struct {
 	ARN                types.String `tfsdk:"arn"`
+	DefaultView        types.Bool   `tfsdk:"default_view"`
 	Filters            types.List   `tfsdk:"filters"`
 	ID                 types.String `tfsdk:"id"`
 	IncludedProperties types.List   `tfsdk:"included_property"`
@@ -390,6 +449,22 @@ type viewSearchFilterData struct {
 
 type viewIncludedPropertyData struct {
 	Name types.String `tfsdk:"name"`
+}
+
+func findDefaultViewARN(ctx context.Context, conn *resourceexplorer2.Client) (string, error) {
+	input := &resourceexplorer2.GetDefaultViewInput{}
+
+	output, err := conn.GetDefaultView(ctx, input)
+
+	if err != nil {
+		return "", err
+	}
+
+	if output == nil {
+		return "", nil
+	}
+
+	return aws.ToString(output.ViewArn), nil
 }
 
 func findViewByARN(ctx context.Context, conn *resourceexplorer2.Client, arn string) (*resourceexplorer2.GetViewOutput, error) {

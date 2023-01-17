@@ -36,6 +36,7 @@ resource "aws_resourceexplorer2_view" "example" {
 
 The following arguments are supported:
 
+* `default_view` - (Optional) Specifies whether the view is the [_default view_](https://docs.aws.amazon.com/resource-explorer/latest/userguide/manage-views-about.html#manage-views-about-default) for the AWS Region. Default: `false`.
 * `filters` - (Optional) Specifies which resources are included in the results of queries made using this view. See [Filters](#filters) below for more details.
 * `included_property` - (Optional) Optional fields to be included in search results from this view. See [Included Properties](#included-properties) below for more details.
 * `name` - (Required) The name of the view. The name must be no more than 64 characters long, and can include letters, digits, and the dash (-) character. The name must be unique within its AWS Region.
