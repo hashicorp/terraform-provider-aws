@@ -1,6 +1,7 @@
 package configservice_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -16,6 +17,7 @@ import (
 )
 
 func testAccConfigRule_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var cr configservice.ConfigRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_config_config_rule.test"
@@ -24,12 +26,12 @@ func testAccConfigRule_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfigRuleDestroy,
+		CheckDestroy:             testAccCheckConfigRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigRuleConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigRuleExists(resourceName, &cr),
+					testAccCheckConfigRuleExists(ctx, resourceName, &cr),
 					testAccCheckConfigRuleName(resourceName, rName, &cr),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
@@ -41,7 +43,9 @@ func testAccConfigRule_basic(t *testing.T) {
 	})
 }
 
-func testAccConfigRule_ownerAws(t *testing.T) { // nosemgrep:ci.aws-in-func-name
+func testAccConfigRule_ownerAws(t *testing.T) {
+	ctx := // nosemgrep:ci.aws-in-func-name
+		acctest.Context(t)
 	var cr configservice.ConfigRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_config_config_rule.test"
@@ -50,12 +54,12 @@ func testAccConfigRule_ownerAws(t *testing.T) { // nosemgrep:ci.aws-in-func-name
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfigRuleDestroy,
+		CheckDestroy:             testAccCheckConfigRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigRuleConfig_ownerAws(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigRuleExists(resourceName, &cr),
+					testAccCheckConfigRuleExists(ctx, resourceName, &cr),
 					testAccCheckConfigRuleName(resourceName, rName, &cr),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "config", regexp.MustCompile("config-rule/config-rule-[a-z0-9]+$")),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -81,6 +85,7 @@ func testAccConfigRule_ownerAws(t *testing.T) { // nosemgrep:ci.aws-in-func-name
 }
 
 func testAccConfigRule_customlambda(t *testing.T) {
+	ctx := acctest.Context(t)
 	var cr configservice.ConfigRule
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_config_config_rule.test"
@@ -92,12 +97,12 @@ func testAccConfigRule_customlambda(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfigRuleDestroy,
+		CheckDestroy:             testAccCheckConfigRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigRuleConfig_customLambda(rInt, path),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigRuleExists(resourceName, &cr),
+					testAccCheckConfigRuleExists(ctx, resourceName, &cr),
 					testAccCheckConfigRuleName(resourceName, expectedName, &cr),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "config", regexp.MustCompile("config-rule/config-rule-[a-z0-9]+$")),
 					resource.TestCheckResourceAttr(resourceName, "name", expectedName),
@@ -128,6 +133,7 @@ func testAccConfigRule_customlambda(t *testing.T) {
 }
 
 func testAccConfigRule_ownerPolicy(t *testing.T) {
+	ctx := acctest.Context(t)
 	var cr configservice.ConfigRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_config_config_rule.test"
@@ -136,12 +142,12 @@ func testAccConfigRule_ownerPolicy(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfigRuleDestroy,
+		CheckDestroy:             testAccCheckConfigRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigRuleConfig_ownerPolicy(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigRuleExists(resourceName, &cr),
+					testAccCheckConfigRuleExists(ctx, resourceName, &cr),
 					testAccCheckConfigRuleName(resourceName, rName, &cr),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "config", regexp.MustCompile("config-rule/config-rule-[a-z0-9]+$")),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -166,6 +172,7 @@ func testAccConfigRule_ownerPolicy(t *testing.T) {
 }
 
 func testAccConfigRule_Scope_TagKey(t *testing.T) {
+	ctx := acctest.Context(t)
 	var configRule configservice.ConfigRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_config_config_rule.test"
@@ -174,12 +181,12 @@ func testAccConfigRule_Scope_TagKey(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfigRuleDestroy,
+		CheckDestroy:             testAccCheckConfigRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigRuleConfig_scopeTagKey(rName, "key1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigRuleExists(resourceName, &configRule),
+					testAccCheckConfigRuleExists(ctx, resourceName, &configRule),
 					resource.TestCheckResourceAttr(resourceName, "scope.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scope.0.tag_key", "key1"),
 				),
@@ -187,7 +194,7 @@ func testAccConfigRule_Scope_TagKey(t *testing.T) {
 			{
 				Config: testAccConfigRuleConfig_scopeTagKey(rName, "key2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigRuleExists(resourceName, &configRule),
+					testAccCheckConfigRuleExists(ctx, resourceName, &configRule),
 					resource.TestCheckResourceAttr(resourceName, "scope.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scope.0.tag_key", "key2"),
 				),
@@ -197,6 +204,7 @@ func testAccConfigRule_Scope_TagKey(t *testing.T) {
 }
 
 func testAccConfigRule_Scope_TagKey_Empty(t *testing.T) {
+	ctx := acctest.Context(t)
 	var configRule configservice.ConfigRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_config_config_rule.test"
@@ -205,12 +213,12 @@ func testAccConfigRule_Scope_TagKey_Empty(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfigRuleDestroy,
+		CheckDestroy:             testAccCheckConfigRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigRuleConfig_scopeTagKey(rName, ""),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigRuleExists(resourceName, &configRule),
+					testAccCheckConfigRuleExists(ctx, resourceName, &configRule),
 				),
 			},
 		},
@@ -218,6 +226,7 @@ func testAccConfigRule_Scope_TagKey_Empty(t *testing.T) {
 }
 
 func testAccConfigRule_Scope_TagValue(t *testing.T) {
+	ctx := acctest.Context(t)
 	var configRule configservice.ConfigRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_config_config_rule.test"
@@ -226,12 +235,12 @@ func testAccConfigRule_Scope_TagValue(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfigRuleDestroy,
+		CheckDestroy:             testAccCheckConfigRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigRuleConfig_scopeTagValue(rName, "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigRuleExists(resourceName, &configRule),
+					testAccCheckConfigRuleExists(ctx, resourceName, &configRule),
 					resource.TestCheckResourceAttr(resourceName, "scope.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scope.0.tag_value", "value1"),
 				),
@@ -239,7 +248,7 @@ func testAccConfigRule_Scope_TagValue(t *testing.T) {
 			{
 				Config: testAccConfigRuleConfig_scopeTagValue(rName, "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigRuleExists(resourceName, &configRule),
+					testAccCheckConfigRuleExists(ctx, resourceName, &configRule),
 					resource.TestCheckResourceAttr(resourceName, "scope.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scope.0.tag_value", "value2"),
 				),
@@ -249,6 +258,7 @@ func testAccConfigRule_Scope_TagValue(t *testing.T) {
 }
 
 func testAccConfigRule_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var cr configservice.ConfigRule
 	resourceName := "aws_config_config_rule.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -257,12 +267,12 @@ func testAccConfigRule_tags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfigRuleDestroy,
+		CheckDestroy:             testAccCheckConfigRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigRuleConfig_tags(rName, "foo", "bar", "fizz", "buzz"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigRuleExists(resourceName, &cr),
+					testAccCheckConfigRuleExists(ctx, resourceName, &cr),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.foo", "bar"),
@@ -272,7 +282,7 @@ func testAccConfigRule_tags(t *testing.T) {
 			{
 				Config: testAccConfigRuleConfig_tags(rName, "foo", "bar2", "fizz2", "buzz2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigRuleExists(resourceName, &cr),
+					testAccCheckConfigRuleExists(ctx, resourceName, &cr),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.foo", "bar2"),
@@ -287,7 +297,7 @@ func testAccConfigRule_tags(t *testing.T) {
 			{
 				Config: testAccConfigRuleConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigRuleExists(resourceName, &cr),
+					testAccCheckConfigRuleExists(ctx, resourceName, &cr),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -296,6 +306,7 @@ func testAccConfigRule_tags(t *testing.T) {
 }
 
 func testAccConfigRule_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var cr configservice.ConfigRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_config_config_rule.test"
@@ -304,12 +315,12 @@ func testAccConfigRule_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConfigRuleDestroy,
+		CheckDestroy:             testAccCheckConfigRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigRuleConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConfigRuleExists(resourceName, &cr),
+					testAccCheckConfigRuleExists(ctx, resourceName, &cr),
 					acctest.CheckResourceDisappears(acctest.Provider, tfconfig.ResourceConfigRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -331,7 +342,7 @@ func testAccCheckConfigRuleName(n, desired string, obj *configservice.ConfigRule
 	}
 }
 
-func testAccCheckConfigRuleExists(n string, obj *configservice.ConfigRule) resource.TestCheckFunc {
+func testAccCheckConfigRuleExists(ctx context.Context, n string, obj *configservice.ConfigRule) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -344,7 +355,7 @@ func testAccCheckConfigRuleExists(n string, obj *configservice.ConfigRule) resou
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn()
 
-		rule, err := tfconfig.FindConfigRule(conn, rs.Primary.ID)
+		rule, err := tfconfig.FindConfigRule(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("Failed to describe config rule: %w", err)
 		}
@@ -354,28 +365,30 @@ func testAccCheckConfigRuleExists(n string, obj *configservice.ConfigRule) resou
 	}
 }
 
-func testAccCheckConfigRuleDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn()
+func testAccCheckConfigRuleDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_config_config_rule" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_config_config_rule" {
+				continue
+			}
+
+			_, err := tfconfig.FindConfigRule(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("ConfigService Rule %s still exists", rs.Primary.ID)
 		}
 
-		_, err := tfconfig.FindConfigRule(conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("ConfigService Rule %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
 func testAccConfigRuleConfig_base(rName string) string {
