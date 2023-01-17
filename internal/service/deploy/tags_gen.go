@@ -14,11 +14,7 @@ import (
 // ListTags lists deploy service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn codedeployiface.CodeDeployAPI, identifier string) (tftags.KeyValueTags, error) {
-	return ListTagsWithContext(context.Background(), conn, identifier)
-}
-
-func ListTagsWithContext(ctx context.Context, conn codedeployiface.CodeDeployAPI, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(ctx context.Context, conn codedeployiface.CodeDeployAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &codedeploy.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
@@ -64,10 +60,7 @@ func KeyValueTags(tags []*codedeploy.Tag) tftags.KeyValueTags {
 // UpdateTags updates deploy service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn codedeployiface.CodeDeployAPI, identifier string, oldTags interface{}, newTags interface{}) error {
-	return UpdateTagsWithContext(context.Background(), conn, identifier, oldTags, newTags)
-}
-func UpdateTagsWithContext(ctx context.Context, conn codedeployiface.CodeDeployAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(ctx context.Context, conn codedeployiface.CodeDeployAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
