@@ -28,6 +28,7 @@ func TestAccControlTowerControl_serial(t *testing.T) {
 }
 
 func testAccControl_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var control controltower.EnabledControlSummary
 	resourceName := "aws_controltower_control.test"
 	controlName := "AWS-GR_EC2_VOLUME_INUSE_CHECK"
@@ -37,16 +38,16 @@ func testAccControl_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckOrganizationManagementAccount(t)
-			testAccPreCheck(t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, controltower.EndpointsID),
-		CheckDestroy:             testAccCheckControlDestroy,
+		CheckDestroy:             testAccCheckControlDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccControlConfig_basic(controlName, ouName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckControlExists(resourceName, &control),
+					testAccCheckControlExists(ctx, resourceName, &control),
 					resource.TestCheckResourceAttrSet(resourceName, "control_identifier"),
 				),
 			},
@@ -55,6 +56,7 @@ func testAccControl_basic(t *testing.T) {
 }
 
 func testAccControl_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var control controltower.EnabledControlSummary
 	resourceName := "aws_controltower_control.test"
 	controlName := "AWS-GR_EC2_VOLUME_INUSE_CHECK"
@@ -64,16 +66,16 @@ func testAccControl_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckOrganizationManagementAccount(t)
-			testAccPreCheck(t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, controltower.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckControlDestroy,
+		CheckDestroy:             testAccCheckControlDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccControlConfig_basic(controlName, ouName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckControlExists(resourceName, &control),
+					testAccCheckControlExists(ctx, resourceName, &control),
 					acctest.CheckResourceDisappears(acctest.Provider, tfcontroltower.ResourceControl(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -82,7 +84,7 @@ func testAccControl_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckControlExists(n string, v *controltower.EnabledControlSummary) resource.TestCheckFunc {
+func testAccCheckControlExists(ctx context.Context, n string, v *controltower.EnabledControlSummary) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -100,7 +102,7 @@ func testAccCheckControlExists(n string, v *controltower.EnabledControlSummary) 
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ControlTowerConn()
 
-		output, err := tfcontroltower.FindEnabledControlByTwoPartKey(context.Background(), conn, targetIdentifier, controlIdentifier)
+		output, err := tfcontroltower.FindEnabledControlByTwoPartKey(ctx, conn, targetIdentifier, controlIdentifier)
 
 		if err != nil {
 			return err
@@ -112,34 +114,36 @@ func testAccCheckControlExists(n string, v *controltower.EnabledControlSummary) 
 	}
 }
 
-func testAccCheckControlDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ControlTowerConn()
+func testAccCheckControlDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ControlTowerConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_controltower_control" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_controltower_control" {
+				continue
+			}
+
+			targetIdentifier, controlIdentifier, err := tfcontroltower.ControlParseResourceID(rs.Primary.ID)
+
+			if err != nil {
+				return err
+			}
+
+			_, err = tfcontroltower.FindEnabledControlByTwoPartKey(ctx, conn, targetIdentifier, controlIdentifier)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("ControlTower Control %s still exists", rs.Primary.ID)
 		}
 
-		targetIdentifier, controlIdentifier, err := tfcontroltower.ControlParseResourceID(rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		_, err = tfcontroltower.FindEnabledControlByTwoPartKey(context.Background(), conn, targetIdentifier, controlIdentifier)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("ControlTower Control %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
 func testAccControlConfig_basic(controlName string, ouName string) string {
