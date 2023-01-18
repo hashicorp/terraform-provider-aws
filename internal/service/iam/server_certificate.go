@@ -276,7 +276,11 @@ func resourceServerCertificateDelete(d *schema.ResourceData, meta interface{}) e
 		})
 	}
 
-	return fmt.Errorf("deleting IAM Server Certificate (%s): %w", d.Id(), err)
+	if err != nil {
+		return fmt.Errorf("deleting IAM Server Certificate (%s): %w", d.Id(), err)
+	}
+
+	return nil
 }
 
 func resourceServerCertificateImport(
