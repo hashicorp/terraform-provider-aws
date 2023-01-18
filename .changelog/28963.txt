@@ -1,0 +1,3 @@
+```release-note:bug
+data-source/aws_lambda_function: Remove any qualifier from `invoke_arn`
+```
