@@ -2,6 +2,6 @@
 resource/aws_ce_anomaly_subscription: Add `threshold_expression` argument
 ```
 
-```release-note:enhancement
+```release-note:note
 resource/aws_ce_anomaly_subscription: Deprecate `threshold` argument in favour of `threshold_expression`
 ```
