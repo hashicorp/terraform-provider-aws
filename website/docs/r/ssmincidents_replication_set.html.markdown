@@ -54,6 +54,26 @@ resource "aws_ssmincidents_replication_set" "replicationSetName" {
 }
 ```
 
+## Basic Usage with Customer Managed Keys
+
+Creating a new Replication Set:
+
+```terraform
+
+resource "aws_kms_key" "example_key" {}
+
+resource "aws_ssmincidents_replication_set" "replicationSetName" {
+  region {
+    name        = "us-west-2"
+    kms_key_arn = aws_kms_key.example_key.arn
+  }
+
+  tags = {
+    exampleTag = "exampleValue"
+  }
+}
+```
+
 ## Argument Reference
 
 ~> **NOTE:** The region specified by the provider must be one of the regions within the Replication Set at all times. Make sure to keep this in mind when performing complex update operations.
@@ -62,7 +82,7 @@ resource "aws_ssmincidents_replication_set" "replicationSetName" {
 
 ~> **NOTE:** Changing the Customer Managed Key for a single region requires us to first delete that region then recreate it with an updated Customer Managed Key in separate terraform apply operations. Performing this when the Replication Set contains only one region requires deleting the Replication Set. This can be done by commenting out the Replication Set, running Terraform Apply and recreating the Replication Set with the new correct KMS keys.
 
-~> **NOTE:** Either all regions must have a Customer Managed KMS key or None. Changing from using the default keys to customer managed keys or vice versa requires the Replication Set and all associated data to be destroyed and recreated.
+~> **NOTE:** Either all regions must have a Customer Managed KMS key or None. Changing from using Amazon owned keys to customer managed keys or vice versa requires the Replication Set and all associated data to be destroyed and recreated.
 
 ~> **NOTE:** If possible, create all KMS keys used by a Replication Set in the same or previous `terraform apply` command compared to when the Replication Set is created. If this is not possible and you want to delete a Replication Set, make sure to delete the Replication Set first in its own `terraform apply` command before deleting the KMS keys used by that Replication Set in a separate `Terraform apply` command. This minimises the likelihood that a KMS Key which is used by a Replication Set is accidentally deleted before attempting to delete the Replication Set, which will result in an error. If this error occurs, the deleted KMS Key must be manually re-enabled via the AWS Console before the Replication Set can be successfully deleted.
 
@@ -98,13 +118,13 @@ In addition to the arguments above, The `region` configuration block exports the
 
 ## Timeouts
 
-~> **NOTE:** Update and Delete operations on Replication Sets with large amounts of response plans and data take longer to complete. It is highly recommended that custom timeouts are configured in these circumstances.
+~> **NOTE:** Update and Delete operations on Replication Sets with large amounts of response plans and data take longer to complete. It may be required for custom timeouts are configured in these circumstances.
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `60m`) This operation will take additional time for each extra region in the created Replication Set beyond the first.
-* `update` - (Default `40m`)
-* `delete` - (Default `40m`)
+* `create` - (Default `120m`) This operation will take additional time for each extra region in the created Replication Set beyond the first.
+* `update` - (Default `120m`)
+* `delete` - (Default `120m`)
 
 ## Import
 

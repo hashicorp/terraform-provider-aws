@@ -56,7 +56,7 @@ func UpdateResourceTags(ctx context.Context, conn *ssmincidents.Client, d *schem
 	oldTags := tftags.New(o)
 	newTags := tftags.New(n)
 
-	allNewTagsMap := CastInterfaceMapToStringMap(n.(map[string]interface{}))
+	allNewTagsMap := ConvertInterfaceMapToStringMap(n.(map[string]interface{}))
 
 	if err := updateResourceTag(ctx, conn, d.Id(), oldTags.Removed(newTags), oldTags.Updated(newTags)); err != nil {
 		return err
@@ -93,7 +93,7 @@ func UpdateResourceTags(ctx context.Context, conn *ssmincidents.Client, d *schem
 	return nil
 }
 
-func updateResourceTag(ctx context.Context, conn *ssmincidents.Client, arn string, removedTags, updatedTags tftags.KeyValueTags) error {
+func updateResourceTag(ctx context.Context, conn *ssmincidents.Client, arn string, removedTags, addedTags tftags.KeyValueTags) error {
 	if len(removedTags) > 0 {
 		input := &ssmincidents.UntagResourceInput{
 			ResourceArn: aws.String(arn),
@@ -104,10 +104,10 @@ func updateResourceTag(ctx context.Context, conn *ssmincidents.Client, arn strin
 		}
 	}
 
-	if len(updatedTags) > 0 {
+	if len(addedTags) > 0 {
 		input := &ssmincidents.TagResourceInput{
 			ResourceArn: aws.String(arn),
-			Tags:        updatedTags.IgnoreAWS().Map(),
+			Tags:        addedTags.IgnoreAWS().Map(),
 		}
 
 		if _, err := conn.TagResource(ctx, input); err != nil {

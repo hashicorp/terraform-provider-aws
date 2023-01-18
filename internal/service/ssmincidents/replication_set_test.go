@@ -507,7 +507,7 @@ resource "aws_ssmincidents_replication_set" "test" {
     %[1]q = %[2]q
   }
 }
-`, tfssmincidents.Trim(tagKey), tagVal, acctest.Region())
+`, tfssmincidents.TrimQuotes(tagKey), tagVal, acctest.Region())
 }
 
 func testAccReplicationSetConfig_twoTags(tag1Key, tag1Val, tag2Key, tag2Val string) string {
@@ -524,16 +524,16 @@ resource "aws_ssmincidents_replication_set" "test" {
     %[3]q = %[4]q
   }
 }
-`, tfssmincidents.Trim(tag1Key), tag1Val, tfssmincidents.Trim(tag2Key), tag2Val, acctest.Region())
+`, tfssmincidents.TrimQuotes(tag1Key), tag1Val, tfssmincidents.TrimQuotes(tag2Key), tag2Val, acctest.Region())
 }
 
-func testAccReplicationSetConfigBaseKey1() string {
+func testAccReplicationSetConfigBaseKeyDefaultRegion() string {
 	return `
 resource "aws_kms_key" "default" {}
 `
 }
 
-func testAccReplicationSetConfigBaseKey2() string {
+func testAccReplicationSetConfigBaseKeyAlternateRegion() string {
 	return acctest.ConfigMultipleRegionProvider(2) + `
 resource "aws_kms_key" "alternate" {
   provider = awsalternate
@@ -543,8 +543,8 @@ resource "aws_kms_key" "alternate" {
 
 func testAccReplicationSetConfig_oneRegionCMK() string {
 	return acctest.ConfigCompose(
-		testAccReplicationSetConfigBaseKey1(),
-		testAccReplicationSetConfigBaseKey2(),
+		testAccReplicationSetConfigBaseKeyDefaultRegion(),
+		testAccReplicationSetConfigBaseKeyAlternateRegion(),
 		fmt.Sprintf(`
 resource "aws_ssmincidents_replication_set" "test" {
   region {
@@ -557,8 +557,8 @@ resource "aws_ssmincidents_replication_set" "test" {
 
 func testAccReplicationSetConfig_twoRegionCMK() string {
 	return acctest.ConfigCompose(
-		testAccReplicationSetConfigBaseKey1(),
-		testAccReplicationSetConfigBaseKey2(),
+		testAccReplicationSetConfigBaseKeyDefaultRegion(),
+		testAccReplicationSetConfigBaseKeyAlternateRegion(),
 		fmt.Sprintf(`
 resource "aws_ssmincidents_replication_set" "test" {
   region {

@@ -34,9 +34,9 @@ func ResourceReplicationSet() *schema.Resource {
 		DeleteWithoutTimeout: resourceReplicationSetDelete,
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(60 * time.Minute),
-			Update: schema.DefaultTimeout(40 * time.Minute),
-			Delete: schema.DefaultTimeout(40 * time.Minute),
+			Create: schema.DefaultTimeout(120 * time.Minute),
+			Update: schema.DefaultTimeout(120 * time.Minute),
+			Delete: schema.DefaultTimeout(120 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -103,24 +103,7 @@ func ResourceReplicationSet() *schema.Resource {
 		},
 
 		Importer: &schema.ResourceImporter{
-
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				conn := meta.(*conns.AWSClient).SSMIncidentsClient()
-
-				arn, err := GetReplicationSetARN(ctx, conn)
-
-				if err != nil {
-					return nil, err
-				}
-
-				d.SetId(arn)
-
-				if diagErr := GetSetResourceTags(ctx, d, meta, conn, ResNameReplicationSet); diagErr != nil {
-					return nil, fmt.Errorf("tags could not be imported")
-				}
-
-				return []*schema.ResourceData{d}, nil
-			},
+			StateContext: resourceReplicationSetImport,
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -131,8 +114,7 @@ func resourceReplicationSetCreate(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).SSMIncidentsClient()
 
 	in := &ssmincidents.CreateReplicationSetInput{
-		Regions:     ExpandRegions(d.Get("region").(*schema.Set).List()),
-		ClientToken: aws.String(GenerateClientToken()),
+		Regions: ExpandRegions(d.Get("region").(*schema.Set).List()),
 	}
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
@@ -199,8 +181,7 @@ func resourceReplicationSetUpdate(ctx context.Context, d *schema.ResourceData, m
 
 	if d.HasChanges("region") {
 		in := &ssmincidents.UpdateReplicationSetInput{
-			Arn:         aws.String(d.Id()),
-			ClientToken: aws.String(GenerateClientToken()),
+			Arn: aws.String(d.Id()),
 		}
 
 		if err := updateRegionsInput(d, in); err != nil {
@@ -318,6 +299,8 @@ func statusReplicationSet(ctx context.Context, conn *ssmincidents.Client, id str
 	}
 }
 
+// converts a list of regions to a map with the region name as the key and the rest
+// of the region data as the values so that it is easier to loop through and process
 func regionListToMap(list []interface{}) map[string]map[string]interface{} {
 	ret := make(map[string]map[string]interface{})
 	for _, val := range list {
@@ -379,4 +362,22 @@ func updateRegionsInput(d *schema.ResourceData, in *ssmincidents.UpdateReplicati
 	}
 
 	return nil
+}
+
+func resourceReplicationSetImport(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+	conn := meta.(*conns.AWSClient).SSMIncidentsClient()
+
+	arn, err := GetReplicationSetARN(ctx, conn)
+
+	if err != nil {
+		return nil, err
+	}
+
+	d.SetId(arn)
+
+	if diagErr := GetSetResourceTags(ctx, d, meta, conn, ResNameReplicationSet); diagErr != nil {
+		return nil, fmt.Errorf("tags could not be imported")
+	}
+
+	return []*schema.ResourceData{d}, nil
 }
