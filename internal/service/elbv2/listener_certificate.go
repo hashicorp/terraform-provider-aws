@@ -56,11 +56,9 @@ func resourceListenerCertificateCreate(d *schema.ResourceData, meta interface{})
 
 	params := &elbv2.AddListenerCertificatesInput{
 		ListenerArn: aws.String(listenerArn),
-		Certificates: []*elbv2.Certificate{
-			{
-				CertificateArn: aws.String(certificateArn),
-			},
-		},
+		Certificates: []*elbv2.Certificate{{
+			CertificateArn: aws.String(certificateArn),
+		}},
 	}
 
 	log.Printf("[DEBUG] Adding certificate: %s of listener: %s", certificateArn, listenerArn)
@@ -85,7 +83,7 @@ func resourceListenerCertificateCreate(d *schema.ResourceData, meta interface{})
 	}
 
 	if err != nil {
-		return fmt.Errorf("adding LB Listener Certificate: %w", err)
+		return create.Error(names.ELBV2, create.ErrActionCreating, ResNameListenerCertificate, d.Id(), err)
 	}
 
 	d.SetId(listenerCertificateCreateID(listenerArn, certificateArn))
@@ -98,7 +96,7 @@ func resourceListenerCertificateRead(d *schema.ResourceData, meta interface{}) e
 
 	listenerArn, certificateArn, err := listenerCertificateParseID(d.Id())
 	if err != nil {
-		return fmt.Errorf("reading ELB v2 Listener Certificate (%s): %w", d.Id(), err)
+		return create.Error(names.ELBV2, create.ErrActionReading, ResNameListenerCertificate, d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Reading certificate: %s of listener: %s", certificateArn, listenerArn)
@@ -122,7 +120,7 @@ func resourceListenerCertificateRead(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] ELBv2 Listener Certificate (%s) not found, removing from state", d.Id())
+		create.LogNotFoundRemoveState(names.ELBV2, create.ErrActionReading, ResNameListenerCertificate, d.Id())
 		d.SetId("")
 		return nil
 	}
@@ -147,11 +145,9 @@ func resourceListenerCertificateDelete(d *schema.ResourceData, meta interface{})
 
 	params := &elbv2.RemoveListenerCertificatesInput{
 		ListenerArn: aws.String(listenerArn),
-		Certificates: []*elbv2.Certificate{
-			{
-				CertificateArn: aws.String(certificateArn),
-			},
-		},
+		Certificates: []*elbv2.Certificate{{
+			CertificateArn: aws.String(certificateArn),
+		}},
 	}
 
 	_, err := conn.RemoveListenerCertificates(params)
@@ -162,7 +158,8 @@ func resourceListenerCertificateDelete(d *schema.ResourceData, meta interface{})
 		if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeListenerNotFoundException) {
 			return nil
 		}
-		return fmt.Errorf("Error removing LB Listener Certificate: %w", err)
+
+		return create.Error(names.ELBV2, create.ErrActionDeleting, ResNameListenerCertificate, d.Id(), err)
 	}
 
 	return nil
