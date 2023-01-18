@@ -11,9 +11,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func ResourceListenerCertificate() *schema.Resource {
@@ -41,6 +42,11 @@ func ResourceListenerCertificate() *schema.Resource {
 		},
 	}
 }
+
+const (
+	ResNameListenerCertificate  = "Listener Certificate"
+	ListenerCertificateNotFound = "ListenerCertificateNotFound"
+)
 
 func resourceListenerCertificateCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ELBV2Conn()
@@ -97,19 +103,14 @@ func resourceListenerCertificateRead(d *schema.ResourceData, meta interface{}) e
 
 	log.Printf("[DEBUG] Reading certificate: %s of listener: %s", certificateArn, listenerArn)
 
-	var certificate *elbv2.Certificate
 	err = resource.Retry(1*time.Minute, func() *resource.RetryError {
 		var err error
-		certificate, err = findListenerCertificate(certificateArn, listenerArn, true, nil, conn)
-		if err != nil {
-			return resource.NonRetryableError(err)
+		err = findListenerCertificate(certificateArn, listenerArn, true, nil, conn)
+		if tfresource.NotFound(err) && d.IsNewResource() {
+			return resource.RetryableError(err)
 		}
 
-		if certificate == nil {
-			err = fmt.Errorf("certificate not found: %s", certificateArn)
-			if d.IsNewResource() {
-				return resource.RetryableError(err)
-			}
+		if err != nil {
 			return resource.NonRetryableError(err)
 		}
 
@@ -117,21 +118,17 @@ func resourceListenerCertificateRead(d *schema.ResourceData, meta interface{}) e
 	})
 
 	if tfresource.TimedOut(err) {
-		certificate, err = findListenerCertificate(certificateArn, listenerArn, true, nil, conn)
+		err = findListenerCertificate(certificateArn, listenerArn, true, nil, conn)
 	}
 
-	if !d.IsNewResource() && errs.Contains(err, "certificate not found") {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ELBv2 Listener Certificate (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	if err == nil && certificate == nil {
-		return fmt.Errorf("reading ELB v2 Listener Certificate (%s): certificate not found", d.Id())
-	}
-
 	if err != nil {
-		return fmt.Errorf("reading ELB v2 Listener Certificate (%s): %w", d.Id(), err)
+		return create.Error(names.ELBV2, create.ErrActionReading, ResNameListenerCertificate, d.Id(), err)
 	}
 
 	d.Set("certificate_arn", certificateArn)
@@ -171,7 +168,7 @@ func resourceListenerCertificateDelete(d *schema.ResourceData, meta interface{})
 	return nil
 }
 
-func findListenerCertificate(certificateArn, listenerArn string, skipDefault bool, nextMarker *string, conn *elbv2.ELBV2) (*elbv2.Certificate, error) {
+func findListenerCertificate(certificateArn, listenerArn string, skipDefault bool, nextMarker *string, conn *elbv2.ELBV2) error {
 	params := &elbv2.DescribeListenerCertificatesInput{
 		ListenerArn: aws.String(listenerArn),
 		PageSize:    aws.Int64(400),
@@ -182,7 +179,7 @@ func findListenerCertificate(certificateArn, listenerArn string, skipDefault boo
 
 	resp, err := conn.DescribeListenerCertificates(params)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	for _, cert := range resp.Certificates {
@@ -191,12 +188,16 @@ func findListenerCertificate(certificateArn, listenerArn string, skipDefault boo
 		}
 
 		if aws.StringValue(cert.CertificateArn) == certificateArn {
-			return cert, nil
+			return nil
 		}
 	}
 
 	if resp.NextMarker != nil {
 		return findListenerCertificate(certificateArn, listenerArn, skipDefault, resp.NextMarker, conn)
 	}
-	return nil, nil
+
+	return &resource.NotFoundError{
+		LastRequest: params,
+		Message:     fmt.Sprintf("%s: certificate %s for listener %s not found", ListenerCertificateNotFound, certificateArn, listenerArn),
+	}
 }
