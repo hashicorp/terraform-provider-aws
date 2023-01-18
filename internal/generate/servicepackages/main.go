@@ -240,11 +240,9 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 
 // Visit is called for each node visited by ast.Walk.
 func (v *visitor) Visit(node ast.Node) ast.Visitor {
-	if node != nil {
-		// Look at functions (not methods) with comments.
-		if funcDecl, ok := node.(*ast.FuncDecl); ok && funcDecl.Recv == nil && funcDecl.Doc != nil {
-			v.processFuncDecl(funcDecl)
-		}
+	// Look at functions (not methods) with comments.
+	if funcDecl, ok := node.(*ast.FuncDecl); ok && funcDecl.Recv == nil && funcDecl.Doc != nil {
+		v.processFuncDecl(funcDecl)
 	}
 
 	return v
