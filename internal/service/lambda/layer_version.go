@@ -152,7 +152,7 @@ func resourceLayerVersionPublish(d *schema.ResourceData, meta interface{}) error
 	if hasFilename {
 		conns.GlobalMutexKV.Lock(mutexLayerKey)
 		defer conns.GlobalMutexKV.Unlock(mutexLayerKey)
-		file, err := loadFileContent(filename.(string))
+		file, err := readFileContents(filename.(string))
 		if err != nil {
 			return fmt.Errorf("Unable to load %q: %s", filename.(string), err)
 		}

@@ -26,9 +26,10 @@ import (
 	homedir "github.com/mitchellh/go-homedir"
 )
 
-const keyMutex = `aws_lambda_function`
-
-const FunctionVersionLatest = "$LATEST"
+const (
+	FunctionVersionLatest = "$LATEST"
+	mutexKey              = `aws_lambda_function`
+)
 
 func ResourceFunction() *schema.Resource {
 	return &schema.Resource{
@@ -375,7 +376,6 @@ func ResourceFunction() *schema.Resource {
 }
 
 const (
-	functionPutConcurrencyTimeout  = 1 * time.Minute
 	functionExtraThrottlingTimeout = 9 * time.Minute
 )
 
@@ -385,258 +385,187 @@ func resourceFunctionCreate(d *schema.ResourceData, meta interface{}) error {
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	functionName := d.Get("function_name").(string)
-	reservedConcurrentExecutions := d.Get("reserved_concurrent_executions").(int)
-	iamRole := d.Get("role").(string)
-
-	log.Printf("[DEBUG] Creating Lambda Function %s with role %s", functionName, iamRole)
-
-	filename, hasFilename := d.GetOk("filename")
-	s3Bucket, bucketOk := d.GetOk("s3_bucket")
-	s3Key, keyOk := d.GetOk("s3_key")
-	s3ObjectVersion, versionOk := d.GetOk("s3_object_version")
-	imageUri, hasImageUri := d.GetOk("image_uri")
-
-	if !hasFilename && !bucketOk && !keyOk && !versionOk && !hasImageUri {
-		return errors.New("filename, s3_* or image_uri attributes must be set")
-	}
-
-	var functionCode *lambda.FunctionCode
-	if hasFilename {
-		// Grab an exclusive lock so that we're only reading one function into
-		// memory at a time.
-		// See https://github.com/hashicorp/terraform/issues/9364
-		conns.GlobalMutexKV.Lock(keyMutex)
-		defer conns.GlobalMutexKV.Unlock(keyMutex)
-		file, err := loadFileContent(filename.(string))
-		if err != nil {
-			return fmt.Errorf("unable to load %q: %w", filename.(string), err)
-		}
-		functionCode = &lambda.FunctionCode{
-			ZipFile: file,
-		}
-	} else if hasImageUri {
-		functionCode = &lambda.FunctionCode{
-			ImageUri: aws.String(imageUri.(string)),
-		}
-	} else {
-		if !bucketOk || !keyOk {
-			return errors.New("s3_bucket and s3_key must all be set while using S3 code source")
-		}
-		functionCode = &lambda.FunctionCode{
-			S3Bucket: aws.String(s3Bucket.(string)),
-			S3Key:    aws.String(s3Key.(string)),
-		}
-		if versionOk {
-			functionCode.S3ObjectVersion = aws.String(s3ObjectVersion.(string))
-		}
-	}
-
 	packageType := d.Get("package_type").(string)
-	params := &lambda.CreateFunctionInput{
-		Code:         functionCode,
+	input := &lambda.CreateFunctionInput{
+		Code:         &lambda.FunctionCode{},
 		Description:  aws.String(d.Get("description").(string)),
 		FunctionName: aws.String(functionName),
 		MemorySize:   aws.Int64(int64(d.Get("memory_size").(int))),
-		Role:         aws.String(iamRole),
-		Timeout:      aws.Int64(int64(d.Get("timeout").(int))),
-		Publish:      aws.Bool(d.Get("publish").(bool)),
 		PackageType:  aws.String(packageType),
+		Publish:      aws.Bool(d.Get("publish").(bool)),
+		Role:         aws.String(d.Get("role").(string)),
+		Timeout:      aws.Int64(int64(d.Get("timeout").(int))),
+	}
+
+	if v, ok := d.GetOk("filename"); ok {
+		// Grab an exclusive lock so that we're only reading one function into memory at a time.
+		// See https://github.com/hashicorp/terraform/issues/9364.
+		conns.GlobalMutexKV.Lock(mutexKey)
+		defer conns.GlobalMutexKV.Unlock(mutexKey)
+
+		zipFile, err := readFileContents(v.(string))
+
+		if err != nil {
+			return fmt.Errorf("reading ZIP file (%s): %w", v, err)
+		}
+
+		input.Code.ZipFile = zipFile
+	} else if v, ok := d.GetOk("image_uri"); ok {
+		input.Code.ImageUri = aws.String(v.(string))
+	} else {
+		input.Code.S3Bucket = aws.String(d.Get("s3_bucket").(string))
+		input.Code.S3Key = aws.String(d.Get("s3_key").(string))
+		if v, ok := d.GetOk("s3_object_version"); ok {
+			input.Code.S3ObjectVersion = aws.String(v.(string))
+		}
 	}
 
 	if v, ok := d.GetOk("architectures"); ok && len(v.([]interface{})) > 0 {
-		params.Architectures = flex.ExpandStringList(v.([]interface{}))
-	}
-
-	if packageType == lambda.PackageTypeZip {
-		params.Handler = aws.String(d.Get("handler").(string))
-		params.Runtime = aws.String(d.Get("runtime").(string))
+		input.Architectures = flex.ExpandStringList(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("code_signing_config_arn"); ok {
-		params.CodeSigningConfigArn = aws.String(v.(string))
+		input.CodeSigningConfigArn = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("layers"); ok && len(v.([]interface{})) > 0 {
-		params.Layers = flex.ExpandStringList(v.([]interface{}))
+	if v, ok := d.GetOk("dead_letter_config"); ok && len(v.([]interface{})) > 0 {
+		if v.([]interface{})[0] == nil {
+			return fmt.Errorf("nil dead_letter_config supplied for function: %s", functionName)
+		}
+
+		input.DeadLetterConfig = &lambda.DeadLetterConfig{
+			TargetArn: aws.String(v.([]interface{})[0].(map[string]interface{})["target_arn"].(string)),
+		}
 	}
 
-	if v, ok := d.GetOk("dead_letter_config"); ok {
-		dlcMaps := v.([]interface{})
-		if len(dlcMaps) == 1 { // Schema guarantees either 0 or 1
-			// Prevent panic on nil dead_letter_config. See GH-14961
-			if dlcMaps[0] == nil {
-				return fmt.Errorf("nil dead_letter_config supplied for function: %s", functionName)
-			}
-			dlcMap := dlcMaps[0].(map[string]interface{})
-			params.DeadLetterConfig = &lambda.DeadLetterConfig{
-				TargetArn: aws.String(dlcMap["target_arn"].(string)),
+	if v, ok := d.GetOk("environment"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		if v, ok := v.([]interface{})[0].(map[string]interface{})["variables"].(map[string]interface{}); ok && len(v) > 0 {
+			input.Environment = &lambda.Environment{
+				Variables: flex.ExpandStringMap(v),
 			}
 		}
 	}
 
-	if v, ok := d.GetOk("ephemeral_storage"); ok && len(v.([]interface{})) > 0 {
-		ephemeralStorage := v.([]interface{})
-		configMap := ephemeralStorage[0].(map[string]interface{})
-		params.EphemeralStorage = &lambda.EphemeralStorage{
-			Size: aws.Int64(int64(configMap["size"].(int))),
+	if v, ok := d.GetOk("ephemeral_storage"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.EphemeralStorage = &lambda.EphemeralStorage{
+			Size: aws.Int64(int64(v.([]interface{})[0].(map[string]interface{})["size"].(int))),
 		}
 	}
 
 	if v, ok := d.GetOk("file_system_config"); ok && len(v.([]interface{})) > 0 {
-		params.FileSystemConfigs = expandFileSystemConfigs(v.([]interface{}))
+		input.FileSystemConfigs = expandFileSystemConfigs(v.([]interface{}))
+	}
+
+	if packageType == lambda.PackageTypeZip {
+		input.Handler = aws.String(d.Get("handler").(string))
+		input.Runtime = aws.String(d.Get("runtime").(string))
 	}
 
 	if v, ok := d.GetOk("image_config"); ok && len(v.([]interface{})) > 0 {
-		params.ImageConfig = expandImageConfigs(v.([]interface{}))
-	}
-
-	if v, ok := d.GetOk("vpc_config"); ok && len(v.([]interface{})) > 0 {
-		config := v.([]interface{})[0].(map[string]interface{})
-
-		params.VpcConfig = &lambda.VpcConfig{
-			SecurityGroupIds: flex.ExpandStringSet(config["security_group_ids"].(*schema.Set)),
-			SubnetIds:        flex.ExpandStringSet(config["subnet_ids"].(*schema.Set)),
-		}
-	}
-
-	if v, ok := d.GetOk("snap_start"); ok {
-		params.SnapStart = expandSnapStart(v.([]interface{}))
-	}
-
-	if v, ok := d.GetOk("tracing_config"); ok {
-		tracingConfig := v.([]interface{})
-		tracing := tracingConfig[0].(map[string]interface{})
-		params.TracingConfig = &lambda.TracingConfig{
-			Mode: aws.String(tracing["mode"].(string)),
-		}
-	}
-
-	if v, ok := d.GetOk("environment"); ok {
-		environments := v.([]interface{})
-		environment, ok := environments[0].(map[string]interface{})
-		if !ok {
-			return errors.New("At least one field is expected inside environment")
-		}
-
-		if environmentVariables, ok := environment["variables"]; ok {
-			variables := flex.ExpandStringValueMap(environmentVariables.(map[string]interface{}))
-
-			params.Environment = &lambda.Environment{
-				Variables: aws.StringMap(variables),
-			}
-		}
+		input.ImageConfig = expandImageConfigs(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("kms_key_arn"); ok {
-		params.KMSKeyArn = aws.String(v.(string))
+		input.KMSKeyArn = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("layers"); ok && len(v.([]interface{})) > 0 {
+		input.Layers = flex.ExpandStringList(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("snap_start"); ok {
+		input.SnapStart = expandSnapStart(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("tracing_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.TracingConfig = &lambda.TracingConfig{
+			Mode: aws.String(v.([]interface{})[0].(map[string]interface{})["mode"].(string)),
+		}
+	}
+
+	if v, ok := d.GetOk("vpc_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		tfMap := v.([]interface{})[0].(map[string]interface{})
+		input.VpcConfig = &lambda.VpcConfig{
+			SecurityGroupIds: flex.ExpandStringSet(tfMap["security_group_ids"].(*schema.Set)),
+			SubnetIds:        flex.ExpandStringSet(tfMap["subnet_ids"].(*schema.Set)),
+		}
 	}
 
 	if len(tags) > 0 {
-		params.Tags = Tags(tags.IgnoreAWS())
+		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	err := resource.Retry(propagationTimeout, func() *resource.RetryError { // nosem: helper-schema-resource-Retry-without-TimeoutError-check
-		_, err := conn.CreateFunction(params)
+	_, err := tfresource.RetryWhen(propagationTimeout,
+		func() (interface{}, error) {
+			return conn.CreateFunction(input)
+		},
+		func(err error) (bool, error) {
+			if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "The role defined for the function cannot be assumed by Lambda") {
+				return true, err
+			}
 
-		if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "The role defined for the function cannot be assumed by Lambda") {
-			log.Printf("[DEBUG] Received %s, retrying CreateFunction", err)
-			return resource.RetryableError(err)
-		}
+			if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "The provided execution role does not have permissions") {
+				return true, err
+			}
 
-		if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "The provided execution role does not have permissions") {
-			log.Printf("[DEBUG] Received %s, retrying CreateFunction", err)
-			return resource.RetryableError(err)
-		}
+			if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "throttled by EC2") {
+				return true, err
+			}
 
-		if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "throttled by EC2") {
-			log.Printf("[DEBUG] Received %s, retrying CreateFunction", err)
-			return resource.RetryableError(err)
-		}
+			if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "Lambda was unable to configure access to your environment variables because the KMS key is invalid for CreateGrant") {
+				return true, err
+			}
 
-		if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "Lambda was unable to configure access to your environment variables because the KMS key is invalid for CreateGrant") {
-			log.Printf("[DEBUG] Received %s, retrying CreateFunction", err)
-			return resource.RetryableError(err)
-		}
+			if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceConflictException) {
+				return true, err
+			}
 
-		if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceConflictException) {
-			log.Printf("[DEBUG] Received %s, retrying CreateFunction", err)
-			return resource.RetryableError(err)
-		}
+			return false, err
+		})
 
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
+	// Additional retries when throttled.
+	if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "throttled by EC2") {
+		_, err = tfresource.RetryWhen(functionExtraThrottlingTimeout,
+			func() (interface{}, error) {
+				return conn.CreateFunction(input)
+			},
+			func(err error) (bool, error) {
+				if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "throttled by EC2") {
+					return true, err
+				}
 
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.CreateFunction(params)
+				return false, err
+			})
 	}
 
 	if err != nil {
-		if !tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "throttled by EC2") {
-			return fmt.Errorf("error creating Lambda Function (1): %w", err)
-		}
-
-		err := resource.Retry(functionExtraThrottlingTimeout, func() *resource.RetryError {
-			_, err := conn.CreateFunction(params)
-
-			if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "throttled by EC2") {
-				log.Printf("[DEBUG] Received %s, retrying CreateFunction", err)
-				return resource.RetryableError(err)
-			}
-
-			if err != nil {
-				return resource.NonRetryableError(err)
-			}
-
-			return nil
-		})
-
-		if tfresource.TimedOut(err) {
-			_, err = conn.CreateFunction(params)
-		}
-
-		if err != nil {
-			return fmt.Errorf("error creating Lambda Function (2): %w", err)
-		}
+		return fmt.Errorf("creating Lambda Function (%s): %w", functionName, err)
 	}
 
-	d.SetId(d.Get("function_name").(string))
+	d.SetId(functionName)
+
+	_, err = tfresource.RetryWhenNotFound(propagationTimeout, func() (interface{}, error) {
+		return FindFunctionByName(conn, d.Id())
+	})
+
+	if err != nil {
+		return fmt.Errorf("waiting for Lambda Function (%s) create: %w", d.Id(), err)
+	}
 
 	if _, err := waitFunctionCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("waiting for Lambda Function (%s) create: %w", d.Id(), err)
 	}
 
-	if reservedConcurrentExecutions >= 0 {
-		log.Printf("[DEBUG] Setting Concurrency to %d for the Lambda Function %s", reservedConcurrentExecutions, functionName)
-
-		concurrencyParams := &lambda.PutFunctionConcurrencyInput{
-			FunctionName:                 aws.String(functionName),
-			ReservedConcurrentExecutions: aws.Int64(int64(reservedConcurrentExecutions)),
+	if v, ok := d.Get("reserved_concurrent_executions").(int); ok && v >= 0 {
+		input := &lambda.PutFunctionConcurrencyInput{
+			FunctionName:                 aws.String(d.Id()),
+			ReservedConcurrentExecutions: aws.Int64(int64(v)),
 		}
 
-		err := resource.Retry(functionPutConcurrencyTimeout, func() *resource.RetryError {
-			_, err := conn.PutFunctionConcurrency(concurrencyParams)
-
-			if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceNotFoundException) {
-				return resource.RetryableError(err)
-			}
-
-			if err != nil {
-				return resource.NonRetryableError(err)
-			}
-
-			return nil
-		})
-
-		if tfresource.TimedOut(err) {
-			_, err = conn.PutFunctionConcurrency(concurrencyParams)
-		}
+		_, err := conn.PutFunctionConcurrency(input)
 
 		if err != nil {
-			return fmt.Errorf("error setting Lambda Function (%s) concurrency: %w", functionName, err)
+			return fmt.Errorf("setting Lambda Function (%s) concurrency: %w", d.Id(), err)
 		}
 	}
 
@@ -1040,9 +969,9 @@ func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 			// Grab an exclusive lock so that we're only reading one function into
 			// memory at a time.
 			// See https://github.com/hashicorp/terraform/issues/9364
-			conns.GlobalMutexKV.Lock(keyMutex)
-			defer conns.GlobalMutexKV.Unlock(keyMutex)
-			file, err := loadFileContent(v.(string))
+			conns.GlobalMutexKV.Lock(mutexKey)
+			defer conns.GlobalMutexKV.Unlock(mutexKey)
+			file, err := readFileContents(v.(string))
 			if err != nil {
 				return fmt.Errorf("unable to load %q: %w", v.(string), err)
 			}
@@ -1282,8 +1211,7 @@ func hasConfigChanges(d verify.ResourceDiffer) bool {
 		d.HasChange("ephemeral_storage")
 }
 
-// loadFileContent returns contents of a file in a given path
-func loadFileContent(v string) ([]byte, error) {
+func readFileContents(v string) ([]byte, error) {
 	filename, err := homedir.Expand(v)
 	if err != nil {
 		return nil, err
