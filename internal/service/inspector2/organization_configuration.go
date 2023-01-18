@@ -47,6 +47,10 @@ func ResourceOrganizationConfiguration() *schema.Resource {
 							Type:     schema.TypeBool,
 							Required: true,
 						},
+						"lambda": {
+							Type:     schema.TypeBool,
+							Required: true,
+						},
 					},
 				},
 			},
@@ -117,7 +121,7 @@ func resourceOrganizationConfigurationUpdate(ctx context.Context, d *schema.Reso
 		return create.DiagError(names.Inspector2, create.ErrActionUpdating, ResNameOrganizationConfiguration, d.Id(), err)
 	}
 
-	if err := waitOrganizationConfigurationUpdated(ctx, conn, d.Get("auto_enable.0.ec2").(bool), d.Get("auto_enable.0.ecr").(bool), d.Timeout(schema.TimeoutUpdate)); err != nil {
+	if err := waitOrganizationConfigurationUpdated(ctx, conn, d.Get("auto_enable.0.ec2").(bool), d.Get("auto_enable.0.ecr").(bool), d.Get("auto_enable.0.lambda").(bool), d.Timeout(schema.TimeoutUpdate)); err != nil {
 		return create.DiagError(names.Inspector2, create.ErrActionWaitingForUpdate, ResNameOrganizationConfiguration, d.Id(), err)
 	}
 
@@ -132,8 +136,9 @@ func resourceOrganizationConfigurationDelete(ctx context.Context, d *schema.Reso
 
 	in := &inspector2.UpdateOrganizationConfigurationInput{
 		AutoEnable: &types.AutoEnable{
-			Ec2: aws.Bool(false),
-			Ecr: aws.Bool(false),
+			Ec2:    aws.Bool(false),
+			Ecr:    aws.Bool(false),
+			Lambda: aws.Bool(false),
 		},
 	}
 
@@ -143,15 +148,15 @@ func resourceOrganizationConfigurationDelete(ctx context.Context, d *schema.Reso
 		return create.DiagError(names.Inspector2, create.ErrActionUpdating, ResNameOrganizationConfiguration, d.Id(), err)
 	}
 
-	if err := waitOrganizationConfigurationUpdated(ctx, conn, false, false, d.Timeout(schema.TimeoutUpdate)); err != nil {
+	if err := waitOrganizationConfigurationUpdated(ctx, conn, false, false, false, d.Timeout(schema.TimeoutUpdate)); err != nil {
 		return create.DiagError(names.Inspector2, create.ErrActionWaitingForUpdate, ResNameOrganizationConfiguration, d.Id(), err)
 	}
 
 	return nil
 }
 
-func waitOrganizationConfigurationUpdated(ctx context.Context, conn *inspector2.Client, ec2, ecr bool, timeout time.Duration) error {
-	needle := fmt.Sprintf("%t:%t", ec2, ecr)
+func waitOrganizationConfigurationUpdated(ctx context.Context, conn *inspector2.Client, ec2, ecr, lambda bool, timeout time.Duration) error {
+	needle := fmt.Sprintf("%t:%t:%t", ec2, ecr, lambda)
 
 	all := []string{
 		fmt.Sprintf("%t:%t", false, false),
@@ -193,7 +198,7 @@ func statusOrganizationConfiguration(ctx context.Context, conn *inspector2.Clien
 			return nil, "", err
 		}
 
-		return out, fmt.Sprintf("%t:%t", aws.ToBool(out.AutoEnable.Ec2), aws.ToBool(out.AutoEnable.Ecr)), nil
+		return out, fmt.Sprintf("%t:%t:%t", aws.ToBool(out.AutoEnable.Ec2), aws.ToBool(out.AutoEnable.Ecr), aws.ToBool(out.AutoEnable.Lambda)), nil
 	}
 }
 
@@ -212,6 +217,10 @@ func flattenAutoEnable(apiObject *types.AutoEnable) map[string]interface{} {
 		m["ecr"] = aws.ToBool(v)
 	}
 
+	if v := apiObject.Lambda; v != nil {
+		m["lambda"] = aws.ToBool(v)
+	}
+
 	return m
 }
 
@@ -228,6 +237,10 @@ func expandAutoEnable(tfMap map[string]interface{}) *types.AutoEnable {
 
 	if v, ok := tfMap["ecr"].(bool); ok {
 		a.Ecr = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["lambda"].(bool); ok {
+		a.Lambda = aws.Bool(v)
 	}
 
 	return a
