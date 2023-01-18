@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -114,15 +115,22 @@ func resourceListenerCertificateRead(d *schema.ResourceData, meta interface{}) e
 
 		return nil
 	})
+
 	if tfresource.TimedOut(err) {
 		certificate, err = findListenerCertificate(certificateArn, listenerArn, true, nil, conn)
 	}
+
+	if !d.IsNewResource() && errs.Contains(err, "certificate not found") {
+		log.Printf("[WARN] ELBv2 Listener Certificate (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	if err == nil && certificate == nil {
+		return fmt.Errorf("reading ELB v2 Listener Certificate (%s): certificate not found", d.Id())
+	}
+
 	if err != nil {
-		if certificate == nil {
-			log.Printf("[WARN] ELB v2 Listener Certificate (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
 		return fmt.Errorf("reading ELB v2 Listener Certificate (%s): %w", d.Id(), err)
 	}
 
