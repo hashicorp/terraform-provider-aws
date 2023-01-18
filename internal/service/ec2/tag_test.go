@@ -12,6 +12,7 @@ import (
 )
 
 func TestAccEC2Tag_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_ec2_tag.test"
 
@@ -19,12 +20,12 @@ func TestAccEC2Tag_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTagDestroy,
+		CheckDestroy:             testAccCheckTagDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTagConfig_basic(rBgpAsn, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTagExists(resourceName),
+					testAccCheckTagExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "key", "key1"),
 					resource.TestCheckResourceAttr(resourceName, "value", "value1"),
 				),
@@ -39,6 +40,7 @@ func TestAccEC2Tag_basic(t *testing.T) {
 }
 
 func TestAccEC2Tag_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_ec2_tag.test"
 
@@ -46,12 +48,12 @@ func TestAccEC2Tag_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTagDestroy,
+		CheckDestroy:             testAccCheckTagDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTagConfig_basic(rBgpAsn, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTagExists(resourceName),
+					testAccCheckTagExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceTag(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -61,6 +63,7 @@ func TestAccEC2Tag_disappears(t *testing.T) {
 }
 
 func TestAccEC2Tag_value(t *testing.T) {
+	ctx := acctest.Context(t)
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	resourceName := "aws_ec2_tag.test"
 
@@ -68,12 +71,12 @@ func TestAccEC2Tag_value(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTagDestroy,
+		CheckDestroy:             testAccCheckTagDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTagConfig_basic(rBgpAsn, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTagExists(resourceName),
+					testAccCheckTagExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "key", "key1"),
 					resource.TestCheckResourceAttr(resourceName, "value", "value1"),
 				),
@@ -86,7 +89,7 @@ func TestAccEC2Tag_value(t *testing.T) {
 			{
 				Config: testAccTagConfig_basic(rBgpAsn, "key1", "value1updated"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTagExists(resourceName),
+					testAccCheckTagExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "key", "key1"),
 					resource.TestCheckResourceAttr(resourceName, "value", "value1updated"),
 				),
