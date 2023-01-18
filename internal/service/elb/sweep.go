@@ -4,6 +4,7 @@
 package elb
 
 import (
+	"context"
 	"fmt"
 	"log"
 
@@ -43,7 +44,7 @@ func sweepLoadBalancers(region string) error {
 				log.Printf("[ERROR] Failed to delete ELB %s: %s", *lb.LoadBalancerName, err)
 				continue
 			}
-			err = CleanupNetworkInterfaces(client.(*conns.AWSClient).EC2Conn(), *lb.LoadBalancerName)
+			err = CleanupNetworkInterfaces(context.TODO(), client.(*conns.AWSClient).EC2Conn(), *lb.LoadBalancerName)
 			if err != nil {
 				log.Printf("[WARN] Failed to cleanup ENIs for ELB %q: %s", *lb.LoadBalancerName, err)
 			}

@@ -1,6 +1,7 @@
 package efs
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"time"
@@ -244,7 +245,7 @@ func resourceMountTargetRead(d *schema.ResourceData, meta interface{}) error {
 
 func getAzFromSubnetId(subnetId string, meta interface{}) (string, error) {
 	conn := meta.(*conns.AWSClient).EC2Conn()
-	subnet, err := ec2.FindSubnetByID(conn, subnetId)
+	subnet, err := ec2.FindSubnetByID(context.TODO(), conn, subnetId)
 	if err != nil {
 		return "", err
 	}

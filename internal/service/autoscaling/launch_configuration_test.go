@@ -240,7 +240,7 @@ func TestAccAutoScalingLaunchConfiguration_RootBlockDevice_amiDisappears(t *test
 				Config: testAccLaunchConfigurationConfig_cofingRootBlockDeviceCopiedAMI(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchConfigurationExists(ctx, resourceName, &conf),
-					testAccCheckAMIExists(amiCopyResourceName, &ami),
+					testAccCheckAMIExists(ctx, amiCopyResourceName, &ami),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceAMI(), amiCopyResourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -594,7 +594,7 @@ func TestAccAutoScalingLaunchConfiguration_AssociatePublicIPAddress_subnetFalseC
 					testAccCheckLaunchConfigurationExists(ctx, resourceName, &conf),
 					testAccCheckGroupExists(ctx, groupResourceName, &group),
 					testAccCheckGroupHealthyInstanceCount(&group, 1),
-					testAccCheckInstanceHasPublicIPAddress(&group, 0, false),
+					testAccCheckInstanceHasPublicIPAddress(ctx, &group, 0, false),
 				),
 			},
 			{
@@ -626,7 +626,7 @@ func TestAccAutoScalingLaunchConfiguration_AssociatePublicIPAddress_subnetFalseC
 					testAccCheckLaunchConfigurationExists(ctx, resourceName, &conf),
 					testAccCheckGroupExists(ctx, groupResourceName, &group),
 					testAccCheckGroupHealthyInstanceCount(&group, 1),
-					testAccCheckInstanceHasPublicIPAddress(&group, 0, false),
+					testAccCheckInstanceHasPublicIPAddress(ctx, &group, 0, false),
 				),
 			},
 			{
@@ -658,7 +658,7 @@ func TestAccAutoScalingLaunchConfiguration_AssociatePublicIPAddress_subnetFalseC
 					testAccCheckLaunchConfigurationExists(ctx, resourceName, &conf),
 					testAccCheckGroupExists(ctx, groupResourceName, &group),
 					testAccCheckGroupHealthyInstanceCount(&group, 1),
-					testAccCheckInstanceHasPublicIPAddress(&group, 0, true),
+					testAccCheckInstanceHasPublicIPAddress(ctx, &group, 0, true),
 				),
 			},
 			{
@@ -690,7 +690,7 @@ func TestAccAutoScalingLaunchConfiguration_AssociatePublicIPAddress_subnetTrueCo
 					testAccCheckLaunchConfigurationExists(ctx, resourceName, &conf),
 					testAccCheckGroupExists(ctx, groupResourceName, &group),
 					testAccCheckGroupHealthyInstanceCount(&group, 1),
-					testAccCheckInstanceHasPublicIPAddress(&group, 0, true),
+					testAccCheckInstanceHasPublicIPAddress(ctx, &group, 0, true),
 				),
 			},
 			{
@@ -722,7 +722,7 @@ func TestAccAutoScalingLaunchConfiguration_AssociatePublicIPAddress_subnetTrueCo
 					testAccCheckLaunchConfigurationExists(ctx, resourceName, &conf),
 					testAccCheckGroupExists(ctx, groupResourceName, &group),
 					testAccCheckGroupHealthyInstanceCount(&group, 1),
-					testAccCheckInstanceHasPublicIPAddress(&group, 0, false),
+					testAccCheckInstanceHasPublicIPAddress(ctx, &group, 0, false),
 				),
 			},
 			{
@@ -754,7 +754,7 @@ func TestAccAutoScalingLaunchConfiguration_AssociatePublicIPAddress_subnetTrueCo
 					testAccCheckLaunchConfigurationExists(ctx, resourceName, &conf),
 					testAccCheckGroupExists(ctx, groupResourceName, &group),
 					testAccCheckGroupHealthyInstanceCount(&group, 1),
-					testAccCheckInstanceHasPublicIPAddress(&group, 0, true),
+					testAccCheckInstanceHasPublicIPAddress(ctx, &group, 0, true),
 				),
 			},
 			{
@@ -817,7 +817,7 @@ func testAccCheckLaunchConfigurationExists(ctx context.Context, n string, v *aut
 	}
 }
 
-func testAccCheckAMIExists(n string, v *ec2.Image) resource.TestCheckFunc {
+func testAccCheckAMIExists(ctx context.Context, n string, v *ec2.Image) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -830,7 +830,7 @@ func testAccCheckAMIExists(n string, v *ec2.Image) resource.TestCheckFunc {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
-		output, err := tfec2.FindImageByID(conn, rs.Primary.ID)
+		output, err := tfec2.FindImageByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -842,12 +842,12 @@ func testAccCheckAMIExists(n string, v *ec2.Image) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckInstanceHasPublicIPAddress(group *autoscaling.Group, idx int, expected bool) resource.TestCheckFunc {
+func testAccCheckInstanceHasPublicIPAddress(ctx context.Context, group *autoscaling.Group, idx int, expected bool) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		instanceID := aws.StringValue(group.Instances[idx].InstanceId)
-		instance, err := tfec2.FindInstanceByID(conn, instanceID)
+		instance, err := tfec2.FindInstanceByID(ctx, conn, instanceID)
 
 		if err != nil {
 			return err

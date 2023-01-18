@@ -4,7 +4,6 @@
 package docdb
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -98,7 +97,7 @@ func sweepDBClusters(region string) error {
 				continue
 			}
 
-			if err := WaitForDBClusterDeletion(context.TODO(), conn, id, DBClusterDeleteTimeout); err != nil {
+			if err := WaitForDBClusterDeletion(ctx, conn, id, DBClusterDeleteTimeout); err != nil {
 				log.Printf("[ERROR] Failure while waiting for DocDB Cluster (%s) to be deleted: %s", id, err)
 			}
 		}
@@ -144,7 +143,7 @@ func sweepDBClusterSnapshots(region string) error {
 				continue
 			}
 
-			if err := WaitForDBClusterSnapshotDeletion(context.TODO(), conn, name, DBClusterSnapshotDeleteTimeout); err != nil {
+			if err := WaitForDBClusterSnapshotDeletion(ctx, conn, name, DBClusterSnapshotDeleteTimeout); err != nil {
 				log.Printf("[ERROR] Failure while waiting for DocDB Cluster Snapshot (%s) to be deleted: %s", name, err)
 			}
 		}
@@ -282,7 +281,7 @@ func sweepGlobalClusters(region string) error {
 				continue
 			}
 
-			if err := WaitForGlobalClusterDeletion(context.TODO(), conn, id, GlobalClusterDeleteTimeout); err != nil {
+			if err := WaitForGlobalClusterDeletion(ctx, conn, id, GlobalClusterDeleteTimeout); err != nil {
 				log.Printf("[ERROR] Failure while waiting for DocDB Global Cluster (%s) to be deleted: %s", id, err)
 			}
 		}
@@ -328,7 +327,7 @@ func sweepDBSubnetGroups(region string) error {
 				continue
 			}
 
-			if err := WaitForDBSubnetGroupDeletion(context.TODO(), conn, name, DBSubnetGroupDeleteTimeout); err != nil {
+			if err := WaitForDBSubnetGroupDeletion(ctx, conn, name, DBSubnetGroupDeleteTimeout); err != nil {
 				log.Printf("[ERROR] Failure while waiting for DocDB Subnet Group (%s) to be deleted: %s", name, err)
 			}
 		}
@@ -374,7 +373,7 @@ func sweepEventSubscriptions(region string) error {
 				continue
 			}
 
-			if _, err := waitEventSubscriptionDeleted(context.TODO(), conn, id, EventSubscriptionDeleteTimeout); err != nil {
+			if _, err := waitEventSubscriptionDeleted(ctx, conn, id, EventSubscriptionDeleteTimeout); err != nil {
 				log.Printf("[ERROR] Failure while waiting for DocDB Event Subscription (%s) to be deleted: %s", id, err)
 			}
 		}

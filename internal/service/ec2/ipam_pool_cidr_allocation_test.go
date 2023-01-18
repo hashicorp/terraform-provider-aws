@@ -1,6 +1,7 @@
 package ec2_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"strings"
@@ -17,6 +18,7 @@ import (
 )
 
 func TestAccIPAMPoolCIDRAllocation_ipv4Basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var allocation ec2.IpamPoolAllocation
 	resourceName := "aws_vpc_ipam_pool_cidr_allocation.test"
 	cidr := "172.2.0.0/28"
@@ -25,12 +27,12 @@ func TestAccIPAMPoolCIDRAllocation_ipv4Basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIPAMPoolAllocationDestroy,
+		CheckDestroy:             testAccCheckIPAMPoolAllocationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPAMPoolCIDRAllocationConfig_ipv4(cidr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPAMPoolCIDRAllocationExists(resourceName, &allocation),
+					testAccCheckIPAMPoolCIDRAllocationExists(ctx, resourceName, &allocation),
 					resource.TestCheckResourceAttr(resourceName, "cidr", cidr),
 					resource.TestMatchResourceAttr(resourceName, "id", regexp.MustCompile(`^ipam-pool-alloc-[\da-f]+_ipam-pool(-[\da-f]+)$`)),
 					resource.TestMatchResourceAttr(resourceName, "ipam_pool_allocation_id", regexp.MustCompile(`^ipam-pool-alloc-[\da-f]+$`)),
@@ -47,6 +49,7 @@ func TestAccIPAMPoolCIDRAllocation_ipv4Basic(t *testing.T) {
 }
 
 func TestAccIPAMPoolCIDRAllocation_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var allocation ec2.IpamPoolAllocation
 	resourceName := "aws_vpc_ipam_pool_cidr_allocation.test"
 	cidr := "172.2.0.0/28"
@@ -55,12 +58,12 @@ func TestAccIPAMPoolCIDRAllocation_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIPAMPoolAllocationDestroy,
+		CheckDestroy:             testAccCheckIPAMPoolAllocationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPAMPoolCIDRAllocationConfig_ipv4(cidr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPAMPoolCIDRAllocationExists(resourceName, &allocation),
+					testAccCheckIPAMPoolCIDRAllocationExists(ctx, resourceName, &allocation),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceIPAMPoolCIDRAllocation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -70,6 +73,7 @@ func TestAccIPAMPoolCIDRAllocation_disappears(t *testing.T) {
 }
 
 func TestAccIPAMPoolCIDRAllocation_ipv4BasicNetmask(t *testing.T) {
+	ctx := acctest.Context(t)
 	var allocation ec2.IpamPoolAllocation
 	resourceName := "aws_vpc_ipam_pool_cidr_allocation.test"
 	netmask := "28"
@@ -78,12 +82,12 @@ func TestAccIPAMPoolCIDRAllocation_ipv4BasicNetmask(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIPAMPoolAllocationDestroy,
+		CheckDestroy:             testAccCheckIPAMPoolAllocationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPAMPoolCIDRAllocationConfig_ipv4Netmask(netmask),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPAMPoolCIDRAllocationExists(resourceName, &allocation),
+					testAccCheckIPAMPoolCIDRAllocationExists(ctx, resourceName, &allocation),
 					testAccCheckIPAMCIDRPrefix(&allocation, netmask),
 				),
 			},
@@ -98,6 +102,7 @@ func TestAccIPAMPoolCIDRAllocation_ipv4BasicNetmask(t *testing.T) {
 }
 
 func TestAccIPAMPoolCIDRAllocation_ipv4DisallowedCIDR(t *testing.T) {
+	ctx := acctest.Context(t)
 	var allocation ec2.IpamPoolAllocation
 	resourceName := "aws_vpc_ipam_pool_cidr_allocation.test"
 	disallowedCidr := "172.2.0.0/28"
@@ -113,7 +118,7 @@ func TestAccIPAMPoolCIDRAllocation_ipv4DisallowedCIDR(t *testing.T) {
 			{
 				Config: testAccIPAMPoolCIDRAllocationConfig_ipv4Disallowed(netmaskLength, disallowedCidr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPAMPoolCIDRAllocationExists(resourceName, &allocation),
+					testAccCheckIPAMPoolCIDRAllocationExists(ctx, resourceName, &allocation),
 					resource.TestCheckResourceAttr(resourceName, "cidr", expectedCidr),
 					resource.TestCheckResourceAttr(resourceName, "disallowed_cidrs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "disallowed_cidrs.0", disallowedCidr),
@@ -127,6 +132,7 @@ func TestAccIPAMPoolCIDRAllocation_ipv4DisallowedCIDR(t *testing.T) {
 }
 
 func TestAccIPAMPoolCIDRAllocation_multiple(t *testing.T) {
+	ctx := acctest.Context(t)
 	var allocation1, allocation2 ec2.IpamPoolAllocation
 	resourceName := "aws_vpc_ipam_pool_cidr_allocation.test1"
 	resourceName2 := "aws_vpc_ipam_pool_cidr_allocation.test2"
@@ -137,13 +143,13 @@ func TestAccIPAMPoolCIDRAllocation_multiple(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIPAMPoolAllocationDestroy,
+		CheckDestroy:             testAccCheckIPAMPoolAllocationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPAMPoolCIDRAllocationConfig_multiple(cidr1, cidr2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPAMPoolCIDRAllocationExists(resourceName, &allocation1),
-					testAccCheckIPAMPoolCIDRAllocationExists(resourceName2, &allocation2),
+					testAccCheckIPAMPoolCIDRAllocationExists(ctx, resourceName, &allocation1),
+					testAccCheckIPAMPoolCIDRAllocationExists(ctx, resourceName2, &allocation2),
 					resource.TestCheckResourceAttr(resourceName, "cidr", cidr1),
 					resource.TestMatchResourceAttr(resourceName, "id", regexp.MustCompile(`^ipam-pool-alloc-[\da-f]+_ipam-pool(-[\da-f]+)$`)),
 					resource.TestMatchResourceAttr(resourceName, "ipam_pool_allocation_id", regexp.MustCompile(`^ipam-pool-alloc-[\da-f]+$`)),
@@ -178,7 +184,7 @@ func testAccCheckIPAMCIDRPrefix(allocation *ec2.IpamPoolAllocation, expected str
 	}
 }
 
-func testAccCheckIPAMPoolCIDRAllocationExists(n string, v *ec2.IpamPoolAllocation) resource.TestCheckFunc {
+func testAccCheckIPAMPoolCIDRAllocationExists(ctx context.Context, n string, v *ec2.IpamPoolAllocation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -197,7 +203,7 @@ func testAccCheckIPAMPoolCIDRAllocationExists(n string, v *ec2.IpamPoolAllocatio
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
-		output, err := tfec2.FindIPAMPoolAllocationByTwoPartKey(conn, allocationID, poolID)
+		output, err := tfec2.FindIPAMPoolAllocationByTwoPartKey(ctx, conn, allocationID, poolID)
 
 		if err != nil {
 			return err
@@ -209,34 +215,36 @@ func testAccCheckIPAMPoolCIDRAllocationExists(n string, v *ec2.IpamPoolAllocatio
 	}
 }
 
-func testAccCheckIPAMPoolAllocationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+func testAccCheckIPAMPoolAllocationDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_vpc_ipam_pool_cidr_allocation" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_vpc_ipam_pool_cidr_allocation" {
+				continue
+			}
+
+			allocationID, poolID, err := tfec2.IPAMPoolCIDRAllocationParseResourceID(rs.Primary.ID)
+
+			if err != nil {
+				return err
+			}
+
+			_, err = tfec2.FindIPAMPoolAllocationByTwoPartKey(ctx, conn, allocationID, poolID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("IPAM Pool CIDR Allocation still exists: %s", rs.Primary.ID)
 		}
 
-		allocationID, poolID, err := tfec2.IPAMPoolCIDRAllocationParseResourceID(rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		_, err = tfec2.FindIPAMPoolAllocationByTwoPartKey(conn, allocationID, poolID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("IPAM Pool CIDR Allocation still exists: %s", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
 const testAccIPAMPoolCIDRAllocationConfig_base = `

@@ -385,7 +385,7 @@ func resourceLaunchConfigurationCreate(ctx context.Context, d *schema.ResourceDa
 	}
 
 	// We'll use this to detect if we're declaring it incorrectly as an ebs_block_device.
-	rootDeviceName, err := findImageRootDeviceName(ec2conn, d.Get("image_id").(string))
+	rootDeviceName, err := findImageRootDeviceName(ctx, ec2conn, d.Get("image_id").(string))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Auto Scaling Launch Configuration (%s): %s", lcName, err)
@@ -498,7 +498,7 @@ func resourceLaunchConfigurationRead(ctx context.Context, d *schema.ResourceData
 	d.Set("vpc_classic_link_id", lc.ClassicLinkVPCId)
 	d.Set("vpc_classic_link_security_groups", aws.StringValueSlice(lc.ClassicLinkVPCSecurityGroups))
 
-	rootDeviceName, err := findImageRootDeviceName(ec2conn, d.Get("image_id").(string))
+	rootDeviceName, err := findImageRootDeviceName(ctx, ec2conn, d.Get("image_id").(string))
 
 	if tfresource.NotFound(err) {
 		// Don't block a refresh for a bad image.
@@ -898,8 +898,8 @@ func FindLaunchConfigurationByName(ctx context.Context, conn *autoscaling.AutoSc
 	return output, nil
 }
 
-func findImageRootDeviceName(conn *ec2.EC2, imageID string) (string, error) {
-	image, err := tfec2.FindImageByID(conn, imageID)
+func findImageRootDeviceName(ctx context.Context, conn *ec2.EC2, imageID string) (string, error) {
+	image, err := tfec2.FindImageByID(ctx, conn, imageID)
 
 	if err != nil {
 		return "", err

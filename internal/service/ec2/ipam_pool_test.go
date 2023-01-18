@@ -1,6 +1,7 @@
 package ec2_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -14,6 +15,7 @@ import (
 )
 
 func TestAccIPAMPool_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var pool ec2.IpamPool
 	resourceName := "aws_vpc_ipam_pool.test"
 
@@ -21,12 +23,12 @@ func TestAccIPAMPool_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIPAMPoolDestroy,
+		CheckDestroy:             testAccCheckIPAMPoolDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPAMPoolConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIPAMPoolExists(resourceName, &pool),
+					testAccCheckIPAMPoolExists(ctx, resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
 					resource.TestCheckNoResourceAttr(resourceName, "allocation_default_netmask_length"),
 					resource.TestCheckNoResourceAttr(resourceName, "allocation_max_netmask_length"),
@@ -52,7 +54,7 @@ func TestAccIPAMPool_basic(t *testing.T) {
 			{
 				Config: testAccIPAMPoolConfig_updated,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIPAMPoolExists(resourceName, &pool),
+					testAccCheckIPAMPoolExists(ctx, resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
 					resource.TestCheckResourceAttr(resourceName, "allocation_default_netmask_length", "32"),
 					resource.TestCheckResourceAttr(resourceName, "allocation_max_netmask_length", "32"),
@@ -76,6 +78,7 @@ func TestAccIPAMPool_basic(t *testing.T) {
 }
 
 func TestAccIPAMPool_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var pool ec2.IpamPool
 	resourceName := "aws_vpc_ipam_pool.test"
 
@@ -83,12 +86,12 @@ func TestAccIPAMPool_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIPAMPoolDestroy,
+		CheckDestroy:             testAccCheckIPAMPoolDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPAMPoolConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPAMPoolExists(resourceName, &pool),
+					testAccCheckIPAMPoolExists(ctx, resourceName, &pool),
 					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceIPAMPool(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -98,6 +101,7 @@ func TestAccIPAMPool_disappears(t *testing.T) {
 }
 
 func TestAccIPAMPool_ipv6Basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var pool ec2.IpamPool
 	resourceName := "aws_vpc_ipam_pool.test"
 
@@ -105,12 +109,12 @@ func TestAccIPAMPool_ipv6Basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIPAMPoolDestroy,
+		CheckDestroy:             testAccCheckIPAMPoolDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPAMPoolConfig_ipv6,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPAMPoolExists(resourceName, &pool),
+					testAccCheckIPAMPoolExists(ctx, resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv6"),
 				),
 			},
@@ -124,6 +128,7 @@ func TestAccIPAMPool_ipv6Basic(t *testing.T) {
 }
 
 func TestAccIPAMPool_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var pool ec2.IpamPool
 	resourceName := "aws_vpc_ipam_pool.test"
 
@@ -131,12 +136,12 @@ func TestAccIPAMPool_tags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIPAMPoolDestroy,
+		CheckDestroy:             testAccCheckIPAMPoolDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPAMPoolConfig_tags("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPAMPoolExists(resourceName, &pool),
+					testAccCheckIPAMPoolExists(ctx, resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -149,7 +154,7 @@ func TestAccIPAMPool_tags(t *testing.T) {
 			{
 				Config: testAccIPAMPoolConfig_tags2("key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPAMPoolExists(resourceName, &pool),
+					testAccCheckIPAMPoolExists(ctx, resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -158,7 +163,7 @@ func TestAccIPAMPool_tags(t *testing.T) {
 			{
 				Config: testAccIPAMPoolConfig_tags("key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPAMPoolExists(resourceName, &pool),
+					testAccCheckIPAMPoolExists(ctx, resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -167,7 +172,7 @@ func TestAccIPAMPool_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckIPAMPoolExists(n string, v *ec2.IpamPool) resource.TestCheckFunc {
+func testAccCheckIPAMPoolExists(ctx context.Context, n string, v *ec2.IpamPool) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -180,7 +185,7 @@ func testAccCheckIPAMPoolExists(n string, v *ec2.IpamPool) resource.TestCheckFun
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
-		output, err := tfec2.FindIPAMPoolByID(conn, rs.Primary.ID)
+		output, err := tfec2.FindIPAMPoolByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -192,28 +197,30 @@ func testAccCheckIPAMPoolExists(n string, v *ec2.IpamPool) resource.TestCheckFun
 	}
 }
 
-func testAccCheckIPAMPoolDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+func testAccCheckIPAMPoolDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_vpc_ipam_pool" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_vpc_ipam_pool" {
+				continue
+			}
+
+			_, err := tfec2.FindIPAMPoolByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("IPAM Pool still exists: %s", rs.Primary.ID)
 		}
 
-		_, err := tfec2.FindIPAMPoolByID(conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("IPAM Pool still exists: %s", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
 const testAccIPAMPoolConfig_base = `

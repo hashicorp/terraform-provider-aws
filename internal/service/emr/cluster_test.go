@@ -525,6 +525,7 @@ func TestAccEMRCluster_CoreInstanceGroup_name(t *testing.T) {
 }
 
 func TestAccEMRCluster_EC2Attributes_defaultManagedSecurityGroups(t *testing.T) {
+	ctx := acctest.Context(t)
 	var cluster emr.Cluster
 	var vpc ec2.Vpc
 
@@ -542,7 +543,7 @@ func TestAccEMRCluster_EC2Attributes_defaultManagedSecurityGroups(t *testing.T) 
 				Config: testAccClusterConfig_ec2AttributesDefaultManagedSecurityGroups(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName, &cluster),
-					acctest.CheckVPCExists(vpcResourceName, &vpc),
+					acctest.CheckVPCExists(ctx, vpcResourceName, &vpc),
 				),
 			},
 			{

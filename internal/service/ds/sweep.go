@@ -4,7 +4,6 @@
 package ds
 
 import (
-	"context"
 	"fmt"
 	"log"
 
@@ -51,7 +50,7 @@ func sweepDirectories(region string) error {
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	input := &directoryservice.DescribeDirectoriesInput{}
-	err = describeDirectoriesPages(context.TODO(), conn, input, func(page *directoryservice.DescribeDirectoriesOutput, lastPage bool) bool {
+	err = describeDirectoriesPages(ctx, conn, input, func(page *directoryservice.DescribeDirectoriesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -98,7 +97,7 @@ func sweepRegions(region string) error {
 
 	input := &directoryservice.DescribeDirectoriesInput{}
 
-	err = describeDirectoriesPages(context.TODO(), conn, input, func(page *directoryservice.DescribeDirectoriesOutput, lastPage bool) bool {
+	err = describeDirectoriesPages(ctx, conn, input, func(page *directoryservice.DescribeDirectoriesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}

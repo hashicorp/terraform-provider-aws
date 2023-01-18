@@ -14,6 +14,7 @@ import (
 )
 
 func TestAccEC2AMICopy_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var image ec2.Image
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ami_copy.test"
@@ -22,12 +23,12 @@ func TestAccEC2AMICopy_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAMIDestroy,
+		CheckDestroy:             testAccCheckAMIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAMICopyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAMIExists(resourceName, &image),
+					testAccCheckAMIExists(ctx, resourceName, &image),
 					testAccCheckAMICopyAttributes(&image, rName),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`image/ami-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "usage_operation", "RunInstances"),
@@ -42,6 +43,7 @@ func TestAccEC2AMICopy_basic(t *testing.T) {
 }
 
 func TestAccEC2AMICopy_description(t *testing.T) {
+	ctx := acctest.Context(t)
 	var image ec2.Image
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ami_copy.test"
@@ -50,19 +52,19 @@ func TestAccEC2AMICopy_description(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAMIDestroy,
+		CheckDestroy:             testAccCheckAMIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAMICopyConfig_description(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAMIExists(resourceName, &image),
+					testAccCheckAMIExists(ctx, resourceName, &image),
 					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
 				),
 			},
 			{
 				Config: testAccAMICopyConfig_description(rName, "description2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAMIExists(resourceName, &image),
+					testAccCheckAMIExists(ctx, resourceName, &image),
 					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
 				),
 			},
@@ -71,6 +73,7 @@ func TestAccEC2AMICopy_description(t *testing.T) {
 }
 
 func TestAccEC2AMICopy_enaSupport(t *testing.T) {
+	ctx := acctest.Context(t)
 	var image ec2.Image
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ami_copy.test"
@@ -79,12 +82,12 @@ func TestAccEC2AMICopy_enaSupport(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAMIDestroy,
+		CheckDestroy:             testAccCheckAMIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAMICopyConfig_enaSupport(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAMIExists(resourceName, &image),
+					testAccCheckAMIExists(ctx, resourceName, &image),
 					resource.TestCheckResourceAttr(resourceName, "ena_support", "true"),
 				),
 			},
@@ -93,6 +96,7 @@ func TestAccEC2AMICopy_enaSupport(t *testing.T) {
 }
 
 func TestAccEC2AMICopy_destinationOutpost(t *testing.T) {
+	ctx := acctest.Context(t)
 	var image ec2.Image
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	outpostDataSourceName := "data.aws_outposts_outpost.test"
@@ -102,12 +106,12 @@ func TestAccEC2AMICopy_destinationOutpost(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAMIDestroy,
+		CheckDestroy:             testAccCheckAMIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAMICopyConfig_destOutpost(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAMIExists(resourceName, &image),
+					testAccCheckAMIExists(ctx, resourceName, &image),
 					resource.TestCheckResourceAttrPair(resourceName, "destination_outpost_arn", outpostDataSourceName, "arn"),
 				),
 			},
@@ -116,6 +120,7 @@ func TestAccEC2AMICopy_destinationOutpost(t *testing.T) {
 }
 
 func TestAccEC2AMICopy_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var ami ec2.Image
 	resourceName := "aws_ami_copy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -124,12 +129,12 @@ func TestAccEC2AMICopy_tags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAMIDestroy,
+		CheckDestroy:             testAccCheckAMIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAMICopyConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAMIExists(resourceName, &ami),
+					testAccCheckAMIExists(ctx, resourceName, &ami),
 					testAccCheckAMICopyAttributes(&ami, rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
@@ -138,7 +143,7 @@ func TestAccEC2AMICopy_tags(t *testing.T) {
 			{
 				Config: testAccAMICopyConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAMIExists(resourceName, &ami),
+					testAccCheckAMIExists(ctx, resourceName, &ami),
 					testAccCheckAMICopyAttributes(&ami, rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
@@ -148,7 +153,7 @@ func TestAccEC2AMICopy_tags(t *testing.T) {
 			{
 				Config: testAccAMICopyConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAMIExists(resourceName, &ami),
+					testAccCheckAMIExists(ctx, resourceName, &ami),
 					testAccCheckAMICopyAttributes(&ami, rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),

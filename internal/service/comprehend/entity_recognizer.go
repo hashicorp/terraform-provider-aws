@@ -463,7 +463,7 @@ func resourceEntityRecognizerDelete(ctx context.Context, d *schema.ResourceData,
 			}
 
 			ec2Conn := meta.(*conns.AWSClient).EC2Conn()
-			networkInterfaces, err := tfec2.FindNetworkInterfacesWithContext(ctx, ec2Conn, &ec2.DescribeNetworkInterfacesInput{
+			networkInterfaces, err := tfec2.FindNetworkInterfaces(ctx, ec2Conn, &ec2.DescribeNetworkInterfacesInput{
 				Filters: []*ec2.Filter{
 					tfec2.NewFilter(fmt.Sprintf("tag:%s", entityRecognizerTagKey), []string{aws.ToString(v.EntityRecognizerArn)}),
 				},
@@ -478,14 +478,14 @@ func resourceEntityRecognizerDelete(ctx context.Context, d *schema.ResourceData,
 					networkInterfaceID := aws.ToString(v.NetworkInterfaceId)
 
 					if v.Attachment != nil {
-						err = tfec2.DetachNetworkInterfaceWithContext(ctx, ec2Conn, networkInterfaceID, aws.ToString(v.Attachment.AttachmentId), d.Timeout(schema.TimeoutDelete))
+						err = tfec2.DetachNetworkInterface(ctx, ec2Conn, networkInterfaceID, aws.ToString(v.Attachment.AttachmentId), d.Timeout(schema.TimeoutDelete))
 
 						if err != nil {
 							return fmt.Errorf("detaching ENI (%s): %w", networkInterfaceID, err)
 						}
 					}
 
-					err = tfec2.DeleteNetworkInterfaceWithContext(ctx, ec2Conn, networkInterfaceID)
+					err = tfec2.DeleteNetworkInterface(ctx, ec2Conn, networkInterfaceID)
 					if err != nil {
 						return fmt.Errorf("deleting ENI (%s): %w", networkInterfaceID, err)
 					}

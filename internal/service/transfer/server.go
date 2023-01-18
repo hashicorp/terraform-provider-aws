@@ -389,7 +389,7 @@ func resourceServerRead(d *schema.ResourceData, meta interface{}) error {
 		// Security Group IDs are not returned for VPC endpoints.
 		if aws.StringValue(output.EndpointType) == transfer.EndpointTypeVpc && len(output.EndpointDetails.SecurityGroupIds) == 0 {
 			vpcEndpointID := aws.StringValue(output.EndpointDetails.VpcEndpointId)
-			output, err := tfec2.FindVPCEndpointByID(meta.(*conns.AWSClient).EC2Conn(), vpcEndpointID)
+			output, err := tfec2.FindVPCEndpointByID(context.TODO(), meta.(*conns.AWSClient).EC2Conn(), vpcEndpointID)
 
 			if err != nil {
 				return fmt.Errorf("error reading Transfer Server (%s) VPC Endpoint (%s): %w", d.Id(), vpcEndpointID, err)
@@ -544,7 +544,7 @@ func resourceServerUpdate(d *schema.ResourceData, meta interface{}) error {
 					return fmt.Errorf("error updating Transfer Server (%s) VPC Endpoint (%s): %w", d.Id(), vpcEndpointID, err)
 				}
 
-				_, err := tfec2.WaitVPCEndpointAvailable(conn, vpcEndpointID, tfec2.VPCEndpointCreationTimeout)
+				_, err := tfec2.WaitVPCEndpointAvailable(context.TODO(), conn, vpcEndpointID, tfec2.VPCEndpointCreationTimeout)
 
 				if err != nil {
 					return fmt.Errorf("error waiting for Transfer Server (%s) VPC Endpoint (%s) to become available: %w", d.Id(), vpcEndpointID, err)

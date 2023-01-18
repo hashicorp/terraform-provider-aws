@@ -817,12 +817,12 @@ func resourceLoadBalancerDelete(d *schema.ResourceData, meta interface{}) error 
 		LoadBalancerName: aws.String(d.Id()),
 	}
 	if _, err := elbconn.DeleteLoadBalancer(&deleteElbOpts); err != nil {
-		return fmt.Errorf("Error deleting ELB: %s", err)
+		return fmt.Errorf("deleting ELB: %s", err)
 	}
 
 	name := d.Get("name").(string)
 
-	err := CleanupNetworkInterfaces(meta.(*conns.AWSClient).EC2Conn(), name)
+	err := CleanupNetworkInterfaces(context.TODO(), meta.(*conns.AWSClient).EC2Conn(), name)
 	if err != nil {
 		log.Printf("[WARN] Failed to cleanup ENIs for ELB %q: %#v", name, err)
 	}
@@ -954,9 +954,9 @@ func validateListenerProtocol() schema.SchemaValidateFunc {
 // but the cleanup is asynchronous and may take time
 // which then blocks IGW, SG or VPC on deletion
 // So we make the cleanup "synchronous" here
-func CleanupNetworkInterfaces(conn *ec2.EC2, name string) error {
+func CleanupNetworkInterfaces(ctx context.Context, conn *ec2.EC2, name string) error {
 	// https://aws.amazon.com/premiumsupport/knowledge-center/elb-find-load-balancer-IP/.
-	networkInterfaces, err := tfec2.FindNetworkInterfacesByAttachmentInstanceOwnerIDAndDescription(conn, "amazon-elb", "ELB "+name)
+	networkInterfaces, err := tfec2.FindNetworkInterfacesByAttachmentInstanceOwnerIDAndDescription(ctx, conn, "amazon-elb", "ELB "+name)
 
 	if err != nil {
 		return err
@@ -972,7 +972,7 @@ func CleanupNetworkInterfaces(conn *ec2.EC2, name string) error {
 		attachmentID := aws.StringValue(networkInterface.Attachment.AttachmentId)
 		networkInterfaceID := aws.StringValue(networkInterface.NetworkInterfaceId)
 
-		err = tfec2.DetachNetworkInterface(conn, networkInterfaceID, attachmentID, tfec2.NetworkInterfaceDetachedTimeout)
+		err = tfec2.DetachNetworkInterface(ctx, conn, networkInterfaceID, attachmentID, tfec2.NetworkInterfaceDetachedTimeout)
 
 		if err != nil {
 			errs = multierror.Append(errs, err)
@@ -980,7 +980,7 @@ func CleanupNetworkInterfaces(conn *ec2.EC2, name string) error {
 			continue
 		}
 
-		err = tfec2.DeleteNetworkInterface(conn, networkInterfaceID)
+		err = tfec2.DeleteNetworkInterface(ctx, conn, networkInterfaceID)
 
 		if err != nil {
 			errs = multierror.Append(errs, err)

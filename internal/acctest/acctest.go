@@ -1977,7 +1977,7 @@ resource "aws_subnet" "test" {
 	)
 }
 
-func CheckVPCExists(n string, v *ec2.Vpc) resource.TestCheckFunc {
+func CheckVPCExists(ctx context.Context, n string, v *ec2.Vpc) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -1990,7 +1990,7 @@ func CheckVPCExists(n string, v *ec2.Vpc) resource.TestCheckFunc {
 
 		conn := Provider.Meta().(*conns.AWSClient).EC2Conn()
 
-		output, err := tfec2.FindVPCByID(conn, rs.Primary.ID)
+		output, err := tfec2.FindVPCByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

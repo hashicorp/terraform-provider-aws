@@ -80,6 +80,7 @@ func TestAccGlobalAcceleratorEndpointGroup_disappears(t *testing.T) {
 }
 
 func TestAccGlobalAcceleratorEndpointGroup_ALBEndpoint_clientIP(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v globalaccelerator.EndpointGroup
 	var vpc ec2.Vpc
 	resourceName := "aws_globalaccelerator_endpoint_group.test"
@@ -145,7 +146,7 @@ func TestAccGlobalAcceleratorEndpointGroup_ALBEndpoint_clientIP(t *testing.T) {
 			{ // nosemgrep:ci.test-config-funcs-correct-form
 				Config: acctest.ConfigVPCWithSubnets(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckVPCExists(vpcResourceName, &vpc),
+					acctest.CheckVPCExists(ctx, vpcResourceName, &vpc),
 					testAccCheckEndpointGroupDeleteSecurityGroup(&vpc),
 				),
 			},
@@ -154,6 +155,7 @@ func TestAccGlobalAcceleratorEndpointGroup_ALBEndpoint_clientIP(t *testing.T) {
 }
 
 func TestAccGlobalAcceleratorEndpointGroup_instanceEndpoint(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v globalaccelerator.EndpointGroup
 	var vpc ec2.Vpc
 	resourceName := "aws_globalaccelerator_endpoint_group.test"
@@ -197,7 +199,7 @@ func TestAccGlobalAcceleratorEndpointGroup_instanceEndpoint(t *testing.T) {
 			{ // nosemgrep:ci.test-config-funcs-correct-form
 				Config: acctest.ConfigVPCWithSubnets(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckVPCExists(vpcResourceName, &vpc),
+					acctest.CheckVPCExists(ctx, vpcResourceName, &vpc),
 					testAccCheckEndpointGroupDeleteSecurityGroup(&vpc),
 				),
 			},
