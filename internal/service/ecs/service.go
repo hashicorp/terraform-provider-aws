@@ -651,7 +651,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	cluster := d.Get("cluster").(string)
 
-	service, err := FindServiceByIDWaitForActive(context.TODO(), conn, d.Id(), cluster)
+	service, err := FindServiceByIDWaitForActive(ctx, conn, d.Id(), cluster)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ECS Service (%s) not found, removing from state", d.Id())
@@ -979,7 +979,7 @@ func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSConn()
 
-	service, err := FindServiceNoTagsByID(context.TODO(), conn, d.Id(), d.Get("cluster").(string))
+	service, err := FindServiceNoTagsByID(ctx, conn, d.Id(), d.Get("cluster").(string))
 	if tfresource.NotFound(err) {
 		return diags
 	}

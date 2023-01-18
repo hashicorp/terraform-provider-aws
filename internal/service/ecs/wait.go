@@ -75,7 +75,7 @@ func waitServiceStable(ctx context.Context, conn *ecs.ECS, id, cluster string, t
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{serviceStatusInactive, serviceStatusDraining, serviceStatusPending},
 		Target:  []string{serviceStatusStable},
-		Refresh: statusServiceWaitForStable(conn, id, cluster),
+		Refresh: statusServiceWaitForStable(ctx, conn, id, cluster),
 		Timeout: timeout,
 	}
 
@@ -101,7 +101,7 @@ func waitServiceInactive(ctx context.Context, conn *ecs.ECS, id, cluster string,
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{serviceStatusActive, serviceStatusDraining},
 		Target:     []string{serviceStatusInactive},
-		Refresh:    statusServiceNoTags(conn, id, cluster),
+		Refresh:    statusServiceNoTags(ctx, conn, id, cluster),
 		Timeout:    timeout,
 		MinTimeout: serviceInactiveTimeoutMin,
 	}
@@ -116,7 +116,7 @@ func waitServiceActive(ctx context.Context, conn *ecs.ECS, id, cluster string, t
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{serviceStatusInactive, serviceStatusDraining},
 		Target:  []string{serviceStatusActive},
-		Refresh: statusServiceNoTags(conn, id, cluster),
+		Refresh: statusServiceNoTags(ctx, conn, id, cluster),
 		Timeout: timeout,
 	}
 

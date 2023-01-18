@@ -57,9 +57,9 @@ func statusCapacityProviderUpdate(ctx context.Context, conn *ecs.ECS, arn string
 	}
 }
 
-func statusServiceNoTags(conn *ecs.ECS, id, cluster string) resource.StateRefreshFunc {
+func statusServiceNoTags(ctx context.Context, conn *ecs.ECS, id, cluster string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		service, err := FindServiceNoTagsByID(context.TODO(), conn, id, cluster)
+		service, err := FindServiceNoTagsByID(ctx, conn, id, cluster)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -71,9 +71,9 @@ func statusServiceNoTags(conn *ecs.ECS, id, cluster string) resource.StateRefres
 	}
 }
 
-func statusServiceWaitForStable(conn *ecs.ECS, id, cluster string) resource.StateRefreshFunc {
+func statusServiceWaitForStable(ctx context.Context, conn *ecs.ECS, id, cluster string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		serviceRaw, status, err := statusServiceNoTags(conn, id, cluster)()
+		serviceRaw, status, err := statusServiceNoTags(ctx, conn, id, cluster)()
 		if err != nil {
 			return nil, "", err
 		}
