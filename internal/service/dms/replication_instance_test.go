@@ -16,10 +16,9 @@ import (
 )
 
 func TestAccDMSReplicationInstance_basic(t *testing.T) {
-	ctx :=
-		// NOTE: Using larger dms.c4.large here for AWS GovCloud (US) support
-		acctest.Context(t)
+	ctx := acctest.Context(t)
 
+	// NOTE: Using larger dms.c4.large here for AWS GovCloud (US) support
 	replicationInstanceClass := "dms.c4.large"
 	resourceName := "aws_dms_replication_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -358,10 +357,9 @@ func TestAccDMSReplicationInstance_publiclyAccessible(t *testing.T) {
 }
 
 func TestAccDMSReplicationInstance_replicationInstanceClass(t *testing.T) {
-	ctx :=
-		// NOTE: Using larger dms.c4.(x)?large here for AWS GovCloud (US) support
-		acctest.Context(t)
+	ctx := acctest.Context(t)
 
+	// NOTE: Using larger dms.c4.(x)?large here for AWS GovCloud (US) support
 	replicationInstanceClass1 := "dms.c4.large"
 	replicationInstanceClass2 := "dms.c4.xlarge"
 	resourceName := "aws_dms_replication_instance.test"

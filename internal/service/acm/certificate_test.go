@@ -1493,10 +1493,10 @@ func TestAccACMCertificate_Imported_validityDates(t *testing.T) {
 	})
 }
 
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/7103
 // lintignore:AT002
 func TestAccACMCertificate_Imported_ipAddress(t *testing.T) {
-	ctx := // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/7103
-		acctest.Context(t)
+	ctx := acctest.Context(t)
 	resourceName := "aws_acm_certificate.test"
 	var v acm.CertificateDetail
 

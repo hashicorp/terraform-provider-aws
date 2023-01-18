@@ -246,10 +246,9 @@ func TestAccS3BucketReplicationConfiguration_multipleDestinationsNonEmptyFilter(
 }
 
 func TestAccS3BucketReplicationConfiguration_twoDestination(t *testing.T) {
-	ctx :=
-		// This tests 2 destinations since GovCloud and possibly other non-standard partitions allow a max of 2
-		acctest.Context(t)
+	ctx := acctest.Context(t)
 
+	// This tests 2 destinations since GovCloud and possibly other non-standard partitions allow a max of 2
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_replication_configuration.test"
 

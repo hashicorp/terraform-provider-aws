@@ -104,14 +104,13 @@ func TestAccECSClusterCapacityProviders_defaults(t *testing.T) {
 }
 
 func TestAccECSClusterCapacityProviders_destroy(t *testing.T) {
-	ctx :=
-		// This test proves that https://github.com/hashicorp/terraform-provider-aws/issues/11409
-		// has been addressed by aws_ecs_cluster_capacity_providers.
-		//
-		// If we were configuring capacity providers directly on the cluster, the
-		// test would fail with a timeout error.
-		acctest.Context(t)
+	ctx := acctest.Context(t)
 
+	// This test proves that https://github.com/hashicorp/terraform-provider-aws/issues/11409
+	// has been addressed by aws_ecs_cluster_capacity_providers.
+	//
+	// If we were configuring capacity providers directly on the cluster, the
+	// test would fail with a timeout error.
 	var cluster ecs.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 

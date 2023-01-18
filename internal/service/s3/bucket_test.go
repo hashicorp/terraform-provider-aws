@@ -1345,10 +1345,9 @@ func TestAccS3Bucket_Replication_multipleDestinationsNonEmptyFilter(t *testing.T
 }
 
 func TestAccS3Bucket_Replication_twoDestination(t *testing.T) {
-	ctx :=
-		// This tests 2 destinations since GovCloud and possibly other non-standard partitions allow a max of 2
-		acctest.Context(t)
+	ctx := acctest.Context(t)
 
+	// This tests 2 destinations since GovCloud and possibly other non-standard partitions allow a max of 2
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	alternateRegion := acctest.AlternateRegion()
 	region := acctest.Region()

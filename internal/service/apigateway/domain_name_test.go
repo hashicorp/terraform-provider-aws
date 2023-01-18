@@ -148,13 +148,12 @@ func TestAccAPIGatewayDomainName_regionalCertificateARN(t *testing.T) {
 }
 
 func TestAccAPIGatewayDomainName_regionalCertificateName(t *testing.T) {
-	ctx :=
-		// For now, use an environment variable to limit running this test
-		// BadRequestException: Uploading certificates is not supported for REGIONAL.
-		// See Remarks section of https://docs.aws.amazon.com/apigateway/api-reference/link-relation/domainname-create/
-		// which suggests this configuration should be possible somewhere, e.g. AWS China?
-		acctest.Context(t)
+	ctx := acctest.Context(t)
 
+	// For now, use an environment variable to limit running this test
+	// BadRequestException: Uploading certificates is not supported for REGIONAL.
+	// See Remarks section of https://docs.aws.amazon.com/apigateway/api-reference/link-relation/domainname-create/
+	// which suggests this configuration should be possible somewhere, e.g. AWS China?
 	regionalCertificateArn := os.Getenv("AWS_API_GATEWAY_DOMAIN_NAME_REGIONAL_CERTIFICATE_NAME_ENABLED")
 	if regionalCertificateArn == "" {
 		t.Skip(
