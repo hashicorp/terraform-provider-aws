@@ -11,7 +11,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -379,56 +378,6 @@ const (
 	functionExtraThrottlingTimeout = 9 * time.Minute
 )
 
-func checkHandlerRuntimeForZipFunction(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
-	packageType := d.Get("package_type")
-	_, handlerOk := d.GetOk("handler")
-	_, runtimeOk := d.GetOk("runtime")
-
-	if packageType == lambda.PackageTypeZip && (!handlerOk || !runtimeOk) {
-		return fmt.Errorf("handler and runtime must be set when PackageType is Zip")
-	}
-	return nil
-}
-
-func updateComputedAttributesOnPublish(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
-	configChanged := hasConfigChanges(d)
-	functionCodeUpdated := needsFunctionCodeUpdate(d)
-	if functionCodeUpdated {
-		d.SetNewComputed("last_modified")
-	}
-
-	publish := d.Get("publish").(bool)
-	publishChanged := d.HasChange("publish")
-	if publish && (configChanged || functionCodeUpdated || publishChanged) {
-		d.SetNewComputed("version")
-		d.SetNewComputed("qualified_arn")
-		d.SetNewComputed("qualified_invoke_arn")
-	}
-	return nil
-}
-
-func hasConfigChanges(d verify.ResourceDiffer) bool {
-	return d.HasChange("description") ||
-		d.HasChange("handler") ||
-		d.HasChange("file_system_config") ||
-		d.HasChange("image_config") ||
-		d.HasChange("memory_size") ||
-		d.HasChange("role") ||
-		d.HasChange("timeout") ||
-		d.HasChange("kms_key_arn") ||
-		d.HasChange("layers") ||
-		d.HasChange("dead_letter_config") ||
-		d.HasChange("snap_start") ||
-		d.HasChange("tracing_config") ||
-		d.HasChange("vpc_config.0.security_group_ids") ||
-		d.HasChange("vpc_config.0.subnet_ids") ||
-		d.HasChange("runtime") ||
-		d.HasChange("environment") ||
-		d.HasChange("ephemeral_storage")
-}
-
-// resourceAwsLambdaFunction maps to:
-// CreateFunction in the API / SDK
 func resourceFunctionCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LambdaConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
@@ -569,7 +518,7 @@ func resourceFunctionCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if environmentVariables, ok := environment["variables"]; ok {
-			variables := readEnvironmentVariables(environmentVariables.(map[string]interface{}))
+			variables := flex.ExpandStringValueMap(environmentVariables.(map[string]interface{}))
 
 			params.Environment = &lambda.Environment{
 				Variables: aws.StringMap(variables),
@@ -655,8 +604,8 @@ func resourceFunctionCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(d.Get("function_name").(string))
 
-	if err := waitForFunctionCreation(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("error waiting for Lambda Function (%s) creation: %w", d.Id(), err)
+	if _, err := waitFunctionCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return fmt.Errorf("waiting for Lambda Function (%s) create: %w", d.Id(), err)
 	}
 
 	if reservedConcurrentExecutions >= 0 {
@@ -693,187 +642,85 @@ func resourceFunctionCreate(d *schema.ResourceData, meta interface{}) error {
 	return resourceFunctionRead(d, meta)
 }
 
-// resourceFunctionRead maps to:
-// GetFunction in the API / SDK
 func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LambdaConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	params := &lambda.GetFunctionInput{
-		FunctionName: aws.String(d.Get("function_name").(string)),
+	input := &lambda.GetFunctionInput{
+		FunctionName: aws.String(d.Id()),
 	}
 
-	// qualifier for lambda function data source
-	qualifier, qualifierExistance := d.GetOk("qualifier")
-	if qualifierExistance {
-		params.Qualifier = aws.String(qualifier.(string))
-		log.Printf("[DEBUG] Fetching Lambda Function: %s:%s", d.Id(), qualifier.(string))
-	} else {
-		log.Printf("[DEBUG] Fetching Lambda Function: %s", d.Id())
+	var hasQualifier bool
+	if v, ok := d.GetOk("qualifier"); ok {
+		hasQualifier = true
+		input.Qualifier = aws.String(v.(string))
 	}
 
-	getFunctionOutput, err := conn.GetFunction(params)
+	output, err := findFunction(conn, input)
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Lambda Function %s not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
 	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == lambda.ErrCodeResourceNotFoundException && !d.IsNewResource() {
-			d.SetId("")
-			return nil
-		}
 		return fmt.Errorf("reading Lambda Function (%s): %w", d.Id(), err)
 	}
 
-	if getFunctionOutput.Concurrency != nil {
-		d.Set("reserved_concurrent_executions", getFunctionOutput.Concurrency.ReservedConcurrentExecutions)
-	} else {
-		d.Set("reserved_concurrent_executions", -1)
-	}
-
-	// Tagging operations are permitted on Lambda functions only.
-	// Tags on aliases and versions are not supported.
-	if !qualifierExistance {
-		tags := KeyValueTags(getFunctionOutput.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-		//lintignore:AWSR002
-		if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-			return fmt.Errorf("error setting tags: %w", err)
-		}
-
-		if err := d.Set("tags_all", tags.Map()); err != nil {
-			return fmt.Errorf("error setting tags_all: %w", err)
-		}
-	}
-
-	// getFunctionOutput.Code.Location is a pre-signed URL pointing at the zip
-	// file that we uploaded when we created the resource. You can use it to
-	// download the code from AWS. The other part is
-	// getFunctionOutput.Configuration which holds metadata.
-
-	function := getFunctionOutput.Configuration
-
-	architectures := flex.FlattenStringList(function.Architectures)
-	log.Printf("[INFO] Setting Lambda %s Architecture %#v from API", d.Id(), architectures)
-	if err := d.Set("architectures", architectures); err != nil {
-		return fmt.Errorf("error setting architectures for Lambda Function (%s): %w", d.Id(), err)
-	}
-
-	if err := d.Set("arn", function.FunctionArn); err != nil {
-		return fmt.Errorf("error setting function arn for Lambda Function: %w", err)
-	}
-
-	if err := d.Set("description", function.Description); err != nil {
-		return fmt.Errorf("error setting function description for Lambda Function: %w", err)
-	}
-
-	if err := d.Set("handler", function.Handler); err != nil {
-		return fmt.Errorf("error setting handler for Lambda Function: %w", err)
-	}
-
-	if err := d.Set("memory_size", function.MemorySize); err != nil {
-		return fmt.Errorf("error setting memory size for Lambda Function: %w", err)
-	}
-
-	if err := d.Set("last_modified", function.LastModified); err != nil {
-		return fmt.Errorf("error setting last modified time for Lambda Function: %w", err)
-	}
-
-	if err := d.Set("role", function.Role); err != nil {
-		return fmt.Errorf("error setting role for Lambda Function: %w", err)
-	}
-
-	if err := d.Set("runtime", function.Runtime); err != nil {
-		return fmt.Errorf("error setting runtime for Lambda Function: %w", err)
-	}
-
-	if err := d.Set("timeout", function.Timeout); err != nil {
-		return fmt.Errorf("error setting timeout for Lambda Function: %w", err)
-	}
-
-	if err := d.Set("kms_key_arn", function.KMSKeyArn); err != nil {
-		return fmt.Errorf("error setting KMS key arn for Lambda Function: %w", err)
-	}
-
-	if err := d.Set("source_code_hash", function.CodeSha256); err != nil {
-		return fmt.Errorf("error setting CodeSha256 for Lambda Function: %w", err)
-	}
-
-	if err := d.Set("source_code_size", function.CodeSize); err != nil {
-		return fmt.Errorf("error setting code size for Lambda Function: %w", err)
-	}
-
-	// Add Signing Profile Version ARN
-	if err := d.Set("signing_profile_version_arn", function.SigningProfileVersionArn); err != nil {
-		return fmt.Errorf("error setting signing profile version arn for Lambda Function: %w", err)
-	}
-
-	// Add Signing Job ARN
-	if err := d.Set("signing_job_arn", function.SigningJobArn); err != nil {
-		return fmt.Errorf("error setting signing job arn for Lambda Function: %w", err)
-	}
-
-	fileSystemConfigs := flattenFileSystemConfigs(function.FileSystemConfigs)
-	log.Printf("[INFO] Setting Lambda %s file system configs %#v from API", d.Id(), fileSystemConfigs)
-	if err := d.Set("file_system_config", fileSystemConfigs); err != nil {
-		return fmt.Errorf("error setting file system config for Lambda Function (%s): %w", d.Id(), err)
-	}
-
-	// Add Package Type
-	log.Printf("[INFO] Setting Lambda %s package type %#v from API", d.Id(), function.PackageType)
-	if err := d.Set("package_type", function.PackageType); err != nil {
-		return fmt.Errorf("error setting package type for Lambda Function: %w", err)
-	}
-
-	// Add Image Configuration
-	imageConfig := FlattenImageConfig(function.ImageConfigResponse)
-	log.Printf("[INFO] Setting Lambda %s Image config %#v from API", d.Id(), imageConfig)
-	if err := d.Set("image_config", imageConfig); err != nil {
-		return fmt.Errorf("error setting image config for Lambda Function: %w", err)
-	}
-
-	if err := d.Set("image_uri", getFunctionOutput.Code.ImageUri); err != nil {
-		return fmt.Errorf("error setting image uri for Lambda Function: %w", err)
-	}
-
-	layers := flattenLayers(function.Layers)
-	log.Printf("[INFO] Setting Lambda %s Layers %#v from API", d.Id(), layers)
-	if err := d.Set("layers", layers); err != nil {
-		return fmt.Errorf("error setting layers for Lambda Function (%s): %w", d.Id(), err)
-	}
-
-	config := flattenVPCConfigResponse(function.VpcConfig)
-	log.Printf("[INFO] Setting Lambda %s VPC config %#v from API", d.Id(), config)
-	if err := d.Set("vpc_config", config); err != nil {
-		return fmt.Errorf("error setting vpc_config for Lambda Function (%s): %w", d.Id(), err)
-	}
-
-	environment := flattenEnvironment(function.Environment)
-	log.Printf("[INFO] Setting Lambda %s environment %#v from API", d.Id(), environment)
-	if err := d.Set("environment", environment); err != nil {
-		log.Printf("[ERR] Error setting environment for Lambda Function (%s): %s", d.Id(), err)
-	}
-
-	ephemeralStorage := flattenEphemeralStorage(function.EphemeralStorage)
-	log.Printf("[INFO] Setting Lambda %s ephemeralStorage %#v from API", d.Id(), ephemeralStorage)
-	if err := d.Set("ephemeral_storage", ephemeralStorage); err != nil {
-		return fmt.Errorf("error setting ephemeral_storage for Lambda Function (%s): %w", d.Id(), err)
-	}
-
+	function := output.Configuration
+	d.Set("architectures", aws.StringValueSlice(function.Architectures))
+	functionARN := aws.StringValue(function.FunctionArn)
+	d.Set("arn", functionARN)
 	if function.DeadLetterConfig != nil && function.DeadLetterConfig.TargetArn != nil {
 		d.Set("dead_letter_config", []interface{}{
 			map[string]interface{}{
-				"target_arn": *function.DeadLetterConfig.TargetArn,
+				"target_arn": aws.StringValue(function.DeadLetterConfig.TargetArn),
 			},
 		})
 	} else {
 		d.Set("dead_letter_config", []interface{}{})
 	}
-
-	snapStart := flattenSnapStart(function.SnapStart)
-	if err := d.Set("snap_start", snapStart); err != nil {
-		return fmt.Errorf("error setting snap_start for Lambda Function (%s): %w", d.Id(), err)
+	d.Set("description", function.Description)
+	if err := d.Set("environment", flattenEnvironment(function.Environment)); err != nil {
+		return fmt.Errorf("setting environment: %w", err)
 	}
-
-	// Assume `PassThrough` on partitions that don't support tracing config
-	tracingConfigMode := "PassThrough"
+	if err := d.Set("ephemeral_storage", flattenEphemeralStorage(function.EphemeralStorage)); err != nil {
+		return fmt.Errorf("setting ephemeral_storage: %w", err)
+	}
+	if err := d.Set("file_system_config", flattenFileSystemConfigs(function.FileSystemConfigs)); err != nil {
+		return fmt.Errorf("setting file_system_config: %w", err)
+	}
+	d.Set("handler", function.Handler)
+	if err := d.Set("image_config", FlattenImageConfig(function.ImageConfigResponse)); err != nil {
+		return fmt.Errorf("setting image_config: %w", err)
+	}
+	d.Set("image_uri", output.Code.ImageUri)
+	d.Set("invoke_arn", functionInvokeARN(functionARN, meta))
+	d.Set("kms_key_arn", function.KMSKeyArn)
+	d.Set("last_modified", function.LastModified)
+	if err := d.Set("layers", flattenLayers(function.Layers)); err != nil {
+		return fmt.Errorf("setting layers: %w", err)
+	}
+	d.Set("memory_size", function.MemorySize)
+	d.Set("package_type", function.PackageType)
+	if output.Concurrency != nil {
+		d.Set("reserved_concurrent_executions", output.Concurrency.ReservedConcurrentExecutions)
+	} else {
+		d.Set("reserved_concurrent_executions", -1)
+	}
+	d.Set("role", function.Role)
+	d.Set("runtime", function.Runtime)
+	d.Set("signing_job_arn", function.SigningJobArn)
+	d.Set("signing_profile_version_arn", function.SigningProfileVersionArn)
+	if err := d.Set("snap_start", flattenSnapStart(function.SnapStart)); err != nil {
+		return fmt.Errorf("setting snap_start: %w", err)
+	}
+	d.Set("source_code_hash", function.CodeSha256)
+	d.Set("source_code_size", function.CodeSize)
+	d.Set("timeout", function.Timeout)
+	tracingConfigMode := lambda.TracingModePassThrough
 	if function.TracingConfig != nil {
 		tracingConfigMode = aws.StringValue(function.TracingConfig.Mode)
 	}
@@ -882,114 +729,69 @@ func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 			"mode": tracingConfigMode,
 		},
 	})
-
-	// Get latest version and ARN unless qualifier is specified via data source
-	if qualifierExistance {
-		functionARN := aws.StringValue(function.FunctionArn)
-		d.Set("version", function.Version)
-		d.Set("qualified_arn", functionARN)
-		qualifiedInvokeArn := functionInvokeARN(functionARN, meta)
-		d.Set("qualified_invoke_arn", qualifiedInvokeArn)
-	} else {
-		// List is sorted from oldest to latest
-		// so this may get costly over time :'(
-		var lastVersion, lastQualifiedArn string
-		err = conn.ListVersionsByFunctionPages(&lambda.ListVersionsByFunctionInput{
-			FunctionName: function.FunctionName,
-			MaxItems:     aws.Int64(10000),
-		}, func(p *lambda.ListVersionsByFunctionOutput, lastPage bool) bool {
-			if lastPage {
-				last := p.Versions[len(p.Versions)-1]
-				lastVersion = aws.StringValue(last.Version)
-				lastQualifiedArn = aws.StringValue(last.FunctionArn)
-				return false
-			}
-			return true
-		})
-		if err != nil {
-			return fmt.Errorf("reading Lambda Function (%s): %w", d.Id(), err)
-		}
-
-		d.Set("version", lastVersion)
-		d.Set("qualified_arn", lastQualifiedArn)
-		qualifiedInvokeArn := functionInvokeARN(lastQualifiedArn, meta)
-		d.Set("qualified_invoke_arn", qualifiedInvokeArn)
+	if err := d.Set("vpc_config", flattenVPCConfigResponse(function.VpcConfig)); err != nil {
+		return fmt.Errorf("setting vpc_config: %w", err)
 	}
 
-	invokeArn := functionInvokeARN(*function.FunctionArn, meta)
-	d.Set("invoke_arn", invokeArn)
+	if hasQualifier {
+		d.Set("qualified_arn", functionARN)
+		d.Set("qualified_invoke_arn", functionInvokeARN(functionARN, meta))
+		d.Set("version", function.Version)
+	} else {
+		latest, err := findLatestFunctionVersionByName(conn, d.Id())
+
+		if err != nil {
+			return fmt.Errorf("reading Lambda Function (%s) latest version: %w", d.Id(), err)
+		}
+
+		qualifiedARN := aws.StringValue(latest.FunctionArn)
+		d.Set("qualified_arn", qualifiedARN)
+		d.Set("qualified_invoke_arn", functionInvokeARN(qualifiedARN, meta))
+		d.Set("version", latest.Version)
+
+		// Tagging operations are permitted on Lambda functions only.
+		// Tags on aliases and versions are not supported.
+		tags := KeyValueTags(output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+
+		//lintignore:AWSR002
+		if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+			return fmt.Errorf("setting tags: %w", err)
+		}
+
+		if err := d.Set("tags_all", tags.Map()); err != nil {
+			return fmt.Errorf("setting tags_all: %w", err)
+		}
+	}
 
 	// Currently, this functionality is only enabled in AWS Commercial partition
 	// and other partitions return ambiguous error codes (e.g. AccessDeniedException
 	// in AWS GovCloud (US)) so we cannot just ignore the error as would typically.
-	if partition := meta.(*conns.AWSClient).Partition; partition != endpoints.AwsPartitionID {
-		return nil
-	}
-
 	// Currently this functionality is not enabled in all Regions and returns ambiguous error codes
 	// (e.g. AccessDeniedException), so we cannot just ignore the error as we would typically.
-	if !SignerServiceIsAvailable(meta.(*conns.AWSClient).Region) {
-		return nil
-	}
+	if partition := meta.(*conns.AWSClient).Partition; partition == endpoints.AwsPartitionID && SignerServiceIsAvailable(meta.(*conns.AWSClient).Region) {
+		var codeSigningConfigArn string
 
-	// Code Signing is only supported on zip packaged lambda functions.
-	var codeSigningConfigArn string
+		// Code Signing is only supported on zip packaged lambda functions.
+		if aws.StringValue(function.PackageType) == lambda.PackageTypeZip {
+			output, err := conn.GetFunctionCodeSigningConfig(&lambda.GetFunctionCodeSigningConfigInput{
+				FunctionName: aws.String(d.Id()),
+			})
 
-	if aws.StringValue(function.PackageType) == lambda.PackageTypeZip {
-		codeSigningConfigInput := &lambda.GetFunctionCodeSigningConfigInput{
-			FunctionName: aws.String(d.Id()),
+			if err != nil {
+				return fmt.Errorf("reading Lambda Function (%s) code signing config: %w", d.Id(), err)
+			}
+
+			if output != nil {
+				codeSigningConfigArn = aws.StringValue(output.CodeSigningConfigArn)
+			}
 		}
-		getCodeSigningConfigOutput, err := conn.GetFunctionCodeSigningConfig(codeSigningConfigInput)
-		if err != nil {
-			return fmt.Errorf("error getting Lambda Function (%s) code signing config %w", d.Id(), err)
-		}
 
-		if getCodeSigningConfigOutput != nil {
-			codeSigningConfigArn = aws.StringValue(getCodeSigningConfigOutput.CodeSigningConfigArn)
-		}
-	}
-
-	d.Set("code_signing_config_arn", codeSigningConfigArn)
-
-	return nil
-}
-
-// resourceAwsLambdaFunction maps to:
-// DeleteFunction in the API / SDK
-func resourceFunctionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LambdaConn()
-
-	log.Printf("[INFO] Deleting Lambda Function: %s", d.Id())
-
-	params := &lambda.DeleteFunctionInput{
-		FunctionName: aws.String(d.Get("function_name").(string)),
-	}
-
-	_, err := conn.DeleteFunction(params)
-
-	if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceNotFoundException) {
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error deleting Lambda Function (%s): %w", d.Id(), err)
+		d.Set("code_signing_config_arn", codeSigningConfigArn)
 	}
 
 	return nil
 }
 
-func needsFunctionCodeUpdate(d verify.ResourceDiffer) bool {
-	return d.HasChange("filename") ||
-		d.HasChange("source_code_hash") ||
-		d.HasChange("s3_bucket") ||
-		d.HasChange("s3_key") ||
-		d.HasChange("s3_object_version") ||
-		d.HasChange("image_uri") ||
-		d.HasChange("architectures")
-}
-
-// resourceFunctionUpdate maps to:
-// UpdateFunctionCode in the API / SDK
 func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LambdaConn()
 
@@ -1124,7 +926,7 @@ func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 
 			if environmentVariables, ok := environment["variables"]; ok {
-				variables := readEnvironmentVariables(environmentVariables.(map[string]interface{}))
+				variables := flex.ExpandStringValueMap(environmentVariables.(map[string]interface{}))
 
 				configReq.Environment = &lambda.Environment{
 					Variables: aws.StringMap(variables),
@@ -1209,8 +1011,8 @@ func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 
-		if err := waitForFunctionUpdate(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return fmt.Errorf("error waiting for Lambda Function (%s) configuration update: %w", d.Id(), err)
+		if _, err := waitFunctionUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return fmt.Errorf("waiting for Lambda Function (%s) configuration update: %w", d.Id(), err)
 		}
 	}
 
@@ -1259,8 +1061,8 @@ func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 			return fmt.Errorf("error modifying Lambda Function (%s) Code: %w", d.Id(), err)
 		}
 
-		if err := waitForFunctionUpdate(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return fmt.Errorf("error waiting for Lambda Function (%s) code update: %w", d.Id(), err)
+		if _, err := waitFunctionUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return fmt.Errorf("waiting for Lambda Function (%s) code update: %w", d.Id(), err)
 		}
 	}
 
@@ -1336,6 +1138,25 @@ func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 	return resourceFunctionRead(d, meta)
 }
 
+func resourceFunctionDelete(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).LambdaConn()
+
+	log.Printf("[INFO] Deleting Lambda Function: %s", d.Id())
+	_, err := conn.DeleteFunction(&lambda.DeleteFunctionInput{
+		FunctionName: aws.String(d.Id()),
+	})
+
+	if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceNotFoundException) {
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("deleting Lambda Function (%s): %w", d.Id(), err)
+	}
+
+	return nil
+}
+
 func FindFunctionByName(conn *lambda.Lambda, name string) (*lambda.GetFunctionOutput, error) {
 	input := &lambda.GetFunctionInput{
 		FunctionName: aws.String(name),
@@ -1365,6 +1186,95 @@ func findFunction(conn *lambda.Lambda, input *lambda.GetFunctionInput) (*lambda.
 	return output, nil
 }
 
+func findLatestFunctionVersionByName(conn *lambda.Lambda, name string) (*lambda.FunctionConfiguration, error) {
+	input := &lambda.ListVersionsByFunctionInput{
+		FunctionName: aws.String(name),
+		MaxItems:     aws.Int64(10000),
+	}
+	var output *lambda.FunctionConfiguration
+
+	err := conn.ListVersionsByFunctionPages(input, func(page *lambda.ListVersionsByFunctionOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		// List is sorted from oldest to latest.
+		if lastPage {
+			output = page.Versions[len(page.Versions)-1]
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func checkHandlerRuntimeForZipFunction(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
+	packageType := d.Get("package_type")
+	_, handlerOk := d.GetOk("handler")
+	_, runtimeOk := d.GetOk("runtime")
+
+	if packageType == lambda.PackageTypeZip && (!handlerOk || !runtimeOk) {
+		return fmt.Errorf("handler and runtime must be set when PackageType is Zip")
+	}
+	return nil
+}
+
+func updateComputedAttributesOnPublish(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
+	configChanged := hasConfigChanges(d)
+	functionCodeUpdated := needsFunctionCodeUpdate(d)
+	if functionCodeUpdated {
+		d.SetNewComputed("last_modified")
+	}
+
+	publish := d.Get("publish").(bool)
+	publishChanged := d.HasChange("publish")
+	if publish && (configChanged || functionCodeUpdated || publishChanged) {
+		d.SetNewComputed("version")
+		d.SetNewComputed("qualified_arn")
+		d.SetNewComputed("qualified_invoke_arn")
+	}
+	return nil
+}
+
+func needsFunctionCodeUpdate(d verify.ResourceDiffer) bool {
+	return d.HasChange("filename") ||
+		d.HasChange("source_code_hash") ||
+		d.HasChange("s3_bucket") ||
+		d.HasChange("s3_key") ||
+		d.HasChange("s3_object_version") ||
+		d.HasChange("image_uri") ||
+		d.HasChange("architectures")
+}
+
+func hasConfigChanges(d verify.ResourceDiffer) bool {
+	return d.HasChange("description") ||
+		d.HasChange("handler") ||
+		d.HasChange("file_system_config") ||
+		d.HasChange("image_config") ||
+		d.HasChange("memory_size") ||
+		d.HasChange("role") ||
+		d.HasChange("timeout") ||
+		d.HasChange("kms_key_arn") ||
+		d.HasChange("layers") ||
+		d.HasChange("dead_letter_config") ||
+		d.HasChange("snap_start") ||
+		d.HasChange("tracing_config") ||
+		d.HasChange("vpc_config.0.security_group_ids") ||
+		d.HasChange("vpc_config.0.subnet_ids") ||
+		d.HasChange("runtime") ||
+		d.HasChange("environment") ||
+		d.HasChange("ephemeral_storage")
+}
+
 // loadFileContent returns contents of a file in a given path
 func loadFileContent(v string) ([]byte, error) {
 	filename, err := homedir.Expand(v)
@@ -1378,22 +1288,13 @@ func loadFileContent(v string) ([]byte, error) {
 	return fileContent, nil
 }
 
-func readEnvironmentVariables(ev map[string]interface{}) map[string]string {
-	variables := make(map[string]string)
-	for k, v := range ev {
-		variables[k] = v.(string)
-	}
-
-	return variables
-}
-
-func functionInvokeARN(functionArn string, meta interface{}) string {
+func functionInvokeARN(functionARN string, meta interface{}) string {
 	return arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "apigateway",
 		Region:    meta.(*conns.AWSClient).Region,
 		AccountID: "lambda",
-		Resource:  fmt.Sprintf("path/2015-03-31/functions/%s/invocations", functionArn),
+		Resource:  fmt.Sprintf("path/2015-03-31/functions/%s/invocations", functionARN),
 	}.String()
 }
 
@@ -1423,47 +1324,43 @@ func refreshFunctionLastUpdateStatus(conn *lambda.Lambda, functionName string) r
 	}
 }
 
-func refreshFunctionState(conn *lambda.Lambda, functionName string) resource.StateRefreshFunc {
+func statusFunctionState(conn *lambda.Lambda, name string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		input := &lambda.GetFunctionInput{
-			FunctionName: aws.String(functionName),
-		}
+		output, err := FindFunctionByName(conn, name)
 
-		output, err := conn.GetFunction(input)
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
 
 		if err != nil {
 			return nil, "", err
 		}
 
-		if output == nil || output.Configuration == nil {
-			return nil, "", nil
-		}
-
-		state := aws.StringValue(output.Configuration.State)
-
-		if state == lambda.StateFailed {
-			return output.Configuration, state, fmt.Errorf("%s: %s", aws.StringValue(output.Configuration.StateReasonCode), aws.StringValue(output.Configuration.StateReason))
-		}
-
-		return output.Configuration, state, nil
+		return output.Configuration, aws.StringValue(output.Configuration.State), nil
 	}
 }
 
-func waitForFunctionCreation(conn *lambda.Lambda, functionName string, timeout time.Duration) error {
+func waitFunctionCreated(conn *lambda.Lambda, name string, timeout time.Duration) (*lambda.FunctionConfiguration, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{lambda.StatePending},
 		Target:  []string{lambda.StateActive},
-		Refresh: refreshFunctionState(conn, functionName),
+		Refresh: statusFunctionState(conn, name),
 		Timeout: timeout,
 		Delay:   5 * time.Second,
 	}
 
-	_, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForState()
 
-	return err
+	if output, ok := outputRaw.(*lambda.FunctionConfiguration); ok {
+		tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(output.StateReasonCode), aws.StringValue(output.StateReason)))
+
+		return output, err
+	}
+
+	return nil, err
 }
 
-func waitForFunctionUpdate(conn *lambda.Lambda, functionName string, timeout time.Duration) error {
+func waitFunctionUpdated(conn *lambda.Lambda, functionName string, timeout time.Duration) (*lambda.FunctionConfiguration, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{lambda.LastUpdateStatusInProgress},
 		Target:  []string{lambda.LastUpdateStatusSuccessful},
@@ -1472,9 +1369,15 @@ func waitForFunctionUpdate(conn *lambda.Lambda, functionName string, timeout tim
 		Delay:   5 * time.Second,
 	}
 
-	_, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForState()
 
-	return err
+	if output, ok := outputRaw.(*lambda.FunctionConfiguration); ok {
+		tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(output.StateReasonCode), aws.StringValue(output.StateReason)))
+
+		return output, err
+	}
+
+	return nil, err
 }
 
 // SignerServiceIsAvailable returns whether the AWS Signer service is available in the specified AWS Region.
