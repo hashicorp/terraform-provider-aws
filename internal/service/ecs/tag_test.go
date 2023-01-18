@@ -1,6 +1,7 @@
 package ecs_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -71,7 +72,7 @@ func TestAccECSTag_ResourceARN_batchComputeEnvironment(t *testing.T) {
 	resourceName := "aws_ecs_tag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckBatch(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckBatch(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTagDestroy(ctx),
@@ -185,12 +186,12 @@ resource "aws_ecs_tag" "test" {
 `, rName)
 }
 
-func testAccPreCheckBatch(t *testing.T) {
+func testAccPreCheckBatch(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).BatchConn()
 
 	input := &batch.DescribeComputeEnvironmentsInput{}
 
-	_, err := conn.DescribeComputeEnvironments(input)
+	_, err := conn.DescribeComputeEnvironmentsWithContext(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
