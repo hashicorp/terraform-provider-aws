@@ -674,11 +674,13 @@ func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 	functionARN := aws.StringValue(function.FunctionArn)
 	d.Set("arn", functionARN)
 	if function.DeadLetterConfig != nil && function.DeadLetterConfig.TargetArn != nil {
-		d.Set("dead_letter_config", []interface{}{
+		if err := d.Set("dead_letter_config", []interface{}{
 			map[string]interface{}{
 				"target_arn": aws.StringValue(function.DeadLetterConfig.TargetArn),
 			},
-		})
+		}); err != nil {
+			return fmt.Errorf("setting dead_letter_config: %w", err)
+		}
 	} else {
 		d.Set("dead_letter_config", []interface{}{})
 	}
@@ -696,7 +698,9 @@ func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 	if err := d.Set("image_config", FlattenImageConfig(function.ImageConfigResponse)); err != nil {
 		return fmt.Errorf("setting image_config: %w", err)
 	}
-	d.Set("image_uri", output.Code.ImageUri)
+	if output.Code != nil {
+		d.Set("image_uri", output.Code.ImageUri)
+	}
 	d.Set("invoke_arn", functionInvokeARN(functionARN, meta))
 	d.Set("kms_key_arn", function.KMSKeyArn)
 	d.Set("last_modified", function.LastModified)
@@ -724,11 +728,13 @@ func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 	if function.TracingConfig != nil {
 		tracingConfigMode = aws.StringValue(function.TracingConfig.Mode)
 	}
-	d.Set("tracing_config", []interface{}{
+	if err := d.Set("tracing_config", []interface{}{
 		map[string]interface{}{
 			"mode": tracingConfigMode,
 		},
-	})
+	}); err != nil {
+		return fmt.Errorf("setting tracing_config: %s", err)
+	}
 	if err := d.Set("vpc_config", flattenVPCConfigResponse(function.VpcConfig)); err != nil {
 		return fmt.Errorf("setting vpc_config: %w", err)
 	}
