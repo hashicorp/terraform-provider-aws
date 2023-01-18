@@ -1366,7 +1366,7 @@ func waitFunctionCreated(conn *lambda.Lambda, name string, timeout time.Duration
 	return nil, err
 }
 
-func waitFunctionUpdated(conn *lambda.Lambda, functionName string, timeout time.Duration) (*lambda.FunctionConfiguration, error) {
+func waitFunctionUpdated(conn *lambda.Lambda, functionName string, timeout time.Duration) (*lambda.FunctionConfiguration, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{lambda.LastUpdateStatusInProgress},
 		Target:  []string{lambda.LastUpdateStatusSuccessful},
