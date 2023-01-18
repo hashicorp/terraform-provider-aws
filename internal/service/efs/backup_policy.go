@@ -57,7 +57,7 @@ func resourceBackupPolicyCreate(d *schema.ResourceData, meta interface{}) error 
 	fsID := d.Get("file_system_id").(string)
 
 	if err := backupPolicyPut(conn, fsID, d.Get("backup_policy").([]interface{})[0].(map[string]interface{})); err != nil {
-		return err
+		return fmt.Errorf("creating EFS Backup Policy (%s): %w", fsID, err)
 	}
 
 	d.SetId(fsID)
@@ -93,7 +93,7 @@ func resourceBackupPolicyUpdate(d *schema.ResourceData, meta interface{}) error 
 	conn := meta.(*conns.AWSClient).EFSConn()
 
 	if err := backupPolicyPut(conn, d.Id(), d.Get("backup_policy").([]interface{})[0].(map[string]interface{})); err != nil {
-		return err
+		return fmt.Errorf("updating EFS Backup Policy (%s): %w", d.Id(), err)
 	}
 
 	return resourceBackupPolicyRead(d, meta)

@@ -45,7 +45,7 @@ func resourceNotificationCreate(d *schema.ResourceData, meta interface{}) error 
 
 	topic := d.Get("topic_arn").(string)
 	if err := addNotificationConfigToGroupsWithTopic(conn, gl, nl, topic); err != nil {
-		return err
+		return fmt.Errorf("creating Autoscaling Group Notification (%s): %w", topic, err)
 	}
 
 	// ARNs are unique, and these notifications are per ARN, so we re-use the ARN
@@ -92,7 +92,7 @@ func resourceNotificationRead(d *schema.ResourceData, meta interface{}) error {
 		return true // return false to stop paging
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("updating Autoscaling Group Notification (%s): %w", topic, err)
 	}
 
 	// Grab the keys here as the list of Groups
@@ -108,10 +108,10 @@ func resourceNotificationRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err := d.Set("group_names", gList); err != nil {
-		return err
+		return fmt.Errorf("updating Autoscaling Group Notification (%s): %w", topic, err)
 	}
 	if err := d.Set("notifications", nList); err != nil {
-		return err
+		return fmt.Errorf("updating Autoscaling Group Notification (%s): %w", topic, err)
 	}
 
 	return nil
@@ -138,7 +138,7 @@ func resourceNotificationUpdate(d *schema.ResourceData, meta interface{}) error 
 	topic := d.Get("topic_arn").(string)
 
 	if err := removeNotificationConfigToGroupsWithTopic(conn, remove, topic); err != nil {
-		return err
+		return fmt.Errorf("updating Autoscaling Group Notification (%s): %w", topic, err)
 	}
 
 	var update []*string
@@ -149,16 +149,16 @@ func resourceNotificationUpdate(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	if err := addNotificationConfigToGroupsWithTopic(conn, update, nl, topic); err != nil {
-		return err
+		return fmt.Errorf("updating Autoscaling Group Notification (%s): %w", topic, err)
 	}
 
 	return resourceNotificationRead(d, meta)
 }
 
 func addNotificationConfigToGroupsWithTopic(conn *autoscaling.AutoScaling, groups []*string, nl []*string, topic string) error {
-	for _, a := range groups {
+	for _, group := range groups {
 		opts := &autoscaling.PutNotificationConfigurationInput{
-			AutoScalingGroupName: a,
+			AutoScalingGroupName: group,
 			NotificationTypes:    nl,
 			TopicARN:             aws.String(topic),
 		}
@@ -166,7 +166,7 @@ func addNotificationConfigToGroupsWithTopic(conn *autoscaling.AutoScaling, group
 		_, err := conn.PutNotificationConfiguration(opts)
 
 		if err != nil {
-			return fmt.Errorf("Error creating Autoscaling Group Notification for Group (%s): %w", aws.StringValue(a), err)
+			return fmt.Errorf("adding notifications for (%s): %w", aws.StringValue(group), err)
 		}
 	}
 
@@ -174,15 +174,15 @@ func addNotificationConfigToGroupsWithTopic(conn *autoscaling.AutoScaling, group
 }
 
 func removeNotificationConfigToGroupsWithTopic(conn *autoscaling.AutoScaling, groups []*string, topic string) error {
-	for _, r := range groups {
+	for _, group := range groups {
 		opts := &autoscaling.DeleteNotificationConfigurationInput{
-			AutoScalingGroupName: r,
+			AutoScalingGroupName: group,
 			TopicARN:             aws.String(topic),
 		}
 
 		_, err := conn.DeleteNotificationConfiguration(opts)
 		if err != nil {
-			return fmt.Errorf("Error deleting notification configuration for ASG \"%s\", Topic ARN \"%s\"", *r, topic)
+			return fmt.Errorf("removing notifications for (%s): %w", aws.StringValue(group), err)
 		}
 	}
 	return nil
@@ -194,6 +194,8 @@ func resourceNotificationDelete(d *schema.ResourceData, meta interface{}) error 
 	gl := flex.ExpandStringSet(d.Get("group_names").(*schema.Set))
 
 	topic := d.Get("topic_arn").(string)
-	err := removeNotificationConfigToGroupsWithTopic(conn, gl, topic)
-	return err
+	if err := removeNotificationConfigToGroupsWithTopic(conn, gl, topic); err != nil {
+		return fmt.Errorf("deleting Autoscaling Group Notification (%s): %w", topic, err)
+	}
+	return nil
 }

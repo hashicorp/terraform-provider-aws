@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codebuild"
@@ -109,9 +108,7 @@ func resourceWebhookCreate(d *schema.ResourceData, meta interface{}) error {
 		input.BranchFilter = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating CodeBuild Webhook: %s", input)
 	resp, err := conn.CreateWebhook(input)
-
 	if err != nil {
 		return fmt.Errorf("error creating CodeBuild Webhook: %s", err)
 	}
@@ -239,7 +236,7 @@ func resourceWebhookUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return err
+		return fmt.Errorf("updating CodeBuild Webhook (%s): %s", d.Id(), err)
 	}
 
 	return resourceWebhookRead(d, meta)
@@ -256,7 +253,7 @@ func resourceWebhookDelete(d *schema.ResourceData, meta interface{}) error {
 		if tfawserr.ErrCodeEquals(err, codebuild.ErrCodeResourceNotFoundException) {
 			return nil
 		}
-		return err
+		return fmt.Errorf("deleting CodeBuild Webhook (%s): %s", d.Id(), err)
 	}
 
 	return nil

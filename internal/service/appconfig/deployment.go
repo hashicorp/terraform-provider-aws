@@ -126,7 +126,7 @@ func resourceDeploymentRead(d *schema.ResourceData, meta interface{}) error {
 	appID, envID, deploymentNum, err := DeploymentParseID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading AppConfig Deployment (%s): %w", d.Id(), err)
 	}
 
 	input := &appconfig.GetDeploymentInput{
@@ -144,11 +144,11 @@ func resourceDeploymentRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error getting AppConfig Deployment (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading AppConfig Deployment (%s): %w", d.Id(), err)
 	}
 
 	if output == nil {
-		return fmt.Errorf("error getting AppConfig Deployment (%s): empty response", d.Id())
+		return fmt.Errorf("reading AppConfig Deployment (%s): empty response", d.Id())
 	}
 
 	arn := arn.ARN{

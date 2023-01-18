@@ -176,12 +176,12 @@ func resourceVaultDelete(d *schema.ResourceData, meta interface{}) error {
 				})
 
 				if err != nil {
-					recoveryPointErrs = multierror.Append(recoveryPointErrs, fmt.Errorf("deleting Backup Vault (%s) recovery point (%s): %w", d.Id(), recoveryPointARN, err))
+					recoveryPointErrs = multierror.Append(recoveryPointErrs, fmt.Errorf("deleting recovery point (%s): %w", recoveryPointARN, err))
 					continue
 				}
 
 				if _, err := waitRecoveryPointDeleted(conn, d.Id(), recoveryPointARN, d.Timeout(schema.TimeoutDelete)); err != nil {
-					recoveryPointErrs = multierror.Append(recoveryPointErrs, fmt.Errorf("waiting for Backup Vault (%s) recovery point (%s) delete: %w", d.Id(), recoveryPointARN, err))
+					recoveryPointErrs = multierror.Append(recoveryPointErrs, fmt.Errorf("deleting recovery point (%s): waiting for completion: %w", recoveryPointARN, err))
 				}
 			}
 
@@ -193,7 +193,7 @@ func resourceVaultDelete(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if err := recoveryPointErrs.ErrorOrNil(); err != nil {
-			return err
+			return fmt.Errorf("deleting Backup Vault (%s): %w", d.Id(), err)
 		}
 	}
 

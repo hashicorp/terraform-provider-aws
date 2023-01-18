@@ -181,10 +181,8 @@ func resourceRepositoryPolicyDelete(d *schema.ResourceData, meta interface{}) er
 			tfawserr.ErrCodeEquals(err, ecr.ErrCodeRepositoryPolicyNotFoundException) {
 			return nil
 		}
-		return err
+		return fmt.Errorf("deleting ECR Repository Policy (%s): %w", d.Id(), err)
 	}
-
-	log.Printf("[DEBUG] repository policy %s deleted.", d.Id())
 
 	return nil
 }

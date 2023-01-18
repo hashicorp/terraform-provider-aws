@@ -261,13 +261,13 @@ func deleteConnection(conn *directconnect.DirectConnect, connectionID string, wa
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Direct Connect Connection (%s): %w", connectionID, err)
+		return fmt.Errorf("deleting Direct Connect Connection (%s): %w", connectionID, err)
 	}
 
 	_, err = waiter(conn, connectionID)
 
 	if err != nil {
-		return fmt.Errorf("error waiting for Direct Connect Connection (%s) delete: %w", connectionID, err)
+		return fmt.Errorf("waiting for Direct Connect Connection (%s) delete: %w", connectionID, err)
 	}
 
 	return nil

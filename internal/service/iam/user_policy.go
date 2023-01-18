@@ -79,7 +79,7 @@ func resourceUserPolicyPut(d *schema.ResourceData, meta interface{}) error {
 	if !d.IsNewResource() {
 		_, policyName, err = UserPolicyParseID(d.Id())
 		if err != nil {
-			return err
+			return fmt.Errorf("putting IAM User Policy %s: %s", d.Id(), err)
 		}
 	} else if v, ok := d.GetOk("name"); ok {
 		policyName = v.(string)
@@ -91,10 +91,10 @@ func resourceUserPolicyPut(d *schema.ResourceData, meta interface{}) error {
 	request.PolicyName = aws.String(policyName)
 
 	if _, err := conn.PutUserPolicy(request); err != nil {
-		return fmt.Errorf("Error putting IAM user policy %s: %s", *request.PolicyName, err)
+		return fmt.Errorf("putting IAM User Policy %s: %s", aws.StringValue(request.PolicyName), err)
 	}
 
-	d.SetId(fmt.Sprintf("%s:%s", *request.UserName, *request.PolicyName))
+	d.SetId(fmt.Sprintf("%s:%s", aws.StringValue(request.UserName), aws.StringValue(request.PolicyName)))
 	return nil
 }
 
@@ -103,7 +103,7 @@ func resourceUserPolicyRead(d *schema.ResourceData, meta interface{}) error {
 
 	user, name, err := UserPolicyParseID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("reading IAM User Policy (%s): %w", d.Id(), err)
 	}
 
 	request := &iam.GetUserPolicyInput{
@@ -140,29 +140,29 @@ func resourceUserPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading IAM User Policy (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading IAM User Policy (%s): %w", d.Id(), err)
 	}
 
 	if getResp == nil || getResp.PolicyDocument == nil {
-		return fmt.Errorf("error reading IAM User Policy (%s): empty response", d.Id())
+		return fmt.Errorf("reading IAM User Policy (%s): empty response", d.Id())
 	}
 
 	policy, err := url.QueryUnescape(*getResp.PolicyDocument)
 	if err != nil {
-		return err
+		return fmt.Errorf("reading IAM User Policy (%s): %w", d.Id(), err)
 	}
 
 	policyToSet, err := verify.LegacyPolicyToSet(d.Get("policy").(string), policy)
 	if err != nil {
-		return fmt.Errorf("while setting policy (%s), encountered: %w", policyToSet, err)
+		return fmt.Errorf("reading IAM User Policy (%s): setting policy: %w", d.Id(), err)
 	}
 
 	d.Set("policy", policyToSet)
 
-	if err := d.Set("name", name); err != nil {
-		return err
-	}
-	return d.Set("user", user)
+	d.Set("name", name)
+	d.Set("user", user)
+
+	return nil
 }
 
 func resourceUserPolicyDelete(d *schema.ResourceData, meta interface{}) error {
@@ -170,7 +170,7 @@ func resourceUserPolicyDelete(d *schema.ResourceData, meta interface{}) error {
 
 	user, name, err := UserPolicyParseID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting IAM User Policy %s: %s", d.Id(), err)
 	}
 
 	request := &iam.DeleteUserPolicyInput{
@@ -182,7 +182,7 @@ func resourceUserPolicyDelete(d *schema.ResourceData, meta interface{}) error {
 		if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 			return nil
 		}
-		return fmt.Errorf("Error deleting IAM user policy %s: %s", d.Id(), err)
+		return fmt.Errorf("deleting IAM User Policy %s: %s", d.Id(), err)
 	}
 	return nil
 }

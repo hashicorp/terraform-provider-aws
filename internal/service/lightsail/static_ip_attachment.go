@@ -1,11 +1,12 @@
 package lightsail
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/lightsail"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
@@ -39,15 +40,14 @@ func resourceStaticIPAttachmentCreate(d *schema.ResourceData, meta interface{}) 
 	conn := meta.(*conns.AWSClient).LightsailConn()
 
 	staticIpName := d.Get("static_ip_name").(string)
-	log.Printf("[INFO] Attaching Lightsail Static IP: %q", staticIpName)
-	out, err := conn.AttachStaticIp(&lightsail.AttachStaticIpInput{
+	log.Printf("[INFO] Creating Lightsail Static IP Attachment: %q", staticIpName)
+	_, err := conn.AttachStaticIp(&lightsail.AttachStaticIpInput{
 		StaticIpName: aws.String(staticIpName),
 		InstanceName: aws.String(d.Get("instance_name").(string)),
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("creating Lightsail Static IP Attachment: %w", err)
 	}
-	log.Printf("[INFO] Lightsail Static IP attached: %s", *out)
 
 	d.SetId(staticIpName)
 
@@ -58,27 +58,23 @@ func resourceStaticIPAttachmentRead(d *schema.ResourceData, meta interface{}) er
 	conn := meta.(*conns.AWSClient).LightsailConn()
 
 	staticIpName := d.Get("static_ip_name").(string)
-	log.Printf("[INFO] Reading Lightsail Static IP: %q", staticIpName)
+	log.Printf("[INFO] Reading Lightsail Static IP Attachment: %q", staticIpName)
 	out, err := conn.GetStaticIp(&lightsail.GetStaticIpInput{
 		StaticIpName: aws.String(staticIpName),
 	})
 	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok {
-			if awsErr.Code() == "NotFoundException" {
-				log.Printf("[WARN] Lightsail Static IP (%s) not found, removing from state", d.Id())
-				d.SetId("")
-				return nil
-			}
+		if tfawserr.ErrCodeEquals(err, lightsail.ErrCodeNotFoundException) {
+			log.Printf("[WARN] Lightsail Static IP Attachment (%s) not found, removing from state", d.Id())
+			d.SetId("")
+			return nil
 		}
-		return err
+		return fmt.Errorf("reading Lightsail Static IP Attachment (%s):%w", d.Id(), err)
 	}
 	if !*out.StaticIp.IsAttached {
-		log.Printf("[WARN] Lightsail Static IP (%s) is not attached, removing from state", d.Id())
+		log.Printf("[WARN] Lightsail Static IP Attachment (%s) is not attached, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
-
-	log.Printf("[INFO] Received Lightsail Static IP: %s", *out)
 
 	d.Set("instance_name", out.StaticIp.AttachedTo)
 	d.Set("ip_address", out.StaticIp.IpAddress)
@@ -90,13 +86,11 @@ func resourceStaticIPAttachmentDelete(d *schema.ResourceData, meta interface{}) 
 	conn := meta.(*conns.AWSClient).LightsailConn()
 
 	name := d.Get("static_ip_name").(string)
-	log.Printf("[INFO] Detaching Lightsail Static IP: %q", name)
-	out, err := conn.DetachStaticIp(&lightsail.DetachStaticIpInput{
+	_, err := conn.DetachStaticIp(&lightsail.DetachStaticIpInput{
 		StaticIpName: aws.String(name),
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting Lightsail Static IP Attachment (%s):%w", d.Id(), err)
 	}
-	log.Printf("[INFO] Detached Lightsail Static IP: %s", *out)
 	return nil
 }

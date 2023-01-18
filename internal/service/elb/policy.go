@@ -164,7 +164,7 @@ func resourcePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	err = resourcePolicyCreate(d, meta)
 	if err != nil {
-		return err
+		return fmt.Errorf("updating ELB Classic Policy (%s): %w", d.Id(), err)
 	}
 
 	for _, listenerAssignment := range reassignments.listenerPolicies {

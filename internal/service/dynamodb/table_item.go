@@ -65,7 +65,7 @@ func resourceTableItemCreate(d *schema.ResourceData, meta interface{}) error {
 	item := d.Get("item").(string)
 	attributes, err := ExpandTableItemAttributes(item)
 	if err != nil {
-		return err
+		return fmt.Errorf("creating DynamoDB Table Item: %w", err)
 	}
 
 	log.Printf("[DEBUG] DynamoDB item create: %s", tableName)
@@ -78,7 +78,7 @@ func resourceTableItemCreate(d *schema.ResourceData, meta interface{}) error {
 		TableName:                aws.String(tableName),
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("creating DynamoDB Table Item: %w", err)
 	}
 
 	rangeKey := d.Get("range_key").(string)
@@ -102,7 +102,7 @@ func resourceTableItemUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		attributes, err := ExpandTableItemAttributes(newItem.(string))
 		if err != nil {
-			return err
+			return fmt.Errorf("updating DynamoDB Table Item (%s): %w", d.Id(), err)
 		}
 		newQueryKey := BuildTableItemqueryKey(attributes, hashKey, rangeKey)
 
@@ -121,7 +121,7 @@ func resourceTableItemUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		oldAttributes, err := ExpandTableItemAttributes(oldItem.(string))
 		if err != nil {
-			return err
+			return fmt.Errorf("updating DynamoDB Table Item (%s): %w", d.Id(), err)
 		}
 
 		for k := range oldAttributes {
@@ -141,7 +141,7 @@ func resourceTableItemUpdate(d *schema.ResourceData, meta interface{}) error {
 			Key:              newQueryKey,
 		})
 		if err != nil {
-			return fmt.Errorf("error updating DynamoDB Table Item (%s): %w", d.Id(), err)
+			return fmt.Errorf("updating DynamoDB Table Item (%s): %w", d.Id(), err)
 		}
 
 		// New record is created via UpdateItem in case we're changing hash key
@@ -154,7 +154,7 @@ func resourceTableItemUpdate(d *schema.ResourceData, meta interface{}) error {
 				TableName: aws.String(tableName),
 			})
 			if err != nil {
-				return err
+				return fmt.Errorf("updating DynamoDB Table Item (%s): removing old record: %w", d.Id(), err)
 			}
 		}
 
@@ -175,7 +175,7 @@ func resourceTableItemRead(d *schema.ResourceData, meta interface{}) error {
 	rangeKey := d.Get("range_key").(string)
 	attributes, err := ExpandTableItemAttributes(d.Get("item").(string))
 	if err != nil {
-		return err
+		return fmt.Errorf("reading DynamoDB Table Item (%s): %w", d.Id(), err)
 	}
 
 	key := BuildTableItemqueryKey(attributes, hashKey, rangeKey)
@@ -188,14 +188,14 @@ func resourceTableItemRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading DynamoDB Table Item (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading DynamoDB Table Item (%s): %w", d.Id(), err)
 	}
 
 	// The record exists, now test if it differs from what is desired
 	if !reflect.DeepEqual(result.Item, attributes) {
 		itemAttrs, err := flattenTableItemAttributes(result.Item)
 		if err != nil {
-			return err
+			return fmt.Errorf("reading DynamoDB Table Item (%s): %w", d.Id(), err)
 		}
 		d.Set("item", itemAttrs)
 		id := buildTableItemID(tableName, hashKey, rangeKey, result.Item)
@@ -210,7 +210,7 @@ func resourceTableItemDelete(d *schema.ResourceData, meta interface{}) error {
 
 	attributes, err := ExpandTableItemAttributes(d.Get("item").(string))
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting DynamoDB Table Item (%s): %w", d.Id(), err)
 	}
 	hashKey := d.Get("hash_key").(string)
 	rangeKey := d.Get("range_key").(string)
@@ -222,7 +222,7 @@ func resourceTableItemDelete(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if err != nil {
-		return fmt.Errorf("error deleting DynamoDB Table Item (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting DynamoDB Table Item (%s): %w", d.Id(), err)
 	}
 
 	return nil

@@ -132,7 +132,7 @@ func resourceBotAliasCreate(d *schema.ResourceData, meta interface{}) error {
 	if v, ok := d.GetOk("conversation_logs"); ok {
 		conversationLogs, err := expandConversationLogs(v)
 		if err != nil {
-			return err
+			return fmt.Errorf("creating Lex Model Bot Alias (%s): %w", id, err)
 		}
 		input.ConversationLogs = conversationLogs
 	}
@@ -154,13 +154,12 @@ func resourceBotAliasCreate(d *schema.ResourceData, meta interface{}) error {
 
 		return nil
 	})
-
 	if tfresource.TimedOut(err) { // nosemgrep:ci.helper-schema-TimeoutError-check-doesnt-return-output
 		_, err = conn.PutBotAlias(input)
 	}
 
 	if err != nil {
-		return fmt.Errorf("error creating bot alias '%s': %w", id, err)
+		return fmt.Errorf("creating Lex Model Bot Alias (%s): %w", id, err)
 	}
 
 	d.SetId(id)
@@ -225,7 +224,7 @@ func resourceBotAliasUpdate(d *schema.ResourceData, meta interface{}) error {
 	if v, ok := d.GetOk("conversation_logs"); ok {
 		conversationLogs, err := expandConversationLogs(v)
 		if err != nil {
-			return err
+			return fmt.Errorf("updating Lex Model Bot Alias (%s): %w", d.Id(), err)
 		}
 		input.ConversationLogs = conversationLogs
 	}
@@ -252,7 +251,7 @@ func resourceBotAliasUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error updating bot alias '%s': %w", d.Id(), err)
+		return fmt.Errorf("updating Lex Model Bot Alias (%s): %w", d.Id(), err)
 	}
 
 	return resourceBotAliasRead(d, meta)
@@ -273,7 +272,7 @@ func resourceBotAliasDelete(d *schema.ResourceData, meta interface{}) error {
 		_, err := conn.DeleteBotAlias(input)
 
 		if tfawserr.ErrCodeEquals(err, lexmodelbuildingservice.ErrCodeConflictException) {
-			return resource.RetryableError(fmt.Errorf("'%q': bot alias still deleting", d.Id()))
+			return resource.RetryableError(fmt.Errorf("%q: bot alias still deleting", d.Id()))
 		}
 		if err != nil {
 			return resource.NonRetryableError(err)
@@ -285,14 +284,15 @@ func resourceBotAliasDelete(d *schema.ResourceData, meta interface{}) error {
 	if tfresource.TimedOut(err) {
 		_, err = conn.DeleteBotAlias(input)
 	}
-
 	if err != nil {
-		return fmt.Errorf("error deleting bot alias '%s': %w", d.Id(), err)
+		return fmt.Errorf("deleting Lex Model Bot Alias (%s): %w", d.Id(), err)
 	}
 
-	_, err = waitBotAliasDeleted(conn, botAliasName, botName)
+	if _, err := waitBotAliasDeleted(conn, botAliasName, botName); err != nil {
+		return fmt.Errorf("deleting Lex Model Bot Alias (%s): waiting for completion: %w", d.Id(), err)
+	}
 
-	return err
+	return nil
 }
 
 func resourceBotAliasImport(d *schema.ResourceData, _ interface{}) ([]*schema.ResourceData, error) {

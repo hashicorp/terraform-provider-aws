@@ -96,7 +96,7 @@ func resourceStudioSessionMappingUpdate(d *schema.ResourceData, meta interface{}
 
 	studioId, identityType, identityId, err := readStudioSessionMapping(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("updating EMR Studio Session Mapping (%s): %w", d.Id(), err)
 	}
 
 	input := &emr.UpdateStudioSessionMappingInput{
@@ -108,7 +108,7 @@ func resourceStudioSessionMappingUpdate(d *schema.ResourceData, meta interface{}
 
 	_, err = conn.UpdateStudioSessionMapping(input)
 	if err != nil {
-		return fmt.Errorf("error updating EMR Studio Session Mapping: %w", err)
+		return fmt.Errorf("updating EMR Studio Session Mapping (%s): %w", d.Id(), err)
 	}
 
 	return resourceStudioSessionMappingRead(d, meta)
@@ -141,7 +141,7 @@ func resourceStudioSessionMappingDelete(d *schema.ResourceData, meta interface{}
 	conn := meta.(*conns.AWSClient).EMRConn()
 	studioId, identityType, identityId, err := readStudioSessionMapping(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting EMR Studio Session Mapping (%s): %w", d.Id(), err)
 	}
 
 	input := &emr.DeleteStudioSessionMappingInput{
@@ -157,7 +157,7 @@ func resourceStudioSessionMappingDelete(d *schema.ResourceData, meta interface{}
 		if tfawserr.ErrMessageContains(err, emr.ErrCodeInvalidRequestException, "Studio session mapping does not exist.") {
 			return nil
 		}
-		return fmt.Errorf("error deleting EMR Studio Session Mapping (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting EMR Studio Session Mapping (%s): %w", d.Id(), err)
 	}
 
 	return nil

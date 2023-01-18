@@ -73,7 +73,7 @@ func resourceIPSetCreate(d *schema.ResourceData, meta interface{}) error {
 		return conn.CreateIPSet(params)
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("creating WAF IPSet (%s): %w", d.Get("name").(string), err)
 	}
 	resp := out.(*waf.CreateIPSetOutput)
 	d.SetId(aws.StringValue(resp.IPSet.IPSetId))
@@ -81,7 +81,7 @@ func resourceIPSetCreate(d *schema.ResourceData, meta interface{}) error {
 	if v, ok := d.GetOk("ip_set_descriptors"); ok && v.(*schema.Set).Len() > 0 {
 		err := updateIPSetDescriptors(d.Id(), nil, v.(*schema.Set).List(), conn)
 		if err != nil {
-			return fmt.Errorf("Error Setting IP Descriptors: %s", err)
+			return fmt.Errorf("Setting IP Descriptors: %s", err)
 		}
 	}
 
@@ -103,7 +103,7 @@ func resourceIPSetRead(d *schema.ResourceData, meta interface{}) error {
 			return nil
 		}
 
-		return err
+		return fmt.Errorf("reading WAF IPSet (%s): %w", d.Get("name").(string), err)
 	}
 
 	var descriptors []map[string]interface{}
@@ -140,7 +140,7 @@ func resourceIPSetUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		err := updateIPSetDescriptors(d.Id(), oldD, newD, conn)
 		if err != nil {
-			return fmt.Errorf("Error Updating WAF IPSet: %s", err)
+			return fmt.Errorf("updating WAF IPSet: %s", err)
 		}
 	}
 
@@ -155,7 +155,7 @@ func resourceIPSetDelete(d *schema.ResourceData, meta interface{}) error {
 	if len(oldDescriptors) > 0 {
 		err := updateIPSetDescriptors(d.Id(), oldDescriptors, nil, conn)
 		if err != nil {
-			return fmt.Errorf("Error Deleting IPSetDescriptors: %s", err)
+			return fmt.Errorf("deleting IPSetDescriptors: %s", err)
 		}
 	}
 
@@ -169,7 +169,7 @@ func resourceIPSetDelete(d *schema.ResourceData, meta interface{}) error {
 		return conn.DeleteIPSet(req)
 	})
 	if err != nil {
-		return fmt.Errorf("Error Deleting WAF IPSet: %s", err)
+		return fmt.Errorf("deleting WAF IPSet: %s", err)
 	}
 
 	return nil
@@ -188,7 +188,7 @@ func updateIPSetDescriptors(id string, oldD, newD []interface{}, conn *waf.WAF) 
 			return conn.UpdateIPSet(req)
 		})
 		if err != nil {
-			return fmt.Errorf("Error Updating WAF IPSet: %s", err)
+			return fmt.Errorf("updating WAF IPSet: %s", err)
 		}
 	}
 

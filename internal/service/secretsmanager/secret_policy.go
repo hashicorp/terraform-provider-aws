@@ -126,7 +126,7 @@ func resourceSecretPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	if output.ResourcePolicy != nil {
 		policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.StringValue(output.ResourcePolicy))
 		if err != nil {
-			return err
+			return fmt.Errorf("reading Secrets Manager Secret Policy (%s): %w", d.Id(), err)
 		}
 
 		d.Set("policy", policyToSet)

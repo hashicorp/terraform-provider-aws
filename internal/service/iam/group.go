@@ -106,27 +106,19 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading IAM Group (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading IAM Group (%s): %w", d.Id(), err)
 	}
 
 	if getResp == nil || getResp.Group == nil {
-		return fmt.Errorf("error reading IAM Group (%s): empty response", d.Id())
+		return fmt.Errorf("reading IAM Group (%s): empty response", d.Id())
 	}
 
 	group := getResp.Group
 
-	if err := d.Set("name", group.GroupName); err != nil {
-		return err
-	}
-	if err := d.Set("arn", group.Arn); err != nil {
-		return err
-	}
-	if err := d.Set("path", group.Path); err != nil {
-		return err
-	}
-	if err := d.Set("unique_id", group.GroupId); err != nil {
-		return err
-	}
+	d.Set("name", group.GroupName)
+	d.Set("arn", group.Arn)
+	d.Set("path", group.Path)
+	d.Set("unique_id", group.GroupId)
 	return nil
 }
 

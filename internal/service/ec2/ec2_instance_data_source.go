@@ -419,13 +419,13 @@ func dataSourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] aws_instance - Single Instance ID found: %s", aws.StringValue(instance.InstanceId))
 	if err := instanceDescriptionAttributes(d, instance, conn, ignoreTagsConfig); err != nil {
-		return err
+		return fmt.Errorf("reading EC2 Instance (%s): %w", aws.StringValue(instance.InstanceId), err)
 	}
 
 	if d.Get("get_password_data").(bool) {
 		passwordData, err := getInstancePasswordData(aws.StringValue(instance.InstanceId), conn)
 		if err != nil {
-			return err
+			return fmt.Errorf("reading EC2 Instance (%s): %w", aws.StringValue(instance.InstanceId), err)
 		}
 		d.Set("password_data", passwordData)
 	}
@@ -456,24 +456,12 @@ func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instanc
 
 	// Set the easy attributes
 	d.Set("instance_state", instance.State.Name)
-	if instance.Placement != nil {
-		d.Set("availability_zone", instance.Placement.AvailabilityZone)
-	}
-	if instance.Placement.GroupName != nil {
-		d.Set("placement_group", instance.Placement.GroupName)
-	}
-	if instance.Placement.PartitionNumber != nil {
-		d.Set("placement_partition_number", instance.Placement.PartitionNumber)
-	}
-	if instance.Placement.Tenancy != nil {
-		d.Set("tenancy", instance.Placement.Tenancy)
-	}
-	if instance.Placement.HostId != nil {
-		d.Set("host_id", instance.Placement.HostId)
-	}
-	if instance.Placement.HostResourceGroupArn != nil {
-		d.Set("host_resource_group_arn", instance.Placement.HostResourceGroupArn)
-	}
+	d.Set("availability_zone", instance.Placement.AvailabilityZone)
+	d.Set("placement_group", instance.Placement.GroupName)
+	d.Set("placement_partition_number", instance.Placement.PartitionNumber)
+	d.Set("tenancy", instance.Placement.Tenancy)
+	d.Set("host_id", instance.Placement.HostId)
+	d.Set("host_resource_group_arn", instance.Placement.HostResourceGroupArn)
 
 	d.Set("ami", instance.ImageId)
 	d.Set("instance_type", instanceType)
@@ -544,12 +532,12 @@ func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instanc
 
 	// Security Groups
 	if err := readSecurityGroups(d, instance, conn); err != nil {
-		return err
+		return fmt.Errorf("reading EC2 Instance (%s): %w", aws.StringValue(instance.InstanceId), err)
 	}
 
 	// Block devices
 	if err := readBlockDevices(d, instance, conn); err != nil {
-		return err
+		return fmt.Errorf("reading EC2 Instance (%s): %w", aws.StringValue(instance.InstanceId), err)
 	}
 	if _, ok := d.GetOk("ephemeral_block_device"); !ok {
 		d.Set("ephemeral_block_device", []interface{}{})
@@ -562,7 +550,7 @@ func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instanc
 			InstanceId: aws.String(d.Id()),
 		})
 		if err != nil {
-			return err
+			return fmt.Errorf("getting attribute (%s): %w", ec2.InstanceAttributeNameDisableApiStop, err)
 		}
 		d.Set("disable_api_stop", attr.DisableApiStop.Value)
 	}
@@ -572,7 +560,7 @@ func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instanc
 			InstanceId: aws.String(d.Id()),
 		})
 		if err != nil {
-			return err
+			return fmt.Errorf("getting attribute (%s): %w", ec2.InstanceAttributeNameDisableApiTermination, err)
 		}
 		d.Set("disable_api_termination", attr.DisableApiTermination.Value)
 	}
@@ -582,7 +570,7 @@ func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instanc
 			InstanceId: aws.String(d.Id()),
 		})
 		if err != nil {
-			return err
+			return fmt.Errorf("getting attribute (%s): %w", ec2.InstanceAttributeNameUserData, err)
 		}
 		if attr != nil && attr.UserData != nil && attr.UserData.Value != nil {
 			d.Set("user_data", userDataHashSum(aws.StringValue(attr.UserData.Value)))

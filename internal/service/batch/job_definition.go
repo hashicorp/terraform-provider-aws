@@ -189,7 +189,7 @@ func resourceJobDefinitionCreate(d *schema.ResourceData, meta interface{}) error
 	if v, ok := d.GetOk("container_properties"); ok {
 		props, err := expandJobContainerProperties(v.(string))
 		if err != nil {
-			return err
+			return fmt.Errorf("creating Batch Job Definition (%s): %w", name, err)
 		}
 
 		input.ContainerProperties = props
@@ -218,7 +218,7 @@ func resourceJobDefinitionCreate(d *schema.ResourceData, meta interface{}) error
 	output, err := conn.RegisterJobDefinition(input)
 
 	if err != nil {
-		return fmt.Errorf("error creating Batch Job Definition (%s): %w", name, err)
+		return fmt.Errorf("creating Batch Job Definition (%s): %w", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.JobDefinitionArn))
@@ -336,7 +336,7 @@ func expandJobContainerProperties(rawProps string) (*batch.ContainerProperties, 
 
 	err := json.Unmarshal([]byte(rawProps), &props)
 	if err != nil {
-		return nil, fmt.Errorf("Error decoding JSON: %s", err)
+		return nil, fmt.Errorf("decoding JSON: %s", err)
 	}
 
 	return props, nil

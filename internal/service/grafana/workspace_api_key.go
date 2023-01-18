@@ -83,7 +83,7 @@ func resourceWorkspaceAPIKeyDelete(d *schema.ResourceData, meta interface{}) err
 	workspaceID, keyName, err := WorkspaceAPIKeyParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting Grafana Workspace API Key (%s): %w", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Deleting Grafana Workspace API Key: %s", d.Id())

@@ -94,7 +94,7 @@ func resourceReceiptFilterRead(d *schema.ResourceData, meta interface{}) error {
 
 	response, err := conn.ListReceiptFilters(listOpts)
 	if err != nil {
-		return err
+		return fmt.Errorf("reading SES Receipt Filter (%s): %s", d.Id(), err)
 	}
 
 	var filter *ses.ReceiptFilter
@@ -107,7 +107,7 @@ func resourceReceiptFilterRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if filter == nil {
-		log.Printf("[WARN] SES Receipt Filter (%s) not found", d.Id())
+		log.Printf("[WARN] SES Receipt Filter (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}

@@ -63,7 +63,7 @@ func resourceWebsiteCertificateAuthorityAssociationCreate(d *schema.ResourceData
 
 	resp, err := conn.AssociateWebsiteCertificateAuthority(input)
 	if err != nil {
-		return fmt.Errorf("Error creating WorkLink Website Certificate Authority Association: %s", err)
+		return fmt.Errorf("creating WorkLink Website Certificate Authority Association: %s", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s,%s", d.Get("fleet_arn").(string), aws.StringValue(resp.WebsiteCaId)))
@@ -76,7 +76,7 @@ func resourceWebsiteCertificateAuthorityAssociationRead(d *schema.ResourceData, 
 
 	fleetArn, websiteCaID, err := DecodeWebsiteCertificateAuthorityAssociationResourceID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("reading WorkLink Website Certificate Authority Association (%s): %s", d.Id(), err)
 	}
 
 	input := &worklink.DescribeWebsiteCertificateAuthorityInput{
@@ -91,7 +91,7 @@ func resourceWebsiteCertificateAuthorityAssociationRead(d *schema.ResourceData, 
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("Error describing WorkLink Website Certificate Authority Association (%s): %s", d.Id(), err)
+		return fmt.Errorf("reading WorkLink Website Certificate Authority Association (%s): %s", d.Id(), err)
 	}
 
 	d.Set("website_ca_id", websiteCaID)
@@ -107,7 +107,7 @@ func resourceWebsiteCertificateAuthorityAssociationDelete(d *schema.ResourceData
 
 	fleetArn, websiteCaID, err := DecodeWebsiteCertificateAuthorityAssociationResourceID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting WorkLink Website Certificate Authority Association (%s): %s", d.Id(), err)
 	}
 
 	input := &worklink.DisassociateWebsiteCertificateAuthorityInput{
@@ -119,7 +119,7 @@ func resourceWebsiteCertificateAuthorityAssociationDelete(d *schema.ResourceData
 		if tfawserr.ErrCodeEquals(err, worklink.ErrCodeResourceNotFoundException) {
 			return nil
 		}
-		return fmt.Errorf("Error deleting WorkLink Website Certificate Authority Association (%s): %s", d.Id(), err)
+		return fmt.Errorf("deleting WorkLink Website Certificate Authority Association (%s): %s", d.Id(), err)
 	}
 
 	stateConf := &resource.StateChangeConf{
@@ -133,9 +133,7 @@ func resourceWebsiteCertificateAuthorityAssociationDelete(d *schema.ResourceData
 
 	_, err = stateConf.WaitForState()
 	if err != nil {
-		return fmt.Errorf(
-			"Error waiting for disassociate Worklink Website Certificate Authority (%s) to become deleted: %s",
-			d.Id(), err)
+		return fmt.Errorf("deleting WorkLink Website Certificate Authority Association (%s): waiting for completion: %s", d.Id(), err)
 	}
 
 	return nil

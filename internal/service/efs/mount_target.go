@@ -122,11 +122,9 @@ func resourceMountTargetCreate(d *schema.ResourceData, meta interface{}) error {
 		input.SecurityGroups = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	log.Printf("[DEBUG] Creating EFS mount target: %#v", input)
-
 	mt, err := conn.CreateMountTarget(&input)
 	if err != nil {
-		return err
+		return fmt.Errorf("creating EFS Mount Target (%s): %w", fsId, err)
 	}
 
 	d.SetId(aws.StringValue(mt.MountTargetId))
@@ -177,7 +175,7 @@ func resourceMountTargetUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 		_, err := conn.ModifyMountTargetSecurityGroups(&input)
 		if err != nil {
-			return err
+			return fmt.Errorf("updating EFS Mount Target (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -230,12 +228,12 @@ func resourceMountTargetRead(d *schema.ResourceData, meta interface{}) error {
 		MountTargetId: aws.String(d.Id()),
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("reading EFS Mount Target (%s): %w", d.Id(), err)
 	}
 
 	err = d.Set("security_groups", flex.FlattenStringSet(sgResp.SecurityGroups))
 	if err != nil {
-		return err
+		return fmt.Errorf("reading EFS Mount Target (%s): %w", d.Id(), err)
 	}
 
 	d.Set("dns_name", meta.(*conns.AWSClient).RegionalHostname(fmt.Sprintf("%s.efs", aws.StringValue(mt.FileSystemId))))
@@ -257,20 +255,17 @@ func getAzFromSubnetId(subnetId string, meta interface{}) (string, error) {
 func resourceMountTargetDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EFSConn()
 
-	log.Printf("[DEBUG] Deleting EFS mount target %q", d.Id())
 	_, err := conn.DeleteMountTarget(&efs.DeleteMountTargetInput{
 		MountTargetId: aws.String(d.Id()),
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting EFS Mount Target (%s): %w", d.Id(), err)
 	}
 
 	err = WaitForDeleteMountTarget(conn, d.Id(), mountTargetDeleteTimeout)
 	if err != nil {
-		return fmt.Errorf("Error waiting for EFS mount target (%q) to delete: %s", d.Id(), err.Error())
+		return fmt.Errorf("deleting EFS Mount Target (%s): waiting for completion: %w", d.Id(), err)
 	}
-
-	log.Printf("[DEBUG] EFS mount target %q deleted.", d.Id())
 
 	return nil
 }

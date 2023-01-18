@@ -99,7 +99,7 @@ func resourceGroupPolicyRead(d *schema.ResourceData, meta interface{}) error {
 
 	group, name, err := GroupPolicyParseID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("reading IAM Group Policy (%s): %w", d.Id(), err)
 	}
 
 	request := &iam.GetGroupPolicyInput{
@@ -136,21 +136,21 @@ func resourceGroupPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading IAM Group Policy (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading IAM Group Policy (%s): %w", d.Id(), err)
 	}
 
 	if getResp == nil || getResp.PolicyDocument == nil {
-		return fmt.Errorf("error reading IAM Group Policy (%s): empty response", d.Id())
+		return fmt.Errorf("reading IAM Group Policy (%s): empty response", d.Id())
 	}
 
 	policy, err := url.QueryUnescape(*getResp.PolicyDocument)
 	if err != nil {
-		return err
+		return fmt.Errorf("reading IAM Group Policy (%s): %w", d.Id(), err)
 	}
 
 	policyToSet, err := verify.LegacyPolicyToSet(d.Get("policy").(string), policy)
 	if err != nil {
-		return fmt.Errorf("while setting policy (%s), encountered: %w", policyToSet, err)
+		return fmt.Errorf("reading IAM Group Policy (%s): setting policy: %w", d.Id(), err)
 	}
 
 	d.Set("policy", policyToSet)
@@ -171,7 +171,7 @@ func resourceGroupPolicyDelete(d *schema.ResourceData, meta interface{}) error {
 
 	group, name, err := GroupPolicyParseID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting IAM Group Policy (%s): %w", d.Id(), err)
 	}
 
 	request := &iam.DeleteGroupPolicyInput{
@@ -183,7 +183,7 @@ func resourceGroupPolicyDelete(d *schema.ResourceData, meta interface{}) error {
 		if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 			return nil
 		}
-		return fmt.Errorf("Error deleting IAM group policy %s: %s", d.Id(), err)
+		return fmt.Errorf("deleting IAM Group Policy (%s): %w", d.Id(), err)
 	}
 	return nil
 }

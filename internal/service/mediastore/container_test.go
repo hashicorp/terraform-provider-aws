@@ -105,7 +105,7 @@ func testAccCheckContainerDestroy(s *terraform.State) error {
 		}
 
 		if *resp.Container.Status != mediastore.ContainerStatusDeleting {
-			return fmt.Errorf("Media Store Container (%s) not deleted", rs.Primary.ID)
+			return fmt.Errorf("MediaStore Container (%s) not deleted", rs.Primary.ID)
 		}
 	}
 	return nil

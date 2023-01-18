@@ -68,7 +68,7 @@ func dataSourceSdkRead(d *schema.ResourceData, meta interface{}) error {
 
 	export, err := conn.GetSdk(input)
 	if err != nil {
-		return err
+		return fmt.Errorf("reading API Gateway API: %w", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s:%s", restApiId, stageName, sdkType))

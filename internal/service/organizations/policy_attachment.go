@@ -68,7 +68,7 @@ func resourcePolicyAttachmentRead(d *schema.ResourceData, meta interface{}) erro
 
 	targetID, policyID, err := DecodePolicyAttachmentID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("reading Organizations Policy Attachment (%s): %w", d.Id(), err)
 	}
 
 	_, err = FindPolicyAttachmentByTwoPartKey(conn, targetID, policyID)
@@ -94,7 +94,7 @@ func resourcePolicyAttachmentDelete(d *schema.ResourceData, meta interface{}) er
 
 	targetID, policyID, err := DecodePolicyAttachmentID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting Organizations Policy Attachment (%s): %w", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Deleting Organizations Policy Attachment: %s", d.Id())

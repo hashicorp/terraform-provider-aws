@@ -133,7 +133,7 @@ func resourceProxyTargetRead(d *schema.ResourceData, meta interface{}) error {
 
 	dbProxyName, targetGroupName, targetType, rdsResourceId, err := ProxyTargetParseID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("reading RDS Proxy Target (%s): %w", d.Id(), err)
 	}
 
 	dbProxyTarget, err := FindDBProxyTarget(conn, dbProxyName, targetGroupName, targetType, rdsResourceId)

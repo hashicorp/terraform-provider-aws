@@ -106,7 +106,7 @@ func resourceRolePolicyRead(d *schema.ResourceData, meta interface{}) error {
 
 	role, name, err := RolePolicyParseID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("reading IAM Role Policy (%s): %w", d.Id(), err)
 	}
 
 	request := &iam.GetRolePolicyInput{
@@ -143,29 +143,29 @@ func resourceRolePolicyRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading IAM Role Policy (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading IAM Role Policy (%s): %w", d.Id(), err)
 	}
 
 	if getResp == nil || getResp.PolicyDocument == nil {
-		return fmt.Errorf("error reading IAM Role Policy (%s): empty response", d.Id())
+		return fmt.Errorf("reading IAM Role Policy (%s): empty response", d.Id())
 	}
 
 	policy, err := url.QueryUnescape(*getResp.PolicyDocument)
 	if err != nil {
-		return err
+		return fmt.Errorf("reading IAM Role Policy (%s): %w", d.Id(), err)
 	}
 
 	policyToSet, err := verify.LegacyPolicyToSet(d.Get("policy").(string), policy)
 	if err != nil {
-		return fmt.Errorf("while setting policy (%s), encountered: %w", policyToSet, err)
+		return fmt.Errorf("reading IAM Role Policy (%s): setting policy: %w", d.Id(), err)
 	}
 
 	d.Set("policy", policyToSet)
 
-	if err := d.Set("name", name); err != nil {
-		return err
-	}
-	return d.Set("role", role)
+	d.Set("name", name)
+	d.Set("role", role)
+
+	return nil
 }
 
 func resourceRolePolicyDelete(d *schema.ResourceData, meta interface{}) error {
@@ -173,7 +173,7 @@ func resourceRolePolicyDelete(d *schema.ResourceData, meta interface{}) error {
 
 	role, name, err := RolePolicyParseID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting IAM role policy (%s): %s", d.Id(), err)
 	}
 
 	request := &iam.DeleteRolePolicyInput{
@@ -185,7 +185,7 @@ func resourceRolePolicyDelete(d *schema.ResourceData, meta interface{}) error {
 		if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 			return nil
 		}
-		return fmt.Errorf("Error deleting IAM role policy %s: %s", d.Id(), err)
+		return fmt.Errorf("deleting IAM role policy (%s): %s", d.Id(), err)
 	}
 	return nil
 }

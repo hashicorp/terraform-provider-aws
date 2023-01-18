@@ -87,7 +87,7 @@ func dataSourceBucketRead(d *schema.ResourceData, meta interface{}) error {
 
 	regionalDomainName, err := BucketRegionalDomainName(bucket, d.Get("region").(string))
 	if err != nil {
-		return err
+		return fmt.Errorf("getting S3 Bucket regional domain name: %w", err)
 	}
 	d.Set("bucket_regional_domain_name", regionalDomainName)
 

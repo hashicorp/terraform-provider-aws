@@ -125,7 +125,7 @@ func resourceVaultLockRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Glacier Vault Lock (%s): %s", d.Id(), err)
+		return fmt.Errorf("reading Glacier Vault Lock (%s): %s", d.Id(), err)
 	}
 
 	if output == nil {
@@ -140,7 +140,7 @@ func resourceVaultLockRead(d *schema.ResourceData, meta interface{}) error {
 	policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.StringValue(output.Policy))
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading Glacier Vault Lock (%s): setting policy: %s", d.Id(), err)
 	}
 
 	d.Set("policy", policyToSet)

@@ -535,7 +535,7 @@ func resourceServiceCreate(d *schema.ResourceData, meta interface{}) error {
 		ps, err := expandPlacementStrategy(v.([]interface{}))
 
 		if err != nil {
-			return err
+			return fmt.Errorf("creating ECS Service (%s): %w", d.Get("name").(string), err)
 		}
 
 		input.PlacementStrategy = ps
@@ -545,7 +545,7 @@ func resourceServiceCreate(d *schema.ResourceData, meta interface{}) error {
 		pc, err := expandPlacementConstraints(v.List())
 
 		if err != nil {
-			return err
+			return fmt.Errorf("creating ECS Service (%s): %w", d.Get("name").(string), err)
 		}
 
 		input.PlacementConstraints = pc
@@ -838,7 +838,7 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}) error {
 				ps, err := expandPlacementStrategy(v.([]interface{}))
 
 				if err != nil {
-					return err
+					return fmt.Errorf("updating ECS Service (%s): %w", d.Get("name").(string), err)
 				}
 
 				input.PlacementStrategy = ps
@@ -854,7 +854,7 @@ func resourceServiceUpdate(d *schema.ResourceData, meta interface{}) error {
 				pc, err := expandPlacementConstraints(v.List())
 
 				if err != nil {
-					return err
+					return fmt.Errorf("updating ECS Service (%s): %w", d.Get("name").(string), err)
 				}
 
 				input.PlacementConstraints = pc
@@ -994,7 +994,7 @@ func resourceServiceDelete(d *schema.ResourceData, meta interface{}) error {
 			DesiredCount: aws.Int64(0),
 		})
 		if err != nil {
-			return err
+			return fmt.Errorf("deleting ECS Service (%s): draining service: %w", d.Get("name").(string), err)
 		}
 	}
 
@@ -1026,11 +1026,11 @@ func resourceServiceDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting ECS Service (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting ECS Service (%s): %w", d.Id(), err)
 	}
 
 	if err := waitServiceInactive(conn, d.Id(), d.Get("cluster").(string), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("error waiting for ECS Service (%s) to be deleted: %w", d.Id(), err)
+		return fmt.Errorf("deleting ECS Service (%s): waiting for completion: %w", d.Id(), err)
 	}
 
 	return nil

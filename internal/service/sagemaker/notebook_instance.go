@@ -357,14 +357,14 @@ func resourceNotebookInstanceUpdate(d *schema.ResourceData, meta interface{}) er
 		notebook, err := FindNotebookInstanceByName(conn, d.Id())
 
 		if err != nil {
-			return fmt.Errorf("reading SageMaker Notebook Instance (%s): %w", d.Id(), err)
+			return fmt.Errorf("updating SageMaker Notebook Instance (%s): %w", d.Id(), err)
 		}
 
 		previousStatus := aws.StringValue(notebook.NotebookInstanceStatus)
 
 		if previousStatus != sagemaker.NotebookInstanceStatusStopped {
 			if err := StopNotebookInstance(conn, d.Id()); err != nil {
-				return err
+				return fmt.Errorf("updating SageMaker Notebook Instance (%s): %w", d.Id(), err)
 			}
 		}
 
@@ -378,49 +378,8 @@ func resourceNotebookInstanceUpdate(d *schema.ResourceData, meta interface{}) er
 
 		// Restart if needed
 		if previousStatus == sagemaker.NotebookInstanceStatusInService {
-			startOpts := &sagemaker.StartNotebookInstanceInput{
-				NotebookInstanceName: aws.String(d.Id()),
-			}
-			stateConf := &resource.StateChangeConf{
-				Pending: []string{
-					sagemaker.NotebookInstanceStatusStopped,
-				},
-				Target: []string{
-					sagemaker.NotebookInstanceStatusInService,
-					sagemaker.NotebookInstanceStatusPending,
-				},
-				Refresh: StatusNotebookInstance(conn, d.Id()),
-				Timeout: 30 * time.Second,
-			}
-			// StartNotebookInstance sometimes doesn't take so we'll check for a state change and if
-			// it doesn't change we'll send another request
-			err := resource.Retry(5*time.Minute, func() *resource.RetryError {
-				_, err := conn.StartNotebookInstance(startOpts)
-				if err != nil {
-					return resource.NonRetryableError(fmt.Errorf("starting sagemaker notebook instance (%s): %s", d.Id(), err))
-				}
-
-				_, err = stateConf.WaitForState()
-				if err != nil {
-					return resource.RetryableError(fmt.Errorf("waiting for sagemaker notebook instance (%s) to start: %s", d.Id(), err))
-				}
-
-				return nil
-			})
-			if tfresource.TimedOut(err) {
-				_, err = conn.StartNotebookInstance(startOpts)
-				if err != nil {
-					return fmt.Errorf("starting sagemaker notebook instance (%s): %s", d.Id(), err)
-				}
-
-				_, err = stateConf.WaitForState()
-			}
-			if err != nil {
-				return fmt.Errorf("Error waiting for sagemaker notebook instance to start: %s", err)
-			}
-
-			if _, err := WaitNotebookInstanceInService(conn, d.Id()); err != nil {
-				return fmt.Errorf("waiting for sagemaker notebook instance (%s) to start after update: %w", d.Id(), err)
+			if err := StartNotebookInstance(conn, d.Id()); err != nil {
+				return fmt.Errorf("updating SageMaker Notebook Instance (%s): %w", d.Id(), err)
 			}
 		}
 	}
@@ -443,7 +402,7 @@ func resourceNotebookInstanceDelete(d *schema.ResourceData, meta interface{}) er
 
 	if status := aws.StringValue(notebook.NotebookInstanceStatus); status != sagemaker.NotebookInstanceStatusFailed && status != sagemaker.NotebookInstanceStatusStopped {
 		if err := StopNotebookInstance(conn, d.Id()); err != nil {
-			return err
+			return fmt.Errorf("deleting SageMaker Notebook Instance (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -463,6 +422,43 @@ func resourceNotebookInstanceDelete(d *schema.ResourceData, meta interface{}) er
 	return nil
 }
 
+func StartNotebookInstance(conn *sagemaker.SageMaker, id string) error {
+	startOpts := &sagemaker.StartNotebookInstanceInput{
+		NotebookInstanceName: aws.String(id),
+	}
+	// StartNotebookInstance sometimes doesn't take so we'll check for a state change and if
+	// it doesn't change we'll send another request
+	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+		_, err := conn.StartNotebookInstance(startOpts)
+		if err != nil {
+			return resource.NonRetryableError(fmt.Errorf("starting: %s", err))
+		}
+
+		_, err = WaitNotebookInstanceStarted(conn, id)
+		if err != nil {
+			return resource.RetryableError(fmt.Errorf("starting: waiting for completion: %s", err))
+		}
+
+		return nil
+	})
+	if tfresource.TimedOut(err) {
+		_, err = conn.StartNotebookInstance(startOpts)
+		if err != nil {
+			return fmt.Errorf("starting: %s", err)
+		}
+
+		_, err = WaitNotebookInstanceStarted(conn, id)
+		if err != nil {
+			return fmt.Errorf("starting: waiting for completion: %s", err)
+		}
+	}
+
+	if _, err := WaitNotebookInstanceInService(conn, id); err != nil {
+		return fmt.Errorf("starting: waiting to be in service: %s", err)
+	}
+	return nil
+}
+
 func StopNotebookInstance(conn *sagemaker.SageMaker, id string) error {
 	notebook, err := FindNotebookInstanceByName(conn, id)
 
@@ -470,7 +466,7 @@ func StopNotebookInstance(conn *sagemaker.SageMaker, id string) error {
 		if tfresource.NotFound(err) {
 			return nil
 		}
-		return fmt.Errorf("reading SageMaker Notebook Instance (%s): %w", id, err)
+		return err
 	}
 
 	if aws.StringValue(notebook.NotebookInstanceStatus) == sagemaker.NotebookInstanceStatusStopped {
@@ -482,11 +478,11 @@ func StopNotebookInstance(conn *sagemaker.SageMaker, id string) error {
 	}
 
 	if _, err := conn.StopNotebookInstance(stopOpts); err != nil {
-		return fmt.Errorf("Error stopping sagemaker notebook instance: %s", err)
+		return fmt.Errorf("stopping: %s", err)
 	}
 
 	if _, err := WaitNotebookInstanceStopped(conn, id); err != nil {
-		return fmt.Errorf("waiting for sagemaker notebook instance (%s) to stop: %w", id, err)
+		return fmt.Errorf("stopping: waiting for completion: %s", err)
 	}
 
 	return nil

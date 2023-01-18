@@ -83,24 +83,26 @@ func dataSourceWorkspaceBundleRead(d *schema.ResourceData, meta interface{}) err
 			BundleIds: []*string{aws.String(bundleID.(string))},
 		})
 		if err != nil {
-			return err
+			return fmt.Errorf("reading WorkSpaces Workspace Bundle (%s): %w", bundleID, err)
 		}
 
 		if len(resp.Bundles) != 1 {
-			return fmt.Errorf("expected 1 result for Workspace bundle %q, found %d", bundleID, len(resp.Bundles))
+			return fmt.Errorf("expected 1 result for WorkSpaces Workspace Bundle %q, found %d", bundleID, len(resp.Bundles))
 		}
 
 		bundle = resp.Bundles[0]
 
 		if bundle == nil {
-			return fmt.Errorf("no Workspace bundle with ID %q found", bundleID)
+			return fmt.Errorf("no WorkSpaces Workspace Bundle with ID %q found", bundleID)
 		}
 	}
 
 	if name, ok := d.GetOk("name"); ok {
+		id := name
 		input := &workspaces.DescribeWorkspaceBundlesInput{}
 
 		if owner, ok := d.GetOk("owner"); ok {
+			id = fmt.Sprintf("%s:%s", owner, id)
 			input.Owner = aws.String(owner.(string))
 		}
 
@@ -116,11 +118,11 @@ func dataSourceWorkspaceBundleRead(d *schema.ResourceData, meta interface{}) err
 			return !lastPage
 		})
 		if err != nil {
-			return err
+			return fmt.Errorf("reading WorkSpaces Workspace Bundle (%s): %w", id, err)
 		}
 
 		if bundle == nil {
-			return fmt.Errorf("no Workspace bundle with name %q found", name)
+			return fmt.Errorf("no WorkSpaces Workspace Bundle with name %q found", name)
 		}
 	}
 

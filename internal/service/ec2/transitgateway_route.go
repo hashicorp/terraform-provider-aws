@@ -89,7 +89,7 @@ func resourceTransitGatewayRouteRead(d *schema.ResourceData, meta interface{}) e
 	transitGatewayRouteTableID, destination, err := TransitGatewayRouteParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading EC2 Transit Gateway Route (%s): %w", d.Id(), err)
 	}
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(propagationTimeout, func() (interface{}, error) {
@@ -127,7 +127,7 @@ func resourceTransitGatewayRouteDelete(d *schema.ResourceData, meta interface{})
 	transitGatewayRouteTableID, destination, err := TransitGatewayRouteParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting EC2 Transit Gateway Route (%s): %w", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Deleting EC2 Transit Gateway Route: %s", d.Id())

@@ -140,7 +140,7 @@ func dataSourceClusterSnapshotRead(d *schema.ResourceData, meta interface{}) err
 	log.Printf("[DEBUG] Reading DB Cluster Snapshot: %s", params)
 	resp, err := conn.DescribeDBClusterSnapshots(params)
 	if err != nil {
-		return err
+		return fmt.Errorf("reading RDS Cluster Snapshot (%s): %s", d.Id(), err)
 	}
 
 	if len(resp.DBClusterSnapshots) < 1 {

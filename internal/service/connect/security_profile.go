@@ -199,7 +199,7 @@ func resourceSecurityProfileUpdate(ctx context.Context, d *schema.ResourceData, 
 	_, err = conn.UpdateSecurityProfileWithContext(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("[ERROR] Error updating SecurityProfile (%s): %w", d.Id(), err))
+		return diag.FromErr(fmt.Errorf("updating SecurityProfile (%s): %w", d.Id(), err))
 	}
 
 	if d.HasChange("tags_all") {

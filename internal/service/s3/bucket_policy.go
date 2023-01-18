@@ -115,16 +115,14 @@ func resourceBucketPolicyRead(d *schema.ResourceData, meta interface{}) error {
 
 	policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.StringValue(pol.Policy))
 	if err != nil {
-		return fmt.Errorf("while setting policy (%s), encountered: %w", policyToSet, err)
+		return fmt.Errorf("setting policy: %w", err)
 	}
 
 	if err := d.Set("policy", policyToSet); err != nil {
-		return err
+		return fmt.Errorf("setting policy: %w", err)
 	}
 
-	if err := d.Set("bucket", d.Id()); err != nil {
-		return err
-	}
+	d.Set("bucket", d.Id())
 
 	return nil
 }

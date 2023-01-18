@@ -8,8 +8,8 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/identitystore"
-	"github.com/aws/aws-sdk-go-v2/service/identitystore/types"
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfidentitystore "github.com/hashicorp/terraform-provider-aws/internal/service/identitystore"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -968,47 +969,43 @@ func testAccCheckUserDestroy(s *terraform.State) error {
 			continue
 		}
 
-		_, err := conn.DescribeUser(ctx, &identitystore.DescribeUserInput{
-			IdentityStoreId: aws.String(rs.Primary.Attributes["identity_store_id"]),
-			UserId:          aws.String(rs.Primary.Attributes["user_id"]),
-		})
+		_, err := tfidentitystore.FindUserByTwoPartKey(ctx, conn, rs.Primary.Attributes["identity_store_id"], rs.Primary.Attributes["user_id"])
+
+		if tfresource.NotFound(err) {
+			continue
+		}
+
 		if err != nil {
-			var nfe *types.ResourceNotFoundException
-			if errors.As(err, &nfe) {
-				return nil
-			}
 			return err
 		}
 
-		return create.Error(names.IdentityStore, create.ErrActionCheckingDestroyed, tfidentitystore.ResNameUser, rs.Primary.ID, errors.New("not destroyed"))
+		return fmt.Errorf("IdentityStore User %s still exists", rs.Primary.ID)
 	}
 
 	return nil
 }
 
-func testAccCheckUserExists(name string, user *identitystore.DescribeUserOutput) resource.TestCheckFunc {
+func testAccCheckUserExists(n string, v *identitystore.DescribeUserOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.IdentityStore, create.ErrActionCheckingExistence, tfidentitystore.ResNameUser, name, errors.New("not found"))
+			return create.Error(names.IdentityStore, create.ErrActionCheckingExistence, tfidentitystore.ResNameUser, n, errors.New("not found"))
 		}
 
 		if rs.Primary.ID == "" {
-			return create.Error(names.IdentityStore, create.ErrActionCheckingExistence, tfidentitystore.ResNameUser, name, errors.New("not set"))
+			return create.Error(names.IdentityStore, create.ErrActionCheckingExistence, tfidentitystore.ResNameUser, n, errors.New("not set"))
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IdentityStoreClient()
 		ctx := context.Background()
-		resp, err := conn.DescribeUser(ctx, &identitystore.DescribeUserInput{
-			IdentityStoreId: aws.String(rs.Primary.Attributes["identity_store_id"]),
-			UserId:          aws.String(rs.Primary.Attributes["user_id"]),
-		})
+
+		output, err := tfidentitystore.FindUserByTwoPartKey(ctx, conn, rs.Primary.Attributes["identity_store_id"], rs.Primary.Attributes["user_id"])
 
 		if err != nil {
-			return create.Error(names.IdentityStore, create.ErrActionCheckingExistence, tfidentitystore.ResNameUser, rs.Primary.ID, err)
+			return err
 		}
 
-		*user = *resp
+		*v = *output
 
 		return nil
 	}
@@ -1021,19 +1018,21 @@ func testAccPreCheck(t *testing.T) {
 
 	instances, err := ssoadminConn.ListInstances(&ssoadmin.ListInstancesInput{MaxResults: aws.Int64(1)})
 
+	if acctest.PreCheckSkipError(err) || tfawserr.ErrMessageContains(err, ssoadmin.ErrCodeAccessDeniedException, "is not authorized to perform: sso:ListInstances") {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
 	if err != nil {
-		t.Fatalf("failed to list SSO instances: %s", err)
+		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 
 	if len(instances.Instances) != 1 {
 		t.Fatalf("expected to find at least one SSO instance")
 	}
 
-	input := &identitystore.ListUsersInput{
+	_, err = conn.ListUsers(ctx, &identitystore.ListUsersInput{
 		IdentityStoreId: instances.Instances[0].IdentityStoreId,
-	}
-
-	_, err = conn.ListUsers(ctx, input)
+	})
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

@@ -76,7 +76,7 @@ func dataSourceExportRead(d *schema.ResourceData, meta interface{}) error {
 
 	export, err := conn.GetExport(input)
 	if err != nil {
-		return err
+		return fmt.Errorf("reading API Gateway Export: %w", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", restApiId, stageName))

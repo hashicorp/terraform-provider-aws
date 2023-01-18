@@ -255,7 +255,7 @@ func resourceEventSubscriptionUpdate(d *schema.ResourceData, meta interface{}) e
 		log.Printf("[DEBUG] Neptune Event Subscription modification request: %#v", req)
 		_, err := conn.ModifyEventSubscription(req)
 		if err != nil {
-			return fmt.Errorf("Modifying Neptune Event Subscription %s failed: %s", d.Id(), err)
+			return fmt.Errorf("updating Neptune Event Subscription (%s): %s", d.Id(), err)
 		}
 
 		log.Println("[INFO] Waiting for Neptune Event Subscription modification to finish")
@@ -272,7 +272,7 @@ func resourceEventSubscriptionUpdate(d *schema.ResourceData, meta interface{}) e
 		// Wait, catching any errors
 		_, err = stateConf.WaitForState()
 		if err != nil {
-			return err
+			return fmt.Errorf("updating Neptune Event Subscription (%s): waiting for completion: %s", d.Id(), err)
 		}
 	}
 
@@ -306,7 +306,7 @@ func resourceEventSubscriptionUpdate(d *schema.ResourceData, meta interface{}) e
 					SubscriptionName: aws.String(d.Id()),
 				})
 				if err != nil {
-					return err
+					return fmt.Errorf("updating Neptune Event Subscription (%s): removing Source Identifier (%s): %s", d.Id(), aws.StringValue(removing), err)
 				}
 			}
 		}
@@ -319,7 +319,7 @@ func resourceEventSubscriptionUpdate(d *schema.ResourceData, meta interface{}) e
 					SubscriptionName: aws.String(d.Id()),
 				})
 				if err != nil {
-					return err
+					return fmt.Errorf("updating Neptune Event Subscription (%s): adding Source Identifier (%s): %s", d.Id(), aws.StringValue(adding), err)
 				}
 			}
 		}

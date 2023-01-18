@@ -114,15 +114,15 @@ func resourceConfigurationTemplateRead(d *schema.ResourceData, meta interface{})
 				return nil
 			}
 		}
-		return err
+		return fmt.Errorf("reading Elastic Beanstalk Configuration Template (%s): %w", d.Id(), err)
 	}
 
 	if len(resp.ConfigurationSettings) != 1 {
-		log.Printf("[DEBUG] Elastic Beanstalk unexpected describe configuration template response: %+v", resp)
 		return fmt.Errorf("Error reading application properties: found %d applications, expected 1", len(resp.ConfigurationSettings))
 	}
 
 	d.Set("description", resp.ConfigurationSettings[0].Description)
+
 	return nil
 }
 
@@ -133,13 +133,13 @@ func resourceConfigurationTemplateUpdate(d *schema.ResourceData, meta interface{
 
 	if d.HasChange("description") {
 		if err := resourceConfigurationTemplateDescriptionUpdate(conn, d); err != nil {
-			return err
+			return fmt.Errorf("updating Elastic Beanstalk Configuration Template (%s): %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("setting") {
 		if err := resourceConfigurationTemplateOptionSettingsUpdate(conn, d); err != nil {
-			return err
+			return fmt.Errorf("updating Elastic Beanstalk Configuration Template (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -231,8 +231,10 @@ func resourceConfigurationTemplateDelete(d *schema.ResourceData, meta interface{
 		ApplicationName: aws.String(application),
 		TemplateName:    aws.String(d.Id()),
 	})
-
-	return err
+	if err != nil {
+		return fmt.Errorf("deleting Elastic Beanstalk Configuration Template (%s): %w", d.Id(), err)
+	}
+	return nil
 }
 
 func gatherOptionSettings(d *schema.ResourceData) []*elasticbeanstalk.ConfigurationOptionSetting {
