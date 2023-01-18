@@ -1428,6 +1428,46 @@ func TestAccDMSEndpoint_db2(t *testing.T) {
 	})
 }
 
+func TestAccDMSEndpoint_azureSQLManagedInstance(t *testing.T) {
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_azureSQLManagedInstance(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointExists(resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"password"},
+			},
+			{
+				Config: testAccEndpointConfig_azureSQLManagedInstanceUpdate(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "database_name", "tf-test-dms-db-updated"),
+					resource.TestCheckResourceAttr(resourceName, "extra_connection_attributes", "extra"),
+					resource.TestCheckResourceAttr(resourceName, "password", "tftestupdate"),
+					resource.TestCheckResourceAttr(resourceName, "port", "3342"),
+					resource.TestCheckResourceAttr(resourceName, "ssl_mode", "none"),
+					resource.TestCheckResourceAttr(resourceName, "server_name", "tftestupdate"),
+					resource.TestCheckResourceAttr(resourceName, "username", "tftestupdate"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccDMSEndpoint_redis(t *testing.T) {
 	resourceName := "aws_dms_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -3084,6 +3124,54 @@ resource "aws_dms_endpoint" "test" {
   extra_connection_attributes = "extra"
   password                    = "tftestupdate"
   port                        = 27019
+  server_name                 = "tftestupdate"
+  ssl_mode                    = "none"
+
+  tags = {
+    Name   = %[1]q
+    Update = "updated"
+    Add    = "added"
+  }
+
+  username = "tftestupdate"
+}
+`, rName)
+}
+
+func testAccEndpointConfig_azureSQLManagedInstance(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  database_name               = "tf-test-dms-db"
+  endpoint_id                 = %[1]q
+  endpoint_type               = "source"
+  engine_name                 = "azure-sql-managed-instance"
+  extra_connection_attributes = ""
+  password                    = "tftest"
+  port                        = 3342
+  server_name                 = "tftest"
+  ssl_mode                    = "none"
+
+  tags = {
+    Name   = %[1]q
+    Update = "to-update"
+    Remove = "to-remove"
+  }
+
+  username = "tftest"
+}
+`, rName)
+}
+
+func testAccEndpointConfig_azureSQLManagedInstanceUpdate(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  database_name               = "tf-test-dms-db-updated"
+  endpoint_id                 = %[1]q
+  endpoint_type               = "source"
+  engine_name                 = "azure-sql-managed-instance"
+  extra_connection_attributes = "extra"
+  password                    = "tftestupdate"
+  port                        = 3342
   server_name                 = "tftestupdate"
   ssl_mode                    = "none"
 
