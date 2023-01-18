@@ -242,14 +242,10 @@ func dataSourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 	functionARN := aws.StringValue(function.FunctionArn)
 	qualifierSuffix := fmt.Sprintf(":%s", aws.StringValue(input.Qualifier))
 	versionSuffix := fmt.Sprintf(":%s", aws.StringValue(function.Version))
-
-	d.Set("version", function.Version)
-
 	qualifiedARN := functionARN
 	if !strings.HasSuffix(functionARN, qualifierSuffix) && !strings.HasSuffix(functionARN, versionSuffix) {
 		qualifiedARN = functionARN + versionSuffix
 	}
-
 	unqualifiedARN := strings.TrimSuffix(functionARN, qualifierSuffix)
 
 	d.SetId(functionName)
@@ -280,7 +276,7 @@ func dataSourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 	if output.Code != nil {
 		d.Set("image_uri", output.Code.ImageUri)
 	}
-	d.Set("invoke_arn", functionInvokeARN(functionARN, meta))
+	d.Set("invoke_arn", functionInvokeARN(unqualifiedARN, meta))
 	d.Set("kms_key_arn", function.KMSKeyArn)
 	d.Set("last_modified", function.LastModified)
 	if err := d.Set("layers", flattenLayers(function.Layers)); err != nil {
@@ -312,6 +308,7 @@ func dataSourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 	}); err != nil {
 		return fmt.Errorf("setting tracing_config: %s", err)
 	}
+	d.Set("version", function.Version)
 	if err := d.Set("vpc_config", flattenVPCConfigResponse(function.VpcConfig)); err != nil {
 		return fmt.Errorf("setting vpc_config: %w", err)
 	}
