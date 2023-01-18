@@ -141,9 +141,9 @@ func ResourceFunction() *schema.Resource {
 				},
 			},
 			"filename": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"s3_bucket", "s3_key", "s3_object_version", "image_uri"},
+				Type:         schema.TypeString,
+				Optional:     true,
+				ExactlyOneOf: []string{"filename", "image_uri", "s3_bucket"},
 			},
 			"function_name": {
 				Type:         schema.TypeString,
@@ -180,9 +180,9 @@ func ResourceFunction() *schema.Resource {
 				},
 			},
 			"image_uri": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"filename", "s3_bucket", "s3_key", "s3_object_version"},
+				Type:         schema.TypeString,
+				Optional:     true,
+				ExactlyOneOf: []string{"filename", "image_uri", "s3_bucket"},
 			},
 			"invoke_arn": {
 				Type:     schema.TypeString,
@@ -247,14 +247,15 @@ func ResourceFunction() *schema.Resource {
 				ValidateFunc: validation.StringInSlice(lambda.Runtime_Values(), false),
 			},
 			"s3_bucket": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"filename", "image_uri"},
+				Type:         schema.TypeString,
+				Optional:     true,
+				ExactlyOneOf: []string{"filename", "image_uri", "s3_bucket"},
+				RequiredWith: []string{"s3_key"},
 			},
 			"s3_key": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"filename", "image_uri"},
+				Type:         schema.TypeString,
+				Optional:     true,
+				RequiredWith: []string{"s3_bucket"},
 			},
 			"s3_object_version": {
 				Type:          schema.TypeString,
