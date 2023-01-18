@@ -317,7 +317,7 @@ func dataSourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("setting tags: %w", err)
 	}
 
-	// See resourceFunctionRead().
+	// See r/aws_lambda_function.
 	if partition := meta.(*conns.AWSClient).Partition; partition == endpoints.AwsPartitionID && SignerServiceIsAvailable(meta.(*conns.AWSClient).Region) {
 		var codeSigningConfigArn string
 
