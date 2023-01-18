@@ -41,6 +41,7 @@ func init() {
 }
 
 func sweepDirectories(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -50,7 +51,7 @@ func sweepDirectories(region string) error {
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	input := &directoryservice.DescribeDirectoriesInput{}
-	err = describeDirectoriesPagesWithContext(context.TODO(), conn, input, func(page *directoryservice.DescribeDirectoriesOutput, lastPage bool) bool {
+	err = describeDirectoriesPages(context.TODO(), conn, input, func(page *directoryservice.DescribeDirectoriesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -75,7 +76,7 @@ func sweepDirectories(region string) error {
 		return fmt.Errorf("listing Directory Service Directories (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("sweeping Directory Service Directories (%s): %w", region, err)
@@ -85,6 +86,7 @@ func sweepDirectories(region string) error {
 }
 
 func sweepRegions(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -96,7 +98,7 @@ func sweepRegions(region string) error {
 
 	input := &directoryservice.DescribeDirectoriesInput{}
 
-	err = describeDirectoriesPagesWithContext(context.TODO(), conn, input, func(page *directoryservice.DescribeDirectoriesOutput, lastPage bool) bool {
+	err = describeDirectoriesPages(context.TODO(), conn, input, func(page *directoryservice.DescribeDirectoriesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -110,7 +112,7 @@ func sweepRegions(region string) error {
 				continue
 			}
 
-			err := describeRegionsPages(conn, &directoryservice.DescribeRegionsInput{
+			err := describeRegionsPages(ctx, conn, &directoryservice.DescribeRegionsInput{
 				DirectoryId: directory.DirectoryId,
 			}, func(page *directoryservice.DescribeRegionsOutput, lastPage bool) bool {
 				if page == nil {
@@ -146,7 +148,7 @@ func sweepRegions(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("listing Directory Service Directories for %s: %w", region, err))
 	}
 
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("sweeping Directory Service Regions for %s: %w", region, err))
 	}
 
