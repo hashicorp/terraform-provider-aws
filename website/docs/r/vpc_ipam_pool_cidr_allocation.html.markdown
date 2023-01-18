@@ -100,8 +100,8 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-IPAMs can be imported using the `allocation id`, e.g.
+IPAM allocations can be imported using the `allocation id` and `pool id`, separated by `_`, e.g.
 
 ```
-$ terraform import aws_vpc_ipam_pool_cidr_allocation.example
+$ terraform import aws_vpc_ipam_pool_cidr_allocation.example ipam-pool-alloc-0dc6d196509c049ba8b549ff99f639736_ipam-pool-07cfb559e0921fcbe
 ```
