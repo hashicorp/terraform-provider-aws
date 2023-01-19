@@ -1404,37 +1404,38 @@ resource "aws_appmesh_virtual_gateway" "test" {
     }
 
     listener {
-	  port_mapping {
-	    port     = 8081
-	    protocol = "http"
-	  }
+      port_mapping {
+        port     = 8081
+        protocol = "http"
+      }
 
-	  tls {
-	    certificate {
-		  sds {
-		    secret_name = "very-secret"
-		  }
-	    }
+      tls {
+        certificate {
+          sds {
+            secret_name = "very-secret"
+          }
+        }
 
-  	    mode = "PERMISSIVE"
+        mode = "PERMISSIVE"
 
-	    validation {
-		  subject_alternative_names {
-		    match {
-			  exact = ["abc.example.com", "xyz.example.com"]
-		    }
-		  }
+        validation {
+          subject_alternative_names {
+            match {
+              exact = ["abc.example.com", "xyz.example.com"]
+            }
+          }
 
-		  trust {
-		    file {
-			  certificate_chain = "/cert_chain.pem"
-		    }
-		  } 
-	    }
-	  }
+          trust {
+            file {
+              certificate_chain = "/cert_chain.pem"
+            }
+          }
+        }
+      }
     }
   }
 }
+
 
 `, meshName, vgName)
 }
@@ -1473,43 +1474,43 @@ resource "aws_appmesh_virtual_gateway" "test" {
           }
 
           trust {
-		    file {
-			  certificate_chain = "/cert_chain.pem"
-		    }
+            file {
+              certificate_chain = "/cert_chain.pem"
+            }
           }
         }
       }
     }
 
     listener {
-	  port_mapping {
-	    port     = 8081
-	    protocol = "http"
-	  }
+      port_mapping {
+        port     = 8081
+        protocol = "http"
+      }
 
-	  tls {
-	    certificate {
-		  sds {
-		    secret_name = "very-secret"
-		  }
-	    }
+      tls {
+        certificate {
+          sds {
+            secret_name = "very-secret"
+          }
+        }
 
-  	    mode = "STRICT"
+        mode = "STRICT"
 
-	    validation {
-		  subject_alternative_names {
-		    match {
-			  exact = ["abc.example.com", "xyz.example.com"]
-		    }
-		  }
+        validation {
+          subject_alternative_names {
+            match {
+              exact = ["abc.example.com", "xyz.example.com"]
+            }
+          }
 
-		  trust {
-		    file {
-			  certificate_chain = "/cert_chain.pem"
-		    }
-		  } 
-	    }
-	  }
+          trust {
+            file {
+              certificate_chain = "/cert_chain.pem"
+            }
+          }
+        }
+      }
     }
   }
 }

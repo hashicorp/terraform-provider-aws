@@ -2180,7 +2180,7 @@ resource "aws_appmesh_route" "test" {
         weighted_target {
           virtual_node = aws_appmesh_virtual_node.foo.name
           weight       = 100
-          port = 8080
+          port         = 8080
         }
       }
     }
@@ -2201,7 +2201,7 @@ resource "aws_appmesh_route" "test" {
       match {
         method_name  = "test"
         service_name = "test.local"
-        port = 8080
+        port         = 8080
         metadata {
           name   = "X-Testing1"
           invert = true
@@ -2246,13 +2246,13 @@ resource "aws_appmesh_route" "test" {
         weighted_target {
           virtual_node = aws_appmesh_virtual_node.foo.name
           weight       = 90
-          port = 8080
+          port         = 8080
         }
 
         weighted_target {
           virtual_node = aws_appmesh_virtual_node.bar.name
           weight       = 10
-          port = 8080
+          port         = 8080
         }
       }
     }
@@ -2591,7 +2591,7 @@ resource "aws_appmesh_route" "test" {
         prefix = "/"
         method = "POST"
         scheme = "http"
-        port = 8080
+        port   = 8080
         header {
           name = "X-Testing1"
         }
@@ -2614,7 +2614,7 @@ resource "aws_appmesh_route" "test" {
         weighted_target {
           virtual_node = aws_appmesh_virtual_node.foo.name
           weight       = 100
-          port = 8080
+          port         = 8080
         }
       }
     }
@@ -2636,7 +2636,7 @@ resource "aws_appmesh_route" "test" {
         prefix = "/path"
         method = "PUT"
         scheme = "https"
-        port = 8080
+        port   = 8080
         header {
           name   = "X-Testing1"
           invert = true
@@ -2677,7 +2677,7 @@ resource "aws_appmesh_route" "test" {
         weighted_target {
           virtual_node = aws_appmesh_virtual_node.foo.name
           weight       = 100
-          port = 8080
+          port         = 8080
         }
       }
     }
@@ -2833,14 +2833,14 @@ resource "aws_appmesh_route" "test" {
     http_route {
       match {
         prefix = "/"
-        port = 8080
+        port   = 8080
       }
 
       action {
         weighted_target {
           virtual_node = aws_appmesh_virtual_node.foo.name
           weight       = 100
-          port = 8080
+          port         = 8080
         }
       }
     }
@@ -2860,20 +2860,20 @@ resource "aws_appmesh_route" "test" {
     http_route {
       match {
         prefix = "/path"
-        port = 8080
+        port   = 8080
       }
 
       action {
         weighted_target {
           virtual_node = aws_appmesh_virtual_node.foo.name
           weight       = 90
-          port = 8080
+          port         = 8080
         }
 
         weighted_target {
           virtual_node = aws_appmesh_virtual_node.bar.name
           weight       = 10
-          port = 8080
+          port         = 8080
         }
       }
     }
@@ -3041,7 +3041,7 @@ resource "aws_appmesh_route" "test" {
         weighted_target {
           virtual_node = aws_appmesh_virtual_node.foo.name
           weight       = 100
-          port = 8080
+          port         = 8080
         }
       }
       match {
@@ -3066,13 +3066,13 @@ resource "aws_appmesh_route" "test" {
         weighted_target {
           virtual_node = aws_appmesh_virtual_node.foo.name
           weight       = 90
-          port = 8080
+          port         = 8080
         }
 
         weighted_target {
           virtual_node = aws_appmesh_virtual_node.bar.name
           weight       = 10
-          port = 8080
+          port         = 8080
         }
       }
       match {

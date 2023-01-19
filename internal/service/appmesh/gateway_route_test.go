@@ -953,7 +953,7 @@ resource "aws_appmesh_gateway_route" "test" {
 
       match {
         service_name = "test1"
-        port = 8080
+        port         = 8080
       }
     }
   }
@@ -980,7 +980,7 @@ resource "aws_appmesh_gateway_route" "test" {
 
       match {
         service_name = "test2"
-        port = 8080
+        port         = 8080
       }
     }
   }
@@ -1059,7 +1059,7 @@ resource "aws_appmesh_gateway_route" "test" {
 
       match {
         prefix = "/"
-        port = 8080
+        port   = 8080
       }
     }
   }
@@ -1086,7 +1086,7 @@ resource "aws_appmesh_gateway_route" "test" {
 
       match {
         prefix = "/users"
-        port = 8080
+        port   = 8080
       }
     }
   }
@@ -1227,7 +1227,7 @@ resource "aws_appmesh_gateway_route" "test" {
 
       match {
         prefix = "/"
-        port = 8080
+        port   = 8080
       }
     }
   }
@@ -1254,7 +1254,7 @@ resource "aws_appmesh_gateway_route" "test" {
 
       match {
         prefix = "/users"
-        port = 8080
+        port   = 8080
       }
     }
   }
