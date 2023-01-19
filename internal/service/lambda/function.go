@@ -873,6 +873,10 @@ func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 			zipFile, err := readFileContents(v.(string))
 
 			if err != nil {
+				// As filename isn't set in resourceFunctionRead(), don't ovewrite the last known good value.
+				old, _ := d.GetChange("filename")
+				d.Set("filename", old)
+
 				return fmt.Errorf("reading ZIP file (%s): %w", v, err)
 			}
 
@@ -890,6 +894,14 @@ func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 		_, err := conn.UpdateFunctionCode(input)
 
 		if err != nil {
+			if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "Error occurred while GetObject.") {
+				// As s3_bucket, s3_key and s3_object_version aren't set in resourceFunctionRead(), don't ovewrite the last known good values.
+				for _, key := range []string{"s3_bucket", "s3_key", "s3_object_version"} {
+					old, _ := d.GetChange(key)
+					d.Set(key, old)
+				}
+			}
+
 			return fmt.Errorf("updating Lambda Function (%s) code: %w", d.Id(), err)
 		}
 

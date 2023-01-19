@@ -13,3 +13,7 @@ resource/aws_lambda_function: Retry `ResourceNotFoundException` errors on resour
 ```release-note:enhancement
 resource/aws_lambda_function: Add configurable timeout for Update
 ```
+
+```release-note:bug
+resource/aws_lambda_function: Don't persist invalid `filename`, `s3_bucket`, `s3_key` or `s3_object_version` values on resource Update
+```
