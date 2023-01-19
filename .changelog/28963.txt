@@ -9,3 +9,7 @@ data-source/aws_lambda_function: Fix `AccessDeniedException` errors in [AWS Regi
 ```release-note:bug
 resource/aws_lambda_function: Retry `ResourceNotFoundException` errors on resource Create
 ```
+
+```release-note:enhancement
+resource/aws_lambda_function: Add configurable timeout for Update
+```
