@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -161,6 +162,40 @@ func TestAccIPAMPoolCIDRAllocation_multiple(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName2,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccIPAMPoolCIDRAllocation_differentRegion(t *testing.T) {
+	var allocation ec2.IpamPoolAllocation
+	var providers []*schema.Provider
+	resourceName := "aws_vpc_ipam_pool_cidr_allocation.test"
+	cidr := "172.2.0.0/28"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.FactoriesAlternate(t, &providers),
+		CheckDestroy:      testAccCheckIPAMPoolAllocationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIPAMPoolCIDRAllocationConfig_differentRegion(cidr),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIPAMPoolCIDRAllocationExistsWithProvider(resourceName, &allocation, acctest.RegionProviderFunc(acctest.AlternateRegion(), &providers)),
+					resource.TestCheckResourceAttr(resourceName, "cidr", cidr),
+					resource.TestMatchResourceAttr(resourceName, "id", regexp.MustCompile(`^ipam-pool-alloc-[\da-f]+_ipam-pool(-[\da-f]+)$`)),
+					resource.TestMatchResourceAttr(resourceName, "ipam_pool_allocation_id", regexp.MustCompile(`^ipam-pool-alloc-[\da-f]+$`)),
+					resource.TestCheckResourceAttrPair(resourceName, "ipam_pool_id", "aws_vpc_ipam_pool.test", "id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
