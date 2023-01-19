@@ -320,7 +320,7 @@ func sweepGameSessionQueue(region string) error {
 }
 
 func listAliases(ctx context.Context, input *gamelift.ListAliasesInput, conn *gamelift.GameLift, f func(*gamelift.ListAliasesOutput) error) error {
-	resp, err := conn.ListAliases(input)
+	resp, err := conn.ListAliasesWithContext(ctx, input)
 	if err != nil {
 		return err
 	}
