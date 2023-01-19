@@ -9,7 +9,6 @@ import (
 	rds_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -31,6 +30,7 @@ func ResourceClusterParameterGroup() *schema.Resource {
 		Read:                 resourceClusterParameterGroupRead,
 		Update:               resourceClusterParameterGroupUpdate,
 		DeleteWithoutTimeout: resourceClusterParameterGroupDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -131,69 +131,69 @@ func resourceClusterParameterGroupRead(d *schema.ResourceData, meta interface{})
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	describeOpts := rds.DescribeDBClusterParameterGroupsInput{
-		DBClusterParameterGroupName: aws.String(d.Id()),
+	dbClusterParameterGroup, err := FindDBClusterParameterGroupByName(conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] RDS DB Cluster Parameter Group (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
 
-	describeResp, err := conn.DescribeDBClusterParameterGroups(&describeOpts)
 	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "DBParameterGroupNotFound" {
-			log.Printf("[WARN] DB Cluster Parameter Group (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-
-		return fmt.Errorf("reading RDS Cluster Parameter Group (%s): %s", d.Id(), err)
+		return fmt.Errorf("reading RDS DB Cluster Parameter Group (%s): %w", d.Id(), err)
 	}
 
-	if len(describeResp.DBClusterParameterGroups) != 1 ||
-		aws.StringValue(describeResp.DBClusterParameterGroups[0].DBClusterParameterGroupName) != d.Id() {
-		return fmt.Errorf("Unable to find Cluster Parameter Group: %#v", describeResp.DBClusterParameterGroups)
-	}
-
-	arn := aws.StringValue(describeResp.DBClusterParameterGroups[0].DBClusterParameterGroupArn)
+	arn := aws.StringValue(dbClusterParameterGroup.DBClusterParameterGroupArn)
 	d.Set("arn", arn)
-	d.Set("description", describeResp.DBClusterParameterGroups[0].Description)
-	d.Set("family", describeResp.DBClusterParameterGroups[0].DBParameterGroupFamily)
-	d.Set("name", describeResp.DBClusterParameterGroups[0].DBClusterParameterGroupName)
-	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(describeResp.DBClusterParameterGroups[0].DBClusterParameterGroupName)))
+	d.Set("description", dbClusterParameterGroup.Description)
+	d.Set("family", dbClusterParameterGroup.DBParameterGroupFamily)
+	d.Set("name", dbClusterParameterGroup.DBClusterParameterGroupName)
+	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(dbClusterParameterGroup.DBClusterParameterGroupName)))
 
 	// Only include user customized parameters as there's hundreds of system/default ones
-	describeParametersOpts := rds.DescribeDBClusterParametersInput{
+	input := &rds.DescribeDBClusterParametersInput{
 		DBClusterParameterGroupName: aws.String(d.Id()),
 		Source:                      aws.String("user"),
 	}
-
 	var parameters []*rds.Parameter
-	err = conn.DescribeDBClusterParametersPages(&describeParametersOpts,
-		func(describeParametersResp *rds.DescribeDBClusterParametersOutput, lastPage bool) bool {
-			parameters = append(parameters, describeParametersResp.Parameters...)
+
+	err = conn.DescribeDBClusterParametersPages(input, func(page *rds.DescribeDBClusterParametersOutput, lastPage bool) bool {
+		if page == nil {
 			return !lastPage
-		})
+		}
+
+		for _, v := range page.Parameters {
+			if v != nil {
+				parameters = append(parameters, v)
+			}
+		}
+
+		return !lastPage
+	})
+
 	if err != nil {
-		return fmt.Errorf("reading RDS Cluster Parameter Group (%s) parameters: %s", d.Id(), err)
+		return fmt.Errorf("reading RDS Cluster Parameter Group (%s) parameters: %w", d.Id(), err)
 	}
 
 	if err := d.Set("parameter", flattenParameters(parameters)); err != nil {
-		return fmt.Errorf("setting parameter: %s", err)
+		return fmt.Errorf("setting parameter: %w", err)
 	}
 
-	resp, err := conn.ListTagsForResource(&rds.ListTagsForResourceInput{
-		ResourceName: aws.String(arn),
-	})
+	tags, err := ListTags(conn, arn)
+
 	if err != nil {
-		log.Printf("[WARN] Error retrieving tags for DB Cluster Parameter Group (%s). Ignoring: %s", d.Id(), err)
-	}
+		log.Printf("[WARN] listing tags for RDS DB Cluster Parameter Group (%s): %s", d.Id(), err)
+	} else {
+		tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
-	tags := KeyValueTags(resp.TagList).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+		//lintignore:AWSR002
+		if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+			return fmt.Errorf("setting tags: %w", err)
+		}
 
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("setting tags_all: %w", err)
+		if err := d.Set("tags_all", tags.Map()); err != nil {
+			return fmt.Errorf("setting tags_all: %w", err)
+		}
 	}
 
 	return nil
@@ -315,7 +315,7 @@ func resourceClusterParameterGroupDelete(ctx context.Context, d *schema.Resource
 		DBClusterParameterGroupName: aws.String(d.Id()),
 	}
 
-	log.Printf("[DEBUG] Deleting RDS Cluster Parameter Group: %s", d.Id())
+	log.Printf("[DEBUG] Deleting RDS DB Cluster Parameter Group: %s", d.Id())
 	err := resource.Retry(3*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteDBClusterParameterGroup(ctx, &input)
 		if errs.IsA[*types.DBParameterGroupNotFoundFault](err) {
@@ -335,4 +335,34 @@ func resourceClusterParameterGroupDelete(ctx context.Context, d *schema.Resource
 		return errs.AppendErrorf(diags, "deleting RDS Cluster Parameter Group (%s): %s", d.Id(), err)
 	}
 	return nil
+}
+
+func FindDBClusterParameterGroupByName(conn *rds.RDS, name string) (*rds.DBClusterParameterGroup, error) {
+	input := &rds.DescribeDBClusterParameterGroupsInput{
+		DBClusterParameterGroupName: aws.String(name),
+	}
+
+	output, err := conn.DescribeDBClusterParameterGroups(input)
+
+	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBParameterGroupNotFoundFault) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if output == nil || len(output.DBClusterParameterGroups) == 0 || output.DBClusterParameterGroups[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	dbClusterParameterGroup := output.DBClusterParameterGroups[0]
+
+	// Eventual consistency check.
+	if aws.StringValue(dbClusterParameterGroup.DBClusterParameterGroupName) != name {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return dbClusterParameterGroup, nil
 }
