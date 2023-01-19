@@ -753,7 +753,9 @@ func PreCheckPartitionNot(t *testing.T, partitions ...string) {
 }
 
 func PreCheckOrganizationsAccount(t *testing.T) {
-	_, err := tforganizations.FindOrganization(Provider.Meta().(*conns.AWSClient).OrganizationsConn())
+	ctx := context.TODO()
+
+	_, err := tforganizations.FindOrganization(ctx, Provider.Meta().(*conns.AWSClient).OrganizationsConn())
 
 	if tfresource.NotFound(err) {
 		return
@@ -767,7 +769,9 @@ func PreCheckOrganizationsAccount(t *testing.T) {
 }
 
 func PreCheckOrganizationsEnabled(t *testing.T) {
-	_, err := tforganizations.FindOrganization(Provider.Meta().(*conns.AWSClient).OrganizationsConn())
+	ctx := context.TODO()
+
+	_, err := tforganizations.FindOrganization(ctx, Provider.Meta().(*conns.AWSClient).OrganizationsConn())
 
 	if tfresource.NotFound(err) {
 		t.Skip("this AWS account must be an existing member of an AWS Organization")
@@ -779,13 +783,15 @@ func PreCheckOrganizationsEnabled(t *testing.T) {
 }
 
 func PreCheckOrganizationManagementAccount(t *testing.T) {
-	organization, err := tforganizations.FindOrganization(Provider.Meta().(*conns.AWSClient).OrganizationsConn())
+	ctx := context.TODO()
+
+	organization, err := tforganizations.FindOrganization(ctx, Provider.Meta().(*conns.AWSClient).OrganizationsConn())
 
 	if err != nil {
 		t.Fatalf("error describing AWS Organization: %s", err)
 	}
 
-	callerIdentity, err := tfsts.FindCallerIdentity(context.Background(), Provider.Meta().(*conns.AWSClient).STSConn())
+	callerIdentity, err := tfsts.FindCallerIdentity(ctx, Provider.Meta().(*conns.AWSClient).STSConn())
 
 	if err != nil {
 		t.Fatalf("error getting current identity: %s", err)
@@ -1022,11 +1028,12 @@ func RegionProviderFunc(region string, providers *[]*schema.Provider) func() *sc
 func DeleteResource(resource *schema.Resource, d *schema.ResourceData, meta interface{}) error {
 	if resource.DeleteContext != nil || resource.DeleteWithoutTimeout != nil {
 		var diags diag.Diagnostics
+		ctx := context.TODO()
 
 		if resource.DeleteContext != nil {
-			diags = resource.DeleteContext(context.Background(), d, meta)
+			diags = resource.DeleteContext(ctx, d, meta)
 		} else {
-			diags = resource.DeleteWithoutTimeout(context.Background(), d, meta)
+			diags = resource.DeleteWithoutTimeout(ctx, d, meta)
 		}
 
 		for i := range diags {
