@@ -14,13 +14,13 @@ import (
 	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/internal/service/servicecatalog"
 )
 
-func TestAccServiceCatalogPortfolioShare_basic(t *testing.T) {
+func testAccPortfolioShare_basic(t *testing.T) {
 	resourceName := "aws_servicecatalog_portfolio_share.test"
 	compareName := "aws_servicecatalog_portfolio.test"
 	dataSourceName := "data.aws_caller_identity.alternate"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckAlternateAccount(t)
@@ -68,11 +68,11 @@ func TestAccServiceCatalogPortfolioShare_basic(t *testing.T) {
 	})
 }
 
-func TestAccServiceCatalogPortfolioShare_sharePrincipals(t *testing.T) {
+func testAccPortfolioShare_sharePrincipals(t *testing.T) {
 	resourceName := "aws_servicecatalog_portfolio_share.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckOrganizationsEnabled(t)
@@ -109,12 +109,12 @@ func TestAccServiceCatalogPortfolioShare_sharePrincipals(t *testing.T) {
 	})
 }
 
-func TestAccServiceCatalogPortfolioShare_organizationalUnit(t *testing.T) {
+func testAccPortfolioShare_organizationalUnit(t *testing.T) {
 	resourceName := "aws_servicecatalog_portfolio_share.test"
 	compareName := "aws_servicecatalog_portfolio.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckOrganizationsEnabled(t)
@@ -149,11 +149,11 @@ func TestAccServiceCatalogPortfolioShare_organizationalUnit(t *testing.T) {
 	})
 }
 
-func TestAccServiceCatalogPortfolioShare_disappears(t *testing.T) {
+func testAccPortfolioShare_disappears(t *testing.T) {
 	resourceName := "aws_servicecatalog_portfolio_share.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckAlternateAccount(t)
@@ -167,7 +167,7 @@ func TestAccServiceCatalogPortfolioShare_disappears(t *testing.T) {
 				Config: testAccPortfolioShareConfig_basic(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPortfolioShareExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfservicecatalog.ResourceProduct(), resourceName),
+					acctest.CheckResourceDisappears(acctest.Provider, tfservicecatalog.ResourcePortfolioShare(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

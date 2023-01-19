@@ -12,10 +12,10 @@ import (
 	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/internal/service/servicecatalog"
 )
 
-func TestAccServiceCatalogOrganizationsAccess_basic(t *testing.T) {
+func testAccOrganizationsAccess_basic(t *testing.T) {
 	resourceName := "aws_servicecatalog_organizations_access.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckOrganizationsEnabled(t)
