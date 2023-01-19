@@ -244,6 +244,37 @@ func testAccCheckIPAMPoolCIDRAllocationExists(n string, v *ec2.IpamPoolAllocatio
 	}
 }
 
+func testAccCheckIPAMPoolCIDRAllocationExistsWithProvider(n string, v *ec2.IpamPoolAllocation, providerF func() *schema.Provider) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No IPAM Pool CIDR Allocation ID is set")
+		}
+
+		allocationID, poolID, err := tfec2.IPAMPoolCIDRAllocationParseResourceID(rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		conn := providerF().Meta().(*conns.AWSClient).EC2Conn()
+
+		output, err := tfec2.FindIPAMPoolAllocationByTwoPartKey(conn, allocationID, poolID)
+
+		if err != nil {
+			return err
+		}
+
+		*v = *output
+
+		return nil
+	}
+}
+
 func testAccCheckIPAMPoolAllocationDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
