@@ -178,7 +178,7 @@ func resourceBucketAnalyticsConfigurationRead(d *schema.ResourceData, meta inter
 
 	bucket, name, err := BucketAnalyticsConfigurationParseID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("reading S3 Bucket Analytics Configuration (%s): %w", d.Id(), err)
 	}
 
 	d.Set("bucket", bucket)
@@ -228,7 +228,7 @@ func resourceBucketAnalyticsConfigurationDelete(d *schema.ResourceData, meta int
 
 	bucket, name, err := BucketAnalyticsConfigurationParseID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting S3 analytics configuration (%s): %w", d.Id(), err)
 	}
 
 	input := &s3.DeleteBucketAnalyticsConfigurationInput{
@@ -242,7 +242,7 @@ func resourceBucketAnalyticsConfigurationDelete(d *schema.ResourceData, meta int
 		if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) || tfawserr.ErrMessageContains(err, "NoSuchConfiguration", "The specified configuration does not exist.") {
 			return nil
 		}
-		return fmt.Errorf("Error deleting S3 analytics configuration: %w", err)
+		return fmt.Errorf("deleting S3 analytics configuration (%s): %w", d.Id(), err)
 	}
 
 	return WaitForDeleteBucketAnalyticsConfiguration(conn, bucket, name, 1*time.Minute)

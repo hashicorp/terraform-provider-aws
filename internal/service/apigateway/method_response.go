@@ -173,7 +173,7 @@ func resourceMethodResponseUpdate(d *schema.ResourceData, meta interface{}) erro
 		operations = append(operations, ops...)
 	}
 
-	out, err := conn.UpdateMethodResponse(&apigateway.UpdateMethodResponseInput{
+	_, err := conn.UpdateMethodResponse(&apigateway.UpdateMethodResponseInput{
 		HttpMethod:      aws.String(d.Get("http_method").(string)),
 		ResourceId:      aws.String(d.Get("resource_id").(string)),
 		RestApiId:       aws.String(d.Get("rest_api_id").(string)),
@@ -182,10 +182,8 @@ func resourceMethodResponseUpdate(d *schema.ResourceData, meta interface{}) erro
 	})
 
 	if err != nil {
-		return err
+		return fmt.Errorf("updating API Gateway Method Response (%s): %s", d.Id(), err)
 	}
-
-	log.Printf("[DEBUG] Received API Gateway Method Response: %s", out)
 
 	return resourceMethodResponseRead(d, meta)
 }
@@ -206,7 +204,7 @@ func resourceMethodResponseDelete(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting API Gateway Method Response (%s): %s", d.Id(), err)
+		return fmt.Errorf("deleting API Gateway Method Response (%s): %s", d.Id(), err)
 	}
 
 	return nil

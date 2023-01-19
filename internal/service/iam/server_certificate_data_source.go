@@ -120,7 +120,7 @@ func dataSourceServerCertificateRead(d *schema.ResourceData, meta interface{}) e
 		return true
 	})
 	if err != nil {
-		return fmt.Errorf("Error describing certificates: %w", err)
+		return fmt.Errorf("reading IAM Server Certificate: listing certificates: %w", err)
 	}
 
 	if len(metadatas) == 0 {
@@ -148,7 +148,7 @@ func dataSourceServerCertificateRead(d *schema.ResourceData, meta interface{}) e
 		ServerCertificateName: metadata.ServerCertificateName,
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("reading IAM Server Certificate: getting certificate details: %w", err)
 	}
 	d.Set("upload_date", serverCertificateResp.ServerCertificate.ServerCertificateMetadata.UploadDate.Format(time.RFC3339))
 	d.Set("certificate_body", serverCertificateResp.ServerCertificate.CertificateBody)

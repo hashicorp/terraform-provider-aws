@@ -32,6 +32,8 @@ func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 }
 
 func TestUpdateDiffGSI(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		Old             []interface{}
 		New             []interface{}

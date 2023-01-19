@@ -15,6 +15,8 @@ import (
 )
 
 func TestDecodeBasePathMappingID(t *testing.T) {
+	t.Parallel()
+
 	var testCases = []struct {
 		Input      string
 		DomainName string

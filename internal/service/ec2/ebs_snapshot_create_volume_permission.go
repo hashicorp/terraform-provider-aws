@@ -85,7 +85,7 @@ func resourceSnapshotCreateVolumePermissionRead(d *schema.ResourceData, meta int
 	snapshotID, accountID, err := EBSSnapshotCreateVolumePermissionParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading EBS Snapshot CreateVolumePermission (%s): %w", d.Id(), err)
 	}
 
 	_, err = FindCreateSnapshotCreateVolumePermissionByTwoPartKey(conn, snapshotID, accountID)
@@ -109,7 +109,7 @@ func resourceSnapshotCreateVolumePermissionDelete(d *schema.ResourceData, meta i
 	snapshotID, accountID, err := EBSSnapshotCreateVolumePermissionParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting EBS Snapshot CreateVolumePermission (%s): %w", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Deleting EBS Snapshot CreateVolumePermission: %s", d.Id())

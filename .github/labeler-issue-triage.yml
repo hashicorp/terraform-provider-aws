@@ -236,7 +236,7 @@ service/elastictranscoder:
 service/elb:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_(app_cookie_stickiness_policy|elb|lb_cookie_stickiness_policy|lb_ssl_negotiation_policy|load_balancer_|proxy_protocol_policy)'
 service/elbv2:
-  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_a?lb(\b|_listener|_target_group)'
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_a?lb(\b|_listener|_target_group|s)'
 service/emr:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_emr_'
 service/emrcontainers:

@@ -231,7 +231,7 @@ func resourceRepositoryRead(d *schema.ResourceData, meta interface{}) error {
 
 	owner, domain, repo, err := DecodeRepositoryID(d.Id())
 	if err != nil {
-		return err
+		return create.Error(names.CodeArtifact, create.ErrActionReading, ResNameRepository, d.Id(), err)
 	}
 	sm, err := conn.DescribeRepository(&codeartifact.DescribeRepositoryInput{
 		Repository:  aws.String(repo),
@@ -294,7 +294,7 @@ func resourceRepositoryDelete(d *schema.ResourceData, meta interface{}) error {
 
 	owner, domain, repo, err := DecodeRepositoryID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting CodeArtifact Repository (%s): %w", d.Id(), err)
 	}
 	input := &codeartifact.DeleteRepositoryInput{
 		Repository:  aws.String(repo),
@@ -309,7 +309,7 @@ func resourceRepositoryDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting CodeArtifact Repository (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting CodeArtifact Repository (%s): %w", d.Id(), err)
 	}
 
 	return nil

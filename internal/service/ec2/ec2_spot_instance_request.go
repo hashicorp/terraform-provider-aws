@@ -137,7 +137,7 @@ func resourceSpotInstanceRequestCreate(d *schema.ResourceData, meta interface{})
 
 	instanceOpts, err := buildInstanceOpts(d, meta)
 	if err != nil {
-		return err
+		return fmt.Errorf("requesting EC2 Spot Instances: %s", err)
 	}
 
 	spotOpts := &ec2.RequestSpotInstancesInput{
@@ -177,7 +177,7 @@ func resourceSpotInstanceRequestCreate(d *schema.ResourceData, meta interface{})
 	if v, ok := d.GetOk("valid_from"); ok {
 		validFrom, err := time.Parse(time.RFC3339, v.(string))
 		if err != nil {
-			return err
+			return fmt.Errorf("requesting EC2 Spot Instances: %s", err)
 		}
 		spotOpts.ValidFrom = aws.Time(validFrom)
 	}
@@ -185,7 +185,7 @@ func resourceSpotInstanceRequestCreate(d *schema.ResourceData, meta interface{})
 	if v, ok := d.GetOk("valid_until"); ok {
 		validUntil, err := time.Parse(time.RFC3339, v.(string))
 		if err != nil {
-			return err
+			return fmt.Errorf("requesting EC2 Spot Instances: %s", err)
 		}
 		spotOpts.ValidUntil = aws.Time(validUntil)
 	}
@@ -196,8 +196,6 @@ func resourceSpotInstanceRequestCreate(d *schema.ResourceData, meta interface{})
 	}
 
 	// Make the spot instance request
-	log.Printf("[DEBUG] Requesting spot bid opts: %s", spotOpts)
-
 	var resp *ec2.RequestSpotInstancesOutput
 	err = resource.Retry(propagationTimeout, func() *resource.RetryError {
 		resp, err = conn.RequestSpotInstances(spotOpts)
@@ -223,7 +221,7 @@ func resourceSpotInstanceRequestCreate(d *schema.ResourceData, meta interface{})
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error requesting spot instances: %s", err)
+		return fmt.Errorf("requesting EC2 Spot Instances: %s", err)
 	}
 	if len(resp.SpotInstanceRequests) != 1 {
 		return fmt.Errorf(
@@ -320,7 +318,7 @@ func readInstance(d *schema.ResourceData, meta interface{}) error {
 	instance, err := FindInstanceByID(conn, d.Get("spot_instance_id").(string))
 
 	if err != nil {
-		return err
+		return err // nosemgrep:ci.bare-error-returns
 	}
 
 	d.Set("public_dns", instance.PublicDnsName)
@@ -342,7 +340,7 @@ func readInstance(d *schema.ResourceData, meta interface{}) error {
 		})
 	}
 	if err := readBlockDevices(d, instance, conn); err != nil {
-		return err
+		return err // nosemgrep:ci.bare-error-returns
 	}
 
 	var ipv6Addresses []string
@@ -369,13 +367,13 @@ func readInstance(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err := readSecurityGroups(d, instance, conn); err != nil {
-		return err
+		return fmt.Errorf("reading EC2 Instance (%s): %w", aws.StringValue(instance.InstanceId), err)
 	}
 
 	if d.Get("get_password_data").(bool) {
 		passwordData, err := getInstancePasswordData(*instance.InstanceId, conn)
 		if err != nil {
-			return err
+			return err // nosemgrep:ci.bare-error-returns
 		}
 		d.Set("password_data", passwordData)
 	} else {
@@ -414,7 +412,7 @@ func resourceSpotInstanceRequestDelete(d *schema.ResourceData, meta interface{})
 
 	if instanceId := d.Get("spot_instance_id").(string); instanceId != "" {
 		if err := terminateInstance(conn, instanceId, d.Timeout(schema.TimeoutDelete)); err != nil {
-			return err
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
 

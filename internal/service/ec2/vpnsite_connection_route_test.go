@@ -23,7 +23,7 @@ func TestAccSiteVPNConnectionRoute_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccVPNConnectionRouteDestroy,
+		CheckDestroy:             testAccCheckVPNConnectionRouteDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSiteVPNConnectionRouteConfig_basic(rName, rBgpAsn),
@@ -44,7 +44,7 @@ func TestAccSiteVPNConnectionRoute_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccVPNConnectionRouteDestroy,
+		CheckDestroy:             testAccCheckVPNConnectionRouteDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSiteVPNConnectionRouteConfig_basic(rName, rBgpAsn),
@@ -58,7 +58,7 @@ func TestAccSiteVPNConnectionRoute_disappears(t *testing.T) {
 	})
 }
 
-func testAccVPNConnectionRouteDestroy(s *terraform.State) error {
+func testAccCheckVPNConnectionRouteDestroy(s *terraform.State) error {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	for _, rs := range s.RootModule().Resources {

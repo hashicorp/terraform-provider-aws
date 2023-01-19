@@ -140,7 +140,7 @@ func TestAccRedshiftCluster_withFinalSnapshot(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, redshift.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDestroyClusterSnapshot(rName),
+		CheckDestroy:             testAccCheckClusterSnapshotDestroy(rName),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_finalSnapshot(rName),
@@ -743,7 +743,7 @@ func TestAccRedshiftCluster_restoreFromSnapshot(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, redshift.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDestroyClusterSnapshot(rName),
+		CheckDestroy:             testAccCheckClusterSnapshotDestroy(rName),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_createSnapshot(rName),
@@ -807,7 +807,7 @@ func testAccCheckClusterDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckDestroyClusterSnapshot(rName string) resource.TestCheckFunc {
+func testAccCheckClusterSnapshotDestroy(rName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_redshift_cluster" {

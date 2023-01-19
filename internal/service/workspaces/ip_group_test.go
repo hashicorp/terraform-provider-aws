@@ -173,7 +173,7 @@ func testAccCheckIPGroupDestroy(s *terraform.State) error {
 		})
 
 		if err != nil {
-			return fmt.Errorf("error Describing Workspaces IP Group: %w", err)
+			return fmt.Errorf("error Describing WorkSpaces IP Group: %w", err)
 		}
 
 		// Return nil if the IP Group is already destroyed (does not exist)
@@ -182,7 +182,7 @@ func testAccCheckIPGroupDestroy(s *terraform.State) error {
 		}
 
 		if *resp.Result[0].GroupId == rs.Primary.ID {
-			return fmt.Errorf("Workspaces IP Group %s still exists", rs.Primary.ID)
+			return fmt.Errorf("WorkSpaces IP Group %s still exists", rs.Primary.ID)
 		}
 	}
 
@@ -213,7 +213,7 @@ func testAccCheckIPGroupExists(n string, v *workspaces.IpGroup) resource.TestChe
 			return nil
 		}
 
-		return fmt.Errorf("Workspaces IP Group (%s) not found", rs.Primary.ID)
+		return fmt.Errorf("WorkSpaces IP Group (%s) not found", rs.Primary.ID)
 	}
 }
 

@@ -454,6 +454,8 @@ data "aws_partition" "current" {}
 }
 
 func TestValidateTemplateARN(t *testing.T) {
+	t.Parallel()
+
 	validNames := []string{
 		"arn:aws:acm-pca:::template/EndEntityCertificate/V1",                     // lintignore:AWSAT005
 		"arn:aws:acm-pca:::template/SubordinateCACertificate_PathLen0/V1",        // lintignore:AWSAT005
@@ -483,6 +485,8 @@ func TestValidateTemplateARN(t *testing.T) {
 }
 
 func TestExpandValidityValue(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		Type     string
 		Value    string

@@ -44,10 +44,11 @@ func ResourceRepositoryPermissionsPolicy() *schema.Resource {
 				ForceNew: true,
 			},
 			"policy_document": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				Type:                  schema.TypeString,
+				Required:              true,
+				ValidateFunc:          validation.StringIsJSON,
+				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+				DiffSuppressOnRefresh: true,
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
@@ -106,7 +107,7 @@ func resourceRepositoryPermissionsPolicyRead(d *schema.ResourceData, meta interf
 
 	domainOwner, domainName, repoName, err := DecodeRepositoryID(d.Id())
 	if err != nil {
-		return err
+		return create.Error(names.CodeArtifact, create.ErrActionReading, ResNameRepositoryPermissionsPolicy, d.Id(), err)
 	}
 
 	dm, err := conn.GetRepositoryPermissionsPolicy(&codeartifact.GetRepositoryPermissionsPolicyInput{
@@ -153,7 +154,7 @@ func resourceRepositoryPermissionsPolicyDelete(d *schema.ResourceData, meta inte
 
 	domainOwner, domainName, repoName, err := DecodeRepositoryID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting CodeArtifact Repository Permissions Policy (%s): %w", d.Id(), err)
 	}
 
 	input := &codeartifact.DeleteRepositoryPermissionsPolicyInput{
@@ -169,7 +170,7 @@ func resourceRepositoryPermissionsPolicyDelete(d *schema.ResourceData, meta inte
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting CodeArtifact Repository Permissions Policy (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting CodeArtifact Repository Permissions Policy (%s): %w", d.Id(), err)
 	}
 
 	return nil

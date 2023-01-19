@@ -49,9 +49,11 @@ func resourceUserGroupAssociationCreate(d *schema.ResourceData, meta interface{}
 
 	id := userGroupAssociationID(d.Get("user_group_id").(string), d.Get("user_id").(string))
 
-	_, err := tfresource.RetryWhenNotFound(30*time.Second, func() (interface{}, error) {
-		return conn.ModifyUserGroup(input)
-	})
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(10*time.Minute, func() (interface{}, error) {
+		return tfresource.RetryWhenNotFound(30*time.Second, func() (interface{}, error) {
+			return conn.ModifyUserGroup(input)
+		})
+	}, elasticache.ErrCodeInvalidUserGroupStateFault)
 
 	if err != nil {
 		return fmt.Errorf("creating ElastiCache User Group Association (%q): %w", id, err)
@@ -129,7 +131,10 @@ func resourceUserGroupAssociationDelete(d *schema.ResourceData, meta interface{}
 		UserIdsToRemove: aws.StringSlice([]string{d.Get("user_id").(string)}),
 	}
 
-	_, err := conn.ModifyUserGroup(input)
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(10*time.Minute, func() (interface{}, error) {
+		return conn.ModifyUserGroup(input)
+	}, elasticache.ErrCodeInvalidUserGroupStateFault)
+
 	if err != nil && !tfawserr.ErrMessageContains(err, elasticache.ErrCodeInvalidParameterValueException, "not a member") {
 		return fmt.Errorf("deleting ElastiCache User Group Association (%q): %w", d.Id(), err)
 	}

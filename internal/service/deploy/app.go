@@ -108,9 +108,8 @@ func resourceAppCreate(d *schema.ResourceData, meta interface{}) error {
 		Tags:            Tags(tags.IgnoreAWS()),
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("creating CodeDeploy Application (%s): %w", application, err)
 	}
-	log.Printf("[DEBUG] CodeDeploy application %s created", *resp.ApplicationId)
 
 	// Despite giving the application a unique ID, AWS doesn't actually use
 	// it in API calls. Use it and the app name to identify the resource in
@@ -227,8 +226,7 @@ func resourceAppDelete(d *schema.ResourceData, meta interface{}) error {
 			return nil
 		}
 
-		log.Printf("[ERROR] Error deleting CodeDeploy application: %s", err)
-		return err
+		return fmt.Errorf("deleting CodeDeploy Application (%s): %w", d.Id(), err)
 	}
 
 	return nil

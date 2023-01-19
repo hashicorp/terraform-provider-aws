@@ -714,6 +714,8 @@ resource "aws_s3_bucket" "destination" {
 }
 
 func TestExpandAnalyticsFilter(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]struct {
 		Input    []interface{}
 		Expected *s3.AnalyticsFilter
@@ -856,6 +858,8 @@ func TestExpandAnalyticsFilter(t *testing.T) {
 }
 
 func TestExpandStorageClassAnalysis(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]struct {
 		Input    []interface{}
 		Expected *s3.StorageClassAnalysis
@@ -1002,6 +1006,8 @@ func TestExpandStorageClassAnalysis(t *testing.T) {
 }
 
 func TestFlattenAnalyticsFilter(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]struct {
 		Input    *s3.AnalyticsFilter
 		Expected []map[string]interface{}
@@ -1122,6 +1128,8 @@ func TestFlattenAnalyticsFilter(t *testing.T) {
 }
 
 func TestFlattenStorageClassAnalysis(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]struct {
 		Input    *s3.StorageClassAnalysis
 		Expected []map[string]interface{}

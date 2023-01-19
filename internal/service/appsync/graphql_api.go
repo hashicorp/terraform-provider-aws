@@ -709,7 +709,7 @@ func resourceSchemaPut(d *schema.ResourceData, meta interface{}) error {
 			Definition: ([]byte)(v.(string)),
 		}
 		if _, err := conn.StartSchemaCreation(input); err != nil {
-			return err
+			return err // nosemgrep:ci.bare-error-returns
 		}
 
 		activeSchemaConfig := &resource.StateChangeConf{
@@ -728,7 +728,7 @@ func resourceSchemaPut(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if _, err := activeSchemaConfig.WaitForState(); err != nil {
-			return fmt.Errorf("Error waiting for schema creation status on AppSync API %s: %s", d.Id(), err)
+			return fmt.Errorf("waiting for completion: %s", err)
 		}
 	}
 

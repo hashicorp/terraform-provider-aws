@@ -284,7 +284,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		_, err = conn.UpdateUserHierarchyWithContext(ctx, input)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("[ERROR] Error updating User hierarchy_group_id (%s): %w", d.Id(), err))
+			return diag.FromErr(fmt.Errorf("updating User hierarchy_group_id (%s): %w", d.Id(), err))
 		}
 	}
 
@@ -299,7 +299,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		_, err = conn.UpdateUserIdentityInfoWithContext(ctx, input)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("[ERROR] Error updating User identity_info (%s): %w", d.Id(), err))
+			return diag.FromErr(fmt.Errorf("updating User identity_info (%s): %w", d.Id(), err))
 		}
 	}
 
@@ -314,7 +314,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		_, err = conn.UpdateUserPhoneConfigWithContext(ctx, input)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("[ERROR] Error updating User phone_config (%s): %w", d.Id(), err))
+			return diag.FromErr(fmt.Errorf("updating User phone_config (%s): %w", d.Id(), err))
 		}
 	}
 
@@ -329,7 +329,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		_, err = conn.UpdateUserRoutingProfileWithContext(ctx, input)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("[ERROR] Error updating User routing_profile_id (%s): %w", d.Id(), err))
+			return diag.FromErr(fmt.Errorf("updating User routing_profile_id (%s): %w", d.Id(), err))
 		}
 	}
 
@@ -344,7 +344,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		_, err = conn.UpdateUserSecurityProfilesWithContext(ctx, input)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("[ERROR] Error updating User security_profile_ids (%s): %w", d.Id(), err))
+			return diag.FromErr(fmt.Errorf("updating User security_profile_ids (%s): %w", d.Id(), err))
 		}
 	}
 

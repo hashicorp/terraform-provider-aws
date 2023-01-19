@@ -214,7 +214,7 @@ func resourcePolicyCreate(d *schema.ResourceData, meta interface{}) error {
 
 	params, err := getPutScalingPolicyInput(d)
 	if err != nil {
-		return err
+		return create.Error(names.AppAutoScaling, create.ErrActionCreating, ResNamePolicy, d.Get("name").(string), err)
 	}
 
 	log.Printf("[DEBUG] ApplicationAutoScaling PutScalingPolicy: %#v", params)

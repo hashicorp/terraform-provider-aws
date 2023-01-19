@@ -259,7 +259,7 @@ func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		_, err = conn.UpdateQueueHoursOfOperationWithContext(ctx, input)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("[ERROR] Error updating Queue Hours of Operation (%s): %w", d.Id(), err))
+			return diag.FromErr(fmt.Errorf("updating Queue Hours of Operation (%s): %w", d.Id(), err))
 		}
 	}
 
@@ -273,7 +273,7 @@ func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		_, err = conn.UpdateQueueMaxContactsWithContext(ctx, input)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("[ERROR] Error updating Queue Max Contacts (%s): %w", d.Id(), err))
+			return diag.FromErr(fmt.Errorf("updating Queue Max Contacts (%s): %w", d.Id(), err))
 		}
 	}
 
@@ -288,7 +288,7 @@ func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		_, err = conn.UpdateQueueNameWithContext(ctx, input)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("[ERROR] Error updating Queue Name and/or Description (%s): %w", d.Id(), err))
+			return diag.FromErr(fmt.Errorf("updating Queue Name and/or Description (%s): %w", d.Id(), err))
 		}
 	}
 
@@ -302,7 +302,7 @@ func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		_, err = conn.UpdateQueueOutboundCallerConfigWithContext(ctx, input)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("[ERROR] Error updating Queue Outbound Caller Config (%s): %w", d.Id(), err))
+			return diag.FromErr(fmt.Errorf("updating Queue Outbound Caller Config (%s): %w", d.Id(), err))
 		}
 	}
 
@@ -316,7 +316,7 @@ func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		_, err = conn.UpdateQueueStatusWithContext(ctx, input)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("[ERROR] Error updating Queue Status (%s): %w", d.Id(), err))
+			return diag.FromErr(fmt.Errorf("updating Queue Status (%s): %w", d.Id(), err))
 		}
 	}
 
@@ -331,7 +331,7 @@ func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			input.QuickConnectIds = flex.ExpandStringSet(v.(*schema.Set))
 			_, err = conn.DisassociateQueueQuickConnectsWithContext(ctx, input)
 			if err != nil {
-				return diag.FromErr(fmt.Errorf("[ERROR] Error updating Queues Quick Connect IDs, specifically disassociating quick connects from queue (%s): %w", d.Id(), err))
+				return diag.FromErr(fmt.Errorf("updating Queues Quick Connect IDs, specifically disassociating quick connects from queue (%s): %w", d.Id(), err))
 			}
 		}
 
@@ -344,7 +344,7 @@ func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			input.QuickConnectIds = flex.ExpandStringSet(v.(*schema.Set))
 			_, err = conn.AssociateQueueQuickConnectsWithContext(ctx, input)
 			if err != nil {
-				return diag.FromErr(fmt.Errorf("[ERROR] Error updating Queues Quick Connect IDs, specifically associating quick connects to queue (%s): %w", d.Id(), err))
+				return diag.FromErr(fmt.Errorf("updating Queues Quick Connect IDs, specifically associating quick connects to queue (%s): %w", d.Id(), err))
 			}
 		}
 	}

@@ -20,6 +20,8 @@ import (
 )
 
 func TestTrackerAssociationParseID(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		TestName string
 		Input    string

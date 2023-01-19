@@ -16,6 +16,8 @@ import (
 )
 
 func TestAccGrafana_serial(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]map[string]func(t *testing.T){
 		"Workspace": {
 			"saml":                     testAccWorkspace_saml,
@@ -27,6 +29,7 @@ func TestAccGrafana_serial(t *testing.T) {
 			"notificationDestinations": testAccWorkspace_notificationDestinations,
 			"tags":                     testAccWorkspace_tags,
 			"vpc":                      testAccWorkspace_vpc,
+			"configuration":            testAccWorkspace_configuration,
 		},
 		"ApiKey": {
 			"basic": testAccWorkspaceAPIKey_basic,
@@ -52,17 +55,7 @@ func TestAccGrafana_serial(t *testing.T) {
 		},
 	}
 
-	for group, m := range testCases {
-		m := m
-		t.Run(group, func(t *testing.T) {
-			for name, tc := range m {
-				tc := tc
-				t.Run(name, func(t *testing.T) {
-					tc(t)
-				})
-			}
-		})
-	}
+	acctest.RunSerialTests2Levels(t, testCases, 0)
 }
 
 func testAccWorkspace_saml(t *testing.T) {
@@ -120,7 +113,7 @@ func testAccWorkspace_vpc(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkspaceConfig_vpc(rName),
+				Config: testAccWorkspaceConfig_vpc(rName, 2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWorkspaceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "vpc_configuration.#", "1"),
@@ -132,6 +125,15 @@ func testAccWorkspace_vpc(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccWorkspaceConfig_vpc(rName, 3),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWorkspaceExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "vpc_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_configuration.0.security_group_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_configuration.0.subnet_ids.#", "3"),
+				),
 			},
 		},
 	})
@@ -401,6 +403,39 @@ func testAccWorkspace_notificationDestinations(t *testing.T) {
 	})
 }
 
+func testAccWorkspace_configuration(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_grafana_workspace.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, managedgrafana.EndpointsID),
+		CheckDestroy:             testAccCheckWorkspaceDestroy,
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWorkspaceConfig_configuration(rName, `{"unifiedAlerting": { "enabled": true }}`),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWorkspaceExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "configuration", `{"unifiedAlerting":{"enabled":true}}`),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccWorkspaceConfig_configuration(rName, `{"unifiedAlerting": { "enabled": false }}`),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWorkspaceExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "configuration", `{"unifiedAlerting":{"enabled":false}}`),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckWorkspaceExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
@@ -569,8 +604,8 @@ resource "aws_grafana_workspace" "test" {
 `, rName))
 }
 
-func testAccWorkspaceConfig_vpc(rName string) string {
-	return acctest.ConfigCompose(testAccWorkspaceConfig_base(rName), acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
+func testAccWorkspaceConfig_vpc(rName string, subnets int) string {
+	return acctest.ConfigCompose(testAccWorkspaceConfig_base(rName), acctest.ConfigVPCWithSubnets(rName, subnets), fmt.Sprintf(`
 resource "aws_security_group" "test" {
   description = %[1]q
   vpc_id      = aws_vpc.test.id
@@ -588,4 +623,16 @@ resource "aws_grafana_workspace" "test" {
   }
 }
 `, rName))
+}
+
+func testAccWorkspaceConfig_configuration(rName, configuration string) string {
+	return acctest.ConfigCompose(testAccWorkspaceConfig_base(rName), fmt.Sprintf(`
+resource "aws_grafana_workspace" "test" {
+  account_access_type      = "CURRENT_ACCOUNT"
+  authentication_providers = ["SAML"]
+  permission_type          = "SERVICE_MANAGED"
+  role_arn                 = aws_iam_role.test.arn
+  configuration            = %[1]q
+}
+`, configuration))
 }

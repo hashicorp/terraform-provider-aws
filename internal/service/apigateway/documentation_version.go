@@ -73,7 +73,7 @@ func resourceDocumentationVersionRead(d *schema.ResourceData, meta interface{}) 
 
 	apiId, docVersion, err := DecodeDocumentationVersionID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("reading API Gateway Documentation Version (%s): %w", d.Id(), err)
 	}
 
 	version, err := conn.GetDocumentationVersion(&apigateway.GetDocumentationVersionInput{
@@ -86,7 +86,7 @@ func resourceDocumentationVersionRead(d *schema.ResourceData, meta interface{}) 
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("error reading API Gateway Documentation Version (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading API Gateway Documentation Version (%s): %w", d.Id(), err)
 	}
 
 	d.Set("rest_api_id", apiId)
@@ -112,7 +112,7 @@ func resourceDocumentationVersionUpdate(d *schema.ResourceData, meta interface{}
 		},
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("updating API Gateway Documentation Version (%s): %w", d.Id(), err)
 	}
 	log.Printf("[DEBUG] Updated API Gateway Documentation Version %s", d.Id())
 
@@ -127,7 +127,10 @@ func resourceDocumentationVersionDelete(d *schema.ResourceData, meta interface{}
 		DocumentationVersion: aws.String(d.Get("version").(string)),
 		RestApiId:            aws.String(d.Get("rest_api_id").(string)),
 	})
-	return err
+	if err != nil {
+		return fmt.Errorf("deleting API Gateway Documentation Version (%s): %w", d.Id(), err)
+	}
+	return nil
 }
 
 func DecodeDocumentationVersionID(id string) (string, string, error) {

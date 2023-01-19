@@ -141,6 +141,8 @@ func TestAccEFSMountTarget_IPAddress_emptyString(t *testing.T) {
 }
 
 func TestMountTarget_hasEmptyMountTargets(t *testing.T) {
+	t.Parallel()
+
 	mto := &efs.DescribeMountTargetsOutput{
 		MountTargets: []*efs.MountTargetDescription{},
 	}

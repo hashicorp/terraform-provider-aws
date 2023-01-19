@@ -106,7 +106,7 @@ func resourceThingTypeCreate(d *schema.ResourceData, meta interface{}) error {
 	out, err := conn.CreateThingType(params)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("creating IoT Thing Type (%s): %w", d.Get("name").(string), err)
 	}
 
 	d.SetId(aws.StringValue(out.ThingTypeName))
@@ -117,11 +117,10 @@ func resourceThingTypeCreate(d *schema.ResourceData, meta interface{}) error {
 			UndoDeprecate: aws.Bool(false),
 		}
 
-		log.Printf("[DEBUG] Deprecating IoT Thing Type: %s", params)
 		_, err := conn.DeprecateThingType(params)
 
 		if err != nil {
-			return err
+			return fmt.Errorf("creating IoT Thing Type (%s): deprecating Thing Type: %w", d.Get("name").(string), err)
 		}
 	}
 
@@ -142,10 +141,10 @@ func resourceThingTypeRead(d *schema.ResourceData, meta interface{}) error {
 
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
-			log.Printf("[WARN] IoT Thing Type %q not found, removing from state", d.Id())
+			log.Printf("[WARN] IoT Thing Type (%s) not found, removing from state", d.Id())
 			d.SetId("")
 		}
-		return err
+		return fmt.Errorf("reading IoT Thing Type (%s): %w", d.Id(), err)
 	}
 
 	if out.ThingTypeMetadata != nil {
@@ -190,7 +189,7 @@ func resourceThingTypeUpdate(d *schema.ResourceData, meta interface{}) error {
 		_, err := conn.DeprecateThingType(params)
 
 		if err != nil {
-			return err
+			return fmt.Errorf("updating IoT Thing Type (%s): deprecating Thing Type: %w", d.Id(), err)
 		}
 	}
 
@@ -217,13 +216,12 @@ func resourceThingTypeDelete(d *schema.ResourceData, meta interface{}) error {
 	_, err := conn.DeprecateThingType(deprecateParams)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting IoT Thing Type (%s): deprecating Thing Type: %s", d.Id(), err)
 	}
 
 	deleteParams := &iot.DeleteThingTypeInput{
 		ThingTypeName: aws.String(d.Id()),
 	}
-	log.Printf("[DEBUG] Deleting IoT Thing Type: %s", deleteParams)
 
 	err = resource.Retry(6*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteThingType(deleteParams)
@@ -251,7 +249,7 @@ func resourceThingTypeDelete(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 	if err != nil {
-		return fmt.Errorf("Error deleting IOT thing type: %s", err)
+		return fmt.Errorf("deleting IoT Thing Type (%s): %s", d.Id(), err)
 	}
 	return nil
 }

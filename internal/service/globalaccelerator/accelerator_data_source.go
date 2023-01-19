@@ -22,7 +22,10 @@ func init() {
 
 // newDataSourceAccelerator instantiates a new DataSource for the aws_globalaccelerator_accelerator data source.
 func newDataSourceAccelerator(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceAccelerator{}, nil
+	d := &dataSourceAccelerator{}
+	d.SetMigratedFromPluginSDK(true)
+
+	return d, nil
 }
 
 type dataSourceAccelerator struct {
@@ -176,7 +179,7 @@ func (d *dataSourceAccelerator) Read(ctx context.Context, request datasource.Rea
 		return
 	}
 
-	data.Tags = flex.FlattenFrameworkStringValueMap(ctx, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
+	data.Tags = flex.FlattenFrameworkStringValueMapLegacy(ctx, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -192,7 +195,7 @@ func (d *dataSourceAccelerator) flattenIPSetFramework(ctx context.Context, apiOb
 	}
 
 	attributes := map[string]attr.Value{
-		"ip_addresses": flex.FlattenFrameworkStringList(ctx, apiObject.IpAddresses),
+		"ip_addresses": flex.FlattenFrameworkStringListLegacy(ctx, apiObject.IpAddresses),
 		"ip_family":    flex.StringToFrameworkLegacy(ctx, apiObject.IpFamily),
 	}
 

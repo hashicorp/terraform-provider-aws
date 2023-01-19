@@ -33,7 +33,7 @@ func ResourceEndpoint() *schema.Resource {
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(5 * time.Minute),
-			Delete: schema.DefaultTimeout(5 * time.Minute),
+			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -461,7 +461,7 @@ func ResourceEndpoint() *schema.Resource {
 						"cdc_min_file_size": {
 							Type:         schema.TypeInt,
 							Optional:     true,
-							Default:      32,
+							Default:      32000,
 							ValidateFunc: validation.IntAtLeast(0),
 						},
 						"cdc_path": {
@@ -559,6 +559,12 @@ func ResourceEndpoint() *schema.Resource {
 							Default:  "",
 						},
 						"ignore_headers_row": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntInSlice([]int{0, 1}),
+							Description:  "This setting has no effect, is deprecated, and will be removed in a future version",
+						},
+						"ignore_header_rows": {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							Default:      0,
@@ -929,7 +935,7 @@ func resourceEndpointRead(d *schema.ResourceData, meta interface{}) error {
 	err = resourceEndpointSetState(d, endpoint)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading DMS Endpoint (%s): %w", d.Id(), err)
 	}
 
 	tags, err := ListTags(conn, d.Get("endpoint_arn").(string))
@@ -1298,7 +1304,7 @@ func resourceEndpointDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("waiting for DMS Endpoint (%s) delete: %w", d.Id(), err)
 	}
 
-	return err
+	return nil
 }
 
 func resourceEndpointCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {

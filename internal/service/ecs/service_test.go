@@ -36,6 +36,7 @@ func TestAccECSService_basic(t *testing.T) {
 				Config: testAccServiceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "alarms.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "service_registries.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "scheduling_strategy", "REPLICA"),
 				),
@@ -45,6 +46,7 @@ func TestAccECSService_basic(t *testing.T) {
 				Config: testAccServiceConfig_modified(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "alarms.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "service_registries.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "scheduling_strategy", "REPLICA"),
 				),
@@ -481,6 +483,28 @@ func TestAccECSService_DeploymentControllerType_external(t *testing.T) {
 				ImportStateVerify: true,
 				// wait_for_steady_state is not read from API
 				ImportStateVerifyIgnore: []string{"wait_for_steady_state"},
+			},
+		},
+	})
+}
+
+func TestAccECSService_Alarms(t *testing.T) {
+	var service ecs.Service
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecs_service.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceConfig_alarms(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "alarms.#", "1"),
+				),
 			},
 		},
 	})
@@ -2555,6 +2579,57 @@ resource "aws_ecs_service" "test" {
   }
 
   depends_on = [aws_iam_role_policy.ecs_service]
+}
+`, rName)
+}
+
+func testAccServiceConfig_alarms(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_cluster" "default" {
+  name = %[1]q
+}
+
+resource "aws_ecs_task_definition" "test" {
+  family = %[1]q
+
+  container_definitions = <<DEFINITION
+[
+  {
+    "cpu": 128,
+    "essential": true,
+    "image": "mongo:latest",
+    "memory": 128,
+    "name": "mongodb"
+  }
+]
+DEFINITION
+}
+
+resource "aws_ecs_service" "test" {
+  name            = %[1]q
+  cluster         = aws_ecs_cluster.default.id
+  task_definition = aws_ecs_task_definition.test.arn
+  desired_count   = 1
+
+  alarms {
+    enable   = true
+    rollback = true
+    alarm_names = [
+      aws_cloudwatch_metric_alarm.test.alarm_name
+    ]
+  }
+}
+
+resource "aws_cloudwatch_metric_alarm" "test" {
+  alarm_name                = %[1]q
+  comparison_operator       = "GreaterThanOrEqualToThreshold"
+  evaluation_periods        = "2"
+  metric_name               = "CPUReservation"
+  namespace                 = "AWS/ECS"
+  period                    = "120"
+  statistic                 = "Average"
+  threshold                 = "80"
+  insufficient_data_actions = []
 }
 `, rName)
 }

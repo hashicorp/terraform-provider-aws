@@ -186,11 +186,10 @@ func resourceDatabaseUpdate(ctx context.Context, d *schema.ResourceData, meta in
 func resourceDatabaseDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).TimestreamWriteConn()
 
-	input := &timestreamwrite.DeleteDatabaseInput{
+	log.Printf("[INFO] Deleting Timestream Database: %s", d.Id())
+	_, err := conn.DeleteDatabaseWithContext(ctx, &timestreamwrite.DeleteDatabaseInput{
 		DatabaseName: aws.String(d.Id()),
-	}
-
-	_, err := conn.DeleteDatabaseWithContext(ctx, input)
+	})
 
 	if tfawserr.ErrCodeEquals(err, timestreamwrite.ErrCodeResourceNotFoundException) {
 		return nil

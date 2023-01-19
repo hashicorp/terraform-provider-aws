@@ -300,12 +300,12 @@ func resourceAMICopyCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if _, err := WaitImageAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("waiting for EC2 AMI (%s) create: %w", d.Id(), err)
+		return fmt.Errorf("creating EC2 AMI (%s) from source EC2 AMI (%s): waiting for completion: %w", name, sourceImageID, err)
 	}
 
 	if v, ok := d.GetOk("deprecation_time"); ok {
 		if err := enableImageDeprecation(conn, d.Id(), v.(string)); err != nil {
-			return err
+			return fmt.Errorf("creating EC2 AMI (%s) from source EC2 AMI (%s): %w", name, sourceImageID, err)
 		}
 	}
 

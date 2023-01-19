@@ -231,52 +231,18 @@ func resourceWorkspaceSAMLConfigurationRead(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("error reading Grafana Workspace Saml Configuration (%s): %w", d.Id(), err)
 	}
 
-	if saml.Configuration.RoleValues.Admin != nil {
-		d.Set("admin_role_values", saml.Configuration.RoleValues.Admin)
-	}
-
-	if saml.Configuration.AllowedOrganizations != nil {
-		d.Set("allowed_organizations", saml.Configuration.AllowedOrganizations)
-	}
-
+	d.Set("admin_role_values", saml.Configuration.RoleValues.Admin)
+	d.Set("allowed_organizations", saml.Configuration.AllowedOrganizations)
 	d.Set("editor_role_values", saml.Configuration.RoleValues.Editor)
-
-	if saml.Configuration.AssertionAttributes.Email != nil {
-		d.Set("email_assertion", saml.Configuration.AssertionAttributes.Email)
-	}
-
-	if saml.Configuration.AssertionAttributes.Groups != nil {
-		d.Set("groups_assertion", saml.Configuration.AssertionAttributes.Groups)
-	}
-
-	if saml.Configuration.IdpMetadata.Url != nil {
-		d.Set("idp_metadata_url", saml.Configuration.IdpMetadata.Url)
-	}
-
-	if saml.Configuration.IdpMetadata.Xml != nil {
-		d.Set("idp_metadata_xml", saml.Configuration.IdpMetadata.Xml)
-	}
-
-	if saml.Configuration.AssertionAttributes.Login != nil {
-		d.Set("login_assertion", saml.Configuration.AssertionAttributes.Login)
-	}
-
-	if saml.Configuration.LoginValidityDuration != nil {
-		d.Set("login_validity_duration", saml.Configuration.LoginValidityDuration)
-	}
-
-	if saml.Configuration.AssertionAttributes.Name != nil {
-		d.Set("name_assertion", saml.Configuration.AssertionAttributes.Name)
-	}
-
-	if saml.Configuration.AssertionAttributes.Org != nil {
-		d.Set("org_assertion", saml.Configuration.AssertionAttributes.Org)
-	}
-
-	if saml.Configuration.AssertionAttributes.Role != nil {
-		d.Set("role_assertion", saml.Configuration.AssertionAttributes.Role)
-	}
-
+	d.Set("email_assertion", saml.Configuration.AssertionAttributes.Email)
+	d.Set("groups_assertion", saml.Configuration.AssertionAttributes.Groups)
+	d.Set("idp_metadata_url", saml.Configuration.IdpMetadata.Url)
+	d.Set("idp_metadata_xml", saml.Configuration.IdpMetadata.Xml)
+	d.Set("login_assertion", saml.Configuration.AssertionAttributes.Login)
+	d.Set("login_validity_duration", saml.Configuration.LoginValidityDuration)
+	d.Set("name_assertion", saml.Configuration.AssertionAttributes.Name)
+	d.Set("org_assertion", saml.Configuration.AssertionAttributes.Org)
+	d.Set("role_assertion", saml.Configuration.AssertionAttributes.Role)
 	d.Set("status", saml.Status)
 
 	return nil

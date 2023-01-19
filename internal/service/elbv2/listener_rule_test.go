@@ -20,6 +20,8 @@ import (
 )
 
 func TestLBListenerARNFromRuleARN(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		name     string
 		arn      string

@@ -361,7 +361,7 @@ func resourceCrawlerCreate(d *schema.ResourceData, meta interface{}) error {
 
 	crawlerInput, err := createCrawlerInput(d, name, meta.(*conns.AWSClient).DefaultTagsConfig)
 	if err != nil {
-		return err
+		return fmt.Errorf("creating Glue Crawler (%s): %w", name, err)
 	}
 
 	// Retry for IAM eventual consistency
@@ -395,7 +395,7 @@ func resourceCrawlerCreate(d *schema.ResourceData, meta interface{}) error {
 		_, err = glueConn.CreateCrawler(crawlerInput)
 	}
 	if err != nil {
-		return fmt.Errorf("error creating Glue crawler: %w", err)
+		return fmt.Errorf("creating Glue Crawler (%s): %w", name, err)
 	}
 	d.SetId(name)
 
@@ -750,7 +750,7 @@ func resourceCrawlerUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChangesExcept("tags", "tags_all") {
 		updateCrawlerInput, err := updateCrawlerInput(d, name)
 		if err != nil {
-			return err
+			return fmt.Errorf("updating Glue Crawler (%s): %w", d.Id(), err)
 		}
 
 		// Retry for IAM eventual consistency
@@ -786,7 +786,7 @@ func resourceCrawlerUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if err != nil {
-			return fmt.Errorf("error updating Glue crawler: %w", err)
+			return fmt.Errorf("updating Glue Crawler (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -1000,7 +1000,7 @@ func flattenDeltaTargets(deltaTargets []*glue.DeltaTarget) []map[string]interfac
 func resourceCrawlerDelete(d *schema.ResourceData, meta interface{}) error {
 	glueConn := meta.(*conns.AWSClient).GlueConn()
 
-	log.Printf("[DEBUG] deleting Glue crawler: %s", d.Id())
+	log.Printf("[DEBUG] deleting Glue Crawler: %s", d.Id())
 	_, err := glueConn.DeleteCrawler(&glue.DeleteCrawlerInput{
 		Name: aws.String(d.Id()),
 	})
@@ -1008,7 +1008,7 @@ func resourceCrawlerDelete(d *schema.ResourceData, meta interface{}) error {
 		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 			return nil
 		}
-		return fmt.Errorf("error deleting Glue crawler: %w", err)
+		return fmt.Errorf("error deleting Glue Crawler: %w", err)
 	}
 	return nil
 }

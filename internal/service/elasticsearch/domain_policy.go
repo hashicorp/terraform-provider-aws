@@ -29,10 +29,11 @@ func ResourceDomainPolicy() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"access_policies": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				Type:                  schema.TypeString,
+				Required:              true,
+				ValidateFunc:          validation.StringIsJSON,
+				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+				DiffSuppressOnRefresh: true,
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
@@ -58,15 +59,13 @@ func resourceDomainPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Elasticsearch Domain Policy (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading Elasticsearch Domain Policy (%s): %w", d.Id(), err)
 	}
-
-	log.Printf("[DEBUG] Received Elasticsearch domain: %s", ds)
 
 	policies, err := verify.PolicyToSet(d.Get("access_policies").(string), aws.StringValue(ds.AccessPolicies))
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading Elasticsearch Domain Policy (%s): %w", d.Id(), err)
 	}
 
 	d.Set("access_policies", policies)
@@ -89,13 +88,13 @@ func resourceDomainPolicyUpsert(d *schema.ResourceData, meta interface{}) error 
 		AccessPolicies: aws.String(policy),
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("setting Elasticsearch Domain Policy (%s): %w", d.Id(), err)
 	}
 
 	d.SetId("esd-policy-" + domainName)
 
 	if err := waitForDomainUpdate(conn, d.Get("domain_name").(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return fmt.Errorf("error waiting for Elasticsearch Domain Policy (%s) to be updated: %w", d.Id(), err)
+		return fmt.Errorf("setting Elasticsearch Domain Policy (%s): waiting for completion: %w", d.Id(), err)
 	}
 
 	return resourceDomainPolicyRead(d, meta)
@@ -109,13 +108,13 @@ func resourceDomainPolicyDelete(d *schema.ResourceData, meta interface{}) error 
 		AccessPolicies: aws.String(""),
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting Elasticsearch Domain Policy (%s): %w", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Waiting for Elasticsearch domain policy %q to be deleted", d.Get("domain_name").(string))
 
 	if err := waitForDomainUpdate(conn, d.Get("domain_name").(string), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("error waiting for Elasticsearch Domain Policy (%s) to be deleted: %w", d.Id(), err)
+		return fmt.Errorf("deleting Elasticsearch Domain Policy (%s): waiting for completion: %w", d.Id(), err)
 	}
 
 	return nil

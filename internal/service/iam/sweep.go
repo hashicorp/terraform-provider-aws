@@ -421,7 +421,7 @@ func sweepPolicies(region string) error {
 			}
 
 			log.Printf("[INFO] Deleting IAM Policy: %s", arn)
-			if err := PolicyDeleteNondefaultVersions(arn, conn); err != nil {
+			if err := policyDeleteNonDefaultVersions(arn, conn); err != nil {
 				sweeperErr := fmt.Errorf("error deleting IAM Policy (%s) non-default versions: %w", arn, err)
 				log.Printf("[ERROR] %s", sweeperErr)
 				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)

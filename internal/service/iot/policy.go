@@ -31,10 +31,11 @@ func ResourcePolicy() *schema.Resource {
 				ForceNew: true,
 			},
 			"policy": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				Type:                  schema.TypeString,
+				Required:              true,
+				ValidateFunc:          validation.StringIsJSON,
+				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+				DiffSuppressOnRefresh: true,
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
@@ -56,7 +57,6 @@ func resourcePolicyCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).IoTConn()
 
 	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
-
 	if err != nil {
 		return fmt.Errorf("policy (%s) is invalid JSON: %w", policy, err)
 	}
@@ -89,7 +89,7 @@ func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading IoT Policy (%s): %s", d.Id(), err)
+		return fmt.Errorf("reading IoT Policy (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", out.PolicyArn)
@@ -97,9 +97,8 @@ func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", out.PolicyName)
 
 	policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.StringValue(out.PolicyDocument))
-
 	if err != nil {
-		return err
+		return fmt.Errorf("reading IoT Policy (%s): %s", d.Id(), err)
 	}
 
 	d.Set("policy", policyToSet)
@@ -112,7 +111,6 @@ func resourcePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("policy") {
 		policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
-
 		if err != nil {
 			return fmt.Errorf("policy (%s) is invalid JSON: %w", policy, err)
 		}

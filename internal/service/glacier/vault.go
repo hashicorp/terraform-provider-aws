@@ -52,10 +52,11 @@ func ResourceVault() *schema.Resource {
 			},
 
 			"access_policy": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				Type:                  schema.TypeString,
+				Optional:              true,
+				ValidateFunc:          validation.StringIsJSON,
+				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+				DiffSuppressOnRefresh: true,
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
@@ -176,7 +177,7 @@ func resourceVaultRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("Error reading Glacier Vault: %w", err)
+		return fmt.Errorf("reading Glacier Vault (%s): %w", d.Id(), err)
 	}
 
 	awsClient := meta.(*conns.AWSClient)
@@ -185,7 +186,7 @@ func resourceVaultRead(d *schema.ResourceData, meta interface{}) error {
 
 	location, err := buildVaultLocation(awsClient.AccountID, d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("reading Glacier Vault (%s): %w", d.Id(), err)
 	}
 	d.Set("location", location)
 
@@ -214,12 +215,12 @@ func resourceVaultRead(d *schema.ResourceData, meta interface{}) error {
 	if tfawserr.ErrCodeEquals(err, glacier.ErrCodeResourceNotFoundException) {
 		d.Set("access_policy", "")
 	} else if err != nil {
-		return fmt.Errorf("error getting access policy for Glacier Vault (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading Glacier Vault (%s): reading policy: %w", d.Id(), err)
 	} else if pol != nil && pol.Policy != nil {
 		policy, err := verify.PolicyToSet(d.Get("access_policy").(string), aws.StringValue(pol.Policy.Policy))
 
 		if err != nil {
-			return err
+			return fmt.Errorf("reading Glacier Vault (%s): setting policy: %w", d.Id(), err)
 		}
 
 		d.Set("access_policy", policy)
@@ -240,7 +241,7 @@ func resourceVaultRead(d *schema.ResourceData, meta interface{}) error {
 func resourceVaultDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).GlacierConn()
 
-	log.Printf("[DEBUG] Glacier Delete Vault: %s", d.Id())
+	log.Printf("[DEBUG] Deleting Glacier Vault: %s", d.Id())
 	_, err := conn.DeleteVault(&glacier.DeleteVaultInput{
 		VaultName: aws.String(d.Id()),
 	})

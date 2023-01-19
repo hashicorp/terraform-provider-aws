@@ -1135,6 +1135,8 @@ func testAccCheckTaskDefinitionConstraintsAttrs(def *ecs.TaskDefinition) resourc
 }
 
 func TestValidTaskDefinitionContainerDefinitions(t *testing.T) {
+	t.Parallel()
+
 	validDefinitions := []string{
 		testValidTaskDefinitionValidContainerDefinitions,
 	}

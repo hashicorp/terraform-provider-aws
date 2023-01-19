@@ -65,7 +65,7 @@ func resourceSizeConstraintSetRead(d *schema.ResourceData, meta interface{}) err
 			return nil
 		}
 
-		return err
+		return fmt.Errorf("reading WAF Size Constraint Set (%s): %w", d.Get("name").(string), err)
 	}
 
 	d.Set("name", resp.SizeConstraintSet.Name)

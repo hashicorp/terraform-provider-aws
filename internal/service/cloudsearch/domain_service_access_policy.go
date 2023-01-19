@@ -34,10 +34,11 @@ func ResourceDomainServiceAccessPolicy() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"access_policy": {
-				Type:             schema.TypeString,
-				Required:         true,
-				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
-				ValidateFunc:     validation.StringIsJSON,
+				Type:                  schema.TypeString,
+				Required:              true,
+				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+				DiffSuppressOnRefresh: true,
+				ValidateFunc:          validation.StringIsJSON,
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
@@ -98,13 +99,13 @@ func resourceDomainServiceAccessPolicyRead(d *schema.ResourceData, meta interfac
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading CloudSearch Domain Service Access Policy (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading CloudSearch Domain Service Access Policy (%s): %w", d.Id(), err)
 	}
 
 	policyToSet, err := verify.PolicyToSet(d.Get("access_policy").(string), accessPolicy)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading CloudSearch Domain Service Access Policy (%s): %w", d.Id(), err)
 	}
 
 	d.Set("access_policy", policyToSet)
