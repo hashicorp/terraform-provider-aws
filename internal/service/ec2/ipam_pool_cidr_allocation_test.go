@@ -421,3 +421,19 @@ resource "aws_vpc_ipam_pool_cidr_allocation" "test2" {
 }
 `, cidr1, cidr2))
 }
+
+func testAccIPAMPoolCIDRAllocationConfig_differentRegion(cidr string) string {
+	return acctest.ConfigCompose(acctest.ConfigMultipleRegionProvider(2),
+		testAccIPAMPoolCIDRAllocationConfig_baseDifferentRegion,
+		fmt.Sprintf(`
+resource "aws_vpc_ipam_pool_cidr_allocation" "test1" {
+  provider = "awsalternate"
+  ipam_pool_id = aws_vpc_ipam_pool.test.id
+  cidr         = %[1]q
+
+  depends_on = [
+    aws_vpc_ipam_pool_cidr.test
+  ]
+}
+`, cidr))
+}
