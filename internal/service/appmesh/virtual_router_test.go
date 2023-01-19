@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfappmesh "github.com/hashicorp/terraform-provider-aws/internal/service/appmesh"
 )
 
 func testAccVirtualRouter_basic(t *testing.T) {
@@ -183,6 +184,30 @@ func testAccVirtualRouter_tags(t *testing.T) {
 				ImportStateId:     fmt.Sprintf("%s/%s", meshName, vrName),
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccVirtualRouter_disappears(t *testing.T) {
+	var vr appmesh.VirtualRouterData
+	resourceName := "aws_appmesh_virtual_router.test"
+	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	vrName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, appmesh.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVirtualRouterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVirtualRouterConfig_basic(meshName, vrName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVirtualRouterExists(resourceName, &vr),
+					acctest.CheckResourceDisappears(acctest.Provider, tfappmesh.ResourceVirtualRouter(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
