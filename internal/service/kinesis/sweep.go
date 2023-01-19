@@ -22,6 +22,7 @@ func init() {
 }
 
 func sweepStreams(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -30,7 +31,7 @@ func sweepStreams(region string) error {
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	input := &kinesis.ListStreamsInput{}
-	err = conn.ListStreamsPages(input, func(page *kinesis.ListStreamsOutput, lastPage bool) bool {
+	err = conn.ListStreamsPagesWithContext(ctx, input, func(page *kinesis.ListStreamsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -56,7 +57,7 @@ func sweepStreams(region string) error {
 		return fmt.Errorf("error listing Kinesis Streams (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Kinesis Streams (%s): %w", region, err)
