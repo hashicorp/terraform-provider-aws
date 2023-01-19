@@ -6,6 +6,7 @@ NOTES:
 
 FEATURES:
 
+* **New Data Source:** `aws_auditmanager_control` ([#28967](https://github.com/hashicorp/terraform-provider-aws/issues/28967))
 * **New Resource:** `aws_datasync_location_object_storage` ([#23154](https://github.com/hashicorp/terraform-provider-aws/issues/23154))
 * **New Resource:** `aws_resourceexplorer2_view` ([#28841](https://github.com/hashicorp/terraform-provider-aws/issues/28841))
 
@@ -27,6 +28,8 @@ BUG FIXES:
 * resource/aws_appstream_image_builder: Fix refresh error when `domain_join_info` and `vpc_config` are not empty ([#26677](https://github.com/hashicorp/terraform-provider-aws/issues/26677))
 * resource/aws_elasticsearch_domain: Prevent persistent `iops` diff ([#28901](https://github.com/hashicorp/terraform-provider-aws/issues/28901))
 * resource/aws_grafana_workspace: Fix updating `vpc_configuration` ([#28569](https://github.com/hashicorp/terraform-provider-aws/issues/28569))
+* resource/aws_iam_server_certificate: Avoid errors on delete when no error occurred ([#28968](https://github.com/hashicorp/terraform-provider-aws/issues/28968))
+* resource/aws_lb_listener_certificate: Show errors in certain cases where they were previously only logged and resource was removed from state ([#28968](https://github.com/hashicorp/terraform-provider-aws/issues/28968))
 * resource/aws_opensearch_domain: Omit `throughput` and `iops` for unsupported volume types ([#28862](https://github.com/hashicorp/terraform-provider-aws/issues/28862))
 * resource/aws_sagemaker_app: Correctly list all apps so as not to lose track in an environment where there are many apps ([#28561](https://github.com/hashicorp/terraform-provider-aws/issues/28561))
 
