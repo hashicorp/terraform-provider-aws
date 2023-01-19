@@ -84,6 +84,7 @@ func TestAccAppMesh_serial(t *testing.T) {
 			"tags":          testAccVirtualRouter_tags,
 		},
 		"VirtualService": {
+			"disappears":    testAccVirtualService_disappears,
 			"virtualNode":   testAccVirtualService_virtualNode,
 			"virtualRouter": testAccVirtualService_virtualRouter,
 			"tags":          testAccVirtualService_tags,
