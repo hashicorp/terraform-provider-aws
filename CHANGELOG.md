@@ -18,6 +18,7 @@ ENHANCEMENTS:
 * resource/aws_imagbuilder_component: Add `skip_destroy` argument ([#28905](https://github.com/hashicorp/terraform-provider-aws/issues/28905))
 * resource/aws_lambda_event_source_mapping: Add `scaling_config` argument ([#28876](https://github.com/hashicorp/terraform-provider-aws/issues/28876))
 * resource/aws_rum_app_monitor: Add `custom_events` argument ([#28431](https://github.com/hashicorp/terraform-provider-aws/issues/28431))
+* resource/aws_servicecatalog_portfolio_share: Add `share_principals` argument ([#28619](https://github.com/hashicorp/terraform-provider-aws/issues/28619))
 
 BUG FIXES:
 
