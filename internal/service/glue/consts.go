@@ -1,6 +1,8 @@
 package glue
 
-import "time"
+import (
+	"time"
+)
 
 const (
 	devEndpointStatusFailed       = "FAILED"
