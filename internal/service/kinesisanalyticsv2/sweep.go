@@ -24,6 +24,7 @@ func init() {
 }
 
 func sweepApplication(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -34,7 +35,7 @@ func sweepApplication(region string) error {
 	var sweeperErrs *multierror.Error
 
 	input := &kinesisanalyticsv2.ListApplicationsInput{}
-	err = listApplicationsPages(conn, input, func(page *kinesisanalyticsv2.ListApplicationsOutput, lastPage bool) bool {
+	err = listApplicationsPages(ctx, conn, input, func(page *kinesisanalyticsv2.ListApplicationsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -43,7 +44,7 @@ func sweepApplication(region string) error {
 			arn := aws.StringValue(applicationSummary.ApplicationARN)
 			name := aws.StringValue(applicationSummary.ApplicationName)
 
-			application, err := FindApplicationDetailByName(conn, name)
+			application, err := FindApplicationDetailByName(ctx, conn, name)
 
 			if err != nil {
 				sweeperErr := fmt.Errorf("error reading Kinesis Analytics v2 Application (%s): %w", arn, err)
@@ -72,7 +73,7 @@ func sweepApplication(region string) error {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Kinesis Analytics v2 Applications: %w", err))
 	}
 
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Kinesis Analytics v2 Applications: %w", err))
 	}
 
