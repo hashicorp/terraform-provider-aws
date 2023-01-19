@@ -290,7 +290,7 @@ func resourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta int
 		WorkspaceId: aws.String(d.Id()),
 	}
 
-	output, err := conn.DescribeWorkspaceConfiguration(input)
+	output, err := conn.DescribeWorkspaceConfigurationWithContext(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Grafana Workspace (%s): %s", d.Id(), err)
@@ -371,7 +371,7 @@ func resourceWorkspaceUpdate(ctx context.Context, d *schema.ResourceData, meta i
 			Configuration: aws.String(d.Get("configuration").(string)),
 		}
 
-		_, err := conn.UpdateWorkspaceConfiguration(input)
+		_, err := conn.UpdateWorkspaceConfigurationWithContext(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Grafana Workspace (%s) configuration: %s", d.Id(), err)
