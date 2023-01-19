@@ -156,7 +156,7 @@ func resourceTrafficPolicyDelete(ctx context.Context, d *schema.ResourceData, me
 	}
 	var output []*route53.TrafficPolicy
 
-	err := listTrafficPolicyVersionsPagesWithContext(ctx, conn, input, func(page *route53.ListTrafficPolicyVersionsOutput, lastPage bool) bool {
+	err := listTrafficPolicyVersionsPages(ctx, conn, input, func(page *route53.ListTrafficPolicyVersionsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
