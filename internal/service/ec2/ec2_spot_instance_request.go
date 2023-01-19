@@ -283,7 +283,7 @@ func resourceSpotInstanceRequestRead(ctx context.Context, d *schema.ResourceData
 	if request.InstanceId != nil {
 		d.Set("spot_instance_id", request.InstanceId)
 		// Read the instance data, setting up connection information
-		diags = append(diags, readInstance(ctx, d, meta)...)
+		diags = append(diags, sdkdiag.WrapDiagsf(readInstance(ctx, d, meta), "reading EC2 Spot Instance Request (%s)", d.Id())...)
 		if diags.HasError() {
 			return diags
 		}

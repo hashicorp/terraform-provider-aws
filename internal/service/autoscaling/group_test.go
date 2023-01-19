@@ -1249,7 +1249,7 @@ func TestAccAutoScalingGroup_ALBTargetGroups_elbCapacity(t *testing.T) {
 				Config: testAccGroupConfig_targetELBCapacity(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &group),
-					testAccCheckLBTargetGroupExists("aws_lb_target_group.test", &tg),
+					testAccCheckLBTargetGroupExists(ctx, "aws_lb_target_group.test", &tg),
 					testAccCheckALBTargetGroupHealthy(ctx, &tg),
 				),
 			},
@@ -3409,7 +3409,7 @@ func testAccCheckInstanceRefreshStatus(ctx context.Context, v *autoscaling.Group
 	}
 }
 
-func testAccCheckLBTargetGroupExists(n string, v *elbv2.TargetGroup) resource.TestCheckFunc {
+func testAccCheckLBTargetGroupExists(ctx context.Context, n string, v *elbv2.TargetGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -3422,7 +3422,7 @@ func testAccCheckLBTargetGroupExists(n string, v *elbv2.TargetGroup) resource.Te
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn()
 
-		output, err := tfelbv2.FindTargetGroupByARN(conn, rs.Primary.ID)
+		output, err := tfelbv2.FindTargetGroupByARN(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
