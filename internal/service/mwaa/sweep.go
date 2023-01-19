@@ -24,6 +24,7 @@ func init() {
 }
 
 func sweepEnvironment(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -33,7 +34,7 @@ func sweepEnvironment(region string) error {
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
 
-	listOutput, err := conn.ListEnvironments(&mwaa.ListEnvironmentsInput{})
+	listOutput, err := conn.ListEnvironmentsWithContext(ctx, &mwaa.ListEnvironmentsInput{})
 	if err != nil {
 		if sweep.SkipSweepError(err) || tfawserr.ErrCodeEquals(err, "InternalFailure") {
 			log.Printf("[WARN] Skipping MWAA Environment sweep for %s: %s", region, err)
@@ -50,7 +51,7 @@ func sweepEnvironment(region string) error {
 		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 	}
 
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping MWAA Environment: %w", err))
 	}
 
