@@ -1112,7 +1112,7 @@ func waitFunctionUpdated(conn *lambda.Lambda, functionName string, timeout time.
 
 // retryFunctionOp retries a Lambda Function Create or Update operation.
 // It handles IAM eventual consistency and EC2 throttling.
-func retryFunctionOp(f func() (interface{}, error)) (interface{}, error) {
+func retryFunctionOp(f func() (interface{}, error)) (interface{}, error) { //nolint:unparam
 	output, err := tfresource.RetryWhen(propagationTimeout,
 		f,
 		func(err error) (bool, error) {
