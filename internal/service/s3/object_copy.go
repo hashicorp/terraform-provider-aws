@@ -357,7 +357,7 @@ func resourceObjectCopyRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("object_lock_mode", resp.ObjectLockMode)
 	d.Set("object_lock_retain_until_date", flattenObjectDate(resp.ObjectLockRetainUntilDate))
 
-	if err := resourceObjectSetKMS(d, meta, resp.SSEKMSKeyId); err != nil {
+	if err := resourceObjectSetKMS(ctx, d, meta, resp.SSEKMSKeyId); err != nil {
 		return sdkdiag.AppendErrorf(diags, "object KMS: %s", err)
 	}
 

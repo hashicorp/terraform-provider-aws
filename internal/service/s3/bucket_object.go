@@ -269,7 +269,7 @@ func resourceBucketObjectRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("object_lock_mode", resp.ObjectLockMode)
 	d.Set("object_lock_retain_until_date", flattenObjectDate(resp.ObjectLockRetainUntilDate))
 
-	if err := resourceBucketObjectSetKMS(d, meta, resp.SSEKMSKeyId); err != nil {
+	if err := resourceBucketObjectSetKMS(ctx, d, meta, resp.SSEKMSKeyId); err != nil {
 		return sdkdiag.AppendErrorf(diags, "object KMS: %s", err)
 	}
 
@@ -552,12 +552,12 @@ func resourceBucketObjectUpload(ctx context.Context, d *schema.ResourceData, met
 	return append(diags, resourceBucketObjectRead(ctx, d, meta)...)
 }
 
-func resourceBucketObjectSetKMS(d *schema.ResourceData, meta interface{}, sseKMSKeyId *string) error {
+func resourceBucketObjectSetKMS(ctx context.Context, d *schema.ResourceData, meta interface{}, sseKMSKeyId *string) error {
 	// Only set non-default KMS key ID (one that doesn't match default)
 	if sseKMSKeyId != nil {
 		// retrieve S3 KMS Default Master Key
 		conn := meta.(*conns.AWSClient).KMSConn()
-		keyMetadata, err := kms.FindKeyByID(conn, DefaultKMSKeyAlias)
+		keyMetadata, err := kms.FindKeyByID(ctx, conn, DefaultKMSKeyAlias)
 		if err != nil {
 			return fmt.Errorf("Failed to describe default S3 KMS key (%s): %s", DefaultKMSKeyAlias, err)
 		}
