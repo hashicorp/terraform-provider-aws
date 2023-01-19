@@ -265,6 +265,7 @@ semgrep:
 semall:
 	@echo "==> Running Semgrep checks locally (must have semgrep installed)..."
 	@semgrep --error --metrics=off \
+		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
 		--config .ci/.semgrep.yml \
 		--config .ci/.semgrep-caps-aws-ec2.yml \
 		--config .ci/.semgrep-configs.yml \
