@@ -21,7 +21,7 @@ func ResourceDefaultVPCDHCPOptions() *schema.Resource {
 		CreateWithoutTimeout: resourceDefaultVPCDHCPOptionsCreate,
 		ReadWithoutTimeout:   resourceVPCDHCPOptionsRead,
 		UpdateWithoutTimeout: resourceVPCDHCPOptionsUpdate,
-		Delete:               schema.Noop,
+		DeleteWithoutTimeout: schema.NoopContext,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,

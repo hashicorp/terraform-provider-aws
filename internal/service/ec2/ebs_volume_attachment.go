@@ -22,7 +22,7 @@ func ResourceVolumeAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVolumeAttachmentCreate,
 		ReadWithoutTimeout:   resourceVolumeAttachmentRead,
-		Update:               schema.Noop,
+		UpdateWithoutTimeout: schema.NoopContext,
 		DeleteWithoutTimeout: resourceVolumeAttachmentDelete,
 
 		Importer: &schema.ResourceImporter{

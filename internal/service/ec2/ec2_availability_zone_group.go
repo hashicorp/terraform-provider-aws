@@ -18,7 +18,7 @@ func ResourceAvailabilityZoneGroup() *schema.Resource {
 		CreateWithoutTimeout: resourceAvailabilityZoneGroupCreate,
 		ReadWithoutTimeout:   resourceAvailabilityZoneGroupRead,
 		UpdateWithoutTimeout: resourceAvailabilityZoneGroupUpdate,
-		Delete:               schema.Noop,
+		DeleteWithoutTimeout: schema.NoopContext,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,

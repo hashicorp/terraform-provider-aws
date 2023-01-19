@@ -17,7 +17,7 @@ func ResourceGlobalSettings() *schema.Resource {
 		CreateWithoutTimeout: resourceGlobalSettingsUpdate,
 		UpdateWithoutTimeout: resourceGlobalSettingsUpdate,
 		ReadWithoutTimeout:   resourceGlobalSettingsRead,
-		Delete:               schema.Noop,
+		DeleteWithoutTimeout: schema.NoopContext,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},

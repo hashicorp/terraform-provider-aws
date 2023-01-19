@@ -21,7 +21,7 @@ func ResourceIPAMPreviewNextCIDR() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceIPAMPreviewNextCIDRCreate,
 		ReadWithoutTimeout:   resourceIPAMPreviewNextCIDRRead,
-		Delete:               schema.Noop,
+		DeleteWithoutTimeout: schema.NoopContext,
 		Schema: map[string]*schema.Schema{
 			"cidr": {
 				Type:     schema.TypeString,

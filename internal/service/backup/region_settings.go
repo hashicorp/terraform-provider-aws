@@ -17,7 +17,7 @@ func ResourceRegionSettings() *schema.Resource {
 		CreateWithoutTimeout: resourceRegionSettingsUpdate,
 		UpdateWithoutTimeout: resourceRegionSettingsUpdate,
 		ReadWithoutTimeout:   resourceRegionSettingsRead,
-		Delete:               schema.Noop,
+		DeleteWithoutTimeout: schema.NoopContext,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},

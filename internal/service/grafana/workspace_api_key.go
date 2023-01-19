@@ -20,7 +20,7 @@ func ResourceWorkspaceAPIKey() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceWorkspaceAPIKeyCreate,
 		ReadWithoutTimeout:   schema.NoopContext,
-		Update:               schema.Noop,
+		UpdateWithoutTimeout: schema.NoopContext,
 		DeleteWithoutTimeout: resourceWorkspaceAPIKeyDelete,
 
 		Schema: map[string]*schema.Schema{

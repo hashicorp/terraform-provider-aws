@@ -24,7 +24,7 @@ func ResourceDatabase() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDatabaseCreate,
 		ReadWithoutTimeout:   resourceDatabaseRead,
-		Update:               schema.Noop,
+		UpdateWithoutTimeout: schema.NoopContext,
 		DeleteWithoutTimeout: resourceDatabaseDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,

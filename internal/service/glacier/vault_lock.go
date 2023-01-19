@@ -24,7 +24,7 @@ func ResourceVaultLock() *schema.Resource {
 		CreateWithoutTimeout: resourceVaultLockCreate,
 		ReadWithoutTimeout:   resourceVaultLockRead,
 		// Allow ignore_deletion_error update
-		Update:               schema.Noop,
+		UpdateWithoutTimeout: schema.NoopContext,
 		DeleteWithoutTimeout: resourceVaultLockDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,

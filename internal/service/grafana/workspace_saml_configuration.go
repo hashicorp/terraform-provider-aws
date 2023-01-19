@@ -20,7 +20,7 @@ func ResourceWorkspaceSAMLConfiguration() *schema.Resource {
 		CreateWithoutTimeout: resourceWorkspaceSAMLConfigurationUpsert,
 		ReadWithoutTimeout:   resourceWorkspaceSAMLConfigurationRead,
 		UpdateWithoutTimeout: resourceWorkspaceSAMLConfigurationUpsert,
-		Delete:               schema.Noop,
+		DeleteWithoutTimeout: schema.NoopContext,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,

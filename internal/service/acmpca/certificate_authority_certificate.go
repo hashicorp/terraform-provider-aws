@@ -19,7 +19,7 @@ func ResourceCertificateAuthorityCertificate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCertificateAuthorityCertificateCreate,
 		ReadWithoutTimeout:   resourceCertificateAuthorityCertificateRead,
-		Delete:               schema.Noop,
+		DeleteWithoutTimeout: schema.NoopContext,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
