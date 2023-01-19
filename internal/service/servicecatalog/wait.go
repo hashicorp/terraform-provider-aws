@@ -193,16 +193,12 @@ func WaitPortfolioShareCreatedWithToken(conn *servicecatalog.ServiceCatalog, tok
 func WaitPortfolioShareDeleted(conn *servicecatalog.ServiceCatalog, portfolioID, shareType, principalID string, timeout time.Duration) (*servicecatalog.PortfolioShareDetail, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{servicecatalog.ShareStatusNotStarted, servicecatalog.ShareStatusInProgress, servicecatalog.ShareStatusCompleted, StatusUnavailable},
-		Target:  []string{StatusNotFound},
+		Target:  []string{},
 		Refresh: StatusPortfolioShare(conn, portfolioID, shareType, principalID),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
-
-	if tfresource.NotFound(err) {
-		return nil, nil
-	}
 
 	if output, ok := outputRaw.(*servicecatalog.PortfolioShareDetail); ok {
 		return output, err

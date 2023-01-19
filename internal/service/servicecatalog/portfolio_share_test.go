@@ -5,13 +5,13 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/internal/service/servicecatalog"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func testAccPortfolioShare_basic(t *testing.T) {
@@ -183,35 +183,36 @@ func testAccCheckPortfolioShareDestroy(s *terraform.State) error {
 			continue
 		}
 
-		output, err := tfservicecatalog.FindPortfolioShare(
+		_, err := tfservicecatalog.FindPortfolioShare(
 			conn,
 			rs.Primary.Attributes["portfolio_id"],
 			rs.Primary.Attributes["type"],
 			rs.Primary.Attributes["principal_id"],
 		)
 
-		if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
-			return nil
+		if tfresource.NotFound(err) {
+			continue
 		}
 
 		if err != nil {
-			return fmt.Errorf("error getting Service Catalog Portfolio Share (%s): %w", rs.Primary.ID, err)
+			return err
 		}
 
-		if output != nil {
-			return fmt.Errorf("Service Catalog Portfolio Share (%s) still exists", rs.Primary.ID)
-		}
+		return fmt.Errorf("Service Catalog Portfolio Share %s still exists", rs.Primary.ID)
 	}
 
 	return nil
 }
 
-func testAccCheckPortfolioShareExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckPortfolioShareExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
-
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("resource not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No Service Catalog Portfolio Share ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn()
@@ -223,15 +224,7 @@ func testAccCheckPortfolioShareExists(resourceName string) resource.TestCheckFun
 			rs.Primary.Attributes["principal_id"],
 		)
 
-		if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
-			return fmt.Errorf("Service Catalog Portfolio Share (%s) not found", rs.Primary.ID)
-		}
-
-		if err != nil {
-			return fmt.Errorf("error getting Service Catalog Portfolio Share (%s): %w", rs.Primary.ID, err)
-		}
-
-		return nil
+		return err
 	}
 }
 

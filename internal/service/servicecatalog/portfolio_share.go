@@ -188,18 +188,14 @@ func resourcePortfolioShareRead(d *schema.ResourceData, meta interface{}) error 
 
 	output, err := WaitPortfolioShareReady(conn, portfolioID, shareType, principalID, waitForAcceptance, d.Timeout(schema.TimeoutRead))
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Service Catalog Portfolio Share (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error describing Service Catalog Portfolio Share (%s): %w", d.Id(), err)
-	}
-
-	if output == nil {
-		return fmt.Errorf("error getting Service Catalog Portfolio Share (%s): empty response", d.Id())
+		return fmt.Errorf("readingService Catalog Portfolio Share (%s): %w", d.Id(), err)
 	}
 
 	d.Set("accepted", output.Accepted)
