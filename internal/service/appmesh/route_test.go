@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfappmesh "github.com/hashicorp/terraform-provider-aws/internal/service/appmesh"
 )
 
 func testAccRoute_grpcRoute(t *testing.T) {
@@ -1897,6 +1898,33 @@ func testAccRoute_httpRetryPolicy(t *testing.T) {
 				ImportStateIdFunc: testAccRouteImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccRoute_disappears(t *testing.T) {
+	var r appmesh.RouteData
+	resourceName := "aws_appmesh_route.test"
+	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	vrName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	vn1Name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	vn2Name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, appmesh.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRouteDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRouteConfig_grpcRoute(meshName, vrName, vn1Name, vn2Name, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRouteExists(resourceName, &r),
+					acctest.CheckResourceDisappears(acctest.Provider, tfappmesh.ResourceRoute(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})

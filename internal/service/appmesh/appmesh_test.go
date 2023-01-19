@@ -27,6 +27,7 @@ func TestAccAppMesh_serial(t *testing.T) {
 			"tags":         testAccMesh_tags,
 		},
 		"Route": {
+			"disappears":              testAccRoute_disappears,
 			"grpcRoute":               testAccRoute_grpcRoute,
 			"grpcRouteWithPortMatch":  testAccRoute_grpcRouteWithPortMatch,
 			"grpcRouteEmptyMatch":     testAccRoute_grpcRouteEmptyMatch,
