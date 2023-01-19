@@ -28,7 +28,7 @@ func ResourceLedger() *schema.Resource {
 		DeleteWithoutTimeout: resourceLedgerDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -133,7 +133,7 @@ func resourceLedgerRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("name", ledger.Name)
 	d.Set("permissions_mode", ledger.PermissionsMode)
 
-	tags, err := ListTags(conn, d.Get("arn").(string))
+	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
 
 	if err != nil {
 		return diag.Errorf("listing tags for QLDB Ledger (%s): %s", d.Id(), err)
@@ -187,7 +187,7 @@ func resourceLedgerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.Errorf("updating tags: %s", err)
 		}
 	}
