@@ -102,8 +102,7 @@ func resourceListenerCertificateRead(d *schema.ResourceData, meta interface{}) e
 	log.Printf("[DEBUG] Reading certificate: %s of listener: %s", certificateArn, listenerArn)
 
 	err = resource.Retry(1*time.Minute, func() *resource.RetryError {
-		var err error
-		err = findListenerCertificate(certificateArn, listenerArn, true, nil, conn)
+		err := findListenerCertificate(certificateArn, listenerArn, true, nil, conn)
 		if tfresource.NotFound(err) && d.IsNewResource() {
 			return resource.RetryableError(err)
 		}
