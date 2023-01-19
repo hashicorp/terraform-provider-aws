@@ -1,4 +1,5 @@
-## 4.51.0 (Unreleased)
+## 4.52.0 (Unreleased)
+## 4.51.0 (January 19, 2023)
 
 NOTES:
 
