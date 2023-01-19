@@ -145,12 +145,15 @@ func testAccCheckExportTaskExists(name string, exportTask *types.ExportTask) res
 // isInDestroyedStatus determines whether the export task status is a value that could
 // be returned if the resource was properly destroyed.
 //
-// COMPLETED and FAILED statuses are valid because the resource is simply removed from
+// COMPLETE and FAILED statuses are valid because the resource is simply removed from
 // state in these scenarios. In-progress tasks should be cancelled upon destroy, so CANCELED
-// and CANCELLING are also valid.
+// is also valid.
 func isInDestroyedStatus(s string) bool {
-	// AWS does not provide enum types for these statuses
-	deletedStatuses := []string{"CANCELED", "CANCELLING", "COMPLETED", "FAILED"}
+	deletedStatuses := []string{
+		tfrds.StatusComplete,
+		tfrds.StatusFailed,
+		tfrds.StatusCanceled,
+	}
 	for _, status := range deletedStatuses {
 		if s == status {
 			return true
