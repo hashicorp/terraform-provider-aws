@@ -8,10 +8,16 @@ FEATURES:
 
 * **New Data Source:** `aws_auditmanager_control` ([#28967](https://github.com/hashicorp/terraform-provider-aws/issues/28967))
 * **New Resource:** `aws_datasync_location_object_storage` ([#23154](https://github.com/hashicorp/terraform-provider-aws/issues/23154))
+* **New Resource:** `aws_rds_export_task` ([#28831](https://github.com/hashicorp/terraform-provider-aws/issues/28831))
 * **New Resource:** `aws_resourceexplorer2_view` ([#28841](https://github.com/hashicorp/terraform-provider-aws/issues/28841))
 
 ENHANCEMENTS:
 
+* resource/aws_appmesh_gateway_route: Add `port` on the `match` attribute for routes ([#27799](https://github.com/hashicorp/terraform-provider-aws/issues/27799))
+* resource/aws_appmesh_route: Add `port` on the `weighted_target` attribute ([#27799](https://github.com/hashicorp/terraform-provider-aws/issues/27799))
+* resource/aws_appmesh_virtual_gateway: Add the functionality to be able specify multi listeners ([#27799](https://github.com/hashicorp/terraform-provider-aws/issues/27799))
+* resource/aws_appmesh_virtual_node: Add the functionality to be able specify multi listeners ([#27799](https://github.com/hashicorp/terraform-provider-aws/issues/27799))
+* resource/aws_appmesh_virtual_router: Add the functionality to be able specify multi listeners ([#27799](https://github.com/hashicorp/terraform-provider-aws/issues/27799))
 * resource/aws_apprunner_service: Add `source_configuration.code_repository.code_configuration.runtime_environment_secrets` and `source_configuration.image_repository.image_configuration.runtime_environment_secrets` argument ([#28871](https://github.com/hashicorp/terraform-provider-aws/issues/28871))
 * resource/aws_ce_anomaly_subscription: Add `threshold_expression` argument ([#28573](https://github.com/hashicorp/terraform-provider-aws/issues/28573))
 * resource/aws_grafana_workspace: Add `configuration` argument ([#28569](https://github.com/hashicorp/terraform-provider-aws/issues/28569))
