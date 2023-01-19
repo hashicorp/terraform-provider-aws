@@ -1119,6 +1119,188 @@ func testAccVirtualNode_listenerValidation(t *testing.T) {
 	})
 }
 
+func testAccVirtualNode_multiListenerValidation(t *testing.T) {
+	var vn appmesh.VirtualNodeData
+	resourceName := "aws_appmesh_virtual_node.test"
+	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	vnName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, appmesh.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVirtualNodeDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVirtualNodeConfig_multiListenerValidation(meshName, vnName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVirtualNodeExists(resourceName, &vn),
+					resource.TestCheckResourceAttr(resourceName, "name", vnName),
+					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
+					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
+					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "spec.0.backend.*", map[string]string{
+						"virtual_service.#":                      "1",
+						"virtual_service.0.client_policy.#":      "0",
+						"virtual_service.0.virtual_service_name": "servicea.simpleapp.local",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.connection_pool.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.outlier_detection.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.port", "8080"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.protocol", "http"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.certificate.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.certificate.0.acm.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.certificate.0.file.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.certificate.0.sds.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.certificate.0.sds.0.secret_name", "very-secret"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.mode", "PERMISSIVE"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.validation.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.validation.0.subject_alternative_names.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.validation.0.subject_alternative_names.0.match.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.validation.0.subject_alternative_names.0.match.0.exact.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "spec.0.listener.0.tls.0.validation.0.subject_alternative_names.0.match.0.exact.*", "abc.example.com"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "spec.0.listener.0.tls.0.validation.0.subject_alternative_names.0.match.0.exact.*", "xyz.example.com"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.validation.0.trust.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.validation.0.trust.0.acm.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.validation.0.trust.0.file.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.validation.0.trust.0.file.0.certificate_chain", "/cert_chain.pem"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.validation.0.trust.0.sds.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.connection_pool.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.health_check.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.outlier_detection.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.port_mapping.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.port_mapping.0.port", "8081"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.port_mapping.0.protocol", "http"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.tls.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.tls.0.certificate.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.tls.0.certificate.0.acm.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.tls.0.certificate.0.file.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.tls.0.certificate.0.sds.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.tls.0.certificate.0.sds.0.secret_name", "very-secret"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.tls.0.mode", "PERMISSIVE"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.tls.0.validation.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.tls.0.validation.0.subject_alternative_names.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.tls.0.validation.0.subject_alternative_names.0.match.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.tls.0.validation.0.subject_alternative_names.0.match.0.exact.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "spec.0.listener.1.tls.0.validation.0.subject_alternative_names.0.match.0.exact.*", "abc.example.com"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "spec.0.listener.1.tls.0.validation.0.subject_alternative_names.0.match.0.exact.*", "xyz.example.com"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.tls.0.validation.0.trust.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.tls.0.validation.0.trust.0.acm.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.tls.0.validation.0.trust.0.file.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.tls.0.validation.0.trust.0.file.0.certificate_chain", "/cert_chain.pem"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.tls.0.validation.0.trust.0.sds.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.0.dns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.0.dns.0.hostname", "serviceb.simpleapp.local"),
+					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
+					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
+					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualNode/%s", meshName, vnName)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateId:     fmt.Sprintf("%s/%s", meshName, vnName),
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccVirtualNodeConfig_multiListenerValidationUpdated(meshName, vnName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVirtualNodeExists(resourceName, &vn),
+					resource.TestCheckResourceAttr(resourceName, "name", vnName),
+					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
+					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
+					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "spec.0.backend.*", map[string]string{
+						"virtual_service.#":                      "1",
+						"virtual_service.0.client_policy.#":      "0",
+						"virtual_service.0.virtual_service_name": "servicea.simpleapp.local",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.connection_pool.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.outlier_detection.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.port", "8080"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.protocol", "http"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.certificate.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.certificate.0.acm.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.certificate.0.file.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.certificate.0.sds.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.certificate.0.sds.0.secret_name", "top-secret"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.mode", "PERMISSIVE"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.validation.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.validation.0.subject_alternative_names.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.validation.0.trust.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.validation.0.trust.0.acm.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.validation.0.trust.0.file.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.validation.0.trust.0.sds.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.tls.0.validation.0.trust.0.sds.0.secret_name", "confidential"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.connection_pool.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.health_check.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.outlier_detection.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.port_mapping.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.port_mapping.0.port", "8081"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.port_mapping.0.protocol", "http"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.tls.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.tls.0.certificate.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.tls.0.certificate.0.acm.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.tls.0.certificate.0.file.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.tls.0.certificate.0.sds.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.tls.0.certificate.0.sds.0.secret_name", "top-secret"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.tls.0.mode", "PERMISSIVE"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.tls.0.validation.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.tls.0.validation.0.subject_alternative_names.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.tls.0.validation.0.trust.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.tls.0.validation.0.trust.0.acm.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.tls.0.validation.0.trust.0.file.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.tls.0.validation.0.trust.0.sds.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.tls.0.validation.0.trust.0.sds.0.secret_name", "confidential"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.2.connection_pool.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.2.health_check.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.2.outlier_detection.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.2.port_mapping.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.2.port_mapping.0.port", "8082"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.2.port_mapping.0.protocol", "grpc"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.2.tls.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.2.tls.0.certificate.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.2.tls.0.certificate.0.acm.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.2.tls.0.certificate.0.file.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.2.tls.0.certificate.0.sds.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.2.tls.0.certificate.0.sds.0.secret_name", "top-secret"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.2.tls.0.mode", "PERMISSIVE"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.2.tls.0.validation.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.2.tls.0.validation.0.subject_alternative_names.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.2.tls.0.validation.0.trust.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.2.tls.0.validation.0.trust.0.acm.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.2.tls.0.validation.0.trust.0.file.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.2.tls.0.validation.0.trust.0.sds.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.2.tls.0.validation.0.trust.0.sds.0.secret_name", "confidential"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.0.dns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.0.dns.0.hostname", "serviceb.simpleapp.local"),
+					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
+					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
+					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualNode/%s", meshName, vnName)),
+				),
+			},
+		},
+	})
+}
+
 func testAccVirtualNode_logging(t *testing.T) {
 	var vn appmesh.VirtualNodeData
 	resourceName := "aws_appmesh_virtual_node.test"
@@ -2072,6 +2254,189 @@ resource "aws_appmesh_virtual_node" "test" {
       port_mapping {
         port     = 8080
         protocol = "http"
+      }
+
+      tls {
+        certificate {
+          sds {
+            secret_name = "top-secret"
+          }
+        }
+
+        mode = "PERMISSIVE"
+
+        validation {
+          trust {
+            sds {
+              secret_name = "confidential"
+            }
+          }
+        }
+      }
+    }
+
+    service_discovery {
+      dns {
+        hostname = "serviceb.simpleapp.local"
+      }
+    }
+  }
+}
+`, vnName))
+}
+
+func testAccVirtualNodeConfig_multiListenerValidation(meshName, vnName string) string {
+	return acctest.ConfigCompose(testAccVirtualNodeConfig_mesh(meshName), fmt.Sprintf(`
+resource "aws_appmesh_virtual_node" "test" {
+  name      = %[1]q
+  mesh_name = aws_appmesh_mesh.test.id
+
+  spec {
+    backend {
+      virtual_service {
+        virtual_service_name = "servicea.simpleapp.local"
+      }
+    }
+
+    listener {
+      port_mapping {
+        port     = 8080
+        protocol = "http"
+      }
+
+      tls {
+        certificate {
+          sds {
+            secret_name = "very-secret"
+          }
+        }
+
+        mode = "PERMISSIVE"
+
+        validation {
+          subject_alternative_names {
+            match {
+              exact = ["abc.example.com", "xyz.example.com"]
+            }
+          }
+
+          trust {
+            file {
+              certificate_chain = "/cert_chain.pem"
+            }
+          }
+        }
+      }
+    }
+
+    listener {
+      port_mapping {
+        port     = 8081
+        protocol = "http"
+      }
+
+      tls {
+        certificate {
+          sds {
+            secret_name = "very-secret"
+          }
+        }
+
+        mode = "PERMISSIVE"
+
+        validation {
+          subject_alternative_names {
+            match {
+              exact = ["abc.example.com", "xyz.example.com"]
+            }
+          }
+
+          trust {
+            file {
+              certificate_chain = "/cert_chain.pem"
+            }
+          }
+        }
+      }
+    }
+
+    service_discovery {
+      dns {
+        hostname = "serviceb.simpleapp.local"
+      }
+    }
+  }
+}
+`, vnName))
+}
+
+func testAccVirtualNodeConfig_multiListenerValidationUpdated(meshName, vnName string) string {
+	return acctest.ConfigCompose(testAccVirtualNodeConfig_mesh(meshName), fmt.Sprintf(`
+resource "aws_appmesh_virtual_node" "test" {
+  name      = %[1]q
+  mesh_name = aws_appmesh_mesh.test.id
+
+  spec {
+    backend {
+      virtual_service {
+        virtual_service_name = "servicea.simpleapp.local"
+      }
+    }
+
+    listener {
+      port_mapping {
+        port     = 8080
+        protocol = "http"
+      }
+
+      tls {
+        certificate {
+          sds {
+            secret_name = "top-secret"
+          }
+        }
+
+        mode = "PERMISSIVE"
+
+        validation {
+          trust {
+            sds {
+              secret_name = "confidential"
+            }
+          }
+        }
+      }
+    }
+
+    listener {
+      port_mapping {
+        port     = 8081
+        protocol = "http"
+      }
+
+      tls {
+        certificate {
+          sds {
+            secret_name = "top-secret"
+          }
+        }
+
+        mode = "PERMISSIVE"
+
+        validation {
+          trust {
+            sds {
+              secret_name = "confidential"
+            }
+          }
+        }
+      }
+    }
+
+    listener {
+      port_mapping {
+        port     = 8082
+        protocol = "grpc"
       }
 
       tls {

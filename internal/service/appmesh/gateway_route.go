@@ -120,6 +120,11 @@ func ResourceGatewayRoute() *schema.Resource {
 													Type:     schema.TypeString,
 													Required: true,
 												},
+												"port": {
+													Type:         schema.TypeInt,
+													Optional:     true,
+													ValidateFunc: validation.IntBetween(1, 65535),
+												},
 											},
 										},
 									},
@@ -282,6 +287,11 @@ func ResourceGatewayRoute() *schema.Resource {
 														"spec.0.http2_route.0.match.0.hostname",
 													},
 												},
+												"port": {
+													Type:         schema.TypeInt,
+													Optional:     true,
+													ValidateFunc: validation.IntBetween(1, 65535),
+												},
 											},
 										},
 									},
@@ -442,6 +452,11 @@ func ResourceGatewayRoute() *schema.Resource {
 														"spec.0.http_route.0.match.0.prefix",
 														"spec.0.http_route.0.match.0.hostname",
 													},
+												},
+												"port": {
+													Type:         schema.TypeInt,
+													Optional:     true,
+													ValidateFunc: validation.IntBetween(1, 65535),
 												},
 											},
 										},
@@ -766,6 +781,10 @@ func expandGRPCGatewayRoute(vGrpcRoute []interface{}) *appmesh.GrpcGatewayRoute 
 			routeMatch.ServiceName = aws.String(vServiceName)
 		}
 
+		if vPort, ok := mRouteMatch["port"].(int); ok && vPort > 0 {
+			routeMatch.Port = aws.Int64(int64(vPort))
+		}
+
 		route.Match = routeMatch
 	}
 
@@ -826,7 +845,12 @@ func expandHTTPGatewayRouteMatch(vHttpRouteMatch []interface{}) *appmesh.HttpGat
 		if vSuffix, ok := mHostnameMatch["suffix"].(string); ok && vSuffix != "" {
 			hostnameMatch.Suffix = aws.String(vSuffix)
 		}
+
 		routeMatch.Hostname = hostnameMatch
+	}
+
+	if vPort, ok := mRouteMatch["port"].(int); ok && vPort > 0 {
+		routeMatch.Port = aws.Int64(int64(vPort))
 	}
 
 	return routeMatch
@@ -915,6 +939,9 @@ func flattenGRPCGatewayRoute(grpcRoute *appmesh.GrpcGatewayRoute) []interface{} 
 		mRouteMatch := map[string]interface{}{
 			"service_name": aws.StringValue(routeMatch.ServiceName),
 		}
+		if routeMatch.Port != nil {
+			mRouteMatch["port"] = int(aws.Int64Value(routeMatch.Port))
+		}
 
 		mGrpcRoute["match"] = []interface{}{mRouteMatch}
 	}
@@ -944,6 +971,11 @@ func flattenHTTPGatewayRouteMatch(routeMatch *appmesh.HttpGatewayRouteMatch) []i
 
 		mRouteMatch["hostname"] = []interface{}{mHostnameMatch}
 	}
+
+	if routeMatch.Port != nil {
+		mRouteMatch["port"] = int(aws.Int64Value(routeMatch.Port))
+	}
+
 	return []interface{}{mRouteMatch}
 }
 
