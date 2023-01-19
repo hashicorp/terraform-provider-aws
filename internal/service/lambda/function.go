@@ -2,7 +2,6 @@ package lambda
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -495,48 +494,9 @@ func resourceFunctionCreate(d *schema.ResourceData, meta interface{}) error {
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	_, err := tfresource.RetryWhen(propagationTimeout,
-		func() (interface{}, error) {
-			return conn.CreateFunction(input)
-		},
-		func(err error) (bool, error) {
-			if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "The role defined for the function cannot be assumed by Lambda") {
-				return true, err
-			}
-
-			if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "The provided execution role does not have permissions") {
-				return true, err
-			}
-
-			if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "throttled by EC2") {
-				return true, err
-			}
-
-			if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "Lambda was unable to configure access to your environment variables because the KMS key is invalid for CreateGrant") {
-				return true, err
-			}
-
-			if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceConflictException) {
-				return true, err
-			}
-
-			return false, err
-		})
-
-	// Additional retries when throttled.
-	if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "throttled by EC2") {
-		_, err = tfresource.RetryWhen(functionExtraThrottlingTimeout,
-			func() (interface{}, error) {
-				return conn.CreateFunction(input)
-			},
-			func(err error) (bool, error) {
-				if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "throttled by EC2") {
-					return true, err
-				}
-
-				return false, err
-			})
-	}
+	_, err := retryFunctionOp(func() (interface{}, error) {
+		return conn.CreateFunction(input)
+	})
 
 	if err != nil {
 		return fmt.Errorf("creating Lambda Function (%s): %w", functionName, err)
@@ -557,12 +517,10 @@ func resourceFunctionCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.Get("reserved_concurrent_executions").(int); ok && v >= 0 {
-		input := &lambda.PutFunctionConcurrencyInput{
+		_, err := conn.PutFunctionConcurrency(&lambda.PutFunctionConcurrencyInput{
 			FunctionName:                 aws.String(d.Id()),
 			ReservedConcurrentExecutions: aws.Int64(int64(v)),
-		}
-
-		_, err := conn.PutFunctionConcurrency(input)
+		})
 
 		if err != nil {
 			return fmt.Errorf("setting Lambda Function (%s) concurrency: %w", d.Id(), err)
@@ -731,220 +689,161 @@ func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).LambdaConn()
 
-	// If Code Signing Config is updated, calls PutFunctionCodeSigningConfig
-	// If removed, calls DeleteFunctionCodeSigningConfig
 	if d.HasChange("code_signing_config_arn") {
 		if v, ok := d.GetOk("code_signing_config_arn"); ok {
-			configUpdateInput := &lambda.PutFunctionCodeSigningConfigInput{
+			_, err := conn.PutFunctionCodeSigningConfig(&lambda.PutFunctionCodeSigningConfigInput{
 				CodeSigningConfigArn: aws.String(v.(string)),
 				FunctionName:         aws.String(d.Id()),
-			}
-
-			_, err := conn.PutFunctionCodeSigningConfig(configUpdateInput)
+			})
 
 			if err != nil {
-				return fmt.Errorf("error updating code signing config arn (Function: %s): %w", d.Id(), err)
+				return fmt.Errorf("setting Lambda Function (%s) code signing config: %w", d.Id(), err)
 			}
 		} else {
-			configDeleteInput := &lambda.DeleteFunctionCodeSigningConfigInput{
+			_, err := conn.DeleteFunctionCodeSigningConfig(&lambda.DeleteFunctionCodeSigningConfigInput{
 				FunctionName: aws.String(d.Id()),
-			}
-
-			_, err := conn.DeleteFunctionCodeSigningConfig(configDeleteInput)
+			})
 
 			if err != nil {
-				return fmt.Errorf("error deleting code signing config arn (Function: %s): %w", d.Id(), err)
+				return fmt.Errorf("deleting Lambda Function (%s) code signing config: %w", d.Id(), err)
 			}
 		}
 	}
 
-	arn := d.Get("arn").(string)
 	if d.HasChange("tags_all") {
+		arn := d.Get("arn").(string)
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, arn, o, n); err != nil {
-			return fmt.Errorf("error updating Lambda Function (%s) tags: %w", arn, err)
+			return fmt.Errorf("updating Lambda Function (%s) tags: %w", arn, err)
 		}
 	}
 
-	configReq := &lambda.UpdateFunctionConfigurationInput{
-		FunctionName: aws.String(d.Id()),
-	}
+	configUpdate := needsFunctionConfigUpdate(d)
+	if configUpdate {
+		input := &lambda.UpdateFunctionConfigurationInput{
+			FunctionName: aws.String(d.Id()),
+		}
 
-	if d.HasChange("description") {
-		configReq.Description = aws.String(d.Get("description").(string))
-	}
-	if d.HasChange("ephemeral_storage") {
-		ephemeralStorage := d.Get("ephemeral_storage").([]interface{})
-		if len(ephemeralStorage) == 1 {
-			configMap := ephemeralStorage[0].(map[string]interface{})
-			configReq.EphemeralStorage = &lambda.EphemeralStorage{
-				Size: aws.Int64(int64(configMap["size"].(int))),
-			}
-		}
-	}
-	if d.HasChange("handler") {
-		configReq.Handler = aws.String(d.Get("handler").(string))
-	}
-	if d.HasChange("file_system_config") {
-		configReq.FileSystemConfigs = make([]*lambda.FileSystemConfig, 0)
-		if v, ok := d.GetOk("file_system_config"); ok && len(v.([]interface{})) > 0 {
-			configReq.FileSystemConfigs = expandFileSystemConfigs(v.([]interface{}))
-		}
-	}
-	if d.HasChange("image_config") {
-		configReq.ImageConfig = &lambda.ImageConfig{}
-		if v, ok := d.GetOk("image_config"); ok && len(v.([]interface{})) > 0 {
-			configReq.ImageConfig = expandImageConfigs(v.([]interface{}))
-		}
-	}
-	if d.HasChange("memory_size") {
-		configReq.MemorySize = aws.Int64(int64(d.Get("memory_size").(int)))
-	}
-	if d.HasChange("role") {
-		configReq.Role = aws.String(d.Get("role").(string))
-	}
-	if d.HasChange("timeout") {
-		configReq.Timeout = aws.Int64(int64(d.Get("timeout").(int)))
-	}
-	if d.HasChange("kms_key_arn") {
-		configReq.KMSKeyArn = aws.String(d.Get("kms_key_arn").(string))
-	}
-	if d.HasChange("layers") {
-		layers := d.Get("layers").([]interface{})
-		configReq.Layers = flex.ExpandStringList(layers)
-	}
-	if d.HasChange("dead_letter_config") {
-		dlcMaps := d.Get("dead_letter_config").([]interface{})
-		configReq.DeadLetterConfig = &lambda.DeadLetterConfig{
-			TargetArn: aws.String(""),
-		}
-		if len(dlcMaps) == 1 { // Schema guarantees either 0 or 1
-			dlcMap := dlcMaps[0].(map[string]interface{})
-			configReq.DeadLetterConfig.TargetArn = aws.String(dlcMap["target_arn"].(string))
-		}
-	}
-	if d.HasChange("snap_start") {
-		snapStart := d.Get("snap_start").([]interface{})
-		configReq.SnapStart = expandSnapStart(snapStart)
-	}
-	if d.HasChange("tracing_config") {
-		tracingConfig := d.Get("tracing_config").([]interface{})
-		if len(tracingConfig) == 1 { // Schema guarantees either 0 or 1
-			config := tracingConfig[0].(map[string]interface{})
-			configReq.TracingConfig = &lambda.TracingConfig{
-				Mode: aws.String(config["mode"].(string)),
-			}
-		}
-	}
-	if d.HasChanges("vpc_config.0.security_group_ids", "vpc_config.0.subnet_ids") {
-		configReq.VpcConfig = &lambda.VpcConfig{
-			SecurityGroupIds: []*string{},
-			SubnetIds:        []*string{},
-		}
-		if v, ok := d.GetOk("vpc_config"); ok && len(v.([]interface{})) > 0 {
-			vpcConfig := v.([]interface{})[0].(map[string]interface{})
-			configReq.VpcConfig.SecurityGroupIds = flex.ExpandStringSet(vpcConfig["security_group_ids"].(*schema.Set))
-			configReq.VpcConfig.SubnetIds = flex.ExpandStringSet(vpcConfig["subnet_ids"].(*schema.Set))
-		}
-	}
+		if d.HasChange("dead_letter_config") {
+			if v, ok := d.GetOk("dead_letter_config"); ok && len(v.([]interface{})) > 0 {
+				if v.([]interface{})[0] == nil {
+					return fmt.Errorf("nil dead_letter_config supplied for function: %s", d.Id())
+				}
 
-	if d.HasChange("runtime") {
-		configReq.Runtime = aws.String(d.Get("runtime").(string))
-	}
-
-	if d.HasChanges("environment", "kms_key_arn") {
-		if v, ok := d.GetOk("environment"); ok {
-			environments := v.([]interface{})
-			environment, ok := environments[0].(map[string]interface{})
-			if !ok {
-				return errors.New("At least one field is expected inside environment")
-			}
-
-			if environmentVariables, ok := environment["variables"]; ok {
-				variables := flex.ExpandStringValueMap(environmentVariables.(map[string]interface{}))
-
-				configReq.Environment = &lambda.Environment{
-					Variables: aws.StringMap(variables),
+				input.DeadLetterConfig = &lambda.DeadLetterConfig{
+					TargetArn: aws.String(v.([]interface{})[0].(map[string]interface{})["target_arn"].(string)),
+				}
+			} else {
+				input.DeadLetterConfig = &lambda.DeadLetterConfig{
+					TargetArn: aws.String(""),
 				}
 			}
-		} else {
-			configReq.Environment = &lambda.Environment{
-				Variables: aws.StringMap(map[string]string{}),
+		}
+
+		if d.HasChange("description") {
+			input.Description = aws.String(d.Get("description").(string))
+		}
+
+		if d.HasChanges("environment", "kms_key_arn") {
+			input.Environment = &lambda.Environment{
+				Variables: map[string]*string{},
+			}
+
+			if v, ok := d.GetOk("environment"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				if v, ok := v.([]interface{})[0].(map[string]interface{})["variables"].(map[string]interface{}); ok && len(v) > 0 {
+					input.Environment = &lambda.Environment{
+						Variables: flex.ExpandStringMap(v),
+					}
+				}
 			}
 		}
-	}
-	configUpdate := hasConfigChanges(d)
-	if configUpdate {
-		log.Printf("[DEBUG] Send Update Lambda Function Configuration request: %#v", configReq)
 
-		err := resource.Retry(propagationTimeout, func() *resource.RetryError { // nosem: helper-schema-resource-Retry-without-TimeoutError-check
-			_, err := conn.UpdateFunctionConfiguration(configReq)
-
-			if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "The role defined for the function cannot be assumed by Lambda") {
-				log.Printf("[DEBUG] Received %s, retrying UpdateFunctionConfiguration", err)
-				return resource.RetryableError(err)
+		if d.HasChange("ephemeral_storage") {
+			if v, ok := d.GetOk("ephemeral_storage"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				input.EphemeralStorage = &lambda.EphemeralStorage{
+					Size: aws.Int64(int64(v.([]interface{})[0].(map[string]interface{})["size"].(int))),
+				}
 			}
+		}
 
-			if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "The provided execution role does not have permissions") {
-				log.Printf("[DEBUG] Received %s, retrying UpdateFunctionConfiguration", err)
-				return resource.RetryableError(err)
+		if d.HasChange("file_system_config") {
+			if v, ok := d.GetOk("file_system_config"); ok && len(v.([]interface{})) > 0 {
+				input.FileSystemConfigs = expandFileSystemConfigs(v.([]interface{}))
+			} else {
+				input.FileSystemConfigs = []*lambda.FileSystemConfig{}
 			}
+		}
 
-			if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "throttled by EC2") {
-				log.Printf("[DEBUG] Received %s, retrying UpdateFunctionConfiguration", err)
-				return resource.RetryableError(err)
+		if d.HasChange("handler") {
+			input.Handler = aws.String(d.Get("handler").(string))
+		}
+
+		if d.HasChange("image_config") {
+			if v, ok := d.GetOk("image_config"); ok && len(v.([]interface{})) > 0 {
+				input.ImageConfig = expandImageConfigs(v.([]interface{}))
+			} else {
+				input.ImageConfig = &lambda.ImageConfig{}
 			}
+		}
 
-			if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "Lambda was unable to configure access to your environment variables because the KMS key is invalid for CreateGrant") {
-				log.Printf("[DEBUG] Received %s, retrying UpdateFunctionConfiguration", err)
-				return resource.RetryableError(err)
+		if d.HasChange("kms_key_arn") {
+			input.KMSKeyArn = aws.String(d.Get("kms_key_arn").(string))
+		}
+
+		if d.HasChange("layers") {
+			input.Layers = flex.ExpandStringList(d.Get("layers").([]interface{}))
+		}
+
+		if d.HasChange("memory_size") {
+			input.MemorySize = aws.Int64(int64(d.Get("memory_size").(int)))
+		}
+
+		if d.HasChange("role") {
+			input.Role = aws.String(d.Get("role").(string))
+		}
+
+		if d.HasChange("runtime") {
+			input.Runtime = aws.String(d.Get("runtime").(string))
+		}
+
+		if d.HasChange("snap_start") {
+			input.SnapStart = expandSnapStart(d.Get("snap_start").([]interface{}))
+		}
+
+		if d.HasChange("timeout") {
+			input.Timeout = aws.Int64(int64(d.Get("timeout").(int)))
+		}
+
+		if d.HasChange("tracing_config") {
+			if v, ok := d.GetOk("tracing_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				input.TracingConfig = &lambda.TracingConfig{
+					Mode: aws.String(v.([]interface{})[0].(map[string]interface{})["mode"].(string)),
+				}
 			}
+		}
 
-			if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceConflictException) {
-				log.Printf("[DEBUG] Received %s, retrying UpdateFunctionConfiguration", err)
-				return resource.RetryableError(err)
+		if d.HasChanges("vpc_config.0.security_group_ids", "vpc_config.0.subnet_ids") {
+			if v, ok := d.GetOk("vpc_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				tfMap := v.([]interface{})[0].(map[string]interface{})
+				input.VpcConfig = &lambda.VpcConfig{
+					SecurityGroupIds: flex.ExpandStringSet(tfMap["security_group_ids"].(*schema.Set)),
+					SubnetIds:        flex.ExpandStringSet(tfMap["subnet_ids"].(*schema.Set)),
+				}
+			} else {
+				input.VpcConfig = &lambda.VpcConfig{
+					SecurityGroupIds: []*string{},
+					SubnetIds:        []*string{},
+				}
 			}
+		}
 
-			if err != nil {
-				return resource.NonRetryableError(err)
-			}
-
-			return nil
+		_, err := retryFunctionOp(func() (interface{}, error) {
+			return conn.UpdateFunctionConfiguration(input)
 		})
 
-		if tfresource.TimedOut(err) {
-			_, err = conn.UpdateFunctionConfiguration(configReq)
-		}
-
 		if err != nil {
-			if !tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "throttled by EC2") {
-				return fmt.Errorf("error modifying Lambda Function (%s) configuration : %w", d.Id(), err)
-			}
-
-			// Allow more time for EC2 throttling
-			err := resource.Retry(functionExtraThrottlingTimeout, func() *resource.RetryError { // nosem: helper-schema-resource-Retry-without-TimeoutError-check
-				_, err = conn.UpdateFunctionConfiguration(configReq)
-
-				if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "throttled by EC2") {
-					log.Printf("[DEBUG] Received %s, retrying UpdateFunctionConfiguration", err)
-					return resource.RetryableError(err)
-				}
-
-				if err != nil {
-					return resource.NonRetryableError(err)
-				}
-
-				return nil
-			})
-
-			if tfresource.TimedOut(err) {
-				_, err = conn.UpdateFunctionConfiguration(configReq)
-			}
-
-			if err != nil {
-				return fmt.Errorf("error modifying Lambda Function Configuration %s: %w", d.Id(), err)
-			}
+			return fmt.Errorf("updating Lambda Function (%s) configuration: %w", d.Id(), err)
 		}
 
 		if _, err := waitFunctionUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
@@ -954,47 +853,43 @@ func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	codeUpdate := needsFunctionCodeUpdate(d)
 	if codeUpdate {
-		codeReq := &lambda.UpdateFunctionCodeInput{
+		input := &lambda.UpdateFunctionCodeInput{
 			FunctionName: aws.String(d.Id()),
 		}
 
 		if d.HasChange("architectures") {
-			architectures := d.Get("architectures").([]interface{})
-			if len(architectures) > 0 {
-				codeReq.Architectures = flex.ExpandStringList(architectures)
+			if v, ok := d.GetOk("architectures"); ok && len(v.([]interface{})) > 0 {
+				input.Architectures = flex.ExpandStringList(v.([]interface{}))
 			}
 		}
 
 		if v, ok := d.GetOk("filename"); ok {
-			// Grab an exclusive lock so that we're only reading one function into
-			// memory at a time.
+			// Grab an exclusive lock so that we're only reading one function into memory at a time.
 			// See https://github.com/hashicorp/terraform/issues/9364
 			conns.GlobalMutexKV.Lock(mutexKey)
 			defer conns.GlobalMutexKV.Unlock(mutexKey)
-			file, err := readFileContents(v.(string))
-			if err != nil {
-				return fmt.Errorf("unable to load %q: %w", v.(string), err)
-			}
-			codeReq.ZipFile = file
-		} else if v, ok := d.GetOk("image_uri"); ok {
-			codeReq.ImageUri = aws.String(v.(string))
-		} else {
-			s3Bucket, _ := d.GetOk("s3_bucket")
-			s3Key, _ := d.GetOk("s3_key")
-			s3ObjectVersion, versionOk := d.GetOk("s3_object_version")
 
-			codeReq.S3Bucket = aws.String(s3Bucket.(string))
-			codeReq.S3Key = aws.String(s3Key.(string))
-			if versionOk {
-				codeReq.S3ObjectVersion = aws.String(s3ObjectVersion.(string))
+			zipFile, err := readFileContents(v.(string))
+
+			if err != nil {
+				return fmt.Errorf("reading ZIP file (%s): %w", v, err)
+			}
+
+			input.ZipFile = zipFile
+		} else if v, ok := d.GetOk("image_uri"); ok {
+			input.ImageUri = aws.String(v.(string))
+		} else {
+			input.S3Bucket = aws.String(d.Get("s3_bucket").(string))
+			input.S3Key = aws.String(d.Get("s3_key").(string))
+			if v, ok := d.GetOk("s3_object_version"); ok {
+				input.S3ObjectVersion = aws.String(v.(string))
 			}
 		}
 
-		log.Printf("[DEBUG] Send Update Lambda Function Code request: %#v", codeReq)
+		_, err := conn.UpdateFunctionCode(input)
 
-		_, err := conn.UpdateFunctionCode(codeReq)
 		if err != nil {
-			return fmt.Errorf("error modifying Lambda Function (%s) Code: %w", d.Id(), err)
+			return fmt.Errorf("updating Lambda Function (%s) code: %w", d.Id(), err)
 		}
 
 		if _, err := waitFunctionUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
@@ -1003,63 +898,40 @@ func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("reserved_concurrent_executions") {
-		nc := d.Get("reserved_concurrent_executions")
-
-		if nc.(int) >= 0 {
-			log.Printf("[DEBUG] Updating Concurrency to %d for the Lambda Function %s", nc.(int), d.Id())
-
-			concurrencyParams := &lambda.PutFunctionConcurrencyInput{
+		if v, ok := d.Get("reserved_concurrent_executions").(int); ok && v >= 0 {
+			_, err := conn.PutFunctionConcurrency(&lambda.PutFunctionConcurrencyInput{
 				FunctionName:                 aws.String(d.Id()),
-				ReservedConcurrentExecutions: aws.Int64(int64(d.Get("reserved_concurrent_executions").(int))),
-			}
+				ReservedConcurrentExecutions: aws.Int64(int64(v)),
+			})
 
-			_, err := conn.PutFunctionConcurrency(concurrencyParams)
 			if err != nil {
-				return fmt.Errorf("error setting Lambda Function (%s) concurrency: %w", d.Id(), err)
+				return fmt.Errorf("setting Lambda Function (%s) concurrency: %w", d.Id(), err)
 			}
 		} else {
-			log.Printf("[DEBUG] Removing Concurrency for the Lambda Function %s", d.Id())
-
-			deleteConcurrencyParams := &lambda.DeleteFunctionConcurrencyInput{
+			_, err := conn.DeleteFunctionConcurrency(&lambda.DeleteFunctionConcurrencyInput{
 				FunctionName: aws.String(d.Id()),
-			}
-			_, err := conn.DeleteFunctionConcurrency(deleteConcurrencyParams)
+			})
+
 			if err != nil {
-				return fmt.Errorf("error setting Lambda Function (%s) concurrency: %w", d.Id(), err)
+				return fmt.Errorf("deleting Lambda Function (%s) concurrency: %w", d.Id(), err)
 			}
 		}
 	}
 
-	publish := d.Get("publish").(bool)
-	if publish && (codeUpdate || configUpdate || d.HasChange("publish")) {
-		versionReq := &lambda.PublishVersionInput{
+	if d.Get("publish").(bool) && (codeUpdate || configUpdate || d.HasChange("publish")) {
+		input := &lambda.PublishVersionInput{
 			FunctionName: aws.String(d.Id()),
 		}
 
-		var output *lambda.FunctionConfiguration
-		err := resource.Retry(propagationTimeout, func() *resource.RetryError {
-			var err error
-			output, err = conn.PublishVersion(versionReq)
-
-			if tfawserr.ErrMessageContains(err, lambda.ErrCodeResourceConflictException, "in progress") {
-				log.Printf("[DEBUG] Retrying publish of Lambda function (%s) version after error: %s", d.Id(), err)
-				return resource.RetryableError(err)
-			}
-
-			if err != nil {
-				return resource.NonRetryableError(err)
-			}
-
-			return nil
-		})
-
-		if tfresource.TimedOut(err) {
-			output, err = conn.PublishVersion(versionReq)
-		}
+		outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(propagationTimeout, func() (interface{}, error) {
+			return conn.PublishVersion(input)
+		}, lambda.ErrCodeResourceConflictException, "in progress")
 
 		if err != nil {
-			return fmt.Errorf("error publishing Lambda Function (%s) version: %w", d.Id(), err)
+			return fmt.Errorf("publishing Lambda Function (%s) version: %w", d.Id(), err)
 		}
+
+		output := outputRaw.(*lambda.FunctionConfiguration)
 
 		err = conn.WaitUntilFunctionUpdated(&lambda.GetFunctionConfigurationInput{
 			FunctionName: output.FunctionArn,
@@ -1067,7 +939,7 @@ func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 		})
 
 		if err != nil {
-			return fmt.Errorf("while waiting for function (%s) update: %w", d.Id(), err)
+			return fmt.Errorf("waiting for Lambda Function (%s) version publish: %w", d.Id(), err)
 		}
 	}
 
@@ -1153,109 +1025,19 @@ func findLatestFunctionVersionByName(conn *lambda.Lambda, name string) (*lambda.
 	return output, nil
 }
 
-func checkHandlerRuntimeForZipFunction(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
-	packageType := d.Get("package_type")
-	_, handlerOk := d.GetOk("handler")
-	_, runtimeOk := d.GetOk("runtime")
-
-	if packageType == lambda.PackageTypeZip && (!handlerOk || !runtimeOk) {
-		return fmt.Errorf("handler and runtime must be set when PackageType is Zip")
-	}
-	return nil
-}
-
-func updateComputedAttributesOnPublish(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
-	configChanged := hasConfigChanges(d)
-	functionCodeUpdated := needsFunctionCodeUpdate(d)
-	if functionCodeUpdated {
-		d.SetNewComputed("last_modified")
-	}
-
-	publish := d.Get("publish").(bool)
-	publishChanged := d.HasChange("publish")
-	if publish && (configChanged || functionCodeUpdated || publishChanged) {
-		d.SetNewComputed("version")
-		d.SetNewComputed("qualified_arn")
-		d.SetNewComputed("qualified_invoke_arn")
-	}
-	return nil
-}
-
-func needsFunctionCodeUpdate(d verify.ResourceDiffer) bool {
-	return d.HasChange("filename") ||
-		d.HasChange("source_code_hash") ||
-		d.HasChange("s3_bucket") ||
-		d.HasChange("s3_key") ||
-		d.HasChange("s3_object_version") ||
-		d.HasChange("image_uri") ||
-		d.HasChange("architectures")
-}
-
-func hasConfigChanges(d verify.ResourceDiffer) bool {
-	return d.HasChange("description") ||
-		d.HasChange("handler") ||
-		d.HasChange("file_system_config") ||
-		d.HasChange("image_config") ||
-		d.HasChange("memory_size") ||
-		d.HasChange("role") ||
-		d.HasChange("timeout") ||
-		d.HasChange("kms_key_arn") ||
-		d.HasChange("layers") ||
-		d.HasChange("dead_letter_config") ||
-		d.HasChange("snap_start") ||
-		d.HasChange("tracing_config") ||
-		d.HasChange("vpc_config.0.security_group_ids") ||
-		d.HasChange("vpc_config.0.subnet_ids") ||
-		d.HasChange("runtime") ||
-		d.HasChange("environment") ||
-		d.HasChange("ephemeral_storage")
-}
-
-func readFileContents(v string) ([]byte, error) {
-	filename, err := homedir.Expand(v)
-	if err != nil {
-		return nil, err
-	}
-	fileContent, err := os.ReadFile(filename)
-	if err != nil {
-		return nil, err
-	}
-	return fileContent, nil
-}
-
-func functionInvokeARN(functionARN string, meta interface{}) string {
-	return arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   "apigateway",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: "lambda",
-		Resource:  fmt.Sprintf("path/2015-03-31/functions/%s/invocations", functionARN),
-	}.String()
-}
-
-func refreshFunctionLastUpdateStatus(conn *lambda.Lambda, functionName string) resource.StateRefreshFunc {
+func statusFunctionLastUpdateStatus(conn *lambda.Lambda, name string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		input := &lambda.GetFunctionInput{
-			FunctionName: aws.String(functionName),
-		}
+		output, err := FindFunctionByName(conn, name)
 
-		output, err := conn.GetFunction(input)
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
 
 		if err != nil {
 			return nil, "", err
 		}
 
-		if output == nil || output.Configuration == nil {
-			return nil, "", nil
-		}
-
-		lastUpdateStatus := aws.StringValue(output.Configuration.LastUpdateStatus)
-
-		if lastUpdateStatus == lambda.LastUpdateStatusFailed {
-			return output.Configuration, lastUpdateStatus, fmt.Errorf("%s: %s", aws.StringValue(output.Configuration.LastUpdateStatusReasonCode), aws.StringValue(output.Configuration.LastUpdateStatusReason))
-		}
-
-		return output.Configuration, lastUpdateStatus, nil
+		return output.Configuration, aws.StringValue(output.Configuration.LastUpdateStatus), nil
 	}
 }
 
@@ -1299,7 +1081,7 @@ func waitFunctionUpdated(conn *lambda.Lambda, functionName string, timeout time.
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{lambda.LastUpdateStatusInProgress},
 		Target:  []string{lambda.LastUpdateStatusSuccessful},
-		Refresh: refreshFunctionLastUpdateStatus(conn, functionName),
+		Refresh: statusFunctionLastUpdateStatus(conn, functionName),
 		Timeout: timeout,
 		Delay:   5 * time.Second,
 	}
@@ -1307,12 +1089,137 @@ func waitFunctionUpdated(conn *lambda.Lambda, functionName string, timeout time.
 	outputRaw, err := stateConf.WaitForState()
 
 	if output, ok := outputRaw.(*lambda.FunctionConfiguration); ok {
-		tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(output.StateReasonCode), aws.StringValue(output.StateReason)))
+		tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(output.LastUpdateStatusReasonCode), aws.StringValue(output.LastUpdateStatusReason)))
 
 		return output, err
 	}
 
 	return nil, err
+}
+
+// retryFunctionOp retries a Lambda Function Create or Update operation.
+// It handles IAM eventual consistency and EC2 throttling.
+func retryFunctionOp(f func() (interface{}, error)) (interface{}, error) {
+	output, err := tfresource.RetryWhen(propagationTimeout,
+		f,
+		func(err error) (bool, error) {
+			if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "The role defined for the function cannot be assumed by Lambda") {
+				return true, err
+			}
+
+			if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "The provided execution role does not have permissions") {
+				return true, err
+			}
+
+			if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "throttled by EC2") {
+				return true, err
+			}
+
+			if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "Lambda was unable to configure access to your environment variables because the KMS key is invalid for CreateGrant") {
+				return true, err
+			}
+
+			if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceConflictException) {
+				return true, err
+			}
+
+			return false, err
+		})
+
+	// Additional retries when throttled.
+	if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "throttled by EC2") {
+		output, err = tfresource.RetryWhen(functionExtraThrottlingTimeout,
+			f,
+			func(err error) (bool, error) {
+				if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "throttled by EC2") {
+					return true, err
+				}
+
+				return false, err
+			})
+	}
+
+	return output, err
+}
+
+func checkHandlerRuntimeForZipFunction(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
+	packageType := d.Get("package_type")
+	_, handlerOk := d.GetOk("handler")
+	_, runtimeOk := d.GetOk("runtime")
+
+	if packageType == lambda.PackageTypeZip && (!handlerOk || !runtimeOk) {
+		return fmt.Errorf("handler and runtime must be set when PackageType is Zip")
+	}
+	return nil
+}
+
+func updateComputedAttributesOnPublish(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
+	configChanged := needsFunctionConfigUpdate(d)
+	codeChanged := needsFunctionCodeUpdate(d)
+	if codeChanged {
+		d.SetNewComputed("last_modified")
+	}
+
+	publish := d.Get("publish").(bool)
+	publishChanged := d.HasChange("publish")
+	if publish && (configChanged || codeChanged || publishChanged) {
+		d.SetNewComputed("version")
+		d.SetNewComputed("qualified_arn")
+		d.SetNewComputed("qualified_invoke_arn")
+	}
+	return nil
+}
+
+func needsFunctionCodeUpdate(d verify.ResourceDiffer) bool {
+	return d.HasChange("filename") ||
+		d.HasChange("source_code_hash") ||
+		d.HasChange("s3_bucket") ||
+		d.HasChange("s3_key") ||
+		d.HasChange("s3_object_version") ||
+		d.HasChange("image_uri") ||
+		d.HasChange("architectures")
+}
+
+func needsFunctionConfigUpdate(d verify.ResourceDiffer) bool {
+	return d.HasChange("description") ||
+		d.HasChange("handler") ||
+		d.HasChange("file_system_config") ||
+		d.HasChange("image_config") ||
+		d.HasChange("memory_size") ||
+		d.HasChange("role") ||
+		d.HasChange("timeout") ||
+		d.HasChange("kms_key_arn") ||
+		d.HasChange("layers") ||
+		d.HasChange("dead_letter_config") ||
+		d.HasChange("snap_start") ||
+		d.HasChange("tracing_config") ||
+		d.HasChange("vpc_config.0.security_group_ids") ||
+		d.HasChange("vpc_config.0.subnet_ids") ||
+		d.HasChange("runtime") ||
+		d.HasChange("environment") ||
+		d.HasChange("ephemeral_storage")
+}
+
+func readFileContents(v string) ([]byte, error) {
+	filename, err := homedir.Expand(v)
+	if err != nil {
+		return nil, err
+	}
+	fileContent, err := os.ReadFile(filename)
+	if err != nil {
+		return nil, err
+	}
+	return fileContent, nil
+}
+
+func functionInvokeARN(functionARN string, meta interface{}) string {
+	return arn.ARN{
+		Partition: meta.(*conns.AWSClient).Partition,
+		Service:   "apigateway",
+		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: "lambda",
+		Resource:  fmt.Sprintf("path/2015-03-31/functions/%s/invocations", functionARN),
+	}.String()
 }
 
 // SignerServiceIsAvailable returns whether the AWS Signer service is available in the specified AWS Region.
