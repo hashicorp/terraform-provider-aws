@@ -20,6 +20,7 @@ import (
 )
 
 func TestAccMediaLiveChannel_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -32,16 +33,16 @@ func TestAccMediaLiveChannel_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(names.MediaLiveEndpointID, t)
-			testAccChannelsPreCheck(t)
+			testAccChannelsPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckChannelDestroy,
+		CheckDestroy:             testAccCheckChannelDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccChannelConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckChannelExists(resourceName, &channel),
+					testAccCheckChannelExists(ctx, resourceName, &channel),
 					resource.TestCheckResourceAttrSet(resourceName, "channel_id"),
 					resource.TestCheckResourceAttr(resourceName, "channel_class", "STANDARD"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -76,6 +77,7 @@ func TestAccMediaLiveChannel_basic(t *testing.T) {
 }
 
 func TestAccMediaLiveChannel_hls(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -88,16 +90,16 @@ func TestAccMediaLiveChannel_hls(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(names.MediaLiveEndpointID, t)
-			testAccChannelsPreCheck(t)
+			testAccChannelsPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckChannelDestroy,
+		CheckDestroy:             testAccCheckChannelDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccChannelConfig_hls(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckChannelExists(resourceName, &channel),
+					testAccCheckChannelExists(ctx, resourceName, &channel),
 					resource.TestCheckResourceAttrSet(resourceName, "channel_id"),
 					resource.TestCheckResourceAttr(resourceName, "channel_class", "STANDARD"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -127,6 +129,7 @@ func TestAccMediaLiveChannel_hls(t *testing.T) {
 }
 
 func TestAccMediaLiveChannel_status(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -139,24 +142,24 @@ func TestAccMediaLiveChannel_status(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(names.MediaLiveEndpointID, t)
-			testAccChannelsPreCheck(t)
+			testAccChannelsPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckChannelDestroy,
+		CheckDestroy:             testAccCheckChannelDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccChannelConfig_start(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckChannelExists(resourceName, &channel),
-					testAccCheckChannelStatus(resourceName, types.ChannelStateRunning),
+					testAccCheckChannelExists(ctx, resourceName, &channel),
+					testAccCheckChannelStatus(ctx, resourceName, types.ChannelStateRunning),
 				),
 			},
 			{
 				Config: testAccChannelConfig_start(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckChannelExists(resourceName, &channel),
-					testAccCheckChannelStatus(resourceName, types.ChannelStateIdle),
+					testAccCheckChannelExists(ctx, resourceName, &channel),
+					testAccCheckChannelStatus(ctx, resourceName, types.ChannelStateIdle),
 				),
 			},
 		},
@@ -164,6 +167,7 @@ func TestAccMediaLiveChannel_status(t *testing.T) {
 }
 
 func TestAccMediaLiveChannel_update(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -177,16 +181,16 @@ func TestAccMediaLiveChannel_update(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(names.MediaLiveEndpointID, t)
-			testAccChannelsPreCheck(t)
+			testAccChannelsPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckChannelDestroy,
+		CheckDestroy:             testAccCheckChannelDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccChannelConfig_update(rName, "AVC", "HD"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckChannelExists(resourceName, &channel),
+					testAccCheckChannelExists(ctx, resourceName, &channel),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "channel_id"),
 					resource.TestCheckResourceAttr(resourceName, "channel_class", "STANDARD"),
@@ -213,7 +217,7 @@ func TestAccMediaLiveChannel_update(t *testing.T) {
 			{
 				Config: testAccChannelConfig_update(rNameUpdated, "AVC", "HD"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckChannelExists(resourceName, &channel),
+					testAccCheckChannelExists(ctx, resourceName, &channel),
 					resource.TestCheckResourceAttr(resourceName, "name", rNameUpdated),
 					resource.TestCheckResourceAttrSet(resourceName, "channel_id"),
 					resource.TestCheckResourceAttr(resourceName, "channel_class", "STANDARD"),
@@ -242,6 +246,7 @@ func TestAccMediaLiveChannel_update(t *testing.T) {
 }
 
 func TestAccMediaLiveChannel_updateTags(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -254,16 +259,16 @@ func TestAccMediaLiveChannel_updateTags(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(names.MediaLiveEndpointID, t)
-			testAccChannelsPreCheck(t)
+			testAccChannelsPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckChannelDestroy,
+		CheckDestroy:             testAccCheckChannelDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccChannelConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckChannelExists(resourceName, &channel),
+					testAccCheckChannelExists(ctx, resourceName, &channel),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -271,7 +276,7 @@ func TestAccMediaLiveChannel_updateTags(t *testing.T) {
 			{
 				Config: testAccChannelConfig_tags2(rName, "key1", "value1", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckChannelExists(resourceName, &channel),
+					testAccCheckChannelExists(ctx, resourceName, &channel),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -280,7 +285,7 @@ func TestAccMediaLiveChannel_updateTags(t *testing.T) {
 			{
 				Config: testAccChannelConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckChannelExists(resourceName, &channel),
+					testAccCheckChannelExists(ctx, resourceName, &channel),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -290,6 +295,7 @@ func TestAccMediaLiveChannel_updateTags(t *testing.T) {
 }
 
 func TestAccMediaLiveChannel_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -302,16 +308,16 @@ func TestAccMediaLiveChannel_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(names.MediaLiveEndpointID, t)
-			testAccChannelsPreCheck(t)
+			testAccChannelsPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckChannelDestroy,
+		CheckDestroy:             testAccCheckChannelDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccChannelConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckChannelExists(resourceName, &channel),
+					testAccCheckChannelExists(ctx, resourceName, &channel),
 					acctest.CheckResourceDisappears(acctest.Provider, tfmedialive.ResourceChannel(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -320,30 +326,31 @@ func TestAccMediaLiveChannel_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckChannelDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveClient()
-	ctx := context.Background()
+func testAccCheckChannelDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveClient()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_medialive_channel" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_medialive_channel" {
+				continue
+			}
+
+			_, err := tfmedialive.FindChannelByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return create.Error(names.MediaLive, create.ErrActionCheckingDestroyed, tfmedialive.ResNameChannel, rs.Primary.ID, err)
+			}
 		}
 
-		_, err := tfmedialive.FindChannelByID(ctx, conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return create.Error(names.MediaLive, create.ErrActionCheckingDestroyed, tfmedialive.ResNameChannel, rs.Primary.ID, err)
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckChannelExists(name string, channel *medialive.DescribeChannelOutput) resource.TestCheckFunc {
+func testAccCheckChannelExists(ctx context.Context, name string, channel *medialive.DescribeChannelOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -355,7 +362,7 @@ func testAccCheckChannelExists(name string, channel *medialive.DescribeChannelOu
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveClient()
-		ctx := context.Background()
+
 		resp, err := tfmedialive.FindChannelByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
@@ -368,7 +375,7 @@ func testAccCheckChannelExists(name string, channel *medialive.DescribeChannelOu
 	}
 }
 
-func testAccCheckChannelStatus(name string, state types.ChannelState) resource.TestCheckFunc {
+func testAccCheckChannelStatus(ctx context.Context, name string, state types.ChannelState) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -380,7 +387,7 @@ func testAccCheckChannelStatus(name string, state types.ChannelState) resource.T
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveClient()
-		ctx := context.Background()
+
 		resp, err := tfmedialive.FindChannelByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
@@ -395,9 +402,8 @@ func testAccCheckChannelStatus(name string, state types.ChannelState) resource.T
 	}
 }
 
-func testAccChannelsPreCheck(t *testing.T) {
+func testAccChannelsPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveClient()
-	ctx := context.Background()
 
 	input := &medialive.ListChannelsInput{}
 	_, err := conn.ListChannels(ctx, input)

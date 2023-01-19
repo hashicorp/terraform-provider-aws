@@ -224,7 +224,7 @@ func resourceInputCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	// IAM propagation
-	outputRaw, err := tfresource.RetryWhen(propagationTimeout,
+	outputRaw, err := tfresource.RetryWhenContext(ctx, propagationTimeout,
 		func() (interface{}, error) {
 			return conn.CreateInput(ctx, in)
 		},
