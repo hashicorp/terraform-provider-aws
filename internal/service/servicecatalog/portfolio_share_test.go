@@ -160,7 +160,7 @@ func TestAccServiceCatalogPortfolioShare_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(servicecatalog.EndpointsID, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
 		CheckDestroy:             testAccCheckPortfolioShareDestroy,
 		Steps: []resource.TestStep{
 			{
