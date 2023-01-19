@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_opsworks_permission: `stack_id` and `user_arn` are both Required and ForceNew
+```
