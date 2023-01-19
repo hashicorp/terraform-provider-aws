@@ -204,11 +204,11 @@ providerlint:
 		-XR005=false \
 		-XS001=false \
 		-XS002=false \
-		./$(PKG_NAME)/service/... ./$(PKG_NAME)/provider/...
+		./internal/service/... ./internal/provider/...
 
 importlint:
 	@echo "==> Checking source code with importlint..."
-	@impi --local . --scheme stdThirdPartyLocal ./$(PKG_NAME)/...
+	@impi --local . --scheme stdThirdPartyLocal ./internal/...
 
 tools:
 	cd .ci/providerlint && $(GO_VER) install .
@@ -275,9 +275,9 @@ semall:
 		--config .ci/semgrep/acctest/ \
 		--config 'r/dgryski.semgrep-go.badnilguard' \
 		--config 'r/dgryski.semgrep-go.errnilcheck' \
-    	--config 'r/dgryski.semgrep-go.marshaljson' \
+		--config 'r/dgryski.semgrep-go.marshaljson' \
 		--config 'r/dgryski.semgrep-go.nilerr' \
-        --config 'r/dgryski.semgrep-go.oddifsequence' \
+		--config 'r/dgryski.semgrep-go.oddifsequence' \
 		--config 'r/dgryski.semgrep-go.oserrors'
 
 skaff:
