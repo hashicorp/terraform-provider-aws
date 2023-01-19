@@ -274,9 +274,9 @@ resource "aws_inspector2_delegated_admin_account" "test" {
 
 resource "aws_inspector2_organization_configuration" "test" {
   auto_enable {
-    ec2 = %[1]t
-    ecr = %[2]t
-	lambda = %[3]t
+    ec2    = %[1]t
+    ecr    = %[2]t
+    lambda = %[3]t
   }
 
   depends_on = [aws_inspector2_delegated_admin_account.test]
