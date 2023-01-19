@@ -1645,7 +1645,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	dbSetResourceDataEngineVersionFromInstance(d, v)
 
-	tags, err := ListTagsWithContext(ctx, conn, arn)
+	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing tags for RDS DB Instance (%s): %s", arn, err)
@@ -1876,7 +1876,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTagsWithContext(ctx, meta.(*conns.AWSClient).RDSConn(), d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, meta.(*conns.AWSClient).RDSConn(), d.Get("arn").(string), o, n); err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}

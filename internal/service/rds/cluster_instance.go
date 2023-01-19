@@ -417,7 +417,7 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 
 	clusterSetResourceDataEngineVersionFromClusterInstance(d, db)
 
-	tags, err := ListTagsWithContext(ctx, conn, aws.StringValue(db.DBInstanceArn))
+	tags, err := ListTags(ctx, conn, aws.StringValue(db.DBInstanceArn))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing tags for RDS Cluster Instance (%s): %s", d.Id(), err)
@@ -521,7 +521,7 @@ func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTagsWithContext(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating RDS Cluster Instance (%s) tags: %s", d.Id(), err)
 		}
 	}

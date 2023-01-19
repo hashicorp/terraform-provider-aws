@@ -272,7 +272,7 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 		d.Set("port", nil)
 	}
 
-	tags, err := ListTagsWithContext(ctx, conn, d.Get("db_instance_arn").(string))
+	tags, err := ListTags(ctx, conn, d.Get("db_instance_arn").(string))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing tags for RDS DB Instance (%s): %s", d.Get("db_instance_arn").(string), err)

@@ -1060,7 +1060,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	d.Set("vpc_security_group_ids", securityGroupIDs)
 
-	tags, err := ListTagsWithContext(ctx, conn, clusterARN)
+	tags, err := ListTags(ctx, conn, clusterARN)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing tags for RDS Cluster (%s): %s", d.Id(), err)
@@ -1303,7 +1303,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTagsWithContext(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating RDS Cluster (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}

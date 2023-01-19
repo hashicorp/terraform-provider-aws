@@ -204,7 +204,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 	d.Set("vpc_security_group_ids", securityGroupIDs)
 
-	tags, err := ListTagsWithContext(ctx, conn, clusterARN)
+	tags, err := ListTags(ctx, conn, clusterARN)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing tags for RDS Cluster (%s): %s", d.Id(), err)
