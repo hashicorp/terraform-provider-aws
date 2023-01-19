@@ -25,6 +25,7 @@ func init() {
 }
 
 func sweepApplications(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -35,7 +36,7 @@ func sweepApplications(region string) error {
 	var sweeperErrs *multierror.Error
 
 	input := &kinesisanalytics.ListApplicationsInput{}
-	err = ListApplicationsPages(conn, input, func(page *kinesisanalytics.ListApplicationsOutput, lastPage bool) bool {
+	err = ListApplicationsPages(ctx, conn, input, func(page *kinesisanalytics.ListApplicationsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -44,7 +45,7 @@ func sweepApplications(region string) error {
 			arn := aws.StringValue(applicationSummary.ApplicationARN)
 			name := aws.StringValue(applicationSummary.ApplicationName)
 
-			application, err := FindApplicationDetailByName(conn, name)
+			application, err := FindApplicationDetailByName(ctx, conn, name)
 
 			if tfawserr.ErrMessageContains(err, kinesisanalytics.ErrCodeUnsupportedOperationException, "was created/updated by kinesisanalyticsv2 SDK") {
 				continue
@@ -77,7 +78,7 @@ func sweepApplications(region string) error {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Kinesis Analytics Applications: %w", err))
 	}
 
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Kinesis Analytics Applications: %w", err))
 	}
 
