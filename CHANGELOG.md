@@ -1,15 +1,22 @@
 ## 4.51.0 (Unreleased)
 
+NOTES:
+
+* resource/aws_ce_anomaly_subscription: Deprecate `threshold` argument in favour of `threshold_expression` ([#28573](https://github.com/hashicorp/terraform-provider-aws/issues/28573))
+
 FEATURES:
 
 * **New Resource:** `aws_datasync_location_object_storage` ([#23154](https://github.com/hashicorp/terraform-provider-aws/issues/23154))
+* **New Resource:** `aws_resourceexplorer2_view` ([#28841](https://github.com/hashicorp/terraform-provider-aws/issues/28841))
 
 ENHANCEMENTS:
 
 * resource/aws_apprunner_service: Add `source_configuration.code_repository.code_configuration.runtime_environment_secrets` and `source_configuration.image_repository.image_configuration.runtime_environment_secrets` argument ([#28871](https://github.com/hashicorp/terraform-provider-aws/issues/28871))
+* resource/aws_ce_anomaly_subscription: Add `threshold_expression` argument ([#28573](https://github.com/hashicorp/terraform-provider-aws/issues/28573))
 * resource/aws_grafana_workspace: Add `configuration` argument ([#28569](https://github.com/hashicorp/terraform-provider-aws/issues/28569))
 * resource/aws_imagbuilder_component: Add `skip_destroy` argument ([#28905](https://github.com/hashicorp/terraform-provider-aws/issues/28905))
 * resource/aws_lambda_event_source_mapping: Add `scaling_config` argument ([#28876](https://github.com/hashicorp/terraform-provider-aws/issues/28876))
+* resource/aws_rum_app_monitor: Add `custom_events` argument ([#28431](https://github.com/hashicorp/terraform-provider-aws/issues/28431))
 
 BUG FIXES:
 

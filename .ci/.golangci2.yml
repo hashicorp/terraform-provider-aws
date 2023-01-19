@@ -73,6 +73,8 @@ linters-settings:
           - validation.*
           # Terraform Plugin Framework
           - int64validator.*
+          - listvalidator.*
+          - stringvalidator.*
           - SetDefaultCreateTimeout
           - SetDefaultReadTimeout
           - SetDefaultUpdateTimeout
