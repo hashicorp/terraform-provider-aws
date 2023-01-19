@@ -348,7 +348,7 @@ func ResourceCatalogTable() *schema.Resource {
 	}
 }
 
-func ReadTableID(id string) (catalogID string, dbName string, name string, error error) {
+func ReadTableID(id string) (string, string, string, error) {
 	idParts := strings.Split(id, ":")
 	if len(idParts) != 3 {
 		return "", "", "", fmt.Errorf("expected ID in format catalog-id:database-name:table-name, received: %s", id)
@@ -357,7 +357,7 @@ func ReadTableID(id string) (catalogID string, dbName string, name string, error
 }
 
 func resourceCatalogTableCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+	conn := meta.(*conns.AWSClient).GlueConn()
 	catalogID := createCatalogID(d, meta.(*conns.AWSClient).AccountID)
 	dbName := d.Get("database_name").(string)
 	name := d.Get("name").(string)
@@ -369,10 +369,9 @@ func resourceCatalogTableCreate(d *schema.ResourceData, meta interface{}) error 
 		PartitionIndexes: expandTablePartitionIndexes(d.Get("partition_index").([]interface{})),
 	}
 
-	log.Printf("[DEBUG] Glue catalog table input: %#v", input)
 	_, err := conn.CreateTable(input)
 	if err != nil {
-		return fmt.Errorf("Error creating Glue Catalog Table: %w", err)
+		return fmt.Errorf("creating Glue Catalog Table (%s): %w", name, err)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s:%s", catalogID, dbName, name))
@@ -381,11 +380,11 @@ func resourceCatalogTableCreate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceCatalogTableRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+	conn := meta.(*conns.AWSClient).GlueConn()
 
 	catalogID, dbName, name, err := ReadTableID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("reading Glue Catalog Table (%s): %w", d.Id(), err)
 	}
 
 	out, err := FindTableByName(conn, catalogID, dbName, name)
@@ -396,7 +395,7 @@ func resourceCatalogTableRead(d *schema.ResourceData, meta interface{}) error {
 			return nil
 		}
 
-		return fmt.Errorf("Error reading Glue Catalog Table: %w", err)
+		return fmt.Errorf("reading Glue Catalog Table (%s): %w", d.Id(), err)
 	}
 
 	table := out.Table
@@ -460,11 +459,11 @@ func resourceCatalogTableRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceCatalogTableUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+	conn := meta.(*conns.AWSClient).GlueConn()
 
 	catalogID, dbName, _, err := ReadTableID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("updating Glue Catalog Table (%s): %w", d.Id(), err)
 	}
 
 	updateTableInput := &glue.UpdateTableInput{
@@ -474,22 +473,22 @@ func resourceCatalogTableUpdate(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	if _, err := conn.UpdateTable(updateTableInput); err != nil {
-		return fmt.Errorf("Error updating Glue Catalog Table: %w", err)
+		return fmt.Errorf("updating Glue Catalog Table (%s): %w", d.Id(), err)
 	}
 
 	return resourceCatalogTableRead(d, meta)
 }
 
 func resourceCatalogTableDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+	conn := meta.(*conns.AWSClient).GlueConn()
 
-	catalogID, dbName, name, tableIdErr := ReadTableID(d.Id())
-	if tableIdErr != nil {
-		return tableIdErr
+	catalogID, dbName, name, err := ReadTableID(d.Id())
+	if err != nil {
+		return fmt.Errorf("deleting Glue Catalog Table (%s): %w", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Glue Catalog Table: %s:%s:%s", catalogID, dbName, name)
-	_, err := conn.DeleteTable(&glue.DeleteTableInput{
+	_, err = conn.DeleteTable(&glue.DeleteTableInput{
 		CatalogId:    aws.String(catalogID),
 		Name:         aws.String(name),
 		DatabaseName: aws.String(dbName),
@@ -498,7 +497,7 @@ func resourceCatalogTableDelete(d *schema.ResourceData, meta interface{}) error 
 		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 			return nil
 		}
-		return fmt.Errorf("Error deleting Glue Catalog Table: %w", err)
+		return fmt.Errorf("deleting Glue Catalog Table (%s): %w", d.Id(), err)
 	}
 	return nil
 }

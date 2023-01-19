@@ -44,7 +44,7 @@ func ResourceBudgetResourceAssociation() *schema.Resource {
 }
 
 func resourceBudgetResourceAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 
 	input := &servicecatalog.AssociateBudgetWithResourceInput{
 		BudgetName: aws.String(d.Get("budget_name").(string)),
@@ -86,7 +86,7 @@ func resourceBudgetResourceAssociationCreate(d *schema.ResourceData, meta interf
 }
 
 func resourceBudgetResourceAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 
 	budgetName, resourceID, err := BudgetResourceAssociationParseID(d.Id())
 
@@ -117,7 +117,7 @@ func resourceBudgetResourceAssociationRead(d *schema.ResourceData, meta interfac
 }
 
 func resourceBudgetResourceAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 
 	budgetName, resourceID, err := BudgetResourceAssociationParseID(d.Id())
 

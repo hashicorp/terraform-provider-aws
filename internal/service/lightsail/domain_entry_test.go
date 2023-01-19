@@ -58,7 +58,7 @@ func TestAccLightsailDomainEntry_disappears(t *testing.T) {
 	domainEntryName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	testDestroy := func(*terraform.State) error {
-		conn := testAccProviderLightsailDomain.Meta().(*conns.AWSClient).LightsailConn
+		conn := testAccProviderLightsailDomain.Meta().(*conns.AWSClient).LightsailConn()
 		_, err := conn.DeleteDomainEntry(&lightsail.DeleteDomainEntryInput{
 			DomainName: aws.String(domainName),
 			DomainEntry: &lightsail.DomainEntry{
@@ -108,7 +108,7 @@ func testAccCheckDomainEntryExists(n string, domainEntry *lightsail.DomainEntry)
 			return errors.New("No Lightsail Domain Entry ID is set")
 		}
 
-		conn := testAccProviderLightsailDomain.Meta().(*conns.AWSClient).LightsailConn
+		conn := testAccProviderLightsailDomain.Meta().(*conns.AWSClient).LightsailConn()
 
 		resp, err := tflightsail.FindDomainEntryById(context.Background(), conn, rs.Primary.ID)
 
@@ -132,7 +132,7 @@ func testAccCheckDomainEntryDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := testAccProviderLightsailDomain.Meta().(*conns.AWSClient).LightsailConn
+		conn := testAccProviderLightsailDomain.Meta().(*conns.AWSClient).LightsailConn()
 
 		_, err := tflightsail.FindDomainEntryById(context.Background(), conn, rs.Primary.ID)
 

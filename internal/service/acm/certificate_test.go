@@ -230,7 +230,7 @@ func TestAccACMCertificate_privateCertificate_renewable(t *testing.T) {
 			},
 			{
 				PreConfig: func() {
-					conn := acctest.Provider.Meta().(*conns.AWSClient).ACMConn
+					conn := acctest.Provider.Meta().(*conns.AWSClient).ACMConn()
 
 					_, err := conn.ExportCertificate(&acm.ExportCertificateInput{
 						CertificateArn: v1.CertificateArn,
@@ -258,7 +258,7 @@ func TestAccACMCertificate_privateCertificate_renewable(t *testing.T) {
 			},
 			{
 				PreConfig: func() {
-					conn := acctest.Provider.Meta().(*conns.AWSClient).ACMConn
+					conn := acctest.Provider.Meta().(*conns.AWSClient).ACMConn()
 
 					ctx := context.Background()
 					_, err := conn.RenewCertificateWithContext(ctx, &acm.RenewCertificateInput{
@@ -283,7 +283,7 @@ func TestAccACMCertificate_privateCertificate_renewable(t *testing.T) {
 			},
 			{
 				PreConfig: func() {
-					conn := acctest.Provider.Meta().(*conns.AWSClient).ACMConn
+					conn := acctest.Provider.Meta().(*conns.AWSClient).ACMConn()
 
 					ctx := context.Background()
 					_, err := tfacm.WaitCertificateRenewed(ctx, conn, aws.StringValue(v1.CertificateArn), tfacm.CertificateRenewalTimeout)
@@ -357,7 +357,7 @@ func TestAccACMCertificate_privateCertificate_noRenewalPermission(t *testing.T) 
 			},
 			{
 				PreConfig: func() {
-					conn := acctest.Provider.Meta().(*conns.AWSClient).ACMConn
+					conn := acctest.Provider.Meta().(*conns.AWSClient).ACMConn()
 
 					_, err := conn.ExportCertificate(&acm.ExportCertificateInput{
 						CertificateArn: v1.CertificateArn,
@@ -384,7 +384,7 @@ func TestAccACMCertificate_privateCertificate_noRenewalPermission(t *testing.T) 
 			},
 			{
 				PreConfig: func() {
-					conn := acctest.Provider.Meta().(*conns.AWSClient).ACMConn
+					conn := acctest.Provider.Meta().(*conns.AWSClient).ACMConn()
 
 					ctx := context.Background()
 					_, err := conn.RenewCertificateWithContext(ctx, &acm.RenewCertificateInput{
@@ -467,7 +467,7 @@ func TestAccACMCertificate_privateCertificate_pendingRenewalGoDuration(t *testin
 			},
 			{
 				PreConfig: func() {
-					conn := acctest.Provider.Meta().(*conns.AWSClient).ACMConn
+					conn := acctest.Provider.Meta().(*conns.AWSClient).ACMConn()
 
 					_, err := conn.ExportCertificate(&acm.ExportCertificateInput{
 						CertificateArn: v1.CertificateArn,
@@ -540,7 +540,7 @@ func TestAccACMCertificate_privateCertificate_pendingRenewalRFC3339Duration(t *t
 			},
 			{
 				PreConfig: func() {
-					conn := acctest.Provider.Meta().(*conns.AWSClient).ACMConn
+					conn := acctest.Provider.Meta().(*conns.AWSClient).ACMConn()
 
 					_, err := conn.ExportCertificate(&acm.ExportCertificateInput{
 						CertificateArn: v1.CertificateArn,
@@ -613,7 +613,7 @@ func TestAccACMCertificate_privateCertificate_addEarlyRenewalPast(t *testing.T) 
 			},
 			{
 				PreConfig: func() {
-					conn := acctest.Provider.Meta().(*conns.AWSClient).ACMConn
+					conn := acctest.Provider.Meta().(*conns.AWSClient).ACMConn()
 
 					_, err := conn.ExportCertificate(&acm.ExportCertificateInput{
 						CertificateArn: v1.CertificateArn,
@@ -752,7 +752,7 @@ func TestAccACMCertificate_privateCertificate_addEarlyRenewalFuture(t *testing.T
 			},
 			{
 				PreConfig: func() {
-					conn := acctest.Provider.Meta().(*conns.AWSClient).ACMConn
+					conn := acctest.Provider.Meta().(*conns.AWSClient).ACMConn()
 
 					_, err := conn.ExportCertificate(&acm.ExportCertificateInput{
 						CertificateArn: v1.CertificateArn,
@@ -837,7 +837,7 @@ func TestAccACMCertificate_privateCertificate_updateEarlyRenewalFuture(t *testin
 			},
 			{
 				PreConfig: func() {
-					conn := acctest.Provider.Meta().(*conns.AWSClient).ACMConn
+					conn := acctest.Provider.Meta().(*conns.AWSClient).ACMConn()
 
 					_, err := conn.ExportCertificate(&acm.ExportCertificateInput{
 						CertificateArn: v1.CertificateArn,
@@ -906,7 +906,7 @@ func TestAccACMCertificate_privateCertificate_removeEarlyRenewal(t *testing.T) {
 			},
 			{
 				PreConfig: func() {
-					conn := acctest.Provider.Meta().(*conns.AWSClient).ACMConn
+					conn := acctest.Provider.Meta().(*conns.AWSClient).ACMConn()
 
 					_, err := conn.ExportCertificate(&acm.ExportCertificateInput{
 						CertificateArn: v1.CertificateArn,
@@ -1567,7 +1567,7 @@ func testAccCheckCertificateExists(n string, v *acm.CertificateDetail) resource.
 			return fmt.Errorf("no ACM Certificate ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMConn()
 
 		output, err := tfacm.FindCertificateByARN(context.Background(), conn, rs.Primary.ID)
 
@@ -1582,7 +1582,7 @@ func testAccCheckCertificateExists(n string, v *acm.CertificateDetail) resource.
 }
 
 func testAccCheckCertificateDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ACMConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ACMConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_acm_certificate" {

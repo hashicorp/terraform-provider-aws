@@ -52,7 +52,7 @@ func ResourceProvisionedConcurrencyConfig() *schema.Resource {
 }
 
 func resourceProvisionedConcurrencyConfigCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LambdaConn
+	conn := meta.(*conns.AWSClient).LambdaConn()
 	functionName := d.Get("function_name").(string)
 	qualifier := d.Get("qualifier").(string)
 
@@ -78,12 +78,12 @@ func resourceProvisionedConcurrencyConfigCreate(d *schema.ResourceData, meta int
 }
 
 func resourceProvisionedConcurrencyConfigRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LambdaConn
+	conn := meta.(*conns.AWSClient).LambdaConn()
 
 	functionName, qualifier, err := ProvisionedConcurrencyConfigParseID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading Lambda Provisioned Concurrency Config (%s): %s", d.Id(), err)
 	}
 
 	input := &lambda.GetProvisionedConcurrencyConfigInput{
@@ -100,7 +100,7 @@ func resourceProvisionedConcurrencyConfigRead(d *schema.ResourceData, meta inter
 	}
 
 	if err != nil {
-		return fmt.Errorf("error getting Lambda Provisioned Concurrency Config (%s): %s", d.Id(), err)
+		return fmt.Errorf("reading Lambda Provisioned Concurrency Config (%s): %s", d.Id(), err)
 	}
 
 	d.Set("function_name", functionName)
@@ -111,12 +111,12 @@ func resourceProvisionedConcurrencyConfigRead(d *schema.ResourceData, meta inter
 }
 
 func resourceProvisionedConcurrencyConfigUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LambdaConn
+	conn := meta.(*conns.AWSClient).LambdaConn()
 
 	functionName, qualifier, err := ProvisionedConcurrencyConfigParseID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("updating Lambda Provisioned Concurrency Config (%s): %s", d.Id(), err)
 	}
 
 	input := &lambda.PutProvisionedConcurrencyConfigInput{
@@ -128,23 +128,23 @@ func resourceProvisionedConcurrencyConfigUpdate(d *schema.ResourceData, meta int
 	_, err = conn.PutProvisionedConcurrencyConfig(input)
 
 	if err != nil {
-		return fmt.Errorf("error putting Lambda Provisioned Concurrency Config (%s:%s): %s", functionName, qualifier, err)
+		return fmt.Errorf("updating Lambda Provisioned Concurrency Config (%s): %s", d.Id(), err)
 	}
 
 	if err := waitForProvisionedConcurrencyConfigStatusReady(conn, functionName, qualifier, d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return fmt.Errorf("error waiting for Lambda Provisioned Concurrency Config (%s) to be ready: %s", d.Id(), err)
+		return fmt.Errorf("updating Lambda Provisioned Concurrency Config (%s): waiting for completion: %s", d.Id(), err)
 	}
 
 	return resourceProvisionedConcurrencyConfigRead(d, meta)
 }
 
 func resourceProvisionedConcurrencyConfigDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LambdaConn
+	conn := meta.(*conns.AWSClient).LambdaConn()
 
 	functionName, qualifier, err := ProvisionedConcurrencyConfigParseID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting Lambda Provisioned Concurrency Config (%s): %s", d.Id(), err)
 	}
 
 	input := &lambda.DeleteProvisionedConcurrencyConfigInput{
@@ -159,7 +159,7 @@ func resourceProvisionedConcurrencyConfigDelete(d *schema.ResourceData, meta int
 	}
 
 	if err != nil {
-		return fmt.Errorf("error putting Lambda Provisioned Concurrency Config (%s:%s): %s", functionName, qualifier, err)
+		return fmt.Errorf("deleting Lambda Provisioned Concurrency Config (%s): %s", d.Id(), err)
 	}
 
 	return nil

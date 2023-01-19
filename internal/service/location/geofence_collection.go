@@ -23,10 +23,10 @@ import (
 
 func ResourceGeofenceCollection() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceGeofenceCollectionCreate,
-		ReadContext:   resourceGeofenceCollectionRead,
-		UpdateContext: resourceGeofenceCollectionUpdate,
-		DeleteContext: resourceGeofenceCollectionDelete,
+		CreateWithoutTimeout: resourceGeofenceCollectionCreate,
+		ReadWithoutTimeout:   resourceGeofenceCollectionRead,
+		UpdateWithoutTimeout: resourceGeofenceCollectionUpdate,
+		DeleteWithoutTimeout: resourceGeofenceCollectionDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -81,7 +81,7 @@ const (
 )
 
 func resourceGeofenceCollectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LocationConn
+	conn := meta.(*conns.AWSClient).LocationConn()
 
 	in := &locationservice.CreateGeofenceCollectionInput{
 		CollectionName: aws.String(d.Get("collection_name").(string)),
@@ -117,7 +117,7 @@ func resourceGeofenceCollectionCreate(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceGeofenceCollectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LocationConn
+	conn := meta.(*conns.AWSClient).LocationConn()
 
 	out, err := findGeofenceCollectionByName(ctx, conn, d.Id())
 
@@ -159,7 +159,7 @@ func resourceGeofenceCollectionRead(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceGeofenceCollectionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LocationConn
+	conn := meta.(*conns.AWSClient).LocationConn()
 
 	update := false
 
@@ -194,7 +194,7 @@ func resourceGeofenceCollectionUpdate(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceGeofenceCollectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LocationConn
+	conn := meta.(*conns.AWSClient).LocationConn()
 
 	log.Printf("[INFO] Deleting Location GeofenceCollection %s", d.Id())
 

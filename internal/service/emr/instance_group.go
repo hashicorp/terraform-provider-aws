@@ -2,6 +2,7 @@ package emr
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -136,7 +137,7 @@ func ResourceInstanceGroup() *schema.Resource {
 }
 
 func resourceInstanceGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EMRConn
+	conn := meta.(*conns.AWSClient).EMRConn()
 
 	instanceRole := emr.InstanceGroupTypeTask
 	groupConfig := &emr.InstanceGroupConfig{
@@ -183,27 +184,25 @@ func resourceInstanceGroupCreate(d *schema.ResourceData, meta interface{}) error
 		JobFlowId:      aws.String(d.Get("cluster_id").(string)),
 	}
 
-	log.Printf("[DEBUG] Creating EMR %s group with the following params: %s", instanceRole, params)
 	resp, err := conn.AddInstanceGroups(params)
 	if err != nil {
-		return err
+		return fmt.Errorf("creating EMR Instance Group: %w", err)
 	}
 
-	log.Printf("[DEBUG] Created EMR %s group finished: %#v", instanceRole, resp)
 	if resp == nil || len(resp.InstanceGroupIds) == 0 {
-		return fmt.Errorf("Error creating instance groups: no instance group returned")
+		return errors.New("creating EMR Instance Group: empty response")
 	}
 	d.SetId(aws.StringValue(resp.InstanceGroupIds[0]))
 
 	if err := waitForInstanceGroupStateRunning(conn, d.Get("cluster_id").(string), d.Id(), instanceGroupCreateTimeout); err != nil {
-		return fmt.Errorf("error waiting for EMR Instance Group (%s) creation: %s", d.Id(), err)
+		return fmt.Errorf("creating EMR Instance Group (%s): waiting for completion: %s", d.Id(), err)
 	}
 
 	return resourceInstanceGroupRead(d, meta)
 }
 
 func resourceInstanceGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EMRConn
+	conn := meta.(*conns.AWSClient).EMRConn()
 
 	ig, err := FetchInstanceGroup(conn, d.Get("cluster_id").(string), d.Id())
 
@@ -219,7 +218,7 @@ func resourceInstanceGroupRead(d *schema.ResourceData, meta interface{}) error {
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("error reading EMR Instance Group (%s): %s", d.Id(), err)
+		return fmt.Errorf("reading EMR Instance Group (%s): %s", d.Id(), err)
 	}
 
 	if ig.Status != nil {
@@ -249,7 +248,7 @@ func resourceInstanceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	autoscalingPolicyString, err := flattenAutoScalingPolicyDescription(ig.AutoScalingPolicy)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading EMR Instance Group (%s): %s", d.Id(), err)
 	}
 
 	d.Set("autoscaling_policy", autoscalingPolicyString)
@@ -272,7 +271,7 @@ func resourceInstanceGroupRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceInstanceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EMRConn
+	conn := meta.(*conns.AWSClient).EMRConn()
 
 	log.Printf("[DEBUG] Modify EMR task group")
 	if d.HasChanges("instance_count", "configurations_json") {
@@ -334,7 +333,7 @@ func resourceInstanceGroupUpdate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceInstanceGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EMRConn
+	conn := meta.(*conns.AWSClient).EMRConn()
 
 	log.Printf("[WARN] AWS EMR Instance Group does not support DELETE; resizing cluster to zero before removing from state")
 	params := &emr.ModifyInstanceGroupsInput{

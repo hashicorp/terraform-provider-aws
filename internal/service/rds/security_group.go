@@ -97,7 +97,7 @@ func resourceSecurityGroupRead(d *schema.ResourceData, meta interface{}) error {
 
 	sg, err := resourceSecurityGroupRetrieve(d, meta)
 	if err != nil {
-		return err
+		return fmt.Errorf("reading RDS DB Security Group (%s): %s", d.Id(), err)
 	}
 
 	d.Set("name", sg.DBSecurityGroupName)
@@ -129,7 +129,7 @@ func resourceSecurityGroupRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("ingress", rules)
 
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	arn := aws.StringValue(sg.DBSecurityGroupArn)
 	d.Set("arn", arn)
@@ -155,7 +155,7 @@ func resourceSecurityGroupRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceSecurityGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -168,7 +168,7 @@ func resourceSecurityGroupUpdate(d *schema.ResourceData, meta interface{}) error
 	if d.HasChange("ingress") {
 		sg, err := resourceSecurityGroupRetrieve(d, meta)
 		if err != nil {
-			return err
+			return fmt.Errorf("updating RDS DB Security Group (%s): %s", d.Id(), err)
 		}
 
 		oi, ni := d.GetChange("ingress")
@@ -188,7 +188,7 @@ func resourceSecurityGroupUpdate(d *schema.ResourceData, meta interface{}) error
 		for _, ing := range removeIngress {
 			err := resourceSecurityGroupRevokeRule(ing, *sg.DBSecurityGroupName, conn)
 			if err != nil {
-				return err
+				return fmt.Errorf("updating RDS DB Security Group (%s): revoking ingress: %s", d.Id(), err)
 			}
 		}
 
@@ -196,7 +196,7 @@ func resourceSecurityGroupUpdate(d *schema.ResourceData, meta interface{}) error
 		for _, ing := range newIngress {
 			err := resourceSecurityGroupAuthorizeRule(ing, *sg.DBSecurityGroupName, conn)
 			if err != nil {
-				return err
+				return fmt.Errorf("updating RDS DB Security Group (%s): authorizing ingress: %s", d.Id(), err)
 			}
 		}
 	}
@@ -205,27 +205,26 @@ func resourceSecurityGroupUpdate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceSecurityGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	log.Printf("[DEBUG] DB Security Group destroy: %v", d.Id())
 
 	opts := rds.DeleteDBSecurityGroupInput{DBSecurityGroupName: aws.String(d.Id())}
 
-	log.Printf("[DEBUG] DB Security Group destroy configuration: %v", opts)
 	_, err := conn.DeleteDBSecurityGroup(&opts)
 
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, "InvalidDBSecurityGroup.NotFound") {
 			return nil
 		}
-		return err
+		return fmt.Errorf("deleting RDS DB Security Group (%s): %s", d.Id(), err)
 	}
 
 	return nil
 }
 
 func resourceSecurityGroupRetrieve(d *schema.ResourceData, meta interface{}) (*rds.DBSecurityGroup, error) {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	opts := rds.DescribeDBSecurityGroupsInput{
 		DBSecurityGroupName: aws.String(d.Id()),

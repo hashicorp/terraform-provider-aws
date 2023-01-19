@@ -69,7 +69,7 @@ func TestAccBackupVaultLockConfiguration_disappears(t *testing.T) {
 }
 
 func testAccCheckVaultLockConfigurationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn()
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_backup_vault_lock_configuration" {
 			continue
@@ -102,7 +102,7 @@ func testAccCheckVaultLockConfigurationExists(name string, vault *backup.Describ
 			return fmt.Errorf("No Backup Vault Lock Configuration ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn()
 
 		output, err := tfbackup.FindVaultByName(conn, rs.Primary.ID)
 

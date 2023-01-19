@@ -80,7 +80,7 @@ func ResourceUser() *schema.Resource {
 }
 
 func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 	name := d.Get("name").(string)
@@ -135,7 +135,7 @@ func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -202,7 +202,7 @@ func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	if d.HasChanges("name", "path") {
 		on, nn := d.GetChange("name")
@@ -265,7 +265,7 @@ func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceUserDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	// IAM Users must be removed from all groups before they can be deleted
 	if err := DeleteUserGroupMemberships(conn, d.Id()); err != nil {
@@ -339,7 +339,7 @@ func DeleteUserGroupMemberships(conn *iam.IAM, username string) error {
 	for _, g := range groups {
 		// use iam group membership func to remove user from all groups
 		log.Printf("[DEBUG] Removing IAM User %s from IAM Group %s", username, g)
-		if err := removeUsersFromGroup(conn, []*string{aws.String(username)}, g); err != nil {
+		if err := removeUsersFromGroup(conn, []string{username}, g); err != nil {
 			return err
 		}
 	}

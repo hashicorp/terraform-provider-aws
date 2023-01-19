@@ -45,7 +45,7 @@ func ResourceVPCAssociationAuthorization() *schema.Resource {
 }
 
 func resourceVPCAssociationAuthorizationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53Conn
+	conn := meta.(*conns.AWSClient).Route53Conn()
 
 	req := &route53.CreateVPCAssociationAuthorizationInput{
 		HostedZoneId: aws.String(d.Get("zone_id").(string)),
@@ -72,11 +72,11 @@ func resourceVPCAssociationAuthorizationCreate(d *schema.ResourceData, meta inte
 }
 
 func resourceVPCAssociationAuthorizationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53Conn
+	conn := meta.(*conns.AWSClient).Route53Conn()
 
 	zone_id, vpc_id, err := VPCAssociationAuthorizationParseID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("reading Route53 VPC Association Authorization (%s): %s", d.Id(), err)
 	}
 
 	req := route53.ListVPCAssociationAuthorizationsInput{
@@ -121,11 +121,11 @@ func resourceVPCAssociationAuthorizationRead(d *schema.ResourceData, meta interf
 }
 
 func resourceVPCAssociationAuthorizationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53Conn
+	conn := meta.(*conns.AWSClient).Route53Conn()
 
 	zone_id, vpc_id, err := VPCAssociationAuthorizationParseID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting Route53 VPC Association Authorization (%s): %s", d.Id(), err)
 	}
 
 	req := route53.DeleteVPCAssociationAuthorizationInput{
@@ -136,10 +136,9 @@ func resourceVPCAssociationAuthorizationDelete(d *schema.ResourceData, meta inte
 		},
 	}
 
-	log.Printf("[DEBUG] Deleting Route53 Assocatiation Authorization for hosted zone %s for VPC %s", zone_id, vpc_id)
 	_, err = conn.DeleteVPCAssociationAuthorization(&req)
 	if err != nil {
-		return fmt.Errorf("Error deleting Route53 VPC Association Authorization: %s", err)
+		return fmt.Errorf("deleting Route53 VPC Association Authorization (%s): %s", d.Id(), err)
 	}
 
 	return nil

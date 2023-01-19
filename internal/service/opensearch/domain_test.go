@@ -20,7 +20,61 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+func TestEBSVolumeTypePermitsIopsInput(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name       string
+		volumeType string
+		want       bool
+	}{
+		{"empty", "", false},
+		{"gp2", opensearchservice.VolumeTypeGp2, false},
+		{"gp3", opensearchservice.VolumeTypeGp3, true},
+		{"io1", opensearchservice.VolumeTypeIo1, true},
+		{"standard", opensearchservice.VolumeTypeStandard, false},
+	}
+	for _, testCase := range testCases {
+		testCase := testCase
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			if got := tfopensearch.EBSVolumeTypePermitsIopsInput(testCase.volumeType); got != testCase.want {
+				t.Errorf("EBSVolumeTypePermitsIopsInput() = %v, want %v", got, testCase.want)
+			}
+		})
+	}
+}
+
+func TestEBSVolumeTypePermitsThroughputInput(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name       string
+		volumeType string
+		want       bool
+	}{
+		{"empty", "", false},
+		{"gp2", opensearchservice.VolumeTypeGp2, false},
+		{"gp3", opensearchservice.VolumeTypeGp3, true},
+		{"io1", opensearchservice.VolumeTypeIo1, false},
+		{"standard", opensearchservice.VolumeTypeStandard, false},
+	}
+	for _, testCase := range testCases {
+		testCase := testCase
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			if got := tfopensearch.EBSVolumeTypePermitsThroughputInput(testCase.volumeType); got != testCase.want {
+				t.Errorf("EBSVolumeTypePermitsThroughputInput() = %v, want %v", got, testCase.want)
+			}
+		})
+	}
+}
+
 func TestParseEngineVersion(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		TestName           string
 		InputEngineVersion string
@@ -51,7 +105,10 @@ func TestParseEngineVersion(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.TestName, func(t *testing.T) {
+			t.Parallel()
+
 			engineType, semver, err := tfopensearch.ParseEngineVersion(testCase.InputEngineVersion)
 
 			if err == nil && testCase.ExpectError {
@@ -447,7 +504,7 @@ func TestAccOpenSearchDomain_duplicate(t *testing.T) {
 		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy: func(s *terraform.State) error {
-			conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchConn
+			conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchConn()
 			_, err := conn.DeleteDomain(&opensearchservice.DeleteDomainInput{
 				DomainName: aws.String(rName),
 			})
@@ -457,7 +514,7 @@ func TestAccOpenSearchDomain_duplicate(t *testing.T) {
 			{
 				PreConfig: func() {
 					// Create duplicate
-					conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchConn
+					conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchConn()
 					_, err := conn.CreateDomain(&opensearchservice.CreateDomainInput{
 						DomainName: aws.String(rName),
 						EBSOptions: &opensearchservice.EBSOptions{
@@ -1488,6 +1545,54 @@ func TestAccOpenSearchDomain_VolumeType_update(t *testing.T) {
 		}})
 }
 
+// Verifies that EBS volume_type can be changed from gp3 to a type which does not
+// support the throughput and iops input values (ex. gp2)
+//
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/27467
+func TestAccOpenSearchDomain_VolumeType_gp3ToGP2(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var input opensearchservice.DomainStatus
+	rName := testAccRandomDomainName()
+	resourceName := "aws_opensearch_domain.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRole(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_clusterEBSVolumeGP3DefaultIopsThroughput(rName, 10),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(resourceName, &input),
+					resource.TestCheckResourceAttr(resourceName, "ebs_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_options.0.ebs_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_options.0.volume_size", "10"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_options.0.volume_type", "gp3"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateId:     rName,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDomainConfig_clusterEBSVolumeGP2(rName, 10),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(resourceName, &input),
+					resource.TestCheckResourceAttr(resourceName, "ebs_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_options.0.ebs_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_options.0.volume_size", "10"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_options.0.volume_type", "gp2"),
+				),
+			},
+		}})
+}
+
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/13867
 func TestAccOpenSearchDomain_VolumeType_missing(t *testing.T) {
 	if testing.Short() {
@@ -1782,7 +1887,7 @@ func testAccCheckDomainExists(n string, domain *opensearchservice.DomainStatus) 
 			return fmt.Errorf("No OpenSearch Domain ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchConn()
 		resp, err := tfopensearch.FindDomainByName(conn, rs.Primary.Attributes["domain_name"])
 		if err != nil {
 			return fmt.Errorf("Error describing domain: %s", err.Error())
@@ -1802,7 +1907,7 @@ func testAccCheckDomainExists(n string, domain *opensearchservice.DomainStatus) 
 func testAccCheckDomainNotRecreated(domain1, domain2 *opensearchservice.DomainStatus) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		/*
-			conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchConn
+			conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchConn()
 
 			ic, err := conn.DescribeDomainConfig(&opensearchservice.DescribeDomainConfigInput{
 				DomainName: domain1.DomainName,
@@ -1839,7 +1944,7 @@ func testAccCheckDomainDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchConn()
 		_, err := tfopensearch.FindDomainByName(conn, rs.Primary.Attributes["domain_name"])
 
 		if tfresource.NotFound(err) {
@@ -1869,7 +1974,7 @@ func testAccPreCheckIAMServiceLinkedRole(t *testing.T) {
 }
 
 func testAccPreCheckCognitoIdentityProvider(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn()
 
 	input := &cognitoidentityprovider.ListUserPoolsInput{
 		MaxResults: aws.Int64(1),
@@ -1887,7 +1992,7 @@ func testAccPreCheckCognitoIdentityProvider(t *testing.T) {
 }
 
 func testAccCheckELBDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_elb" {
@@ -2228,6 +2333,42 @@ resource "aws_opensearch_domain" "test" {
   }
 }
 `, rName, volumeSize, volumeThroughput, volumeIops)
+}
+
+func testAccDomainConfig_clusterEBSVolumeGP3DefaultIopsThroughput(rName string, volumeSize int) string {
+	return fmt.Sprintf(`
+resource "aws_opensearch_domain" "test" {
+  domain_name = %[1]q
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = %[2]d
+    volume_type = "gp3"
+  }
+
+  cluster_config {
+    instance_type = "t3.small.search"
+  }
+}
+`, rName, volumeSize)
+}
+
+func testAccDomainConfig_clusterEBSVolumeGP2(rName string, volumeSize int) string {
+	return fmt.Sprintf(`
+resource "aws_opensearch_domain" "test" {
+  domain_name = %[1]q
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = %[2]d
+    volume_type = "gp2"
+  }
+
+  cluster_config {
+    instance_type = "t3.small.search"
+  }
+}
+`, rName, volumeSize)
 }
 
 func testAccDomainConfig_clusterUpdateVersion(rName, version string) string {

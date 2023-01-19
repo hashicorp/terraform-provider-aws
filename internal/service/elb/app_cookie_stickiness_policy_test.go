@@ -75,7 +75,7 @@ func TestAccELBAppCookieStickinessPolicy_Disappears_elb(t *testing.T) {
 }
 
 func testAccCheckAppCookieStickinessPolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_app_cookie_stickiness_policy" {
@@ -119,7 +119,7 @@ func testAccCheckAppCookieStickinessPolicy(elbResource string, policyResource st
 			return fmt.Errorf("Not found: %s", policyResource)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn()
 		elbName, _, policyName := tfelb.AppCookieStickinessPolicyParseID(policy.Primary.ID)
 		_, err := conn.DescribeLoadBalancerPolicies(&elb.DescribeLoadBalancerPoliciesInput{
 			LoadBalancerName: aws.String(elbName),

@@ -66,11 +66,12 @@ func ResourceSecret() *schema.Resource {
 				ValidateFunc:  validSecretNamePrefix,
 			},
 			"policy": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				Type:                  schema.TypeString,
+				Optional:              true,
+				Computed:              true,
+				ValidateFunc:          validation.StringIsJSON,
+				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+				DiffSuppressOnRefresh: true,
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
@@ -151,7 +152,7 @@ func ResourceSecret() *schema.Resource {
 }
 
 func resourceSecretCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecretsManagerConn
+	conn := meta.(*conns.AWSClient).SecretsManagerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -203,7 +204,6 @@ func resourceSecretCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("policy"); ok && v.(string) != "" && v.(string) != "{}" {
 		policy, err := structure.NormalizeJsonString(v.(string))
-
 		if err != nil {
 			return fmt.Errorf("policy (%s) is invalid JSON: %w", v.(string), err)
 		}
@@ -263,7 +263,7 @@ func resourceSecretCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceSecretRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecretsManagerConn
+	conn := meta.(*conns.AWSClient).SecretsManagerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -299,9 +299,8 @@ func resourceSecretRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("reading Secrets Manager Secret (%s) policy: %w", d.Id(), err)
 	} else if v := output.ResourcePolicy; v != nil {
 		policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.StringValue(v))
-
 		if err != nil {
-			return err
+			return fmt.Errorf("reading Secrets Manager Secret (%s): %w", d.Id(), err)
 		}
 
 		d.Set("policy", policyToSet)
@@ -336,7 +335,7 @@ func resourceSecretRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceSecretUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecretsManagerConn
+	conn := meta.(*conns.AWSClient).SecretsManagerConn()
 
 	if d.HasChange("replica") {
 		o, n := d.GetChange("replica")
@@ -378,7 +377,6 @@ func resourceSecretUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("policy") {
 		if v, ok := d.GetOk("policy"); ok && v.(string) != "" && v.(string) != "{}" {
 			policy, err := structure.NormalizeJsonString(v.(string))
-
 			if err != nil {
 				return fmt.Errorf("policy contains an invalid JSON: %w", err)
 			}
@@ -461,7 +459,7 @@ func resourceSecretUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceSecretDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecretsManagerConn
+	conn := meta.(*conns.AWSClient).SecretsManagerConn()
 
 	if v, ok := d.GetOk("replica"); ok && v.(*schema.Set).Len() > 0 {
 		err := removeSecretReplicas(conn, d.Id(), v.(*schema.Set).List())

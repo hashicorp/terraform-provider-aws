@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/rds"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -65,7 +66,7 @@ func ResourceInstanceAutomatedBackupsReplication() *schema.Resource {
 }
 
 func resourceInstanceAutomatedBackupsReplicationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	input := &rds.StartDBInstanceAutomatedBackupsReplicationInput{
 		BackupRetentionPeriod: aws.Int64(int64(d.Get("retention_period").(int))),
@@ -97,7 +98,7 @@ func resourceInstanceAutomatedBackupsReplicationCreate(d *schema.ResourceData, m
 }
 
 func resourceInstanceAutomatedBackupsReplicationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	backup, err := FindDBInstanceAutomatedBackupByARN(conn, d.Id())
 
@@ -120,7 +121,7 @@ func resourceInstanceAutomatedBackupsReplicationRead(d *schema.ResourceData, met
 
 func resourceInstanceAutomatedBackupsReplicationDelete(d *schema.ResourceData, meta interface{}) error {
 	ctx := context.TODO()
-	conn := meta.(*conns.AWSClient).RDSConn
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	backup, err := FindDBInstanceAutomatedBackupByARN(conn, d.Id())
 
@@ -129,23 +130,27 @@ func resourceInstanceAutomatedBackupsReplicationDelete(d *schema.ResourceData, m
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading RDS instance automated backup (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting RDS DB Instance Automated Backup (%s): %w", d.Id(), err)
 	}
 
 	dbInstanceID := aws.StringValue(backup.DBInstanceIdentifier)
 	sourceDatabaseARN, err := arn.Parse(aws.StringValue(backup.DBInstanceArn))
 
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting RDS DB Instance Automated Backup (%s): %w", d.Id(), err)
 	}
 
-	log.Printf("[DEBUG] Stopping RDS instance automated backups replication: %s", d.Id())
+	log.Printf("[DEBUG] Stopping RDS Instance Automated Backups Replication: %s", d.Id())
 	_, err = conn.StopDBInstanceAutomatedBackupsReplication(&rds.StopDBInstanceAutomatedBackupsReplicationInput{
 		SourceDBInstanceArn: aws.String(d.Get("source_db_instance_arn").(string)),
 	})
 
+	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBInstanceNotFoundFault) {
+		return nil
+	}
+
 	if err != nil {
-		return fmt.Errorf("stopping RDS instance automated backups replication (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting RDS DB Instance Automated Backup (%s): %w", d.Id(), err)
 	}
 
 	// Create a new client to the source region.
@@ -155,7 +160,7 @@ func resourceInstanceAutomatedBackupsReplicationDelete(d *schema.ResourceData, m
 	}
 
 	if _, err := waitDBInstanceAutomatedBackupDeleted(ctx, sourceDatabaseConn, dbInstanceID, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("error waiting for DB instance automated backup (%s) delete: %w", d.Id(), err)
+		return fmt.Errorf("deleting RDS DB Instance Automated Backup (%s): waiting for completion: %w", d.Id(), err)
 	}
 
 	return nil

@@ -20,10 +20,10 @@ import (
 
 func ResourceUser() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceUserCreate,
-		ReadContext:   resourceUserRead,
-		UpdateContext: resourceUserUpdate,
-		DeleteContext: resourceUserDelete,
+		CreateWithoutTimeout: resourceUserCreate,
+		ReadWithoutTimeout:   resourceUserRead,
+		UpdateWithoutTimeout: resourceUserUpdate,
+		DeleteWithoutTimeout: resourceUserDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -141,7 +141,7 @@ func ResourceUser() *schema.Resource {
 }
 
 func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -192,7 +192,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -255,7 +255,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 }
 
 func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 
 	instanceID, userID, err := UserParseID(d.Id())
 
@@ -284,7 +284,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		_, err = conn.UpdateUserHierarchyWithContext(ctx, input)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("[ERROR] Error updating User hierarchy_group_id (%s): %w", d.Id(), err))
+			return diag.FromErr(fmt.Errorf("updating User hierarchy_group_id (%s): %w", d.Id(), err))
 		}
 	}
 
@@ -299,7 +299,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		_, err = conn.UpdateUserIdentityInfoWithContext(ctx, input)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("[ERROR] Error updating User identity_info (%s): %w", d.Id(), err))
+			return diag.FromErr(fmt.Errorf("updating User identity_info (%s): %w", d.Id(), err))
 		}
 	}
 
@@ -314,7 +314,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		_, err = conn.UpdateUserPhoneConfigWithContext(ctx, input)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("[ERROR] Error updating User phone_config (%s): %w", d.Id(), err))
+			return diag.FromErr(fmt.Errorf("updating User phone_config (%s): %w", d.Id(), err))
 		}
 	}
 
@@ -329,7 +329,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		_, err = conn.UpdateUserRoutingProfileWithContext(ctx, input)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("[ERROR] Error updating User routing_profile_id (%s): %w", d.Id(), err))
+			return diag.FromErr(fmt.Errorf("updating User routing_profile_id (%s): %w", d.Id(), err))
 		}
 	}
 
@@ -344,7 +344,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		_, err = conn.UpdateUserSecurityProfilesWithContext(ctx, input)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("[ERROR] Error updating User security_profile_ids (%s): %w", d.Id(), err))
+			return diag.FromErr(fmt.Errorf("updating User security_profile_ids (%s): %w", d.Id(), err))
 		}
 	}
 
@@ -360,7 +360,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 
 	instanceID, userID, err := UserParseID(d.Id())
 

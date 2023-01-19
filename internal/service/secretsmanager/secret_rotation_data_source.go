@@ -46,7 +46,7 @@ func DataSourceSecretRotation() *schema.Resource {
 }
 
 func dataSourceSecretRotationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecretsManagerConn
+	conn := meta.(*conns.AWSClient).SecretsManagerConn()
 	secretID := d.Get("secret_id").(string)
 
 	input := &secretsmanager.DescribeSecretInput{

@@ -616,7 +616,7 @@ func ResourceApplication() *schema.Resource {
 }
 
 func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KinesisAnalyticsConn
+	conn := meta.(*conns.AWSClient).KinesisAnalyticsConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 	applicationName := d.Get("name").(string)
@@ -641,7 +641,7 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if err != nil {
-		return fmt.Errorf("error creating Kinesis Analytics Application (%s): %w", applicationName, err)
+		return fmt.Errorf("creating Kinesis Analytics Application (%s): %w", applicationName, err)
 	}
 
 	applicationSummary := outputRaw.(*kinesisanalytics.CreateApplicationOutput).ApplicationSummary
@@ -690,7 +690,7 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 			err = startApplication(conn, application, inputStartingPosition)
 
 			if err != nil {
-				return err
+				return fmt.Errorf("creating Kinesis Analytics Application (%s): %w", applicationName, err)
 			}
 		} else {
 			log.Printf("[DEBUG] Kinesis Analytics Application (%s) has no inputs", d.Id())
@@ -701,7 +701,7 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KinesisAnalyticsConn
+	conn := meta.(*conns.AWSClient).KinesisAnalyticsConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -764,7 +764,7 @@ func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KinesisAnalyticsConn
+	conn := meta.(*conns.AWSClient).KinesisAnalyticsConn()
 
 	if d.HasChanges("cloudwatch_logging_options", "code", "inputs", "outputs", "reference_data_sources") {
 		applicationName := d.Get("name").(string)
@@ -1141,7 +1141,7 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 				err = startApplication(conn, application, inputStartingPosition)
 
 				if err != nil {
-					return err
+					return fmt.Errorf("updating Kinesis Analytics Application (%s): %w", d.Id(), err)
 				}
 			} else {
 				log.Printf("[DEBUG] Kinesis Analytics Application (%s) has no inputs", d.Id())
@@ -1150,7 +1150,7 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 			err = stopApplication(conn, application)
 
 			if err != nil {
-				return err
+				return fmt.Errorf("updating Kinesis Analytics Application (%s): %w", d.Id(), err)
 			}
 		}
 	}
@@ -1159,7 +1159,7 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceApplicationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KinesisAnalyticsConn
+	conn := meta.(*conns.AWSClient).KinesisAnalyticsConn()
 
 	createTimestamp, err := time.Parse(time.RFC3339, d.Get("create_timestamp").(string))
 	if err != nil {
@@ -1237,11 +1237,11 @@ func startApplication(conn *kinesisanalytics.KinesisAnalytics, application *kine
 	log.Printf("[DEBUG] Starting Kinesis Analytics Application (%s): %s", applicationARN, input)
 
 	if _, err := conn.StartApplication(input); err != nil {
-		return fmt.Errorf("error starting Kinesis Analytics Application (%s): %w", applicationARN, err)
+		return fmt.Errorf("starting application: %w", err)
 	}
 
 	if _, err := waitApplicationStarted(conn, applicationName); err != nil {
-		return fmt.Errorf("error waiting for Kinesis Analytics Application (%s) to start: %w", applicationARN, err)
+		return fmt.Errorf("starting application: waiting for completion: %w", err)
 	}
 
 	return nil
@@ -1263,11 +1263,11 @@ func stopApplication(conn *kinesisanalytics.KinesisAnalytics, application *kines
 	log.Printf("[DEBUG] Stopping Kinesis Analytics Application (%s): %s", applicationARN, input)
 
 	if _, err := conn.StopApplication(input); err != nil {
-		return fmt.Errorf("error stopping Kinesis Analytics Application (%s): %w", applicationARN, err)
+		return fmt.Errorf("stopping application: %w", err)
 	}
 
 	if _, err := waitApplicationStopped(conn, applicationName); err != nil {
-		return fmt.Errorf("error waiting for Kinesis Analytics Application (%s) to stop: %w", applicationARN, err)
+		return fmt.Errorf("stopping application: waiting for completion: %w", err)
 	}
 
 	return nil

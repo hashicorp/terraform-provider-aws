@@ -237,7 +237,7 @@ func TestAccMemoryDBUser_update_tags(t *testing.T) {
 }
 
 func testAccCheckUserDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).MemoryDBConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).MemoryDBConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_memorydb_user" {
@@ -271,7 +271,7 @@ func testAccCheckUserExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No MemoryDB User ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MemoryDBConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MemoryDBConn()
 
 		_, err := tfmemorydb.FindUserByName(context.Background(), conn, rs.Primary.Attributes["user_name"])
 

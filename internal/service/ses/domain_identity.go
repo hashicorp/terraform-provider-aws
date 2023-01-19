@@ -42,7 +42,7 @@ func ResourceDomainIdentity() *schema.Resource {
 }
 
 func resourceDomainIdentityCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	domainName := d.Get("domain").(string)
 
@@ -61,7 +61,7 @@ func resourceDomainIdentityCreate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceDomainIdentityRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	domainName := d.Id()
 	d.Set("domain", domainName)
@@ -74,13 +74,12 @@ func resourceDomainIdentityRead(d *schema.ResourceData, meta interface{}) error 
 
 	response, err := conn.GetIdentityVerificationAttributes(readOpts)
 	if err != nil {
-		log.Printf("[WARN] Error fetching identity verification attributes for %s: %s", d.Id(), err)
-		return err
+		return fmt.Errorf("reading SES Domain Identity (%s): %w", domainName, err)
 	}
 
 	verificationAttrs, ok := response.VerificationAttributes[domainName]
 	if !ok {
-		log.Printf("[WARN] Domain not listed in response when fetching verification attributes for %s", d.Id())
+		log.Printf("[WARN] SES Domain Identity (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
@@ -98,7 +97,7 @@ func resourceDomainIdentityRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceDomainIdentityDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	domainName := d.Get("domain").(string)
 

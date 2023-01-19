@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func StatusProduct(conn *servicecatalog.ServiceCatalog, acceptLanguage, productID string) resource.StateRefreshFunc {
@@ -96,25 +97,19 @@ func StatusPortfolioShare(conn *servicecatalog.ServiceCatalog, portfolioID, shar
 	return func() (interface{}, string, error) {
 		output, err := FindPortfolioShare(conn, portfolioID, shareType, principalID)
 
-		if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
-			return nil, StatusNotFound, err
+		if tfresource.NotFound(err) {
+			return nil, "", nil
 		}
 
 		if err != nil {
-			return nil, servicecatalog.ShareStatusError, fmt.Errorf("error finding portfolio share: %w", err)
-		}
-
-		if output == nil {
-			return nil, StatusNotFound, &resource.NotFoundError{
-				Message: fmt.Sprintf("error finding portfolio share (%s:%s:%s): empty response", portfolioID, shareType, principalID),
-			}
+			return nil, "", err
 		}
 
 		if !aws.BoolValue(output.Accepted) {
-			return output, servicecatalog.ShareStatusInProgress, err
+			return output, servicecatalog.ShareStatusInProgress, nil
 		}
 
-		return output, servicecatalog.ShareStatusCompleted, err
+		return output, servicecatalog.ShareStatusCompleted, nil
 	}
 }
 

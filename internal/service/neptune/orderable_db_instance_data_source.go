@@ -132,7 +132,7 @@ func DataSourceOrderableDBInstance() *schema.Resource {
 }
 
 func dataSourceOrderableDBInstanceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).NeptuneConn
+	conn := meta.(*conns.AWSClient).NeptuneConn()
 
 	input := &neptune.DescribeOrderableDBInstanceOptionsInput{}
 

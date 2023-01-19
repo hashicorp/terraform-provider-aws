@@ -264,7 +264,7 @@ func TestAccStorageGatewayFileSystemAssociation_Disappears_fsxFileSystem(t *test
 }
 
 func testAccCheckFileSystemAssociationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_storagegateway_file_system_association" {
@@ -294,7 +294,7 @@ func testAccCheckFileSystemAssociationExists(resourceName string, v *storagegate
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).StorageGatewayConn()
 
 		output, err := tfstoragegateway.FindFileSystemAssociationByARN(conn, rs.Primary.ID)
 

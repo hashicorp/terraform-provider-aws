@@ -430,14 +430,14 @@ func ValidTaskDefinitionContainerDefinitions(v interface{}, k string) (ws []stri
 }
 
 func resourceTaskDefinitionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECSConn
+	conn := meta.(*conns.AWSClient).ECSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	rawDefinitions := d.Get("container_definitions").(string)
 	definitions, err := expandContainerDefinitions(rawDefinitions)
 	if err != nil {
-		return err
+		return fmt.Errorf("creating ECS Task Definition (%s): %w", d.Get("family").(string), err)
 	}
 
 	input := ecs.RegisterTaskDefinitionInput{
@@ -491,7 +491,7 @@ func resourceTaskDefinitionCreate(d *schema.ResourceData, meta interface{}) erro
 	if len(constraints) > 0 {
 		cons, err := expandTaskDefinitionPlacementConstraints(constraints)
 		if err != nil {
-			return err
+			return fmt.Errorf("creating ECS Task Definition (%s): %w", d.Get("family").(string), err)
 		}
 		input.PlacementConstraints = cons
 	}
@@ -526,7 +526,7 @@ func resourceTaskDefinitionCreate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if err != nil {
-		return fmt.Errorf("failed creating ECS Task Definition (%s): %w", d.Get("family").(string), err)
+		return fmt.Errorf("creating ECS Task Definition (%s): %w", d.Get("family").(string), err)
 	}
 
 	taskDefinition := *out.TaskDefinition // nosemgrep:ci.prefer-aws-go-sdk-pointer-conversion-assignment // false positive
@@ -556,7 +556,7 @@ func resourceTaskDefinitionCreate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceTaskDefinitionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECSConn
+	conn := meta.(*conns.AWSClient).ECSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -578,7 +578,7 @@ func resourceTaskDefinitionRead(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading ECS Task Definition (%s): %w", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Received task definition %s, status:%s\n %s", aws.StringValue(out.TaskDefinition.Family),
@@ -604,11 +604,11 @@ func resourceTaskDefinitionRead(d *schema.ResourceData, meta interface{}) error 
 
 	defs, err := flattenContainerDefinitions(taskDefinition.ContainerDefinitions)
 	if err != nil {
-		return err
+		return fmt.Errorf("reading ECS Task Definition (%s): %w", d.Id(), err)
 	}
 	err = d.Set("container_definitions", defs)
 	if err != nil {
-		return err
+		return fmt.Errorf("reading ECS Task Definition (%s): %w", d.Id(), err)
 	}
 
 	d.Set("task_role_arn", taskDefinition.TaskRoleArn)
@@ -724,7 +724,7 @@ func flattenProxyConfiguration(pc *ecs.ProxyConfiguration) []map[string]interfac
 }
 
 func resourceTaskDefinitionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECSConn
+	conn := meta.(*conns.AWSClient).ECSConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -751,16 +751,14 @@ func resourceTaskDefinitionDelete(d *schema.ResourceData, meta interface{}) erro
 		return nil
 	}
 
-	conn := meta.(*conns.AWSClient).ECSConn
+	conn := meta.(*conns.AWSClient).ECSConn()
 
 	_, err := conn.DeregisterTaskDefinition(&ecs.DeregisterTaskDefinitionInput{
 		TaskDefinition: aws.String(d.Get("arn").(string)),
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting ECS Task Definition (%s): %w", d.Id(), err)
 	}
-
-	log.Printf("[DEBUG] Task definition %q deregistered.", d.Get("arn").(string))
 
 	return nil
 }

@@ -20,10 +20,10 @@ import (
 
 func ResourceEventIntegration() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceEventIntegrationCreate,
-		ReadContext:   resourceEventIntegrationRead,
-		UpdateContext: resourceEventIntegrationUpdate,
-		DeleteContext: resourceEventIntegrationDelete,
+		CreateWithoutTimeout: resourceEventIntegrationCreate,
+		ReadWithoutTimeout:   resourceEventIntegrationRead,
+		UpdateWithoutTimeout: resourceEventIntegrationUpdate,
+		DeleteWithoutTimeout: resourceEventIntegrationDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -73,7 +73,7 @@ func ResourceEventIntegration() *schema.Resource {
 }
 
 func resourceEventIntegrationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppIntegrationsConn
+	conn := meta.(*conns.AWSClient).AppIntegrationsConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -112,7 +112,7 @@ func resourceEventIntegrationCreate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceEventIntegrationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppIntegrationsConn
+	conn := meta.(*conns.AWSClient).AppIntegrationsConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -160,7 +160,7 @@ func resourceEventIntegrationRead(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceEventIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppIntegrationsConn
+	conn := meta.(*conns.AWSClient).AppIntegrationsConn()
 
 	name := d.Id()
 
@@ -171,7 +171,7 @@ func resourceEventIntegrationUpdate(ctx context.Context, d *schema.ResourceData,
 		})
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("[ERROR] Error updating EventIntegration (%s): %w", d.Id(), err))
+			return diag.FromErr(fmt.Errorf("updating EventIntegration (%s): %w", d.Id(), err))
 		}
 	}
 
@@ -186,7 +186,7 @@ func resourceEventIntegrationUpdate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceEventIntegrationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppIntegrationsConn
+	conn := meta.(*conns.AWSClient).AppIntegrationsConn()
 
 	name := d.Id()
 

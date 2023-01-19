@@ -121,7 +121,7 @@ func testAccCheckActivityExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No Step Functions Activity ID set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SFNConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SFNConn()
 
 		_, err := tfsfn.FindActivityByARN(context.Background(), conn, rs.Primary.ID)
 
@@ -130,7 +130,7 @@ func testAccCheckActivityExists(n string) resource.TestCheckFunc {
 }
 
 func testAccCheckActivityDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SFNConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SFNConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_sfn_activity" {

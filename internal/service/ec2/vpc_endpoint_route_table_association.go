@@ -38,7 +38,7 @@ func ResourceVPCEndpointRouteTableAssociation() *schema.Resource {
 }
 
 func resourceVPCEndpointRouteTableAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	endpointID := d.Get("vpc_endpoint_id").(string)
 	routeTableID := d.Get("route_table_id").(string)
@@ -69,7 +69,7 @@ func resourceVPCEndpointRouteTableAssociationCreate(d *schema.ResourceData, meta
 }
 
 func resourceVPCEndpointRouteTableAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	endpointID := d.Get("vpc_endpoint_id").(string)
 	routeTableID := d.Get("route_table_id").(string)
@@ -92,7 +92,7 @@ func resourceVPCEndpointRouteTableAssociationRead(d *schema.ResourceData, meta i
 }
 
 func resourceVPCEndpointRouteTableAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	endpointID := d.Get("vpc_endpoint_id").(string)
 	routeTableID := d.Get("route_table_id").(string)

@@ -53,7 +53,7 @@ func ResourceRevision() *schema.Resource {
 }
 
 func resourceRevisionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataExchangeConn
+	conn := meta.(*conns.AWSClient).DataExchangeConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -77,13 +77,13 @@ func resourceRevisionCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceRevisionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataExchangeConn
+	conn := meta.(*conns.AWSClient).DataExchangeConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	dataSetId, revisionId, err := RevisionParseResourceID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("reading DataExchange Revision (%s): %w", d.Id(), err)
 	}
 
 	revision, err := FindRevisionById(conn, dataSetId, revisionId)
@@ -95,7 +95,7 @@ func resourceRevisionRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading DataExchange Revision (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading DataExchange Revision (%s): %w", d.Id(), err)
 	}
 
 	d.Set("data_set_id", revision.DataSetId)
@@ -117,7 +117,7 @@ func resourceRevisionRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceRevisionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataExchangeConn
+	conn := meta.(*conns.AWSClient).DataExchangeConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &dataexchange.UpdateRevisionInput{
@@ -148,7 +148,7 @@ func resourceRevisionUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceRevisionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataExchangeConn
+	conn := meta.(*conns.AWSClient).DataExchangeConn()
 
 	input := &dataexchange.DeleteRevisionInput{
 		RevisionId: aws.String(d.Get("revision_id").(string)),

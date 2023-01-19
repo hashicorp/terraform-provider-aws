@@ -170,7 +170,7 @@ func ResourceDomain() *schema.Resource {
 }
 
 func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudSearchConn
+	conn := meta.(*conns.AWSClient).CloudSearchConn()
 
 	name := d.Get("name").(string)
 	input := cloudsearch.CreateDomainInput{
@@ -181,7 +181,7 @@ func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 	_, err := conn.CreateDomain(&input)
 
 	if err != nil {
-		return fmt.Errorf("error creating CloudSearch Domain (%s): %w", name, err)
+		return fmt.Errorf("creating CloudSearch Domain (%s): %w", name, err)
 	}
 
 	d.SetId(name)
@@ -232,7 +232,7 @@ func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 		err := defineIndexFields(conn, d.Id(), v.(*schema.Set).List())
 
 		if err != nil {
-			return err
+			return fmt.Errorf("creating CloudSearch Domain (%s): %w", name, err)
 		}
 
 		log.Printf("[DEBUG] Indexing CloudSearch Domain documents: %s", d.Id())
@@ -257,7 +257,7 @@ func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudSearchConn
+	conn := meta.(*conns.AWSClient).CloudSearchConn()
 
 	domainStatus, err := FindDomainStatusByName(conn, d.Id())
 
@@ -268,7 +268,7 @@ func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading CloudSearch Domain (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading CloudSearch Domain (%s): %w", d.Id(), err)
 	}
 
 	d.Set("arn", domainStatus.ARN)
@@ -323,7 +323,7 @@ func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if tfList, err := flattenIndexFieldStatuses(indexResults.IndexFields); err != nil {
-		return err
+		return fmt.Errorf("reading CloudSearch Domain (%s): %w", d.Id(), err)
 	} else if err := d.Set("index_field", tfList); err != nil {
 		return fmt.Errorf("error setting index_field: %w", err)
 	}
@@ -332,7 +332,7 @@ func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDomainUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudSearchConn
+	conn := meta.(*conns.AWSClient).CloudSearchConn()
 	requiresIndexDocuments := false
 
 	if d.HasChange("scaling_parameters") {
@@ -434,7 +434,7 @@ func resourceDomainUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		if v := new.Difference(old); v.Len() > 0 {
 			if err := defineIndexFields(conn, d.Id(), v.List()); err != nil {
-				return err
+				return fmt.Errorf("updating CloudSearch Domain (%s): %w", d.Id(), err)
 			}
 
 			requiresIndexDocuments = true
@@ -462,7 +462,7 @@ func resourceDomainUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDomainDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudSearchConn
+	conn := meta.(*conns.AWSClient).CloudSearchConn()
 
 	log.Printf("[DEBUG] Deleting CloudSearch Domain: %s", d.Id())
 	_, err := conn.DeleteDomain(&cloudsearch.DeleteDomainInput{

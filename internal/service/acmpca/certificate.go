@@ -108,7 +108,7 @@ func ResourceCertificate() *schema.Resource {
 }
 
 func resourceCertificateCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ACMPCAConn
+	conn := meta.(*conns.AWSClient).ACMPCAConn()
 
 	certificateAuthorityARN := d.Get("certificate_authority_arn").(string)
 	input := &acmpca.IssueCertificateInput{
@@ -163,7 +163,7 @@ func resourceCertificateCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceCertificateRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ACMPCAConn
+	conn := meta.(*conns.AWSClient).ACMPCAConn()
 
 	getCertificateInput := &acmpca.GetCertificateInput{
 		CertificateArn:          aws.String(d.Id()),
@@ -196,7 +196,7 @@ func resourceCertificateRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceCertificateRevoke(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ACMPCAConn
+	conn := meta.(*conns.AWSClient).ACMPCAConn()
 
 	block, _ := pem.Decode([]byte(d.Get("certificate").(string)))
 	if block == nil {

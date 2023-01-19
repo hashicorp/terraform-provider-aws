@@ -282,7 +282,7 @@ func hasIntentConfigChanges(d verify.ResourceDiffer) bool {
 }
 
 func resourceIntentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LexModelsConn
+	conn := meta.(*conns.AWSClient).LexModelsConn()
 	name := d.Get("name").(string)
 
 	input := &lexmodelbuildingservice.PutIntentInput{
@@ -355,7 +355,7 @@ func resourceIntentCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceIntentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LexModelsConn
+	conn := meta.(*conns.AWSClient).LexModelsConn()
 
 	resp, err := conn.GetIntent(&lexmodelbuildingservice.GetIntentInput{
 		Name:    aws.String(d.Id()),
@@ -413,17 +413,13 @@ func resourceIntentRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("fulfillment_activity", flattenFulfilmentActivity(resp.FulfillmentActivity))
 	}
 
-	if resp.ParentIntentSignature != nil {
-		d.Set("parent_intent_signature", resp.ParentIntentSignature)
-	}
+	d.Set("parent_intent_signature", resp.ParentIntentSignature)
 
 	if resp.RejectionStatement != nil {
 		d.Set("rejection_statement", flattenStatement(resp.RejectionStatement))
 	}
 
-	if resp.SampleUtterances != nil {
-		d.Set("sample_utterances", resp.SampleUtterances)
-	}
+	d.Set("sample_utterances", resp.SampleUtterances)
 
 	if resp.Slots != nil {
 		d.Set("slot", flattenSlots(resp.Slots))
@@ -433,7 +429,7 @@ func resourceIntentRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceIntentUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LexModelsConn
+	conn := meta.(*conns.AWSClient).LexModelsConn()
 
 	input := &lexmodelbuildingservice.PutIntentInput{
 		Checksum:      aws.String(d.Get("checksum").(string)),
@@ -503,7 +499,7 @@ func resourceIntentUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceIntentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LexModelsConn
+	conn := meta.(*conns.AWSClient).LexModelsConn()
 
 	input := &lexmodelbuildingservice.DeleteIntentInput{
 		Name: aws.String(d.Id()),
@@ -527,12 +523,14 @@ func resourceIntentDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting intent %s: %w", d.Id(), err)
+		return fmt.Errorf("deleting Lex Model Intent (%s): %w", d.Id(), err)
 	}
 
-	_, err = waitIntentDeleted(conn, d.Id())
+	if _, err := waitIntentDeleted(conn, d.Id()); err != nil {
+		return fmt.Errorf("deleting Lex Model Intent (%s): waiting for completion: %w", d.Id(), err)
+	}
 
-	return err
+	return nil
 }
 
 var codeHookResource = &schema.Resource{

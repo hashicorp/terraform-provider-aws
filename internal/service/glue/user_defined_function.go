@@ -89,7 +89,7 @@ func ResourceUserDefinedFunction() *schema.Resource {
 }
 
 func resourceUserDefinedFunctionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+	conn := meta.(*conns.AWSClient).GlueConn()
 	catalogID := createCatalogID(d, meta.(*conns.AWSClient).AccountID)
 	dbName := d.Get("database_name").(string)
 	funcName := d.Get("name").(string)
@@ -111,11 +111,11 @@ func resourceUserDefinedFunctionCreate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceUserDefinedFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+	conn := meta.(*conns.AWSClient).GlueConn()
 
 	catalogID, dbName, funcName, err := ReadUDFID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("updating Glue User Defined Function (%s): %w", d.Id(), err)
 	}
 
 	input := &glue.UpdateUserDefinedFunctionInput{
@@ -126,18 +126,18 @@ func resourceUserDefinedFunctionUpdate(d *schema.ResourceData, meta interface{})
 	}
 
 	if _, err := conn.UpdateUserDefinedFunction(input); err != nil {
-		return fmt.Errorf("error updating Glue User Defined Function (%s): %w", d.Id(), err)
+		return fmt.Errorf("updating Glue User Defined Function (%s): %w", d.Id(), err)
 	}
 
 	return resourceUserDefinedFunctionRead(d, meta)
 }
 
 func resourceUserDefinedFunctionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+	conn := meta.(*conns.AWSClient).GlueConn()
 
 	catalogID, dbName, funcName, err := ReadUDFID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("reading Glue User Defined Function (%s): %w", d.Id(), err)
 	}
 
 	input := &glue.GetUserDefinedFunctionInput{
@@ -154,7 +154,7 @@ func resourceUserDefinedFunctionRead(d *schema.ResourceData, meta interface{}) e
 			return nil
 		}
 
-		return fmt.Errorf("error reading Glue User Defined Function: %w", err)
+		return fmt.Errorf("reading Glue User Defined Function (%s): %w", d.Id(), err)
 	}
 
 	udf := out.UserDefinedFunction
@@ -178,17 +178,17 @@ func resourceUserDefinedFunctionRead(d *schema.ResourceData, meta interface{}) e
 		d.Set("create_time", udf.CreateTime.Format(time.RFC3339))
 	}
 	if err := d.Set("resource_uris", flattenUserDefinedFunctionResourceURI(udf.ResourceUris)); err != nil {
-		return err
+		return fmt.Errorf("reading Glue User Defined Function (%s): setting resource_uris: %w", d.Id(), err)
 	}
 
 	return nil
 }
 
 func resourceUserDefinedFunctionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+	conn := meta.(*conns.AWSClient).GlueConn()
 	catalogID, dbName, funcName, err := ReadUDFID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting Glue User Defined Function (%s): %w", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Glue User Defined Function: %s", d.Id())
@@ -198,7 +198,7 @@ func resourceUserDefinedFunctionDelete(d *schema.ResourceData, meta interface{})
 		FunctionName: aws.String(funcName),
 	})
 	if err != nil {
-		return fmt.Errorf("error deleting Glue User Defined Function: %w", err)
+		return fmt.Errorf("deleting Glue User Defined Function (%s): %w", d.Id(), err)
 	}
 	return nil
 }

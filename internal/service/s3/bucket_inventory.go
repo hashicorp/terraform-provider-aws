@@ -175,7 +175,7 @@ func ResourceBucketInventory() *schema.Resource {
 }
 
 func resourceBucketInventoryPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 	bucket := d.Get("bucket").(string)
 	name := d.Get("name").(string)
 
@@ -252,11 +252,11 @@ func resourceBucketInventoryPut(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceBucketInventoryDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket, name, err := BucketInventoryParseID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting S3 Bucket Inventory Configuration (%s): %w", d.Id(), err)
 	}
 
 	input := &s3.DeleteBucketInventoryConfigurationInput{
@@ -276,18 +276,18 @@ func resourceBucketInventoryDelete(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting S3 Bucket Inventory Configuration (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting S3 Bucket Inventory Configuration (%s): %w", d.Id(), err)
 	}
 
 	return nil
 }
 
 func resourceBucketInventoryRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket, name, err := BucketInventoryParseID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("reading S3 Bucket Inventory Configuration (%s): %w", d.Id(), err)
 	}
 
 	d.Set("bucket", bucket)

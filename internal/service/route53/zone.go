@@ -118,7 +118,7 @@ func ResourceZone() *schema.Resource {
 }
 
 func resourceZoneCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53Conn
+	conn := meta.(*conns.AWSClient).Route53Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 	region := meta.(*conns.AWSClient).Region
@@ -169,7 +169,7 @@ func resourceZoneCreate(d *schema.ResourceData, meta interface{}) error {
 			err := hostedZoneVPCAssociate(conn, d.Id(), vpc)
 
 			if err != nil {
-				return err
+				return fmt.Errorf("creating Route53 Hosted Zone (%s): associating VPC (%s) %s", d.Id(), aws.StringValue(vpc.VPCId), err)
 			}
 		}
 	}
@@ -178,7 +178,7 @@ func resourceZoneCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceZoneRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53Conn
+	conn := meta.(*conns.AWSClient).Route53Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -263,7 +263,7 @@ func resourceZoneRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceZoneUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53Conn
+	conn := meta.(*conns.AWSClient).Route53Conn()
 	region := meta.(*conns.AWSClient).Region
 
 	if d.HasChange("comment") {
@@ -302,7 +302,7 @@ func resourceZoneUpdate(d *schema.ResourceData, meta interface{}) error {
 			err := hostedZoneVPCAssociate(conn, d.Id(), vpc)
 
 			if err != nil {
-				return err
+				return fmt.Errorf("updating Route53 Hosted Zone (%s): associating VPC (%s) %s", d.Id(), aws.StringValue(vpc.VPCId), err)
 			}
 		}
 
@@ -315,7 +315,7 @@ func resourceZoneUpdate(d *schema.ResourceData, meta interface{}) error {
 			err := hostedZoneVPCDisassociate(conn, d.Id(), vpc)
 
 			if err != nil {
-				return err
+				return fmt.Errorf("updating Route53 Hosted Zone (%s): disassociating VPC (%s) %s", d.Id(), aws.StringValue(vpc.VPCId), err)
 			}
 		}
 	}
@@ -324,7 +324,7 @@ func resourceZoneUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceZoneDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53Conn
+	conn := meta.(*conns.AWSClient).Route53Conn()
 
 	if d.Get("force_destroy").(bool) {
 		if err := deleteAllRecordsInHostedZoneId(d.Id(), d.Get("name").(string), conn); err != nil {

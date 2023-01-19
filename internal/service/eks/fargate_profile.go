@@ -98,7 +98,7 @@ func ResourceFargateProfile() *schema.Resource {
 }
 
 func resourceFargateProfileCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EKSConn
+	conn := meta.(*conns.AWSClient).EKSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -160,14 +160,14 @@ func resourceFargateProfileCreate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceFargateProfileRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EKSConn
+	conn := meta.(*conns.AWSClient).EKSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	clusterName, fargateProfileName, err := FargateProfileParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading EKS Fargate Profile (%s): %w", d.Id(), err)
 	}
 
 	fargateProfile, err := FindFargateProfileByClusterNameAndFargateProfileName(conn, clusterName, fargateProfileName)
@@ -179,7 +179,7 @@ func resourceFargateProfileRead(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading EKS Fargate Profile (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading EKS Fargate Profile (%s): %w", d.Id(), err)
 	}
 
 	d.Set("arn", fargateProfile.FargateProfileArn)
@@ -212,7 +212,7 @@ func resourceFargateProfileRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceFargateProfileUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EKSConn
+	conn := meta.(*conns.AWSClient).EKSConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -225,12 +225,12 @@ func resourceFargateProfileUpdate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceFargateProfileDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EKSConn
+	conn := meta.(*conns.AWSClient).EKSConn()
 
 	clusterName, fargateProfileName, err := FargateProfileParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting EKS Fargate Profile (%s): %w", d.Id(), err)
 	}
 
 	// mutex lock for creation/deletion serialization
@@ -249,13 +249,13 @@ func resourceFargateProfileDelete(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting EKS Fargate Profile (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting EKS Fargate Profile (%s): %w", d.Id(), err)
 	}
 
 	_, err = waitFargateProfileDeleted(conn, clusterName, fargateProfileName, d.Timeout(schema.TimeoutDelete))
 
 	if err != nil {
-		return fmt.Errorf("error waiting for EKS Fargate Profile (%s) to delete: %w", d.Id(), err)
+		return fmt.Errorf("deleting EKS Fargate Profile (%s): waiting for completion: %w", d.Id(), err)
 	}
 
 	return nil

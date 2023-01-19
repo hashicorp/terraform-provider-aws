@@ -79,7 +79,7 @@ func ResourceKeyPair() *schema.Resource {
 }
 
 func resourceKeyPairCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LightsailConn
+	conn := meta.(*conns.AWSClient).LightsailConn()
 
 	var kName string
 	if v, ok := d.GetOk("name"); ok {
@@ -102,13 +102,13 @@ func resourceKeyPairCreate(d *schema.ResourceData, meta interface{}) error {
 			KeyPairName: aws.String(kName),
 		})
 		if err != nil {
-			return err
+			return fmt.Errorf("creating Lightsail Key Pair (%s): %w", kName, err)
 		}
 		if resp.Operation == nil {
-			return fmt.Errorf("No operation found for CreateKeyPair response")
+			return fmt.Errorf("creating Lightsail Key Pair (%s): no operation returned", kName)
 		}
 		if resp.KeyPair == nil {
-			return fmt.Errorf("No KeyPair information found for CreateKeyPair response")
+			return fmt.Errorf("creating Lightsail Key Pair (%s): no key information returned", kName)
 		}
 		d.SetId(kName)
 
@@ -120,12 +120,12 @@ func resourceKeyPairCreate(d *schema.ResourceData, meta interface{}) error {
 		// encrypt private key if pgp_key is given
 		pgpKey, err := retrieveGPGKey(d.Get("pgp_key").(string))
 		if err != nil {
-			return err
+			return fmt.Errorf("creating Lightsail Key Pair (%s): %w", kName, err)
 		}
 		if pgpKey != "" {
-			fingerprint, encrypted, err := encryptValue(pgpKey, *resp.PrivateKeyBase64, "Lightsail Private Key")
+			fingerprint, encrypted, err := encryptValue(pgpKey, aws.StringValue(resp.PrivateKeyBase64), "Lightsail Private Key")
 			if err != nil {
-				return err
+				return fmt.Errorf("creating Lightsail Key Pair (%s): %w", kName, err)
 			}
 
 			d.Set("encrypted_fingerprint", fingerprint)
@@ -143,8 +143,7 @@ func resourceKeyPairCreate(d *schema.ResourceData, meta interface{}) error {
 		})
 
 		if err != nil {
-			log.Printf("[ERR] Error importing key: %s", err)
-			return err
+			return fmt.Errorf("creating Lightsail Key Pair (%s): %w", kName, err)
 		}
 		d.SetId(kName)
 
@@ -162,7 +161,7 @@ func resourceKeyPairCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceKeyPairRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LightsailConn
+	conn := meta.(*conns.AWSClient).LightsailConn()
 
 	resp, err := conn.GetKeyPair(&lightsail.GetKeyPairInput{
 		KeyPairName: aws.String(d.Id()),
@@ -174,7 +173,7 @@ func resourceKeyPairRead(d *schema.ResourceData, meta interface{}) error {
 			d.SetId("")
 			return nil
 		}
-		return err
+		return fmt.Errorf("reading Lightsail Key Pair (%s): %w", d.Id(), err)
 	}
 
 	d.Set("arn", resp.KeyPair.Arn)
@@ -185,13 +184,13 @@ func resourceKeyPairRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceKeyPairDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LightsailConn
+	conn := meta.(*conns.AWSClient).LightsailConn()
 	resp, err := conn.DeleteKeyPair(&lightsail.DeleteKeyPairInput{
 		KeyPairName: aws.String(d.Id()),
 	})
 
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting Lightsail Key Pair (%s): %w", d.Id(), err)
 	}
 
 	op := resp.Operation
@@ -199,9 +198,7 @@ func resourceKeyPairDelete(d *schema.ResourceData, meta interface{}) error {
 	err = waitOperation(conn, op.Id)
 
 	if err != nil {
-		return fmt.Errorf(
-			"Error waiting for KeyPair (%s) to become destroyed: %s",
-			d.Id(), err)
+		return fmt.Errorf("deleting Lightsail Key Pair (%s): waiting for completion: %w", d.Id(), err)
 	}
 
 	return nil
@@ -217,7 +214,7 @@ func retrieveGPGKey(pgpKey string) (string, error) {
 	if strings.HasPrefix(pgpKey, keybasePrefix) {
 		publicKeys, err := pgpkeys.FetchKeybasePubkeys([]string{pgpKey})
 		if err != nil {
-			return "", fmt.Errorf("Error retrieving Public Key for %s: %w", pgpKey, err)
+			return "", fmt.Errorf("retrieving Public Key (%s): %w", pgpKey, err)
 		}
 		encryptionKey = publicKeys[pgpKey]
 	}
@@ -231,7 +228,7 @@ func encryptValue(encryptionKey, value, description string) (string, string, err
 	fingerprints, encryptedValue, err :=
 		pgpkeys.EncryptShares([][]byte{[]byte(value)}, []string{encryptionKey})
 	if err != nil {
-		return "", "", fmt.Errorf("Error encrypting %s: %w", description, err)
+		return "", "", fmt.Errorf("encrypting %s: %w", description, err)
 	}
 
 	return fingerprints[0], base64.StdEncoding.EncodeToString(encryptedValue[0]), nil

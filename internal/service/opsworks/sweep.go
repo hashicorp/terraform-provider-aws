@@ -52,6 +52,9 @@ func init() {
 	resource.AddTestSweepers("aws_opsworks_rds_db_instance", &resource.Sweeper{
 		Name: "aws_opsworks_rds_db_instance",
 		F:    sweepRDSDBInstance,
+		Dependencies: []string{
+			"aws_db_instance",
+		},
 	})
 
 	resource.AddTestSweepers("aws_opsworks_user_profile", &resource.Sweeper{
@@ -66,7 +69,7 @@ func sweepApplication(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).OpsWorksConn
+	conn := client.(*conns.AWSClient).OpsWorksConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	output, err := conn.DescribeStacks(&opsworks.DescribeStacksInput{})
@@ -117,7 +120,7 @@ func sweepInstance(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).OpsWorksConn
+	conn := client.(*conns.AWSClient).OpsWorksConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	output, err := conn.DescribeStacks(&opsworks.DescribeStacksInput{})
@@ -169,7 +172,7 @@ func sweepRDSDBInstance(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).OpsWorksConn
+	conn := client.(*conns.AWSClient).OpsWorksConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	output, err := conn.DescribeStacks(&opsworks.DescribeStacksInput{})
@@ -221,7 +224,7 @@ func sweepStacks(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).OpsWorksConn
+	conn := client.(*conns.AWSClient).OpsWorksConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	output, err := conn.DescribeStacks(&opsworks.DescribeStacksInput{})
@@ -263,7 +266,7 @@ func sweepLayers(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).OpsWorksConn
+	conn := client.(*conns.AWSClient).OpsWorksConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	output, err := conn.DescribeStacks(&opsworks.DescribeStacksInput{})
@@ -324,7 +327,7 @@ func sweepUserProfiles(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).OpsWorksConn
+	conn := client.(*conns.AWSClient).OpsWorksConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	output, err := conn.DescribeUserProfiles(&opsworks.DescribeUserProfilesInput{})

@@ -67,7 +67,7 @@ func ResourcePortfolio() *schema.Resource {
 	}
 }
 func resourcePortfolioCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 	input := servicecatalog.CreatePortfolioInput{
@@ -96,7 +96,7 @@ func resourcePortfolioCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourcePortfolioRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -139,7 +139,7 @@ func resourcePortfolioRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourcePortfolioUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 	input := servicecatalog.UpdatePortfolioInput{
 		AcceptLanguage: aws.String(AcceptLanguageEnglish),
 		Id:             aws.String(d.Id()),
@@ -181,7 +181,7 @@ func resourcePortfolioUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourcePortfolioDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 	input := servicecatalog.DeletePortfolioInput{}
 	input.Id = aws.String(d.Id())
 

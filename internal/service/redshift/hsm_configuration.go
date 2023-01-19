@@ -71,7 +71,7 @@ func ResourceHSMConfiguration() *schema.Resource {
 }
 
 func resourceHSMConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -99,7 +99,7 @@ func resourceHSMConfigurationCreate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceHSMConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -145,7 +145,7 @@ func resourceHSMConfigurationRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceHSMConfigurationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -159,7 +159,7 @@ func resourceHSMConfigurationUpdate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceHSMConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 
 	log.Printf("[DEBUG] Deleting Redshift HSM Configuration: %s", d.Id())
 	_, err := conn.DeleteHsmConfiguration(&redshift.DeleteHsmConfigurationInput{

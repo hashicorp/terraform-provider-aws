@@ -1,6 +1,7 @@
 package dax
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -47,7 +48,7 @@ func ResourceSubnetGroup() *schema.Resource {
 }
 
 func resourceSubnetGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DAXConn
+	conn := meta.(*conns.AWSClient).DAXConn()
 
 	input := &dax.CreateSubnetGroupInput{
 		SubnetGroupName: aws.String(d.Get("name").(string)),
@@ -59,7 +60,7 @@ func resourceSubnetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := conn.CreateSubnetGroup(input)
 	if err != nil {
-		return err
+		return fmt.Errorf("creating DAX Subnet Group (%s): %w", d.Get("name").(string), err)
 	}
 
 	d.SetId(d.Get("name").(string))
@@ -67,18 +68,18 @@ func resourceSubnetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DAXConn
+	conn := meta.(*conns.AWSClient).DAXConn()
 
 	resp, err := conn.DescribeSubnetGroups(&dax.DescribeSubnetGroupsInput{
 		SubnetGroupNames: []*string{aws.String(d.Id())},
 	})
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, dax.ErrCodeSubnetGroupNotFoundFault) {
-			log.Printf("[WARN] DAX SubnetGroup %q not found, removing from state", d.Id())
+			log.Printf("[WARN] DAX Subnet Group %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
-		return err
+		return fmt.Errorf("reading DAX Subnet Group (%s): %w", d.Id(), err)
 	}
 	sg := resp.SubnetGroups[0]
 
@@ -94,7 +95,7 @@ func resourceSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceSubnetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DAXConn
+	conn := meta.(*conns.AWSClient).DAXConn()
 
 	input := &dax.UpdateSubnetGroupInput{
 		SubnetGroupName: aws.String(d.Id()),
@@ -110,14 +111,14 @@ func resourceSubnetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := conn.UpdateSubnetGroup(input)
 	if err != nil {
-		return err
+		return fmt.Errorf("updating DAX Subnet Group (%s): %w", d.Id(), err)
 	}
 
 	return resourceSubnetGroupRead(d, meta)
 }
 
 func resourceSubnetGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DAXConn
+	conn := meta.(*conns.AWSClient).DAXConn()
 
 	input := &dax.DeleteSubnetGroupInput{
 		SubnetGroupName: aws.String(d.Id()),
@@ -128,7 +129,7 @@ func resourceSubnetGroupDelete(d *schema.ResourceData, meta interface{}) error {
 		if tfawserr.ErrCodeEquals(err, dax.ErrCodeSubnetGroupNotFoundFault) {
 			return nil
 		}
-		return err
+		return fmt.Errorf("deleting DAX Subnet Group (%s): %w", d.Id(), err)
 	}
 
 	return nil

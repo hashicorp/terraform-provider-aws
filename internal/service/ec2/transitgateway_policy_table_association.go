@@ -50,7 +50,7 @@ func ResourceTransitGatewayPolicyTableAssociation() *schema.Resource {
 }
 
 func resourceTransitGatewayPolicyTableAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	// If the TGW attachment is already associated with a TGW route table, disassociate it to prevent errors like
 	// "IncorrectState: Cannot have both PolicyTableAssociation and RouteTableAssociation on the same TransitGateway Attachment".
@@ -102,12 +102,12 @@ func resourceTransitGatewayPolicyTableAssociationCreate(d *schema.ResourceData, 
 }
 
 func resourceTransitGatewayPolicyTableAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	transitGatewayPolicyTableID, transitGatewayAttachmentID, err := TransitGatewayPolicyTableAssociationParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading EC2 Transit Gateway Policy Table Association (%s): %w", d.Id(), err)
 	}
 
 	transitGatewayPolicyTableAssociation, err := FindTransitGatewayPolicyTableAssociationByTwoPartKey(conn, transitGatewayPolicyTableID, transitGatewayAttachmentID)
@@ -131,12 +131,12 @@ func resourceTransitGatewayPolicyTableAssociationRead(d *schema.ResourceData, me
 }
 
 func resourceTransitGatewayPolicyTableAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	transitGatewayPolicyTableID, transitGatewayAttachmentID, err := TransitGatewayPolicyTableAssociationParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting EC2 Transit Gateway Policy Table Association (%s): %w", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Deleting EC2 Transit Gateway Policy Table Association: %s", d.Id())

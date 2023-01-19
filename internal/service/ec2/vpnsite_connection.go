@@ -661,7 +661,7 @@ var (
 )
 
 func resourceVPNConnectionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -698,7 +698,7 @@ func resourceVPNConnectionCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceVPNConnectionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -711,7 +711,7 @@ func resourceVPNConnectionRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 VPN Connection (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading EC2 VPN Connection (%s): %w", d.Id(), err)
 	}
 
 	arn := arn.ARN{
@@ -783,7 +783,7 @@ func resourceVPNConnectionRead(d *schema.ResourceData, meta interface{}) error {
 		for i, prefix := range []string{"tunnel1_", "tunnel2_"} {
 			if len(v.TunnelOptions) > i {
 				if err := flattenTunnelOption(d, prefix, v.TunnelOptions[i]); err != nil {
-					return err
+					return fmt.Errorf("reading EC2 VPN Connection (%s): %w", d.Id(), err)
 				}
 			}
 		}
@@ -845,7 +845,7 @@ func resourceVPNConnectionRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceVPNConnectionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	if d.HasChanges("customer_gateway_id", "transit_gateway_id", "vpn_gateway_id") {
 		input := &ec2.ModifyVpnConnectionInput{
@@ -940,7 +940,7 @@ func resourceVPNConnectionUpdate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceVPNConnectionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	log.Printf("[INFO] Deleting EC2 VPN Connection: %s", d.Id())
 	_, err := conn.DeleteVpnConnection(&ec2.DeleteVpnConnectionInput{

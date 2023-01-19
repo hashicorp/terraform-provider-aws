@@ -120,7 +120,7 @@ func testAccCheckVoiceConnectorOriginationExists(name string) resource.TestCheck
 			return fmt.Errorf("no Chime voice connector origination ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeConn()
 		input := &chime.GetVoiceConnectorOriginationInput{
 			VoiceConnectorId: aws.String(rs.Primary.ID),
 		}
@@ -143,7 +143,7 @@ func testAccCheckVoiceConnectorOriginationDestroy(s *terraform.State) error {
 		if rs.Type != "aws_chime_voice_connector_origination" {
 			continue
 		}
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeConn()
 		input := &chime.GetVoiceConnectorOriginationInput{
 			VoiceConnectorId: aws.String(rs.Primary.ID),
 		}

@@ -414,7 +414,7 @@ func resourceReceiptRuleImport(d *schema.ResourceData, meta interface{}) ([]*sch
 }
 
 func resourceReceiptRuleCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	createOpts := &ses.CreateReceiptRuleInput{
 		Rule:        buildReceiptRule(d),
@@ -436,7 +436,7 @@ func resourceReceiptRuleCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceReceiptRuleUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	updateOpts := &ses.UpdateReceiptRuleInput{
 		Rule:        buildReceiptRule(d),
@@ -465,7 +465,7 @@ func resourceReceiptRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceReceiptRuleRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	ruleSetName := d.Get("rule_set_name").(string)
 	describeOpts := &ses.DescribeReceiptRuleInput{
@@ -485,7 +485,7 @@ func resourceReceiptRuleRead(d *schema.ResourceData, meta interface{}) error {
 			d.SetId("")
 			return nil
 		}
-		return err
+		return fmt.Errorf("reading SES Receipt Rule (%s): %s", d.Id(), err)
 	}
 
 	d.Set("enabled", response.Rule.Enabled)
@@ -607,37 +607,37 @@ func resourceReceiptRuleRead(d *schema.ResourceData, meta interface{}) error {
 
 	err = d.Set("add_header_action", addHeaderActionList)
 	if err != nil {
-		return err
+		return fmt.Errorf("setting add_header_action: %w", err)
 	}
 
 	err = d.Set("bounce_action", bounceActionList)
 	if err != nil {
-		return err
+		return fmt.Errorf("setting bounce_action: %w", err)
 	}
 
 	err = d.Set("lambda_action", lambdaActionList)
 	if err != nil {
-		return err
+		return fmt.Errorf("setting lambda_action: %w", err)
 	}
 
 	err = d.Set("s3_action", s3ActionList)
 	if err != nil {
-		return err
+		return fmt.Errorf("setting s3_action: %w", err)
 	}
 
 	err = d.Set("sns_action", snsActionList)
 	if err != nil {
-		return err
+		return fmt.Errorf("setting sns_action: %w", err)
 	}
 
 	err = d.Set("stop_action", stopActionList)
 	if err != nil {
-		return err
+		return fmt.Errorf("setting stop_action: %w", err)
 	}
 
 	err = d.Set("workmail_action", workmailActionList)
 	if err != nil {
-		return err
+		return fmt.Errorf("setting workmail_action: %w", err)
 	}
 
 	arn := arn.ARN{
@@ -653,7 +653,7 @@ func resourceReceiptRuleRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceReceiptRuleDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	deleteOpts := &ses.DeleteReceiptRuleInput{
 		RuleName:    aws.String(d.Id()),

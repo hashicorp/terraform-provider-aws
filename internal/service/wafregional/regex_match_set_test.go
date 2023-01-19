@@ -20,6 +20,8 @@ import (
 // Serialized acceptance tests due to WAF account limits
 // https://docs.aws.amazon.com/waf/latest/developerguide/limits.html
 func TestAccWAFRegionalRegexMatchSet_serial(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]func(t *testing.T){
 		"basic":          testAccRegexMatchSet_basic,
 		"changePatterns": testAccRegexMatchSet_changePatterns,
@@ -27,12 +29,7 @@ func TestAccWAFRegionalRegexMatchSet_serial(t *testing.T) {
 		"disappears":     testAccRegexMatchSet_disappears,
 	}
 
-	for name, tc := range testCases {
-		tc := tc
-		t.Run(name, func(t *testing.T) {
-			tc(t)
-		})
-	}
+	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
 func testAccRegexMatchSet_basic(t *testing.T) {
@@ -199,7 +196,7 @@ func testAccCheckRegexMatchSetExists(n string, v *waf.RegexMatchSet) resource.Te
 			return fmt.Errorf("No WAF Regional Regex Match Set ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn()
 		resp, err := conn.GetRegexMatchSet(&waf.GetRegexMatchSetInput{
 			RegexMatchSetId: aws.String(rs.Primary.ID),
 		})
@@ -223,7 +220,7 @@ func testAccCheckRegexMatchSetDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn()
 		resp, err := conn.GetRegexMatchSet(&waf.GetRegexMatchSetInput{
 			RegexMatchSetId: aws.String(rs.Primary.ID),
 		})

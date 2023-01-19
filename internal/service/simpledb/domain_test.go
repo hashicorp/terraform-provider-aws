@@ -55,7 +55,6 @@ func TestAccSimpleDBDomain_disappears(t *testing.T) {
 				Config: testAccDomainConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					acctest.CheckFrameworkResourceDisappears(acctest.Provider, tfsimpledb.ResourceDomain, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -96,7 +95,7 @@ func TestAccSimpleDBDomain_MigrateFromPluginSDK(t *testing.T) {
 }
 
 func testAccCheckDomainDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SimpleDBConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SimpleDBConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_simpledb_domain" {
@@ -130,7 +129,7 @@ func testAccCheckDomainExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No SimpleDB Domain ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SimpleDBConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SimpleDBConn()
 
 		_, err := tfsimpledb.FindDomainByName(context.Background(), conn, rs.Primary.ID)
 

@@ -316,7 +316,7 @@ func TestAccRDSProxyDefaultTargetGroup_disappears(t *testing.T) {
 }
 
 func testAccCheckProxyTargetGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_db_proxy_default_target_group" {
@@ -356,7 +356,7 @@ func testAccCheckProxyTargetGroupExists(n string, v *rds.DBProxyTargetGroup) res
 			return fmt.Errorf("No DB Proxy ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
 
 		opts := rds.DescribeDBProxyTargetGroupsInput{
 			DBProxyName:     aws.String(rs.Primary.ID),

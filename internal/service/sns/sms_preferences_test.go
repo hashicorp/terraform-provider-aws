@@ -17,18 +17,15 @@ import (
 
 // The preferences are account-wide, so the tests must be serialized
 func TestAccSNSSMSPreferences_serial(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]func(t *testing.T){
 		"almostAll":      testAccSMSPreferences_almostAll,
 		"defaultSMSType": testAccSMSPreferences_defaultSMSType,
 		"deliveryRole":   testAccSMSPreferences_deliveryRole,
 	}
 
-	for name, tc := range testCases {
-		tc := tc
-		t.Run(name, func(t *testing.T) {
-			tc(t)
-		})
-	}
+	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
 func testAccSMSPreferences_defaultSMSType(t *testing.T) {
@@ -104,7 +101,7 @@ func testAccCheckSMSPreferencesDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn()
 
 		attrs, err := conn.GetSMSAttributes(&sns.GetSMSAttributesInput{})
 

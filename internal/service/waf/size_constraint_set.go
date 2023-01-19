@@ -27,7 +27,7 @@ func ResourceSizeConstraintSet() *schema.Resource {
 }
 
 func resourceSizeConstraintSetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFConn
+	conn := meta.(*conns.AWSClient).WAFConn()
 
 	log.Printf("[INFO] Creating SizeConstraintSet: %s", d.Get("name").(string))
 
@@ -51,7 +51,7 @@ func resourceSizeConstraintSetCreate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceSizeConstraintSetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFConn
+	conn := meta.(*conns.AWSClient).WAFConn()
 	log.Printf("[INFO] Reading SizeConstraintSet: %s", d.Get("name").(string))
 	params := &waf.GetSizeConstraintSetInput{
 		SizeConstraintSetId: aws.String(d.Id()),
@@ -65,7 +65,7 @@ func resourceSizeConstraintSetRead(d *schema.ResourceData, meta interface{}) err
 			return nil
 		}
 
-		return err
+		return fmt.Errorf("reading WAF Size Constraint Set (%s): %w", d.Get("name").(string), err)
 	}
 
 	d.Set("name", resp.SizeConstraintSet.Name)
@@ -83,7 +83,7 @@ func resourceSizeConstraintSetRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceSizeConstraintSetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFConn
+	conn := meta.(*conns.AWSClient).WAFConn()
 
 	if d.HasChange("size_constraints") {
 		o, n := d.GetChange("size_constraints")
@@ -99,7 +99,7 @@ func resourceSizeConstraintSetUpdate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceSizeConstraintSetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFConn
+	conn := meta.(*conns.AWSClient).WAFConn()
 
 	oldConstraints := d.Get("size_constraints").(*schema.Set).List()
 

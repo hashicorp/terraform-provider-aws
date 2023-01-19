@@ -732,7 +732,7 @@ func ResourceProject() *schema.Resource {
 }
 
 func resourceProjectCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeBuildConn
+	conn := meta.(*conns.AWSClient).CodeBuildConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -1336,7 +1336,7 @@ func expandProjectSourceData(data map[string]interface{}) codebuild.ProjectSourc
 }
 
 func resourceProjectRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeBuildConn
+	conn := meta.(*conns.AWSClient).CodeBuildConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -1431,7 +1431,7 @@ func resourceProjectRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceProjectUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeBuildConn
+	conn := meta.(*conns.AWSClient).CodeBuildConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -1589,7 +1589,7 @@ func resourceProjectUpdate(d *schema.ResourceData, meta interface{}) error {
 			_, err = conn.UpdateProject(params)
 		}
 		if err != nil {
-			return fmt.Errorf("[ERROR] Error updating CodeBuild project (%s): %w", d.Id(), err)
+			return fmt.Errorf("updating CodeBuild project (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -1597,12 +1597,12 @@ func resourceProjectUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceProjectDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeBuildConn
+	conn := meta.(*conns.AWSClient).CodeBuildConn()
 
 	_, err := conn.DeleteProject(&codebuild.DeleteProjectInput{
 		Name: aws.String(d.Id()),
 	})
-	return err
+	return fmt.Errorf("deleting CodeBuild project (%s): %w", d.Id(), err)
 }
 
 func flattenProjectFileSystemLocations(apiObjects []*codebuild.ProjectFileSystemLocation) []interface{} {

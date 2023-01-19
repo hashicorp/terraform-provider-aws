@@ -38,14 +38,14 @@ func ResourceVPNGatewayRoutePropagation() *schema.Resource {
 }
 
 func resourceVPNGatewayRoutePropagationEnable(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	gatewayID := d.Get("vpn_gateway_id").(string)
 	routeTableID := d.Get("route_table_id").(string)
 	err := routeTableEnableVGWRoutePropagation(conn, routeTableID, gatewayID, d.Timeout(schema.TimeoutCreate))
 
 	if err != nil {
-		return err
+		return err // nosemgrep:ci.bare-error-returns
 	}
 
 	d.SetId(VPNGatewayRoutePropagationCreateID(routeTableID, gatewayID))
@@ -54,12 +54,12 @@ func resourceVPNGatewayRoutePropagationEnable(d *schema.ResourceData, meta inter
 }
 
 func resourceVPNGatewayRoutePropagationDisable(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	routeTableID, gatewayID, err := VPNGatewayRoutePropagationParseID(d.Id())
 
 	if err != nil {
-		return err
+		return err // nosemgrep:ci.bare-error-returns
 	}
 
 	err = routeTableDisableVGWRoutePropagation(conn, routeTableID, gatewayID)
@@ -68,16 +68,16 @@ func resourceVPNGatewayRoutePropagationDisable(d *schema.ResourceData, meta inte
 		return nil
 	}
 
-	return err
+	return err // nosemgrep:ci.bare-error-returns
 }
 
 func resourceVPNGatewayRoutePropagationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	routeTableID, gatewayID, err := VPNGatewayRoutePropagationParseID(d.Id())
 
 	if err != nil {
-		return err
+		return err // nosemgrep:ci.bare-error-returns
 	}
 
 	err = FindVPNGatewayRoutePropagationExists(conn, routeTableID, gatewayID)
@@ -89,7 +89,7 @@ func resourceVPNGatewayRoutePropagationRead(d *schema.ResourceData, meta interfa
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Route Table (%s) VPN Gateway (%s) route propagation: %w", routeTableID, gatewayID, err)
+		return fmt.Errorf("reading Route Table (%s) VPN Gateway (%s) route propagation: %w", routeTableID, gatewayID, err)
 	}
 
 	return nil

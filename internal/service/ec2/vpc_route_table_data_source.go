@@ -176,7 +176,7 @@ func DataSourceRouteTable() *schema.Resource {
 }
 
 func dataSourceRouteTableRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	req := &ec2.DescribeRouteTablesInput{}
@@ -205,10 +205,9 @@ func dataSourceRouteTableRead(d *schema.ResourceData, meta interface{}) error {
 		filter.(*schema.Set),
 	)...)
 
-	log.Printf("[DEBUG] Reading Route Table: %s", req)
 	resp, err := conn.DescribeRouteTables(req)
 	if err != nil {
-		return err
+		return fmt.Errorf("reading EC2 VPC Route Table: %w", err)
 	}
 	if resp == nil || len(resp.RouteTables) == 0 {
 		return fmt.Errorf("query returned no results. Please change your search criteria and try again")
@@ -241,11 +240,11 @@ func dataSourceRouteTableRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err := d.Set("routes", dataSourceRoutesRead(conn, rt.Routes)); err != nil {
-		return err
+		return fmt.Errorf("reading EC2 VPC Route Table: %w", err)
 	}
 
 	if err := d.Set("associations", dataSourceAssociationsRead(rt.Associations)); err != nil {
-		return err
+		return fmt.Errorf("reading EC2 VPC Route Table: %w", err)
 	}
 
 	return nil

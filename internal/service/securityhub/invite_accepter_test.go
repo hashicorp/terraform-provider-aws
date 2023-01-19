@@ -48,7 +48,7 @@ func testAccCheckInviteAccepterExists(resourceName string) resource.TestCheckFun
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn()
 
 		resp, err := conn.GetMasterAccount(&securityhub.GetMasterAccountInput{})
 
@@ -65,7 +65,7 @@ func testAccCheckInviteAccepterExists(resourceName string) resource.TestCheckFun
 }
 
 func testAccCheckInviteAccepterDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_securityhub_invite_accepter" {

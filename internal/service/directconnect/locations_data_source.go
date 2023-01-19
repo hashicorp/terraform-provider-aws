@@ -24,7 +24,7 @@ func DataSourceLocations() *schema.Resource {
 }
 
 func dataSourceLocationsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
 	locations, err := FindLocations(conn, &directconnect.DescribeLocationsInput{})
 

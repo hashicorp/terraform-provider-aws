@@ -36,7 +36,7 @@ func DataSourceDetector() *schema.Resource {
 }
 
 func dataSourceDetectorRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GuardDutyConn
+	conn := meta.(*conns.AWSClient).GuardDutyConn()
 
 	detectorId := d.Get("id").(string)
 
@@ -64,11 +64,11 @@ func dataSourceDetectorRead(d *schema.ResourceData, meta interface{}) error {
 
 	getResp, err := conn.GetDetector(getInput)
 	if err != nil {
-		return err
+		return fmt.Errorf("reading GuardDuty Detector (%s): %w", detectorId, err)
 	}
 
 	if getResp == nil {
-		return fmt.Errorf("cannot receive GuardDuty Detector details")
+		return fmt.Errorf("reading GuardDuty Detector (%s): empty result", detectorId)
 	}
 
 	d.SetId(detectorId)

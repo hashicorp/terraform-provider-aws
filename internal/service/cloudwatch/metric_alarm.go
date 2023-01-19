@@ -296,11 +296,11 @@ func validMetricAlarm(d *schema.ResourceData) error {
 }
 
 func resourceMetricAlarmCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudWatchConn
+	conn := meta.(*conns.AWSClient).CloudWatchConn()
 
 	err := validMetricAlarm(d)
 	if err != nil {
-		return err
+		return fmt.Errorf("creating CloudWatch Metric Alarm (%s): %w", d.Get("alarm_name").(string), err)
 	}
 	params := getPutMetricAlarmInput(d, meta)
 
@@ -316,7 +316,7 @@ func resourceMetricAlarmCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("failed creating CloudWatch Metric Alarm (%s): %w", d.Get("alarm_name").(string), err)
+		return fmt.Errorf("creating CloudWatch Metric Alarm (%s): %w", d.Get("alarm_name").(string), err)
 	}
 
 	d.SetId(d.Get("alarm_name").(string))
@@ -350,7 +350,7 @@ func resourceMetricAlarmCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceMetricAlarmRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudWatchConn
+	conn := meta.(*conns.AWSClient).CloudWatchConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -415,7 +415,7 @@ func resourceMetricAlarmRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("threshold_metric_id", resp.ThresholdMetricId)
 	d.Set("unit", resp.Unit)
 	d.Set("extended_statistic", resp.ExtendedStatistic)
-	if resp.TreatMissingData != nil {
+	if resp.TreatMissingData != nil { // nosemgrep: ci.helper-schema-ResourceData-Set-extraneous-nil-check
 		d.Set("treat_missing_data", resp.TreatMissingData)
 	} else {
 		d.Set("treat_missing_data", missingDataMissing)
@@ -449,7 +449,7 @@ func resourceMetricAlarmRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceMetricAlarmUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudWatchConn
+	conn := meta.(*conns.AWSClient).CloudWatchConn()
 	params := getPutMetricAlarmInput(d, meta)
 
 	log.Printf("[DEBUG] Updating CloudWatch Metric Alarm: %#v", params)
@@ -480,7 +480,7 @@ func resourceMetricAlarmUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceMetricAlarmDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudWatchConn
+	conn := meta.(*conns.AWSClient).CloudWatchConn()
 	params := cloudwatch.DeleteAlarmsInput{
 		AlarmNames: []*string{aws.String(d.Id())},
 	}

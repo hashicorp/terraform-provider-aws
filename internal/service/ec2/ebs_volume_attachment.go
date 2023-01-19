@@ -80,7 +80,7 @@ func ResourceVolumeAttachment() *schema.Resource {
 }
 
 func resourceVolumeAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	deviceName := d.Get("device_name").(string)
 	instanceID := d.Get("instance_id").(string)
 	volumeID := d.Get("volume_id").(string)
@@ -121,7 +121,7 @@ func resourceVolumeAttachmentCreate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceVolumeAttachmentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	deviceName := d.Get("device_name").(string)
 	instanceID := d.Get("instance_id").(string)
 	volumeID := d.Get("volume_id").(string)
@@ -142,7 +142,7 @@ func resourceVolumeAttachmentRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceVolumeAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	if _, ok := d.GetOk("skip_destroy"); ok {
 		return nil
@@ -154,7 +154,7 @@ func resourceVolumeAttachmentDelete(d *schema.ResourceData, meta interface{}) er
 
 	if _, ok := d.GetOk("stop_instance_before_detaching"); ok {
 		if err := StopInstance(conn, instanceID, InstanceStopTimeout); err != nil {
-			return err
+			return fmt.Errorf("deleting EBS Volume (%s) Attachment (%s): %w", volumeID, instanceID, err)
 		}
 	}
 

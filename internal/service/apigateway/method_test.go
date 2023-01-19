@@ -300,7 +300,7 @@ func testAccCheckMethodExists(n string, res *apigateway.Method) resource.TestChe
 			return fmt.Errorf("No API Gateway Method ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
 
 		req := &apigateway.GetMethodInput{
 			HttpMethod: aws.String("GET"),
@@ -319,7 +319,7 @@ func testAccCheckMethodExists(n string, res *apigateway.Method) resource.TestChe
 }
 
 func testAccCheckMethodDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_api_gateway_method" {

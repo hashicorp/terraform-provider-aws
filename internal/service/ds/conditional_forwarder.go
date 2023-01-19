@@ -53,7 +53,7 @@ func ResourceConditionalForwarder() *schema.Resource {
 }
 
 func resourceConditionalForwarderCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DSConn
+	conn := meta.(*conns.AWSClient).DSConn()
 
 	dnsIps := flex.ExpandStringList(d.Get("dns_ips").([]interface{}))
 
@@ -67,7 +67,7 @@ func resourceConditionalForwarderCreate(d *schema.ResourceData, meta interface{}
 	})
 
 	if err != nil {
-		return err
+		return fmt.Errorf("creating Directory Service Conditional Forwarder: %w", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", directoryId, domainName))
@@ -76,11 +76,11 @@ func resourceConditionalForwarderCreate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceConditionalForwarderRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DSConn
+	conn := meta.(*conns.AWSClient).DSConn()
 
 	directoryId, domainName, err := ParseConditionalForwarderID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("reading Directory Service Conditional Forwarder (%s): %w", d.Id(), err)
 	}
 
 	res, err := conn.DescribeConditionalForwarders(&directoryservice.DescribeConditionalForwardersInput{
@@ -94,7 +94,7 @@ func resourceConditionalForwarderRead(d *schema.ResourceData, meta interface{}) 
 			d.SetId("")
 			return nil
 		}
-		return err
+		return fmt.Errorf("reading Directory Service Conditional Forwarder (%s): %w", d.Id(), err)
 	}
 
 	if len(res.ConditionalForwarders) == 0 {
@@ -113,11 +113,11 @@ func resourceConditionalForwarderRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceConditionalForwarderUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DSConn
+	conn := meta.(*conns.AWSClient).DSConn()
 
 	directoryId, domainName, err := ParseConditionalForwarderID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("updating Directory Service Conditional Forwarder (%s): %w", d.Id(), err)
 	}
 
 	dnsIps := flex.ExpandStringList(d.Get("dns_ips").([]interface{}))
@@ -129,18 +129,18 @@ func resourceConditionalForwarderUpdate(d *schema.ResourceData, meta interface{}
 	})
 
 	if err != nil {
-		return err
+		return fmt.Errorf("updating Directory Service Conditional Forwarder (%s): %w", d.Id(), err)
 	}
 
 	return resourceConditionalForwarderRead(d, meta)
 }
 
 func resourceConditionalForwarderDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DSConn
+	conn := meta.(*conns.AWSClient).DSConn()
 
 	directoryId, domainName, err := ParseConditionalForwarderID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting Directory Service Conditional Forwarder (%s): %w", d.Id(), err)
 	}
 
 	_, err = conn.DeleteConditionalForwarder(&directoryservice.DeleteConditionalForwarderInput{
@@ -149,7 +149,7 @@ func resourceConditionalForwarderDelete(d *schema.ResourceData, meta interface{}
 	})
 
 	if err != nil && !tfawserr.ErrCodeEquals(err, directoryservice.ErrCodeEntityDoesNotExistException) {
-		return err
+		return fmt.Errorf("deleting Directory Service Conditional Forwarder (%s): %w", d.Id(), err)
 	}
 
 	return nil

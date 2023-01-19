@@ -341,7 +341,7 @@ func ResourceCluster() *schema.Resource {
 }
 
 func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn
+	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -494,7 +494,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn
+	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -511,7 +511,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("cluster_id", c.CacheClusterId)
 
 	if err := setFromCacheCluster(d, c); err != nil {
-		return err
+		return fmt.Errorf("reading ElastiCache Cache Cluster (%s): %w", d.Id(), err)
 	}
 
 	d.Set("log_delivery_configuration", flattenLogDeliveryConfigurations(c.LogDeliveryConfigurations))
@@ -528,9 +528,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("port", c.CacheNodes[0].Endpoint.Port)
 	}
 
-	if c.ReplicationGroupId != nil {
-		d.Set("replication_group_id", c.ReplicationGroupId)
-	}
+	d.Set("replication_group_id", c.ReplicationGroupId)
 
 	if c.NotificationConfiguration != nil {
 		if aws.StringValue(c.NotificationConfiguration.TopicStatus) == "active" {
@@ -545,7 +543,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err := setCacheNodeData(d, c); err != nil {
-		return err
+		return fmt.Errorf("reading ElastiCache Cache Cluster (%s): %w", d.Id(), err)
 	}
 
 	d.Set("arn", c.ARN)
@@ -586,7 +584,7 @@ func setFromCacheCluster(d *schema.ResourceData, c *elasticache.CacheCluster) er
 	d.Set("engine", c.Engine)
 	if aws.StringValue(c.Engine) == engineRedis {
 		if err := setEngineVersionRedis(d, c.EngineVersion); err != nil {
-			return err
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	} else {
 		setEngineVersionMemcached(d, c.EngineVersion)
@@ -595,10 +593,10 @@ func setFromCacheCluster(d *schema.ResourceData, c *elasticache.CacheCluster) er
 
 	d.Set("subnet_group_name", c.CacheSubnetGroupName)
 	if err := d.Set("security_group_names", flattenSecurityGroupNames(c.CacheSecurityGroups)); err != nil {
-		return fmt.Errorf("error setting security_group_names: %w", err)
+		return fmt.Errorf("setting security_group_names: %w", err)
 	}
 	if err := d.Set("security_group_ids", flattenSecurityGroupIDs(c.SecurityGroups)); err != nil {
-		return fmt.Errorf("error setting security_group_ids: %w", err)
+		return fmt.Errorf("setting security_group_ids: %w", err)
 	}
 
 	if c.CacheParameterGroup != nil {
@@ -611,7 +609,7 @@ func setFromCacheCluster(d *schema.ResourceData, c *elasticache.CacheCluster) er
 }
 
 func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn
+	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 
 	req := &elasticache.ModifyCacheClusterInput{
 		CacheClusterId:   aws.String(d.Id()),
@@ -815,7 +813,7 @@ func (b byCacheNodeId) Less(i, j int) bool {
 }
 
 func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn
+	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 
 	var finalSnapshotID = d.Get("final_snapshot_identifier").(string)
 	err := DeleteCacheCluster(conn, d.Id(), finalSnapshotID)

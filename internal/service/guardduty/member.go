@@ -71,7 +71,7 @@ func ResourceMember() *schema.Resource {
 }
 
 func resourceMemberCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GuardDutyConn
+	conn := meta.(*conns.AWSClient).GuardDutyConn()
 	accountID := d.Get("account_id").(string)
 	detectorID := d.Get("detector_id").(string)
 
@@ -86,7 +86,7 @@ func resourceMemberCreate(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Creating GuardDuty Member: %s", input)
 	_, err := conn.CreateMembers(&input)
 	if err != nil {
-		return fmt.Errorf("Creating GuardDuty Member failed: %s", err.Error())
+		return fmt.Errorf("Creating GuardDuty Member failed: %s", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", detectorID, accountID))
@@ -117,11 +117,11 @@ func resourceMemberCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceMemberRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GuardDutyConn
+	conn := meta.(*conns.AWSClient).GuardDutyConn()
 
 	accountID, detectorID, err := DecodeMemberID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("reading GuardDuty Member (%s): %s", d.Id(), err)
 	}
 
 	input := guardduty.GetMembersInput{
@@ -137,7 +137,7 @@ func resourceMemberRead(d *schema.ResourceData, meta interface{}) error {
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("Reading GuardDuty Member '%s' failed: %s", d.Id(), err.Error())
+		return fmt.Errorf("reading GuardDuty Member (%s): %s", d.Id(), err)
 	}
 
 	if gmo.Members == nil || (len(gmo.Members) < 1) {
@@ -164,11 +164,11 @@ func resourceMemberRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceMemberUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GuardDutyConn
+	conn := meta.(*conns.AWSClient).GuardDutyConn()
 
 	accountID, detectorID, err := DecodeMemberID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("updating GuardDuty Member (%s): %s", d.Id(), err)
 	}
 
 	if d.HasChange("invite") {
@@ -212,11 +212,11 @@ func resourceMemberUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceMemberDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GuardDutyConn
+	conn := meta.(*conns.AWSClient).GuardDutyConn()
 
 	accountID, detectorID, err := DecodeMemberID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting GuardDuty Member (%s): %s", d.Id(), err)
 	}
 
 	input := guardduty.DeleteMembersInput{
@@ -227,7 +227,7 @@ func resourceMemberDelete(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Delete GuardDuty Member: %s", input)
 	_, err = conn.DeleteMembers(&input)
 	if err != nil {
-		return fmt.Errorf("Deleting GuardDuty Member '%s' failed: %s", d.Id(), err.Error())
+		return fmt.Errorf("deleting GuardDuty Member (%s): %s", d.Id(), err)
 	}
 	return nil
 }

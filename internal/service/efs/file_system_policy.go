@@ -37,17 +37,22 @@ func ResourceFileSystemPolicy() *schema.Resource {
 				ForceNew: true,
 			},
 			"policy": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				Type:                  schema.TypeString,
+				Required:              true,
+				ValidateFunc:          validation.StringIsJSON,
+				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+				DiffSuppressOnRefresh: true,
+				StateFunc: func(v interface{}) string {
+					json, _ := structure.NormalizeJsonString(v)
+					return json
+				},
 			},
 		},
 	}
 }
 
 func resourceFileSystemPolicyPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EFSConn
+	conn := meta.(*conns.AWSClient).EFSConn()
 
 	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
 
@@ -76,7 +81,7 @@ func resourceFileSystemPolicyPut(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceFileSystemPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EFSConn
+	conn := meta.(*conns.AWSClient).EFSConn()
 
 	output, err := FindFileSystemPolicyByID(conn, d.Id())
 
@@ -110,7 +115,7 @@ func resourceFileSystemPolicyRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceFileSystemPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EFSConn
+	conn := meta.(*conns.AWSClient).EFSConn()
 
 	log.Printf("[DEBUG] Deleting EFS File System Policy: %s", d.Id())
 	_, err := conn.DeleteFileSystemPolicy(&efs.DeleteFileSystemPolicyInput{

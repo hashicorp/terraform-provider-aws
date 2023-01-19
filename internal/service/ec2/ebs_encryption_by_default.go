@@ -29,7 +29,7 @@ func ResourceEBSEncryptionByDefault() *schema.Resource {
 }
 
 func resourceEBSEncryptionByDefaultCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	enabled := d.Get("enabled").(bool)
 	if err := setEBSEncryptionByDefault(conn, enabled); err != nil {
@@ -43,7 +43,7 @@ func resourceEBSEncryptionByDefaultCreate(d *schema.ResourceData, meta interface
 }
 
 func resourceEBSEncryptionByDefaultRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	resp, err := conn.GetEbsEncryptionByDefault(&ec2.GetEbsEncryptionByDefaultInput{})
 	if err != nil {
@@ -56,7 +56,7 @@ func resourceEBSEncryptionByDefaultRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceEBSEncryptionByDefaultUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	enabled := d.Get("enabled").(bool)
 	if err := setEBSEncryptionByDefault(conn, enabled); err != nil {
@@ -67,7 +67,7 @@ func resourceEBSEncryptionByDefaultUpdate(d *schema.ResourceData, meta interface
 }
 
 func resourceEBSEncryptionByDefaultDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	// Removing the resource disables default encryption.
 	if err := setEBSEncryptionByDefault(conn, false); err != nil {

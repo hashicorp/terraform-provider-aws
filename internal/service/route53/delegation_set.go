@@ -2,7 +2,6 @@ package route53
 
 import (
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -46,7 +45,7 @@ func ResourceDelegationSet() *schema.Resource {
 }
 
 func resourceDelegationSetCreate(d *schema.ResourceData, meta interface{}) error {
-	r53 := meta.(*conns.AWSClient).Route53Conn
+	r53 := meta.(*conns.AWSClient).Route53Conn()
 
 	callerRef := resource.UniqueId()
 	if v, ok := d.GetOk("reference_name"); ok {
@@ -58,12 +57,10 @@ func resourceDelegationSetCreate(d *schema.ResourceData, meta interface{}) error
 		CallerReference: aws.String(callerRef),
 	}
 
-	log.Printf("[DEBUG] Creating Route53 reusable delegation set: %#v", input)
 	out, err := r53.CreateReusableDelegationSet(input)
 	if err != nil {
-		return err
+		return fmt.Errorf("creating Route 53 Reusable Delegation Set: %w", err)
 	}
-	log.Printf("[DEBUG] Route53 reusable delegation set created: %#v", out)
 
 	set := out.DelegationSet
 	d.SetId(CleanDelegationSetID(*set.Id))
@@ -72,21 +69,19 @@ func resourceDelegationSetCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceDelegationSetRead(d *schema.ResourceData, meta interface{}) error {
-	r53 := meta.(*conns.AWSClient).Route53Conn
+	r53 := meta.(*conns.AWSClient).Route53Conn()
 
 	input := &route53.GetReusableDelegationSetInput{
 		Id: aws.String(CleanDelegationSetID(d.Id())),
 	}
-	log.Printf("[DEBUG] Reading Route53 reusable delegation set: %#v", input)
 	out, err := r53.GetReusableDelegationSet(input)
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, route53.ErrCodeNoSuchDelegationSet) {
 			d.SetId("")
 			return nil
 		}
-		return err
+		return fmt.Errorf("reading Route 53 Reusable Delegation Set: %w", err)
 	}
-	log.Printf("[DEBUG] Route53 reusable delegation set received: %#v", out)
 
 	set := out.DelegationSet
 	d.Set("name_servers", aws.StringValueSlice(set.NameServers))
@@ -102,19 +97,18 @@ func resourceDelegationSetRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDelegationSetDelete(d *schema.ResourceData, meta interface{}) error {
-	r53 := meta.(*conns.AWSClient).Route53Conn
+	r53 := meta.(*conns.AWSClient).Route53Conn()
 
 	input := &route53.DeleteReusableDelegationSetInput{
 		Id: aws.String(CleanDelegationSetID(d.Id())),
 	}
-	log.Printf("[DEBUG] Deleting Route53 reusable delegation set: %#v", input)
 	_, err := r53.DeleteReusableDelegationSet(input)
 	if tfawserr.ErrCodeEquals(err, route53.ErrCodeNoSuchDelegationSet) {
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("deleting Route53 reusable delegation set (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting Route53 Reusable Delegation Set (%s): %w", d.Id(), err)
 	}
 
 	return nil

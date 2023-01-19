@@ -85,7 +85,7 @@ func ResourceFieldLevelEncryptionProfile() *schema.Resource {
 }
 
 func resourceFieldLevelEncryptionProfileCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 
 	apiObject := &cloudfront.FieldLevelEncryptionProfileConfig{
 		CallerReference: aws.String(resource.UniqueId()),
@@ -117,7 +117,7 @@ func resourceFieldLevelEncryptionProfileCreate(d *schema.ResourceData, meta inte
 }
 
 func resourceFieldLevelEncryptionProfileRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 
 	output, err := FindFieldLevelEncryptionProfileByID(conn, d.Id())
 
@@ -148,7 +148,7 @@ func resourceFieldLevelEncryptionProfileRead(d *schema.ResourceData, meta interf
 }
 
 func resourceFieldLevelEncryptionProfileUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 
 	apiObject := &cloudfront.FieldLevelEncryptionProfileConfig{
 		CallerReference: aws.String(d.Get("caller_reference").(string)),
@@ -180,7 +180,7 @@ func resourceFieldLevelEncryptionProfileUpdate(d *schema.ResourceData, meta inte
 }
 
 func resourceFieldLevelEncryptionProfileDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 
 	log.Printf("[DEBUG] Deleting CloudFront Field-level Encryption Profile: (%s)", d.Id())
 	_, err := conn.DeleteFieldLevelEncryptionProfile(&cloudfront.DeleteFieldLevelEncryptionProfileInput{

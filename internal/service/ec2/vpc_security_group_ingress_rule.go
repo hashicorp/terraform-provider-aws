@@ -11,10 +11,12 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -25,7 +27,7 @@ import (
 )
 
 func init() {
-	//registerFrameworkResourceFactory(newResourceSecurityGroupIngressRule)
+	// _sp.registerFrameworkResourceFactory(newResourceSecurityGroupIngressRule)
 }
 
 // newResourceSecurityGroupIngressRule instantiates a new Resource for the aws_vpc_security_group_ingress_rule resource.
@@ -65,7 +67,7 @@ func (r *resourceSecurityGroupIngressRule) Delete(ctx context.Context, request r
 }
 
 func (r *resourceSecurityGroupIngressRule) createSecurityGroupRule(ctx context.Context, data *resourceSecurityGroupRuleData) (string, error) {
-	conn := r.Meta().EC2Conn
+	conn := r.Meta().EC2Conn()
 
 	input := &ec2.AuthorizeSecurityGroupIngressInput{
 		GroupId:       flex.StringFromFramework(ctx, data.SecurityGroupID),
@@ -82,7 +84,7 @@ func (r *resourceSecurityGroupIngressRule) createSecurityGroupRule(ctx context.C
 }
 
 func (r *resourceSecurityGroupIngressRule) deleteSecurityGroupRule(ctx context.Context, data *resourceSecurityGroupRuleData) error {
-	conn := r.Meta().EC2Conn
+	conn := r.Meta().EC2Conn()
 
 	_, err := conn.RevokeSecurityGroupIngressWithContext(ctx, &ec2.RevokeSecurityGroupIngressInput{
 		GroupId:              flex.StringFromFramework(ctx, data.SecurityGroupID),
@@ -93,7 +95,7 @@ func (r *resourceSecurityGroupIngressRule) deleteSecurityGroupRule(ctx context.C
 }
 
 func (r *resourceSecurityGroupIngressRule) findSecurityGroupRuleByID(ctx context.Context, id string) (*ec2.SecurityGroupRule, error) {
-	conn := r.Meta().EC2Conn
+	conn := r.Meta().EC2Conn()
 
 	return FindSecurityGroupIngressRuleByID(ctx, conn, id)
 }
@@ -104,91 +106,72 @@ type resourceSecurityGroupRule struct {
 	framework.ResourceWithConfigure
 }
 
-// GetSchema returns the schema for this resource.
-func (r *resourceSecurityGroupRule) GetSchema(context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	schema := tfsdk.Schema{
-		Attributes: map[string]tfsdk.Attribute{
-			"arn": {
-				Type:     types.StringType,
+// Schema returns the schema for this resource.
+func (r *resourceSecurityGroupRule) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"arn": schema.StringAttribute{
 				Computed: true,
-				PlanModifiers: []tfsdk.AttributePlanModifier{
-					resource.UseStateForUnknown(),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"cidr_ipv4": {
-				Type:     types.StringType,
+			"cidr_ipv4": schema.StringAttribute{
 				Optional: true,
-				Validators: []tfsdk.AttributeValidator{
+				Validators: []validator.String{
 					fwvalidators.IPv4CIDRNetworkAddress(),
 				},
 			},
-			"cidr_ipv6": {
-				Type:     types.StringType,
+			"cidr_ipv6": schema.StringAttribute{
 				Optional: true,
-				Validators: []tfsdk.AttributeValidator{
+				Validators: []validator.String{
 					fwvalidators.IPv6CIDRNetworkAddress(),
 				},
 			},
-			"description": {
-				Type:     types.StringType,
+			"description": schema.StringAttribute{
 				Optional: true,
 			},
-			"from_port": {
-				Type:     types.Int64Type,
+			"from_port": schema.Int64Attribute{
 				Optional: true,
-				Validators: []tfsdk.AttributeValidator{
+				Validators: []validator.Int64{
 					int64validator.Between(-1, 65535),
 				},
 			},
-			"id": {
-				Type:     types.StringType,
-				Computed: true,
-				PlanModifiers: []tfsdk.AttributePlanModifier{
-					resource.UseStateForUnknown(),
-				},
-			},
-			"ip_protocol": {
-				Type:     types.StringType,
+			"id": framework.IDAttribute(),
+			"ip_protocol": schema.StringAttribute{
 				Required: true,
-				PlanModifiers: []tfsdk.AttributePlanModifier{
+				PlanModifiers: []planmodifier.String{
 					NormalizeIPProtocol(),
 				},
 			},
-			"prefix_list_id": {
-				Type:     types.StringType,
+			"prefix_list_id": schema.StringAttribute{
 				Optional: true,
 			},
-			"referenced_security_group_id": {
-				Type:     types.StringType,
+			"referenced_security_group_id": schema.StringAttribute{
 				Optional: true,
 			},
-			"security_group_id": {
-				Type:     types.StringType,
+			"security_group_id": schema.StringAttribute{
 				Optional: true,
-				PlanModifiers: []tfsdk.AttributePlanModifier{
-					resource.RequiresReplace(),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"security_group_rule_id": {
-				Type:     types.StringType,
+			"security_group_rule_id": schema.StringAttribute{
 				Computed: true,
-				PlanModifiers: []tfsdk.AttributePlanModifier{
-					resource.UseStateForUnknown(),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"tags":     tftags.TagsAttribute(),
 			"tags_all": tftags.TagsAttributeComputedOnly(),
-			"to_port": {
-				Type:     types.Int64Type,
+			"to_port": schema.Int64Attribute{
 				Optional: true,
-				Validators: []tfsdk.AttributeValidator{
+				Validators: []validator.Int64{
 					int64validator.Between(-1, 65535),
 				},
 			},
 		},
 	}
-
-	return schema, nil
 }
 
 // Update is called to update the state of the resource.
@@ -208,7 +191,7 @@ func (r *resourceSecurityGroupRule) Update(ctx context.Context, request resource
 		return
 	}
 
-	conn := r.Meta().EC2Conn
+	conn := r.Meta().EC2Conn()
 
 	if !new.CIDRIPv4.Equal(old.CIDRIPv4) ||
 		!new.CIDRIPv6.Equal(old.CIDRIPv6) ||
@@ -328,7 +311,7 @@ func (r *resourceSecurityGroupRule) create(ctx context.Context, request resource
 
 	data.ID = types.StringValue(securityGroupRuleID)
 
-	conn := r.Meta().EC2Conn
+	conn := r.Meta().EC2Conn()
 	defaultTagsConfig := r.Meta().DefaultTagsConfig
 	ignoreTagsConfig := r.Meta().IgnoreTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(data.Tags))
@@ -344,7 +327,7 @@ func (r *resourceSecurityGroupRule) create(ctx context.Context, request resource
 	// Set values for unknowns.
 	data.ARN = r.arn(ctx, securityGroupRuleID)
 	data.SecurityGroupRuleID = types.StringValue(securityGroupRuleID)
-	data.TagsAll = flex.FlattenFrameworkStringValueMap(ctx, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
+	data.TagsAll = flex.FlattenFrameworkStringValueMapLegacy(ctx, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -430,9 +413,9 @@ func (r *resourceSecurityGroupRule) read(ctx context.Context, request resource.R
 	if tags := tags.RemoveDefaultConfig(defaultTagsConfig).Map(); len(tags) == 0 {
 		data.Tags = tftags.Null
 	} else {
-		data.Tags = flex.FlattenFrameworkStringValueMap(ctx, tags)
+		data.Tags = flex.FlattenFrameworkStringValueMapLegacy(ctx, tags)
 	}
-	data.TagsAll = flex.FlattenFrameworkStringValueMap(ctx, tags.Map())
+	data.TagsAll = flex.FlattenFrameworkStringValueMapLegacy(ctx, tags.Map())
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -555,7 +538,7 @@ func (d *resourceSecurityGroupRuleData) sourceAttributeName() string {
 
 type normalizeIPProtocol struct{}
 
-func NormalizeIPProtocol() tfsdk.AttributePlanModifier {
+func NormalizeIPProtocol() planmodifier.String {
 	return normalizeIPProtocol{}
 }
 
@@ -567,37 +550,17 @@ func (m normalizeIPProtocol) MarkdownDescription(ctx context.Context) string {
 	return m.Description(ctx)
 }
 
-func (m normalizeIPProtocol) Modify(ctx context.Context, request tfsdk.ModifyAttributePlanRequest, response *tfsdk.ModifyAttributePlanResponse) {
-	if request.AttributeState == nil {
-		response.AttributePlan = request.AttributePlan
-
+func (m normalizeIPProtocol) PlanModifyString(ctx context.Context, request planmodifier.StringRequest, response *planmodifier.StringResponse) {
+	if request.StateValue.IsNull() {
+		response.PlanValue = request.PlanValue
 		return
 	}
 
-	// If the current value is semantically equivalent to the planned value
-	// then return the current value, else return the planned value.
-
-	var planned types.String
-
-	response.Diagnostics = append(response.Diagnostics, tfsdk.ValueAs(ctx, request.AttributePlan, &planned)...)
-
-	if response.Diagnostics.HasError() {
+	// If the state value is semantically equivalent to the planned value
+	// then return the state value, else return the planned value.
+	if ProtocolForValue(request.StateValue.ValueString()) == ProtocolForValue(request.PlanValue.ValueString()) {
+		response.PlanValue = request.StateValue
 		return
 	}
-
-	var current types.String
-
-	response.Diagnostics = append(response.Diagnostics, tfsdk.ValueAs(ctx, request.AttributeState, &current)...)
-
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	if ProtocolForValue(current.ValueString()) == ProtocolForValue(planned.ValueString()) {
-		response.AttributePlan = request.AttributeState
-
-		return
-	}
-
-	response.AttributePlan = request.AttributePlan
+	response.PlanValue = request.PlanValue
 }

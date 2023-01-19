@@ -140,7 +140,7 @@ func ResourceDeploymentConfig() *schema.Resource {
 }
 
 func resourceDeploymentConfigCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DeployConn
+	conn := meta.(*conns.AWSClient).DeployConn()
 
 	input := &codedeploy.CreateDeploymentConfigInput{
 		DeploymentConfigName: aws.String(d.Get("deployment_config_name").(string)),
@@ -151,7 +151,7 @@ func resourceDeploymentConfigCreate(d *schema.ResourceData, meta interface{}) er
 
 	_, err := conn.CreateDeploymentConfig(input)
 	if err != nil {
-		return err
+		return fmt.Errorf("creating CodeDeploy Deployment Config (%s): %w", d.Get("deployment_config_name").(string), err)
 	}
 
 	d.SetId(d.Get("deployment_config_name").(string))
@@ -160,7 +160,7 @@ func resourceDeploymentConfigCreate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceDeploymentConfigRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DeployConn
+	conn := meta.(*conns.AWSClient).DeployConn()
 
 	input := &codedeploy.GetDeploymentConfigInput{
 		DeploymentConfigName: aws.String(d.Id()),
@@ -175,19 +175,19 @@ func resourceDeploymentConfigRead(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if err != nil {
-		return fmt.Errorf("finding CodeDeploy Deployment Config (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading CodeDeploy Deployment Config (%s): %w", d.Id(), err)
 	}
 
 	if resp.DeploymentConfigInfo == nil {
-		return fmt.Errorf("Cannot find DeploymentConfig %q", d.Id())
+		return fmt.Errorf("reading CodeDeploy Deployment Config (%s): empty result", d.Id())
 	}
 
 	if err := d.Set("minimum_healthy_hosts", flattenMinimumHealthHostsConfig(resp.DeploymentConfigInfo.MinimumHealthyHosts)); err != nil {
-		return err
+		return fmt.Errorf("reading CodeDeploy Deployment Config (%s): %w", d.Id(), err)
 	}
 
 	if err := d.Set("traffic_routing_config", flattenTrafficRoutingConfig(resp.DeploymentConfigInfo.TrafficRoutingConfig)); err != nil {
-		return err
+		return fmt.Errorf("reading CodeDeploy Deployment Config (%s): %w", d.Id(), err)
 	}
 
 	d.Set("deployment_config_id", resp.DeploymentConfigInfo.DeploymentConfigId)
@@ -198,14 +198,16 @@ func resourceDeploymentConfigRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceDeploymentConfigDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DeployConn
+	conn := meta.(*conns.AWSClient).DeployConn()
 
 	input := &codedeploy.DeleteDeploymentConfigInput{
 		DeploymentConfigName: aws.String(d.Id()),
 	}
 
-	_, err := conn.DeleteDeploymentConfig(input)
-	return err
+	if _, err := conn.DeleteDeploymentConfig(input); err != nil {
+		return fmt.Errorf("deleting CodeDeploy Deployment Config (%s): %w", d.Id(), err)
+	}
+	return nil
 }
 
 func expandMinimumHealthHostsConfig(d *schema.ResourceData) *codedeploy.MinimumHealthyHosts {

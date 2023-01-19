@@ -38,7 +38,7 @@ func ResourceSnapshotScheduleAssociation() *schema.Resource {
 }
 
 func resourceSnapshotScheduleAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 	clusterIdentifier := d.Get("cluster_identifier").(string)
 	scheduleIdentifier := d.Get("schedule_identifier").(string)
 
@@ -49,20 +49,20 @@ func resourceSnapshotScheduleAssociationCreate(d *schema.ResourceData, meta inte
 	})
 
 	if err != nil {
-		return fmt.Errorf("Error associating Redshift Cluster (%s) and Snapshot Schedule (%s): %s", clusterIdentifier, scheduleIdentifier, err)
+		return fmt.Errorf("creating Redshift Cluster Snapshot Schedule (%s/%s): %w", clusterIdentifier, scheduleIdentifier, err)
 	}
 
 	d.SetId(fmt.Sprintf("%s/%s", clusterIdentifier, scheduleIdentifier))
 
 	if _, err := WaitScheduleAssociationActive(conn, d.Id()); err != nil {
-		return err
+		return fmt.Errorf("creating Redshift Cluster Snapshot Schedule (%s): waiting for completion: %w", d.Id(), err)
 	}
 
 	return resourceSnapshotScheduleAssociationRead(d, meta)
 }
 
 func resourceSnapshotScheduleAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 
 	scheduleIdentifier, assoicatedCluster, err := FindScheduleAssociationById(conn, d.Id())
 
@@ -82,10 +82,10 @@ func resourceSnapshotScheduleAssociationRead(d *schema.ResourceData, meta interf
 }
 
 func resourceSnapshotScheduleAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 	clusterIdentifier, scheduleIdentifier, err := SnapshotScheduleAssociationParseID(d.Id())
 	if err != nil {
-		return fmt.Errorf("Error parse Redshift Cluster Snapshot Schedule Association ID %s: %s", d.Id(), err)
+		return fmt.Errorf("deleting Redshift Cluster Snapshot Schedule (%s): %w", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Deleting Redshift Cluster Snapshot Schedule Association: %s", d.Id())
@@ -100,11 +100,11 @@ func resourceSnapshotScheduleAssociationDelete(d *schema.ResourceData, meta inte
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error disassociate Redshift Cluster (%s) and Snapshot Schedule (%s) Association: %s", clusterIdentifier, scheduleIdentifier, err)
+		return fmt.Errorf("deleting Redshift Cluster Snapshot Schedule (%s): %w", d.Id(), err)
 	}
 
 	if _, err := waitScheduleAssociationDeleted(conn, d.Id()); err != nil {
-		return err
+		return fmt.Errorf("deleting Redshift Cluster Snapshot Schedule (%s): waiting for completion: %w", d.Id(), err)
 	}
 
 	return nil

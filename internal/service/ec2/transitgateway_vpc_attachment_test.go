@@ -448,7 +448,7 @@ func testAccCheckTransitGatewayVPCAttachmentExists(n string, v *ec2.TransitGatew
 			return fmt.Errorf("No EC2 Transit Gateway VPC Attachment ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		output, err := tfec2.FindTransitGatewayVPCAttachmentByID(conn, rs.Primary.ID)
 
@@ -463,7 +463,7 @@ func testAccCheckTransitGatewayVPCAttachmentExists(n string, v *ec2.TransitGatew
 }
 
 func testAccCheckTransitGatewayVPCAttachmentDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ec2_transit_gateway_vpc_attachment" {

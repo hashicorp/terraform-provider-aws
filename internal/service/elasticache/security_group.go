@@ -54,28 +54,27 @@ func resourceSecurityGroupCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceSecurityGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn
+	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 	req := &elasticache.DescribeCacheSecurityGroupsInput{
 		CacheSecurityGroupName: aws.String(d.Id()),
 	}
 
 	res, err := conn.DescribeCacheSecurityGroups(req)
 	if err != nil {
-		return err
+		return fmt.Errorf("reading ElastiCache Cache Security Group (%s): %w", d.Id(), err)
 	}
 	if len(res.CacheSecurityGroups) == 0 {
-		return fmt.Errorf("Error missing %v", d.Id())
+		return fmt.Errorf("reading ElastiCache Cache Security Group (%s): empty response", d.Id())
 	}
 
 	var group *elasticache.CacheSecurityGroup
 	for _, g := range res.CacheSecurityGroups {
-		log.Printf("[DEBUG] CacheSecurityGroupName: %v, id: %v", g.CacheSecurityGroupName, d.Id())
 		if aws.StringValue(g.CacheSecurityGroupName) == d.Id() {
 			group = g
 		}
 	}
 	if group == nil {
-		return fmt.Errorf("Error retrieving cache security group: %v", res)
+		return fmt.Errorf("reading ElastiCache Cache Security Group (%s): not found", d.Id())
 	}
 
 	d.Set("name", group.CacheSecurityGroupName)
@@ -91,7 +90,7 @@ func resourceSecurityGroupRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceSecurityGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn
+	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 
 	log.Printf("[DEBUG] Cache security group delete: %s", d.Id())
 
@@ -123,6 +122,8 @@ func resourceSecurityGroupDelete(d *schema.ResourceData, meta interface{}) error
 			CacheSecurityGroupName: aws.String(d.Id()),
 		})
 	}
-
-	return err
+	if err != nil {
+		return fmt.Errorf("deleting ElastiCache Cache Security Group (%s): %w", d.Id(), err)
+	}
+	return nil
 }

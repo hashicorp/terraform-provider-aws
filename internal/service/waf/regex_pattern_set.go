@@ -42,7 +42,7 @@ func ResourceRegexPatternSet() *schema.Resource {
 }
 
 func resourceRegexPatternSetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFConn
+	conn := meta.(*conns.AWSClient).WAFConn()
 
 	log.Printf("[INFO] Creating WAF Regex Pattern Set: %s", d.Get("name").(string))
 
@@ -65,7 +65,7 @@ func resourceRegexPatternSetCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceRegexPatternSetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFConn
+	conn := meta.(*conns.AWSClient).WAFConn()
 	log.Printf("[INFO] Reading WAF Regex Pattern Set: %s", d.Get("name").(string))
 	params := &waf.GetRegexPatternSetInput{
 		RegexPatternSetId: aws.String(d.Id()),
@@ -79,7 +79,7 @@ func resourceRegexPatternSetRead(d *schema.ResourceData, meta interface{}) error
 			return nil
 		}
 
-		return err
+		return fmt.Errorf("reading WAF Regex Pattern Set (%s): %w", d.Get("name").(string), err)
 	}
 
 	d.Set("name", resp.RegexPatternSet.Name)
@@ -97,7 +97,7 @@ func resourceRegexPatternSetRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceRegexPatternSetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFConn
+	conn := meta.(*conns.AWSClient).WAFConn()
 
 	log.Printf("[INFO] Updating WAF Regex Pattern Set: %s", d.Get("name").(string))
 
@@ -114,7 +114,7 @@ func resourceRegexPatternSetUpdate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceRegexPatternSetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFConn
+	conn := meta.(*conns.AWSClient).WAFConn()
 
 	oldPatterns := d.Get("regex_pattern_strings").(*schema.Set).List()
 	if len(oldPatterns) > 0 {

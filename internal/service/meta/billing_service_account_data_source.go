@@ -5,19 +5,21 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 )
 
 func init() {
-	registerFrameworkDataSourceFactory(newDataSourceBillingServiceAccount)
+	_sp.registerFrameworkDataSourceFactory(newDataSourceBillingServiceAccount)
 }
 
 // newDataSourceBillingServiceAccount instantiates a new DataSource for the aws_billing_service_account data source.
 func newDataSourceBillingServiceAccount(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceBillingServiceAccount{}, nil
+	d := &dataSourceBillingServiceAccount{}
+	d.SetMigratedFromPluginSDK(true)
+
+	return d, nil
 }
 
 type dataSourceBillingServiceAccount struct {
@@ -30,23 +32,19 @@ func (d *dataSourceBillingServiceAccount) Metadata(_ context.Context, request da
 	response.TypeName = "aws_billing_service_account"
 }
 
-// GetSchema returns the schema for this data source.
-func (d *dataSourceBillingServiceAccount) GetSchema(context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	schema := tfsdk.Schema{
-		Attributes: map[string]tfsdk.Attribute{
-			"arn": {
-				Type:     types.StringType,
+// Schema returns the schema for this data source.
+func (d *dataSourceBillingServiceAccount) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"arn": schema.StringAttribute{
 				Computed: true,
 			},
-			"id": {
-				Type:     types.StringType,
+			"id": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 			},
 		},
 	}
-
-	return schema, nil
 }
 
 // Read is called when the provider must read data source values in order to update state.

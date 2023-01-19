@@ -52,7 +52,7 @@ func ResourceSigningCertificate() *schema.Resource {
 }
 
 func resourceSigningCertificateCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	createOpts := &iam.UploadSigningCertificateInput{
 		CertificateBody: aws.String(d.Get("certificate_body").(string)),
@@ -86,11 +86,11 @@ func resourceSigningCertificateCreate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceSigningCertificateRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	certId, userName, err := DecodeSigningCertificateId(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("reading IAM Signing Certificate (%s): %w", d.Id(), err)
 	}
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(propagationTimeout, func() (interface{}, error) {
@@ -104,7 +104,7 @@ func resourceSigningCertificateRead(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading IAM Signing Certificate (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading IAM Signing Certificate (%s): %w", d.Id(), err)
 	}
 
 	resp := outputRaw.(*iam.SigningCertificate)
@@ -118,11 +118,11 @@ func resourceSigningCertificateRead(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceSigningCertificateUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	certId, userName, err := DecodeSigningCertificateId(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("updating IAM Signing Certificate (%s): %w", d.Id(), err)
 	}
 
 	updateInput := &iam.UpdateSigningCertificateInput{
@@ -133,19 +133,19 @@ func resourceSigningCertificateUpdate(d *schema.ResourceData, meta interface{}) 
 
 	_, err = conn.UpdateSigningCertificate(updateInput)
 	if err != nil {
-		return fmt.Errorf("error updating IAM Signing Certificate: %w", err)
+		return fmt.Errorf("updating IAM Signing Certificate (%s): %w", d.Id(), err)
 	}
 
 	return resourceSigningCertificateRead(d, meta)
 }
 
 func resourceSigningCertificateDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 	log.Printf("[INFO] Deleting IAM Signing Certificate: %s", d.Id())
 
 	certId, userName, err := DecodeSigningCertificateId(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting IAM Signing Certificate (%s): %s", d.Id(), err)
 	}
 
 	input := &iam.DeleteSigningCertificateInput{
@@ -157,7 +157,7 @@ func resourceSigningCertificateDelete(d *schema.ResourceData, meta interface{}) 
 		if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 			return nil
 		}
-		return fmt.Errorf("Error deleting IAM Signing Certificate %s: %s", d.Id(), err)
+		return fmt.Errorf("deleting IAM Signing Certificate (%s): %s", d.Id(), err)
 	}
 
 	return nil

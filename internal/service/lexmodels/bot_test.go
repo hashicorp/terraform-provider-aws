@@ -81,6 +81,8 @@ func TestAccLexModelsBot_basic(t *testing.T) {
 }
 
 func TestAccLexModelsBot_Version_serial(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]func(t *testing.T){
 		"LexBot_createVersion":         testAccBot_createVersion,
 		"LexBotAlias_botVersion":       testAccBotAlias_botVersion,
@@ -88,12 +90,7 @@ func TestAccLexModelsBot_Version_serial(t *testing.T) {
 		"DataSourceLexBotAlias_basic":  testAccBotAliasDataSource_basic,
 	}
 
-	for name, tc := range testCases {
-		tc := tc
-		t.Run(name, func(t *testing.T) {
-			tc(t)
-		})
-	}
+	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
 func testAccBot_createVersion(t *testing.T) {
@@ -736,7 +733,7 @@ func testAccCheckBotExistsWithVersion(rName, botVersion string, v *lexmodelbuild
 			return fmt.Errorf("No Lex Bot ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn()
 
 		output, err := tflexmodels.FindBotVersionByName(conn, rs.Primary.ID, botVersion)
 
@@ -756,7 +753,7 @@ func testAccCheckBotExists(rName string, output *lexmodelbuildingservice.GetBotO
 
 func testAccCheckBotNotExists(botName, botVersion string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn()
 
 		_, err := tflexmodels.FindBotVersionByName(conn, botName, botVersion)
 
@@ -773,7 +770,7 @@ func testAccCheckBotNotExists(botName, botVersion string) resource.TestCheckFunc
 }
 
 func testAccCheckBotDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lex_bot" {

@@ -282,7 +282,7 @@ func ResourceTaskSet() *schema.Resource {
 }
 
 func resourceTaskSetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECSConn
+	conn := meta.(*conns.AWSClient).ECSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -352,7 +352,7 @@ func resourceTaskSetCreate(d *schema.ResourceData, meta interface{}) error {
 	if d.Get("wait_until_stable").(bool) {
 		timeout, _ := time.ParseDuration(d.Get("wait_until_stable_timeout").(string))
 		if err := waitTaskSetStable(conn, timeout, taskSetId, service, cluster); err != nil {
-			return fmt.Errorf("error waiting for ECS TaskSet (%s) to be stable: %w", d.Id(), err)
+			return fmt.Errorf("error waiting for ECS Task Set (%s) to be stable: %w", d.Id(), err)
 		}
 	}
 
@@ -375,14 +375,14 @@ func resourceTaskSetCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceTaskSetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECSConn
+	conn := meta.(*conns.AWSClient).ECSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	taskSetId, service, cluster, err := TaskSetParseID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading ECS Task Set (%s): %w", d.Id(), err)
 	}
 
 	input := &ecs.DescribeTaskSetsInput{
@@ -395,7 +395,7 @@ func resourceTaskSetRead(d *schema.ResourceData, meta interface{}) error {
 	out, err := conn.DescribeTaskSets(input)
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ecs.ErrCodeClusterNotFoundException, ecs.ErrCodeServiceNotFoundException, ecs.ErrCodeTaskSetNotFoundException) {
-		log.Printf("[WARN] ECS TaskSet (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] ECS Task Set (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
@@ -409,14 +409,14 @@ func resourceTaskSetRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading ECS TaskSet (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading ECS Task Set (%s): %w", d.Id(), err)
 	}
 
 	if out == nil || len(out.TaskSets) == 0 {
 		if d.IsNewResource() {
-			return fmt.Errorf("error reading ECS TaskSet (%s): empty output after creation", d.Id())
+			return fmt.Errorf("error reading ECS Task Set (%s): empty output after creation", d.Id())
 		}
-		log.Printf("[WARN] ECS TaskSet (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] ECS Task Set (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
@@ -469,13 +469,13 @@ func resourceTaskSetRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceTaskSetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECSConn
+	conn := meta.(*conns.AWSClient).ECSConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		taskSetId, service, cluster, err := TaskSetParseID(d.Id())
 
 		if err != nil {
-			return err
+			return fmt.Errorf("updating ECS Task Set (%s): %w", d.Id(), err)
 		}
 
 		input := &ecs.UpdateTaskSetInput{
@@ -488,13 +488,13 @@ func resourceTaskSetUpdate(d *schema.ResourceData, meta interface{}) error {
 		_, err = conn.UpdateTaskSet(input)
 
 		if err != nil {
-			return fmt.Errorf("error updating ECS TaskSet (%s): %w", d.Id(), err)
+			return fmt.Errorf("updating ECS Task Set (%s): %w", d.Id(), err)
 		}
 
 		if d.Get("wait_until_stable").(bool) {
 			timeout, _ := time.ParseDuration(d.Get("wait_until_stable_timeout").(string))
 			if err := waitTaskSetStable(conn, timeout, taskSetId, service, cluster); err != nil {
-				return fmt.Errorf("error waiting for ECS TaskSet (%s) to be stable after update: %w", d.Id(), err)
+				return fmt.Errorf("error waiting for ECS Task Set (%s) to be stable after update: %w", d.Id(), err)
 			}
 		}
 	}
@@ -519,12 +519,12 @@ func resourceTaskSetUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceTaskSetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECSConn
+	conn := meta.(*conns.AWSClient).ECSConn()
 
 	taskSetId, service, cluster, err := TaskSetParseID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting ECS Task Set (%s): %w", d.Id(), err)
 	}
 
 	input := &ecs.DeleteTaskSetInput{
@@ -541,14 +541,14 @@ func resourceTaskSetDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting ECS TaskSet (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting ECS Task Set (%s): %w", d.Id(), err)
 	}
 
 	if err := waitTaskSetDeleted(conn, taskSetId, service, cluster); err != nil {
 		if tfawserr.ErrCodeEquals(err, ecs.ErrCodeTaskSetNotFoundException) {
 			return nil
 		}
-		return fmt.Errorf("error waiting for ECS TaskSet (%s) to delete: %w", d.Id(), err)
+		return fmt.Errorf("deleting ECS Task Set (%s): waiting for completion: %w", d.Id(), err)
 	}
 
 	return nil

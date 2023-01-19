@@ -535,9 +535,9 @@ The `restrictions` sub-resource takes another single sub-resource named
 
 The arguments of `geo_restriction` are:
 
-* `locations` (Optional) - The [ISO 3166-1-alpha-2 codes][4] for which you
+* `locations` (Required) - The [ISO 3166-1-alpha-2 codes][4] for which you
     want CloudFront either to distribute your content (`whitelist`) or not
-    distribute your content (`blacklist`).
+    distribute your content (`blacklist`). If the type is specified as `none` an empty array can be used.
 
 * `restriction_type` (Required) - The method that you want to use to restrict
     distribution of your content by country: `none`, `whitelist`, or

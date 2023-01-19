@@ -191,7 +191,7 @@ func resourceObjectCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceObjectRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -270,8 +270,9 @@ func resourceObjectRead(d *schema.ResourceData, meta interface{}) error {
 
 	// The "STANDARD" (which is also the default) storage
 	// class when set would not be included in the results.
-	d.Set("storage_class", s3.StorageClassStandard)
-	if resp.StorageClass != nil {
+	if resp.StorageClass == nil {
+		d.Set("storage_class", s3.StorageClassStandard)
+	} else {
 		d.Set("storage_class", resp.StorageClass)
 	}
 
@@ -309,7 +310,7 @@ func resourceObjectUpdate(d *schema.ResourceData, meta interface{}) error {
 		return resourceObjectUpload(d, meta)
 	}
 
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket := d.Get("bucket").(string)
 	key := d.Get("key").(string)
@@ -376,7 +377,7 @@ func resourceObjectUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceObjectDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket := d.Get("bucket").(string)
 	key := d.Get("key").(string)
@@ -419,7 +420,7 @@ func resourceObjectImport(d *schema.ResourceData, meta interface{}) ([]*schema.R
 }
 
 func resourceObjectUpload(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 	uploader := s3manager.NewUploaderWithClient(conn)
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
@@ -545,7 +546,7 @@ func resourceObjectSetKMS(d *schema.ResourceData, meta interface{}, sseKMSKeyId 
 	// Only set non-default KMS key ID (one that doesn't match default)
 	if sseKMSKeyId != nil {
 		// retrieve S3 KMS Default Master Key
-		conn := meta.(*conns.AWSClient).KMSConn
+		conn := meta.(*conns.AWSClient).KMSConn()
 		keyMetadata, err := kms.FindKeyByID(conn, DefaultKMSKeyAlias)
 		if err != nil {
 			return fmt.Errorf("Failed to describe default S3 KMS key (%s): %s", DefaultKMSKeyAlias, err)

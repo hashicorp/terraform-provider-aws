@@ -8,8 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/globalaccelerator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -18,12 +17,15 @@ import (
 )
 
 func init() {
-	registerFrameworkDataSourceFactory(newDataSourceAccelerator)
+	_sp.registerFrameworkDataSourceFactory(newDataSourceAccelerator)
 }
 
 // newDataSourceAccelerator instantiates a new DataSource for the aws_globalaccelerator_accelerator data source.
 func newDataSourceAccelerator(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceAccelerator{}, nil
+	d := &dataSourceAccelerator{}
+	d.SetMigratedFromPluginSDK(true)
+
+	return d, nil
 }
 
 type dataSourceAccelerator struct {
@@ -36,65 +38,57 @@ func (d *dataSourceAccelerator) Metadata(_ context.Context, request datasource.M
 	response.TypeName = "aws_globalaccelerator_accelerator"
 }
 
-// GetSchema returns the schema for this data source.
-func (d *dataSourceAccelerator) GetSchema(context.Context) (tfsdk.Schema, diag.Diagnostics) {
-	schema := tfsdk.Schema{
-		Attributes: map[string]tfsdk.Attribute{
-			"arn": {
-				Type:     fwtypes.ARNType,
-				Optional: true,
-				Computed: true,
+// Schema returns the schema for this data source.
+func (d *dataSourceAccelerator) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"arn": schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Optional:   true,
+				Computed:   true,
 			},
-			"attributes": {
-				Type: types.ListType{ElemType: types.ObjectType{
+			"attributes": schema.ListAttribute{
+				ElementType: types.ObjectType{
 					AttrTypes: map[string]attr.Type{
 						"flow_logs_enabled":   types.BoolType,
 						"flow_logs_s3_bucket": types.StringType,
 						"flow_logs_s3_prefix": types.StringType,
 					},
-				}},
+				},
 				Computed: true,
 			},
-			"dns_name": {
-				Type:     types.StringType,
+			"dns_name": schema.StringAttribute{
 				Computed: true,
 			},
-			"enabled": {
-				Type:     types.BoolType,
+			"enabled": schema.BoolAttribute{
 				Computed: true,
 			},
-			"hosted_zone_id": {
-				Type:     types.StringType,
+			"hosted_zone_id": schema.StringAttribute{
 				Computed: true,
 			},
-			"id": {
-				Type:     types.StringType,
+			"id": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 			},
-			"ip_address_type": {
-				Type:     types.StringType,
+			"ip_address_type": schema.StringAttribute{
 				Computed: true,
 			},
-			"ip_sets": {
-				Type: types.ListType{ElemType: types.ObjectType{
+			"ip_sets": schema.ListAttribute{
+				ElementType: types.ObjectType{
 					AttrTypes: map[string]attr.Type{
 						"ip_addresses": types.ListType{ElemType: types.StringType},
 						"ip_family":    types.StringType,
 					},
-				}},
+				},
 				Computed: true,
 			},
-			"name": {
-				Type:     types.StringType,
+			"name": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 			},
 			"tags": tftags.TagsAttributeComputedOnly(),
 		},
 	}
-
-	return schema, nil
 }
 
 // Read is called when the provider must read data source values in order to update state.
@@ -108,7 +102,7 @@ func (d *dataSourceAccelerator) Read(ctx context.Context, request datasource.Rea
 		return
 	}
 
-	conn := d.Meta().GlobalAcceleratorConn
+	conn := d.Meta().GlobalAcceleratorConn()
 	ignoreTagsConfig := d.Meta().IgnoreTagsConfig
 
 	var results []*globalaccelerator.Accelerator
@@ -185,7 +179,7 @@ func (d *dataSourceAccelerator) Read(ctx context.Context, request datasource.Rea
 		return
 	}
 
-	data.Tags = flex.FlattenFrameworkStringValueMap(ctx, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
+	data.Tags = flex.FlattenFrameworkStringValueMapLegacy(ctx, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -201,7 +195,7 @@ func (d *dataSourceAccelerator) flattenIPSetFramework(ctx context.Context, apiOb
 	}
 
 	attributes := map[string]attr.Value{
-		"ip_addresses": flex.FlattenFrameworkStringList(ctx, apiObject.IpAddresses),
+		"ip_addresses": flex.FlattenFrameworkStringListLegacy(ctx, apiObject.IpAddresses),
 		"ip_family":    flex.StringToFrameworkLegacy(ctx, apiObject.IpFamily),
 	}
 

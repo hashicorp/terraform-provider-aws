@@ -37,7 +37,7 @@ func ResourceProxyProtocolPolicy() *schema.Resource {
 }
 
 func resourceProxyProtocolPolicyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBConn
+	conn := meta.(*conns.AWSClient).ELBConn()
 	elbname := aws.String(d.Get("load_balancer").(string))
 
 	input := &elb.CreateLoadBalancerPolicyInput{
@@ -67,7 +67,7 @@ func resourceProxyProtocolPolicyCreate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceProxyProtocolPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBConn
+	conn := meta.(*conns.AWSClient).ELBConn()
 	elbname := d.Get("load_balancer").(string)
 
 	// Retrieve the current ELB policies for updating the state
@@ -97,7 +97,7 @@ func resourceProxyProtocolPolicyRead(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceProxyProtocolPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBConn
+	conn := meta.(*conns.AWSClient).ELBConn()
 	elbname := aws.String(d.Get("load_balancer").(string))
 
 	// Retrieve the current ELB policies for updating the state
@@ -123,13 +123,13 @@ func resourceProxyProtocolPolicyUpdate(d *schema.ResourceData, meta interface{})
 
 		i, err := resourceProxyProtocolPolicyRemove(policyName, remove, backends)
 		if err != nil {
-			return err
+			return fmt.Errorf("updating ELB Classic Proxy Protocol Policy (%s): %w", d.Id(), err)
 		}
 		inputs = append(inputs, i...)
 
 		i, err = resourceProxyProtocolPolicyAdd(policyName, add, backends)
 		if err != nil {
-			return err
+			return fmt.Errorf("updating ELB Classic Proxy Protocol Policy (%s): %w", d.Id(), err)
 		}
 		inputs = append(inputs, i...)
 
@@ -145,7 +145,7 @@ func resourceProxyProtocolPolicyUpdate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceProxyProtocolPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBConn
+	conn := meta.(*conns.AWSClient).ELBConn()
 	elbname := aws.String(d.Get("load_balancer").(string))
 
 	// Retrieve the current ELB policies for updating the state
@@ -166,7 +166,7 @@ func resourceProxyProtocolPolicyDelete(d *schema.ResourceData, meta interface{})
 
 	inputs, err := resourceProxyProtocolPolicyRemove(policyName, ports, backends)
 	if err != nil {
-		return fmt.Errorf("Error detaching a policy from backend: %w", err)
+		return fmt.Errorf("deleting ELB Classic Proxy Protocol Policy (%s): %w", d.Id(), err)
 	}
 	for _, input := range inputs {
 		input.LoadBalancerName = elbname
@@ -191,7 +191,7 @@ func resourceProxyProtocolPolicyRemove(policyName string, ports []interface{}, b
 	for _, p := range ports {
 		ip, err := strconv.ParseInt(p.(string), 10, 64)
 		if err != nil {
-			return nil, fmt.Errorf("Error detaching the policy: %s", err)
+			return nil, fmt.Errorf("detaching the policy: %s", err)
 		}
 
 		newPolicies := []*string{}
@@ -222,7 +222,7 @@ func resourceProxyProtocolPolicyAdd(policyName string, ports []interface{}, back
 	for _, p := range ports {
 		ip, err := strconv.ParseInt(p.(string), 10, 64)
 		if err != nil {
-			return nil, fmt.Errorf("Error attaching the policy: %s", err)
+			return nil, fmt.Errorf("attaching the policy: %s", err)
 		}
 
 		newPolicies := []*string{}

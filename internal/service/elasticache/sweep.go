@@ -79,7 +79,7 @@ func sweepClusters(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).ElastiCacheConn
+	conn := client.(*conns.AWSClient).ElastiCacheConn()
 
 	var sweeperErrs *multierror.Error
 
@@ -125,7 +125,7 @@ func sweepGlobalReplicationGroups(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).ElastiCacheConn
+	conn := client.(*conns.AWSClient).ElastiCacheConn()
 	ctx := context.Background()
 
 	var grgGroup multierror.Group
@@ -180,7 +180,7 @@ func sweepParameterGroups(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).ElastiCacheConn
+	conn := client.(*conns.AWSClient).ElastiCacheConn()
 
 	err = conn.DescribeCacheParameterGroupsPages(&elasticache.DescribeCacheParameterGroupsInput{}, func(page *elasticache.DescribeCacheParameterGroupsOutput, lastPage bool) bool {
 		if len(page.CacheParameterGroups) == 0 {
@@ -223,7 +223,7 @@ func sweepReplicationGroups(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).ElastiCacheConn
+	conn := client.(*conns.AWSClient).ElastiCacheConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -272,7 +272,7 @@ func sweepCacheSecurityGroups(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).ElastiCacheConn
+	conn := client.(*conns.AWSClient).ElastiCacheConn()
 
 	err = conn.DescribeCacheSecurityGroupsPages(&elasticache.DescribeCacheSecurityGroupsInput{}, func(page *elasticache.DescribeCacheSecurityGroupsOutput, lastPage bool) bool {
 		if len(page.CacheSecurityGroups) == 0 {
@@ -313,7 +313,7 @@ func sweepSubnetGroups(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).ElastiCacheConn
+	conn := client.(*conns.AWSClient).ElastiCacheConn()
 
 	err = conn.DescribeCacheSubnetGroupsPages(&elasticache.DescribeCacheSubnetGroupsInput{}, func(page *elasticache.DescribeCacheSubnetGroupsOutput, lastPage bool) bool {
 		if len(page.CacheSubnetGroups) == 0 {
@@ -323,6 +323,11 @@ func sweepSubnetGroups(region string) error {
 
 		for _, subnetGroup := range page.CacheSubnetGroups {
 			name := aws.StringValue(subnetGroup.CacheSubnetGroupName)
+
+			if name == "default" {
+				log.Printf("[INFO] Skipping ElastiCache Subnet Group: %s", name)
+				continue
+			}
 
 			log.Printf("[INFO] Deleting ElastiCache Subnet Group: %s", name)
 			_, err := conn.DeleteCacheSubnetGroup(&elasticache.DeleteCacheSubnetGroupInput{

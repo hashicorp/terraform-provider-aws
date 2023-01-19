@@ -124,7 +124,7 @@ func ResourceLocationFSxOpenZFSFileSystem() *schema.Resource {
 }
 
 func resourceLocationFSxOpenZFSFileSystemCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataSyncConn
+	conn := meta.(*conns.AWSClient).DataSyncConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 	fsxArn := d.Get("fsx_filesystem_arn").(string)
@@ -152,7 +152,7 @@ func resourceLocationFSxOpenZFSFileSystemCreate(d *schema.ResourceData, meta int
 }
 
 func resourceLocationFSxOpenZFSFileSystemRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataSyncConn
+	conn := meta.(*conns.AWSClient).DataSyncConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -165,13 +165,13 @@ func resourceLocationFSxOpenZFSFileSystemRead(d *schema.ResourceData, meta inter
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading DataSync Location Fsx OpenZfs (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading DataSync Location Fsx OpenZfs (%s): %w", d.Id(), err)
 	}
 
 	subdirectory, err := SubdirectoryFromLocationURI(aws.StringValue(output.LocationUri))
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading DataSync Location Fsx OpenZfs (%s): %w", d.Id(), err)
 	}
 
 	d.Set("arn", output.LocationArn)
@@ -211,7 +211,7 @@ func resourceLocationFSxOpenZFSFileSystemRead(d *schema.ResourceData, meta inter
 }
 
 func resourceLocationFSxOpenZFSFileSystemUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataSyncConn
+	conn := meta.(*conns.AWSClient).DataSyncConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -225,7 +225,7 @@ func resourceLocationFSxOpenZFSFileSystemUpdate(d *schema.ResourceData, meta int
 }
 
 func resourceLocationFSxOpenZFSFileSystemDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataSyncConn
+	conn := meta.(*conns.AWSClient).DataSyncConn()
 
 	input := &datasync.DeleteLocationInput{
 		LocationArn: aws.String(d.Id()),

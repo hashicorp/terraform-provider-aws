@@ -45,7 +45,7 @@ func ResourceRouteTableAssociation() *schema.Resource {
 }
 
 func resourceRouteTableAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	routeTableID := d.Get("route_table_id").(string)
 	input := &ec2.AssociateRouteTableInput{
@@ -84,7 +84,7 @@ func resourceRouteTableAssociationCreate(d *schema.ResourceData, meta interface{
 }
 
 func resourceRouteTableAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(propagationTimeout, func() (interface{}, error) {
 		return FindRouteTableAssociationByID(conn, d.Id())
@@ -110,7 +110,7 @@ func resourceRouteTableAssociationRead(d *schema.ResourceData, meta interface{})
 }
 
 func resourceRouteTableAssociationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	input := &ec2.ReplaceRouteTableAssociationInput{
 		AssociationId: aws.String(d.Id()),
@@ -146,7 +146,7 @@ func resourceRouteTableAssociationUpdate(d *schema.ResourceData, meta interface{
 }
 
 func resourceRouteTableAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	return routeTableAssociationDelete(conn, d.Id())
 }
@@ -162,7 +162,7 @@ func resourceRouteTableAssociationImport(d *schema.ResourceData, meta interface{
 
 	log.Printf("[DEBUG] Importing route table association, target: %s, route table: %s", targetID, routeTableID)
 
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	routeTable, err := FindRouteTableByID(conn, routeTableID)
 
@@ -210,12 +210,12 @@ func routeTableAssociationDelete(conn *ec2.EC2, associationID string) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Route Table Association (%s): %w", associationID, err)
+		return fmt.Errorf("deleting Route Table Association (%s): %w", associationID, err)
 	}
 
 	log.Printf("[DEBUG] Waiting for Route Table Association (%s) deletion", associationID)
 	if _, err := WaitRouteTableAssociationDeleted(conn, associationID); err != nil {
-		return fmt.Errorf("error waiting for Route Table Association (%s) delete: %w", associationID, err)
+		return fmt.Errorf("deleting Route Table Association (%s): waiting for completion: %w", associationID, err)
 	}
 
 	return nil

@@ -184,7 +184,7 @@ func TestAccLocationPlaceIndex_tags(t *testing.T) {
 }
 
 func testAccCheckPlaceIndexDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).LocationConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).LocationConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_location_place_index" {
@@ -221,7 +221,7 @@ func testAccCheckPlaceIndexExists(resourceName string) resource.TestCheckFunc {
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LocationConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LocationConn()
 
 		input := &locationservice.DescribePlaceIndexInput{
 			IndexName: aws.String(rs.Primary.ID),

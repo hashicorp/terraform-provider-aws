@@ -1,6 +1,7 @@
 package emr
 
 import (
+	"fmt"
 	"log"
 	"time"
 
@@ -55,7 +56,7 @@ func ResourceSecurityConfiguration() *schema.Resource {
 }
 
 func resourceSecurityConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EMRConn
+	conn := meta.(*conns.AWSClient).EMRConn()
 
 	var emrSCName string
 	if v, ok := d.GetOk("name"); ok {
@@ -74,7 +75,7 @@ func resourceSecurityConfigurationCreate(d *schema.ResourceData, meta interface{
 	})
 
 	if err != nil {
-		return err
+		return fmt.Errorf("creating EMR Security Configuration (%s): %w", emrSCName, err)
 	}
 
 	d.SetId(aws.StringValue(resp.Name))
@@ -82,7 +83,7 @@ func resourceSecurityConfigurationCreate(d *schema.ResourceData, meta interface{
 }
 
 func resourceSecurityConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EMRConn
+	conn := meta.(*conns.AWSClient).EMRConn()
 
 	resp, err := conn.DescribeSecurityConfiguration(&emr.DescribeSecurityConfigurationInput{
 		Name: aws.String(d.Id()),
@@ -93,7 +94,7 @@ func resourceSecurityConfigurationRead(d *schema.ResourceData, meta interface{})
 			d.SetId("")
 			return nil
 		}
-		return err
+		return fmt.Errorf("reading EMR Security Configuration (%s): %w", d.Id(), err)
 	}
 
 	d.Set("creation_date", aws.TimeValue(resp.CreationDateTime).Format(time.RFC3339))
@@ -104,7 +105,7 @@ func resourceSecurityConfigurationRead(d *schema.ResourceData, meta interface{})
 }
 
 func resourceSecurityConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EMRConn
+	conn := meta.(*conns.AWSClient).EMRConn()
 
 	_, err := conn.DeleteSecurityConfiguration(&emr.DeleteSecurityConfigurationInput{
 		Name: aws.String(d.Id()),
@@ -113,7 +114,7 @@ func resourceSecurityConfigurationDelete(d *schema.ResourceData, meta interface{
 		if tfawserr.ErrMessageContains(err, "InvalidRequestException", "does not exist") {
 			return nil
 		}
-		return err
+		return fmt.Errorf("deleting EMR Security Configuration (%s): %w", d.Id(), err)
 	}
 
 	return nil

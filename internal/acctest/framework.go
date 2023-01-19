@@ -29,20 +29,17 @@ func DeleteFrameworkResource(factory func(context.Context) (fwresource.ResourceW
 
 	resource.Configure(ctx, fwresource.ConfigureRequest{ProviderData: meta}, &fwresource.ConfigureResponse{})
 
-	schema, diags := resource.GetSchema(ctx)
-
-	if diags.HasError() {
-		return fwdiag.DiagnosticsError(diags)
-	}
+	schemaResp := fwresource.SchemaResponse{}
+	resource.Schema(ctx, fwresource.SchemaRequest{}, &schemaResp)
 
 	// Construct a simple Framework State that contains just top-level attributes.
 	state := tfsdk.State{
-		Raw:    tftypes.NewValue(schema.Type().TerraformType(ctx), nil),
-		Schema: schema,
+		Raw:    tftypes.NewValue(schemaResp.Schema.Type().TerraformType(ctx), nil),
+		Schema: schemaResp.Schema,
 	}
 
 	for name, v := range is.Attributes {
-		if strings.Contains(name, ".") {
+		if name == "%" || strings.Contains(name, ".") {
 			continue
 		}
 

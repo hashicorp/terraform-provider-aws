@@ -81,14 +81,14 @@ func ResourceResourceShareAccepter() *schema.Resource {
 }
 
 func resourceResourceShareAccepterCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RAMConn
+	conn := meta.(*conns.AWSClient).RAMConn()
 
 	shareARN := d.Get("share_arn").(string)
 
 	invitation, err := FindResourceShareInvitationByResourceShareARNAndStatus(conn, shareARN, ram.ResourceShareInvitationStatusPending)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("creating RAM Resource Share Accepter: %w", err)
 	}
 
 	if invitation == nil || aws.StringValue(invitation.ResourceShareInvitationArn) == "" {
@@ -127,7 +127,7 @@ func resourceResourceShareAccepterCreate(d *schema.ResourceData, meta interface{
 
 func resourceResourceShareAccepterRead(d *schema.ResourceData, meta interface{}) error {
 	accountID := meta.(*conns.AWSClient).AccountID
-	conn := meta.(*conns.AWSClient).RAMConn
+	conn := meta.(*conns.AWSClient).RAMConn()
 
 	invitation, err := FindResourceShareInvitationByResourceShareARNAndStatus(conn, d.Id(), ram.ResourceShareInvitationStatusAccepted)
 
@@ -191,7 +191,7 @@ func resourceResourceShareAccepterRead(d *schema.ResourceData, meta interface{})
 }
 
 func resourceResourceShareAccepterDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RAMConn
+	conn := meta.(*conns.AWSClient).RAMConn()
 
 	receiverAccountID := d.Get("receiver_account_id").(string)
 

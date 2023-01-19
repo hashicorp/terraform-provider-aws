@@ -64,7 +64,7 @@ func ResourceApplicationVersion() *schema.Resource {
 }
 
 func resourceApplicationVersionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn
+	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -87,20 +87,18 @@ func resourceApplicationVersionCreate(d *schema.ResourceData, meta interface{}) 
 		VersionLabel:    aws.String(name),
 	}
 
-	log.Printf("[DEBUG] Elastic Beanstalk Application Version create opts: %s", createOpts)
 	_, err := conn.CreateApplicationVersion(&createOpts)
 	if err != nil {
-		return err
+		return fmt.Errorf("creating Elastic Beanstalk Application Version (%s): %w", name, err)
 	}
 
 	d.SetId(name)
-	log.Printf("[INFO] Elastic Beanstalk Application Version Label: %s", name)
 
 	return resourceApplicationVersionRead(d, meta)
 }
 
 func resourceApplicationVersionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn
+	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -109,7 +107,7 @@ func resourceApplicationVersionRead(d *schema.ResourceData, meta interface{}) er
 		VersionLabels:   []*string{aws.String(d.Id())},
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("reading Elastic Beanstalk Application Version (%s): %w", d.Id(), err)
 	}
 
 	if len(resp.ApplicationVersions) == 0 {
@@ -148,11 +146,11 @@ func resourceApplicationVersionRead(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceApplicationVersionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn
+	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn()
 
 	if d.HasChange("description") {
 		if err := resourceApplicationVersionDescriptionUpdate(conn, d); err != nil {
-			return err
+			return fmt.Errorf("updating Elastic Beanstalk Application Version (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -161,7 +159,7 @@ func resourceApplicationVersionUpdate(d *schema.ResourceData, meta interface{}) 
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, arn, o, n); err != nil {
-			return fmt.Errorf("error updating Elastic Beanstalk Application version (%s) tags: %s", arn, err)
+			return fmt.Errorf("updating Elastic Beanstalk Application Version (%s): setting tags: %w", d.Id(), err)
 		}
 	}
 
@@ -169,7 +167,7 @@ func resourceApplicationVersionUpdate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceApplicationVersionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn
+	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn()
 
 	application := d.Get("application").(string)
 	name := d.Id()
@@ -177,7 +175,7 @@ func resourceApplicationVersionDelete(d *schema.ResourceData, meta interface{}) 
 	if !d.Get("force_delete").(bool) {
 		environments, err := versionUsedBy(application, name, conn)
 		if err != nil {
-			return err
+			return fmt.Errorf("deleting Elastic Beanstalk Application Version (%s): %w", d.Id(), err)
 		}
 
 		if len(environments) > 1 {
@@ -206,8 +204,6 @@ func resourceApplicationVersionDescriptionUpdate(conn *elasticbeanstalk.ElasticB
 	application := d.Get("application").(string)
 	description := d.Get("description").(string)
 	name := d.Get("name").(string)
-
-	log.Printf("[DEBUG] Elastic Beanstalk application version: %s, update description: %s", name, description)
 
 	_, err := conn.UpdateApplicationVersion(&elasticbeanstalk.UpdateApplicationVersionInput{
 		ApplicationName: aws.String(application),

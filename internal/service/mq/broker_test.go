@@ -20,6 +20,8 @@ import (
 )
 
 func TestValidateBrokerName(t *testing.T) {
+	t.Parallel()
+
 	validNames := []string{
 		"ValidName",
 		"V_-dN01e",
@@ -51,6 +53,8 @@ func TestValidateBrokerName(t *testing.T) {
 }
 
 func TestBrokerPasswordValidation(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Value    string
 		ErrCount int
@@ -99,6 +103,8 @@ func TestBrokerPasswordValidation(t *testing.T) {
 }
 
 func TestDiffUsers(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		OldUsers []interface{}
 		NewUsers []interface{}
@@ -1286,7 +1292,7 @@ func TestAccMQBroker_ldap(t *testing.T) {
 }
 
 func testAccCheckBrokerDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).MQConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).MQConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_mq_broker" {
@@ -1320,7 +1326,7 @@ func testAccCheckBrokerExists(n string, v *mq.DescribeBrokerResponse) resource.T
 			return fmt.Errorf("No MQ Broker ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MQConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MQConn()
 
 		output, err := tfmq.FindBrokerByID(context.Background(), conn, rs.Primary.ID)
 
@@ -1335,7 +1341,7 @@ func testAccCheckBrokerExists(n string, v *mq.DescribeBrokerResponse) resource.T
 }
 
 func testAccPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).MQConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).MQConn()
 
 	input := &mq.ListBrokersInput{}
 

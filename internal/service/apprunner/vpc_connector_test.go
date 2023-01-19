@@ -112,13 +112,57 @@ func TestAccAppRunnerVPCConnector_tags(t *testing.T) {
 	})
 }
 
+func TestAccAppRunnerVPCConnector_defaultTags(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_apprunner_vpc_connector.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckVPCConnector(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apprunner.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCConnectorDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: acctest.ConfigCompose(
+					acctest.ConfigDefaultTags_Tags1("providerkey1", "providervalue1"),
+					testAccVPCConnectorConfig_basic(rName),
+				),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVPCConnectorExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.providerkey1", "providervalue1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: acctest.ConfigCompose(
+					acctest.ConfigDefaultTags_Tags2("providerkey1", "providervalue1", "providerkey2", "providervalue2"),
+					testAccVPCConnectorConfig_basic(rName),
+				),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVPCConnectorExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.providerkey1", "providervalue1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.providerkey2", "providervalue2"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckVPCConnectorDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_apprunner_vpc_connector" {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn()
 
 		_, err := tfapprunner.FindVPCConnectorByARN(context.Background(), conn, rs.Primary.ID)
 
@@ -147,7 +191,7 @@ func testAccCheckVPCConnectorExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No App Runner VPC Connector ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn()
 
 		_, err := tfapprunner.FindVPCConnectorByARN(context.Background(), conn, rs.Primary.ID)
 
@@ -208,7 +252,7 @@ resource "aws_apprunner_vpc_connector" "test" {
 }
 
 func testAccPreCheckVPCConnector(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn()
 	ctx := context.Background()
 
 	input := &apprunner.ListVpcConnectorsInput{}

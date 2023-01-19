@@ -300,7 +300,7 @@ func resourceObjectCopyCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceObjectCopyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -363,7 +363,7 @@ func resourceObjectCopyRead(d *schema.ResourceData, meta interface{}) error {
 	// The "STANDARD" (which is also the default) storage
 	// class when set would not be included in the results.
 	d.Set("storage_class", s3.ObjectStorageClassStandard)
-	if resp.StorageClass != nil {
+	if resp.StorageClass != nil { // nosemgrep: ci.helper-schema-ResourceData-Set-extraneous-nil-check
 		d.Set("storage_class", resp.StorageClass)
 	}
 
@@ -453,7 +453,7 @@ func resourceObjectCopyUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceObjectCopyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket := d.Get("bucket").(string)
 	key := d.Get("key").(string)
@@ -476,7 +476,7 @@ func resourceObjectCopyDelete(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceObjectCopyDoCopy(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 

@@ -77,7 +77,7 @@ func ResourceAlias() *schema.Resource {
 // resourceAliasCreate maps to:
 // CreateAlias in the API / SDK
 func resourceAliasCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LambdaConn
+	conn := meta.(*conns.AWSClient).LambdaConn()
 
 	functionName := d.Get("function_name").(string)
 	aliasName := d.Get("name").(string)
@@ -105,7 +105,7 @@ func resourceAliasCreate(d *schema.ResourceData, meta interface{}) error {
 // resourceAliasRead maps to:
 // GetAlias in the API / SDK
 func resourceAliasRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LambdaConn
+	conn := meta.(*conns.AWSClient).LambdaConn()
 
 	log.Printf("[DEBUG] Fetching Lambda alias: %s:%s", d.Get("function_name"), d.Get("name"))
 
@@ -116,11 +116,11 @@ func resourceAliasRead(d *schema.ResourceData, meta interface{}) error {
 
 	aliasConfiguration, err := conn.GetAlias(params)
 	if err != nil {
-		if tfawserr.ErrMessageContains(err, lambda.ErrCodeResourceNotFoundException, "Cannot find alias arn") {
+		if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceNotFoundException) {
 			d.SetId("")
 			return nil
 		}
-		return err
+		return fmt.Errorf("reading Lambda Alias (%s): %w", d.Id(), err)
 	}
 
 	d.Set("description", aliasConfiguration.Description)
@@ -142,7 +142,7 @@ func resourceAliasRead(d *schema.ResourceData, meta interface{}) error {
 // resourceAliasDelete maps to:
 // DeleteAlias in the API / SDK
 func resourceAliasDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LambdaConn
+	conn := meta.(*conns.AWSClient).LambdaConn()
 
 	log.Printf("[INFO] Deleting Lambda alias: %s:%s", d.Get("function_name"), d.Get("name"))
 
@@ -162,7 +162,7 @@ func resourceAliasDelete(d *schema.ResourceData, meta interface{}) error {
 // resourceAliasUpdate maps to:
 // UpdateAlias in the API / SDK
 func resourceAliasUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LambdaConn
+	conn := meta.(*conns.AWSClient).LambdaConn()
 
 	log.Printf("[DEBUG] Updating Lambda alias: %s:%s", d.Get("function_name"), d.Get("name"))
 

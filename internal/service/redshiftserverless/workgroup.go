@@ -116,14 +116,14 @@ func ResourceWorkgroup() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"publicly_accessible": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
 			"namespace_name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+			},
+			"publicly_accessible": {
+				Type:     schema.TypeBool,
+				Optional: true,
 			},
 			"security_group_ids": {
 				Type:     schema.TypeSet,
@@ -159,7 +159,7 @@ func ResourceWorkgroup() *schema.Resource {
 }
 
 func resourceWorkgroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn
+	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -210,7 +210,7 @@ func resourceWorkgroupCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceWorkgroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn
+	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -227,14 +227,14 @@ func resourceWorkgroupRead(d *schema.ResourceData, meta interface{}) error {
 
 	arn := aws.StringValue(out.WorkgroupArn)
 	d.Set("arn", arn)
-	d.Set("namespace_name", out.NamespaceName)
-	d.Set("workgroup_name", out.WorkgroupName)
-	d.Set("workgroup_id", out.WorkgroupId)
 	d.Set("base_capacity", out.BaseCapacity)
 	d.Set("enhanced_vpc_routing", out.EnhancedVpcRouting)
+	d.Set("namespace_name", out.NamespaceName)
 	d.Set("publicly_accessible", out.PubliclyAccessible)
 	d.Set("security_group_ids", flex.FlattenStringSet(out.SecurityGroupIds))
 	d.Set("subnet_ids", flex.FlattenStringSet(out.SubnetIds))
+	d.Set("workgroup_id", out.WorkgroupId)
+	d.Set("workgroup_name", out.WorkgroupName)
 	if err := d.Set("config_parameter", flattenConfigParameters(out.ConfigParameters)); err != nil {
 		return fmt.Errorf("setting config_parameter: %w", err)
 	}
@@ -268,7 +268,7 @@ func resourceWorkgroupRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceWorkgroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn
+	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &redshiftserverless.UpdateWorkgroupInput{
@@ -321,7 +321,7 @@ func resourceWorkgroupUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceWorkgroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn
+	conn := meta.(*conns.AWSClient).RedshiftServerlessConn()
 
 	_, err := tfresource.RetryWhenAWSErrMessageContains(10*time.Minute,
 		func() (interface{}, error) {
@@ -336,11 +336,11 @@ func resourceWorkgroupDelete(d *schema.ResourceData, meta interface{}) error {
 		if tfawserr.ErrCodeEquals(err, redshiftserverless.ErrCodeResourceNotFoundException) {
 			return nil
 		}
-		return err
+		return fmt.Errorf("deleting Redshift Serverless Workgroup (%s): %w", d.Id(), err)
 	}
 
 	if _, err := waitWorkgroupDeleted(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for Redshift Serverless Workgroup (%s) delete: %w", d.Id(), err)
+		return fmt.Errorf("deleting Redshift Serverless Workgroup (%s): waiting for completion: %w", d.Id(), err)
 	}
 
 	return nil

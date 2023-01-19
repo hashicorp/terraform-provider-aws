@@ -206,16 +206,8 @@ func TestAccLambdaFunction_unpublishedCodeUpdate(t *testing.T) {
 }
 
 func TestAccLambdaFunction_codeSigning(t *testing.T) {
-	if got, want := acctest.Partition(), endpoints.AwsUsGovPartitionID; got == want {
-		t.Skipf("Lambda code signing config is not supported in %s partition", got)
-	}
-
-	// We are hardcoding the region here, because go aws sdk endpoints
-	// package does not support Signer service
-	for _, want := range []string{endpoints.ApNortheast3RegionID, endpoints.ApSoutheast3RegionID} {
-		if got := acctest.Region(); got == want {
-			t.Skipf("Lambda code signing config is not supported in %s region", got)
-		}
+	if curr := acctest.Region(); !tflambda.SignerServiceIsAvailable(curr) {
+		t.Skipf("Lambda code signing config is not supported in %s region", curr)
 	}
 
 	var conf lambda.GetFunctionOutput
@@ -363,7 +355,7 @@ func TestAccLambdaFunction_expectFilenameAndS3Attributes(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccFunctionConfig_noFilenameAndS3Attributes(rName),
-				ExpectError: regexp.MustCompile(`filename, s3_\* or image_uri attributes must be set`),
+				ExpectError: regexp.MustCompile("one of `filename,image_uri,s3_bucket` must be specified"),
 			},
 		},
 	})
@@ -1166,16 +1158,12 @@ func TestAccLambdaFunction_tracing(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	if got, want := acctest.Partition(), endpoints.AwsUsGovPartitionID; got == want {
-		t.Skipf("Lambda tracing config is not supported in %s partition", got)
-	}
-
 	var conf lambda.GetFunctionOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID) },
 		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFunctionDestroy,
@@ -1873,6 +1861,42 @@ func TestAccLambdaFunction_S3Update_unversioned(t *testing.T) {
 	})
 }
 
+func TestAccLambdaFunction_snapStart(t *testing.T) {
+	var conf lambda.GetFunctionOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lambda_function.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFunctionConfig_snapStartEnabled(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFunctionExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "snap_start.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "snap_start.0.apply_on", "PublishedVersions"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"filename", "publish"},
+			},
+			{
+				Config: testAccFunctionConfig_snapStartDisabled(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFunctionExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "snap_start.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccLambdaFunction_runtimes(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -1965,7 +1989,7 @@ func TestAccLambdaFunction_Zip_validation(t *testing.T) {
 }
 
 func testAccCheckFunctionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lambda_function" {
@@ -1999,7 +2023,7 @@ func testAccCheckFunctionExists(n string, v *lambda.GetFunctionOutput) resource.
 			return fmt.Errorf("No Lambda Function ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn()
 
 		output, err := tflambda.FindFunctionByName(conn, rs.Primary.ID)
 
@@ -2030,7 +2054,7 @@ func testAccCheckFunctionInvokeARN(name string, function *lambda.GetFunctionOutp
 func testAccInvokeFunction(function *lambda.GetFunctionOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		f := function.Configuration
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LambdaConn()
 
 		// If the function is VPC-enabled this will create ENI automatically
 		_, err := conn.Invoke(&lambda.InvokeInput{
@@ -2156,6 +2180,38 @@ resource "aws_lambda_function" "test" {
   runtime       = "nodejs16.x"
 }
 `, funcName)
+}
+
+func testAccFunctionConfig_snapStartEnabled(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLambdaBase(rName, rName, rName),
+		fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambda_java11.zip"
+  function_name = %[1]q
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "example.Hello::handleRequest"
+  runtime       = "java11"
+
+  snap_start {
+    apply_on = "PublishedVersions"
+  }
+}
+`, rName))
+}
+
+func testAccFunctionConfig_snapStartDisabled(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLambdaBase(rName, rName, rName),
+		fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambda_java11.zip"
+  function_name = %[1]q
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "example.Hello::handleRequest"
+  runtime       = "java11"
+}
+`, rName))
 }
 
 func testAccFunctionConfig_tags1(rName, tagKey1, tagValue1 string) string {
@@ -3471,6 +3527,7 @@ func testAccFunctionConfig_zipNoHandler(rName string) string {
 		acctest.ConfigLambdaBase(rName, rName, rName),
 		fmt.Sprintf(`
 resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   runtime       = "nodejs16.x"
@@ -3483,6 +3540,7 @@ func testAccFunctionConfig_zipNoRuntime(rName string) string {
 		acctest.ConfigLambdaBase(rName, rName, rName),
 		fmt.Sprintf(`
 resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
@@ -3497,7 +3555,7 @@ func TestFlattenImageConfigShouldNotFailWithEmptyImageConfig(t *testing.T) {
 }
 
 func testAccPreCheckSignerSigningProfile(t *testing.T, platformID string) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SignerConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SignerConn()
 
 	var foundPlatform bool
 	err := conn.ListSigningPlatformsPages(&signer.ListSigningPlatformsInput{}, func(page *signer.ListSigningPlatformsOutput, lastPage bool) bool {

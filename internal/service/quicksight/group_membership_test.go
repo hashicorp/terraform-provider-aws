@@ -65,7 +65,7 @@ func TestAccQuickSightGroupMembership_disappears(t *testing.T) {
 }
 
 func testAccCheckGroupMembershipDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_quicksight_group_membership" {
@@ -109,7 +109,7 @@ func testAccCheckGroupMembershipExists(resourceName string) resource.TestCheckFu
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn()
 
 		listInput := &quicksight.ListGroupMembershipsInput{
 			AwsAccountId: aws.String(awsAccountID),

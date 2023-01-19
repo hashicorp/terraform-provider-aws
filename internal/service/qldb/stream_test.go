@@ -147,7 +147,7 @@ func testAccCheckStreamExists(n string, v *qldb.JournalKinesisStreamDescription)
 			return fmt.Errorf("No QLDB Stream ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QLDBConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QLDBConn()
 
 		output, err := tfqldb.FindStream(context.Background(), conn, rs.Primary.Attributes["ledger_name"], rs.Primary.ID)
 
@@ -162,7 +162,7 @@ func testAccCheckStreamExists(n string, v *qldb.JournalKinesisStreamDescription)
 }
 
 func testAccCheckStreamDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).QLDBConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).QLDBConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_qldb_stream" {

@@ -61,7 +61,7 @@ func ResourceIPGroup() *schema.Resource {
 }
 
 func resourceIPGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WorkSpacesConn
+	conn := meta.(*conns.AWSClient).WorkSpacesConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -74,7 +74,7 @@ func resourceIPGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		Tags:      Tags(tags.IgnoreAWS()),
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("creating WorkSpaces IP Group: %w", err)
 	}
 
 	d.SetId(aws.StringValue(resp.GroupId))
@@ -83,7 +83,7 @@ func resourceIPGroupCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceIPGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WorkSpacesConn
+	conn := meta.(*conns.AWSClient).WorkSpacesConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -92,12 +92,12 @@ func resourceIPGroupRead(d *schema.ResourceData, meta interface{}) error {
 	})
 	if err != nil {
 		if len(resp.Result) == 0 {
-			log.Printf("[WARN] WorkSpaces Ip Group (%s) not found, removing from state", d.Id())
+			log.Printf("[WARN] WorkSpaces IP Group (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
 
-		return err
+		return fmt.Errorf("reading WorkSpaces IP Group (%s): %w", d.Id(), err)
 	}
 
 	ipGroups := resp.Result
@@ -116,43 +116,42 @@ func resourceIPGroupRead(d *schema.ResourceData, meta interface{}) error {
 
 	tags, err := ListTags(conn, d.Id())
 	if err != nil {
-		return fmt.Errorf("error listing tags for WorkSpaces IP Group (%s): %w", d.Id(), err)
+		return fmt.Errorf("listing tags for WorkSpaces IP Group (%s): %w", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	return nil
 }
 
 func resourceIPGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WorkSpacesConn
+	conn := meta.(*conns.AWSClient).WorkSpacesConn()
 
 	if d.HasChange("rules") {
 		rules := d.Get("rules").(*schema.Set).List()
 
-		log.Printf("[INFO] Updating WorkSpaces IP Group Rules")
 		_, err := conn.UpdateRulesOfIpGroup(&workspaces.UpdateRulesOfIpGroupInput{
 			GroupId:   aws.String(d.Id()),
 			UserRules: expandIPGroupRules(rules),
 		})
 		if err != nil {
-			return err
+			return fmt.Errorf("updating WorkSpaces IP Group (%s): %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %w", err)
+			return fmt.Errorf("updating tags: %w", err)
 		}
 	}
 
@@ -160,7 +159,7 @@ func resourceIPGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceIPGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WorkSpacesConn
+	conn := meta.(*conns.AWSClient).WorkSpacesConn()
 
 	var found bool
 	var sweeperErrs *multierror.Error
@@ -177,7 +176,7 @@ func resourceIPGroupDelete(d *schema.ResourceData, meta interface{}) error {
 						GroupIds:    aws.StringSlice([]string{d.Id()}),
 					})
 					if err != nil {
-						sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error disassociating WorkSpaces IP Group (%s) from WorkSpaces Directory (%s): %w", d.Id(), aws.StringValue(dir.DirectoryId), err))
+						sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("disassociating WorkSpaces IP Group (%s) from WorkSpaces Directory (%s): %w", d.Id(), aws.StringValue(dir.DirectoryId), err))
 						continue
 					}
 					log.Printf("[INFO] WorkSpaces IP Group (%s) disassociated from WorkSpaces Directory (%s)", d.Id(), aws.StringValue(dir.DirectoryId))
@@ -187,7 +186,7 @@ func resourceIPGroupDelete(d *schema.ResourceData, meta interface{}) error {
 		return !lastPage
 	})
 	if err != nil {
-		return multierror.Append(sweeperErrs, fmt.Errorf("error describing WorkSpaces Directories: %w", err))
+		return multierror.Append(sweeperErrs, fmt.Errorf("describing WorkSpaces Directories: %w", err))
 	}
 	if sweeperErrs.ErrorOrNil() != nil {
 		return sweeperErrs
@@ -202,7 +201,7 @@ func resourceIPGroupDelete(d *schema.ResourceData, meta interface{}) error {
 		GroupId: aws.String(d.Id()),
 	})
 	if err != nil {
-		return fmt.Errorf("error deleting WorkSpaces IP Group (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting WorkSpaces IP Group (%s): %w", d.Id(), err)
 	}
 	log.Printf("[INFO] WorkSpaces IP Group (%s) deleted", d.Id())
 

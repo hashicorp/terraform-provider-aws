@@ -57,6 +57,11 @@ func init() {
 		F:    sweepLocationHDFSs,
 	})
 
+	resource.AddTestSweepers("aws_datasync_location_object_storage", &resource.Sweeper{
+		Name: "aws_datasync_location_object_storage",
+		F:    sweepLocationObjectStorages,
+	})
+
 	resource.AddTestSweepers("aws_datasync_task", &resource.Sweeper{
 		Name: "aws_datasync_task",
 		F:    sweepTasks,
@@ -68,7 +73,7 @@ func sweepAgents(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).DataSyncConn
+	conn := client.(*conns.AWSClient).DataSyncConn()
 
 	input := &datasync.ListAgentsInput{}
 	for {
@@ -122,7 +127,7 @@ func sweepLocationEFSs(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).DataSyncConn
+	conn := client.(*conns.AWSClient).DataSyncConn()
 
 	input := &datasync.ListLocationsInput{}
 	for {
@@ -179,7 +184,7 @@ func sweepLocationFSxWindows(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).DataSyncConn
+	conn := client.(*conns.AWSClient).DataSyncConn()
 
 	input := &datasync.ListLocationsInput{}
 	for {
@@ -236,7 +241,7 @@ func sweepLocationFSxLustres(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).DataSyncConn
+	conn := client.(*conns.AWSClient).DataSyncConn()
 
 	input := &datasync.ListLocationsInput{}
 	for {
@@ -291,7 +296,7 @@ func sweepLocationNFSs(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).DataSyncConn
+	conn := client.(*conns.AWSClient).DataSyncConn()
 
 	input := &datasync.ListLocationsInput{}
 	for {
@@ -347,7 +352,7 @@ func sweepLocationS3s(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).DataSyncConn
+	conn := client.(*conns.AWSClient).DataSyncConn()
 
 	input := &datasync.ListLocationsInput{}
 	for {
@@ -404,7 +409,7 @@ func sweepLocationSMBs(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).DataSyncConn
+	conn := client.(*conns.AWSClient).DataSyncConn()
 
 	input := &datasync.ListLocationsInput{}
 	for {
@@ -460,7 +465,7 @@ func sweepLocationHDFSs(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).DataSyncConn
+	conn := client.(*conns.AWSClient).DataSyncConn()
 
 	input := &datasync.ListLocationsInput{}
 	for {
@@ -511,12 +516,69 @@ func sweepLocationHDFSs(region string) error {
 	return nil
 }
 
+func sweepLocationObjectStorages(region string) error {
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*conns.AWSClient).DataSyncConn()
+
+	input := &datasync.ListLocationsInput{}
+	for {
+		output, err := conn.ListLocations(input)
+
+		if sweep.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping DataSync Location Object Storage sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("Error retrieving DataSync Location Object Storages: %s", err)
+		}
+
+		if len(output.Locations) == 0 {
+			log.Print("[DEBUG] No DataSync Location Object Storages to sweep")
+			return nil
+		}
+
+		for _, location := range output.Locations {
+			uri := aws.StringValue(location.LocationUri)
+			if !strings.HasPrefix(uri, "object-storage://") {
+				log.Printf("[INFO] Skipping DataSync Location Object Storage: %s", uri)
+				continue
+			}
+			log.Printf("[INFO] Deleting DataSync Location Object Storage: %s", uri)
+			input := &datasync.DeleteLocationInput{
+				LocationArn: location.LocationArn,
+			}
+
+			_, err := conn.DeleteLocation(input)
+
+			if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "not found") {
+				continue
+			}
+
+			if err != nil {
+				log.Printf("[ERROR] Failed to delete DataSync Location Object Storage (%s): %s", uri, err)
+			}
+		}
+
+		if aws.StringValue(output.NextToken) == "" {
+			break
+		}
+
+		input.NextToken = output.NextToken
+	}
+
+	return nil
+}
+
 func sweepTasks(region string) error {
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).DataSyncConn
+	conn := client.(*conns.AWSClient).DataSyncConn()
 
 	input := &datasync.ListTasksInput{}
 	for {

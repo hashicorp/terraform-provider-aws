@@ -22,7 +22,7 @@ type Retryable func(error) (bool, error)
 func RetryWhenContext(ctx context.Context, timeout time.Duration, f func() (interface{}, error), retryable Retryable) (interface{}, error) {
 	var output interface{}
 
-	err := resource.RetryContext(ctx, timeout, func() *resource.RetryError { // nosemgrep:ci.helper-schema-resource-Retry-without-TimeoutError-check
+	err := RetryContext(ctx, timeout, func() *resource.RetryError { // nosemgrep:ci.helper-schema-resource-Retry-without-TimeoutError-check
 		var err error
 		var retry bool
 
@@ -144,9 +144,11 @@ func RetryWhenNewResourceNotFound(timeout time.Duration, f func() (interface{}, 
 }
 
 type Options struct {
-	Delay           time.Duration // Wait this time before starting checks
-	MinPollInterval time.Duration // Smallest time to wait before refreshes (MinTimeout in resource.StateChangeConf)
-	PollInterval    time.Duration // Override MinPollInterval/backoff and only poll this often
+	Delay                     time.Duration // Wait this time before starting checks
+	MinPollInterval           time.Duration // Smallest time to wait before refreshes (MinTimeout in resource.StateChangeConf)
+	PollInterval              time.Duration // Override MinPollInterval/backoff and only poll this often
+	NotFoundChecks            int           // Number of times to allow not found (nil result from Refresh)
+	ContinuousTargetOccurence int           // Number of times the Target state has to occur continuously
 }
 
 func (o Options) Apply(c *resource.StateChangeConf) {
@@ -160,6 +162,14 @@ func (o Options) Apply(c *resource.StateChangeConf) {
 
 	if o.PollInterval > 0 {
 		c.PollInterval = o.PollInterval
+	}
+
+	if o.NotFoundChecks > 0 {
+		c.NotFoundChecks = o.NotFoundChecks
+	}
+
+	if o.ContinuousTargetOccurence > 0 {
+		c.ContinuousTargetOccurence = o.ContinuousTargetOccurence
 	}
 }
 
@@ -190,6 +200,18 @@ func WithPollInterval(pollInterval time.Duration) OptionsFunc {
 	}
 }
 
+func WithNotFoundChecks(notFoundChecks int) OptionsFunc {
+	return func(o *Options) {
+		o.NotFoundChecks = notFoundChecks
+	}
+}
+
+func WithContinuousTargetOccurence(continuousTargetOccurence int) OptionsFunc {
+	return func(o *Options) {
+		o.ContinuousTargetOccurence = continuousTargetOccurence
+	}
+}
+
 // RetryContext allows configuration of StateChangeConf's various time arguments.
 // This is especially useful for AWS services that are prone to throttling, such as Route53, where
 // the default durations cause problems.
@@ -205,9 +227,10 @@ func RetryContext(ctx context.Context, timeout time.Duration, f resource.RetryFu
 	}
 
 	c := &resource.StateChangeConf{
-		Pending: []string{"retryableerror"},
-		Target:  []string{"success"},
-		Timeout: timeout,
+		Pending:    []string{"retryableerror"},
+		Target:     []string{"success"},
+		Timeout:    timeout,
+		MinTimeout: 500 * time.Millisecond,
 		Refresh: func() (interface{}, string, error) {
 			rerr := f()
 

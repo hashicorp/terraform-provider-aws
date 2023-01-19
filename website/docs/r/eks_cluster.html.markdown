@@ -243,7 +243,12 @@ The following arguments are supported in the `outpost_config` configuration bloc
 
     * 101–250 nodes, then we recommend specifying a 2xlarge instance type.
 
-For a list of the available Amazon EC2 instance types, see Compute and storage in AWS Outposts rack features  The control plane is not automatically scaled by Amazon EKS.
+    For a list of the available Amazon EC2 instance types, see Compute and storage in AWS Outposts rack features  The control plane is not automatically scaled by Amazon EKS.
+
+* `control_plane_placement` - (Optional) An object representing the placement configuration for all the control plane instances of your local Amazon EKS cluster on AWS Outpost.
+The following arguments are supported in the `control_plane_placement` configuration block:
+
+    * `group_name` - (Required) The name of the placement group for the Kubernetes control plane instances. This setting can't be changed after cluster creation.
 
 * `outpost_arns` - (Required) The ARN of the Outpost that you want to use for your local Amazon EKS cluster on Outposts. This argument is a list of arns, but only a single Outpost ARN is supported currently.
 
@@ -253,6 +258,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `arn` - ARN of the cluster.
 * `certificate_authority` - Attribute block containing `certificate-authority-data` for your cluster. Detailed below.
+* `cluster_id` - The ID of your local Amazon EKS cluster on the AWS Outpost. This attribute isn't available for an AWS EKS cluster on AWS cloud.
 * `created_at` - Unix epoch timestamp in seconds for when the cluster was created.
 * `endpoint` - Endpoint for your Kubernetes API server.
 * `id` - Name of the cluster.

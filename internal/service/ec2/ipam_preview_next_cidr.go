@@ -60,7 +60,7 @@ func ResourceIPAMPreviewNextCIDR() *schema.Resource {
 }
 
 func resourceIPAMPreviewNextCIDRCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	poolId := d.Get("ipam_pool_id").(string)
 
 	input := &ec2.AllocateIpamPoolCidrInput{
@@ -99,7 +99,7 @@ func resourceIPAMPreviewNextCIDRRead(d *schema.ResourceData, meta interface{}) e
 	cidr, poolId, err := decodeIPAMPreviewNextCIDRID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading EC2 IPAM Preview Next CIDR: %w", err)
 	}
 
 	d.Set("cidr", cidr)

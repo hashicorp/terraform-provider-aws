@@ -29,7 +29,7 @@ func ResourceAccessKey() *schema.Resource {
 			//   ValidationError: Must specify userName when calling with non-User credentials
 			// To prevent import from requiring this extra information, use GetAccessKeyLastUsed.
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-				conn := meta.(*conns.AWSClient).IAMConn
+				conn := meta.(*conns.AWSClient).IAMConn()
 
 				input := &iam.GetAccessKeyLastUsedInput{
 					AccessKeyId: aws.String(d.Id()),
@@ -99,19 +99,17 @@ func ResourceAccessKey() *schema.Resource {
 }
 
 func resourceAccessKeyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
+
+	username := d.Get("user").(string)
 
 	request := &iam.CreateAccessKeyInput{
-		UserName: aws.String(d.Get("user").(string)),
+		UserName: aws.String(username),
 	}
 
 	createResp, err := conn.CreateAccessKey(request)
 	if err != nil {
-		return fmt.Errorf(
-			"Error creating access key for user %s: %s",
-			*request.UserName,
-			err,
-		)
+		return fmt.Errorf("creating IAM Access Key (%s): %s", username, err)
 	}
 
 	d.SetId(aws.StringValue(createResp.AccessKey.AccessKeyId))
@@ -129,11 +127,11 @@ func resourceAccessKeyCreate(d *schema.ResourceData, meta interface{}) error {
 		pgpKey := v.(string)
 		encryptionKey, err := retrieveGPGKey(pgpKey)
 		if err != nil {
-			return err
+			return fmt.Errorf("creating IAM Access Key (%s): %s", username, err)
 		}
 		fingerprint, encrypted, err := encryptValue(encryptionKey, *createResp.AccessKey.SecretAccessKey, "IAM Access Key Secret")
 		if err != nil {
-			return err
+			return fmt.Errorf("creating IAM Access Key (%s): %s", username, err)
 		}
 
 		d.Set("key_fingerprint", fingerprint)
@@ -141,18 +139,14 @@ func resourceAccessKeyCreate(d *schema.ResourceData, meta interface{}) error {
 
 		_, encrypted, err = encryptValue(encryptionKey, sesSMTPPasswordV4, "SES SMTP password")
 		if err != nil {
-			return err
+			return fmt.Errorf("creating IAM Access Key (%s): %s", username, err)
 		}
 
 		d.Set("encrypted_ses_smtp_password_v4", encrypted)
 	} else {
-		if err := d.Set("secret", createResp.AccessKey.SecretAccessKey); err != nil {
-			return err
-		}
+		d.Set("secret", createResp.AccessKey.SecretAccessKey)
 
-		if err := d.Set("ses_smtp_password_v4", sesSMTPPasswordV4); err != nil {
-			return err
-		}
+		d.Set("ses_smtp_password_v4", sesSMTPPasswordV4)
 	}
 
 	if v, ok := d.GetOk("status"); ok && v.(string) == iam.StatusTypeInactive {
@@ -180,7 +174,7 @@ func resourceAccessKeyCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAccessKeyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	username := d.Get("user").(string)
 
@@ -191,7 +185,7 @@ func resourceAccessKeyRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("error reading IAM access key: %w", err)
+		return fmt.Errorf("error reading IAM Access Key (%s): %s", d.Id(), err)
 	}
 
 	d.SetId(aws.StringValue(key.AccessKeyId))
@@ -224,11 +218,11 @@ func resourceAccessKeyReadResult(d *schema.ResourceData, key *iam.AccessKeyMetad
 }
 
 func resourceAccessKeyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	if d.HasChange("status") {
 		if err := resourceAccessKeyStatusUpdate(conn, d); err != nil {
-			return err
+			return fmt.Errorf("updating IAM Access Key (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -236,7 +230,7 @@ func resourceAccessKeyUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAccessKeyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	request := &iam.DeleteAccessKeyInput{
 		AccessKeyId: aws.String(d.Id()),
@@ -244,7 +238,7 @@ func resourceAccessKeyDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if _, err := conn.DeleteAccessKey(request); err != nil {
-		return fmt.Errorf("Error deleting access key %s: %s", d.Id(), err)
+		return fmt.Errorf("deleting IAM Access Key (%s): %s", d.Id(), err)
 	}
 	return nil
 }
@@ -256,10 +250,8 @@ func resourceAccessKeyStatusUpdate(conn *iam.IAM, d *schema.ResourceData) error 
 		UserName:    aws.String(d.Get("user").(string)),
 	}
 
-	if _, err := conn.UpdateAccessKey(request); err != nil {
-		return fmt.Errorf("Error updating access key %s: %s", d.Id(), err)
-	}
-	return nil
+	_, err := conn.UpdateAccessKey(request)
+	return err
 }
 
 func hmacSignature(key []byte, value []byte) ([]byte, error) {

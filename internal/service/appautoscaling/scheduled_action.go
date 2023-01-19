@@ -104,7 +104,7 @@ func ResourceScheduledAction() *schema.Resource {
 }
 
 func resourceScheduledActionPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppAutoScalingConn
+	conn := meta.(*conns.AWSClient).AppAutoScalingConn()
 
 	input := &applicationautoscaling.PutScheduledActionInput{
 		ScheduledActionName: aws.String(d.Get("name").(string)),
@@ -198,7 +198,7 @@ func scheduledActionPopulateInputForUpdate(input *applicationautoscaling.PutSche
 }
 
 func resourceScheduledActionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppAutoScalingConn
+	conn := meta.(*conns.AWSClient).AppAutoScalingConn()
 
 	scheduledAction, err := FindScheduledAction(conn, d.Get("name").(string), d.Get("service_namespace").(string), d.Get("resource_id").(string))
 	if tfresource.NotFound(err) && !d.IsNewResource() {
@@ -228,7 +228,7 @@ func resourceScheduledActionRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceScheduledActionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppAutoScalingConn
+	conn := meta.(*conns.AWSClient).AppAutoScalingConn()
 
 	input := &applicationautoscaling.DeleteScheduledActionInput{
 		ScheduledActionName: aws.String(d.Get("name").(string)),
@@ -244,7 +244,7 @@ func resourceScheduledActionDelete(d *schema.ResourceData, meta interface{}) err
 			log.Printf("[WARN] Application Auto Scaling scheduled action (%s) not found, removing from state", d.Id())
 			return nil
 		}
-		return err
+		return fmt.Errorf("deleting Application Auto Scaling Scheduled Action (%s): %w", d.Id(), err)
 	}
 
 	return nil

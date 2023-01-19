@@ -56,6 +56,7 @@ The following arguments are required:
 * `name` - (Required) Unique name for the Cost Category.
 * `rule` - (Required) Configuration block for the Cost Category rules used to categorize costs. See below.
 * `rule_version` - (Required) Rule schema version in this particular Cost Category.
+* `effective_start`- (Optional)  The Cost Category's effective start date. It can only be a billing start date (first day of the month). If the date isn't provided, it's the first day of the current month. Dates can't be before the previous twelve months, or in the future. For example `2022-11-01T00:00:00Z`.
 
 The following arguments are optional:
 
@@ -120,7 +121,6 @@ In addition to all arguments above, the following attributes are exported:
 
 * `arn` - ARN of the cost category.
 * `effective_end` - Effective end data of your Cost Category.
-* `effective_start` - Effective state data of your Cost Category.
 * `id` - Unique ID of the cost category.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 

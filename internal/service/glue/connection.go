@@ -103,7 +103,7 @@ func ResourceConnection() *schema.Resource {
 }
 
 func resourceConnectionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+	conn := meta.(*conns.AWSClient).GlueConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -133,13 +133,13 @@ func resourceConnectionCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceConnectionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+	conn := meta.(*conns.AWSClient).GlueConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	catalogID, connectionName, err := DecodeConnectionID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("reading Glue Connection (%s): %w", d.Id(), err)
 	}
 
 	connection, err := FindConnectionByName(conn, connectionName, catalogID)
@@ -150,7 +150,7 @@ func resourceConnectionRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Glue Connection (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading Glue Connection (%s): %w", d.Id(), err)
 	}
 
 	connectionArn := arn.ARN{
@@ -197,12 +197,12 @@ func resourceConnectionRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceConnectionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+	conn := meta.(*conns.AWSClient).GlueConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		catalogID, connectionName, err := DecodeConnectionID(d.Id())
 		if err != nil {
-			return err
+			return fmt.Errorf("updating Glue Connection (%s): %w", d.Id(), err)
 		}
 
 		input := &glue.UpdateConnectionInput{
@@ -214,7 +214,7 @@ func resourceConnectionUpdate(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[DEBUG] Updating Glue Connection: %s", input)
 		_, err = conn.UpdateConnection(input)
 		if err != nil {
-			return fmt.Errorf("error updating Glue Connection (%s): %w", d.Id(), err)
+			return fmt.Errorf("updating Glue Connection (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -229,17 +229,17 @@ func resourceConnectionUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceConnectionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+	conn := meta.(*conns.AWSClient).GlueConn()
 
 	catalogID, connectionName, err := DecodeConnectionID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting Glue Connection (%s): %w", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Deleting Glue Connection: %s", d.Id())
 	err = DeleteConnection(conn, catalogID, connectionName)
 	if err != nil {
-		return fmt.Errorf("error deleting Glue Connection (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting Glue Connection (%s): %w", d.Id(), err)
 	}
 
 	return nil

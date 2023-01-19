@@ -270,7 +270,7 @@ func testAccCheckWebhookFilter(webhook *codebuild.Webhook, expectedFilters [][]*
 }
 
 func testAccCheckWebhookDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_codebuild_webhook" {
@@ -306,7 +306,7 @@ func testAccCheckWebhookExists(name string, webhook *codebuild.Webhook) resource
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildConn()
 
 		resp, err := conn.BatchGetProjects(&codebuild.BatchGetProjectsInput{
 			Names: []*string{

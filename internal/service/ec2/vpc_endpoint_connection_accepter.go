@@ -43,7 +43,7 @@ func ResourceVPCEndpointConnectionAccepter() *schema.Resource {
 }
 
 func resourceVPCEndpointConnectionAccepterCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	serviceID := d.Get("vpc_endpoint_service_id").(string)
 	vpcEndpointID := d.Get("vpc_endpoint_id").(string)
@@ -72,12 +72,12 @@ func resourceVPCEndpointConnectionAccepterCreate(d *schema.ResourceData, meta in
 }
 
 func resourceVPCEndpointConnectionAccepterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	serviceID, vpcEndpointID, err := VPCEndpointConnectionAccepterParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading VPC Endpoint Connection (%s): %w", d.Id(), err)
 	}
 
 	vpcEndpointConnection, err := FindVPCEndpointConnectionByServiceIDAndVPCEndpointID(conn, serviceID, vpcEndpointID)
@@ -89,7 +89,7 @@ func resourceVPCEndpointConnectionAccepterRead(d *schema.ResourceData, meta inte
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading VPC Endpoint Connection (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading VPC Endpoint Connection (%s): %w", d.Id(), err)
 	}
 
 	d.Set("vpc_endpoint_id", vpcEndpointConnection.VpcEndpointId)
@@ -100,12 +100,12 @@ func resourceVPCEndpointConnectionAccepterRead(d *schema.ResourceData, meta inte
 }
 
 func resourceVPCEndpointConnectionAccepterDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	serviceID, vpcEndpointID, err := VPCEndpointConnectionAccepterParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting VPC Endpoint Connection (%s): %w", d.Id(), err)
 	}
 
 	input := &ec2.RejectVpcEndpointConnectionsInput{
@@ -120,7 +120,7 @@ func resourceVPCEndpointConnectionAccepterDelete(d *schema.ResourceData, meta in
 	}
 
 	if err != nil {
-		return fmt.Errorf("error rejecting VPC Endpoint Connection (%s): %w", d.Id(), err)
+		return fmt.Errorf("rejecting VPC Endpoint Connection (%s): %w", d.Id(), err)
 	}
 
 	return nil

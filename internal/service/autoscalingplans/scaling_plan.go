@@ -319,7 +319,7 @@ func ResourceScalingPlan() *schema.Resource {
 }
 
 func resourceScalingPlanCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AutoScalingPlansConn
+	conn := meta.(*conns.AWSClient).AutoScalingPlansConn()
 
 	scalingPlanName := d.Get("name").(string)
 	input := &autoscalingplans.CreateScalingPlanInput{
@@ -349,12 +349,12 @@ func resourceScalingPlanCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceScalingPlanRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AutoScalingPlansConn
+	conn := meta.(*conns.AWSClient).AutoScalingPlansConn()
 
 	scalingPlanName, scalingPlanVersion, err := scalingPlanParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading Auto Scaling Scaling Plan (%s): %w", d.Id(), err)
 	}
 
 	scalingPlan, err := FindScalingPlanByNameAndVersion(conn, scalingPlanName, scalingPlanVersion)
@@ -366,7 +366,7 @@ func resourceScalingPlanRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Auto Scaling Scaling Plan (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading Auto Scaling Scaling Plan (%s): %w", d.Id(), err)
 	}
 
 	err = d.Set("application_source", flattenApplicationSource(scalingPlan.ApplicationSource))
@@ -384,12 +384,12 @@ func resourceScalingPlanRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceScalingPlanUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AutoScalingPlansConn
+	conn := meta.(*conns.AWSClient).AutoScalingPlansConn()
 
 	scalingPlanName, scalingPlanVersion, err := scalingPlanParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("updating Auto Scaling Scaling Plan (%s): %w", d.Id(), err)
 	}
 
 	input := &autoscalingplans.UpdateScalingPlanInput{
@@ -403,25 +403,25 @@ func resourceScalingPlanUpdate(d *schema.ResourceData, meta interface{}) error {
 	_, err = conn.UpdateScalingPlan(input)
 
 	if err != nil {
-		return fmt.Errorf("error updating Auto Scaling Scaling Plan (%s): %w", d.Id(), err)
+		return fmt.Errorf("updating Auto Scaling Scaling Plan (%s): %w", d.Id(), err)
 	}
 
 	_, err = waitScalingPlanUpdated(conn, scalingPlanName, scalingPlanVersion)
 
 	if err != nil {
-		return fmt.Errorf("error waiting for Auto Scaling Scaling Plan (%s) update: %w", d.Id(), err)
+		return fmt.Errorf("updating Auto Scaling Scaling Plan (%s): waiting for completion: %w", d.Id(), err)
 	}
 
 	return resourceScalingPlanRead(d, meta)
 }
 
 func resourceScalingPlanDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AutoScalingPlansConn
+	conn := meta.(*conns.AWSClient).AutoScalingPlansConn()
 
 	scalingPlanName, scalingPlanVersion, err := scalingPlanParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting Auto Scaling Scaling Plan (%s): %w", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Deleting Auto Scaling Scaling Plan: %s", d.Id())
@@ -435,13 +435,13 @@ func resourceScalingPlanDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Auto Scaling Scaling Plan (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting Auto Scaling Scaling Plan (%s): %w", d.Id(), err)
 	}
 
 	_, err = waitScalingPlanDeleted(conn, scalingPlanName, scalingPlanVersion)
 
 	if err != nil {
-		return fmt.Errorf("error waiting for Auto Scaling Scaling Plan (%s) delete: %w", d.Id(), err)
+		return fmt.Errorf("deleting Auto Scaling Scaling Plan (%s): waiting for completion: %w", d.Id(), err)
 	}
 
 	return nil

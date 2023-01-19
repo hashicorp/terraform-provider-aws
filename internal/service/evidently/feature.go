@@ -61,7 +61,7 @@ func ResourceFeature() *schema.Resource {
 			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 160),
+				ValidateFunc: validation.StringLenBetween(0, 160),
 			},
 			"entity_overrides": {
 				Type:     schema.TypeMap,
@@ -193,7 +193,7 @@ func ResourceFeature() *schema.Resource {
 }
 
 func resourceFeatureCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EvidentlyConn
+	conn := meta.(*conns.AWSClient).EvidentlyConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -245,7 +245,7 @@ func resourceFeatureCreate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceFeatureRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EvidentlyConn
+	conn := meta.(*conns.AWSClient).EvidentlyConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -301,7 +301,7 @@ func resourceFeatureRead(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceFeatureUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EvidentlyConn
+	conn := meta.(*conns.AWSClient).EvidentlyConn()
 
 	if d.HasChanges("default_variation", "description", "entity_overrides", "evaluation_strategy", "variations") {
 		name := d.Get("name").(string)
@@ -349,7 +349,7 @@ func resourceFeatureUpdate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceFeatureDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EvidentlyConn
+	conn := meta.(*conns.AWSClient).EvidentlyConn()
 
 	name := d.Get("name").(string)
 	project := d.Get("project").(string)

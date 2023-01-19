@@ -127,13 +127,13 @@ func CheckPwdPolicy(pass []byte) bool {
 }
 
 func resourceUserLoginProfileCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 	username := d.Get("user").(string)
 
 	passwordLength := d.Get("password_length").(int)
 	initialPassword, err := GeneratePassword(passwordLength)
 	if err != nil {
-		return err
+		return fmt.Errorf("creating IAM User Login Profile for %q: %w", username, err)
 	}
 
 	request := &iam.CreateLoginProfileInput{
@@ -144,7 +144,7 @@ func resourceUserLoginProfileCreate(d *schema.ResourceData, meta interface{}) er
 
 	createResp, err := conn.CreateLoginProfile(request)
 	if err != nil {
-		return fmt.Errorf("Error creating IAM User Login Profile for %q: %w", username, err)
+		return fmt.Errorf("creating IAM User Login Profile for %q: %w", username, err)
 	}
 
 	d.SetId(aws.StringValue(createResp.LoginProfile.UserName))
@@ -152,12 +152,12 @@ func resourceUserLoginProfileCreate(d *schema.ResourceData, meta interface{}) er
 	if v, ok := d.GetOk("pgp_key"); ok {
 		encryptionKey, err := retrieveGPGKey(v.(string))
 		if err != nil {
-			return fmt.Errorf("error retrieving GPG Key during IAM User Login Profile (%s) creation: %w", username, err)
+			return fmt.Errorf("creating IAM User Login Profile for %q: %w", username, err)
 		}
 
 		fingerprint, encrypted, err := encryptValue(encryptionKey, initialPassword, "Password")
 		if err != nil {
-			return fmt.Errorf("error encrypting password during IAM User Login Profile (%s) creation: %w", username, err)
+			return fmt.Errorf("creating IAM User Login Profile for %q: %w", username, err)
 		}
 
 		d.Set("key_fingerprint", fingerprint)
@@ -170,7 +170,7 @@ func resourceUserLoginProfileCreate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceUserLoginProfileRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	input := &iam.GetLoginProfileInput{
 		UserName: aws.String(d.Id()),
@@ -221,7 +221,7 @@ func resourceUserLoginProfileRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceUserLoginProfileDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	input := &iam.DeleteLoginProfileInput{
 		UserName: aws.String(d.Id()),

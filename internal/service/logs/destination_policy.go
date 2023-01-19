@@ -15,7 +15,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func ResourceDestinationPolicy() *schema.Resource {
+func init() {
+	_sp.registerSDKResourceFactory("aws_cloudwatch_log_destination_policy", resourceDestinationPolicy)
+}
+
+func resourceDestinationPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDestinationPolicyPut,
 		ReadWithoutTimeout:   resourceDestinationPolicyRead,
@@ -51,7 +55,7 @@ func ResourceDestinationPolicy() *schema.Resource {
 }
 
 func resourceDestinationPolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LogsConn
+	conn := meta.(*conns.AWSClient).LogsConn()
 
 	name := d.Get("destination_name").(string)
 	input := &cloudwatchlogs.PutDestinationPolicyInput{
@@ -63,7 +67,7 @@ func resourceDestinationPolicyPut(ctx context.Context, d *schema.ResourceData, m
 		input.ForceUpdate = aws.Bool(v.(bool))
 	}
 
-	_, err := conn.PutDestinationPolicy(input)
+	_, err := conn.PutDestinationPolicyWithContext(ctx, input)
 
 	if err != nil {
 		return diag.Errorf("putting CloudWatch Logs Destination Policy (%s): %s", name, err)
@@ -77,7 +81,7 @@ func resourceDestinationPolicyPut(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceDestinationPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LogsConn
+	conn := meta.(*conns.AWSClient).LogsConn()
 
 	destination, err := FindDestinationByName(ctx, conn, d.Id())
 

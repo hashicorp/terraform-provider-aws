@@ -131,7 +131,7 @@ func testAccCheckClusterRoleAssociationExists(resourceName string, v *rds.DBClus
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
 
 		role, err := tfrds.FindDBClusterRoleByDBClusterIDAndRoleARN(conn, dbClusterID, roleARN)
 
@@ -146,7 +146,7 @@ func testAccCheckClusterRoleAssociationExists(resourceName string, v *rds.DBClus
 }
 
 func testAccCheckClusterRoleAssociationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_db_cluster_role_association" {

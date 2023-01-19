@@ -75,7 +75,7 @@ func ResourceAlias() *schema.Resource {
 }
 
 func resourceAliasCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GameLiftConn
+	conn := meta.(*conns.AWSClient).GameLiftConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -88,10 +88,9 @@ func resourceAliasCreate(d *schema.ResourceData, meta interface{}) error {
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
-	log.Printf("[INFO] Creating GameLift Alias: %s", input)
 	out, err := conn.CreateAlias(&input)
 	if err != nil {
-		return err
+		return fmt.Errorf("creating GameLift Alias (%s): %w", d.Get("name").(string), err)
 	}
 
 	d.SetId(aws.StringValue(out.Alias.AliasId))
@@ -100,7 +99,7 @@ func resourceAliasCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAliasRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GameLiftConn
+	conn := meta.(*conns.AWSClient).GameLiftConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -114,7 +113,7 @@ func resourceAliasRead(d *schema.ResourceData, meta interface{}) error {
 			log.Printf("[WARN] GameLift Alias (%s) not found, removing from state", d.Id())
 			return nil
 		}
-		return err
+		return fmt.Errorf("reading GameLift Alias (%s): %w", d.Id(), err)
 	}
 	a := out.Alias
 
@@ -126,7 +125,7 @@ func resourceAliasRead(d *schema.ResourceData, meta interface{}) error {
 	tags, err := ListTags(conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for Game Lift Alias (%s): %s", arn, err)
+		return fmt.Errorf("reading GameLift Alias (%s): listing tags: %w", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
@@ -144,7 +143,7 @@ func resourceAliasRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAliasUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GameLiftConn
+	conn := meta.(*conns.AWSClient).GameLiftConn()
 
 	log.Printf("[INFO] Updating GameLift Alias: %s", d.Id())
 	_, err := conn.UpdateAlias(&gamelift.UpdateAliasInput{
@@ -154,7 +153,7 @@ func resourceAliasUpdate(d *schema.ResourceData, meta interface{}) error {
 		RoutingStrategy: expandRoutingStrategy(d.Get("routing_strategy").([]interface{})),
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("updating GameLift Alias (%s): %w", d.Id(), err)
 	}
 
 	arn := d.Get("arn").(string)
@@ -162,7 +161,7 @@ func resourceAliasUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, arn, o, n); err != nil {
-			return fmt.Errorf("error updating Game Lift Alias (%s) tags: %s", arn, err)
+			return fmt.Errorf("reading GameLift Alias (%s): updating tags: %w", d.Id(), err)
 		}
 	}
 
@@ -170,13 +169,15 @@ func resourceAliasUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAliasDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GameLiftConn
+	conn := meta.(*conns.AWSClient).GameLiftConn()
 
 	log.Printf("[INFO] Deleting GameLift Alias: %s", d.Id())
-	_, err := conn.DeleteAlias(&gamelift.DeleteAliasInput{
+	if _, err := conn.DeleteAlias(&gamelift.DeleteAliasInput{
 		AliasId: aws.String(d.Id()),
-	})
-	return err
+	}); err != nil {
+		return fmt.Errorf("deleting GameLift Alias (%s): %w", d.Id(), err)
+	}
+	return nil
 }
 
 func expandRoutingStrategy(cfg []interface{}) *gamelift.RoutingStrategy {

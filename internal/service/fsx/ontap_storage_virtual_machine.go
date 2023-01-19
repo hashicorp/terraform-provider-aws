@@ -230,7 +230,7 @@ func ResourceOntapStorageVirtualMachine() *schema.Resource {
 }
 
 func resourceOntapStorageVirtualMachineCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FSxConn
+	conn := meta.(*conns.AWSClient).FSxConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -271,7 +271,7 @@ func resourceOntapStorageVirtualMachineCreate(d *schema.ResourceData, meta inter
 }
 
 func resourceOntapStorageVirtualMachineRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FSxConn
+	conn := meta.(*conns.AWSClient).FSxConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -326,7 +326,7 @@ func resourceOntapStorageVirtualMachineRead(d *schema.ResourceData, meta interfa
 }
 
 func resourceOntapStorageVirtualMachineUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FSxConn
+	conn := meta.(*conns.AWSClient).FSxConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -365,7 +365,7 @@ func resourceOntapStorageVirtualMachineUpdate(d *schema.ResourceData, meta inter
 }
 
 func resourceOntapStorageVirtualMachineDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FSxConn
+	conn := meta.(*conns.AWSClient).FSxConn()
 
 	log.Printf("[DEBUG] Deleting FSx ONTAP Storage Virtual Machine: %s", d.Id())
 	_, err := conn.DeleteStorageVirtualMachine(&fsx.DeleteStorageVirtualMachineInput{

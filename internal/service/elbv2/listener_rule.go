@@ -486,7 +486,7 @@ func suppressIfActionTypeNot(t string) schema.SchemaDiffSuppressFunc {
 }
 
 func resourceListenerRuleCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBV2Conn
+	conn := meta.(*conns.AWSClient).ELBV2Conn()
 	listenerArn := d.Get("listener_arn").(string)
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
@@ -544,7 +544,7 @@ func resourceListenerRuleCreate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceListenerRuleRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBV2Conn
+	conn := meta.(*conns.AWSClient).ELBV2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -791,7 +791,7 @@ func resourceListenerRuleRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceListenerRuleUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBV2Conn
+	conn := meta.(*conns.AWSClient).ELBV2Conn()
 
 	if d.HasChange("priority") {
 		params := &elbv2.SetRulePrioritiesInput{
@@ -805,7 +805,7 @@ func resourceListenerRuleUpdate(d *schema.ResourceData, meta interface{}) error 
 
 		_, err := conn.SetRulePriorities(params)
 		if err != nil {
-			return err
+			return fmt.Errorf("updating ELB v2 Listener Rule (%s): setting priority: %w", d.Id(), err)
 		}
 	}
 
@@ -880,7 +880,7 @@ func resourceListenerRuleUpdate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceListenerRuleDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBV2Conn
+	conn := meta.(*conns.AWSClient).ELBV2Conn()
 
 	_, err := conn.DeleteRule(&elbv2.DeleteRuleInput{
 		RuleArn: aws.String(d.Id()),

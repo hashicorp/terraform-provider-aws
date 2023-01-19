@@ -70,7 +70,7 @@ func TestAccELBSSLNegotiationPolicy_disappears(t *testing.T) {
 }
 
 func testAccCheckLBSSLNegotiationPolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_elb" && rs.Type != "aws_lb_ssl_negotiation_policy" {
@@ -130,7 +130,7 @@ func testAccCheckLBSSLNegotiationPolicy(elbResource string, policyResource strin
 			return fmt.Errorf("Not found: %s", policyResource)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn()
 
 		elbName, _, policyName, err := tfelb.SSLNegotiationPolicyParseID(policy.Primary.ID)
 		if err != nil {

@@ -112,7 +112,7 @@ func ResourceHostedTransitVirtualInterface() *schema.Resource {
 }
 
 func resourceHostedTransitVirtualInterfaceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
 	req := &directconnect.AllocateTransitVirtualInterfaceInput{
 		ConnectionId: aws.String(d.Get("connection_id").(string)),
@@ -144,18 +144,18 @@ func resourceHostedTransitVirtualInterfaceCreate(d *schema.ResourceData, meta in
 	d.SetId(aws.StringValue(resp.VirtualInterface.VirtualInterfaceId))
 
 	if err := hostedTransitVirtualInterfaceWaitUntilAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return err
+		return err // nosemgrep:ci.bare-error-returns
 	}
 
 	return resourceHostedTransitVirtualInterfaceRead(d, meta)
 }
 
 func resourceHostedTransitVirtualInterfaceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
 	vif, err := virtualInterfaceRead(d.Id(), conn)
 	if err != nil {
-		return err
+		return err // nosemgrep:ci.bare-error-returns
 	}
 	if vif == nil {
 		log.Printf("[WARN] Direct Connect hosted transit virtual interface (%s) not found, removing from state", d.Id())
@@ -193,7 +193,7 @@ func resourceHostedTransitVirtualInterfaceDelete(d *schema.ResourceData, meta in
 }
 
 func resourceHostedTransitVirtualInterfaceImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
 	vif, err := virtualInterfaceRead(d.Id(), conn)
 	if err != nil {

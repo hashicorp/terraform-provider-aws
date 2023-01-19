@@ -354,7 +354,7 @@ func testAccCheckEnvironmentExists(n string, v *mwaa.Environment) resource.TestC
 			return fmt.Errorf("No MWAA Environment ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MWAAConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MWAAConn()
 
 		output, err := tfmwaa.FindEnvironmentByName(context.Background(), conn, rs.Primary.ID)
 
@@ -369,7 +369,7 @@ func testAccCheckEnvironmentExists(n string, v *mwaa.Environment) resource.TestC
 }
 
 func testAccCheckEnvironmentDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).MWAAConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).MWAAConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_mwaa_environment" {

@@ -43,7 +43,7 @@ func DataSourceOrganizationalUnits() *schema.Resource {
 }
 
 func dataSourceOrganizationalUnitsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OrganizationsConn
+	conn := meta.(*conns.AWSClient).OrganizationsConn()
 
 	parent_id := d.Get("parent_id").(string)
 

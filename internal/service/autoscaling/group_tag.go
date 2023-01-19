@@ -53,7 +53,7 @@ func ResourceGroupTag() *schema.Resource {
 }
 
 func resourceGroupTagCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AutoScalingConn
+	conn := meta.(*conns.AWSClient).AutoScalingConn()
 
 	identifier := d.Get("autoscaling_group_name").(string)
 	tags := d.Get("tag").([]interface{})
@@ -69,11 +69,11 @@ func resourceGroupTagCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceGroupTagRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AutoScalingConn
+	conn := meta.(*conns.AWSClient).AutoScalingConn()
 	identifier, key, err := tftags.GetResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading AutoScaling Group (%s) tag (%s): %w", identifier, key, err)
 	}
 
 	value, err := GetTag(conn, identifier, TagResourceTypeGroup, key)
@@ -85,7 +85,7 @@ func resourceGroupTagRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading AutoScaling Group (%s) tag (%s): %w", identifier, key, err)
+		return fmt.Errorf("reading AutoScaling Group (%s) tag (%s): %w", identifier, key, err)
 	}
 
 	d.Set("autoscaling_group_name", identifier)
@@ -102,30 +102,30 @@ func resourceGroupTagRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceGroupTagUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AutoScalingConn
+	conn := meta.(*conns.AWSClient).AutoScalingConn()
 	identifier, key, err := tftags.GetResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("updating AutoScaling Group Tag (%s): %w", d.Id(), err)
 	}
 
 	if err := UpdateTags(conn, identifier, TagResourceTypeGroup, nil, d.Get("tag")); err != nil {
-		return fmt.Errorf("error updating AutoScaling Group (%s) tag (%s): %w", identifier, key, err)
+		return fmt.Errorf("updating AutoScaling Group (%s) tag (%s): %w", identifier, key, err)
 	}
 
 	return resourceGroupTagRead(d, meta)
 }
 
 func resourceGroupTagDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AutoScalingConn
+	conn := meta.(*conns.AWSClient).AutoScalingConn()
 	identifier, key, err := tftags.GetResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting AutoScaling Group Tag (%s): %w", d.Id(), err)
 	}
 
 	if err := UpdateTags(conn, identifier, TagResourceTypeGroup, d.Get("tag"), nil); err != nil {
-		return fmt.Errorf("error deleting AutoScaling Group (%s) tag (%s): %w", identifier, key, err)
+		return fmt.Errorf("deleting AutoScaling Group (%s) tag (%s): %w", identifier, key, err)
 	}
 
 	return nil

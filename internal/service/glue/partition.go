@@ -199,7 +199,7 @@ func ResourcePartition() *schema.Resource {
 }
 
 func resourcePartitionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+	conn := meta.(*conns.AWSClient).GlueConn()
 	catalogID := createCatalogID(d, meta.(*conns.AWSClient).AccountID)
 	dbName := d.Get("database_name").(string)
 	tableName := d.Get("table_name").(string)
@@ -224,7 +224,7 @@ func resourcePartitionCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourcePartitionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+	conn := meta.(*conns.AWSClient).GlueConn()
 
 	log.Printf("[DEBUG] Reading Glue Partition: %s", d.Id())
 	partition, err := FindPartitionByValues(conn, d.Id())
@@ -266,11 +266,11 @@ func resourcePartitionRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourcePartitionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+	conn := meta.(*conns.AWSClient).GlueConn()
 
 	catalogID, dbName, tableName, values, err := readPartitionID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("updating Glue Partition (%s): %w", d.Id(), err)
 	}
 
 	input := &glue.UpdatePartitionInput{
@@ -281,16 +281,15 @@ func resourcePartitionUpdate(d *schema.ResourceData, meta interface{}) error {
 		PartitionValueList: aws.StringSlice(values),
 	}
 
-	log.Printf("[DEBUG] Updating Glue Partition: %#v", input)
 	if _, err := conn.UpdatePartition(input); err != nil {
-		return fmt.Errorf("error updating Glue Partition: %w", err)
+		return fmt.Errorf("updating Glue Partition (%s): %w", d.Id(), err)
 	}
 
 	return resourcePartitionRead(d, meta)
 }
 
 func resourcePartitionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+	conn := meta.(*conns.AWSClient).GlueConn()
 
 	catalogID, dbName, tableName, values, tableErr := readPartitionID(d.Id())
 	if tableErr != nil {

@@ -1,10 +1,10 @@
 package rum_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatchrum"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -38,6 +38,7 @@ func TestAccRUMAppMonitor_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cw_log_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "domain", "localhost"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "custom_events.#", "1"),
 				),
 			},
 			{
@@ -58,6 +59,51 @@ func TestAccRUMAppMonitor_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "cw_log_group"),
 					resource.TestCheckResourceAttr(resourceName, "domain", "localhost"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "custom_events.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRUMAppMonitor_customEvents(t *testing.T) {
+	var appMon cloudwatchrum.AppMonitor
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rum_app_monitor.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchrum.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAppMonitorDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppMonitorConfig_customEvents(rName, "ENABLED"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppMonitorExists(resourceName, &appMon),
+					resource.TestCheckResourceAttr(resourceName, "custom_events.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "custom_events.0.status", "ENABLED"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAppMonitorConfig_customEvents(rName, "DISABLED"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppMonitorExists(resourceName, &appMon),
+					resource.TestCheckResourceAttr(resourceName, "custom_events.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "custom_events.0.status", "DISABLED"),
+				),
+			},
+			{
+				Config: testAccAppMonitorConfig_customEvents(rName, "ENABLED"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppMonitorExists(resourceName, &appMon),
+					resource.TestCheckResourceAttr(resourceName, "custom_events.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "custom_events.0.status", "ENABLED"),
 				),
 			},
 		},
@@ -134,14 +180,15 @@ func TestAccRUMAppMonitor_disappears(t *testing.T) {
 }
 
 func testAccCheckAppMonitorDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RUMConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RUMConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_rum_app_monitor" {
 			continue
 		}
 
-		appMon, err := tfcloudwatchrum.FindAppMonitorByName(conn, rs.Primary.ID)
+		_, err := tfcloudwatchrum.FindAppMonitorByName(context.Background(), conn, rs.Primary.ID)
+
 		if tfresource.NotFound(err) {
 			continue
 		}
@@ -150,32 +197,31 @@ func testAccCheckAppMonitorDestroy(s *terraform.State) error {
 			return err
 		}
 
-		if aws.StringValue(appMon.Name) == rs.Primary.ID {
-			return fmt.Errorf("cloudwatchrum App Monitor %q still exists", rs.Primary.ID)
-		}
+		return fmt.Errorf("CloudWatch RUM App Monitor %s still exists", rs.Primary.ID)
 	}
 
 	return nil
 }
 
-func testAccCheckAppMonitorExists(n string, appMon *cloudwatchrum.AppMonitor) resource.TestCheckFunc {
+func testAccCheckAppMonitorExists(n string, v *cloudwatchrum.AppMonitor) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
-
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No cloudwatchrum App Monitor ID is set")
+			return fmt.Errorf("No CloudWatch RUM App Monitor ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RUMConn
-		resp, err := tfcloudwatchrum.FindAppMonitorByName(conn, rs.Primary.ID)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RUMConn()
+
+		output, err := tfcloudwatchrum.FindAppMonitorByName(context.Background(), conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		*appMon = *resp
+		*v = *output
 
 		return nil
 	}
@@ -225,4 +271,17 @@ resource "aws_rum_app_monitor" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccAppMonitorConfig_customEvents(rName, enabled string) string {
+	return fmt.Sprintf(`
+resource "aws_rum_app_monitor" "test" {
+  name   = %[1]q
+  domain = "localhost"
+
+  custom_events {
+    status = %[2]q
+  }
+}
+`, rName, enabled)
 }

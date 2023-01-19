@@ -884,7 +884,7 @@ func TestAccImageBuilderDistributionConfiguration_tags(t *testing.T) {
 }
 
 func testAccCheckDistributionConfigurationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_imagebuilder_distribution_configuration" {
@@ -920,7 +920,7 @@ func testAccCheckDistributionConfigurationExists(resourceName string) resource.T
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderConn()
 
 		input := &imagebuilder.GetDistributionConfigurationInput{
 			DistributionConfigurationArn: aws.String(rs.Primary.ID),

@@ -562,7 +562,7 @@ func testAccCheckOntapFileSystemExists(resourceName string, fs *fsx.FileSystem) 
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn()
 
 		filesystem, err := tffsx.FindFileSystemByID(conn, rs.Primary.ID)
 		if err != nil {
@@ -580,7 +580,7 @@ func testAccCheckOntapFileSystemExists(resourceName string, fs *fsx.FileSystem) 
 }
 
 func testAccCheckOntapFileSystemDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_fsx_ontap_file_system" {

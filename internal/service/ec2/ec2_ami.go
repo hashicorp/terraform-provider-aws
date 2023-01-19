@@ -284,7 +284,7 @@ func ResourceAMI() *schema.Resource {
 }
 
 func resourceAMICreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -355,7 +355,7 @@ func resourceAMICreate(d *schema.ResourceData, meta interface{}) error {
 	output, err := conn.RegisterImage(input)
 
 	if err != nil {
-		return fmt.Errorf("error creating EC2 AMI (%s): %w", name, err)
+		return fmt.Errorf("creating EC2 AMI (%s): %w", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.ImageId))
@@ -367,12 +367,12 @@ func resourceAMICreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if _, err := WaitImageAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("error waiting for EC2 AMI (%s) create: %w", d.Id(), err)
+		return fmt.Errorf("creating EC2 AMI (%s): waiting for completion: %w", name, err)
 	}
 
 	if v, ok := d.GetOk("deprecation_time"); ok {
 		if err := enableImageDeprecation(conn, d.Id(), v.(string)); err != nil {
-			return err
+			return fmt.Errorf("creating EC2 AMI (%s): %w", name, err)
 		}
 	}
 
@@ -380,7 +380,7 @@ func resourceAMICreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAMIRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -467,7 +467,7 @@ func resourceAMIRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAMIUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -486,13 +486,13 @@ func resourceAMIUpdate(d *schema.ResourceData, meta interface{}) error {
 		})
 
 		if err != nil {
-			return fmt.Errorf("error updating EC2 AMI (%s) description: %w", d.Id(), err)
+			return fmt.Errorf("updating EC2 AMI (%s) description: %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("deprecation_time") {
 		if err := enableImageDeprecation(conn, d.Id(), d.Get("deprecation_time").(string)); err != nil {
-			return err
+			return fmt.Errorf("updating EC2 AMI (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -500,7 +500,7 @@ func resourceAMIUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAMIDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	log.Printf("[INFO] Deleting EC2 AMI: %s", d.Id())
 	_, err := conn.DeregisterImage(&ec2.DeregisterImageInput{
@@ -559,7 +559,7 @@ func enableImageDeprecation(conn *ec2.EC2, id string, deprecateAt string) error 
 	_, err := conn.EnableImageDeprecation(input)
 
 	if err != nil {
-		return fmt.Errorf("error enabling EC2 AMI (%s) image deprecation: %w", id, err)
+		return fmt.Errorf("enabling deprecation: %w", err)
 	}
 
 	return nil

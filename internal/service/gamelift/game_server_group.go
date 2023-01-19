@@ -184,7 +184,7 @@ func ResourceGameServerGroup() *schema.Resource {
 }
 
 func resourceGameServerGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GameLiftConn
+	conn := meta.(*conns.AWSClient).GameLiftConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -249,8 +249,8 @@ func resourceGameServerGroupCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceGameServerGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GameLiftConn
-	autoscalingConn := meta.(*conns.AWSClient).AutoScalingConn
+	conn := meta.(*conns.AWSClient).GameLiftConn()
+	autoscalingConn := meta.(*conns.AWSClient).AutoScalingConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -265,7 +265,7 @@ func resourceGameServerGroupRead(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading GameLift Game Server Group (%s): %w", gameServerGroupName, err)
+		return fmt.Errorf("reading GameLift Game Server Group (%s): %w", gameServerGroupName, err)
 	}
 
 	autoScalingGroupName := strings.Split(aws.StringValue(gameServerGroup.AutoScalingGroupArn), "/")[1]
@@ -273,7 +273,7 @@ func resourceGameServerGroupRead(d *schema.ResourceData, meta interface{}) error
 		AutoScalingGroupNames: []*string{aws.String(autoScalingGroupName)},
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("reading GameLift Game Server Group (%s): reading AutoScaling Group: %w", gameServerGroupName, err)
 	}
 	if autoScalingGroupOutput == nil || len(autoScalingGroupOutput.AutoScalingGroups) == 0 {
 		return fmt.Errorf("error describing Auto Scaling Group (%s): not found", autoScalingGroupName)
@@ -340,7 +340,7 @@ func resourceGameServerGroupRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceGameServerGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GameLiftConn
+	conn := meta.(*conns.AWSClient).GameLiftConn()
 
 	log.Printf("[INFO] Updating GameLift Game Server Group: %s", d.Id())
 
@@ -378,7 +378,7 @@ func resourceGameServerGroupUpdate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceGameServerGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GameLiftConn
+	conn := meta.(*conns.AWSClient).GameLiftConn()
 
 	log.Printf("[INFO] Deleting GameLift Game Server Group: %s", d.Id())
 	input := &gamelift.DeleteGameServerGroupInput{

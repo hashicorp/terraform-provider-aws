@@ -42,7 +42,7 @@ func ResourceBackendServerPolicy() *schema.Resource {
 }
 
 func resourceBackendServerPolicyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBConn
+	conn := meta.(*conns.AWSClient).ELBConn()
 
 	loadBalancerName := d.Get("load_balancer_name")
 
@@ -66,7 +66,7 @@ func resourceBackendServerPolicyCreate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceBackendServerPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBConn
+	conn := meta.(*conns.AWSClient).ELBConn()
 
 	loadBalancerName, instancePort := BackendServerPoliciesParseID(d.Id())
 
@@ -111,7 +111,7 @@ func resourceBackendServerPolicyRead(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceBackendServerPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBConn
+	conn := meta.(*conns.AWSClient).ELBConn()
 
 	loadBalancerName, instancePort := BackendServerPoliciesParseID(d.Id())
 

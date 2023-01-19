@@ -35,7 +35,7 @@ func ResourceVPNConnectionRoute() *schema.Resource {
 }
 
 func resourceVPNConnectionRouteCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	cidrBlock := d.Get("destination_cidr_block").(string)
 	vpnConnectionID := d.Get("vpn_connection_id").(string)
@@ -62,12 +62,12 @@ func resourceVPNConnectionRouteCreate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceVPNConnectionRouteRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	cidrBlock, vpnConnectionID, err := VPNConnectionRouteParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading EC2 VPN Connection Route (%s): %w", d.Id(), err)
 	}
 
 	_, err = FindVPNConnectionRouteByVPNConnectionIDAndCIDR(conn, vpnConnectionID, cidrBlock)
@@ -79,7 +79,7 @@ func resourceVPNConnectionRouteRead(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 VPN Connection Route (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading EC2 VPN Connection Route (%s): %w", d.Id(), err)
 	}
 
 	d.Set("destination_cidr_block", cidrBlock)
@@ -89,12 +89,12 @@ func resourceVPNConnectionRouteRead(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceVPNConnectionRouteDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	cidrBlock, vpnConnectionID, err := VPNConnectionRouteParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting EC2 VPN Connection Route (%s): %w", d.Id(), err)
 	}
 
 	log.Printf("[INFO] Deleting EC2 VPN Connection Route: %s", d.Id())
@@ -108,11 +108,11 @@ func resourceVPNConnectionRouteDelete(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting EC2 VPN Connection Route (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting EC2 VPN Connection Route (%s): %w", d.Id(), err)
 	}
 
 	if _, err := WaitVPNConnectionRouteDeleted(conn, vpnConnectionID, cidrBlock); err != nil {
-		return fmt.Errorf("error waiting for EC2 VPN Connection Route (%s) delete: %w", d.Id(), err)
+		return fmt.Errorf("deleting EC2 VPN Connection Route (%s): waiting for completion: %w", d.Id(), err)
 	}
 
 	return nil

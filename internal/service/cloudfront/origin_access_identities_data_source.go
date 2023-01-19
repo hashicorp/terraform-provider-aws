@@ -41,7 +41,7 @@ func DataSourceOriginAccessIdentities() *schema.Resource {
 }
 
 func dataSourceOriginAccessIdentitiesRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 
 	var comments []interface{}
 

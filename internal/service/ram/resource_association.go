@@ -42,7 +42,7 @@ func ResourceResourceAssociation() *schema.Resource {
 }
 
 func resourceResourceAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RAMConn
+	conn := meta.(*conns.AWSClient).RAMConn()
 	resourceARN := d.Get("resource_arn").(string)
 	resourceShareARN := d.Get("resource_share_arn").(string)
 
@@ -68,11 +68,11 @@ func resourceResourceAssociationCreate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceResourceAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RAMConn
+	conn := meta.(*conns.AWSClient).RAMConn()
 
 	resourceShareARN, resourceARN, err := DecodeResourceAssociationID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("reading RAM Resource Share Resource Association (%s): %w", d.Id(), err)
 	}
 
 	resourceShareAssociation, err := GetResourceShareAssociation(conn, resourceShareARN, resourceARN)
@@ -82,7 +82,7 @@ func resourceResourceAssociationRead(d *schema.ResourceData, meta interface{}) e
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("error reading RAM Resource Share (%s) Resource Association (%s): %w", resourceShareARN, resourceARN, err)
+		return fmt.Errorf("reading RAM Resource Share Resource Association (%s): %w", d.Id(), err)
 	}
 
 	if !d.IsNewResource() && aws.StringValue(resourceShareAssociation.Status) != ram.ResourceShareAssociationStatusAssociated {
@@ -98,11 +98,11 @@ func resourceResourceAssociationRead(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceResourceAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RAMConn
+	conn := meta.(*conns.AWSClient).RAMConn()
 
 	resourceShareARN, resourceARN, err := DecodeResourceAssociationID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting RAM Resource Share Resource Association (%s): %w", d.Id(), err)
 	}
 
 	input := &ram.DisassociateResourceShareInput{
@@ -118,11 +118,11 @@ func resourceResourceAssociationDelete(d *schema.ResourceData, meta interface{})
 	}
 
 	if err != nil {
-		return fmt.Errorf("error disassociating RAM Resource Share (%s) Resource Association (%s): %s", resourceShareARN, resourceARN, err)
+		return fmt.Errorf("deleting RAM Resource Share Resource Association (%s): %w", d.Id(), err)
 	}
 
 	if err := WaitForResourceShareResourceDisassociation(conn, resourceShareARN, resourceARN); err != nil {
-		return fmt.Errorf("error waiting for RAM Resource Share (%s) Resource Association (%s) disassociation: %s", resourceShareARN, resourceARN, err)
+		return fmt.Errorf("deleting RAM Resource Share Resource Association (%s): waiting for completion: %w", d.Id(), err)
 	}
 
 	return nil

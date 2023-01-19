@@ -271,7 +271,7 @@ func ResourceRiskConfiguration() *schema.Resource {
 }
 
 func resourceRiskConfigurationPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
+	conn := meta.(*conns.AWSClient).CognitoIDPConn()
 
 	userPoolId := d.Get("user_pool_id").(string)
 	id := userPoolId
@@ -308,7 +308,12 @@ func resourceRiskConfigurationPut(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceRiskConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
+	conn := meta.(*conns.AWSClient).CognitoIDPConn()
+
+	userPoolId, clientId, err := RiskConfigurationParseID(d.Id())
+	if err != nil {
+		return fmt.Errorf("reading Cognito Risk Configuration (%s): %w", d.Id(), err)
+	}
 
 	riskConfig, err := FindRiskConfigurationById(conn, d.Id())
 
@@ -317,10 +322,8 @@ func resourceRiskConfigurationRead(d *schema.ResourceData, meta interface{}) err
 		d.SetId("")
 		return nil
 	}
-
-	userPoolId, clientId, err := RiskConfigurationParseID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("reading Cognito Risk Configuration (%s): %w", d.Id(), err)
 	}
 
 	d.Set("user_pool_id", userPoolId)
@@ -347,11 +350,11 @@ func resourceRiskConfigurationRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceRiskConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
+	conn := meta.(*conns.AWSClient).CognitoIDPConn()
 
 	userPoolId, clientId, err := RiskConfigurationParseID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting Cognito Risk Configuration (%s): %w", d.Id(), err)
 	}
 
 	input := &cognitoidentityprovider.SetRiskConfigurationInput{
@@ -365,7 +368,7 @@ func resourceRiskConfigurationDelete(d *schema.ResourceData, meta interface{}) e
 	_, err = conn.SetRiskConfiguration(input)
 
 	if err != nil {
-		return fmt.Errorf("removing risk configuration: %w", err)
+		return fmt.Errorf("deleting Cognito Risk Configuration (%s): %w", d.Id(), err)
 	}
 
 	return nil

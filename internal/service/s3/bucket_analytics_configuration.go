@@ -128,7 +128,7 @@ func ResourceBucketAnalyticsConfiguration() *schema.Resource {
 var filterAtLeastOneOfKeys = []string{"filter.0.prefix", "filter.0.tags"}
 
 func resourceBucketAnalyticsConfigurationPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket := d.Get("bucket").(string)
 	name := d.Get("name").(string)
@@ -174,11 +174,11 @@ func resourceBucketAnalyticsConfigurationPut(d *schema.ResourceData, meta interf
 }
 
 func resourceBucketAnalyticsConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket, name, err := BucketAnalyticsConfigurationParseID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("reading S3 Bucket Analytics Configuration (%s): %w", d.Id(), err)
 	}
 
 	d.Set("bucket", bucket)
@@ -224,11 +224,11 @@ func resourceBucketAnalyticsConfigurationRead(d *schema.ResourceData, meta inter
 }
 
 func resourceBucketAnalyticsConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket, name, err := BucketAnalyticsConfigurationParseID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting S3 analytics configuration (%s): %w", d.Id(), err)
 	}
 
 	input := &s3.DeleteBucketAnalyticsConfigurationInput{
@@ -242,7 +242,7 @@ func resourceBucketAnalyticsConfigurationDelete(d *schema.ResourceData, meta int
 		if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) || tfawserr.ErrMessageContains(err, "NoSuchConfiguration", "The specified configuration does not exist.") {
 			return nil
 		}
-		return fmt.Errorf("Error deleting S3 analytics configuration: %w", err)
+		return fmt.Errorf("deleting S3 analytics configuration (%s): %w", d.Id(), err)
 	}
 
 	return WaitForDeleteBucketAnalyticsConfiguration(conn, bucket, name, 1*time.Minute)

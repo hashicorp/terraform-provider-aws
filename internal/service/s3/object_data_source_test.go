@@ -440,7 +440,7 @@ func testAccCheckObjectExistsDataSource(n string, obj *s3.GetObjectOutput) resou
 			return fmt.Errorf("S3 object data source ID not set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
 		out, err := conn.GetObject(
 			&s3.GetObjectInput{
 				Bucket: aws.String(rs.Primary.Attributes["bucket"]),

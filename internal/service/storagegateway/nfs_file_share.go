@@ -210,14 +210,14 @@ func ResourceNFSFileShare() *schema.Resource {
 }
 
 func resourceNFSFileShareCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).StorageGatewayConn
+	conn := meta.(*conns.AWSClient).StorageGatewayConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	fileShareDefaults, err := expandNFSFileShareDefaults(d.Get("nfs_file_share_defaults").([]interface{}))
 
 	if err != nil {
-		return err
+		return fmt.Errorf("creating Storage Gateway NFS File Share: %w", err)
 	}
 
 	input := &storagegateway.CreateNFSFileShareInput{
@@ -282,7 +282,7 @@ func resourceNFSFileShareCreate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceNFSFileShareRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).StorageGatewayConn
+	conn := meta.(*conns.AWSClient).StorageGatewayConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -342,13 +342,13 @@ func resourceNFSFileShareRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceNFSFileShareUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).StorageGatewayConn
+	conn := meta.(*conns.AWSClient).StorageGatewayConn()
 
 	if d.HasChangesExcept("tags_all", "tags") {
 		fileShareDefaults, err := expandNFSFileShareDefaults(d.Get("nfs_file_share_defaults").([]interface{}))
 
 		if err != nil {
-			return err
+			return fmt.Errorf("updating Storage Gateway NFS File Share (%s): %w", d.Id(), err)
 		}
 
 		input := &storagegateway.UpdateNFSFileShareInput{
@@ -408,7 +408,7 @@ func resourceNFSFileShareUpdate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceNFSFileShareDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).StorageGatewayConn
+	conn := meta.(*conns.AWSClient).StorageGatewayConn()
 
 	log.Printf("[DEBUG] Deleting Storage Gateway NFS File Share: %s", d.Id())
 	_, err := conn.DeleteFileShare(&storagegateway.DeleteFileShareInput{

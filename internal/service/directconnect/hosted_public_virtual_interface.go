@@ -110,7 +110,7 @@ func ResourceHostedPublicVirtualInterface() *schema.Resource {
 }
 
 func resourceHostedPublicVirtualInterfaceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
 	req := &directconnect.AllocatePublicVirtualInterfaceInput{
 		ConnectionId: aws.String(d.Get("connection_id").(string)),
@@ -144,18 +144,18 @@ func resourceHostedPublicVirtualInterfaceCreate(d *schema.ResourceData, meta int
 	d.SetId(aws.StringValue(resp.VirtualInterfaceId))
 
 	if err := hostedPublicVirtualInterfaceWaitUntilAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return err
+		return err // nosemgrep:ci.bare-error-returns
 	}
 
 	return resourceHostedPublicVirtualInterfaceRead(d, meta)
 }
 
 func resourceHostedPublicVirtualInterfaceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
 	vif, err := virtualInterfaceRead(d.Id(), conn)
 	if err != nil {
-		return err
+		return err // nosemgrep:ci.bare-error-returns
 	}
 	if vif == nil {
 		log.Printf("[WARN] Direct Connect virtual interface (%s) not found, removing from state", d.Id())
@@ -194,7 +194,7 @@ func resourceHostedPublicVirtualInterfaceDelete(d *schema.ResourceData, meta int
 }
 
 func resourceHostedPublicVirtualInterfaceImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
 	vif, err := virtualInterfaceRead(d.Id(), conn)
 	if err != nil {

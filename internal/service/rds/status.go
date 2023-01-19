@@ -107,7 +107,7 @@ func statusDBInstanceAutomatedBackup(conn *rds.RDS, arn string) resource.StateRe
 // The connection must be valid for the database instance's Region.
 func statusDBInstanceHasAutomatedBackup(ctx context.Context, conn *rds.RDS, dbInstanceID, dbInstanceAutomatedBackupsARN string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindDBInstanceByID(ctx, conn, dbInstanceID)
+		output, err := findDBInstanceByIDSDKv1(ctx, conn, dbInstanceID)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

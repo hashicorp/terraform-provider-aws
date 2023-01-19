@@ -93,7 +93,7 @@ const (
 )
 
 func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IVSConn
+	conn := meta.(*conns.AWSClient).IVSConn()
 
 	in := &ivs.CreateChannelInput{}
 
@@ -143,7 +143,7 @@ func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceChannelRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IVSConn
+	conn := meta.(*conns.AWSClient).IVSConn()
 
 	out, err := FindChannelByID(ctx, conn, d.Id())
 
@@ -187,7 +187,7 @@ func resourceChannelRead(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IVSConn
+	conn := meta.(*conns.AWSClient).IVSConn()
 
 	update := false
 
@@ -248,7 +248,7 @@ func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceChannelDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IVSConn
+	conn := meta.(*conns.AWSClient).IVSConn()
 
 	log.Printf("[INFO] Deleting IVS Channel %s", d.Id())
 

@@ -220,7 +220,7 @@ func ResourceServer() *schema.Resource {
 }
 
 func resourceServerCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).TransferConn
+	conn := meta.(*conns.AWSClient).TransferConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -321,7 +321,7 @@ func resourceServerCreate(d *schema.ResourceData, meta interface{}) error {
 	output, err := conn.CreateServer(input)
 
 	if err != nil {
-		return fmt.Errorf("error creating Transfer Server: %w", err)
+		return fmt.Errorf("creating Transfer Server: %w", err)
 	}
 
 	d.SetId(aws.StringValue(output.ServerId))
@@ -329,13 +329,13 @@ func resourceServerCreate(d *schema.ResourceData, meta interface{}) error {
 	_, err = waitServerCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 
 	if err != nil {
-		return fmt.Errorf("error waiting for Transfer Server (%s) to create: %w", d.Id(), err)
+		return fmt.Errorf("creating Transfer Server (%s): waiting for completion: %w", d.Id(), err)
 	}
 
 	// AddressAllocationIds is only valid in the UpdateServer API.
 	if len(addressAllocationIDs) > 0 {
 		if err := stopServer(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-			return err
+			return fmt.Errorf("creating Transfer Server (%s): setting address allocations: %w", d.Id(), err)
 		}
 
 		input := &transfer.UpdateServerInput{
@@ -346,11 +346,11 @@ func resourceServerCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if err := updateServer(conn, input); err != nil {
-			return err
+			return fmt.Errorf("creating Transfer Server (%s): setting address allocations: %w", d.Id(), err)
 		}
 
 		if err := startServer(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-			return err
+			return fmt.Errorf("creating Transfer Server (%s): setting address allocations: %w", d.Id(), err)
 		}
 	}
 
@@ -358,7 +358,7 @@ func resourceServerCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceServerRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).TransferConn
+	conn := meta.(*conns.AWSClient).TransferConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -389,7 +389,7 @@ func resourceServerRead(d *schema.ResourceData, meta interface{}) error {
 		// Security Group IDs are not returned for VPC endpoints.
 		if aws.StringValue(output.EndpointType) == transfer.EndpointTypeVpc && len(output.EndpointDetails.SecurityGroupIds) == 0 {
 			vpcEndpointID := aws.StringValue(output.EndpointDetails.VpcEndpointId)
-			output, err := tfec2.FindVPCEndpointByID(meta.(*conns.AWSClient).EC2Conn, vpcEndpointID)
+			output, err := tfec2.FindVPCEndpointByID(meta.(*conns.AWSClient).EC2Conn(), vpcEndpointID)
 
 			if err != nil {
 				return fmt.Errorf("error reading Transfer Server (%s) VPC Endpoint (%s): %w", d.Id(), vpcEndpointID, err)
@@ -449,7 +449,7 @@ func resourceServerRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceServerUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).TransferConn
+	conn := meta.(*conns.AWSClient).TransferConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		var newEndpointTypeVpc bool
@@ -522,7 +522,7 @@ func resourceServerUpdate(d *schema.ResourceData, meta interface{}) error {
 			// You can edit the SecurityGroupIds property in the UpdateServer API only if you are changing the EndpointType from PUBLIC or VPC_ENDPOINT to VPC.
 			// To change security groups associated with your server's VPC endpoint after creation, use the Amazon EC2 ModifyVpcEndpoint API.
 			if d.HasChange("endpoint_details.0.security_group_ids") && newEndpointTypeVpc && oldEndpointTypeVpc {
-				conn := meta.(*conns.AWSClient).EC2Conn
+				conn := meta.(*conns.AWSClient).EC2Conn()
 
 				vpcEndpointID := d.Get("endpoint_details.0.vpc_endpoint_id").(string)
 				input := &ec2.ModifyVpcEndpointInput{
@@ -613,7 +613,7 @@ func resourceServerUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		if offlineUpdate {
 			if err := stopServer(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return err
+				return fmt.Errorf("updating Transfer Server (%s): %w", d.Id(), err)
 			}
 		}
 
@@ -627,13 +627,13 @@ func resourceServerUpdate(d *schema.ResourceData, meta interface{}) error {
 
 			log.Printf("[DEBUG] Removing Transfer Server Address Allocation IDs: %s", input)
 			if err := updateServer(conn, input); err != nil {
-				return err
+				return fmt.Errorf("updating Transfer Server (%s): removing address allocations: %w", d.Id(), err)
 			}
 		}
 
 		log.Printf("[DEBUG] Updating Transfer Server: %s", input)
 		if err := updateServer(conn, input); err != nil {
-			return err
+			return fmt.Errorf("updating Transfer Server (%s): %w", d.Id(), err)
 		}
 
 		if len(addressAllocationIDs) > 0 {
@@ -646,13 +646,13 @@ func resourceServerUpdate(d *schema.ResourceData, meta interface{}) error {
 
 			log.Printf("[DEBUG] Adding Transfer Server Address Allocation IDs: %s", input)
 			if err := updateServer(conn, input); err != nil {
-				return err
+				return fmt.Errorf("updating Transfer Server (%s): adding address allocations: %w", d.Id(), err)
 			}
 		}
 
 		if offlineUpdate {
 			if err := startServer(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return err
+				return fmt.Errorf("updating Transfer Server (%s): %w", d.Id(), err)
 			}
 		}
 	}
@@ -668,7 +668,7 @@ func resourceServerUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceServerDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).TransferConn
+	conn := meta.(*conns.AWSClient).TransferConn()
 
 	if d.Get("force_destroy").(bool) && d.Get("identity_provider_type").(string) == transfer.IdentityProviderTypeServiceManaged {
 		input := &transfer.ListUsersInput{
@@ -685,7 +685,6 @@ func resourceServerDelete(d *schema.ResourceData, meta interface{}) error {
 				err := userDelete(conn, d.Id(), aws.StringValue(user.UserName))
 
 				if err != nil {
-					log.Printf("[ERROR] %s", err)
 					deletionErrs = multierror.Append(deletionErrs, err)
 
 					continue
@@ -696,13 +695,13 @@ func resourceServerDelete(d *schema.ResourceData, meta interface{}) error {
 		})
 
 		if err != nil {
-			deletionErrs = multierror.Append(deletionErrs, fmt.Errorf("error listing Transfer Users: %w", err))
+			deletionErrs = multierror.Append(deletionErrs, fmt.Errorf("listing Transfer Users: %w", err))
 		}
 
 		err = deletionErrs.ErrorOrNil()
 
 		if err != nil {
-			return err
+			return fmt.Errorf("deleting Transfer Server (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -720,13 +719,13 @@ func resourceServerDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Transfer Server (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting Transfer Server (%s): %w", d.Id(), err)
 	}
 
 	_, err = waitServerDeleted(conn, d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error waiting for Transfer Server (%s) delete: %w", d.Id(), err)
+		return fmt.Errorf("deleting Transfer Server (%s): waiting for completion: %w", d.Id(), err)
 	}
 
 	return nil
@@ -883,11 +882,11 @@ func stopServer(conn *transfer.Transfer, serverID string, timeout time.Duration)
 	}
 
 	if _, err := conn.StopServer(input); err != nil {
-		return fmt.Errorf("error stopping Transfer Server (%s): %w", serverID, err)
+		return fmt.Errorf("stopping Transfer Server: %w", err)
 	}
 
 	if _, err := waitServerStopped(conn, serverID, timeout); err != nil {
-		return fmt.Errorf("error waiting for Transfer Server (%s) to stop: %w", serverID, err)
+		return fmt.Errorf("stopping Transfer Server: waiting for completion: %w", err)
 	}
 
 	return nil
@@ -899,11 +898,11 @@ func startServer(conn *transfer.Transfer, serverID string, timeout time.Duration
 	}
 
 	if _, err := conn.StartServer(input); err != nil {
-		return fmt.Errorf("error starting Transfer Server (%s): %w", serverID, err)
+		return fmt.Errorf("starting Transfer Server: %w", err)
 	}
 
 	if _, err := waitServerStarted(conn, serverID, timeout); err != nil {
-		return fmt.Errorf("error waiting for Transfer Server (%s) to start: %w", serverID, err)
+		return fmt.Errorf("starting Transfer Server: waiting for completion: %w", err)
 	}
 
 	return nil

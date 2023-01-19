@@ -33,7 +33,7 @@ func ResourceVPCPeeringConnectionOptions() *schema.Resource {
 }
 
 func resourceVPCPeeringConnectionOptionsCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	if peeringConnectionOptionsAllowsClassicLink(d) {
 		return errors.New(`with the retirement of EC2-Classic no new VPC Peering Connection Options can be created with ClassicLink options enabled`)
@@ -49,14 +49,14 @@ func resourceVPCPeeringConnectionOptionsCreate(d *schema.ResourceData, meta inte
 	d.SetId(vpcPeeringConnectionID)
 
 	if err := modifyVPCPeeringConnectionOptions(conn, d, vpcPeeringConnection, false); err != nil {
-		return err
+		return err // nosemgrep:ci.bare-error-returns
 	}
 
 	return resourceVPCPeeringConnectionOptionsRead(d, meta)
 }
 
 func resourceVPCPeeringConnectionOptionsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	vpcPeeringConnection, err := FindVPCPeeringConnectionByID(conn, d.Id())
 
@@ -92,7 +92,7 @@ func resourceVPCPeeringConnectionOptionsRead(d *schema.ResourceData, meta interf
 }
 
 func resourceVPCPeeringConnectionOptionsUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	vpcPeeringConnection, err := FindVPCPeeringConnectionByID(conn, d.Id())
 
@@ -101,7 +101,7 @@ func resourceVPCPeeringConnectionOptionsUpdate(d *schema.ResourceData, meta inte
 	}
 
 	if err := modifyVPCPeeringConnectionOptions(conn, d, vpcPeeringConnection, false); err != nil {
-		return err
+		return err // nosemgrep:ci.bare-error-returns
 	}
 
 	return resourceVPCPeeringConnectionOptionsRead(d, meta)

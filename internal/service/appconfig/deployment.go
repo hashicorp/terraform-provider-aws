@@ -85,7 +85,7 @@ func ResourceDeployment() *schema.Resource {
 }
 
 func resourceDeploymentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppConfigConn
+	conn := meta.(*conns.AWSClient).AppConfigConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -119,14 +119,14 @@ func resourceDeploymentCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDeploymentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppConfigConn
+	conn := meta.(*conns.AWSClient).AppConfigConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	appID, envID, deploymentNum, err := DeploymentParseID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading AppConfig Deployment (%s): %w", d.Id(), err)
 	}
 
 	input := &appconfig.GetDeploymentInput{
@@ -144,11 +144,11 @@ func resourceDeploymentRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error getting AppConfig Deployment (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading AppConfig Deployment (%s): %w", d.Id(), err)
 	}
 
 	if output == nil {
-		return fmt.Errorf("error getting AppConfig Deployment (%s): empty response", d.Id())
+		return fmt.Errorf("reading AppConfig Deployment (%s): empty response", d.Id())
 	}
 
 	arn := arn.ARN{
@@ -190,7 +190,7 @@ func resourceDeploymentRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDeploymentUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppConfigConn
+	conn := meta.(*conns.AWSClient).AppConfigConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")

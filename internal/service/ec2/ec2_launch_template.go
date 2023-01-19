@@ -952,7 +952,7 @@ func ResourceLaunchTemplate() *schema.Resource {
 }
 
 func resourceLaunchTemplateCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -970,14 +970,14 @@ func resourceLaunchTemplateCreate(d *schema.ResourceData, meta interface{}) erro
 	if v, err := expandRequestLaunchTemplateData(conn, d); err == nil {
 		input.LaunchTemplateData = v
 	} else {
-		return err
+		return fmt.Errorf("creating EC2 Launch Template (%s): %w", name, err)
 	}
 
 	log.Printf("[DEBUG] Creating EC2 Launch Template: %s", input)
 	output, err := conn.CreateLaunchTemplate(input)
 
 	if err != nil {
-		return fmt.Errorf("error creating EC2 Launch Template: %w", err)
+		return fmt.Errorf("creating EC2 Launch Template: %w", err)
 	}
 
 	d.SetId(aws.StringValue(output.LaunchTemplate.LaunchTemplateId))
@@ -986,7 +986,7 @@ func resourceLaunchTemplateCreate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceLaunchTemplateRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -1006,7 +1006,7 @@ func resourceLaunchTemplateRead(d *schema.ResourceData, meta interface{}) error 
 	ltv, err := FindLaunchTemplateVersionByTwoPartKey(conn, d.Id(), version)
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 Launch Template (%s) Version (%s): %w", d.Id(), version, err)
+		return fmt.Errorf("reading EC2 Launch Template (%s) Version (%s): %w", d.Id(), version, err)
 	}
 
 	arn := arn.ARN{
@@ -1024,7 +1024,7 @@ func resourceLaunchTemplateRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(lt.LaunchTemplateName)))
 
 	if err := flattenResponseLaunchTemplateData(conn, d, ltv.LaunchTemplateData); err != nil {
-		return err
+		return fmt.Errorf("reading EC2 Launch Template (%s): %w", d.Id(), err)
 	}
 
 	tags := KeyValueTags(lt.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
@@ -1042,7 +1042,7 @@ func resourceLaunchTemplateRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceLaunchTemplateUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	updateKeys := []string{
 		"block_device_mappings",
@@ -1092,7 +1092,7 @@ func resourceLaunchTemplateUpdate(d *schema.ResourceData, meta interface{}) erro
 		if v, err := expandRequestLaunchTemplateData(conn, d); err == nil {
 			input.LaunchTemplateData = v
 		} else {
-			return err
+			return fmt.Errorf("updating EC2 Launch Template (%s): %w", d.Id(), err)
 		}
 
 		output, err := conn.CreateLaunchTemplateVersion(input)
@@ -1118,7 +1118,7 @@ func resourceLaunchTemplateUpdate(d *schema.ResourceData, meta interface{}) erro
 		_, err := conn.ModifyLaunchTemplate(input)
 
 		if err != nil {
-			return fmt.Errorf("error updating EC2 Launch Template (%s): %w", d.Id(), err)
+			return fmt.Errorf("updating EC2 Launch Template (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -1126,7 +1126,7 @@ func resourceLaunchTemplateUpdate(d *schema.ResourceData, meta interface{}) erro
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating EC2 Launch Template (%s) tags: %w", d.Id(), err)
+			return fmt.Errorf("updating EC2 Launch Template (%s) tags: %w", d.Id(), err)
 		}
 	}
 
@@ -1134,7 +1134,7 @@ func resourceLaunchTemplateUpdate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceLaunchTemplateDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	log.Printf("[DEBUG] Deleting EC2 Launch Template: %s", d.Id())
 	_, err := conn.DeleteLaunchTemplate(&ec2.DeleteLaunchTemplateInput{

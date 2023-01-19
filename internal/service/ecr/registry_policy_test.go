@@ -15,18 +15,14 @@ import (
 )
 
 func TestAccECRRegistryPolicy_serial(t *testing.T) {
-	testFuncs := map[string]func(t *testing.T){
+	t.Parallel()
+
+	testCases := map[string]func(t *testing.T){
 		"basic":      testAccRegistryPolicy_basic,
 		"disappears": testAccRegistryPolicy_disappears,
 	}
 
-	for name, testFunc := range testFuncs {
-		testFunc := testFunc
-
-		t.Run(name, func(t *testing.T) {
-			testFunc(t)
-		})
-	}
+	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
 func testAccRegistryPolicy_basic(t *testing.T) {
@@ -88,7 +84,7 @@ func testAccRegistryPolicy_disappears(t *testing.T) {
 }
 
 func testAccCheckRegistryPolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ecr_registry_policy" {
@@ -118,7 +114,7 @@ func testAccCheckRegistryPolicyExists(name string, res *ecr.GetRegistryPolicyOut
 			return fmt.Errorf("No ECR registry policy ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn()
 
 		output, err := conn.GetRegistryPolicy(&ecr.GetRegistryPolicyInput{})
 		if err != nil {

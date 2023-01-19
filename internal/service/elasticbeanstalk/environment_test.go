@@ -440,7 +440,7 @@ func testAccVerifyConfig(env *elasticbeanstalk.EnvironmentDescription, expected 
 		if env == nil {
 			return fmt.Errorf("Nil environment in testAccVerifyConfig")
 		}
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticBeanstalkConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticBeanstalkConn()
 
 		resp, err := conn.DescribeConfigurationSettings(&elasticbeanstalk.DescribeConfigurationSettingsInput{
 			ApplicationName: env.ApplicationName,
@@ -488,7 +488,7 @@ func testAccVerifyConfig(env *elasticbeanstalk.EnvironmentDescription, expected 
 }
 
 func testAccCheckEnvironmentDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticBeanstalkConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticBeanstalkConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_elastic_beanstalk_environment" {
@@ -533,7 +533,7 @@ func testAccCheckEnvironmentExists(n string, app *elasticbeanstalk.EnvironmentDe
 			return fmt.Errorf("Elastic Beanstalk ENV is not set")
 		}
 
-		env, err := describeEnvironment(acctest.Provider.Meta().(*conns.AWSClient).ElasticBeanstalkConn, aws.String(rs.Primary.ID))
+		env, err := describeEnvironment(acctest.Provider.Meta().(*conns.AWSClient).ElasticBeanstalkConn(), aws.String(rs.Primary.ID))
 		if err != nil {
 			return err
 		}
@@ -555,7 +555,7 @@ func testAccCheckEnvironmentTier(n string, app *elasticbeanstalk.EnvironmentDesc
 			return fmt.Errorf("Elastic Beanstalk ENV is not set")
 		}
 
-		env, err := describeEnvironment(acctest.Provider.Meta().(*conns.AWSClient).ElasticBeanstalkConn, aws.String(rs.Primary.ID))
+		env, err := describeEnvironment(acctest.Provider.Meta().(*conns.AWSClient).ElasticBeanstalkConn(), aws.String(rs.Primary.ID))
 		if err != nil {
 			return err
 		}
@@ -571,7 +571,7 @@ func testAccCheckEnvironmentTier(n string, app *elasticbeanstalk.EnvironmentDesc
 
 func testAccCheckEnvironmentConfigValue(n string, expectedValue string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticBeanstalkConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticBeanstalkConn()
 
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -618,7 +618,7 @@ func testAccCheckEnvironmentTagsMatch(env *elasticbeanstalk.EnvironmentDescripti
 			return fmt.Errorf("Nil environment in testAccCheckEnvironmentTagsMatch")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticBeanstalkConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticBeanstalkConn()
 
 		tags, err := conn.ListTagsForResource(&elasticbeanstalk.ListTagsForResourceInput{
 			ResourceArn: env.EnvironmentArn,
@@ -649,7 +649,7 @@ func testAccCheckApplicationVersionDeployed(n string, app *elasticbeanstalk.Envi
 			return fmt.Errorf("Elastic Beanstalk ENV is not set")
 		}
 
-		env, err := describeEnvironment(acctest.Provider.Meta().(*conns.AWSClient).ElasticBeanstalkConn, aws.String(rs.Primary.ID))
+		env, err := describeEnvironment(acctest.Provider.Meta().(*conns.AWSClient).ElasticBeanstalkConn(), aws.String(rs.Primary.ID))
 		if err != nil {
 			return err
 		}

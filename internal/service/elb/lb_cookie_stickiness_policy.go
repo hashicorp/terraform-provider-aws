@@ -52,7 +52,7 @@ func ResourceCookieStickinessPolicy() *schema.Resource {
 }
 
 func resourceCookieStickinessPolicyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBConn
+	conn := meta.(*conns.AWSClient).ELBConn()
 
 	// Provision the LBStickinessPolicy
 	lbspOpts := &elb.CreateLBCookieStickinessPolicyInput{
@@ -88,7 +88,7 @@ func resourceCookieStickinessPolicyCreate(d *schema.ResourceData, meta interface
 }
 
 func resourceCookieStickinessPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBConn
+	conn := meta.(*conns.AWSClient).ELBConn()
 
 	lbName, lbPort, policyName := CookieStickinessPolicyParseID(d.Id())
 
@@ -117,9 +117,9 @@ func resourceCookieStickinessPolicyRead(d *schema.ResourceData, meta interface{}
 	}
 
 	// we know the policy exists now, but we have to check if it's assigned to a listener
-	assigned, err := resourceSticknessPolicyAssigned(policyName, lbName, lbPort, conn)
+	assigned, err := resourceSticknessPolicyAssigned(conn, policyName, lbName, lbPort)
 	if err != nil {
-		return err
+		return fmt.Errorf("reading ELB Classic LB Cookie Stickiness Policy (%s): %w", d.Id(), err)
 	}
 	if !d.IsNewResource() && !assigned {
 		// policy exists, but isn't assigned to a listener
@@ -145,7 +145,7 @@ func resourceCookieStickinessPolicyRead(d *schema.ResourceData, meta interface{}
 	d.Set("load_balancer", lbName)
 	lbPortInt, err := strconv.Atoi(lbPort)
 	if err != nil {
-		return err
+		return fmt.Errorf("reading ELB Classic LB Cookie Stickiness Policy (%s): parsing port number: %w", d.Id(), err)
 	}
 	d.Set("lb_port", lbPortInt)
 
@@ -153,7 +153,7 @@ func resourceCookieStickinessPolicyRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceCookieStickinessPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBConn
+	conn := meta.(*conns.AWSClient).ELBConn()
 
 	lbName, _, policyName := CookieStickinessPolicyParseID(d.Id())
 

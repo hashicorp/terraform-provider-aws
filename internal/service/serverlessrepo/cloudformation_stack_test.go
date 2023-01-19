@@ -274,7 +274,7 @@ func testAccCheckCloudFormationStackExists(n string, stack *cloudformation.Stack
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn()
 		params := &cloudformation.DescribeStacksInput{
 			StackName: aws.String(rs.Primary.ID),
 		}
@@ -538,7 +538,7 @@ resource "aws_serverlessapplicationrepository_cloudformation_stack" "postgres-ro
 }
 
 func testAccCheckAMIDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ami" {
@@ -569,7 +569,7 @@ func testAccCheckAMIDestroy(s *terraform.State) error {
 }
 
 func testAccCheckCloudFormationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudformation_stack" {

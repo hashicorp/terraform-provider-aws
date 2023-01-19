@@ -158,7 +158,7 @@ func testAccCheckConnectionExists(n string, v *codestarconnections.Connection) r
 			return errors.New("No CodeStar Connections Connection ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeStarConnectionsConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeStarConnectionsConn()
 
 		output, err := tfcodestarconnections.FindConnectionByARN(conn, rs.Primary.ID)
 
@@ -173,7 +173,7 @@ func testAccCheckConnectionExists(n string, v *codestarconnections.Connection) r
 }
 
 func testAccCheckConnectionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CodeStarConnectionsConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CodeStarConnectionsConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_codestarconnections_connection" {

@@ -68,7 +68,7 @@ func ResourceEndpointAuthorization() *schema.Resource {
 }
 
 func resourceEndpointAuthorizationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 
 	account := d.Get("account").(string)
 	input := redshift.AuthorizeEndpointAccessInput{
@@ -92,7 +92,7 @@ func resourceEndpointAuthorizationCreate(d *schema.ResourceData, meta interface{
 }
 
 func resourceEndpointAuthorizationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 
 	endpoint, err := FindEndpointAuthorizationById(conn, d.Id())
 
@@ -118,12 +118,12 @@ func resourceEndpointAuthorizationRead(d *schema.ResourceData, meta interface{})
 }
 
 func resourceEndpointAuthorizationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 
 	if d.HasChanges("vpc_ids") {
 		account, clusterId, err := DecodeEndpointAuthorizationID(d.Id())
 		if err != nil {
-			return err
+			return fmt.Errorf("updating Redshift Endpoint Authorization (%s): %w", d.Id(), err)
 		}
 
 		o, n := d.GetChange("vpc_ids")
@@ -140,7 +140,7 @@ func resourceEndpointAuthorizationUpdate(d *schema.ResourceData, meta interface{
 			})
 
 			if err != nil {
-				return fmt.Errorf("authorizing Redshift Endpoint Authorization VPCs (%s): %w", d.Id(), err)
+				return fmt.Errorf("updating Redshift Endpoint Authorization (%s): authorizing VPCs: %w", d.Id(), err)
 			}
 		}
 
@@ -152,7 +152,7 @@ func resourceEndpointAuthorizationUpdate(d *schema.ResourceData, meta interface{
 			})
 
 			if err != nil {
-				return fmt.Errorf("revoking Redshift Endpoint Authorization VPCs (%s): %w", d.Id(), err)
+				return fmt.Errorf("updating Redshift Endpoint Authorization (%s): revoking VPCs: %w", d.Id(), err)
 			}
 		}
 	}
@@ -161,11 +161,11 @@ func resourceEndpointAuthorizationUpdate(d *schema.ResourceData, meta interface{
 }
 
 func resourceEndpointAuthorizationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 
 	account, clusterId, err := DecodeEndpointAuthorizationID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting Redshift Endpoint Authorization (%s): %w", d.Id(), err)
 	}
 
 	input := &redshift.RevokeEndpointAccessInput{
@@ -180,7 +180,7 @@ func resourceEndpointAuthorizationDelete(d *schema.ResourceData, meta interface{
 		if tfawserr.ErrCodeEquals(err, redshift.ErrCodeEndpointAuthorizationNotFoundFault) {
 			return nil
 		}
-		return err
+		return fmt.Errorf("deleting Redshift Endpoint Authorization (%s): %w", d.Id(), err)
 	}
 
 	return nil

@@ -78,7 +78,7 @@ func DataSourceBrokerInstanceTypeOfferings() *schema.Resource {
 }
 
 func dataSourceBrokerInstanceTypeOfferingsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MQConn
+	conn := meta.(*conns.AWSClient).MQConn()
 
 	input := &mq.DescribeBrokerInstanceOptionsInput{}
 

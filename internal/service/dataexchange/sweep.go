@@ -29,7 +29,7 @@ func sweepDataSets(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).DataExchangeConn
+	conn := client.(*conns.AWSClient).DataExchangeConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 

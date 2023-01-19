@@ -67,10 +67,11 @@ func ResourceAccess() *schema.Resource {
 			},
 
 			"policy": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateFunc:     verify.ValidIAMPolicyJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				Type:                  schema.TypeString,
+				Optional:              true,
+				ValidateFunc:          verify.ValidIAMPolicyJSON,
+				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+				DiffSuppressOnRefresh: true,
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
@@ -119,7 +120,7 @@ func ResourceAccess() *schema.Resource {
 }
 
 func resourceAccessCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).TransferConn
+	conn := meta.(*conns.AWSClient).TransferConn()
 
 	externalID := d.Get("external_id").(string)
 	serverID := d.Get("server_id").(string)
@@ -143,7 +144,6 @@ func resourceAccessCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("policy"); ok {
 		policy, err := structure.NormalizeJsonString(v.(string))
-
 		if err != nil {
 			return fmt.Errorf("policy (%s) is invalid JSON: %w", v.(string), err)
 		}
@@ -172,7 +172,7 @@ func resourceAccessCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAccessRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).TransferConn
+	conn := meta.(*conns.AWSClient).TransferConn()
 
 	serverID, externalID, err := AccessParseResourceID(d.Id())
 
@@ -206,9 +206,8 @@ func resourceAccessRead(d *schema.ResourceData, meta interface{}) error {
 	// d.Set("role", access.Role)
 
 	policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.StringValue(access.Policy))
-
 	if err != nil {
-		return err
+		return fmt.Errorf("error reading Transfer Access (%s): %w", d.Id(), err)
 	}
 
 	d.Set("policy", policyToSet)
@@ -219,7 +218,7 @@ func resourceAccessRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAccessUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).TransferConn
+	conn := meta.(*conns.AWSClient).TransferConn()
 
 	serverID, externalID, err := AccessParseResourceID(d.Id())
 
@@ -246,7 +245,6 @@ func resourceAccessUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("policy") {
 		policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
-
 		if err != nil {
 			return fmt.Errorf("policy (%s) is invalid JSON: %w", d.Get("policy").(string), err)
 		}
@@ -273,7 +271,7 @@ func resourceAccessUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAccessDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).TransferConn
+	conn := meta.(*conns.AWSClient).TransferConn()
 
 	serverID, externalID, err := AccessParseResourceID(d.Id())
 

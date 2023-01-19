@@ -163,7 +163,7 @@ func TestAccEMRInstanceFleet_disappears(t *testing.T) {
 }
 
 func testAccCheckInstanceFleetDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_emr_cluster" {
@@ -204,7 +204,7 @@ func testAccCheckInstanceFleetExists(n string, v *emr.InstanceFleet) resource.Te
 			return fmt.Errorf("No task fleet id set")
 		}
 		meta := acctest.Provider.Meta()
-		conn := meta.(*conns.AWSClient).EMRConn
+		conn := meta.(*conns.AWSClient).EMRConn()
 		instanceFleets, err := tfemr.FetchAllInstanceFleets(conn, rs.Primary.Attributes["cluster_id"])
 		if err != nil {
 			return fmt.Errorf("EMR error: %v", err)

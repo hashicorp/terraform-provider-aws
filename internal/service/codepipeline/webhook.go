@@ -115,7 +115,7 @@ func ResourceWebhook() *schema.Resource {
 }
 
 func resourceWebhookCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodePipelineConn
+	conn := meta.(*conns.AWSClient).CodePipelineConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 	authType := d.Get("authentication").(string)
@@ -148,7 +148,7 @@ func resourceWebhookCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceWebhookRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodePipelineConn
+	conn := meta.(*conns.AWSClient).CodePipelineConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -202,7 +202,7 @@ func resourceWebhookRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceWebhookUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodePipelineConn
+	conn := meta.(*conns.AWSClient).CodePipelineConn()
 
 	if d.HasChangesExcept("tags_all", "tags", "register_with_third_party") {
 		authType := d.Get("authentication").(string)
@@ -241,7 +241,7 @@ func resourceWebhookUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceWebhookDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodePipelineConn
+	conn := meta.(*conns.AWSClient).CodePipelineConn()
 	name := d.Get("name").(string)
 
 	input := codepipeline.DeleteWebhookInput{

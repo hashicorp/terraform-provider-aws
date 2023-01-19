@@ -109,7 +109,7 @@ func ResourceLocationEFS() *schema.Resource {
 }
 
 func resourceLocationEFSCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataSyncConn
+	conn := meta.(*conns.AWSClient).DataSyncConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -144,7 +144,7 @@ func resourceLocationEFSCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceLocationEFSRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataSyncConn
+	conn := meta.(*conns.AWSClient).DataSyncConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -162,13 +162,13 @@ func resourceLocationEFSRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading DataSync Location EFS (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading DataSync Location EFS (%s): %w", d.Id(), err)
 	}
 
 	subdirectory, err := SubdirectoryFromLocationURI(aws.StringValue(output.LocationUri))
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading DataSync Location EFS (%s): %w", d.Id(), err)
 	}
 
 	d.Set("arn", output.LocationArn)
@@ -204,7 +204,7 @@ func resourceLocationEFSRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceLocationEFSUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataSyncConn
+	conn := meta.(*conns.AWSClient).DataSyncConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -218,7 +218,7 @@ func resourceLocationEFSUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceLocationEFSDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataSyncConn
+	conn := meta.(*conns.AWSClient).DataSyncConn()
 
 	input := &datasync.DeleteLocationInput{
 		LocationArn: aws.String(d.Id()),

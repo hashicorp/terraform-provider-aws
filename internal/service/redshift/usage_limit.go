@@ -75,7 +75,7 @@ func ResourceUsageLimit() *schema.Resource {
 }
 
 func resourceUsageLimitCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -110,7 +110,7 @@ func resourceUsageLimitCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceUsageLimitRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -156,7 +156,7 @@ func resourceUsageLimitRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceUsageLimitUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &redshift.ModifyUsageLimitInput{
@@ -181,7 +181,7 @@ func resourceUsageLimitUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("updating Redshift Usage Limit (%s) tags: %s", d.Get("arn").(string), err)
+			return fmt.Errorf("updating Redshift Usage Limit (%s) tags: %s", d.Id(), err)
 		}
 	}
 
@@ -189,21 +189,20 @@ func resourceUsageLimitUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceUsageLimitDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 
 	deleteInput := redshift.DeleteUsageLimitInput{
 		UsageLimitId: aws.String(d.Id()),
 	}
 
-	log.Printf("[DEBUG] Deleting snapshot copy grant: %s", d.Id())
 	_, err := conn.DeleteUsageLimit(&deleteInput)
 
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, redshift.ErrCodeUsageLimitNotFoundFault) {
 			return nil
 		}
-		return err
+		return fmt.Errorf("deleting Redshift Usage Limit (%s): %s", d.Id(), err)
 	}
 
-	return err
+	return nil
 }

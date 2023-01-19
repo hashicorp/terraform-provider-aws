@@ -31,7 +31,7 @@ func ResourceAccountAlias() *schema.Resource {
 }
 
 func resourceAccountAliasCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	account_alias := d.Get("account_alias").(string)
 
@@ -51,7 +51,7 @@ func resourceAccountAliasCreate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceAccountAliasRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	params := &iam.ListAccountAliasesInput{}
 
@@ -75,7 +75,7 @@ func resourceAccountAliasRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAccountAliasDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	account_alias := d.Get("account_alias").(string)
 

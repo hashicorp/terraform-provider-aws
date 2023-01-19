@@ -149,7 +149,7 @@ func ResourceApp() *schema.Resource {
 }
 
 func resourceAppCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).PinpointConn
+	conn := meta.(*conns.AWSClient).PinpointConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -187,7 +187,7 @@ func resourceAppCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAppUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).PinpointConn
+	conn := meta.(*conns.AWSClient).PinpointConn()
 
 	appSettings := &pinpoint.WriteApplicationSettingsRequest{}
 
@@ -214,7 +214,7 @@ func resourceAppUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	_, err := conn.UpdateApplicationSettings(&req)
 	if err != nil {
-		return err
+		return fmt.Errorf("updating Pinpoint Application (%s): %s", d.Id(), err)
 	}
 
 	if !d.IsNewResource() {
@@ -232,7 +232,7 @@ func resourceAppUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAppRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).PinpointConn
+	conn := meta.(*conns.AWSClient).PinpointConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -243,12 +243,12 @@ func resourceAppRead(d *schema.ResourceData, meta interface{}) error {
 	})
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, pinpoint.ErrCodeNotFoundException) {
-			log.Printf("[WARN] Pinpoint App (%s) not found, error code (404)", d.Id())
+			log.Printf("[WARN] Pinpoint App (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
 
-		return err
+		return fmt.Errorf("reading Pinpoint Application (%s): %s", d.Id(), err)
 	}
 
 	settings, err := conn.GetApplicationSettings(&pinpoint.GetApplicationSettingsInput{
@@ -256,12 +256,12 @@ func resourceAppRead(d *schema.ResourceData, meta interface{}) error {
 	})
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, pinpoint.ErrCodeNotFoundException) {
-			log.Printf("[WARN] Pinpoint App (%s) not found, error code (404)", d.Id())
+			log.Printf("[WARN] Pinpoint App (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
 
-		return err
+		return fmt.Errorf("reading Pinpoint Application (%s) settings: %s", d.Id(), err)
 	}
 
 	arn := aws.StringValue(app.ApplicationResponse.Arn)
@@ -300,7 +300,7 @@ func resourceAppRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAppDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).PinpointConn
+	conn := meta.(*conns.AWSClient).PinpointConn()
 
 	log.Printf("[DEBUG] Pinpoint Delete App: %s", d.Id())
 	_, err := conn.DeleteApp(&pinpoint.DeleteAppInput{
@@ -311,7 +311,7 @@ func resourceAppDelete(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
-	return err
+	return fmt.Errorf("deleting Pinpoint Application (%s): %s", d.Id(), err)
 }
 
 func expandCampaignHook(configs []interface{}) *pinpoint.CampaignHook {

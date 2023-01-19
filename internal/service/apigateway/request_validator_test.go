@@ -130,7 +130,7 @@ func testAccCheckRequestValidatorExists(n string, res *apigateway.UpdateRequestV
 			return fmt.Errorf("No API Request Validator ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
 
 		req := &apigateway.GetRequestValidatorInput{
 			RequestValidatorId: aws.String(rs.Primary.ID),
@@ -148,7 +148,7 @@ func testAccCheckRequestValidatorExists(n string, res *apigateway.UpdateRequestV
 }
 
 func testAccCheckRequestValidatorDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_api_gateway_request_validator" {

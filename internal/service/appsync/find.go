@@ -79,3 +79,29 @@ func FindDomainNameAPIAssociationByID(conn *appsync.AppSync, id string) (*appsyn
 
 	return out.ApiAssociation, nil
 }
+
+func FindTypeByID(conn *appsync.AppSync, apiID, format, name string) (*appsync.Type, error) {
+	input := &appsync.GetTypeInput{
+		ApiId:    aws.String(apiID),
+		Format:   aws.String(format),
+		TypeName: aws.String(name),
+	}
+	out, err := conn.GetType(input)
+
+	if tfawserr.ErrCodeEquals(err, appsync.ErrCodeNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if out == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return out.Type, nil
+}

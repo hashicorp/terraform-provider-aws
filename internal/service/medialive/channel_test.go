@@ -321,7 +321,7 @@ func TestAccMediaLiveChannel_disappears(t *testing.T) {
 }
 
 func testAccCheckChannelDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveClient
+	conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveClient()
 	ctx := context.Background()
 
 	for _, rs := range s.RootModule().Resources {
@@ -354,7 +354,7 @@ func testAccCheckChannelExists(name string, channel *medialive.DescribeChannelOu
 			return create.Error(names.MediaLive, create.ErrActionCheckingExistence, tfmedialive.ResNameChannel, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveClient
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveClient()
 		ctx := context.Background()
 		resp, err := tfmedialive.FindChannelByID(ctx, conn, rs.Primary.ID)
 
@@ -379,7 +379,7 @@ func testAccCheckChannelStatus(name string, state types.ChannelState) resource.T
 			return create.Error(names.MediaLive, create.ErrActionChecking, tfmedialive.ResNameChannel, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveClient
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveClient()
 		ctx := context.Background()
 		resp, err := tfmedialive.FindChannelByID(ctx, conn, rs.Primary.ID)
 
@@ -396,7 +396,7 @@ func testAccCheckChannelStatus(name string, state types.ChannelState) resource.T
 }
 
 func testAccChannelsPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveClient
+	conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveClient()
 	ctx := context.Background()
 
 	input := &medialive.ListChannelsInput{}

@@ -92,7 +92,7 @@ func ResourceReplicaKey() *schema.Resource {
 }
 
 func resourceReplicaKeyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KMSConn
+	conn := meta.(*conns.AWSClient).KMSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -152,7 +152,7 @@ func resourceReplicaKeyCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if enabled := d.Get("enabled").(bool); !enabled {
 		if err := updateKeyEnabled(conn, d.Id(), enabled); err != nil {
-			return err
+			return fmt.Errorf("creating KMS Replica Key (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -173,7 +173,7 @@ func resourceReplicaKeyCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceReplicaKeyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KMSConn
+	conn := meta.(*conns.AWSClient).KMSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -184,22 +184,21 @@ func resourceReplicaKeyRead(d *schema.ResourceData, meta interface{}) error {
 		d.SetId("")
 		return nil
 	}
-
 	if err != nil {
-		return err
+		return fmt.Errorf("reading KMS Replica Key (%s): %w", d.Id(), err)
 	}
 
 	if keyManager := aws.StringValue(key.metadata.KeyManager); keyManager != kms.KeyManagerTypeCustomer {
-		return fmt.Errorf("KMS Key (%s) has invalid KeyManager: %s", d.Id(), keyManager)
+		return fmt.Errorf("KMS Replica Key (%s) has invalid KeyManager: %s", d.Id(), keyManager)
 	}
 
 	if origin := aws.StringValue(key.metadata.Origin); origin != kms.OriginTypeAwsKms {
-		return fmt.Errorf("KMS Key (%s) has invalid Origin: %s", d.Id(), origin)
+		return fmt.Errorf("KMS Replica Key (%s) has invalid Origin: %s", d.Id(), origin)
 	}
 
 	if !aws.BoolValue(key.metadata.MultiRegion) ||
 		aws.StringValue(key.metadata.MultiRegionConfiguration.MultiRegionKeyType) != kms.MultiRegionKeyTypeReplica {
-		return fmt.Errorf("KMS Key (%s) is not a multi-Region replica key", d.Id())
+		return fmt.Errorf("KMS Replica Key (%s) is not a multi-Region replica key", d.Id())
 	}
 
 	d.Set("arn", key.metadata.Arn)
@@ -235,31 +234,31 @@ func resourceReplicaKeyRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceReplicaKeyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KMSConn
+	conn := meta.(*conns.AWSClient).KMSConn()
 
 	if hasChange, enabled := d.HasChange("enabled"), d.Get("enabled").(bool); hasChange && enabled {
 		// Enable before any attributes are modified.
 		if err := updateKeyEnabled(conn, d.Id(), enabled); err != nil {
-			return err
+			return fmt.Errorf("updating KMS Replica Key (%s): %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("description") {
 		if err := updateKeyDescription(conn, d.Id(), d.Get("description").(string)); err != nil {
-			return err
+			return fmt.Errorf("updating KMS Replica Key (%s): %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("policy") {
 		if err := updateKeyPolicy(conn, d.Id(), d.Get("policy").(string), d.Get("bypass_policy_lockout_safety_check").(bool)); err != nil {
-			return err
+			return fmt.Errorf("updating KMS Replica Key (%s): %w", d.Id(), err)
 		}
 	}
 
 	if hasChange, enabled := d.HasChange("enabled"), d.Get("enabled").(bool); hasChange && !enabled {
 		// Only disable after all attributes have been modified because we cannot modify disabled keys.
 		if err := updateKeyEnabled(conn, d.Id(), enabled); err != nil {
-			return err
+			return fmt.Errorf("updating KMS Replica Key (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -279,7 +278,7 @@ func resourceReplicaKeyUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceReplicaKeyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KMSConn
+	conn := meta.(*conns.AWSClient).KMSConn()
 
 	input := &kms.ScheduleKeyDeletionInput{
 		KeyId: aws.String(d.Id()),

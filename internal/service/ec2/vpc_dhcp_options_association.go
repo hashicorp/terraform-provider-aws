@@ -39,7 +39,7 @@ func ResourceVPCDHCPOptionsAssociation() *schema.Resource {
 }
 
 func resourceVPCDHCPOptionsAssociationPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	dhcpOptionsID := d.Get("dhcp_options_id").(string)
 	vpcID := d.Get("vpc_id").(string)
@@ -62,12 +62,12 @@ func resourceVPCDHCPOptionsAssociationPut(d *schema.ResourceData, meta interface
 }
 
 func resourceVPCDHCPOptionsAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	dhcpOptionsID, vpcID, err := VPCDHCPOptionsAssociationParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading EC2 VPC DHCP Options Set Association (%s): %w", d.Id(), err)
 	}
 
 	_, err = tfresource.RetryWhenNewResourceNotFound(propagationTimeout, func() (interface{}, error) {
@@ -81,7 +81,7 @@ func resourceVPCDHCPOptionsAssociationRead(d *schema.ResourceData, meta interfac
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 VPC DHCP Options Set Association (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading EC2 VPC DHCP Options Set Association (%s): %w", d.Id(), err)
 	}
 
 	d.Set("dhcp_options_id", dhcpOptionsID)
@@ -91,12 +91,12 @@ func resourceVPCDHCPOptionsAssociationRead(d *schema.ResourceData, meta interfac
 }
 
 func resourceVPCDHCPOptionsAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	dhcpOptionsID, vpcID, err := VPCDHCPOptionsAssociationParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return err // nosemgrep:ci.bare-error-returns
 	}
 
 	if dhcpOptionsID == DefaultDHCPOptionsID {
@@ -117,14 +117,14 @@ func resourceVPCDHCPOptionsAssociationDelete(d *schema.ResourceData, meta interf
 	}
 
 	if err != nil {
-		return fmt.Errorf("error disassociating EC2 DHCP Options Set (%s) from VPC (%s): %w", dhcpOptionsID, vpcID, err)
+		return fmt.Errorf("disassociating EC2 DHCP Options Set (%s) from VPC (%s): %w", dhcpOptionsID, vpcID, err)
 	}
 
-	return err
+	return nil
 }
 
 func resourceVPCDHCPOptionsAssociationImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	vpc, err := FindVPCByID(conn, d.Id())
 

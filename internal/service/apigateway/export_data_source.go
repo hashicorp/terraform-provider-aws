@@ -55,7 +55,7 @@ func DataSourceExport() *schema.Resource {
 }
 
 func dataSourceExportRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 
 	restApiId := d.Get("rest_api_id").(string)
 	stageName := d.Get("stage_name").(string)
@@ -76,7 +76,7 @@ func dataSourceExportRead(d *schema.ResourceData, meta interface{}) error {
 
 	export, err := conn.GetExport(input)
 	if err != nil {
-		return err
+		return fmt.Errorf("reading API Gateway Export: %w", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", restApiId, stageName))

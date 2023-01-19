@@ -69,7 +69,7 @@ func TestAccIoTPolicy_disappears(t *testing.T) {
 }
 
 func testAccCheckPolicyDestroy_basic(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iot_policy" {
@@ -111,7 +111,7 @@ func testAccCheckPolicyExists(n string, v *iot.GetPolicyOutput) resource.TestChe
 			return fmt.Errorf("No IoT Policy ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn()
 
 		resp, err := conn.GetPolicy(&iot.GetPolicyInput{
 			PolicyName: aws.String(rs.Primary.ID),

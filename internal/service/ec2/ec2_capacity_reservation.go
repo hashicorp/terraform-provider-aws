@@ -111,7 +111,7 @@ func ResourceCapacityReservation() *schema.Resource {
 }
 
 func resourceCapacityReservationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -171,7 +171,7 @@ func resourceCapacityReservationCreate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceCapacityReservationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -221,7 +221,7 @@ func resourceCapacityReservationRead(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceCapacityReservationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &ec2.ModifyCapacityReservationInput{
@@ -260,7 +260,7 @@ func resourceCapacityReservationUpdate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceCapacityReservationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	log.Printf("[DEBUG] Deleting EC2 Capacity Reservation: %s", d.Id())
 	_, err := conn.CancelCapacityReservation(&ec2.CancelCapacityReservationInput{

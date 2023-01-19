@@ -53,7 +53,7 @@ func ResourceGeoMatchSet() *schema.Resource {
 }
 
 func resourceGeoMatchSetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFConn
+	conn := meta.(*conns.AWSClient).WAFConn()
 
 	log.Printf("[INFO] Creating GeoMatchSet: %s", d.Get("name").(string))
 
@@ -67,7 +67,7 @@ func resourceGeoMatchSetCreate(d *schema.ResourceData, meta interface{}) error {
 		return conn.CreateGeoMatchSet(params)
 	})
 	if err != nil {
-		return fmt.Errorf("Error creating GeoMatchSet: %s", err)
+		return fmt.Errorf("creating GeoMatchSet: %s", err)
 	}
 	resp := out.(*waf.CreateGeoMatchSetOutput)
 
@@ -77,7 +77,7 @@ func resourceGeoMatchSetCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceGeoMatchSetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFConn
+	conn := meta.(*conns.AWSClient).WAFConn()
 	log.Printf("[INFO] Reading GeoMatchSet: %s", d.Get("name").(string))
 	params := &waf.GetGeoMatchSetInput{
 		GeoMatchSetId: aws.String(d.Id()),
@@ -91,7 +91,7 @@ func resourceGeoMatchSetRead(d *schema.ResourceData, meta interface{}) error {
 			return nil
 		}
 
-		return err
+		return fmt.Errorf("reading WAF GeoMatchSet: %s", err)
 	}
 
 	d.Set("name", resp.GeoMatchSet.Name)
@@ -109,7 +109,7 @@ func resourceGeoMatchSetRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceGeoMatchSetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFConn
+	conn := meta.(*conns.AWSClient).WAFConn()
 
 	if d.HasChange("geo_match_constraint") {
 		o, n := d.GetChange("geo_match_constraint")
@@ -117,7 +117,7 @@ func resourceGeoMatchSetUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		err := updateGeoMatchSetResource(d.Id(), oldT, newT, conn)
 		if err != nil {
-			return fmt.Errorf("Error updating GeoMatchSet: %s", err)
+			return fmt.Errorf("updating GeoMatchSet: %s", err)
 		}
 	}
 
@@ -125,14 +125,14 @@ func resourceGeoMatchSetUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceGeoMatchSetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFConn
+	conn := meta.(*conns.AWSClient).WAFConn()
 
 	oldConstraints := d.Get("geo_match_constraint").(*schema.Set).List()
 	if len(oldConstraints) > 0 {
 		noConstraints := []interface{}{}
 		err := updateGeoMatchSetResource(d.Id(), oldConstraints, noConstraints, conn)
 		if err != nil {
-			return fmt.Errorf("Error updating GeoMatchConstraint: %s", err)
+			return fmt.Errorf("updating GeoMatchConstraint: %s", err)
 		}
 	}
 
@@ -146,7 +146,7 @@ func resourceGeoMatchSetDelete(d *schema.ResourceData, meta interface{}) error {
 		return conn.DeleteGeoMatchSet(req)
 	})
 	if err != nil {
-		return fmt.Errorf("Error deleting GeoMatchSet: %s", err)
+		return fmt.Errorf("deleting GeoMatchSet: %s", err)
 	}
 
 	return nil
@@ -165,7 +165,7 @@ func updateGeoMatchSetResource(id string, oldT, newT []interface{}, conn *waf.WA
 		return conn.UpdateGeoMatchSet(req)
 	})
 	if err != nil {
-		return fmt.Errorf("Error updating GeoMatchSet: %s", err)
+		return fmt.Errorf("updating GeoMatchSet: %s", err)
 	}
 
 	return nil

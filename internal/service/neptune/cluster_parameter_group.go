@@ -94,7 +94,7 @@ func ResourceClusterParameterGroup() *schema.Resource {
 }
 
 func resourceClusterParameterGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).NeptuneConn
+	conn := meta.(*conns.AWSClient).NeptuneConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -132,7 +132,7 @@ func resourceClusterParameterGroupCreate(d *schema.ResourceData, meta interface{
 }
 
 func resourceClusterParameterGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).NeptuneConn
+	conn := meta.(*conns.AWSClient).NeptuneConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -175,7 +175,7 @@ func resourceClusterParameterGroupRead(d *schema.ResourceData, meta interface{})
 
 	describeParametersResp, err := conn.DescribeDBClusterParameters(&describeParametersOpts)
 	if err != nil {
-		return err
+		return fmt.Errorf("reading Neptune Cluster Parameter Group (%s): %w", d.Id(), err)
 	}
 
 	if err := d.Set("parameter", flattenParameters(describeParametersResp.Parameters)); err != nil {
@@ -203,7 +203,7 @@ func resourceClusterParameterGroupRead(d *schema.ResourceData, meta interface{})
 }
 
 func resourceClusterParameterGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).NeptuneConn
+	conn := meta.(*conns.AWSClient).NeptuneConn()
 
 	if d.HasChange("parameter") {
 		o, n := d.GetChange("parameter")
@@ -239,7 +239,7 @@ func resourceClusterParameterGroupUpdate(d *schema.ResourceData, meta interface{
 }
 
 func resourceClusterParameterGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).NeptuneConn
+	conn := meta.(*conns.AWSClient).NeptuneConn()
 
 	input := neptune.DeleteDBClusterParameterGroupInput{
 		DBClusterParameterGroupName: aws.String(d.Id()),

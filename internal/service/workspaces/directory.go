@@ -204,7 +204,7 @@ func ResourceDirectory() *schema.Resource {
 }
 
 func resourceDirectoryCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WorkSpacesConn
+	conn := meta.(*conns.AWSClient).WorkSpacesConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 	directoryID := d.Get("directory_id").(string)
@@ -296,7 +296,7 @@ func resourceDirectoryCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDirectoryRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WorkSpacesConn
+	conn := meta.(*conns.AWSClient).WorkSpacesConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -363,7 +363,7 @@ func resourceDirectoryRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDirectoryUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WorkSpacesConn
+	conn := meta.(*conns.AWSClient).WorkSpacesConn()
 
 	if d.HasChange("self_service_permissions") {
 		log.Printf("[DEBUG] Modifying WorkSpaces Directory (%s) self-service permissions", d.Id())
@@ -446,7 +446,7 @@ func resourceDirectoryUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDirectoryDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WorkSpacesConn
+	conn := meta.(*conns.AWSClient).WorkSpacesConn()
 
 	log.Printf("[DEBUG] Deregistering WorkSpaces Directory: %s", d.Id())
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(

@@ -70,7 +70,7 @@ func DataSourceStack() *schema.Resource {
 }
 
 func dataSourceStackRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFormationConn
+	conn := meta.(*conns.AWSClient).CloudFormationConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get("name").(string)
@@ -113,7 +113,7 @@ func dataSourceStackRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	tOut, err := conn.GetTemplate(&tInput)
 	if err != nil {
-		return err
+		return fmt.Errorf("reading CloudFormation Stack (%s): reading template: %w", name, err)
 	}
 
 	template, err := verify.NormalizeJSONOrYAMLString(*tOut.TemplateBody)

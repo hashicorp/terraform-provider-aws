@@ -17,6 +17,8 @@ import (
 )
 
 func TestAccNetworkManagerTransitGatewayRegistration_serial(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]func(t *testing.T){
 		"basic":                     testAccTransitGatewayRegistration_basic,
 		"disappears":                testAccTransitGatewayRegistration_disappears,
@@ -24,12 +26,7 @@ func TestAccNetworkManagerTransitGatewayRegistration_serial(t *testing.T) {
 		"crossRegion":               testAccTransitGatewayRegistration_crossRegion,
 	}
 
-	for name, tc := range testCases {
-		tc := tc
-		t.Run(name, func(t *testing.T) {
-			tc(t)
-		})
-	}
+	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
 func testAccTransitGatewayRegistration_basic(t *testing.T) {
@@ -128,7 +125,7 @@ func testAccTransitGatewayRegistration_crossRegion(t *testing.T) {
 }
 
 func testAccCheckTransitGatewayRegistrationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_networkmanager_transit_gateway_registration" {
@@ -168,7 +165,7 @@ func testAccCheckTransitGatewayRegistrationExists(n string) resource.TestCheckFu
 			return fmt.Errorf("No Network Manager Transit Gateway Registration ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn()
 
 		globalNetworkID, transitGatewayARN, err := tfnetworkmanager.TransitGatewayRegistrationParseResourceID(rs.Primary.ID)
 

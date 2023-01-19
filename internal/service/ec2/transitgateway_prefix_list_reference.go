@@ -55,7 +55,7 @@ func ResourceTransitGatewayPrefixListReference() *schema.Resource {
 }
 
 func resourceTransitGatewayPrefixListReferenceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	input := &ec2.CreateTransitGatewayPrefixListReferenceInput{}
 
@@ -92,12 +92,12 @@ func resourceTransitGatewayPrefixListReferenceCreate(d *schema.ResourceData, met
 }
 
 func resourceTransitGatewayPrefixListReferenceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	transitGatewayRouteTableID, prefixListID, err := TransitGatewayPrefixListReferenceParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading EC2 Transit Gateway Prefix List Reference (%s): %w", d.Id(), err)
 	}
 
 	transitGatewayPrefixListReference, err := FindTransitGatewayPrefixListReferenceByTwoPartKey(conn, transitGatewayRouteTableID, prefixListID)
@@ -126,7 +126,7 @@ func resourceTransitGatewayPrefixListReferenceRead(d *schema.ResourceData, meta 
 }
 
 func resourceTransitGatewayPrefixListReferenceUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	input := &ec2.ModifyTransitGatewayPrefixListReferenceInput{}
 
@@ -160,12 +160,12 @@ func resourceTransitGatewayPrefixListReferenceUpdate(d *schema.ResourceData, met
 }
 
 func resourceTransitGatewayPrefixListReferenceDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	transitGatewayRouteTableID, prefixListID, err := TransitGatewayPrefixListReferenceParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting EC2 Transit Gateway Prefix List Reference (%s): %w", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Creating EC2 Transit Gateway Prefix List Reference: %s", d.Id())

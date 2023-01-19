@@ -236,7 +236,7 @@ service/elastictranscoder:
 service/elb:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_(app_cookie_stickiness_policy|elb|lb_cookie_stickiness_policy|lb_ssl_negotiation_policy|load_balancer_|proxy_protocol_policy)'
 service/elbv2:
-  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_a?lb(\b|_listener|_target_group)'
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_a?lb(\b|_listener|_target_group|s)'
 service/emr:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_emr_'
 service/emrcontainers:
@@ -449,6 +449,8 @@ service/nimble:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_nimble_'
 service/opensearch:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_opensearch_'
+service/opensearchserverless:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_opensearchserverless_'
 service/opsworks:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_opsworks_'
 service/opsworkscm:
@@ -473,6 +475,8 @@ service/pinpointemail:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_pinpointemail_'
 service/pinpointsmsvoice:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_pinpointsmsvoice_'
+service/pipes:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_pipes_'
 service/polly:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_polly_'
 service/pricing:
@@ -503,6 +507,8 @@ service/rekognition:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_rekognition_'
 service/resiliencehub:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_resiliencehub_'
+service/resourceexplorer2:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_resourceexplorer2_'
 service/resourcegroups:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_resourcegroups_'
 service/resourcegroupstaggingapi:

@@ -72,7 +72,7 @@ func ResourceVault() *schema.Resource {
 }
 
 func resourceVaultCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BackupConn
+	conn := meta.(*conns.AWSClient).BackupConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -98,7 +98,7 @@ func resourceVaultCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceVaultRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BackupConn
+	conn := meta.(*conns.AWSClient).BackupConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -140,7 +140,7 @@ func resourceVaultRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceVaultUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BackupConn
+	conn := meta.(*conns.AWSClient).BackupConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -153,7 +153,7 @@ func resourceVaultUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceVaultDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BackupConn
+	conn := meta.(*conns.AWSClient).BackupConn()
 
 	if d.Get("force_destroy").(bool) {
 		input := &backup.ListRecoveryPointsByBackupVaultInput{
@@ -176,12 +176,12 @@ func resourceVaultDelete(d *schema.ResourceData, meta interface{}) error {
 				})
 
 				if err != nil {
-					recoveryPointErrs = multierror.Append(recoveryPointErrs, fmt.Errorf("deleting Backup Vault (%s) recovery point (%s): %w", d.Id(), recoveryPointARN, err))
+					recoveryPointErrs = multierror.Append(recoveryPointErrs, fmt.Errorf("deleting recovery point (%s): %w", recoveryPointARN, err))
 					continue
 				}
 
 				if _, err := waitRecoveryPointDeleted(conn, d.Id(), recoveryPointARN, d.Timeout(schema.TimeoutDelete)); err != nil {
-					recoveryPointErrs = multierror.Append(recoveryPointErrs, fmt.Errorf("waiting for Backup Vault (%s) recovery point (%s) delete: %w", d.Id(), recoveryPointARN, err))
+					recoveryPointErrs = multierror.Append(recoveryPointErrs, fmt.Errorf("deleting recovery point (%s): waiting for completion: %w", recoveryPointARN, err))
 				}
 			}
 
@@ -193,7 +193,7 @@ func resourceVaultDelete(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if err := recoveryPointErrs.ErrorOrNil(); err != nil {
-			return err
+			return fmt.Errorf("deleting Backup Vault (%s): %w", d.Id(), err)
 		}
 	}
 

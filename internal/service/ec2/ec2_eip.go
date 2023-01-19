@@ -127,7 +127,7 @@ func ResourceEIP() *schema.Resource {
 }
 
 func resourceEIPCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -184,7 +184,7 @@ func resourceEIPCreate(d *schema.ResourceData, meta interface{}) error {
 			}, errCodeInvalidAllocationIDNotFound)
 
 		if err != nil {
-			return err
+			return fmt.Errorf("creating EC2 EIP (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -192,7 +192,7 @@ func resourceEIPCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceEIPRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -258,7 +258,7 @@ func resourceEIPRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceEIPUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	if d.HasChanges("associate_with_private_ip", "instance", "network_interface") {
 		o, n := d.GetChange("instance")
@@ -267,7 +267,7 @@ func resourceEIPUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		if oldInstanceID != "" || associationID != "" {
 			if err := disassociateEIP(conn, d.Id(), associationID); err != nil {
-				return err
+				return fmt.Errorf("updating EC2 EIP (%s): %w", d.Id(), err)
 			}
 		}
 
@@ -275,7 +275,7 @@ func resourceEIPUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		if newInstanceID != "" || newNetworkInterfaceID != "" {
 			if err := associateEIP(conn, d.Id(), newInstanceID, newNetworkInterfaceID, d.Get("associate_with_private_ip").(string)); err != nil {
-				return err
+				return fmt.Errorf("updating EC2 EIP (%s): %w", d.Id(), err)
 			}
 		}
 	}
@@ -296,12 +296,12 @@ func resourceEIPUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceEIPDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	// If we are attached to an instance or interface, detach first.
 	if associationID := d.Get("association_id").(string); associationID != "" || d.Get("instance").(string) != "" {
 		if err := disassociateEIP(conn, d.Id(), associationID); err != nil {
-			return err
+			return fmt.Errorf("deleting EC2 EIP (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -361,7 +361,7 @@ func associateEIP(conn *ec2.EC2, id, instanceID, networkInterfaceID, privateIPAd
 	output, err := conn.AssociateAddress(input)
 
 	if err != nil {
-		return fmt.Errorf("associating EC2 EIP (%s): %w", id, err)
+		return fmt.Errorf("associating: %w", err)
 	}
 
 	if associationID := aws.StringValue(output.AssociationId); associationID != "" {
@@ -384,11 +384,11 @@ func associateEIP(conn *ec2.EC2, id, instanceID, networkInterfaceID, privateIPAd
 		)
 
 		if err != nil {
-			return fmt.Errorf("waiting for EC2 EIP (%s) Association (%s) create: %w", id, associationID, err)
+			return fmt.Errorf("associating: waiting for completion: %w", err)
 		}
 	} else {
 		if err := waitForAddressAssociationClassic(conn, id, instanceID); err != nil {
-			return fmt.Errorf("waiting for EC2 EIP (%s) to associate with EC2-Classic Instance (%s): %w", id, instanceID, err)
+			return fmt.Errorf("associating: waiting for completion: %w", err)
 		}
 	}
 
@@ -415,7 +415,7 @@ func disassociateEIP(conn *ec2.EC2, id, associationID string) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("disassociating EC2 EIP (%s): %w", id, err)
+		return fmt.Errorf("disassociating: %w", err)
 	}
 
 	return nil

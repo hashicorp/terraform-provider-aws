@@ -61,7 +61,7 @@ func ResourcePermission() *schema.Resource {
 }
 
 func resourcePermissionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ACMPCAConn
+	conn := meta.(*conns.AWSClient).ACMPCAConn()
 
 	caARN := d.Get("certificate_authority_arn").(string)
 	principal := d.Get("principal").(string)
@@ -90,12 +90,12 @@ func resourcePermissionCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourcePermissionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ACMPCAConn
+	conn := meta.(*conns.AWSClient).ACMPCAConn()
 
 	caARN, principal, sourceAccount, err := PermissionParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading ACM PCA Permission (%s): %w", d.Id(), err)
 	}
 
 	permission, err := FindPermission(conn, caARN, principal, sourceAccount)
@@ -120,12 +120,12 @@ func resourcePermissionRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourcePermissionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ACMPCAConn
+	conn := meta.(*conns.AWSClient).ACMPCAConn()
 
 	caARN, principal, sourceAccount, err := PermissionParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting ACM PCA Permission: %s", err)
 	}
 
 	input := &acmpca.DeletePermissionInput{

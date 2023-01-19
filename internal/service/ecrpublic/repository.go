@@ -116,7 +116,7 @@ func ResourceRepository() *schema.Resource {
 }
 
 func resourceRepositoryCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECRPublicConn
+	conn := meta.(*conns.AWSClient).ECRPublicConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -153,7 +153,7 @@ func resourceRepositoryCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceRepositoryRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECRPublicConn
+	conn := meta.(*conns.AWSClient).ECRPublicConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -248,7 +248,7 @@ func resourceRepositoryRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceRepositoryDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECRPublicConn
+	conn := meta.(*conns.AWSClient).ECRPublicConn()
 
 	deleteInput := &ecrpublic.DeleteRepositoryInput{
 		RepositoryName: aws.String(d.Id()),
@@ -303,11 +303,11 @@ func resourceRepositoryDelete(d *schema.ResourceData, meta interface{}) error {
 
 func resourceRepositoryUpdate(d *schema.ResourceData, meta interface{}) error {
 	arn := d.Get("arn").(string)
-	conn := meta.(*conns.AWSClient).ECRPublicConn
+	conn := meta.(*conns.AWSClient).ECRPublicConn()
 
 	if d.HasChange("catalog_data") {
 		if err := resourceRepositoryUpdateCatalogData(conn, d); err != nil {
-			return err
+			return fmt.Errorf("updating ECR Public Repository (%s): %w", d.Id(), err)
 		}
 	}
 

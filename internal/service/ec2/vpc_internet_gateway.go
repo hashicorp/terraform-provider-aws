@@ -56,7 +56,7 @@ func ResourceInternetGateway() *schema.Resource {
 }
 
 func resourceInternetGatewayCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -68,14 +68,14 @@ func resourceInternetGatewayCreate(d *schema.ResourceData, meta interface{}) err
 	output, err := conn.CreateInternetGateway(input)
 
 	if err != nil {
-		return fmt.Errorf("error creating EC2 Internet Gateway: %w", err)
+		return fmt.Errorf("creating EC2 Internet Gateway: %w", err)
 	}
 
 	d.SetId(aws.StringValue(output.InternetGateway.InternetGatewayId))
 
 	if v, ok := d.GetOk("vpc_id"); ok {
 		if err := attachInternetGateway(conn, d.Id(), v.(string), d.Timeout(schema.TimeoutCreate)); err != nil {
-			return err
+			return fmt.Errorf("creating EC2 Internet Gateway: %w", err)
 		}
 	}
 
@@ -83,7 +83,7 @@ func resourceInternetGatewayCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceInternetGatewayRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -135,20 +135,20 @@ func resourceInternetGatewayRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceInternetGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	if d.HasChange("vpc_id") {
 		o, n := d.GetChange("vpc_id")
 
 		if v := o.(string); v != "" {
 			if err := detachInternetGateway(conn, d.Id(), v, d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return err
+				return fmt.Errorf("updating EC2 Internet Gateway (%s): %w", d.Id(), err)
 			}
 		}
 
 		if v := n.(string); v != "" {
 			if err := attachInternetGateway(conn, d.Id(), v, d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return err
+				return fmt.Errorf("updating EC2 Internet Gateway (%s): %w", d.Id(), err)
 			}
 		}
 	}
@@ -157,7 +157,7 @@ func resourceInternetGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating EC2 Internet Gateway (%s) tags: %w", d.Id(), err)
+			return fmt.Errorf("updating EC2 Internet Gateway (%s) tags: %w", d.Id(), err)
 		}
 	}
 
@@ -165,12 +165,12 @@ func resourceInternetGatewayUpdate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceInternetGatewayDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	// Detach if it is attached.
 	if v, ok := d.GetOk("vpc_id"); ok {
 		if err := detachInternetGateway(conn, d.Id(), v.(string), d.Timeout(schema.TimeoutDelete)); err != nil {
-			return err
+			return fmt.Errorf("deleting EC2 Internet Gateway (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -188,7 +188,7 @@ func resourceInternetGatewayDelete(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting EC2 Internet Gateway (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting EC2 Internet Gateway (%s): %w", d.Id(), err)
 	}
 
 	return nil

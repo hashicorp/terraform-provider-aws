@@ -40,7 +40,7 @@ func ResourceUserInGroup() *schema.Resource {
 }
 
 func resourceUserInGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
+	conn := meta.(*conns.AWSClient).CognitoIDPConn()
 
 	input := &cognitoidentityprovider.AdminAddUserToGroupInput{}
 
@@ -69,7 +69,7 @@ func resourceUserInGroupCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceUserInGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
+	conn := meta.(*conns.AWSClient).CognitoIDPConn()
 
 	groupName := d.Get("group_name").(string)
 	userPoolId := d.Get("user_pool_id").(string)
@@ -78,7 +78,7 @@ func resourceUserInGroupRead(d *schema.ResourceData, meta interface{}) error {
 	found, err := FindCognitoUserInGroup(conn, groupName, userPoolId, username)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading Cognito User Group Membership: %w", err)
 	}
 
 	if !found {
@@ -89,7 +89,7 @@ func resourceUserInGroupRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceUserInGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
+	conn := meta.(*conns.AWSClient).CognitoIDPConn()
 
 	groupName := d.Get("group_name").(string)
 	userPoolID := d.Get("user_pool_id").(string)

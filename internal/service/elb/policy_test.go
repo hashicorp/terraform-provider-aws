@@ -256,7 +256,7 @@ func testAccCheckPolicyExists(resourceName string, policyDescription *elb.Policy
 
 		loadBalancerName, policyName := tfelb.PolicyParseID(rs.Primary.ID)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn()
 
 		input := &elb.DescribeLoadBalancerPoliciesInput{
 			LoadBalancerName: aws.String(loadBalancerName),
@@ -280,7 +280,7 @@ func testAccCheckPolicyExists(resourceName string, policyDescription *elb.Policy
 }
 
 func testAccCheckPolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_load_balancer_policy" {
@@ -309,7 +309,7 @@ func testAccCheckPolicyDestroy(s *terraform.State) error {
 
 func testAccCheckPolicyDisappears(loadBalancer *elb.LoadBalancerDescription, policy *elb.PolicyDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn()
 
 		input := elb.DeleteLoadBalancerPolicyInput{
 			LoadBalancerName: loadBalancer.LoadBalancerName,
@@ -337,7 +337,7 @@ func testAccCheckPolicyState(elbResource string, policyResource string) resource
 			return fmt.Errorf("Not found: %s", policyResource)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn()
 		loadBalancerName, policyName := tfelb.PolicyParseID(policy.Primary.ID)
 		loadBalancerPolicies, err := conn.DescribeLoadBalancerPolicies(&elb.DescribeLoadBalancerPoliciesInput{
 			LoadBalancerName: aws.String(loadBalancerName),

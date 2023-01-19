@@ -74,7 +74,7 @@ func ResourceApplication() *schema.Resource {
 }
 
 func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
-	beanstalkConn := meta.(*conns.AWSClient).ElasticBeanstalkConn
+	beanstalkConn := meta.(*conns.AWSClient).ElasticBeanstalkConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -92,30 +92,30 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 
 	app, err := beanstalkConn.CreateApplication(req)
 	if err != nil {
-		return err
+		return fmt.Errorf("creating Elastic Beanstalk Application (%s): %w", name, err)
 	}
 
 	d.SetId(name)
 
-	if err = resourceApplicationAppversionLifecycleUpdate(beanstalkConn, d, app.Application); err != nil {
-		return err
+	if err = resourceApplicationAppVersionLifecycleUpdate(beanstalkConn, d, app.Application); err != nil {
+		return fmt.Errorf("creating Elastic Beanstalk Application (%s): %w", name, err)
 	}
 
 	return resourceApplicationRead(d, meta)
 }
 
 func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn
+	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn()
 
 	if d.HasChange("description") {
 		if err := resourceApplicationDescriptionUpdate(conn, d); err != nil {
-			return err
+			return fmt.Errorf("updating Elastic Beanstalk Application (%s): %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("appversion_lifecycle") {
-		if err := resourceApplicationAppversionLifecycleUpdate(conn, d, nil); err != nil {
-			return err
+		if err := resourceApplicationAppVersionLifecycleUpdate(conn, d, nil); err != nil {
+			return fmt.Errorf("updating Elastic Beanstalk Application (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -124,7 +124,7 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, arn, o, n); err != nil {
-			return fmt.Errorf("error updating Elastic Beanstalk Application (%s) tags: %s", arn, err)
+			return fmt.Errorf("updating Elastic Beanstalk Application (%s): updating tags: %w", d.Id(), err)
 		}
 	}
 
@@ -145,7 +145,7 @@ func resourceApplicationDescriptionUpdate(beanstalkConn *elasticbeanstalk.Elasti
 	return err
 }
 
-func resourceApplicationAppversionLifecycleUpdate(beanstalkConn *elasticbeanstalk.ElasticBeanstalk, d *schema.ResourceData, app *elasticbeanstalk.ApplicationDescription) error {
+func resourceApplicationAppVersionLifecycleUpdate(beanstalkConn *elasticbeanstalk.ElasticBeanstalk, d *schema.ResourceData, app *elasticbeanstalk.ApplicationDescription) error {
 	name := d.Get("name").(string)
 	appversion_lifecycles := d.Get("appversion_lifecycle").([]interface{})
 	var appversion_lifecycle map[string]interface{} = nil
@@ -160,8 +160,6 @@ func resourceApplicationAppversionLifecycleUpdate(beanstalkConn *elasticbeanstal
 		log.Printf("[DEBUG] Elastic Beanstalk application: %s, update appversion_lifecycle is anticipated no-op", name)
 		return nil
 	}
-
-	log.Printf("[DEBUG] Elastic Beanstalk application: %s, update appversion_lifecycle: %v", name, appversion_lifecycle)
 
 	rlc := &elasticbeanstalk.ApplicationResourceLifecycleConfig{
 		ServiceRole: nil,
@@ -213,12 +211,14 @@ func resourceApplicationAppversionLifecycleUpdate(beanstalkConn *elasticbeanstal
 		ApplicationName:         aws.String(name),
 		ResourceLifecycleConfig: rlc,
 	})
-
-	return err
+	if err != nil {
+		return fmt.Errorf("updating application resource lifecycle: %w", err)
+	}
+	return nil
 }
 
 func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn
+	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -248,7 +248,7 @@ func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
 			d.SetId("")
 			return nil
 		}
-		return err
+		return fmt.Errorf("reading Elastic Beanstalk Application (%s): %w", d.Id(), err)
 	}
 
 	arn := aws.StringValue(app.ApplicationArn)
@@ -281,18 +281,18 @@ func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceApplicationDelete(d *schema.ResourceData, meta interface{}) error {
-	beanstalkConn := meta.(*conns.AWSClient).ElasticBeanstalkConn
+	beanstalkConn := meta.(*conns.AWSClient).ElasticBeanstalkConn()
 
 	_, err := beanstalkConn.DeleteApplication(&elasticbeanstalk.DeleteApplicationInput{
 		ApplicationName: aws.String(d.Id()),
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting Elastic Beanstalk Application (%s): %w", d.Id(), err)
 	}
 
 	var app *elasticbeanstalk.ApplicationDescription
 	err = resource.Retry(10*time.Second, func() *resource.RetryError {
-		app, err = getApplication(d.Id(), meta.(*conns.AWSClient).ElasticBeanstalkConn)
+		app, err = getApplication(d.Id(), meta.(*conns.AWSClient).ElasticBeanstalkConn())
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
@@ -304,10 +304,10 @@ func resourceApplicationDelete(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		app, err = getApplication(d.Id(), meta.(*conns.AWSClient).ElasticBeanstalkConn)
+		app, err = getApplication(d.Id(), meta.(*conns.AWSClient).ElasticBeanstalkConn())
 	}
 	if err != nil {
-		return fmt.Errorf("Error deleting Beanstalk application: %s", err)
+		return fmt.Errorf("deleting Elastic Beanstalk Application (%s): %w", d.Id(), err)
 	}
 	return nil
 }

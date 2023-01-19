@@ -303,7 +303,7 @@ func ResourceBucketReplicationConfiguration() *schema.Resource {
 }
 
 func resourceBucketReplicationConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket := d.Get("bucket").(string)
 
@@ -346,7 +346,7 @@ func resourceBucketReplicationConfigurationCreate(d *schema.ResourceData, meta i
 }
 
 func resourceBucketReplicationConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	input := &s3.GetBucketReplicationInput{
 		Bucket: aws.String(d.Id()),
@@ -385,7 +385,7 @@ func resourceBucketReplicationConfigurationRead(d *schema.ResourceData, meta int
 }
 
 func resourceBucketReplicationConfigurationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	rc := &s3.ReplicationConfiguration{
 		Role:  aws.String(d.Get("role").(string)),
@@ -424,7 +424,7 @@ func resourceBucketReplicationConfigurationUpdate(d *schema.ResourceData, meta i
 }
 
 func resourceBucketReplicationConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	input := &s3.DeleteBucketReplicationInput{
 		Bucket: aws.String(d.Id()),

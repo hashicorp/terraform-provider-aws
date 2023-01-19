@@ -64,7 +64,7 @@ func ResourceCertificate() *schema.Resource {
 }
 
 func resourceCertificateCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DMSConn
+	conn := meta.(*conns.AWSClient).DMSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 	certificateID := d.Get("certificate_id").(string)
@@ -105,7 +105,7 @@ func resourceCertificateCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceCertificateRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DMSConn
+	conn := meta.(*conns.AWSClient).DMSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -125,7 +125,7 @@ func resourceCertificateRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading DMS Certificate (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading DMS Certificate (%s): %w", d.Id(), err)
 	}
 
 	if response == nil || len(response.Certificates) == 0 || response.Certificates[0] == nil {
@@ -137,10 +137,7 @@ func resourceCertificateRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
-	err = resourceCertificateSetState(d, response.Certificates[0])
-	if err != nil {
-		return err
-	}
+	resourceCertificateSetState(d, response.Certificates[0])
 
 	tags, err := ListTags(conn, d.Get("certificate_arn").(string))
 
@@ -163,7 +160,7 @@ func resourceCertificateRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceCertificateUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DMSConn
+	conn := meta.(*conns.AWSClient).DMSConn()
 
 	if d.HasChange("tags_all") {
 		arn := d.Get("certificate_arn").(string)
@@ -178,7 +175,7 @@ func resourceCertificateUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceCertificateDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DMSConn
+	conn := meta.(*conns.AWSClient).DMSConn()
 
 	request := &dms.DeleteCertificateInput{
 		CertificateArn: aws.String(d.Get("certificate_arn").(string)),
@@ -196,7 +193,7 @@ func resourceCertificateDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceCertificateSetState(d *schema.ResourceData, cert *dms.Certificate) error {
+func resourceCertificateSetState(d *schema.ResourceData, cert *dms.Certificate) {
 	d.SetId(aws.StringValue(cert.CertificateIdentifier))
 
 	d.Set("certificate_id", cert.CertificateIdentifier)
@@ -208,6 +205,4 @@ func resourceCertificateSetState(d *schema.ResourceData, cert *dms.Certificate) 
 	if cert.CertificateWallet != nil && len(cert.CertificateWallet) != 0 {
 		d.Set("certificate_wallet", verify.Base64Encode(cert.CertificateWallet))
 	}
-
-	return nil
 }

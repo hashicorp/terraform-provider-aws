@@ -141,7 +141,7 @@ func TestAccCloudFrontRealtimeLogConfig_updates(t *testing.T) {
 }
 
 func testAccCheckRealtimeLogConfigDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudfront_realtime_log_config" {
@@ -175,7 +175,7 @@ func testAccCheckRealtimeLogConfigExists(n string, v *cloudfront.RealtimeLogConf
 			return fmt.Errorf("No CloudFront Real-time Log Config ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn()
 
 		output, err := tfcloudfront.FindRealtimeLogConfigByARN(conn, rs.Primary.ID)
 

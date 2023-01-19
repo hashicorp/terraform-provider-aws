@@ -32,10 +32,11 @@ func ResourceModelPackageGroupPolicy() *schema.Resource {
 				ForceNew: true,
 			},
 			"resource_policy": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				Type:                  schema.TypeString,
+				Required:              true,
+				ValidateFunc:          validation.StringIsJSON,
+				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+				DiffSuppressOnRefresh: true,
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
@@ -46,10 +47,9 @@ func ResourceModelPackageGroupPolicy() *schema.Resource {
 }
 
 func resourceModelPackageGroupPolicyPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	policy, err := structure.NormalizeJsonString(d.Get("resource_policy").(string))
-
 	if err != nil {
 		return fmt.Errorf("policy (%s) is invalid JSON: %w", d.Get("resource_policy").(string), err)
 	}
@@ -71,7 +71,7 @@ func resourceModelPackageGroupPolicyPut(d *schema.ResourceData, meta interface{}
 }
 
 func resourceModelPackageGroupPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	mpg, err := FindModelPackageGroupPolicyByName(conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -87,9 +87,8 @@ func resourceModelPackageGroupPolicyRead(d *schema.ResourceData, meta interface{
 	d.Set("model_package_group_name", d.Id())
 
 	policyToSet, err := verify.PolicyToSet(d.Get("resource_policy").(string), aws.StringValue(mpg.ResourcePolicy))
-
 	if err != nil {
-		return err
+		return fmt.Errorf("reading SageMaker Model Package Group Policy (%s): %w", d.Id(), err)
 	}
 
 	d.Set("resource_policy", policyToSet)
@@ -98,7 +97,7 @@ func resourceModelPackageGroupPolicyRead(d *schema.ResourceData, meta interface{
 }
 
 func resourceModelPackageGroupPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	input := &sagemaker.DeleteModelPackageGroupPolicyInput{
 		ModelPackageGroupName: aws.String(d.Id()),

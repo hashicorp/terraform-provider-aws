@@ -79,7 +79,7 @@ func ResourceServiceLinkedRole() *schema.Resource {
 }
 
 func resourceServiceLinkedRoleCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -96,11 +96,10 @@ func resourceServiceLinkedRoleCreate(d *schema.ResourceData, meta interface{}) e
 		input.Description = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating IAM Service Linked Role: %s", input)
 	output, err := conn.CreateServiceLinkedRole(input)
 
 	if err != nil {
-		return fmt.Errorf("error creating IAM Service Linked Role (%s): %w", serviceName, err)
+		return fmt.Errorf("creating IAM Service Linked Role (%s): %w", serviceName, err)
 	}
 
 	d.SetId(aws.StringValue(output.Role.Arn))
@@ -109,7 +108,7 @@ func resourceServiceLinkedRoleCreate(d *schema.ResourceData, meta interface{}) e
 		_, roleName, _, err := DecodeServiceLinkedRoleID(d.Id())
 
 		if err != nil {
-			return err
+			return fmt.Errorf("creating IAM Service Linked Role (%s): %w", serviceName, err)
 		}
 
 		err = roleUpdateTags(conn, roleName, nil, tags)
@@ -121,7 +120,7 @@ func resourceServiceLinkedRoleCreate(d *schema.ResourceData, meta interface{}) e
 		}
 
 		if err != nil {
-			return fmt.Errorf("failed adding tags after create for IAM Service Linked Role (%s): %w", d.Id(), err)
+			return fmt.Errorf("creating IAM Service Linked Role (%s): adding tags: %w", serviceName, err)
 		}
 	}
 
@@ -129,14 +128,14 @@ func resourceServiceLinkedRoleCreate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceServiceLinkedRoleRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	serviceName, roleName, customSuffix, err := DecodeServiceLinkedRoleID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading IAM Service Linked Role (%s): %w", d.Id(), err)
 	}
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(propagationTimeout, func() (interface{}, error) {
@@ -150,7 +149,7 @@ func resourceServiceLinkedRoleRead(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading IAM Service Linked Role (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading IAM Service Linked Role (%s): %w", d.Id(), err)
 	}
 
 	role := outputRaw.(*iam.Role)
@@ -179,12 +178,12 @@ func resourceServiceLinkedRoleRead(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceServiceLinkedRoleUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	_, roleName, _, err := DecodeServiceLinkedRoleID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("updating IAM Service Linked Role (%s): %w", d.Id(), err)
 	}
 
 	if d.HasChangesExcept("tags_all", "tags") {
@@ -197,7 +196,7 @@ func resourceServiceLinkedRoleUpdate(d *schema.ResourceData, meta interface{}) e
 		_, err = conn.UpdateRole(input)
 
 		if err != nil {
-			return fmt.Errorf("error updating IAM Service Linked Role (%s): %w", d.Id(), err)
+			return fmt.Errorf("updating IAM Service Linked Role (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -213,7 +212,7 @@ func resourceServiceLinkedRoleUpdate(d *schema.ResourceData, meta interface{}) e
 		}
 
 		if err != nil {
-			return fmt.Errorf("failed updating tags for IAM Service Linked Role (%s): %w", d.Id(), err)
+			return fmt.Errorf("updating IAM Service Linked Role (%s): updating tags: %w", d.Id(), err)
 		}
 	}
 
@@ -221,12 +220,12 @@ func resourceServiceLinkedRoleUpdate(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceServiceLinkedRoleDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	_, roleName, _, err := DecodeServiceLinkedRoleID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting IAM Service Linked Role (%s): %w", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Deleting IAM Service Linked Role: (%s)", d.Id())
@@ -239,7 +238,7 @@ func resourceServiceLinkedRoleDelete(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting IAM Service Linked Role (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting IAM Service Linked Role (%s): %w", d.Id(), err)
 	}
 
 	deletionTaskID := aws.StringValue(output.DeletionTaskId)

@@ -13,7 +13,7 @@ import (
 
 func DataSourceConnector() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceConnectorRead,
+		ReadWithoutTimeout: dataSourceConnectorRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -37,7 +37,7 @@ func DataSourceConnector() *schema.Resource {
 }
 
 func dataSourceConnectorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KafkaConnectConn
+	conn := meta.(*conns.AWSClient).KafkaConnectConn()
 
 	name := d.Get("name")
 	var output []*kafkaconnect.ConnectorSummary

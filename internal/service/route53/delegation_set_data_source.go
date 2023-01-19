@@ -38,7 +38,7 @@ func DataSourceDelegationSet() *schema.Resource {
 }
 
 func dataSourceDelegationSetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53Conn
+	conn := meta.(*conns.AWSClient).Route53Conn()
 
 	dSetID := d.Get("id").(string)
 

@@ -60,7 +60,7 @@ func ResourceLifecyclePolicy() *schema.Resource {
 }
 
 func resourceLifecyclePolicyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECRConn
+	conn := meta.(*conns.AWSClient).ECRConn()
 
 	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
 
@@ -75,7 +75,7 @@ func resourceLifecyclePolicyCreate(d *schema.ResourceData, meta interface{}) err
 
 	resp, err := conn.PutLifecyclePolicy(input)
 	if err != nil {
-		return err
+		return fmt.Errorf("creating ECR Lifecycle Policy (%s): %w", d.Get("repository").(string), err)
 	}
 	d.SetId(aws.StringValue(resp.RepositoryName))
 	d.Set("registry_id", resp.RegistryId)
@@ -83,7 +83,7 @@ func resourceLifecyclePolicyCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceLifecyclePolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECRConn
+	conn := meta.(*conns.AWSClient).ECRConn()
 
 	input := &ecr.GetLifecyclePolicyInput{
 		RepositoryName: aws.String(d.Id()),
@@ -158,7 +158,7 @@ func resourceLifecyclePolicyRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceLifecyclePolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECRConn
+	conn := meta.(*conns.AWSClient).ECRConn()
 
 	input := &ecr.DeleteLifecyclePolicyInput{
 		RepositoryName: aws.String(d.Id()),
@@ -172,7 +172,7 @@ func resourceLifecyclePolicyDelete(d *schema.ResourceData, meta interface{}) err
 		if tfawserr.ErrCodeEquals(err, ecr.ErrCodeLifecyclePolicyNotFoundException) {
 			return nil
 		}
-		return err
+		return fmt.Errorf("deleting ECR Lifecycle Policy (%s): %w", d.Id(), err)
 	}
 
 	return nil

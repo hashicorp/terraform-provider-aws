@@ -76,7 +76,7 @@ func ResourceAPIKey() *schema.Resource {
 }
 
 func resourceAPIKeyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 	log.Printf("[DEBUG] Creating API Gateway API Key")
@@ -98,7 +98,7 @@ func resourceAPIKeyCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAPIKeyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -179,7 +179,7 @@ func resourceAPIKeyUpdateOperations(d *schema.ResourceData) []*apigateway.PatchO
 }
 
 func resourceAPIKeyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 
 	log.Printf("[DEBUG] Updating API Gateway API Key: %s", d.Id())
 
@@ -195,14 +195,14 @@ func resourceAPIKeyUpdate(d *schema.ResourceData, meta interface{}) error {
 		PatchOperations: resourceAPIKeyUpdateOperations(d),
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("updating API Gateway API Key (%s): %w", d.Id(), err)
 	}
 
 	return resourceAPIKeyRead(d, meta)
 }
 
 func resourceAPIKeyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 	log.Printf("[DEBUG] Deleting API Gateway API Key: %s", d.Id())
 
 	_, err := conn.DeleteApiKey(&apigateway.DeleteApiKeyInput{

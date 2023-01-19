@@ -284,7 +284,7 @@ func testAccOrganization_FeatureSetUpdate(t *testing.T) {
 }
 
 func testAccCheckOrganizationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_organizations_organization" {
@@ -322,7 +322,7 @@ func testAccCheckOrganizationExists(n string, org *organizations.Organization) r
 			return fmt.Errorf("Organization ID not set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn()
 		params := &organizations.DescribeOrganizationInput{}
 
 		resp, err := conn.DescribeOrganization(params)
@@ -376,6 +376,8 @@ resource "aws_organizations_organization" "test" {
 }
 
 func TestFlattenRoots(t *testing.T) {
+	t.Parallel()
+
 	roots := []*organizations.Root{
 		{
 			Name: aws.String("Root1"),

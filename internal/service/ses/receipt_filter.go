@@ -63,7 +63,7 @@ func ResourceReceiptFilter() *schema.Resource {
 }
 
 func resourceReceiptFilterCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	name := d.Get("name").(string)
 
@@ -88,13 +88,13 @@ func resourceReceiptFilterCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceReceiptFilterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	listOpts := &ses.ListReceiptFiltersInput{}
 
 	response, err := conn.ListReceiptFilters(listOpts)
 	if err != nil {
-		return err
+		return fmt.Errorf("reading SES Receipt Filter (%s): %s", d.Id(), err)
 	}
 
 	var filter *ses.ReceiptFilter
@@ -107,7 +107,7 @@ func resourceReceiptFilterRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if filter == nil {
-		log.Printf("[WARN] SES Receipt Filter (%s) not found", d.Id())
+		log.Printf("[WARN] SES Receipt Filter (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
@@ -129,7 +129,7 @@ func resourceReceiptFilterRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceReceiptFilterDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	deleteOpts := &ses.DeleteReceiptFilterInput{
 		FilterName: aws.String(d.Id()),

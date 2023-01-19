@@ -45,7 +45,7 @@ func ResourceDomain() *schema.Resource {
 				newVersion := d.Get("elasticsearch_version").(string)
 				domainName := d.Get("domain_name").(string)
 
-				conn := meta.(*conns.AWSClient).ElasticsearchConn
+				conn := meta.(*conns.AWSClient).ElasticsearchConn()
 				resp, err := conn.GetCompatibleElasticsearchVersions(&elasticsearch.GetCompatibleElasticsearchVersionsInput{
 					DomainName: aws.String(domainName),
 				})
@@ -85,11 +85,12 @@ func ResourceDomain() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"access_policies": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				Type:                  schema.TypeString,
+				Optional:              true,
+				Computed:              true,
+				ValidateFunc:          validation.StringIsJSON,
+				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+				DiffSuppressOnRefresh: true,
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
@@ -384,6 +385,7 @@ func ResourceDomain() *schema.Resource {
 						"iops": {
 							Type:     schema.TypeInt,
 							Optional: true,
+							Computed: true,
 						},
 						"throughput": {
 							Type:         schema.TypeInt,
@@ -528,7 +530,7 @@ func ResourceDomain() *schema.Resource {
 }
 
 func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticsearchConn
+	conn := meta.(*conns.AWSClient).ElasticsearchConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -707,7 +709,7 @@ func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticsearchConn
+	conn := meta.(*conns.AWSClient).ElasticsearchConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -721,7 +723,7 @@ func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Elasticsearch Domain (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading Elasticsearch Domain (%s): %w", d.Id(), err)
 	}
 
 	output, err := conn.DescribeElasticsearchDomainConfig(&elasticsearch.DescribeElasticsearchDomainConfigInput{
@@ -729,7 +731,7 @@ func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if err != nil {
-		return fmt.Errorf("error reading Elasticsearch Domain (%s) config: %w", d.Id(), err)
+		return fmt.Errorf("reading Elasticsearch Domain (%s) config: %w", d.Id(), err)
 	}
 
 	dc := output.DomainConfig
@@ -738,7 +740,7 @@ func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 		policies, err := verify.PolicyToSet(d.Get("access_policies").(string), v)
 
 		if err != nil {
-			return err
+			return fmt.Errorf("reading Elasticsearch Domain (%s) config: setting policy: %w", d.Id(), err)
 		}
 
 		d.Set("access_policies", policies)
@@ -852,7 +854,7 @@ func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDomainUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticsearchConn
+	conn := meta.(*conns.AWSClient).ElasticsearchConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		name := d.Get("domain_name").(string)
@@ -1001,7 +1003,7 @@ func resourceDomainUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDomainDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticsearchConn
+	conn := meta.(*conns.AWSClient).ElasticsearchConn()
 
 	name := d.Get("domain_name").(string)
 
@@ -1026,7 +1028,7 @@ func resourceDomainDelete(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDomainImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	conn := meta.(*conns.AWSClient).ElasticsearchConn
+	conn := meta.(*conns.AWSClient).ElasticsearchConn()
 
 	d.Set("domain_name", d.Id())
 

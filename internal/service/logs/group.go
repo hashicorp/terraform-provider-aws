@@ -17,7 +17,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func ResourceGroup() *schema.Resource {
+func init() {
+	_sp.registerSDKResourceFactory("aws_cloudwatch_log_group", resourceGroup)
+}
+
+func resourceGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGroupCreate,
 		ReadWithoutTimeout:   resourceGroupRead,
@@ -57,7 +61,7 @@ func ResourceGroup() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Default:      0,
-				ValidateFunc: validation.IntInSlice([]int{0, 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827, 3653}),
+				ValidateFunc: validation.IntInSlice([]int{0, 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827, 2192, 2557, 2922, 3288, 3653}),
 			},
 			"skip_destroy": {
 				Type:     schema.TypeBool,
@@ -73,7 +77,7 @@ func ResourceGroup() *schema.Resource {
 }
 
 func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LogsConn
+	conn := meta.(*conns.AWSClient).LogsConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -113,7 +117,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LogsConn
+	conn := meta.(*conns.AWSClient).LogsConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -135,7 +139,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(lg.LogGroupName)))
 	d.Set("retention_in_days", lg.RetentionInDays)
 
-	tags, err := ListTagsWithContext(ctx, conn, d.Id())
+	tags, err := ListLogGroupTagsWithContext(ctx, conn, d.Id())
 
 	if err != nil {
 		return diag.Errorf("listing tags for CloudWatch Logs Log Group (%s): %s", d.Id(), err)
@@ -156,7 +160,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 }
 
 func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LogsConn
+	conn := meta.(*conns.AWSClient).LogsConn()
 
 	if d.HasChange("retention_in_days") {
 		if v, ok := d.GetOk("retention_in_days"); ok {
@@ -203,7 +207,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTagsWithContext(ctx, conn, d.Id(), o, n); err != nil {
+		if err := UpdateLogGroupTagsWithContext(ctx, conn, d.Id(), o, n); err != nil {
 			return diag.Errorf("updating CloudWatch Logs Log Group (%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -217,7 +221,7 @@ func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta inter
 		return nil
 	}
 
-	conn := meta.(*conns.AWSClient).LogsConn
+	conn := meta.(*conns.AWSClient).LogsConn()
 
 	log.Printf("[INFO] Deleting CloudWatch Logs Log Group: %s", d.Id())
 	_, err := conn.DeleteLogGroupWithContext(ctx, &cloudwatchlogs.DeleteLogGroupInput{

@@ -18,18 +18,15 @@ import (
 )
 
 func TestAccInspector2Enabler_serial(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]func(t *testing.T){
 		"basic":      testAccEnabler_basic,
 		"accountID":  testAccEnabler_accountID,
 		"disappears": testAccEnabler_disappears,
 	}
 
-	for name, tc := range testCases {
-		tc := tc
-		t.Run(name, func(t *testing.T) {
-			tc(t)
-		})
-	}
+	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
 func testAccEnabler_basic(t *testing.T) {
@@ -130,7 +127,7 @@ func testAccCheckEnablerDestroy(s *terraform.State) error {
 		return create.Error(names.Inspector2, create.ErrActionCheckingDestroyed, tfinspector2.ResNameEnabler, id, errors.New("not in state"))
 	}
 
-	conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Client
+	conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Client()
 
 	st, err := tfinspector2.FindAccountStatuses(context.Background(), conn, id)
 	if err != nil {
@@ -148,7 +145,7 @@ func testAccCheckEnablerDestroy(s *terraform.State) error {
 
 func testAccCheckEnablerExists(t []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Client
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Inspector2Client()
 
 		id := tfinspector2.EnablerID([]string{acctest.Provider.Meta().(*conns.AWSClient).AccountID}, t)
 		st, err := tfinspector2.FindAccountStatuses(context.Background(), conn, id)

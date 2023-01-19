@@ -53,7 +53,7 @@ func ResourceNamedQuery() *schema.Resource {
 }
 
 func resourceNamedQueryCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AthenaConn
+	conn := meta.(*conns.AWSClient).AthenaConn()
 
 	input := &athena.CreateNamedQueryInput{
 		Database:    aws.String(d.Get("database").(string)),
@@ -69,14 +69,14 @@ func resourceNamedQueryCreate(d *schema.ResourceData, meta interface{}) error {
 
 	resp, err := conn.CreateNamedQuery(input)
 	if err != nil {
-		return err
+		return fmt.Errorf("creating Athena Named Query (%s): %w", d.Get("name").(string), err)
 	}
 	d.SetId(aws.StringValue(resp.NamedQueryId))
 	return resourceNamedQueryRead(d, meta)
 }
 
 func resourceNamedQueryRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AthenaConn
+	conn := meta.(*conns.AWSClient).AthenaConn()
 
 	input := &athena.GetNamedQueryInput{
 		NamedQueryId: aws.String(d.Id()),
@@ -89,7 +89,7 @@ func resourceNamedQueryRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("error getting Athena Named Query (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading Athena Named Query (%s): %w", d.Id(), err)
 	}
 
 	d.Set("name", resp.NamedQuery.Name)
@@ -101,12 +101,14 @@ func resourceNamedQueryRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceNamedQueryDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AthenaConn
+	conn := meta.(*conns.AWSClient).AthenaConn()
 
 	input := &athena.DeleteNamedQueryInput{
 		NamedQueryId: aws.String(d.Id()),
 	}
 
-	_, err := conn.DeleteNamedQuery(input)
-	return err
+	if _, err := conn.DeleteNamedQuery(input); err != nil {
+		return fmt.Errorf("deleting Athena Named Query (%s): %w", d.Id(), err)
+	}
+	return nil
 }

@@ -136,7 +136,7 @@ func ResourceLayerVersion() *schema.Resource {
 }
 
 func resourceLayerVersionPublish(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LambdaConn
+	conn := meta.(*conns.AWSClient).LambdaConn()
 
 	layerName := d.Get("layer_name").(string)
 	filename, hasFilename := d.GetOk("filename")
@@ -152,7 +152,7 @@ func resourceLayerVersionPublish(d *schema.ResourceData, meta interface{}) error
 	if hasFilename {
 		conns.GlobalMutexKV.Lock(mutexLayerKey)
 		defer conns.GlobalMutexKV.Unlock(mutexLayerKey)
-		file, err := loadFileContent(filename.(string))
+		file, err := readFileContents(filename.(string))
 		if err != nil {
 			return fmt.Errorf("Unable to load %q: %s", filename.(string), err)
 		}
@@ -198,7 +198,7 @@ func resourceLayerVersionPublish(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceLayerVersionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LambdaConn
+	conn := meta.(*conns.AWSClient).LambdaConn()
 
 	layerName, version, err := LayerVersionParseID(d.Id())
 	if err != nil {
@@ -270,7 +270,7 @@ func resourceLayerVersionDelete(d *schema.ResourceData, meta interface{}) error 
 		return nil
 	}
 
-	conn := meta.(*conns.AWSClient).LambdaConn
+	conn := meta.(*conns.AWSClient).LambdaConn()
 
 	version, err := strconv.ParseInt(d.Get("version").(string), 10, 64)
 	if err != nil {

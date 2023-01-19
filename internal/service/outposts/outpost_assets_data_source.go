@@ -55,7 +55,7 @@ func DataSourceOutpostAssets() *schema.Resource {
 }
 
 func DataSourceOutpostAssetsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OutpostsConn
+	conn := meta.(*conns.AWSClient).OutpostsConn()
 	outpost_id := aws.String(d.Get("arn").(string))
 
 	input := &outposts.ListAssetsInput{

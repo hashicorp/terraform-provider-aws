@@ -85,7 +85,7 @@ func TestAccMediaStoreContainer_tags(t *testing.T) {
 }
 
 func testAccCheckContainerDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).MediaStoreConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).MediaStoreConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_media_store_container" {
@@ -105,7 +105,7 @@ func testAccCheckContainerDestroy(s *terraform.State) error {
 		}
 
 		if *resp.Container.Status != mediastore.ContainerStatusDeleting {
-			return fmt.Errorf("Media Store Container (%s) not deleted", rs.Primary.ID)
+			return fmt.Errorf("MediaStore Container (%s) not deleted", rs.Primary.ID)
 		}
 	}
 	return nil
@@ -118,7 +118,7 @@ func testAccCheckContainerExists(name string) resource.TestCheckFunc {
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaStoreConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaStoreConn()
 
 		input := &mediastore.DescribeContainerInput{
 			ContainerName: aws.String(rs.Primary.ID),
@@ -131,7 +131,7 @@ func testAccCheckContainerExists(name string) resource.TestCheckFunc {
 }
 
 func testAccPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).MediaStoreConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).MediaStoreConn()
 
 	input := &mediastore.ListContainersInput{}
 

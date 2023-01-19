@@ -1,6 +1,7 @@
 package dax
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -54,7 +55,7 @@ func ResourceParameterGroup() *schema.Resource {
 }
 
 func resourceParameterGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DAXConn
+	conn := meta.(*conns.AWSClient).DAXConn()
 
 	input := &dax.CreateParameterGroupInput{
 		ParameterGroupName: aws.String(d.Get("name").(string)),
@@ -65,7 +66,7 @@ func resourceParameterGroupCreate(d *schema.ResourceData, meta interface{}) erro
 
 	_, err := conn.CreateParameterGroup(input)
 	if err != nil {
-		return err
+		return fmt.Errorf("creating DAX Parameter Group (%s): %w", d.Get("name").(string), err)
 	}
 
 	d.SetId(d.Get("name").(string))
@@ -77,7 +78,7 @@ func resourceParameterGroupCreate(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceParameterGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DAXConn
+	conn := meta.(*conns.AWSClient).DAXConn()
 
 	resp, err := conn.DescribeParameterGroups(&dax.DescribeParameterGroupsInput{
 		ParameterGroupNames: []*string{aws.String(d.Id())},
@@ -88,7 +89,7 @@ func resourceParameterGroupRead(d *schema.ResourceData, meta interface{}) error 
 			d.SetId("")
 			return nil
 		}
-		return err
+		return fmt.Errorf("reading DAX Parameter Group (%s): %w", d.Id(), err)
 	}
 
 	if len(resp.ParameterGroups) == 0 {
@@ -108,7 +109,7 @@ func resourceParameterGroupRead(d *schema.ResourceData, meta interface{}) error 
 			d.SetId("")
 			return nil
 		}
-		return err
+		return fmt.Errorf("reading DAX Parameter Group (%s): %w", d.Id(), err)
 	}
 
 	d.Set("name", pg.ParameterGroupName)
@@ -123,7 +124,7 @@ func resourceParameterGroupRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceParameterGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DAXConn
+	conn := meta.(*conns.AWSClient).DAXConn()
 
 	input := &dax.UpdateParameterGroupInput{
 		ParameterGroupName: aws.String(d.Id()),
@@ -137,14 +138,14 @@ func resourceParameterGroupUpdate(d *schema.ResourceData, meta interface{}) erro
 
 	_, err := conn.UpdateParameterGroup(input)
 	if err != nil {
-		return err
+		return fmt.Errorf("updating DAX Parameter Group (%s): %w", d.Id(), err)
 	}
 
 	return resourceParameterGroupRead(d, meta)
 }
 
 func resourceParameterGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DAXConn
+	conn := meta.(*conns.AWSClient).DAXConn()
 
 	input := &dax.DeleteParameterGroupInput{
 		ParameterGroupName: aws.String(d.Id()),
@@ -155,7 +156,7 @@ func resourceParameterGroupDelete(d *schema.ResourceData, meta interface{}) erro
 		if tfawserr.ErrCodeEquals(err, dax.ErrCodeParameterGroupNotFoundFault) {
 			return nil
 		}
-		return err
+		return fmt.Errorf("deleting DAX Parameter Group (%s): %w", d.Id(), err)
 	}
 
 	return nil

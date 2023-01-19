@@ -826,7 +826,7 @@ func ResourceDistribution() *schema.Resource {
 }
 
 func resourceDistributionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -878,7 +878,7 @@ func resourceDistributionCreate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceDistributionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -900,7 +900,7 @@ func resourceDistributionRead(d *schema.ResourceData, meta interface{}) error {
 	// Update attributes from DistributionConfig
 	err = flattenDistributionConfig(d, resp.Distribution.DistributionConfig)
 	if err != nil {
-		return err
+		return fmt.Errorf("reading CloudFront Distribution (%s): %w", d.Id(), err)
 	}
 
 	// Update other attributes outside of DistributionConfig
@@ -944,7 +944,7 @@ func resourceDistributionRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDistributionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 	params := &cloudfront.UpdateDistributionInput{
 		Id:                 aws.String(d.Id()),
 		DistributionConfig: expandDistributionConfig(d),
@@ -1018,7 +1018,7 @@ func resourceDistributionUpdate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceDistributionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 
 	if d.Get("retain_on_delete").(bool) {
 		// Check if we need to disable first
@@ -1203,7 +1203,7 @@ func DistributionWaitUntilDeployed(id string, meta interface{}) error {
 // The refresh function for resourceAwsCloudFrontWebDistributionWaitUntilDeployed.
 func resourceWebDistributionStateRefreshFunc(id string, meta interface{}) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		conn := meta.(*conns.AWSClient).CloudFrontConn
+		conn := meta.(*conns.AWSClient).CloudFrontConn()
 		params := &cloudfront.GetDistributionInput{
 			Id: aws.String(id),
 		}

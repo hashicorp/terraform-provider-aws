@@ -55,21 +55,21 @@ func ResourceOriginAccessIdentity() *schema.Resource {
 }
 
 func resourceOriginAccessIdentityCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 	params := &cloudfront.CreateCloudFrontOriginAccessIdentityInput{
 		CloudFrontOriginAccessIdentityConfig: expandOriginAccessIdentityConfig(d),
 	}
 
 	resp, err := conn.CreateCloudFrontOriginAccessIdentity(params)
 	if err != nil {
-		return err
+		return create.Error(names.CloudFront, create.ErrActionReading, ResNameOriginAccessIdentity, d.Id(), err)
 	}
 	d.SetId(aws.StringValue(resp.CloudFrontOriginAccessIdentity.Id))
 	return resourceOriginAccessIdentityRead(d, meta)
 }
 
 func resourceOriginAccessIdentityRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 	params := &cloudfront.GetCloudFrontOriginAccessIdentityInput{
 		Id: aws.String(d.Id()),
 	}
@@ -103,7 +103,7 @@ func resourceOriginAccessIdentityRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceOriginAccessIdentityUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 	params := &cloudfront.UpdateCloudFrontOriginAccessIdentityInput{
 		Id:                                   aws.String(d.Id()),
 		CloudFrontOriginAccessIdentityConfig: expandOriginAccessIdentityConfig(d),
@@ -111,22 +111,23 @@ func resourceOriginAccessIdentityUpdate(d *schema.ResourceData, meta interface{}
 	}
 	_, err := conn.UpdateCloudFrontOriginAccessIdentity(params)
 	if err != nil {
-		return err
+		return create.Error(names.CloudFront, create.ErrActionUpdating, ResNameOriginAccessIdentity, d.Id(), err)
 	}
 
 	return resourceOriginAccessIdentityRead(d, meta)
 }
 
 func resourceOriginAccessIdentityDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 	params := &cloudfront.DeleteCloudFrontOriginAccessIdentityInput{
 		Id:      aws.String(d.Id()),
 		IfMatch: aws.String(d.Get("etag").(string)),
 	}
 
-	_, err := conn.DeleteCloudFrontOriginAccessIdentity(params)
-
-	return err
+	if _, err := conn.DeleteCloudFrontOriginAccessIdentity(params); err != nil {
+		return create.Error(names.CloudFront, create.ErrActionDeleting, ResNameOriginAccessIdentity, d.Id(), err)
+	}
+	return nil
 }
 
 func expandOriginAccessIdentityConfig(d *schema.ResourceData) *cloudfront.OriginAccessIdentityConfig {
@@ -143,8 +144,6 @@ func expandOriginAccessIdentityConfig(d *schema.ResourceData) *cloudfront.Origin
 }
 
 func flattenOriginAccessIdentityConfig(d *schema.ResourceData, originAccessIdentityConfig *cloudfront.OriginAccessIdentityConfig) {
-	if originAccessIdentityConfig.Comment != nil {
-		d.Set("comment", originAccessIdentityConfig.Comment)
-	}
+	d.Set("comment", originAccessIdentityConfig.Comment)
 	d.Set("caller_reference", originAccessIdentityConfig.CallerReference)
 }

@@ -38,10 +38,11 @@ func ResourceBusPolicy() *schema.Resource {
 				Default:      DefaultEventBusName,
 			},
 			"policy": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				Type:                  schema.TypeString,
+				Required:              true,
+				ValidateFunc:          validation.StringIsJSON,
+				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+				DiffSuppressOnRefresh: true,
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
@@ -52,7 +53,7 @@ func ResourceBusPolicy() *schema.Resource {
 }
 
 func resourceBusPolicyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EventsConn
+	conn := meta.(*conns.AWSClient).EventsConn()
 
 	eventBusName := d.Get("event_bus_name").(string)
 
@@ -80,7 +81,7 @@ func resourceBusPolicyCreate(d *schema.ResourceData, meta interface{}) error {
 
 // See also: https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_DescribeEventBus.html
 func resourceBusPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EventsConn
+	conn := meta.(*conns.AWSClient).EventsConn()
 
 	eventBusName := d.Id()
 
@@ -119,7 +120,7 @@ func resourceBusPolicyRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("error reading policy from EventBridge Bus (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading policy from EventBridge Bus (%s): %w", d.Id(), err)
 	}
 
 	busName := aws.StringValue(output.Name)
@@ -129,9 +130,8 @@ func resourceBusPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("event_bus_name", busName)
 
 	policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.StringValue(policy))
-
 	if err != nil {
-		return err
+		return fmt.Errorf("reading policy from EventBridge Bus (%s): %w", d.Id(), err)
 	}
 
 	d.Set("policy", policyToSet)
@@ -151,7 +151,7 @@ func getEventBusPolicy(output *eventbridge.DescribeEventBusOutput) (*string, err
 }
 
 func resourceBusPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EventsConn
+	conn := meta.(*conns.AWSClient).EventsConn()
 
 	eventBusName := d.Id()
 
@@ -169,14 +169,14 @@ func resourceBusPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Update EventBridge Bus policy: %s", input)
 	_, err = conn.PutPermission(&input)
 	if err != nil {
-		return fmt.Errorf("error updating policy for EventBridge Bus (%s): %w", d.Id(), err)
+		return fmt.Errorf("updating policy for EventBridge Bus (%s): %w", d.Id(), err)
 	}
 
 	return resourceBusPolicyRead(d, meta)
 }
 
 func resourceBusPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EventsConn
+	conn := meta.(*conns.AWSClient).EventsConn()
 
 	eventBusName := d.Id()
 	removeAllPermissions := true
@@ -192,7 +192,7 @@ func resourceBusPolicyDelete(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("error deleting policy for EventBridge Bus (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting policy for EventBridge Bus (%s): %w", d.Id(), err)
 	}
 	return nil
 }

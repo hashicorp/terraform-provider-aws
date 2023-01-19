@@ -194,7 +194,7 @@ func ResourceStack() *schema.Resource {
 }
 
 func resourceStackCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OpsWorksConn
+	conn := meta.(*conns.AWSClient).OpsWorksConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -315,28 +315,29 @@ func resourceStackCreate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceStackRead(d *schema.ResourceData, meta interface{}) error {
 	var err error
-	conn := meta.(*conns.AWSClient).OpsWorksConn
+	conn := meta.(*conns.AWSClient).OpsWorksConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	if v, ok := d.GetOk("stack_endpoint"); ok {
+		log.Printf(`[DEBUG] overriding region using "stack_endpoint": %s`, v)
 		conn, err = regionalConn(meta.(*conns.AWSClient), v.(string))
-
 		if err != nil {
-			return err
+			return fmt.Errorf(`reading OpsWorks Stack (%s): creating client for "stack_endpoint" (%s): %w`, d.Id(), v, err)
 		}
 	}
 
 	stack, err := FindStackByID(conn, d.Id())
 
 	if tfresource.NotFound(err) {
-		// If it's not found in the the default region we're in, we check us-east-1
+		// If it's not found in the default region we're in, we check us-east-1
 		// in the event this stack was created with Terraform before version 0.9.
 		// See https://github.com/hashicorp/terraform/issues/12842.
-		conn, err = regionalConn(meta.(*conns.AWSClient), endpoints.UsEast1RegionID)
-
+		v := endpoints.UsEast1RegionID
+		log.Printf(`[DEBUG] overriding region using legacy region: %s`, v)
+		conn, err = regionalConn(meta.(*conns.AWSClient), v)
 		if err != nil {
-			return err
+			return fmt.Errorf(`reading OpsWorks Stack (%s): creating client for legacy region (%s): %w`, d.Id(), v, err)
 		}
 
 		stack, err = FindStackByID(conn, d.Id())
@@ -393,9 +394,7 @@ func resourceStackRead(d *schema.ResourceData, meta interface{}) error {
 	} else {
 		d.Set("custom_cookbooks_source", nil)
 	}
-	if stack.CustomJson != nil {
-		d.Set("custom_json", stack.CustomJson)
-	}
+	d.Set("custom_json", stack.CustomJson)
 	d.Set("default_availability_zone", stack.DefaultAvailabilityZone)
 	d.Set("default_instance_profile_arn", stack.DefaultInstanceProfileArn)
 	d.Set("default_os", stack.DefaultOs)
@@ -432,13 +431,12 @@ func resourceStackRead(d *schema.ResourceData, meta interface{}) error {
 
 func resourceStackUpdate(d *schema.ResourceData, meta interface{}) error {
 	var err error
-	conn := meta.(*conns.AWSClient).OpsWorksConn
+	conn := meta.(*conns.AWSClient).OpsWorksConn()
 
 	if v, ok := d.GetOk("stack_endpoint"); ok {
 		conn, err = regionalConn(meta.(*conns.AWSClient), v.(string))
-
 		if err != nil {
-			return err
+			return fmt.Errorf(`updating OpsWorks Stack (%s): creating client for "stack_endpoint" (%s): %w`, d.Id(), v, err)
 		}
 	}
 
@@ -548,13 +546,12 @@ func resourceStackUpdate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceStackDelete(d *schema.ResourceData, meta interface{}) error {
 	var err error
-	conn := meta.(*conns.AWSClient).OpsWorksConn
+	conn := meta.(*conns.AWSClient).OpsWorksConn()
 
 	if v, ok := d.GetOk("stack_endpoint"); ok {
 		conn, err = regionalConn(meta.(*conns.AWSClient), v.(string))
-
 		if err != nil {
-			return err
+			return fmt.Errorf(`deleting OpsWorks Stack (%s): creating client for "stack_endpoint" (%s): %w`, d.Id(), v, err)
 		}
 	}
 
@@ -695,7 +692,7 @@ func flattenSource(apiObject *opsworks.Source) map[string]interface{} {
 //   - https://github.com/hashicorp/terraform/pull/12688
 //   - https://github.com/hashicorp/terraform/issues/12842
 func regionalConn(client *conns.AWSClient, regionName string) (*opsworks.OpsWorks, error) {
-	conn := client.OpsWorksConn
+	conn := client.OpsWorksConn()
 
 	// Regions are the same, no need to reconfigure.
 	if aws.StringValue(conn.Config.Region) == regionName {

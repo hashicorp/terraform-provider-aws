@@ -378,7 +378,7 @@ func TestAccCloudWatchCompositeAlarm_updateAlarmRule(t *testing.T) {
 }
 
 func testAccCheckCompositeAlarmDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cloudwatch_composite_alarm" {
@@ -413,7 +413,7 @@ func testAccCheckCompositeAlarmExists(resourceName string) resource.TestCheckFun
 			return fmt.Errorf("resource %s has not set its id", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn()
 
 		alarm, err := tfcloudwatch.FindCompositeAlarmByName(context.Background(), conn, rs.Primary.ID)
 

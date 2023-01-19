@@ -36,13 +36,13 @@ func ResourceInviteAccepter() *schema.Resource {
 }
 
 func resourceInviteAccepterCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecurityHubConn
+	conn := meta.(*conns.AWSClient).SecurityHubConn()
 	log.Print("[DEBUG] Accepting Security Hub invitation")
 
 	invitationId, err := resourceInviteAccepterGetInvitationID(conn, d.Get("master_id").(string))
 
 	if err != nil {
-		return err
+		return fmt.Errorf("accepting Security Hub invitation: %w", err)
 	}
 
 	_, err = conn.AcceptInvitation(&securityhub.AcceptInvitationInput{
@@ -51,7 +51,7 @@ func resourceInviteAccepterCreate(d *schema.ResourceData, meta interface{}) erro
 	})
 
 	if err != nil {
-		return fmt.Errorf("error accepting Security Hub invitation: %w", err)
+		return fmt.Errorf("accepting Security Hub invitation: %w", err)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).AccountID)
@@ -65,7 +65,7 @@ func resourceInviteAccepterGetInvitationID(conn *securityhub.SecurityHub, master
 	resp, err := conn.ListInvitations(&securityhub.ListInvitationsInput{})
 
 	if err != nil {
-		return "", fmt.Errorf("error listing Security Hub invitations: %w", err)
+		return "", fmt.Errorf("listing Security Hub invitations: %w", err)
 	}
 
 	for _, invitation := range resp.Invitations {
@@ -79,7 +79,7 @@ func resourceInviteAccepterGetInvitationID(conn *securityhub.SecurityHub, master
 }
 
 func resourceInviteAccepterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecurityHubConn
+	conn := meta.(*conns.AWSClient).SecurityHubConn()
 	log.Print("[DEBUG] Reading Security Hub master account")
 
 	resp, err := conn.GetMasterAccount(&securityhub.GetMasterAccountInput{})
@@ -107,7 +107,7 @@ func resourceInviteAccepterRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceInviteAccepterDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecurityHubConn
+	conn := meta.(*conns.AWSClient).SecurityHubConn()
 	log.Print("[DEBUG] Disassociating from Security Hub master account")
 
 	_, err := conn.DisassociateFromMasterAccount(&securityhub.DisassociateFromMasterAccountInput{})

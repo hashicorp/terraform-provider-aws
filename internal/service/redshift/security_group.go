@@ -8,12 +8,14 @@ import (
 	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/redshift"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourceSecurityGroup() *schema.Resource {
@@ -83,7 +85,7 @@ func resourceSecurityGroupCreate(d *schema.ResourceData, meta interface{}) error
 func resourceSecurityGroupRead(d *schema.ResourceData, meta interface{}) error {
 	sg, err := resourceSecurityGroupRetrieve(d, meta)
 	if err != nil {
-		return err
+		return fmt.Errorf("reading Redshift Security Group (%s): %w", d.Id(), err)
 	}
 
 	rules := &schema.Set{
@@ -111,7 +113,7 @@ func resourceSecurityGroupRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceSecurityGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 
 	if d.HasChange("ingress") {
 		o, n := d.GetChange("ingress")
@@ -132,7 +134,7 @@ func resourceSecurityGroupUpdate(d *schema.ResourceData, meta interface{}) error
 
 				_, err := conn.RevokeClusterSecurityGroupIngress(&r)
 				if err != nil {
-					return err
+					return fmt.Errorf("updating Redshift Security Group (%s): revoking ingress: %w", d.Id(), err)
 				}
 			}
 		}
@@ -144,7 +146,7 @@ func resourceSecurityGroupUpdate(d *schema.ResourceData, meta interface{}) error
 
 				_, err := conn.AuthorizeClusterSecurityGroupIngress(&r)
 				if err != nil {
-					return err
+					return fmt.Errorf("updating Redshift Security Group (%s): authorizing ingress: %w", d.Id(), err)
 				}
 			}
 		}
@@ -153,47 +155,57 @@ func resourceSecurityGroupUpdate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceSecurityGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 
 	log.Printf("[DEBUG] Redshift Security Group destroy: %v", d.Id())
 	opts := redshift.DeleteClusterSecurityGroupInput{
 		ClusterSecurityGroupName: aws.String(d.Id()),
 	}
 
-	log.Printf("[DEBUG] Redshift Security Group destroy configuration: %v", opts)
 	_, err := conn.DeleteClusterSecurityGroup(&opts)
 
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, "InvalidRedshiftSecurityGroup.NotFound") {
+		newerr, ok := err.(awserr.Error)
+		if ok && newerr.Code() == "InvalidRedshiftSecurityGroup.NotFound" {
 			return nil
 		}
-		return err
+		return fmt.Errorf("deleting Redshift Security Group (%s): %w", d.Id(), err)
 	}
 
 	return nil
 }
 
 func resourceSecurityGroupRetrieve(d *schema.ResourceData, meta interface{}) (*redshift.ClusterSecurityGroup, error) {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 
 	opts := redshift.DescribeClusterSecurityGroupsInput{
 		ClusterSecurityGroupName: aws.String(d.Id()),
 	}
 
-	log.Printf("[DEBUG] Redshift Security Group describe configuration: %#v", opts)
-
 	resp, err := conn.DescribeClusterSecurityGroups(&opts)
-
 	if err != nil {
-		return nil, fmt.Errorf("Error retrieving Redshift Security Groups: %s", err)
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: opts,
+		}
 	}
 
-	if len(resp.ClusterSecurityGroups) != 1 ||
-		aws.StringValue(resp.ClusterSecurityGroups[0].ClusterSecurityGroupName) != d.Id() {
-		return nil, fmt.Errorf("Unable to find Redshift Security Group: %#v", resp.ClusterSecurityGroups)
+	if len(resp.ClusterSecurityGroups) == 0 || resp.ClusterSecurityGroups[0] == nil {
+		return nil, tfresource.NewEmptyResultError(opts)
 	}
 
-	return resp.ClusterSecurityGroups[0], nil
+	if l := len(resp.ClusterSecurityGroups); l > 1 {
+		return nil, tfresource.NewTooManyResultsError(l, opts)
+	}
+
+	result := resp.ClusterSecurityGroups[0]
+	if aws.StringValue(result.ClusterSecurityGroupName) != d.Id() {
+		return nil, &resource.NotFoundError{
+			LastRequest: opts,
+		}
+	}
+
+	return result, nil
 }
 
 func resourceSecurityGroupIngressHash(v interface{}) int {

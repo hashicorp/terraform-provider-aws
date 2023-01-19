@@ -60,7 +60,7 @@ func ResourceHostedPrivateVirtualInterfaceAccepter() *schema.Resource {
 }
 
 func resourceHostedPrivateVirtualInterfaceAccepterCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
 	vgwIdRaw, vgwOk := d.GetOk("vpn_gateway_id")
 	dxgwIdRaw, dxgwOk := d.GetOk("dx_gateway_id")
@@ -97,20 +97,20 @@ func resourceHostedPrivateVirtualInterfaceAccepterCreate(d *schema.ResourceData,
 	d.Set("arn", arn)
 
 	if err := hostedPrivateVirtualInterfaceAccepterWaitUntilAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return err
+		return err // nosemgrep:ci.bare-error-returns
 	}
 
 	return resourceHostedPrivateVirtualInterfaceAccepterUpdate(d, meta)
 }
 
 func resourceHostedPrivateVirtualInterfaceAccepterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	vif, err := virtualInterfaceRead(d.Id(), conn)
 	if err != nil {
-		return err
+		return err // nosemgrep:ci.bare-error-returns
 	}
 	if vif == nil {
 		log.Printf("[WARN] Direct Connect hosted private virtual interface (%s) not found, removing from state", d.Id())
@@ -152,7 +152,7 @@ func resourceHostedPrivateVirtualInterfaceAccepterRead(d *schema.ResourceData, m
 
 func resourceHostedPrivateVirtualInterfaceAccepterUpdate(d *schema.ResourceData, meta interface{}) error {
 	if err := virtualInterfaceUpdate(d, meta); err != nil {
-		return err
+		return err // nosemgrep:ci.bare-error-returns
 	}
 
 	return resourceHostedPrivateVirtualInterfaceAccepterRead(d, meta)
@@ -164,7 +164,7 @@ func resourceHostedPrivateVirtualInterfaceAccepterDelete(d *schema.ResourceData,
 }
 
 func resourceHostedPrivateVirtualInterfaceAccepterImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
 	vif, err := virtualInterfaceRead(d.Id(), conn)
 	if err != nil {

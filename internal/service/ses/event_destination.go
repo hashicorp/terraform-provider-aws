@@ -134,7 +134,7 @@ func ResourceEventDestination() *schema.Resource {
 }
 
 func resourceEventDestinationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	configurationSetName := d.Get("configuration_set_name").(string)
 	eventDestinationName := d.Get("name").(string)
@@ -190,7 +190,7 @@ func resourceEventDestinationCreate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceEventDestinationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	configurationSetName := d.Get("configuration_set_name").(string)
 	input := &ses.DescribeConfigurationSetInput{
@@ -250,7 +250,7 @@ func resourceEventDestinationRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceEventDestinationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	log.Printf("[DEBUG] SES Delete Configuration Set Destination: %s", d.Id())
 	_, err := conn.DeleteConfigurationSetEventDestination(&ses.DeleteConfigurationSetEventDestinationInput{
@@ -258,7 +258,10 @@ func resourceEventDestinationDelete(d *schema.ResourceData, meta interface{}) er
 		EventDestinationName: aws.String(d.Id()),
 	})
 
-	return err
+	if err != nil {
+		return fmt.Errorf("deleting SES Event Destination (%s): %w", d.Id(), err)
+	}
+	return nil
 }
 
 func resourceEventDestinationImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {

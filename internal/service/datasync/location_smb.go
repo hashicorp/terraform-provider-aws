@@ -106,7 +106,7 @@ func ResourceLocationSMB() *schema.Resource {
 }
 
 func resourceLocationSMBCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataSyncConn
+	conn := meta.(*conns.AWSClient).DataSyncConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -135,7 +135,7 @@ func resourceLocationSMBCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceLocationSMBRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataSyncConn
+	conn := meta.(*conns.AWSClient).DataSyncConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -164,13 +164,13 @@ func resourceLocationSMBRead(d *schema.ResourceData, meta interface{}) error {
 	tagsOutput, err := conn.ListTagsForResource(tagsInput)
 
 	if err != nil {
-		return fmt.Errorf("error reading DataSync Location SMB (%s) tags: %w", d.Id(), err)
+		return fmt.Errorf("reading DataSync Location SMB (%s) tags: %w", d.Id(), err)
 	}
 
 	subdirectory, err := SubdirectoryFromLocationURI(aws.StringValue(output.LocationUri))
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading DataSync Location SMB (%s) tags: %w", d.Id(), err)
 	}
 
 	d.Set("agent_arns", flex.FlattenStringSet(output.AgentArns))
@@ -204,7 +204,7 @@ func resourceLocationSMBRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceLocationSMBUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataSyncConn
+	conn := meta.(*conns.AWSClient).DataSyncConn()
 
 	if d.HasChangesExcept("tags_all", "tags") {
 		input := &datasync.UpdateLocationSmbInput{
@@ -237,7 +237,7 @@ func resourceLocationSMBUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceLocationSMBDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataSyncConn
+	conn := meta.(*conns.AWSClient).DataSyncConn()
 
 	input := &datasync.DeleteLocationInput{
 		LocationArn: aws.String(d.Id()),

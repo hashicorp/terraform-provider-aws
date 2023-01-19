@@ -93,7 +93,7 @@ func ResourceMountTarget() *schema.Resource {
 }
 
 func resourceMountTargetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EFSConn
+	conn := meta.(*conns.AWSClient).EFSConn()
 
 	fsId := d.Get("file_system_id").(string)
 	subnetId := d.Get("subnet_id").(string)
@@ -122,11 +122,9 @@ func resourceMountTargetCreate(d *schema.ResourceData, meta interface{}) error {
 		input.SecurityGroups = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	log.Printf("[DEBUG] Creating EFS mount target: %#v", input)
-
 	mt, err := conn.CreateMountTarget(&input)
 	if err != nil {
-		return err
+		return fmt.Errorf("creating EFS Mount Target (%s): %w", fsId, err)
 	}
 
 	d.SetId(aws.StringValue(mt.MountTargetId))
@@ -168,7 +166,7 @@ func resourceMountTargetCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceMountTargetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EFSConn
+	conn := meta.(*conns.AWSClient).EFSConn()
 
 	if d.HasChange("security_groups") {
 		input := efs.ModifyMountTargetSecurityGroupsInput{
@@ -177,7 +175,7 @@ func resourceMountTargetUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 		_, err := conn.ModifyMountTargetSecurityGroups(&input)
 		if err != nil {
-			return err
+			return fmt.Errorf("updating EFS Mount Target (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -185,7 +183,7 @@ func resourceMountTargetUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceMountTargetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EFSConn
+	conn := meta.(*conns.AWSClient).EFSConn()
 	resp, err := conn.DescribeMountTargets(&efs.DescribeMountTargetsInput{
 		MountTargetId: aws.String(d.Id()),
 	})
@@ -230,12 +228,12 @@ func resourceMountTargetRead(d *schema.ResourceData, meta interface{}) error {
 		MountTargetId: aws.String(d.Id()),
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("reading EFS Mount Target (%s): %w", d.Id(), err)
 	}
 
 	err = d.Set("security_groups", flex.FlattenStringSet(sgResp.SecurityGroups))
 	if err != nil {
-		return err
+		return fmt.Errorf("reading EFS Mount Target (%s): %w", d.Id(), err)
 	}
 
 	d.Set("dns_name", meta.(*conns.AWSClient).RegionalHostname(fmt.Sprintf("%s.efs", aws.StringValue(mt.FileSystemId))))
@@ -245,7 +243,7 @@ func resourceMountTargetRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func getAzFromSubnetId(subnetId string, meta interface{}) (string, error) {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	subnet, err := ec2.FindSubnetByID(conn, subnetId)
 	if err != nil {
 		return "", err
@@ -255,22 +253,19 @@ func getAzFromSubnetId(subnetId string, meta interface{}) (string, error) {
 }
 
 func resourceMountTargetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EFSConn
+	conn := meta.(*conns.AWSClient).EFSConn()
 
-	log.Printf("[DEBUG] Deleting EFS mount target %q", d.Id())
 	_, err := conn.DeleteMountTarget(&efs.DeleteMountTargetInput{
 		MountTargetId: aws.String(d.Id()),
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting EFS Mount Target (%s): %w", d.Id(), err)
 	}
 
 	err = WaitForDeleteMountTarget(conn, d.Id(), mountTargetDeleteTimeout)
 	if err != nil {
-		return fmt.Errorf("Error waiting for EFS mount target (%q) to delete: %s", d.Id(), err.Error())
+		return fmt.Errorf("deleting EFS Mount Target (%s): waiting for completion: %w", d.Id(), err)
 	}
-
-	log.Printf("[DEBUG] EFS mount target %q deleted.", d.Id())
 
 	return nil
 }

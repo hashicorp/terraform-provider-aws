@@ -60,7 +60,7 @@ func DataSourceIPAMPreviewNextCIDR() *schema.Resource {
 }
 
 func dataSourceIPAMPreviewNextCIDRRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	poolId := d.Get("ipam_pool_id").(string)
 
 	input := &ec2.AllocateIpamPoolCidrInput{

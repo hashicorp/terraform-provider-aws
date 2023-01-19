@@ -324,7 +324,7 @@ func ResourceNetworkInterface() *schema.Resource {
 }
 
 func resourceNetworkInterfaceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -471,7 +471,7 @@ func resourceNetworkInterfaceCreate(d *schema.ResourceData, meta interface{}) er
 		_, err := attachNetworkInterface(conn, d.Id(), attachment["instance"].(string), attachment["device_index"].(int), networkInterfaceAttachedTimeout)
 
 		if err != nil {
-			return err
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
 
@@ -479,7 +479,7 @@ func resourceNetworkInterfaceCreate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceNetworkInterfaceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -565,7 +565,7 @@ func resourceNetworkInterfaceRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	privateIPsNetChange := 0
 
 	if d.HasChange("attachment") {
@@ -577,7 +577,7 @@ func resourceNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{}) er
 			err := DetachNetworkInterface(conn, d.Id(), attachment["attachment_id"].(string), NetworkInterfaceDetachedTimeout)
 
 			if err != nil {
-				return err
+				return err // nosemgrep:ci.bare-error-returns
 			}
 		}
 
@@ -587,7 +587,7 @@ func resourceNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{}) er
 			_, err := attachNetworkInterface(conn, d.Id(), attachment["instance"].(string), attachment["device_index"].(int), networkInterfaceAttachedTimeout)
 
 			if err != nil {
-				return err
+				return err // nosemgrep:ci.bare-error-returns
 			}
 		}
 	}
@@ -1047,7 +1047,7 @@ func resourceNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceNetworkInterfaceDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	if v, ok := d.GetOk("attachment"); ok && v.(*schema.Set).Len() > 0 {
 		attachment := v.(*schema.Set).List()[0].(map[string]interface{})
@@ -1055,7 +1055,7 @@ func resourceNetworkInterfaceDelete(d *schema.ResourceData, meta interface{}) er
 		err := DetachNetworkInterface(conn, d.Id(), attachment["attachment_id"].(string), NetworkInterfaceDetachedTimeout)
 
 		if err != nil {
-			return err
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
 
@@ -1080,7 +1080,7 @@ func attachNetworkInterface(conn *ec2.EC2, networkInterfaceID, instanceID string
 	_, err = WaitNetworkInterfaceAttached(context.TODO(), conn, attachmentID, timeout)
 
 	if err != nil {
-		return attachmentID, fmt.Errorf("waiting for EC2 Network Interface (%s/%s) attach: %w", networkInterfaceID, attachmentID, err)
+		return "", fmt.Errorf("attaching EC2 Network Interface (%s/%s): waiting for completion: %w", networkInterfaceID, instanceID, err)
 	}
 
 	return attachmentID, nil
@@ -1133,7 +1133,7 @@ func DetachNetworkInterfaceWithContext(ctx context.Context, conn *ec2.EC2, netwo
 	}
 
 	if err != nil {
-		return fmt.Errorf("waiting for EC2 Network Interface (%s/%s) detach: %w", networkInterfaceID, attachmentID, err)
+		return fmt.Errorf("detaching EC2 Network Interface (%s/%s): waiting for completion: %w", networkInterfaceID, attachmentID, err)
 	}
 
 	return nil

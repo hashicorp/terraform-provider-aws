@@ -192,8 +192,8 @@ func DataSourceLaunchConfiguration() *schema.Resource {
 }
 
 func dataSourceLaunchConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	autoscalingconn := meta.(*conns.AWSClient).AutoScalingConn
-	ec2conn := meta.(*conns.AWSClient).EC2Conn
+	autoscalingconn := meta.(*conns.AWSClient).AutoScalingConn()
+	ec2conn := meta.(*conns.AWSClient).EC2Conn()
 
 	name := d.Get("name").(string)
 	lc, err := FindLaunchConfigurationByName(autoscalingconn, name)
@@ -234,7 +234,7 @@ func dataSourceLaunchConfigurationRead(d *schema.ResourceData, meta interface{})
 	rootDeviceName, err := findImageRootDeviceName(ec2conn, d.Get("image_id").(string))
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading Auto Scaling Launch Configuration (%s): %w", name, err)
 	}
 
 	tfListEBSBlockDevice, tfListEphemeralBlockDevice, tfListRootBlockDevice := flattenBlockDeviceMappings(lc.BlockDeviceMappings, rootDeviceName, map[string]map[string]interface{}{})

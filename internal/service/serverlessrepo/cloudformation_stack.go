@@ -91,7 +91,7 @@ func ResourceCloudFormationStack() *schema.Resource {
 }
 
 func resourceCloudFormationStackCreate(d *schema.ResourceData, meta interface{}) error {
-	cfConn := meta.(*conns.AWSClient).CloudFormationConn
+	cfConn := meta.(*conns.AWSClient).CloudFormationConn()
 
 	changeSet, err := createCloudFormationChangeSet(d, meta.(*conns.AWSClient))
 	if err != nil {
@@ -124,8 +124,8 @@ func resourceCloudFormationStackCreate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceCloudFormationStackRead(d *schema.ResourceData, meta interface{}) error {
-	serverlessConn := meta.(*conns.AWSClient).ServerlessRepoConn
-	cfConn := meta.(*conns.AWSClient).CloudFormationConn
+	serverlessConn := meta.(*conns.AWSClient).ServerlessRepoConn()
+	cfConn := meta.(*conns.AWSClient).CloudFormationConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -219,7 +219,7 @@ func flattenParameterDefinitions(parameterDefinitions []*serverlessrepo.Paramete
 }
 
 func resourceCloudFormationStackUpdate(d *schema.ResourceData, meta interface{}) error {
-	cfConn := meta.(*conns.AWSClient).CloudFormationConn
+	cfConn := meta.(*conns.AWSClient).CloudFormationConn()
 
 	changeSet, err := createCloudFormationChangeSet(d, meta.(*conns.AWSClient))
 	if err != nil {
@@ -250,28 +250,25 @@ func resourceCloudFormationStackUpdate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceCloudFormationStackDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFormationConn
+	conn := meta.(*conns.AWSClient).CloudFormationConn()
 
 	requestToken := resource.UniqueId()
 	input := &cloudformation.DeleteStackInput{
 		StackName:          aws.String(d.Id()),
 		ClientRequestToken: aws.String(requestToken),
 	}
-	log.Printf("[DEBUG] Deleting Serverless Application Repository CloudFormation stack %s", input)
 	_, err := conn.DeleteStack(input)
 	if tfawserr.ErrCodeEquals(err, "ValidationError") {
 		return nil
 	}
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting Serverless Application Repository CloudFormation Stack (%s): %w", d.Id(), err)
 	}
 
 	_, err = tfcloudformation.WaitStackDeleted(conn, d.Id(), requestToken, d.Timeout(schema.TimeoutDelete))
 	if err != nil {
-		return fmt.Errorf("error waiting for Serverless Application Repository CloudFormation Stack deletion: %w", err)
+		return fmt.Errorf("deleting Serverless Application Repository CloudFormation Stack (%s): waiting for completion: %w", d.Id(), err)
 	}
-
-	log.Printf("[INFO] Serverless Application Repository CloudFormation stack (%s) deleted", d.Id())
 
 	return nil
 }
@@ -286,7 +283,7 @@ func resourceCloudFormationStackImport(d *schema.ResourceData, meta interface{})
 		}
 	}
 
-	cfConn := meta.(*conns.AWSClient).CloudFormationConn
+	cfConn := meta.(*conns.AWSClient).CloudFormationConn()
 	stack, err := tfcloudformation.FindStackByID(cfConn, stackID)
 	if err != nil {
 		return nil, fmt.Errorf("error describing Serverless Application Repository CloudFormation Stack (%s): %w", stackID, err)
@@ -298,8 +295,8 @@ func resourceCloudFormationStackImport(d *schema.ResourceData, meta interface{})
 }
 
 func createCloudFormationChangeSet(d *schema.ResourceData, client *conns.AWSClient) (*cloudformation.DescribeChangeSetOutput, error) {
-	serverlessConn := client.ServerlessRepoConn
-	cfConn := client.CloudFormationConn
+	serverlessConn := client.ServerlessRepoConn()
+	cfConn := client.CloudFormationConn()
 	defaultTagsConfig := client.DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 

@@ -53,7 +53,7 @@ func ResourceHostedTransitVirtualInterfaceAccepter() *schema.Resource {
 }
 
 func resourceHostedTransitVirtualInterfaceAccepterCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
 	vifId := d.Get("virtual_interface_id").(string)
 	req := &directconnect.ConfirmTransitVirtualInterfaceInput{
@@ -78,20 +78,20 @@ func resourceHostedTransitVirtualInterfaceAccepterCreate(d *schema.ResourceData,
 	d.Set("arn", arn)
 
 	if err := hostedTransitVirtualInterfaceAccepterWaitUntilAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return err
+		return err // nosemgrep:ci.bare-error-returns
 	}
 
 	return resourceHostedTransitVirtualInterfaceAccepterUpdate(d, meta)
 }
 
 func resourceHostedTransitVirtualInterfaceAccepterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	vif, err := virtualInterfaceRead(d.Id(), conn)
 	if err != nil {
-		return err
+		return err // nosemgrep:ci.bare-error-returns
 	}
 	if vif == nil {
 		log.Printf("[WARN] Direct Connect transit virtual interface (%s) not found, removing from state", d.Id())
@@ -131,7 +131,7 @@ func resourceHostedTransitVirtualInterfaceAccepterRead(d *schema.ResourceData, m
 
 func resourceHostedTransitVirtualInterfaceAccepterUpdate(d *schema.ResourceData, meta interface{}) error {
 	if err := virtualInterfaceUpdate(d, meta); err != nil {
-		return err
+		return err // nosemgrep:ci.bare-error-returns
 	}
 
 	return resourceHostedTransitVirtualInterfaceAccepterRead(d, meta)
@@ -143,7 +143,7 @@ func resourceHostedTransitVirtualInterfaceAccepterDelete(d *schema.ResourceData,
 }
 
 func resourceHostedTransitVirtualInterfaceAccepterImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
 	vif, err := virtualInterfaceRead(d.Id(), conn)
 	if err != nil {

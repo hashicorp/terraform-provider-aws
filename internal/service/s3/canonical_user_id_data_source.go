@@ -24,14 +24,14 @@ func DataSourceCanonicalUserID() *schema.Resource {
 }
 
 func dataSourceCanonicalUserIDRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	log.Printf("[DEBUG] Reading S3 Buckets")
 
 	req := &s3.ListBucketsInput{}
 	resp, err := conn.ListBuckets(req)
 	if err != nil {
-		return err
+		return fmt.Errorf("listing S3 Buckets: %w", err)
 	}
 	if resp == nil || resp.Owner == nil {
 		return fmt.Errorf("no canonical user ID found")

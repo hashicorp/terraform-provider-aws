@@ -1,6 +1,7 @@
 package opsworks
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -61,7 +62,7 @@ func resourcePermissionDelete(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourcePermissionRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*conns.AWSClient).OpsWorksConn
+	client := meta.(*conns.AWSClient).OpsWorksConn()
 
 	req := &opsworks.DescribePermissionsInput{
 		IamUserArn: aws.String(d.Get("user_arn").(string)),
@@ -77,7 +78,7 @@ func resourcePermissionRead(d *schema.ResourceData, meta interface{}) error {
 			d.SetId("")
 			return nil
 		}
-		return err
+		return fmt.Errorf("reading OpsWorks Permissions (%s): %w", d.Id(), err)
 	}
 
 	found := false
@@ -105,7 +106,7 @@ func resourcePermissionRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceSetPermission(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*conns.AWSClient).OpsWorksConn
+	client := meta.(*conns.AWSClient).OpsWorksConn()
 
 	req := &opsworks.SetPermissionInput{
 		AllowSudo:  aws.Bool(d.Get("allow_sudo").(bool)),
@@ -134,7 +135,7 @@ func resourceSetPermission(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return err
+		return fmt.Errorf("setting OpsWorks Permissions (%s): %w", d.Id(), err)
 	}
 
 	return resourcePermissionRead(d, meta)

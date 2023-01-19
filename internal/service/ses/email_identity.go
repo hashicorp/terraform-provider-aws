@@ -39,7 +39,7 @@ func ResourceEmailIdentity() *schema.Resource {
 }
 
 func resourceEmailIdentityCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	email := d.Get("email").(string)
 	email = strings.TrimSuffix(email, ".")
@@ -59,7 +59,7 @@ func resourceEmailIdentityCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceEmailIdentityRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	email := d.Id()
 	d.Set("email", email)
@@ -72,13 +72,12 @@ func resourceEmailIdentityRead(d *schema.ResourceData, meta interface{}) error {
 
 	response, err := conn.GetIdentityVerificationAttributes(readOpts)
 	if err != nil {
-		log.Printf("[WARN] Error fetching identity verification attributes for %s: %s", d.Id(), err)
-		return err
+		return fmt.Errorf("reading SES Identity Verification Attributes (%s): %w", d.Id(), err)
 	}
 
 	_, ok := response.VerificationAttributes[email]
 	if !ok {
-		log.Printf("[WARN] Email not listed in response when fetching verification attributes for %s", d.Id())
+		log.Printf("[WARN] SES Identity Verification Attributes (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
@@ -95,7 +94,7 @@ func resourceEmailIdentityRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceEmailIdentityDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	email := d.Get("email").(string)
 

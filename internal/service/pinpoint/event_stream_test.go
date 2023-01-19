@@ -88,7 +88,7 @@ func testAccCheckEventStreamExists(n string, stream *pinpoint.EventStream) resou
 			return fmt.Errorf("No Pinpoint event stream with that ID exists")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn()
 
 		// Check if the app exists
 		params := &pinpoint.GetEventStreamInput{
@@ -165,7 +165,7 @@ EOF
 }
 
 func testAccCheckEventStreamDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_pinpoint_event_stream" {

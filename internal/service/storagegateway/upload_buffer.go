@@ -48,7 +48,7 @@ func ResourceUploadBuffer() *schema.Resource {
 }
 
 func resourceUploadBufferCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).StorageGatewayConn
+	conn := meta.(*conns.AWSClient).StorageGatewayConn()
 
 	input := &storagegateway.AddUploadBufferInput{}
 
@@ -97,11 +97,11 @@ func resourceUploadBufferCreate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceUploadBufferRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).StorageGatewayConn
+	conn := meta.(*conns.AWSClient).StorageGatewayConn()
 
 	gatewayARN, diskID, err := DecodeUploadBufferID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("reading Storage Gateway Upload Buffer (%s): %w", d.Id(), err)
 	}
 
 	foundDiskID, err := FindUploadBufferDisk(conn, gatewayARN, diskID)

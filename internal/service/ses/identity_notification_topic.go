@@ -57,7 +57,7 @@ func ResourceIdentityNotificationTopic() *schema.Resource {
 }
 
 func resourceNotificationTopicSet(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 	notification := d.Get("notification_type").(string)
 	identity := d.Get("identity").(string)
 	includeOriginalHeaders := d.Get("include_original_headers").(bool)
@@ -95,11 +95,11 @@ func resourceNotificationTopicSet(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceIdentityNotificationTopicRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	identity, notificationType, err := decodeIdentityNotificationTopicID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("reading SES Identity Notification Topic (%s): %w", d.Id(), err)
 	}
 
 	d.Set("identity", identity)
@@ -109,12 +109,10 @@ func resourceIdentityNotificationTopicRead(d *schema.ResourceData, meta interfac
 		Identities: []*string{aws.String(identity)},
 	}
 
-	log.Printf("[DEBUG] Reading SES Identity Notification Topic Attributes: %#v", getOpts)
-
 	response, err := conn.GetIdentityNotificationAttributes(getOpts)
 
 	if err != nil {
-		return fmt.Errorf("Error reading SES Identity Notification Topic: %s", err)
+		return fmt.Errorf("reading SES Identity Notification Topic (%s): %w", d.Id(), err)
 	}
 
 	d.Set("topic_arn", "")
@@ -143,11 +141,11 @@ func resourceIdentityNotificationTopicRead(d *schema.ResourceData, meta interfac
 }
 
 func resourceIdentityNotificationTopicDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	identity, notificationType, err := decodeIdentityNotificationTopicID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting SES Identity Notification Topic (%s): %s", d.Id(), err)
 	}
 
 	setOpts := &ses.SetIdentityNotificationTopicInput{
@@ -156,10 +154,8 @@ func resourceIdentityNotificationTopicDelete(d *schema.ResourceData, meta interf
 		SnsTopic:         nil,
 	}
 
-	log.Printf("[DEBUG] Deleting SES Identity Notification Topic: %#v", setOpts)
-
 	if _, err := conn.SetIdentityNotificationTopic(setOpts); err != nil {
-		return fmt.Errorf("Error deleting SES Identity Notification Topic: %s", err)
+		return fmt.Errorf("deleting SES Identity Notification Topic (%s): %s", d.Id(), err)
 	}
 
 	return resourceIdentityNotificationTopicRead(d, meta)

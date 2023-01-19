@@ -82,7 +82,7 @@ func ResourceLag() *schema.Resource {
 }
 
 func resourceLagCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -124,7 +124,7 @@ func resourceLagCreate(d *schema.ResourceData, meta interface{}) error {
 		err = deleteConnection(conn, aws.StringValue(output.Connections[0].ConnectionId), waitConnectionDeleted)
 
 		if err != nil {
-			return err
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
 
@@ -132,7 +132,7 @@ func resourceLagCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceLagRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -185,7 +185,7 @@ func resourceLagRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceLagUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
 	if d.HasChange("name") {
 		input := &directconnect.UpdateLagInput{
@@ -214,7 +214,7 @@ func resourceLagUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceLagDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
 	if d.Get("force_destroy").(bool) {
 		lag, err := FindLagByID(conn, d.Id())
@@ -227,12 +227,12 @@ func resourceLagDelete(d *schema.ResourceData, meta interface{}) error {
 			err = deleteConnection(conn, aws.StringValue(connection.ConnectionId), waitConnectionDeleted)
 
 			if err != nil {
-				return err
+				return err // nosemgrep:ci.bare-error-returns
 			}
 		}
 	} else if v, ok := d.GetOk("connection_id"); ok {
 		if err := deleteConnectionLAGAssociation(conn, v.(string), d.Id()); err != nil {
-			return err
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
 

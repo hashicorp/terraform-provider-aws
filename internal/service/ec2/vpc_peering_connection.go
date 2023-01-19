@@ -105,7 +105,7 @@ var vpcPeeringConnectionOptionsSchema = &schema.Schema{
 }
 
 func resourceVPCPeeringConnectionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -150,19 +150,19 @@ func resourceVPCPeeringConnectionCreate(d *schema.ResourceData, meta interface{}
 		vpcPeeringConnection, err = acceptVPCPeeringConnection(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 
 		if err != nil {
-			return err
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
 
 	if err := modifyVPCPeeringConnectionOptions(conn, d, vpcPeeringConnection, true); err != nil {
-		return err
+		return err // nosemgrep:ci.bare-error-returns
 	}
 
 	return resourceVPCPeeringConnectionRead(d, meta)
 }
 
 func resourceVPCPeeringConnectionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -224,7 +224,7 @@ func resourceVPCPeeringConnectionRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceVPCPeeringConnectionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	vpcPeeringConnection, err := FindVPCPeeringConnectionByID(conn, d.Id())
 
@@ -236,13 +236,13 @@ func resourceVPCPeeringConnectionUpdate(d *schema.ResourceData, meta interface{}
 		vpcPeeringConnection, err = acceptVPCPeeringConnection(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 
 		if err != nil {
-			return err
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
 
 	if d.HasChanges("accepter", "requester") {
 		if err := modifyVPCPeeringConnectionOptions(conn, d, vpcPeeringConnection, true); err != nil {
-			return err
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
 
@@ -258,7 +258,7 @@ func resourceVPCPeeringConnectionUpdate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceVPCPeeringConnectionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	log.Printf("[INFO] Deleting EC2 VPC Peering Connection: %s", d.Id())
 	_, err := conn.DeleteVpcPeeringConnection(&ec2.DeleteVpcPeeringConnectionInput{
@@ -292,14 +292,14 @@ func acceptVPCPeeringConnection(conn *ec2.EC2, vpcPeeringConnectionID string, ti
 	})
 
 	if err != nil {
-		return nil, fmt.Errorf("error accepting EC2 VPC Peering Connection (%s): %w", vpcPeeringConnectionID, err)
+		return nil, fmt.Errorf("accepting EC2 VPC Peering Connection (%s): %w", vpcPeeringConnectionID, err)
 	}
 
 	// "OperationNotPermitted: Peering pcx-0000000000000000 is not active. Peering options can be added only to active peerings."
 	vpcPeeringConnection, err := WaitVPCPeeringConnectionActive(conn, vpcPeeringConnectionID, timeout)
 
 	if err != nil {
-		return nil, fmt.Errorf("error waiting for EC2 VPC Peering Connection (%s) update: %w", vpcPeeringConnectionID, err)
+		return nil, fmt.Errorf("accepting EC2 VPC Peering Connection (%s): waiting for completion: %w", vpcPeeringConnectionID, err)
 	}
 
 	return vpcPeeringConnection, nil
@@ -344,7 +344,7 @@ func modifyVPCPeeringConnectionOptions(conn *ec2.EC2, d *schema.ResourceData, vp
 
 	log.Printf("[DEBUG] Modifying VPC Peering Connection Options: %s", input)
 	if _, err := conn.ModifyVpcPeeringConnectionOptions(input); err != nil {
-		return fmt.Errorf("error modifying EC2 VPC Peering Connection (%s) Options: %w", d.Id(), err)
+		return fmt.Errorf("modifying EC2 VPC Peering Connection (%s) Options: %w", d.Id(), err)
 	}
 
 	// Retry reading back the modified options to deal with eventual consistency.
@@ -372,7 +372,7 @@ func modifyVPCPeeringConnectionOptions(conn *ec2.EC2, d *schema.ResourceData, vp
 	})
 
 	if err != nil {
-		return fmt.Errorf("error waiting for EC2 VPC Peering Connection (%s) Options update: %w", d.Id(), err)
+		return fmt.Errorf("modifying EC2 VPC Peering Connection (%s) Options: waiting for completion: %w", d.Id(), err)
 	}
 
 	return nil

@@ -43,13 +43,13 @@ func ResourceInternetGatewayAttachment() *schema.Resource {
 }
 
 func resourceInternetGatewayAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	igwID := d.Get("internet_gateway_id").(string)
 	vpcID := d.Get("vpc_id").(string)
 
 	if err := attachInternetGateway(conn, igwID, vpcID, d.Timeout(schema.TimeoutCreate)); err != nil {
-		return err
+		return fmt.Errorf("creating EC2 Internet Gateway Attachment: %w", err)
 	}
 
 	d.SetId(InternetGatewayAttachmentCreateResourceID(igwID, vpcID))
@@ -58,12 +58,12 @@ func resourceInternetGatewayAttachmentCreate(d *schema.ResourceData, meta interf
 }
 
 func resourceInternetGatewayAttachmentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	igwID, vpcID, err := InternetGatewayAttachmentParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading EC2 Internet Gateway Attachment (%s): %w", d.Id(), err)
 	}
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(propagationTimeout, func() (interface{}, error) {
@@ -77,7 +77,7 @@ func resourceInternetGatewayAttachmentRead(d *schema.ResourceData, meta interfac
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 Internet Gateway Attachment (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading EC2 Internet Gateway Attachment (%s): %w", d.Id(), err)
 	}
 
 	igw := outputRaw.(*ec2.InternetGatewayAttachment)
@@ -89,16 +89,15 @@ func resourceInternetGatewayAttachmentRead(d *schema.ResourceData, meta interfac
 }
 
 func resourceInternetGatewayAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	igwID, vpcID, err := InternetGatewayAttachmentParseResourceID(d.Id())
-
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting EC2 Internet Gateway Attachment (%s): %w", d.Id(), err)
 	}
 
 	if err := detachInternetGateway(conn, igwID, vpcID, d.Timeout(schema.TimeoutDelete)); err != nil {
-		return err
+		return fmt.Errorf("deleting EC2 Internet Gateway Attachment (%s): %w", d.Id(), err)
 	}
 
 	return nil

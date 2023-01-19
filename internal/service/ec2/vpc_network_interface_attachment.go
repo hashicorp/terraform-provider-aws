@@ -48,7 +48,7 @@ func ResourceNetworkInterfaceAttachment() *schema.Resource {
 }
 
 func resourceNetworkInterfaceAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	attachmentID, err := attachNetworkInterface(
 		conn,
@@ -58,19 +58,19 @@ func resourceNetworkInterfaceAttachmentCreate(d *schema.ResourceData, meta inter
 		networkInterfaceAttachedTimeout,
 	)
 
-	if attachmentID != "" {
-		d.SetId(attachmentID)
+	if err != nil {
+		return err // nosemgrep:ci.bare-error-returns
 	}
 
-	if err != nil {
-		return err
+	if attachmentID != "" {
+		d.SetId(attachmentID)
 	}
 
 	return resourceNetworkInterfaceAttachmentRead(d, meta)
 }
 
 func resourceNetworkInterfaceAttachmentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	network_interface, err := FindNetworkInterfaceByAttachmentID(context.TODO(), conn, d.Id())
 
@@ -94,7 +94,7 @@ func resourceNetworkInterfaceAttachmentRead(d *schema.ResourceData, meta interfa
 }
 
 func resourceNetworkInterfaceAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	return DetachNetworkInterface(conn, d.Get("network_interface_id").(string), d.Id(), NetworkInterfaceDetachedTimeout)
 }

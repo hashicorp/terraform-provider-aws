@@ -151,7 +151,7 @@ func ResourceDefaultSubnet() *schema.Resource {
 }
 
 func resourceDefaultSubnetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	availabilityZone := d.Get("availability_zone").(string)
 	input := &ec2.DescribeSubnetsInput{
@@ -222,7 +222,7 @@ func resourceDefaultSubnetCreate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if err := modifySubnetAttributesOnCreate(conn, d, subnet, computedIPv6CIDRBlock); err != nil {
-		return err
+		return err // nosemgrep:ci.bare-error-returns
 	}
 
 	// Configure tags.

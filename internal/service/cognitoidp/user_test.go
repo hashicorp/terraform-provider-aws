@@ -305,7 +305,7 @@ func testAccCheckUserExists(name string) resource.TestCheckFunc {
 			return fmt.Errorf(fmt.Sprintf("ID should be user_pool_id/name. ID was %s. name was %s, user_pool_id was %s", id, userName, userPoolId))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn()
 
 		params := &cognitoidentityprovider.AdminGetUserInput{
 			Username:   aws.String(rs.Primary.Attributes["username"]),
@@ -318,7 +318,7 @@ func testAccCheckUserExists(name string) resource.TestCheckFunc {
 }
 
 func testAccCheckUserDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_cognito_user" {
@@ -359,7 +359,7 @@ func testAccUserTemporaryPassword(userResName string, clientResName string) reso
 		userPassword := userRs.Primary.Attributes["temporary_password"]
 		clientId := clientRs.Primary.Attributes["id"]
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn()
 
 		params := &cognitoidentityprovider.InitiateAuthInput{
 			AuthFlow: aws.String(cognitoidentityprovider.AuthFlowTypeUserPasswordAuth),
@@ -399,7 +399,7 @@ func testAccUserPassword(userResName string, clientResName string) resource.Test
 		userPassword := userRs.Primary.Attributes["password"]
 		clientId := clientRs.Primary.Attributes["id"]
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn()
 
 		params := &cognitoidentityprovider.InitiateAuthInput{
 			AuthFlow: aws.String(cognitoidentityprovider.AuthFlowTypeUserPasswordAuth),

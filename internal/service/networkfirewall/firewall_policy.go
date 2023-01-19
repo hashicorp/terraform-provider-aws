@@ -21,10 +21,10 @@ import (
 
 func ResourceFirewallPolicy() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceFirewallPolicyCreate,
-		ReadContext:   resourceFirewallPolicyRead,
-		UpdateContext: resourceFirewallPolicyUpdate,
-		DeleteContext: resourceFirewallPolicyDelete,
+		CreateWithoutTimeout: resourceFirewallPolicyCreate,
+		ReadWithoutTimeout:   resourceFirewallPolicyRead,
+		UpdateWithoutTimeout: resourceFirewallPolicyUpdate,
+		DeleteWithoutTimeout: resourceFirewallPolicyDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -39,6 +39,7 @@ func ResourceFirewallPolicy() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"encryption_configuration": encryptionConfigurationSchema(),
 			"firewall_policy": {
 				Type:     schema.TypeList,
 				Required: true,
@@ -153,7 +154,7 @@ func ResourceFirewallPolicy() *schema.Resource {
 }
 
 func resourceFirewallPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkFirewallConn
+	conn := meta.(*conns.AWSClient).NetworkFirewallConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -165,6 +166,9 @@ func resourceFirewallPolicyCreate(ctx context.Context, d *schema.ResourceData, m
 
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
+	}
+	if v, ok := d.GetOk("encryption_configuration"); ok {
+		input.EncryptionConfiguration = expandEncryptionConfiguration(v.([]interface{}))
 	}
 
 	if len(tags) > 0 {
@@ -184,7 +188,7 @@ func resourceFirewallPolicyCreate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceFirewallPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkFirewallConn
+	conn := meta.(*conns.AWSClient).NetworkFirewallConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -205,6 +209,7 @@ func resourceFirewallPolicyRead(ctx context.Context, d *schema.ResourceData, met
 
 	d.Set("arn", resp.FirewallPolicyArn)
 	d.Set("description", resp.Description)
+	d.Set("encryption_configuration", flattenEncryptionConfiguration(resp.EncryptionConfiguration))
 	d.Set("name", resp.FirewallPolicyName)
 	d.Set("update_token", output.UpdateToken)
 
@@ -227,9 +232,9 @@ func resourceFirewallPolicyRead(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceFirewallPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkFirewallConn
+	conn := meta.(*conns.AWSClient).NetworkFirewallConn()
 
-	if d.HasChanges("description", "firewall_policy") {
+	if d.HasChanges("description", "encryption_configuration", "firewall_policy") {
 		input := &networkfirewall.UpdateFirewallPolicyInput{
 			FirewallPolicy:    expandFirewallPolicy(d.Get("firewall_policy").([]interface{})),
 			FirewallPolicyArn: aws.String(d.Id()),
@@ -239,6 +244,9 @@ func resourceFirewallPolicyUpdate(ctx context.Context, d *schema.ResourceData, m
 		// Only pass non-empty description values, else API request returns an InternalServiceError
 		if v, ok := d.GetOk("description"); ok {
 			input.Description = aws.String(v.(string))
+		}
+		if d.HasChange("encryption_configuration") {
+			input.EncryptionConfiguration = expandEncryptionConfiguration(d.Get("encryption_configuration").([]interface{}))
 		}
 
 		log.Printf("[DEBUG] Updating NetworkFirewall Firewall Policy: %s", input)
@@ -261,7 +269,7 @@ func resourceFirewallPolicyUpdate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceFirewallPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkFirewallConn
+	conn := meta.(*conns.AWSClient).NetworkFirewallConn()
 
 	log.Printf("[DEBUG] Deleting NetworkFirewall Firewall Policy: %s", d.Id())
 	_, err := tfresource.RetryWhenAWSErrMessageContainsContext(ctx, firewallPolicyTimeout, func() (interface{}, error) {

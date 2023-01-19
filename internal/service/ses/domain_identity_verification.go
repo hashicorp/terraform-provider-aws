@@ -56,7 +56,7 @@ func getIdentityVerificationAttributes(conn *ses.SES, domainName string) (*ses.I
 }
 
 func resourceDomainIdentityVerificationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 	domainName := d.Get("domain").(string)
 	err := resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 		att, err := getIdentityVerificationAttributes(conn, domainName)
@@ -92,19 +92,18 @@ func resourceDomainIdentityVerificationCreate(d *schema.ResourceData, meta inter
 }
 
 func resourceDomainIdentityVerificationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	domainName := d.Id()
 	d.Set("domain", domainName)
 
 	att, err := getIdentityVerificationAttributes(conn, domainName)
 	if err != nil {
-		log.Printf("[WARN] Error fetching identity verification attributes for %s: %s", d.Id(), err)
-		return err
+		return fmt.Errorf("reading SES Domain Identity Verification (%s): %w", domainName, err)
 	}
 
 	if att == nil {
-		log.Printf("[WARN] Domain not listed in response when fetching verification attributes for %s", d.Id())
+		log.Printf("[WARN] SES Domain Identity Verification (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}

@@ -113,7 +113,7 @@ func TestAccWAFRegionalWebACLAssociation_ResourceARN_apiGatewayStage(t *testing.
 }
 
 func testAccCheckWebACLAssociationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_wafregional_web_acl_association" {
@@ -155,7 +155,7 @@ func testAccCheckWebACLAssociationExists(n string) resource.TestCheckFunc {
 
 		resourceArn := tfwafregional.WebACLAssociationParseID(rs.Primary.ID)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn()
 
 		input := &wafregional.GetWebACLForResourceInput{
 			ResourceArn: aws.String(resourceArn),
@@ -182,7 +182,7 @@ func testAccCheckWebACLAssociationDisappears(resourceName string) resource.TestC
 
 		resourceArn := tfwafregional.WebACLAssociationParseID(rs.Primary.ID)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn()
 
 		input := &wafregional.DisassociateWebACLInput{
 			ResourceArn: aws.String(resourceArn),

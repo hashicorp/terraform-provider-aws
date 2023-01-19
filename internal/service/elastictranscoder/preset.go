@@ -500,7 +500,7 @@ func ResourcePreset() *schema.Resource {
 }
 
 func resourcePresetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticTranscoderConn
+	conn := meta.(*conns.AWSClient).ElasticTranscoderConn()
 
 	req := &elastictranscoder.CreatePresetInput{
 		Audio:       expandETAudioParams(d),
@@ -746,7 +746,7 @@ func expandETVideoWatermarks(d *schema.ResourceData) []*elastictranscoder.Preset
 }
 
 func resourcePresetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticTranscoderConn
+	conn := meta.(*conns.AWSClient).ElasticTranscoderConn()
 
 	resp, err := conn.ReadPreset(&elastictranscoder.ReadPresetInput{
 		Id: aws.String(d.Id()),
@@ -754,26 +754,25 @@ func resourcePresetRead(d *schema.ResourceData, meta interface{}) error {
 
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, elastictranscoder.ErrCodeResourceNotFoundException) {
-			log.Printf("[WARN] ElasticTranscoder Preset (%s) not found, removing from state", d.Id())
+			log.Printf("[WARN] Elastic Transcoder Preset (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
-		return err
+		return fmt.Errorf("reading Elastic Transcoder Preset (%s): %w", d.Id(), err)
 	}
-
-	log.Printf("[DEBUG] Elastic Transcoder Preset Read response: %#v", resp)
 
 	preset := resp.Preset
 	d.Set("arn", preset.Arn)
 
 	if preset.Audio != nil {
-		err := d.Set("audio", flattenETAudioParameters(preset.Audio))
-		if err != nil {
-			return err
+		if err := d.Set("audio", flattenETAudioParameters(preset.Audio)); err != nil {
+			return fmt.Errorf("reading Elastic Transcoder Preset (%s): setting audio: %w", d.Id(), err)
 		}
 
 		if preset.Audio.CodecOptions != nil {
-			d.Set("audio_codec_options", flattenETAudioCodecOptions(preset.Audio.CodecOptions))
+			if err := d.Set("audio_codec_options", flattenETAudioCodecOptions(preset.Audio.CodecOptions)); err != nil {
+				return fmt.Errorf("reading Elastic Transcoder Preset (%s): setting audio_codec_options: %w", d.Id(), err)
+			}
 		}
 	}
 
@@ -784,7 +783,7 @@ func resourcePresetRead(d *schema.ResourceData, meta interface{}) error {
 	if preset.Thumbnails != nil {
 		err := d.Set("thumbnails", flattenETThumbnails(preset.Thumbnails))
 		if err != nil {
-			return err
+			return fmt.Errorf("reading Elastic Transcoder Preset (%s): setting thumbnails: %w", d.Id(), err)
 		}
 	}
 
@@ -793,15 +792,19 @@ func resourcePresetRead(d *schema.ResourceData, meta interface{}) error {
 	if preset.Video != nil {
 		err := d.Set("video", flattenETVideoParams(preset.Video))
 		if err != nil {
-			return err
+			return fmt.Errorf("reading Elastic Transcoder Preset (%s): setting video: %w", d.Id(), err)
 		}
 
 		if preset.Video.CodecOptions != nil {
-			d.Set("video_codec_options", aws.StringValueMap(preset.Video.CodecOptions))
+			if err := d.Set("video_codec_options", aws.StringValueMap(preset.Video.CodecOptions)); err != nil {
+				return fmt.Errorf("reading Elastic Transcoder Preset (%s): setting video_codec_options: %w", d.Id(), err)
+			}
 		}
 
 		if preset.Video.Watermarks != nil {
-			d.Set("video_watermarks", flattenETWatermarks(preset.Video.Watermarks))
+			if err := d.Set("video_watermarks", flattenETWatermarks(preset.Video.Watermarks)); err != nil {
+				return fmt.Errorf("reading Elastic Transcoder Preset (%s): setting video_watermarks: %w", d.Id(), err)
+			}
 		}
 	}
 
@@ -909,7 +912,7 @@ func flattenETWatermarks(watermarks []*elastictranscoder.PresetWatermark) []map[
 }
 
 func resourcePresetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticTranscoderConn
+	conn := meta.(*conns.AWSClient).ElasticTranscoderConn()
 
 	log.Printf("[DEBUG] Elastic Transcoder Delete Preset: %s", d.Id())
 	_, err := conn.DeletePreset(&elastictranscoder.DeletePresetInput{

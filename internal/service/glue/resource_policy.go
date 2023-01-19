@@ -26,10 +26,11 @@ func ResourceResourcePolicy() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"policy": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				Type:                  schema.TypeString,
+				Required:              true,
+				ValidateFunc:          validation.StringIsJSON,
+				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+				DiffSuppressOnRefresh: true,
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
@@ -46,7 +47,7 @@ func ResourceResourcePolicy() *schema.Resource {
 
 func resourceResourcePolicyPut(condition string) func(d *schema.ResourceData, meta interface{}) error {
 	return func(d *schema.ResourceData, meta interface{}) error {
-		conn := meta.(*conns.AWSClient).GlueConn
+		conn := meta.(*conns.AWSClient).GlueConn()
 
 		policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
 
@@ -73,7 +74,7 @@ func resourceResourcePolicyPut(condition string) func(d *schema.ResourceData, me
 }
 
 func resourceResourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+	conn := meta.(*conns.AWSClient).GlueConn()
 
 	resourcePolicy, err := conn.GetResourcePolicy(&glue.GetResourcePolicyInput{})
 	if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
@@ -82,7 +83,7 @@ func resourceResourcePolicyRead(d *schema.ResourceData, meta interface{}) error 
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("error reading policy request: %w", err)
+		return fmt.Errorf("reading Glue Resource Policy (%s): %w", d.Id(), err)
 	}
 
 	if aws.StringValue(resourcePolicy.PolicyInJson) == "" {
@@ -92,7 +93,7 @@ func resourceResourcePolicyRead(d *schema.ResourceData, meta interface{}) error 
 		policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.StringValue(resourcePolicy.PolicyInJson))
 
 		if err != nil {
-			return err
+			return fmt.Errorf("reading Glue Resource Policy (%s): %w", d.Id(), err)
 		}
 
 		d.Set("policy", policyToSet)
@@ -101,7 +102,7 @@ func resourceResourcePolicyRead(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceResourcePolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+	conn := meta.(*conns.AWSClient).GlueConn()
 
 	_, err := conn.DeleteResourcePolicy(&glue.DeleteResourcePolicyInput{})
 	if err != nil {

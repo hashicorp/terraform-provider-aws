@@ -285,7 +285,7 @@ func testAccCheckRuleDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn()
 		resp, err := conn.GetRule(
 			&waf.GetRuleInput{
 				RuleId: aws.String(rs.Primary.ID),
@@ -318,7 +318,7 @@ func testAccCheckRuleExists(n string, v *waf.Rule) resource.TestCheckFunc {
 			return fmt.Errorf("No WAF Rule ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn()
 		resp, err := conn.GetRule(&waf.GetRuleInput{
 			RuleId: aws.String(rs.Primary.ID),
 		})
@@ -337,7 +337,7 @@ func testAccCheckRuleExists(n string, v *waf.Rule) resource.TestCheckFunc {
 }
 
 func testAccPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).WAFConn()
 
 	input := &waf.ListRulesInput{}
 

@@ -166,7 +166,7 @@ func TestAccLakeFormationResource_updateSLRToRole(t *testing.T) {
 // func TestAccLakeFormationResource_updateRoleToSLR(t *testing.T) {
 
 func testAccCheckResourceDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_lakeformation_resource" {
@@ -198,7 +198,7 @@ func testAccCheckResourceExists(resourceName string) resource.TestCheckFunc {
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationConn()
 
 		input := &lakeformation.DescribeResourceInput{
 			ResourceArn: aws.String(rs.Primary.ID),

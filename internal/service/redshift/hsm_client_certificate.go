@@ -49,7 +49,7 @@ func ResourceHSMClientCertificate() *schema.Resource {
 }
 
 func resourceHSMClientCertificateCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -63,7 +63,7 @@ func resourceHSMClientCertificateCreate(d *schema.ResourceData, meta interface{}
 
 	out, err := conn.CreateHsmClientCertificate(&input)
 	if err != nil {
-		return fmt.Errorf("creating Redshift Hsm Client Certificate (%s): %s", certIdentifier, err)
+		return fmt.Errorf("creating Redshift HSM Client Certificate (%s): %s", certIdentifier, err)
 	}
 
 	d.SetId(aws.StringValue(out.HsmClientCertificate.HsmClientCertificateIdentifier))
@@ -72,19 +72,19 @@ func resourceHSMClientCertificateCreate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceHSMClientCertificateRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	out, err := FindHSMClientCertificateByID(conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] Redshift Hsm Client Certificate (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] Redshift HSM Client Certificate (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading Redshift Hsm Client Certificate (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading Redshift HSM Client Certificate (%s): %w", d.Id(), err)
 	}
 
 	arn := arn.ARN{
@@ -115,13 +115,13 @@ func resourceHSMClientCertificateRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceHSMClientCertificateUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("updating Redshift Hsm Client Certificate (%s) tags: %s", d.Get("arn").(string), err)
+			return fmt.Errorf("updating Redshift HSM Client Certificate (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
 
@@ -129,21 +129,21 @@ func resourceHSMClientCertificateUpdate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceHSMClientCertificateDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 
 	deleteInput := redshift.DeleteHsmClientCertificateInput{
 		HsmClientCertificateIdentifier: aws.String(d.Id()),
 	}
 
-	log.Printf("[DEBUG] Deleting Redshift Hsm Client Certificate: %s", d.Id())
+	log.Printf("[DEBUG] Deleting Redshift HSM Client Certificate: %s", d.Id())
 	_, err := conn.DeleteHsmClientCertificate(&deleteInput)
 
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, redshift.ErrCodeHsmClientCertificateNotFoundFault) {
 			return nil
 		}
-		return err
+		return fmt.Errorf("updating Redshift HSM Client Certificate (%s) tags: %s", d.Get("arn").(string), err)
 	}
 
-	return err
+	return nil
 }

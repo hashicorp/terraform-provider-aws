@@ -59,7 +59,7 @@ func ResourcePartner() *schema.Resource {
 }
 
 func resourcePartnerCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 
 	account := d.Get("account_id").(string)
 	clusterId := d.Get("cluster_identifier").(string)
@@ -82,7 +82,7 @@ func resourcePartnerCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourcePartnerRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 
 	out, err := FindPartnerById(conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -106,11 +106,11 @@ func resourcePartnerRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourcePartnerDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 
 	account, clusterId, dbName, partnerName, err := DecodePartnerID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting Redshift Partner (%s): %w", d.Id(), err)
 	}
 
 	deleteInput := redshift.DeletePartnerInput{

@@ -115,7 +115,7 @@ func ResourceCatalogDatabase() *schema.Resource {
 }
 
 func resourceCatalogDatabaseCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+	conn := meta.(*conns.AWSClient).GlueConn()
 	catalogID := createCatalogID(d, meta.(*conns.AWSClient).AccountID)
 	name := d.Get("name").(string)
 
@@ -150,7 +150,7 @@ func resourceCatalogDatabaseCreate(d *schema.ResourceData, meta interface{}) err
 
 	_, err := conn.CreateDatabase(input)
 	if err != nil {
-		return fmt.Errorf("Error creating Catalog Database: %w", err)
+		return fmt.Errorf("creating Glue Catalog Database (%s): %w", name, err)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", catalogID, name))
@@ -159,11 +159,11 @@ func resourceCatalogDatabaseCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceCatalogDatabaseUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+	conn := meta.(*conns.AWSClient).GlueConn()
 
 	catalogID, name, err := ReadCatalogID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("updating Glue Catalog Database (%s): %w", d.Id(), err)
 	}
 
 	dbUpdateInput := &glue.UpdateDatabaseInput{
@@ -194,18 +194,18 @@ func resourceCatalogDatabaseUpdate(d *schema.ResourceData, meta interface{}) err
 	dbUpdateInput.DatabaseInput = dbInput
 
 	if _, err := conn.UpdateDatabase(dbUpdateInput); err != nil {
-		return err
+		return fmt.Errorf("updating Glue Catalog Database (%s): %w", d.Id(), err)
 	}
 
 	return resourceCatalogDatabaseRead(d, meta)
 }
 
 func resourceCatalogDatabaseRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+	conn := meta.(*conns.AWSClient).GlueConn()
 
 	catalogID, name, err := ReadCatalogID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("reading Glue Catalog Database (%s): %w", d.Id(), err)
 	}
 
 	input := &glue.GetDatabaseInput{
@@ -221,7 +221,7 @@ func resourceCatalogDatabaseRead(d *schema.ResourceData, meta interface{}) error
 			return nil
 		}
 
-		return fmt.Errorf("Error reading Glue Catalog Database: %s", err.Error())
+		return fmt.Errorf("reading Glue Catalog Database (%s): %w", d.Id(), err)
 	}
 
 	database := out.Database
@@ -255,7 +255,7 @@ func resourceCatalogDatabaseRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceCatalogDatabaseDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+	conn := meta.(*conns.AWSClient).GlueConn()
 
 	log.Printf("[DEBUG] Glue Catalog Database: %s", d.Id())
 	_, err := conn.DeleteDatabase(&glue.DeleteDatabaseInput{
@@ -263,7 +263,7 @@ func resourceCatalogDatabaseDelete(d *schema.ResourceData, meta interface{}) err
 		CatalogId: aws.String(d.Get("catalog_id").(string)),
 	})
 	if err != nil {
-		return fmt.Errorf("Error deleting Glue Catalog Database: %w", err)
+		return fmt.Errorf("deleting Glue Catalog Database (%s): %w", d.Id(), err)
 	}
 	return nil
 }

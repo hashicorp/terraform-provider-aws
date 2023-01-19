@@ -112,7 +112,7 @@ func ResourceRepository() *schema.Resource {
 }
 
 func resourceRepositoryCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECRConn
+	conn := meta.(*conns.AWSClient).ECRConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -177,7 +177,7 @@ func resourceRepositoryCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceRepositoryRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECRConn
+	conn := meta.(*conns.AWSClient).ECRConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -311,17 +311,17 @@ func flattenRepositoryEncryptionConfiguration(ec *ecr.EncryptionConfiguration) [
 
 func resourceRepositoryUpdate(d *schema.ResourceData, meta interface{}) error {
 	arn := d.Get("arn").(string)
-	conn := meta.(*conns.AWSClient).ECRConn
+	conn := meta.(*conns.AWSClient).ECRConn()
 
 	if d.HasChange("image_tag_mutability") {
 		if err := resourceRepositoryUpdateImageTagMutability(conn, d); err != nil {
-			return err
+			return fmt.Errorf("updating ECR Repository (%s): %w", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("image_scanning_configuration") {
 		if err := resourceRepositoryUpdateImageScanningConfiguration(conn, d); err != nil {
-			return err
+			return fmt.Errorf("updating ECR Repository (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -337,7 +337,7 @@ func resourceRepositoryUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if err != nil {
-			return fmt.Errorf("failed updating tags for ECR Repository (%s): %w", d.Id(), err)
+			return fmt.Errorf("updating ECR Repository (%s): updating tags: %w", d.Id(), err)
 		}
 	}
 
@@ -345,7 +345,7 @@ func resourceRepositoryUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceRepositoryDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECRConn
+	conn := meta.(*conns.AWSClient).ECRConn()
 
 	_, err := conn.DeleteRepository(&ecr.DeleteRepositoryInput{
 		RepositoryName: aws.String(d.Id()),
@@ -403,7 +403,7 @@ func resourceRepositoryUpdateImageTagMutability(conn *ecr.ECR, d *schema.Resourc
 
 	_, err := conn.PutImageTagMutability(input)
 	if err != nil {
-		return fmt.Errorf("Error setting image tag mutability: %s", err.Error())
+		return fmt.Errorf("setting image tag mutability: %s", err)
 	}
 
 	return nil
@@ -427,7 +427,7 @@ func resourceRepositoryUpdateImageScanningConfiguration(conn *ecr.ECR, d *schema
 
 	_, err := conn.PutImageScanningConfiguration(input)
 	if err != nil {
-		return fmt.Errorf("Error setting image scanning configuration: %s", err.Error())
+		return fmt.Errorf("setting image scanning configuration: %s", err)
 	}
 
 	return nil

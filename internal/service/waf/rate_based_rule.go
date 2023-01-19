@@ -81,7 +81,7 @@ func ResourceRateBasedRule() *schema.Resource {
 }
 
 func resourceRateBasedRuleCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFConn
+	conn := meta.(*conns.AWSClient).WAFConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -102,7 +102,7 @@ func resourceRateBasedRuleCreate(d *schema.ResourceData, meta interface{}) error
 		return conn.CreateRateBasedRule(params)
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("creating WAF Rate Based Rule (%s): %w", d.Get("name").(string), err)
 	}
 	resp := out.(*waf.CreateRateBasedRuleOutput)
 	d.SetId(aws.StringValue(resp.Rule.RuleId))
@@ -112,7 +112,7 @@ func resourceRateBasedRuleCreate(d *schema.ResourceData, meta interface{}) error
 		noPredicates := []interface{}{}
 		err := updateRateBasedRuleResource(*resp.Rule.RuleId, noPredicates, newPredicates, d.Get("rate_limit"), conn)
 		if err != nil {
-			return fmt.Errorf("Error Updating WAF Rate Based Rule: %s", err)
+			return fmt.Errorf("updating WAF Rate Based Rule: %s", err)
 		}
 	}
 
@@ -120,7 +120,7 @@ func resourceRateBasedRuleCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceRateBasedRuleRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFConn
+	conn := meta.(*conns.AWSClient).WAFConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -136,7 +136,7 @@ func resourceRateBasedRuleRead(d *schema.ResourceData, meta interface{}) error {
 			return nil
 		}
 
-		return err
+		return fmt.Errorf("reading WAF Rate Based Rule (%s): %w", d.Get("name").(string), err)
 	}
 
 	var predicates []map[string]interface{}
@@ -167,11 +167,11 @@ func resourceRateBasedRuleRead(d *schema.ResourceData, meta interface{}) error {
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return fmt.Errorf("setting tags_all: %w", err)
 	}
 
 	d.Set("predicates", predicates)
@@ -184,7 +184,7 @@ func resourceRateBasedRuleRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceRateBasedRuleUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFConn
+	conn := meta.(*conns.AWSClient).WAFConn()
 
 	if d.HasChanges("predicates", "rate_limit") {
 		o, n := d.GetChange("predicates")
@@ -193,7 +193,7 @@ func resourceRateBasedRuleUpdate(d *schema.ResourceData, meta interface{}) error
 
 		err := updateRateBasedRuleResource(d.Id(), oldP, newP, rateLimit, conn)
 		if err != nil {
-			return fmt.Errorf("Error Updating WAF Rule: %s", err)
+			return fmt.Errorf("updating WAF Rule: %s", err)
 		}
 	}
 
@@ -201,7 +201,7 @@ func resourceRateBasedRuleUpdate(d *schema.ResourceData, meta interface{}) error
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %s", err)
+			return fmt.Errorf("updating tags: %s", err)
 		}
 	}
 
@@ -209,7 +209,7 @@ func resourceRateBasedRuleUpdate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceRateBasedRuleDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFConn
+	conn := meta.(*conns.AWSClient).WAFConn()
 
 	oldPredicates := d.Get("predicates").(*schema.Set).List()
 	if len(oldPredicates) > 0 {
@@ -218,7 +218,7 @@ func resourceRateBasedRuleDelete(d *schema.ResourceData, meta interface{}) error
 
 		err := updateRateBasedRuleResource(d.Id(), oldPredicates, noPredicates, rateLimit, conn)
 		if err != nil {
-			return fmt.Errorf("Error updating WAF Rate Based Rule Predicates: %s", err)
+			return fmt.Errorf("updating WAF Rate Based Rule Predicates: %s", err)
 		}
 	}
 
@@ -232,7 +232,7 @@ func resourceRateBasedRuleDelete(d *schema.ResourceData, meta interface{}) error
 		return conn.DeleteRateBasedRule(req)
 	})
 	if err != nil {
-		return fmt.Errorf("Error deleting WAF Rate Based Rule: %s", err)
+		return fmt.Errorf("deleting WAF Rate Based Rule: %s", err)
 	}
 
 	return nil
@@ -251,7 +251,7 @@ func updateRateBasedRuleResource(id string, oldP, newP []interface{}, rateLimit 
 		return conn.UpdateRateBasedRule(req)
 	})
 	if err != nil {
-		return fmt.Errorf("Error Updating WAF Rate Based Rule: %s", err)
+		return fmt.Errorf("updating WAF Rate Based Rule: %s", err)
 	}
 
 	return nil

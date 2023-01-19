@@ -109,7 +109,7 @@ func ResourceReplicationTask() *schema.Resource {
 }
 
 func resourceReplicationTaskCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DMSConn
+	conn := meta.(*conns.AWSClient).DMSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -156,7 +156,7 @@ func resourceReplicationTaskCreate(d *schema.ResourceData, meta interface{}) err
 
 	if d.Get("start_replication_task").(bool) {
 		if err := startReplicationTask(d.Id(), conn); err != nil {
-			return err
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
 
@@ -164,7 +164,7 @@ func resourceReplicationTaskCreate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceReplicationTaskRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DMSConn
+	conn := meta.(*conns.AWSClient).DMSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -177,11 +177,11 @@ func resourceReplicationTaskRead(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading DMS Replication Task (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading DMS Replication Task (%s): %w", d.Id(), err)
 	}
 
 	if task == nil {
-		return fmt.Errorf("error reading DMS Replication Task (%s): empty output", d.Id())
+		return fmt.Errorf("reading DMS Replication Task (%s): empty output", d.Id())
 	}
 
 	d.Set("cdc_start_position", task.CdcStartPosition)
@@ -196,7 +196,7 @@ func resourceReplicationTaskRead(d *schema.ResourceData, meta interface{}) error
 
 	settings, err := replicationTaskRemoveReadOnlySettings(aws.StringValue(task.ReplicationTaskSettings))
 	if err != nil {
-		return err
+		return fmt.Errorf("reading DMS Replication Task (%s): %w", d.Id(), err)
 	}
 
 	d.Set("replication_task_settings", settings)
@@ -222,11 +222,13 @@ func resourceReplicationTaskRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceReplicationTaskUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DMSConn
+	conn := meta.(*conns.AWSClient).DMSConn()
 
 	if d.HasChangesExcept("tags", "tags_all", "start_replication_task") {
 		input := &dms.ModifyReplicationTaskInput{
 			ReplicationTaskArn: aws.String(d.Get("replication_task_arn").(string)),
+			MigrationType:      aws.String(d.Get("migration_type").(string)),
+			TableMappings:      aws.String(d.Get("table_mappings").(string)),
 		}
 
 		if d.HasChange("cdc_start_position") {
@@ -241,23 +243,15 @@ func resourceReplicationTaskUpdate(d *schema.ResourceData, meta interface{}) err
 			input.CdcStartTime = aws.Time(time.Unix(seconds, 0))
 		}
 
-		if d.HasChange("migration_type") {
-			input.MigrationType = aws.String(d.Get("migration_type").(string))
-		}
-
 		if d.HasChange("replication_task_settings") {
 			input.ReplicationTaskSettings = aws.String(d.Get("replication_task_settings").(string))
-		}
-
-		if d.HasChange("table_mappings") {
-			input.TableMappings = aws.String(d.Get("table_mappings").(string))
 		}
 
 		status := d.Get("status").(string)
 		if status == replicationTaskStatusRunning {
 			log.Println("[DEBUG] stopping DMS replication task:", input)
 			if err := stopReplicationTask(d.Id(), conn); err != nil {
-				return err
+				return err // nosemgrep:ci.bare-error-returns
 			}
 		}
 
@@ -274,7 +268,7 @@ func resourceReplicationTaskUpdate(d *schema.ResourceData, meta interface{}) err
 		if d.Get("start_replication_task").(bool) {
 			err := startReplicationTask(d.Id(), conn)
 			if err != nil {
-				return err
+				return err // nosemgrep:ci.bare-error-returns
 			}
 		}
 	}
@@ -284,13 +278,13 @@ func resourceReplicationTaskUpdate(d *schema.ResourceData, meta interface{}) err
 		if d.Get("start_replication_task").(bool) {
 			if status != replicationTaskStatusRunning {
 				if err := startReplicationTask(d.Id(), conn); err != nil {
-					return err
+					return err // nosemgrep:ci.bare-error-returns
 				}
 			}
 		} else {
 			if status == replicationTaskStatusRunning {
 				if err := stopReplicationTask(d.Id(), conn); err != nil {
-					return err
+					return err // nosemgrep:ci.bare-error-returns
 				}
 			}
 		}
@@ -309,11 +303,11 @@ func resourceReplicationTaskUpdate(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceReplicationTaskDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DMSConn
+	conn := meta.(*conns.AWSClient).DMSConn()
 
 	if status := d.Get("status").(string); status == replicationTaskStatusRunning {
 		if err := stopReplicationTask(d.Id(), conn); err != nil {
-			return err
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
 
@@ -374,11 +368,11 @@ func startReplicationTask(id string, conn *dms.DatabaseMigrationService) error {
 
 	task, err := FindReplicationTaskByID(conn, id)
 	if err != nil {
-		return fmt.Errorf("error reading DMS Replication Task (%s): %w", id, err)
+		return fmt.Errorf("reading DMS Replication Task (%s): %w", id, err)
 	}
 
 	if task == nil {
-		return fmt.Errorf("error reading DMS Replication Task (%s): empty output", id)
+		return fmt.Errorf("reading DMS Replication Task (%s): empty output", id)
 	}
 
 	startReplicationTaskType := dms.StartReplicationTaskTypeValueStartReplication
@@ -392,12 +386,12 @@ func startReplicationTask(id string, conn *dms.DatabaseMigrationService) error {
 	})
 
 	if err != nil {
-		return fmt.Errorf("error starting DMS Replication Task (%s): %w", id, err)
+		return fmt.Errorf("starting DMS Replication Task (%s): %w", id, err)
 	}
 
 	err = waitReplicationTaskRunning(conn, id)
 	if err != nil {
-		return fmt.Errorf("error waiting for DMS Replication Task (%s) start: %w", id, err)
+		return fmt.Errorf("waiting for DMS Replication Task (%s) start: %w", id, err)
 	}
 
 	return nil
@@ -408,11 +402,11 @@ func stopReplicationTask(id string, conn *dms.DatabaseMigrationService) error {
 
 	task, err := FindReplicationTaskByID(conn, id)
 	if err != nil {
-		return fmt.Errorf("error reading DMS Replication Task (%s): %w", id, err)
+		return fmt.Errorf("reading DMS Replication Task (%s): %w", id, err)
 	}
 
 	if task == nil {
-		return fmt.Errorf("error reading DMS Replication Task (%s): empty output", id)
+		return fmt.Errorf("reading DMS Replication Task (%s): empty output", id)
 	}
 
 	_, err = conn.StopReplicationTask(&dms.StopReplicationTaskInput{
@@ -420,12 +414,12 @@ func stopReplicationTask(id string, conn *dms.DatabaseMigrationService) error {
 	})
 
 	if err != nil {
-		return fmt.Errorf("error stopping DMS Replication Task (%s): %w", id, err)
+		return fmt.Errorf("stopping DMS Replication Task (%s): %w", id, err)
 	}
 
 	err = waitReplicationTaskStopped(conn, id)
 	if err != nil {
-		return fmt.Errorf("error waiting for DMS Replication Task (%s) stop: %w", id, err)
+		return fmt.Errorf("waiting for DMS Replication Task (%s) stop: %w", id, err)
 	}
 
 	return nil

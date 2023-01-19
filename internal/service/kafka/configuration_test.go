@@ -173,7 +173,7 @@ func TestAccKafkaConfiguration_serverProperties(t *testing.T) {
 }
 
 func testAccCheckConfigurationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_msk_configuration" {
@@ -213,7 +213,7 @@ func testAccCheckConfigurationExists(resourceName string, configuration *kafka.D
 			return fmt.Errorf("Resource ID not set: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn()
 
 		input := &kafka.DescribeConfigurationInput{
 			Arn: aws.String(rs.Primary.ID),

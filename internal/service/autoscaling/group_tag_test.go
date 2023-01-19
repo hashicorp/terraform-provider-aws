@@ -96,7 +96,7 @@ func TestAccAutoScalingGroupTag_value(t *testing.T) {
 }
 
 func testAccCheckGroupTagDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_autoscaling_group_tag" {
@@ -142,7 +142,7 @@ func testAccCheckGroupTagExists(n string) resource.TestCheckFunc {
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn()
 
 		_, err = tfautoscaling.GetTag(conn, identifier, tfautoscaling.TagResourceTypeGroup, key)
 

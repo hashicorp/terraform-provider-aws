@@ -139,7 +139,7 @@ func DataSourceCachePolicy() *schema.Resource {
 	}
 }
 func dataSourceCachePolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 
 	var cachePolicyID string
 

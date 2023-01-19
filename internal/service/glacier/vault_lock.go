@@ -39,11 +39,12 @@ func ResourceVaultLock() *schema.Resource {
 				Default:  false,
 			},
 			"policy": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
-				ValidateFunc:     verify.ValidIAMPolicyJSON,
+				Type:                  schema.TypeString,
+				Required:              true,
+				ForceNew:              true,
+				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+				DiffSuppressOnRefresh: true,
+				ValidateFunc:          verify.ValidIAMPolicyJSON,
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
@@ -60,7 +61,7 @@ func ResourceVaultLock() *schema.Resource {
 }
 
 func resourceVaultLockCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlacierConn
+	conn := meta.(*conns.AWSClient).GlacierConn()
 	vaultName := d.Get("vault_name").(string)
 
 	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
@@ -107,7 +108,7 @@ func resourceVaultLockCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceVaultLockRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlacierConn
+	conn := meta.(*conns.AWSClient).GlacierConn()
 
 	input := &glacier.GetVaultLockInput{
 		AccountId: aws.String("-"),
@@ -124,7 +125,7 @@ func resourceVaultLockRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Glacier Vault Lock (%s): %s", d.Id(), err)
+		return fmt.Errorf("reading Glacier Vault Lock (%s): %s", d.Id(), err)
 	}
 
 	if output == nil {
@@ -139,7 +140,7 @@ func resourceVaultLockRead(d *schema.ResourceData, meta interface{}) error {
 	policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.StringValue(output.Policy))
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading Glacier Vault Lock (%s): setting policy: %s", d.Id(), err)
 	}
 
 	d.Set("policy", policyToSet)
@@ -148,7 +149,7 @@ func resourceVaultLockRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceVaultLockDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlacierConn
+	conn := meta.(*conns.AWSClient).GlacierConn()
 
 	input := &glacier.AbortVaultLockInput{
 		VaultName: aws.String(d.Id()),

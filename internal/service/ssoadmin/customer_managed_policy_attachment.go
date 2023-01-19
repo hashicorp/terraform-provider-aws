@@ -71,7 +71,7 @@ func ResourceCustomerManagedPolicyAttachment() *schema.Resource {
 }
 
 func resourceCustomerManagedPolicyAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSOAdminConn
+	conn := meta.(*conns.AWSClient).SSOAdminConn()
 
 	tfMap := d.Get("customer_managed_policy_reference").([]interface{})[0].(map[string]interface{})
 	policyName := tfMap["name"].(string)
@@ -98,19 +98,19 @@ func resourceCustomerManagedPolicyAttachmentCreate(d *schema.ResourceData, meta 
 
 	// After the policy has been attached to the permission set, provision in all accounts that use this permission set.
 	if err := provisionPermissionSet(conn, permissionSetARN, instanceARN); err != nil {
-		return err
+		return fmt.Errorf("creating SSO Customer Managed Policy Attachment (%s): %w", d.Id(), err)
 	}
 
 	return resourceCustomerManagedPolicyAttachmentRead(d, meta)
 }
 
 func resourceCustomerManagedPolicyAttachmentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSOAdminConn
+	conn := meta.(*conns.AWSClient).SSOAdminConn()
 
 	policyName, policyPath, permissionSetARN, instanceARN, err := CustomerManagedPolicyAttachmentParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading SSO Customer Managed Policy Attachment (%s): %w", d.Id(), err)
 	}
 
 	policy, err := FindCustomerManagedPolicy(conn, policyName, policyPath, permissionSetARN, instanceARN)
@@ -135,12 +135,12 @@ func resourceCustomerManagedPolicyAttachmentRead(d *schema.ResourceData, meta in
 }
 
 func resourceCustomerManagedPolicyAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSOAdminConn
+	conn := meta.(*conns.AWSClient).SSOAdminConn()
 
 	policyName, policyPath, permissionSetARN, instanceARN, err := CustomerManagedPolicyAttachmentParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting SSO Customer Managed Policy Attachment (%s): %w", d.Id(), err)
 	}
 
 	input := &ssoadmin.DetachCustomerManagedPolicyReferenceFromPermissionSetInput{
@@ -167,7 +167,7 @@ func resourceCustomerManagedPolicyAttachmentDelete(d *schema.ResourceData, meta 
 
 	// After the policy has been detached from the permission set, provision in all accounts that use this permission set.
 	if err := provisionPermissionSet(conn, permissionSetARN, instanceARN); err != nil {
-		return err
+		return fmt.Errorf("deleting SSO Customer Managed Policy Attachment (%s): %w", d.Id(), err)
 	}
 
 	return nil

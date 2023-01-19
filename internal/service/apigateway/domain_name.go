@@ -182,7 +182,7 @@ func ResourceDomainName() *schema.Resource {
 }
 
 func resourceDomainNameCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 	log.Printf("[DEBUG] Creating API Gateway Domain Name")
@@ -247,7 +247,7 @@ func resourceDomainNameCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDomainNameRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -390,7 +390,7 @@ func resourceDomainNameUpdateOperations(d *schema.ResourceData) []*apigateway.Pa
 }
 
 func resourceDomainNameUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 	log.Printf("[DEBUG] Updating API Gateway Domain Name %s", d.Id())
 
 	if d.HasChange("tags_all") {
@@ -406,14 +406,14 @@ func resourceDomainNameUpdate(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if err != nil {
-		return err
+		return fmt.Errorf("updating API Gateway Domain Name (%s): %s", d.Id(), err)
 	}
 
 	return resourceDomainNameRead(d, meta)
 }
 
 func resourceDomainNameDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 	log.Printf("[DEBUG] Deleting API Gateway Domain Name: %s", d.Id())
 
 	_, err := conn.DeleteDomainName(&apigateway.DeleteDomainNameInput{
@@ -425,7 +425,7 @@ func resourceDomainNameDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error deleting API Gateway domain name: %s", err)
+		return fmt.Errorf("deleting API Gateway Domain Name (%s): %s", d.Id(), err)
 	}
 
 	return nil

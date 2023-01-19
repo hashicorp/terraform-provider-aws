@@ -10,9 +10,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/google/go-cmp/cmp"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -27,9 +26,9 @@ func TestNormalizeIPProtocol(t *testing.T) {
 	t.Parallel()
 
 	type testCase struct {
-		plannedValue  attr.Value
-		currentValue  attr.Value
-		expectedValue attr.Value
+		plannedValue  types.String
+		currentValue  types.String
+		expectedValue types.String
 		expectError   bool
 	}
 	tests := map[string]testCase{
@@ -53,16 +52,18 @@ func TestNormalizeIPProtocol(t *testing.T) {
 	for name, test := range tests {
 		name, test := name, test
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			ctx := context.Background()
-			request := tfsdk.ModifyAttributePlanRequest{
-				AttributePath:  path.Root("test"),
-				AttributePlan:  test.plannedValue,
-				AttributeState: test.currentValue,
+			request := planmodifier.StringRequest{
+				Path:       path.Root("test"),
+				PlanValue:  test.plannedValue,
+				StateValue: test.currentValue,
 			}
-			response := tfsdk.ModifyAttributePlanResponse{
-				AttributePlan: request.AttributePlan,
+			response := planmodifier.StringResponse{
+				PlanValue: request.PlanValue,
 			}
-			tfec2.NormalizeIPProtocol().Modify(ctx, request, &response)
+			tfec2.NormalizeIPProtocol().PlanModifyString(ctx, request, &response)
 
 			if !response.Diagnostics.HasError() && test.expectError {
 				t.Fatal("expected error, got no error")
@@ -72,7 +73,7 @@ func TestNormalizeIPProtocol(t *testing.T) {
 				t.Fatalf("got unexpected error: %s", response.Diagnostics)
 			}
 
-			if diff := cmp.Diff(response.AttributePlan, test.expectedValue); diff != "" {
+			if diff := cmp.Diff(response.PlanValue, test.expectedValue); diff != "" {
 				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
 			}
 		})
@@ -955,7 +956,7 @@ func testAccCheckSecurityGroupRuleRecreated(i, j *ec2.SecurityGroupRule) resourc
 }
 
 func testAccCheckSecurityGroupIngressRuleDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_vpc_security_group_ingress_rule" {
@@ -989,7 +990,7 @@ func testAccCheckSecurityGroupIngressRuleExists(n string, v *ec2.SecurityGroupRu
 			return fmt.Errorf("No VPC Security Group Ingress Rule ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		output, err := tfec2.FindSecurityGroupIngressRuleByID(context.Background(), conn, rs.Primary.ID)
 
@@ -1005,7 +1006,7 @@ func testAccCheckSecurityGroupIngressRuleExists(n string, v *ec2.SecurityGroupRu
 
 func testAccCheckSecurityGroupIngressRuleUpdateTags(v *ec2.SecurityGroupRule, oldTags, newTags map[string]string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		return tfec2.UpdateTagsWithContext(context.Background(), conn, aws.StringValue(v.SecurityGroupRuleId), oldTags, newTags)
 	}

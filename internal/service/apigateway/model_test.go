@@ -103,7 +103,7 @@ func testAccCheckModelExists(n, rName string, res *apigateway.Model) resource.Te
 			return fmt.Errorf("No API Gateway Model ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
 
 		req := &apigateway.GetModelInput{
 			ModelName: aws.String(rName),
@@ -124,7 +124,7 @@ func testAccCheckModelExists(n, rName string, res *apigateway.Model) resource.Te
 }
 
 func testAccCheckModelDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_api_gateway_model" {

@@ -48,7 +48,7 @@ func ResourceHostedPublicVirtualInterfaceAccepter() *schema.Resource {
 }
 
 func resourceHostedPublicVirtualInterfaceAccepterCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
 	vifId := d.Get("virtual_interface_id").(string)
 	req := &directconnect.ConfirmPublicVirtualInterfaceInput{
@@ -72,20 +72,20 @@ func resourceHostedPublicVirtualInterfaceAccepterCreate(d *schema.ResourceData, 
 	d.Set("arn", arn)
 
 	if err := hostedPublicVirtualInterfaceAccepterWaitUntilAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return err
+		return err // nosemgrep:ci.bare-error-returns
 	}
 
 	return resourceHostedPublicVirtualInterfaceAccepterUpdate(d, meta)
 }
 
 func resourceHostedPublicVirtualInterfaceAccepterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	vif, err := virtualInterfaceRead(d.Id(), conn)
 	if err != nil {
-		return err
+		return err // nosemgrep:ci.bare-error-returns
 	}
 	if vif == nil {
 		log.Printf("[WARN] Direct Connect hosted public virtual interface (%s) not found, removing from state", d.Id())
@@ -126,7 +126,7 @@ func resourceHostedPublicVirtualInterfaceAccepterRead(d *schema.ResourceData, me
 
 func resourceHostedPublicVirtualInterfaceAccepterUpdate(d *schema.ResourceData, meta interface{}) error {
 	if err := virtualInterfaceUpdate(d, meta); err != nil {
-		return err
+		return err // nosemgrep:ci.bare-error-returns
 	}
 
 	return resourceHostedPublicVirtualInterfaceAccepterRead(d, meta)
@@ -138,7 +138,7 @@ func resourceHostedPublicVirtualInterfaceAccepterDelete(d *schema.ResourceData, 
 }
 
 func resourceHostedPublicVirtualInterfaceAccepterImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
 	vif, err := virtualInterfaceRead(d.Id(), conn)
 	if err != nil {

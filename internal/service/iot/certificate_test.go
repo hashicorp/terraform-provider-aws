@@ -83,7 +83,7 @@ func TestAccIoTCertificate_Keys_existingCertificate(t *testing.T) {
 }
 
 func testAccCheckCertificateDestroy_basic(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iot_certificate" {

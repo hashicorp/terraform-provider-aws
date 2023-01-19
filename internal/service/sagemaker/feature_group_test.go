@@ -16,6 +16,8 @@ import (
 )
 
 func TestAccSageMakerFeatureGroup_serial(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]func(t *testing.T){
 		"basic":                         testAccFeatureGroup_basic,
 		"description":                   testAccFeatureGroup_description,
@@ -28,12 +30,7 @@ func TestAccSageMakerFeatureGroup_serial(t *testing.T) {
 		"tags":                          testAccFeatureGroup_tags,
 	}
 
-	for name, tc := range testCases {
-		tc := tc
-		t.Run(name, func(t *testing.T) {
-			tc(t)
-		})
-	}
+	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
 func testAccFeatureGroup_basic(t *testing.T) {
@@ -338,7 +335,7 @@ func TestAccSageMakerFeatureGroup_disappears(t *testing.T) {
 }
 
 func testAccCheckFeatureGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_sagemaker_feature_group" {
@@ -372,7 +369,7 @@ func testAccCheckFeatureGroupExists(n string, v *sagemaker.DescribeFeatureGroupO
 			return fmt.Errorf("No SageMaker Feature Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
 
 		output, err := tfsagemaker.FindFeatureGroupByName(conn, rs.Primary.ID)
 

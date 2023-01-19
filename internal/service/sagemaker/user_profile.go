@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -98,10 +99,23 @@ func ResourceUserProfile() *schema.Resource {
 						"jupyter_server_app_settings": {
 							Type:     schema.TypeList,
 							Optional: true,
-							ForceNew: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"code_repository": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										MaxItems: 10,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"repository_url": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringLenBetween(1, 1024),
+												},
+											},
+										},
+									},
 									"default_resource_spec": {
 										Type:     schema.TypeList,
 										Required: true,
@@ -145,7 +159,6 @@ func ResourceUserProfile() *schema.Resource {
 						"kernel_gateway_app_settings": {
 							Type:     schema.TypeList,
 							Optional: true,
-							ForceNew: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -278,7 +291,6 @@ func ResourceUserProfile() *schema.Resource {
 						"sharing_settings": {
 							Type:     schema.TypeList,
 							Optional: true,
-							ForceNew: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -303,7 +315,6 @@ func ResourceUserProfile() *schema.Resource {
 						"tensor_board_app_settings": {
 							Type:     schema.TypeList,
 							Optional: true,
-							ForceNew: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -355,7 +366,7 @@ func ResourceUserProfile() *schema.Resource {
 }
 
 func resourceUserProfileCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -389,47 +400,47 @@ func resourceUserProfileCreate(d *schema.ResourceData, meta interface{}) error {
 	userProfileArn := aws.StringValue(output.UserProfileArn)
 	domainID, userProfileName, err := decodeUserProfileName(userProfileArn)
 	if err != nil {
-		return err
+		return fmt.Errorf("creating SageMaker User Profile: %w", err)
 	}
 
 	d.SetId(userProfileArn)
 
 	if _, err := WaitUserProfileInService(conn, domainID, userProfileName); err != nil {
-		return fmt.Errorf("waiting for SageMaker User Profile (%s) to create: %w", d.Id(), err)
+		return fmt.Errorf("creating SageMaker User Profile (%s): waiting for completion: %w", d.Id(), err)
 	}
 
 	return resourceUserProfileRead(d, meta)
 }
 
 func resourceUserProfileRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	domainID, userProfileName, err := decodeUserProfileName(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("reading SageMaker User Profile (%s): %w", d.Id(), err)
 	}
 
-	UserProfile, err := FindUserProfileByName(conn, domainID, userProfileName)
+	userProfile, err := FindUserProfileByName(conn, domainID, userProfileName)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
+		if !d.IsNewResource() && tfresource.NotFound(err) {
 			d.SetId("")
-			log.Printf("[WARN] Unable to find SageMaker User Profile (%s), removing from state", d.Id())
+			log.Printf("[WARN] Unable to find SageMaker User Profile (%s); removing from state", d.Id())
 			return nil
 		}
 		return fmt.Errorf("reading SageMaker User Profile (%s): %w", d.Id(), err)
 	}
 
-	arn := aws.StringValue(UserProfile.UserProfileArn)
-	d.Set("user_profile_name", UserProfile.UserProfileName)
-	d.Set("domain_id", UserProfile.DomainId)
-	d.Set("single_sign_on_user_identifier", UserProfile.SingleSignOnUserIdentifier)
-	d.Set("single_sign_on_user_value", UserProfile.SingleSignOnUserValue)
+	arn := aws.StringValue(userProfile.UserProfileArn)
+	d.Set("user_profile_name", userProfile.UserProfileName)
+	d.Set("domain_id", userProfile.DomainId)
+	d.Set("single_sign_on_user_identifier", userProfile.SingleSignOnUserIdentifier)
+	d.Set("single_sign_on_user_value", userProfile.SingleSignOnUserValue)
 	d.Set("arn", arn)
-	d.Set("home_efs_file_system_uid", UserProfile.HomeEfsFileSystemUid)
+	d.Set("home_efs_file_system_uid", userProfile.HomeEfsFileSystemUid)
 
-	if err := d.Set("user_settings", flattenDomainDefaultUserSettings(UserProfile.UserSettings)); err != nil {
+	if err := d.Set("user_settings", flattenDomainDefaultUserSettings(userProfile.UserSettings)); err != nil {
 		return fmt.Errorf("setting user_settings for SageMaker User Profile (%s): %w", d.Id(), err)
 	}
 
@@ -454,7 +465,7 @@ func resourceUserProfileRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceUserProfileUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	if d.HasChange("user_settings") {
 		domainID := d.Get("domain_id").(string)
@@ -489,7 +500,7 @@ func resourceUserProfileUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceUserProfileDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	userProfileName := d.Get("user_profile_name").(string)
 	domainID := d.Get("domain_id").(string)

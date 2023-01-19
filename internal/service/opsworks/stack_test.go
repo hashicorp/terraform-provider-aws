@@ -471,7 +471,7 @@ func TestAccOpsWorksStack_windows(t *testing.T) {
 }
 
 func testAccPreCheckStacks(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn()
 
 	input := &opsworks.DescribeStacksInput{}
 
@@ -497,7 +497,7 @@ func testAccCheckStackExists(n string, v *opsworks.Stack) resource.TestCheckFunc
 			return fmt.Errorf("No OpsWorks Stack ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn()
 
 		output, err := tfopsworks.FindStackByID(conn, rs.Primary.ID)
 
@@ -512,7 +512,7 @@ func testAccCheckStackExists(n string, v *opsworks.Stack) resource.TestCheckFunc
 }
 
 func testAccCheckStackDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_opsworks_stack" {

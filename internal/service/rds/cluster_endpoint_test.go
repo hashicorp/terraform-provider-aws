@@ -149,7 +149,7 @@ func testAccCheckClusterEndpointDestroy(s *terraform.State) error {
 }
 
 func testAccCheckClusterEndpointDestroyWithProvider(s *terraform.State, provider *schema.Provider) error {
-	conn := provider.Meta().(*conns.AWSClient).RDSConn
+	conn := provider.Meta().(*conns.AWSClient).RDSConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_rds_cluster_endpoint" {
@@ -195,7 +195,7 @@ func testAccCheckClusterEndpointExistsWithProvider(resourceName string, endpoint
 			return fmt.Errorf("DBClusterEndpoint ID is not set")
 		}
 
-		conn := provider.Meta().(*conns.AWSClient).RDSConn
+		conn := provider.Meta().(*conns.AWSClient).RDSConn()
 
 		response, err := conn.DescribeDBClusterEndpoints(&rds.DescribeDBClusterEndpointsInput{
 			DBClusterEndpointIdentifier: aws.String(rs.Primary.ID),

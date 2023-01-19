@@ -73,7 +73,7 @@ func ResourceIPAMPoolCIDR() *schema.Resource {
 }
 
 func resourceIPAMPoolCIDRCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	poolID := d.Get("ipam_pool_id").(string)
 	input := &ec2.ProvisionIpamPoolCidrInput{
@@ -105,12 +105,12 @@ func resourceIPAMPoolCIDRCreate(d *schema.ResourceData, meta interface{}) error 
 }
 
 func resourceIPAMPoolCIDRRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	cidrBlock, poolID, err := IPAMPoolCIDRParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading IPAM Pool CIDR (%s): %w", d.Id(), err)
 	}
 
 	output, err := FindIPAMPoolCIDRByTwoPartKey(conn, cidrBlock, poolID)
@@ -132,12 +132,12 @@ func resourceIPAMPoolCIDRRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceIPAMPoolCIDRDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	cidrBlock, poolID, err := IPAMPoolCIDRParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting IPAM Pool CIDR (%s): %w", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Deleting IPAM Pool CIDR: %s", d.Id())

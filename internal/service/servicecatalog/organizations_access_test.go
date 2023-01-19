@@ -12,10 +12,10 @@ import (
 	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/internal/service/servicecatalog"
 )
 
-func TestAccServiceCatalogOrganizationsAccess_basic(t *testing.T) {
+func testAccOrganizationsAccess_basic(t *testing.T) {
 	resourceName := "aws_servicecatalog_organizations_access.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckOrganizationsEnabled(t)
@@ -37,7 +37,7 @@ func TestAccServiceCatalogOrganizationsAccess_basic(t *testing.T) {
 }
 
 func testAccCheckOrganizationsAccessDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_servicecatalog_organizations_access" {
@@ -68,7 +68,7 @@ func testAccCheckOrganizationsAccessExists(resourceName string) resource.TestChe
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn()
 
 		output, err := tfservicecatalog.WaitOrganizationsAccessStable(conn, tfservicecatalog.OrganizationsAccessStableTimeout)
 

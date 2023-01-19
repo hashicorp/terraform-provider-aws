@@ -1,6 +1,7 @@
 package lightsail
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -39,17 +40,16 @@ func ResourceStaticIP() *schema.Resource {
 }
 
 func resourceStaticIPCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LightsailConn
+	conn := meta.(*conns.AWSClient).LightsailConn()
 
 	name := d.Get("name").(string)
 	log.Printf("[INFO] Allocating Lightsail Static IP: %q", name)
-	out, err := conn.AllocateStaticIp(&lightsail.AllocateStaticIpInput{
+	_, err := conn.AllocateStaticIp(&lightsail.AllocateStaticIpInput{
 		StaticIpName: aws.String(name),
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("creating Lightsail Static IP: %w", err)
 	}
-	log.Printf("[INFO] Lightsail Static IP allocated: %s", *out)
 
 	d.SetId(name)
 
@@ -57,7 +57,7 @@ func resourceStaticIPCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceStaticIPRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LightsailConn
+	conn := meta.(*conns.AWSClient).LightsailConn()
 
 	name := d.Get("name").(string)
 	log.Printf("[INFO] Reading Lightsail Static IP: %q", name)
@@ -70,7 +70,7 @@ func resourceStaticIPRead(d *schema.ResourceData, meta interface{}) error {
 			d.SetId("")
 			return nil
 		}
-		return err
+		return fmt.Errorf("reading Lightsail Static IP (%s):%w", d.Id(), err)
 	}
 
 	d.Set("arn", out.StaticIp.Arn)
@@ -81,16 +81,15 @@ func resourceStaticIPRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceStaticIPDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LightsailConn
+	conn := meta.(*conns.AWSClient).LightsailConn()
 
 	name := d.Get("name").(string)
 	log.Printf("[INFO] Deleting Lightsail Static IP: %q", name)
-	out, err := conn.ReleaseStaticIp(&lightsail.ReleaseStaticIpInput{
+	_, err := conn.ReleaseStaticIp(&lightsail.ReleaseStaticIpInput{
 		StaticIpName: aws.String(name),
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting Lightsail Static IP (%s):%w", d.Id(), err)
 	}
-	log.Printf("[INFO] Deleted Lightsail Static IP: %s", *out)
 	return nil
 }

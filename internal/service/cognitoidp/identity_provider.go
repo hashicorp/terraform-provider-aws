@@ -85,7 +85,7 @@ func ResourceIdentityProvider() *schema.Resource {
 }
 
 func resourceIdentityProviderCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
+	conn := meta.(*conns.AWSClient).CognitoIDPConn()
 	log.Print("[DEBUG] Creating Cognito Identity Provider")
 
 	providerName := d.Get("provider_name").(string)
@@ -119,12 +119,12 @@ func resourceIdentityProviderCreate(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceIdentityProviderRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
+	conn := meta.(*conns.AWSClient).CognitoIDPConn()
 	log.Printf("[DEBUG] Reading Cognito Identity Provider: %s", d.Id())
 
 	userPoolID, providerName, err := DecodeIdentityProviderID(d.Id())
 	if err != nil {
-		return err
+		return create.Error(names.CognitoIDP, create.ErrActionReading, ResNameIdentityProvider, d.Id(), err)
 	}
 
 	ret, err := conn.DescribeIdentityProvider(&cognitoidentityprovider.DescribeIdentityProviderInput{
@@ -173,12 +173,12 @@ func resourceIdentityProviderRead(d *schema.ResourceData, meta interface{}) erro
 }
 
 func resourceIdentityProviderUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
+	conn := meta.(*conns.AWSClient).CognitoIDPConn()
 	log.Print("[DEBUG] Updating Cognito Identity Provider")
 
 	userPoolID, providerName, err := DecodeIdentityProviderID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("updating Cognito Identity Provider (%s): %w", d.Id(), err)
 	}
 
 	params := &cognitoidentityprovider.UpdateIdentityProviderInput{
@@ -200,19 +200,19 @@ func resourceIdentityProviderUpdate(d *schema.ResourceData, meta interface{}) er
 
 	_, err = conn.UpdateIdentityProvider(params)
 	if err != nil {
-		return fmt.Errorf("Error updating Cognito Identity Provider: %w", err)
+		return fmt.Errorf("updating Cognito Identity Provider (%s): %w", d.Id(), err)
 	}
 
 	return resourceIdentityProviderRead(d, meta)
 }
 
 func resourceIdentityProviderDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
+	conn := meta.(*conns.AWSClient).CognitoIDPConn()
 	log.Printf("[DEBUG] Deleting Cognito Identity Provider: %s", d.Id())
 
 	userPoolID, providerName, err := DecodeIdentityProviderID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting Cognito Identity Provider (%s): %w", d.Id(), err)
 	}
 
 	_, err = conn.DeleteIdentityProvider(&cognitoidentityprovider.DeleteIdentityProviderInput{
@@ -224,7 +224,7 @@ func resourceIdentityProviderDelete(d *schema.ResourceData, meta interface{}) er
 		if tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
 			return nil
 		}
-		return err
+		return fmt.Errorf("deleting Cognito Identity Provider (%s): %w", d.Id(), err)
 	}
 
 	return nil

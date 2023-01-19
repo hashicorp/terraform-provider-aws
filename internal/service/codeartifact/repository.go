@@ -100,7 +100,7 @@ func ResourceRepository() *schema.Resource {
 }
 
 func resourceRepositoryCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeArtifactConn
+	conn := meta.(*conns.AWSClient).CodeArtifactConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 	log.Print("[DEBUG] Creating CodeArtifact Repository")
@@ -150,7 +150,7 @@ func resourceRepositoryCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceRepositoryUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeArtifactConn
+	conn := meta.(*conns.AWSClient).CodeArtifactConn()
 	log.Print("[DEBUG] Updating CodeArtifact Repository")
 
 	needsUpdate := false
@@ -223,7 +223,7 @@ func resourceRepositoryUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceRepositoryRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeArtifactConn
+	conn := meta.(*conns.AWSClient).CodeArtifactConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -231,7 +231,7 @@ func resourceRepositoryRead(d *schema.ResourceData, meta interface{}) error {
 
 	owner, domain, repo, err := DecodeRepositoryID(d.Id())
 	if err != nil {
-		return err
+		return create.Error(names.CodeArtifact, create.ErrActionReading, ResNameRepository, d.Id(), err)
 	}
 	sm, err := conn.DescribeRepository(&codeartifact.DescribeRepositoryInput{
 		Repository:  aws.String(repo),
@@ -289,12 +289,12 @@ func resourceRepositoryRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceRepositoryDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeArtifactConn
+	conn := meta.(*conns.AWSClient).CodeArtifactConn()
 	log.Printf("[DEBUG] Deleting CodeArtifact Repository: %s", d.Id())
 
 	owner, domain, repo, err := DecodeRepositoryID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting CodeArtifact Repository (%s): %w", d.Id(), err)
 	}
 	input := &codeartifact.DeleteRepositoryInput{
 		Repository:  aws.String(repo),
@@ -309,7 +309,7 @@ func resourceRepositoryDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting CodeArtifact Repository (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting CodeArtifact Repository (%s): %w", d.Id(), err)
 	}
 
 	return nil

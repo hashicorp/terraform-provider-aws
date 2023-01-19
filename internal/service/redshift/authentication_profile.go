@@ -47,7 +47,7 @@ func ResourceAuthenticationProfile() *schema.Resource {
 }
 
 func resourceAuthenticationProfileCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 
 	authProfileName := d.Get("authentication_profile_name").(string)
 
@@ -68,7 +68,7 @@ func resourceAuthenticationProfileCreate(d *schema.ResourceData, meta interface{
 }
 
 func resourceAuthenticationProfileRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 
 	out, err := FindAuthenticationProfileByID(conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -88,7 +88,7 @@ func resourceAuthenticationProfileRead(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAuthenticationProfileUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 
 	input := &redshift.ModifyAuthenticationProfileInput{
 		AuthenticationProfileName:    aws.String(d.Id()),
@@ -105,7 +105,7 @@ func resourceAuthenticationProfileUpdate(d *schema.ResourceData, meta interface{
 }
 
 func resourceAuthenticationProfileDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 
 	deleteInput := redshift.DeleteAuthenticationProfileInput{
 		AuthenticationProfileName: aws.String(d.Id()),
@@ -118,8 +118,8 @@ func resourceAuthenticationProfileDelete(d *schema.ResourceData, meta interface{
 		if tfawserr.ErrCodeEquals(err, redshift.ErrCodeAuthenticationProfileNotFoundFault) {
 			return nil
 		}
-		return err
+		return fmt.Errorf("deleting Redshift Authentication Profile (%s): %w", d.Id(), err)
 	}
 
-	return err
+	return nil
 }

@@ -31,7 +31,7 @@ func ResourceApp() *schema.Resource {
 				}
 
 				applicationName := d.Id()
-				conn := meta.(*conns.AWSClient).DeployConn
+				conn := meta.(*conns.AWSClient).DeployConn()
 
 				input := &codedeploy.GetApplicationInput{
 					ApplicationName: aws.String(applicationName),
@@ -94,7 +94,7 @@ func ResourceApp() *schema.Resource {
 }
 
 func resourceAppCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DeployConn
+	conn := meta.(*conns.AWSClient).DeployConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -108,9 +108,8 @@ func resourceAppCreate(d *schema.ResourceData, meta interface{}) error {
 		Tags:            Tags(tags.IgnoreAWS()),
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("creating CodeDeploy Application (%s): %w", application, err)
 	}
-	log.Printf("[DEBUG] CodeDeploy application %s created", *resp.ApplicationId)
 
 	// Despite giving the application a unique ID, AWS doesn't actually use
 	// it in API calls. Use it and the app name to identify the resource in
@@ -123,7 +122,7 @@ func resourceAppCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAppRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DeployConn
+	conn := meta.(*conns.AWSClient).DeployConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -190,7 +189,7 @@ func resourceAppRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DeployConn
+	conn := meta.(*conns.AWSClient).DeployConn()
 
 	if d.HasChange("name") {
 		o, n := d.GetChange("name")
@@ -217,7 +216,7 @@ func resourceUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAppDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DeployConn
+	conn := meta.(*conns.AWSClient).DeployConn()
 
 	_, err := conn.DeleteApplication(&codedeploy.DeleteApplicationInput{
 		ApplicationName: aws.String(d.Get("name").(string)),
@@ -227,8 +226,7 @@ func resourceAppDelete(d *schema.ResourceData, meta interface{}) error {
 			return nil
 		}
 
-		log.Printf("[ERROR] Error deleting CodeDeploy application: %s", err)
-		return err
+		return fmt.Errorf("deleting CodeDeploy Application (%s): %w", d.Id(), err)
 	}
 
 	return nil

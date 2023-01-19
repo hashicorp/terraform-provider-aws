@@ -154,7 +154,7 @@ func ResourceAssociation() *schema.Resource {
 }
 
 func resourceAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+	conn := meta.(*conns.AWSClient).SSMConn()
 
 	log.Printf("[DEBUG] SSM association create: %s", d.Id())
 
@@ -233,7 +233,7 @@ func resourceAssociationCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+	conn := meta.(*conns.AWSClient).SSMConn()
 
 	log.Printf("[DEBUG] Reading SSM Association: %s", d.Id())
 
@@ -268,7 +268,7 @@ func resourceAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("automation_target_parameter_name", association.AutomationTargetParameterName)
 
 	if err := d.Set("parameters", flattenParameters(association.Parameters)); err != nil {
-		return err
+		return fmt.Errorf("reading SSM Association (%s): %w", d.Id(), err)
 	}
 
 	if err := d.Set("targets", flattenTargets(association.Targets)); err != nil {
@@ -283,7 +283,7 @@ func resourceAssociationRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAssociationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+	conn := meta.(*conns.AWSClient).SSMConn()
 
 	log.Printf("[DEBUG] SSM Association update: %s", d.Id())
 
@@ -345,7 +345,7 @@ func resourceAssociationUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+	conn := meta.(*conns.AWSClient).SSMConn()
 
 	log.Printf("[DEBUG] Deleting SSM Association: %s", d.Id())
 

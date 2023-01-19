@@ -1,6 +1,7 @@
 package lightsail
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -31,13 +32,13 @@ func ResourceDomain() *schema.Resource {
 }
 
 func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LightsailConn
+	conn := meta.(*conns.AWSClient).LightsailConn()
 	_, err := conn.CreateDomain(&lightsail.CreateDomainInput{
 		DomainName: aws.String(d.Get("domain_name").(string)),
 	})
 
 	if err != nil {
-		return err
+		return fmt.Errorf("creating Lightsail Domain: %w", err)
 	}
 
 	d.SetId(d.Get("domain_name").(string))
@@ -46,7 +47,7 @@ func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LightsailConn
+	conn := meta.(*conns.AWSClient).LightsailConn()
 	resp, err := conn.GetDomain(&lightsail.GetDomainInput{
 		DomainName: aws.String(d.Id()),
 	})
@@ -57,7 +58,7 @@ func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 			d.SetId("")
 			return nil
 		}
-		return err
+		return fmt.Errorf("reading Lightsail Domain (%s):%w", d.Id(), err)
 	}
 
 	d.Set("arn", resp.Domain.Arn)
@@ -65,10 +66,10 @@ func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDomainDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LightsailConn
+	conn := meta.(*conns.AWSClient).LightsailConn()
 	_, err := conn.DeleteDomain(&lightsail.DeleteDomainInput{
 		DomainName: aws.String(d.Id()),
 	})
 
-	return err
+	return fmt.Errorf("deleting Lightsail Domain (%s):%w", d.Id(), err)
 }

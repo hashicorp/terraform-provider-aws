@@ -34,7 +34,7 @@ func ResourceOrganizationAdminAccount() *schema.Resource {
 }
 
 func resourceOrganizationAdminAccountCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecurityHubConn
+	conn := meta.(*conns.AWSClient).SecurityHubConn()
 
 	adminAccountID := d.Get("admin_account_id").(string)
 
@@ -58,7 +58,7 @@ func resourceOrganizationAdminAccountCreate(d *schema.ResourceData, meta interfa
 }
 
 func resourceOrganizationAdminAccountRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecurityHubConn
+	conn := meta.(*conns.AWSClient).SecurityHubConn()
 
 	adminAccount, err := FindAdminAccount(conn, d.Id())
 
@@ -88,7 +88,7 @@ func resourceOrganizationAdminAccountRead(d *schema.ResourceData, meta interface
 }
 
 func resourceOrganizationAdminAccountDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecurityHubConn
+	conn := meta.(*conns.AWSClient).SecurityHubConn()
 
 	input := &securityhub.DisableOrganizationAdminAccountInput{
 		AdminAccountId: aws.String(d.Id()),

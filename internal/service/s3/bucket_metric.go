@@ -63,7 +63,7 @@ func ResourceBucketMetric() *schema.Resource {
 }
 
 func resourceBucketMetricPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 	bucket := d.Get("bucket").(string)
 	name := d.Get("name").(string)
 
@@ -113,11 +113,11 @@ func resourceBucketMetricPut(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceBucketMetricDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket, name, err := BucketMetricParseID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting S3 Bucket Metrics Configuration (%s): %w", d.Id(), err)
 	}
 
 	input := &s3.DeleteBucketMetricsConfigurationInput{
@@ -137,18 +137,18 @@ func resourceBucketMetricDelete(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting S3 Bucket Metrics Configuration (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting S3 Bucket Metrics Configuration (%s): %w", d.Id(), err)
 	}
 
 	return nil
 }
 
 func resourceBucketMetricRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket, name, err := BucketMetricParseID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("reading S3 Bucket Metrics Configuration (%s): %w", d.Id(), err)
 	}
 
 	d.Set("bucket", bucket)
@@ -175,16 +175,16 @@ func resourceBucketMetricRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading S3 Bucket Metrics Configuration (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading S3 Bucket Metrics Configuration (%s): %w", d.Id(), err)
 	}
 
 	if output == nil || output.MetricsConfiguration == nil {
-		return fmt.Errorf("error reading S3 Bucket Metrics Configuration (%s): empty response", d.Id())
+		return fmt.Errorf("reading S3 Bucket Metrics Configuration (%s): empty response", d.Id())
 	}
 
 	if output.MetricsConfiguration.Filter != nil {
 		if err := d.Set("filter", []interface{}{FlattenMetricsFilter(output.MetricsConfiguration.Filter)}); err != nil {
-			return err
+			return fmt.Errorf("setting filter")
 		}
 	}
 

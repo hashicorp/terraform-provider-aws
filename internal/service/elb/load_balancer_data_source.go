@@ -205,7 +205,7 @@ func DataSourceLoadBalancer() *schema.Resource {
 }
 
 func dataSourceLoadBalancerRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBConn
+	conn := meta.(*conns.AWSClient).ELBConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	lbName := d.Get("name").(string)
@@ -234,7 +234,7 @@ func dataSourceLoadBalancerRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("arn", arn.String())
 
 	lb := resp.LoadBalancerDescriptions[0]
-	ec2conn := meta.(*conns.AWSClient).EC2Conn
+	ec2conn := meta.(*conns.AWSClient).EC2Conn()
 
 	describeAttrsOpts := &elb.DescribeLoadBalancerAttributesInput{
 		LoadBalancerName: aws.String(d.Id()),
@@ -306,7 +306,7 @@ func dataSourceLoadBalancerRead(d *schema.ResourceData, meta interface{}) error 
 			elbal = nil
 		}
 		if err := d.Set("access_logs", flattenAccessLog(elbal)); err != nil {
-			return err
+			return fmt.Errorf("reading ELB Classic Load Balancer (%s): setting access_logs: %w", d.Id(), err)
 		}
 	}
 

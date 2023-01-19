@@ -38,7 +38,7 @@ func sweepAccountAssignments(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).SSOAdminConn
+	conn := client.(*conns.AWSClient).SSOAdminConn()
 	var sweeperErrs *multierror.Error
 
 	// Need to Read the SSO Instance first; assumes the first instance returned
@@ -145,7 +145,7 @@ func sweepPermissionSets(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).SSOAdminConn
+	conn := client.(*conns.AWSClient).SSOAdminConn()
 	var sweeperErrs *multierror.Error
 
 	// Need to Read the SSO Instance first; assumes the first instance returned

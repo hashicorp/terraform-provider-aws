@@ -170,7 +170,7 @@ func TestAccPinpointApp_tags(t *testing.T) {
 }
 
 func testAccPreCheckApp(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn()
 
 	input := &pinpoint.GetAppsInput{}
 
@@ -196,7 +196,7 @@ func testAccCheckAppExists(n string, application *pinpoint.ApplicationResponse) 
 			return fmt.Errorf("No Pinpoint app with that ID exists")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn()
 
 		// Check if the app exists
 		params := &pinpoint.GetAppInput{
@@ -330,7 +330,7 @@ resource "aws_pinpoint_app" "test" {
 }
 
 func testAccCheckAppDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).PinpointConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_pinpoint_app" {
@@ -355,7 +355,7 @@ func testAccCheckAppDestroy(s *terraform.State) error {
 }
 
 func testAccCheckRAMResourceShareDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RAMConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RAMConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ram_resource_share" {

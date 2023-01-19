@@ -288,7 +288,7 @@ func TestAccSSMParameter_Overwrite_basic(t *testing.T) {
 			{
 
 				PreConfig: func() {
-					conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn
+					conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn()
 
 					input := &ssm.PutParameterInput{
 						Name:  aws.String(fmt.Sprintf("%s-%s", "test_parameter", name)),
@@ -884,7 +884,7 @@ func testAccCheckParameterExists(n string, param *ssm.Parameter) resource.TestCh
 			return fmt.Errorf("No SSM Parameter ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn()
 
 		paramInput := &ssm.GetParametersInput{
 			Names: []*string{
@@ -909,7 +909,7 @@ func testAccCheckParameterExists(n string, param *ssm.Parameter) resource.TestCh
 }
 
 func testAccCheckParameterDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SSMConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ssm_parameter" {
@@ -1128,6 +1128,8 @@ resource "aws_kms_alias" "test_alias" {
 }
 
 func TestParameterShouldUpdate(t *testing.T) {
+	t.Parallel()
+
 	data := tfssm.ResourceParameter().TestResourceData()
 	failure := false
 

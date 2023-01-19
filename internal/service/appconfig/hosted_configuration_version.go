@@ -69,7 +69,7 @@ func ResourceHostedConfigurationVersion() *schema.Resource {
 }
 
 func resourceHostedConfigurationVersionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppConfigConn
+	conn := meta.(*conns.AWSClient).AppConfigConn()
 
 	appID := d.Get("application_id").(string)
 	profileID := d.Get("configuration_profile_id").(string)
@@ -97,12 +97,12 @@ func resourceHostedConfigurationVersionCreate(d *schema.ResourceData, meta inter
 }
 
 func resourceHostedConfigurationVersionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppConfigConn
+	conn := meta.(*conns.AWSClient).AppConfigConn()
 
 	appID, confProfID, versionNumber, err := HostedConfigurationVersionParseID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("reading AppConfig Hosted Configuration Version (%s): %w", d.Id(), err)
 	}
 
 	input := &appconfig.GetHostedConfigurationVersionInput{
@@ -120,11 +120,11 @@ func resourceHostedConfigurationVersionRead(d *schema.ResourceData, meta interfa
 	}
 
 	if err != nil {
-		return fmt.Errorf("error getting AppConfig Hosted Configuration Version (%s): %w", d.Id(), err)
+		return fmt.Errorf("reading AppConfig Hosted Configuration Version (%s): %w", d.Id(), err)
 	}
 
 	if output == nil {
-		return fmt.Errorf("error getting AppConfig Hosted Configuration Version (%s): empty response", d.Id())
+		return fmt.Errorf("reading AppConfig Hosted Configuration Version (%s): empty response", d.Id())
 	}
 
 	d.Set("application_id", output.ApplicationId)
@@ -148,12 +148,12 @@ func resourceHostedConfigurationVersionRead(d *schema.ResourceData, meta interfa
 }
 
 func resourceHostedConfigurationVersionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppConfigConn
+	conn := meta.(*conns.AWSClient).AppConfigConn()
 
 	appID, confProfID, versionNumber, err := HostedConfigurationVersionParseID(d.Id())
 
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting Appconfig Hosted Configuration Version (%s): %w", d.Id(), err)
 	}
 
 	input := &appconfig.DeleteHostedConfigurationVersionInput{
@@ -169,7 +169,7 @@ func resourceHostedConfigurationVersionDelete(d *schema.ResourceData, meta inter
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Appconfig Hosted Configuration Version (%s): %w", d.Id(), err)
+		return fmt.Errorf("deleting Appconfig Hosted Configuration Version (%s): %w", d.Id(), err)
 	}
 
 	return nil

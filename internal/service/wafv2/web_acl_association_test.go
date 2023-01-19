@@ -94,7 +94,7 @@ func testAccCheckWebACLAssociationDestroy(s *terraform.State) error {
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn()
 
 		_, err = tfwafv2.FindWebACLByResourceARN(context.Background(), conn, resourceARN)
 
@@ -129,7 +129,7 @@ func testAccCheckWebACLAssociationExists(n string) resource.TestCheckFunc {
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Conn()
 
 		_, err = tfwafv2.FindWebACLByResourceARN(context.Background(), conn, resourceARN)
 

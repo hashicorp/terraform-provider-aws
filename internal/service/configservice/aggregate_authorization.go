@@ -52,7 +52,7 @@ func ResourceAggregateAuthorization() *schema.Resource {
 }
 
 func resourceAggregateAuthorizationPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigServiceConn
+	conn := meta.(*conns.AWSClient).ConfigServiceConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -76,13 +76,13 @@ func resourceAggregateAuthorizationPut(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAggregateAuthorizationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigServiceConn
+	conn := meta.(*conns.AWSClient).ConfigServiceConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	accountId, region, err := AggregateAuthorizationParseID(d.Id())
 	if err != nil {
-		return err
+		return create.Error(names.ConfigService, create.ErrActionReading, ResNameAggregateAuthorization, d.Id(), err)
 	}
 
 	d.Set("account_id", accountId)
@@ -140,7 +140,7 @@ func resourceAggregateAuthorizationRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAggregateAuthorizationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigServiceConn
+	conn := meta.(*conns.AWSClient).ConfigServiceConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -154,11 +154,11 @@ func resourceAggregateAuthorizationUpdate(d *schema.ResourceData, meta interface
 }
 
 func resourceAggregateAuthorizationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigServiceConn
+	conn := meta.(*conns.AWSClient).ConfigServiceConn()
 
 	accountId, region, err := AggregateAuthorizationParseID(d.Id())
 	if err != nil {
-		return err
+		return fmt.Errorf("deleting Config Aggregate Authorization (%s): %s", d.Id(), err)
 	}
 
 	req := &configservice.DeleteAggregationAuthorizationInput{
@@ -168,7 +168,7 @@ func resourceAggregateAuthorizationDelete(d *schema.ResourceData, meta interface
 
 	_, err = conn.DeleteAggregationAuthorization(req)
 	if err != nil {
-		return fmt.Errorf("Error deleting aggregate authorization: %s", err)
+		return fmt.Errorf("deleting Config Aggregate Authorization (%s): %s", d.Id(), err)
 	}
 
 	return nil

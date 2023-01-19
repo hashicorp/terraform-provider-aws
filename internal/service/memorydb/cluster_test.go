@@ -35,6 +35,7 @@ func TestAccMemoryDBCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
 					resource.TestMatchResourceAttr(resourceName, "cluster_endpoint.0.address", regexp.MustCompile(`^clustercfg\..*?\.amazonaws\.com$`)),
 					resource.TestCheckResourceAttr(resourceName, "cluster_endpoint.0.port", "6379"),
+					resource.TestCheckResourceAttr(resourceName, "data_tiering", "false"),
 					resource.TestCheckResourceAttr(resourceName, "description", "Managed by Terraform"),
 					resource.TestCheckResourceAttrSet(resourceName, "engine_patch_version"),
 					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
@@ -95,6 +96,7 @@ func TestAccMemoryDBCluster_defaults(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
 					resource.TestCheckResourceAttrSet(resourceName, "cluster_endpoint.0.address"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_endpoint.0.port", "6379"),
+					resource.TestCheckResourceAttr(resourceName, "data_tiering", "false"),
 					resource.TestCheckResourceAttr(resourceName, "description", "Managed by Terraform"),
 					resource.TestCheckResourceAttrSet(resourceName, "engine_patch_version"),
 					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
@@ -207,6 +209,32 @@ func TestAccMemoryDBCluster_create_noTLS(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tls_enabled", "false"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccMemoryDBCluster_create_withDataTiering(t *testing.T) {
+	rName := "tf-test-" + sdkacctest.RandString(8)
+	resourceName := "aws_memorydb_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, memorydb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_dataTiering(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "data_tiering", "true"),
 				),
 			},
 			{
@@ -1004,7 +1032,7 @@ func TestAccMemoryDBCluster_Update_tags(t *testing.T) {
 }
 
 func testAccCheckClusterDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).MemoryDBConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).MemoryDBConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_memorydb_cluster" {
@@ -1038,7 +1066,7 @@ func testAccCheckClusterExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No MemoryDB Cluster ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MemoryDBConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MemoryDBConn()
 
 		_, err := tfmemorydb.FindClusterByName(context.Background(), conn, rs.Primary.Attributes["name"])
 
@@ -1048,7 +1076,7 @@ func testAccCheckClusterExists(n string) resource.TestCheckFunc {
 
 func testAccCheckSnapshotExistsByName(snapshotName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MemoryDBConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MemoryDBConn()
 
 		_, err := tfmemorydb.FindSnapshotByName(context.Background(), conn, snapshotName)
 
@@ -1194,6 +1222,21 @@ resource "aws_memorydb_cluster" "test" {
   subnet_group_name      = aws_memorydb_subnet_group.test.id
 }
 `, rName, aclName),
+	)
+}
+
+func testAccClusterConfig_dataTiering(rName string) string {
+	return acctest.ConfigCompose(
+		testAccClusterConfig_baseNetwork(rName),
+		fmt.Sprintf(`
+resource "aws_memorydb_cluster" "test" {
+  acl_name          = "open-access"
+  data_tiering      = true
+  name              = %[1]q
+  node_type         = "db.r6gd.xlarge"
+  subnet_group_name = aws_memorydb_subnet_group.test.id
+}
+`, rName),
 	)
 }
 

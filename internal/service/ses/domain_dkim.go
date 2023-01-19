@@ -35,7 +35,7 @@ func ResourceDomainDKIM() *schema.Resource {
 }
 
 func resourceDomainDKIMCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	domainName := d.Get("domain").(string)
 
@@ -54,7 +54,7 @@ func resourceDomainDKIMCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceDomainDKIMRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	domainName := d.Id()
 	d.Set("domain", domainName)
@@ -67,13 +67,12 @@ func resourceDomainDKIMRead(d *schema.ResourceData, meta interface{}) error {
 
 	response, err := conn.GetIdentityDkimAttributes(readOpts)
 	if err != nil {
-		log.Printf("[WARN] Error fetching identity verification attributes for %s: %s", d.Id(), err)
-		return err
+		return fmt.Errorf("reading SES Domain DKIM (%s): %w", d.Id(), err)
 	}
 
 	verificationAttrs, ok := response.DkimAttributes[domainName]
 	if !ok {
-		log.Printf("[WARN] Domain not listed in response when fetching verification attributes for %s", d.Id())
+		log.Printf("[WARN] SES Domain DKIM (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
