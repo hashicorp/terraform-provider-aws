@@ -428,7 +428,7 @@ resource "aws_vpc_ipam_pool_cidr" "test" {
 }
 
 resource "aws_vpc_ipam_pool_cidr_allocation" "test" {
-  provider = "awsalternate"
+  provider     = "awsalternate"
   ipam_pool_id = aws_vpc_ipam_pool.test.id
   cidr         = %[1]q
 
