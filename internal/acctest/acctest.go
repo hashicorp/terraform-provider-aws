@@ -752,9 +752,7 @@ func PreCheckPartitionNot(t *testing.T, partitions ...string) {
 	}
 }
 
-func PreCheckOrganizationsAccount(t *testing.T) {
-	ctx := context.TODO()
-
+func PreCheckOrganizationsAccount(ctx context.Context, t *testing.T) {
 	_, err := tforganizations.FindOrganization(ctx, Provider.Meta().(*conns.AWSClient).OrganizationsConn())
 
 	if tfresource.NotFound(err) {

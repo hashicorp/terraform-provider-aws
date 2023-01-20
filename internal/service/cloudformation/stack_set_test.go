@@ -535,7 +535,7 @@ func TestAccCloudFormationStackSet_PermissionModel_serviceManaged(t *testing.T) 
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheckStackSet(ctx, t)
-			acctest.PreCheckOrganizationsAccount(t)
+			acctest.PreCheckOrganizationsAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, cloudformation.EndpointsID, "organizations"),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
