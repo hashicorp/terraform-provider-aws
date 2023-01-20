@@ -20,6 +20,7 @@ import (
 )
 
 func TestAccLightsailInstance_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_instance.test"
 
@@ -27,16 +28,16 @@ func TestAccLightsailInstance_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
-			testAccPreCheck(t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceExists(resourceName),
+					testAccCheckInstanceExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
 					resource.TestCheckResourceAttrSet(resourceName, "blueprint_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "bundle_id"),
@@ -52,6 +53,7 @@ func TestAccLightsailInstance_basic(t *testing.T) {
 }
 
 func TestAccLightsailInstance_name(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_instance.test"
 	rNameWithSpaces := fmt.Sprint(rName, "string with spaces")
@@ -62,11 +64,11 @@ func TestAccLightsailInstance_name(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
-			testAccPreCheck(t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccInstanceConfig_basic(rNameWithSpaces),
@@ -79,7 +81,7 @@ func TestAccLightsailInstance_name(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceExists(resourceName),
+					testAccCheckInstanceExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
 					resource.TestCheckResourceAttrSet(resourceName, "blueprint_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "bundle_id"),
@@ -89,7 +91,7 @@ func TestAccLightsailInstance_name(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_basic(rNameWithUnderscore),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceExists(resourceName),
+					testAccCheckInstanceExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
 					resource.TestCheckResourceAttrSet(resourceName, "blueprint_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "bundle_id"),
@@ -101,6 +103,7 @@ func TestAccLightsailInstance_name(t *testing.T) {
 }
 
 func TestAccLightsailInstance_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_instance.test"
 
@@ -108,16 +111,16 @@ func TestAccLightsailInstance_tags(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
-			testAccPreCheck(t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_tags1(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceExists(resourceName),
+					testAccCheckInstanceExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
 					resource.TestCheckResourceAttrSet(resourceName, "blueprint_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "bundle_id"),
@@ -128,7 +131,7 @@ func TestAccLightsailInstance_tags(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_tags2(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceExists(resourceName),
+					testAccCheckInstanceExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
 					resource.TestCheckResourceAttrSet(resourceName, "blueprint_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "bundle_id"),
@@ -141,6 +144,7 @@ func TestAccLightsailInstance_tags(t *testing.T) {
 }
 
 func TestAccLightsailInstance_IPAddressType(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_instance.test"
 
@@ -148,16 +152,16 @@ func TestAccLightsailInstance_IPAddressType(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
-			testAccPreCheck(t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_IPAddressType(rName, "ipv4"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resourceName),
+					testAccCheckInstanceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "ip_address_type", "ipv4"),
 				),
 			},
@@ -169,7 +173,7 @@ func TestAccLightsailInstance_IPAddressType(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_IPAddressType(rName, "dualstack"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resourceName),
+					testAccCheckInstanceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "ip_address_type", "dualstack"),
 				),
 			},
@@ -178,6 +182,7 @@ func TestAccLightsailInstance_IPAddressType(t *testing.T) {
 }
 
 func TestAccLightsailInstance_addOn(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_instance.test"
 	statusEnabled := "Enabled"
@@ -189,16 +194,16 @@ func TestAccLightsailInstance_addOn(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
-			testAccPreCheck(t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_addOn(rName, snapshotTime1, statusEnabled),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resourceName),
+					testAccCheckInstanceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "add_on.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "add_on.*", map[string]string{
 						"type": "AutoSnapshot",
@@ -214,7 +219,7 @@ func TestAccLightsailInstance_addOn(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_addOn(rName, snapshotTime2, statusEnabled),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resourceName),
+					testAccCheckInstanceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "add_on.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "add_on.*", map[string]string{
 						"type": "AutoSnapshot",
@@ -230,7 +235,7 @@ func TestAccLightsailInstance_addOn(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_addOn(rName, snapshotTime2, statusDisabled),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resourceName),
+					testAccCheckInstanceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "add_on.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "add_on.*", map[string]string{
 						"type": "AutoSnapshot",
@@ -248,6 +253,7 @@ func TestAccLightsailInstance_addOn(t *testing.T) {
 }
 
 func TestAccLightsailInstance_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_instance.test"
 
@@ -255,17 +261,17 @@ func TestAccLightsailInstance_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
-			testAccPreCheck(t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tflightsail.ResourceInstance(), resourceName),
+					testAccCheckInstanceExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflightsail.ResourceInstance(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -273,7 +279,7 @@ func TestAccLightsailInstance_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckInstanceExists(n string) resource.TestCheckFunc {
+func testAccCheckInstanceExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -286,7 +292,7 @@ func testAccCheckInstanceExists(n string) resource.TestCheckFunc {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
 
-		out, err := tflightsail.FindInstanceById(context.Background(), conn, rs.Primary.ID)
+		out, err := tflightsail.FindInstanceById(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -300,36 +306,38 @@ func testAccCheckInstanceExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckInstanceDestroy(s *terraform.State) error {
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_lightsail_instance" {
-			continue
+func testAccCheckInstanceDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_lightsail_instance" {
+				continue
+			}
+
+			conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
+
+			_, err := tflightsail.FindInstanceById(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return create.Error(names.Lightsail, create.ErrActionCheckingDestroyed, tflightsail.ResInstance, rs.Primary.ID, errors.New("still exists"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
-
-		_, err := tflightsail.FindInstanceById(context.Background(), conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return create.Error(names.Lightsail, create.ErrActionCheckingDestroyed, tflightsail.ResInstance, rs.Primary.ID, errors.New("still exists"))
+		return nil
 	}
-
-	return nil
 }
 
-func testAccPreCheck(t *testing.T) {
+func testAccPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
 
 	input := &lightsail.GetInstancesInput{}
 
-	_, err := conn.GetInstances(input)
+	_, err := conn.GetInstancesWithContext(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

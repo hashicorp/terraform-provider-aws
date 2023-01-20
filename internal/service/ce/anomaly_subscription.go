@@ -172,7 +172,7 @@ func resourceAnomalySubscriptionRead(ctx context.Context, d *schema.ResourceData
 		return create.DiagError(names.CE, "setting threshold_expression", ResNameAnomalySubscription, d.Id(), err)
 	}
 
-	tags, err := ListTags(conn, aws.StringValue(subscription.SubscriptionArn))
+	tags, err := ListTags(ctx, conn, aws.StringValue(subscription.SubscriptionArn))
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	if err != nil {
@@ -229,7 +229,7 @@ func resourceAnomalySubscriptionUpdate(ctx context.Context, d *schema.ResourceDa
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
 
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
 			return create.DiagError(names.CE, create.ErrActionUpdating, ResNameAnomalySubscription, d.Id(), err)
 		}
 	}
@@ -237,7 +237,7 @@ func resourceAnomalySubscriptionUpdate(ctx context.Context, d *schema.ResourceDa
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
 			return create.DiagError(names.CE, create.ErrActionUpdating, ResNameAnomalySubscription, d.Id(), err)
 		}
 	}

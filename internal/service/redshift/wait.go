@@ -1,6 +1,7 @@
 package redshift
 
 import (
+	"context"
 	"errors"
 	"time"
 
@@ -19,16 +20,16 @@ const (
 	snapshotScheduleAssociationDestroyedTimeout = 75 * time.Minute
 )
 
-func waitClusterCreated(conn *redshift.Redshift, id string, timeout time.Duration) (*redshift.Cluster, error) {
+func waitClusterCreated(ctx context.Context, conn *redshift.Redshift, id string, timeout time.Duration) (*redshift.Cluster, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{clusterAvailabilityStatusModifying, clusterAvailabilityStatusUnavailable},
 		Target:     []string{clusterAvailabilityStatusAvailable},
-		Refresh:    statusClusterAvailability(conn, id),
+		Refresh:    statusClusterAvailability(ctx, conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*redshift.Cluster); ok {
 		tfresource.SetLastError(err, errors.New(aws.StringValue(output.ClusterStatus)))
@@ -39,15 +40,15 @@ func waitClusterCreated(conn *redshift.Redshift, id string, timeout time.Duratio
 	return nil, err
 }
 
-func waitClusterDeleted(conn *redshift.Redshift, id string, timeout time.Duration) (*redshift.Cluster, error) {
+func waitClusterDeleted(ctx context.Context, conn *redshift.Redshift, id string, timeout time.Duration) (*redshift.Cluster, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{clusterAvailabilityStatusModifying},
 		Target:  []string{},
-		Refresh: statusClusterAvailability(conn, id),
+		Refresh: statusClusterAvailability(ctx, conn, id),
 		Timeout: timeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*redshift.Cluster); ok {
 		tfresource.SetLastError(err, errors.New(aws.StringValue(output.ClusterStatus)))
@@ -58,15 +59,15 @@ func waitClusterDeleted(conn *redshift.Redshift, id string, timeout time.Duratio
 	return nil, err
 }
 
-func waitClusterUpdated(conn *redshift.Redshift, id string, timeout time.Duration) (*redshift.Cluster, error) { //nolint:unparam
+func waitClusterUpdated(ctx context.Context, conn *redshift.Redshift, id string, timeout time.Duration) (*redshift.Cluster, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{clusterAvailabilityStatusMaintenance, clusterAvailabilityStatusModifying, clusterAvailabilityStatusUnavailable},
 		Target:  []string{clusterAvailabilityStatusAvailable},
-		Refresh: statusClusterAvailability(conn, id),
+		Refresh: statusClusterAvailability(ctx, conn, id),
 		Timeout: timeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*redshift.Cluster); ok {
 		tfresource.SetLastError(err, errors.New(aws.StringValue(output.ClusterStatus)))
@@ -77,15 +78,15 @@ func waitClusterUpdated(conn *redshift.Redshift, id string, timeout time.Duratio
 	return nil, err
 }
 
-func waitClusterRelocationStatusResolved(conn *redshift.Redshift, id string) (*redshift.Cluster, error) { //nolint:unparam
+func waitClusterRelocationStatusResolved(ctx context.Context, conn *redshift.Redshift, id string) (*redshift.Cluster, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: clusterAvailabilityZoneRelocationStatus_PendingValues(),
 		Target:  clusterAvailabilityZoneRelocationStatus_TerminalValues(),
-		Refresh: statusClusterAvailabilityZoneRelocation(conn, id),
+		Refresh: statusClusterAvailabilityZoneRelocation(ctx, conn, id),
 		Timeout: clusterRelocationStatusResolvedTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*redshift.Cluster); ok {
 		return output, err
@@ -94,16 +95,16 @@ func waitClusterRelocationStatusResolved(conn *redshift.Redshift, id string) (*r
 	return nil, err
 }
 
-func waitClusterRebooted(conn *redshift.Redshift, id string, timeout time.Duration) (*redshift.Cluster, error) {
+func waitClusterRebooted(ctx context.Context, conn *redshift.Redshift, id string, timeout time.Duration) (*redshift.Cluster, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{clusterStatusRebooting, clusterStatusModifying},
 		Target:     []string{clusterStatusAvailable},
-		Refresh:    statusCluster(conn, id),
+		Refresh:    statusCluster(ctx, conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*redshift.Cluster); ok {
 		tfresource.SetLastError(err, errors.New(aws.StringValue(output.ClusterStatus)))
@@ -114,16 +115,16 @@ func waitClusterRebooted(conn *redshift.Redshift, id string, timeout time.Durati
 	return nil, err
 }
 
-func waitClusterAquaApplied(conn *redshift.Redshift, id string, timeout time.Duration) (*redshift.Cluster, error) {
+func waitClusterAquaApplied(ctx context.Context, conn *redshift.Redshift, id string, timeout time.Duration) (*redshift.Cluster, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{redshift.AquaStatusApplying},
 		Target:     []string{redshift.AquaStatusDisabled, redshift.AquaStatusEnabled},
-		Refresh:    statusClusterAqua(conn, id),
+		Refresh:    statusClusterAqua(ctx, conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*redshift.Cluster); ok {
 		tfresource.SetLastError(err, errors.New(aws.StringValue(output.ClusterStatus)))
@@ -134,17 +135,17 @@ func waitClusterAquaApplied(conn *redshift.Redshift, id string, timeout time.Dur
 	return nil, err
 }
 
-func WaitScheduleAssociationActive(conn *redshift.Redshift, id string) (*redshift.ClusterAssociatedToSchedule, error) {
+func WaitScheduleAssociationActive(ctx context.Context, conn *redshift.Redshift, id string) (*redshift.ClusterAssociatedToSchedule, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{redshift.ScheduleStateModifying},
 		Target:     []string{redshift.ScheduleStateActive},
-		Refresh:    statusScheduleAssociation(conn, id),
+		Refresh:    statusScheduleAssociation(ctx, conn, id),
 		Timeout:    snapshotScheduleAssociationActivatedTimeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*redshift.ClusterAssociatedToSchedule); ok {
 		tfresource.SetLastError(err, errors.New(aws.StringValue(output.ScheduleAssociationState)))
@@ -155,16 +156,16 @@ func WaitScheduleAssociationActive(conn *redshift.Redshift, id string) (*redshif
 	return nil, err
 }
 
-func waitScheduleAssociationDeleted(conn *redshift.Redshift, id string) (*redshift.ClusterAssociatedToSchedule, error) { //nolint:unparam
+func waitScheduleAssociationDeleted(ctx context.Context, conn *redshift.Redshift, id string) (*redshift.ClusterAssociatedToSchedule, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{redshift.ScheduleStateModifying, redshift.ScheduleStateActive},
 		Target:     []string{},
-		Refresh:    statusScheduleAssociation(conn, id),
+		Refresh:    statusScheduleAssociation(ctx, conn, id),
 		Timeout:    snapshotScheduleAssociationDestroyedTimeout,
 		MinTimeout: 10 * time.Second,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*redshift.ClusterAssociatedToSchedule); ok {
 		tfresource.SetLastError(err, errors.New(aws.StringValue(output.ScheduleAssociationState)))
@@ -174,17 +175,17 @@ func waitScheduleAssociationDeleted(conn *redshift.Redshift, id string) (*redshi
 	return nil, err
 }
 
-func waitEndpointAccessActive(conn *redshift.Redshift, id string) (*redshift.EndpointAccess, error) { //nolint:unparam
+func waitEndpointAccessActive(ctx context.Context, conn *redshift.Redshift, id string) (*redshift.EndpointAccess, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{endpointAccessStatusCreating, endpointAccessStatusModifying},
 		Target:     []string{endpointAccessStatusActive},
-		Refresh:    statusEndpointAccess(conn, id),
+		Refresh:    statusEndpointAccess(ctx, conn, id),
 		Timeout:    10 * time.Minute,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*redshift.EndpointAccess); ok {
 		tfresource.SetLastError(err, errors.New(aws.StringValue(output.EndpointStatus)))
@@ -195,17 +196,17 @@ func waitEndpointAccessActive(conn *redshift.Redshift, id string) (*redshift.End
 	return nil, err
 }
 
-func waitEndpointAccessDeleted(conn *redshift.Redshift, id string) (*redshift.EndpointAccess, error) {
+func waitEndpointAccessDeleted(ctx context.Context, conn *redshift.Redshift, id string) (*redshift.EndpointAccess, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{endpointAccessStatusDeleting},
 		Target:     []string{},
-		Refresh:    statusEndpointAccess(conn, id),
+		Refresh:    statusEndpointAccess(ctx, conn, id),
 		Timeout:    10 * time.Minute,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*redshift.EndpointAccess); ok {
 		tfresource.SetLastError(err, errors.New(aws.StringValue(output.EndpointStatus)))

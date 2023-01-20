@@ -58,7 +58,7 @@ func dataSourceACLRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("name", acl.Name)
 	d.Set("user_names", flex.FlattenStringSet(acl.UserNames))
 
-	tags, err := ListTags(conn, d.Get("arn").(string))
+	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
 
 	if err != nil {
 		return diag.Errorf("error listing tags for MemoryDB ACL (%s): %s", d.Id(), err)

@@ -35,7 +35,7 @@ func ResourceRuleGroup() *schema.Resource {
 		DeleteWithoutTimeout: resourceRuleGroupDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "/")
 				if len(idParts) != 3 || idParts[0] == "" || idParts[1] == "" || idParts[2] == "" {
 					return nil, fmt.Errorf("Unexpected format of ID (%q), expected ID/NAME/SCOPE", d.Id())
@@ -204,7 +204,7 @@ func resourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 		return diag.Errorf("setting visibility_config: %s", err)
 	}
 
-	tags, err := ListTagsWithContext(ctx, conn, arn)
+	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
 		return diag.Errorf("listing tags for WAFv2 RuleGroup (%s): %s", arn, err)
@@ -259,7 +259,7 @@ func resourceRuleGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		o, n := d.GetChange("tags_all")
 		arn := d.Get("arn").(string)
 
-		if err := UpdateTagsWithContext(ctx, conn, arn, o, n); err != nil {
+		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
 			return diag.Errorf("updating tags for WAFv2 RuleGroup (%s): %s", arn, err)
 		}
 	}

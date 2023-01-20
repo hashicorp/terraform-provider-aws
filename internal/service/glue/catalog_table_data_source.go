@@ -393,7 +393,7 @@ func dataSourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, met
 		TableName:    out.Table.Name,
 		DatabaseName: out.Table.DatabaseName,
 	}
-	partOut, err := conn.GetPartitionIndexes(partIndexInput)
+	partOut, err := conn.GetPartitionIndexesWithContext(ctx, partIndexInput)
 	if err != nil {
 		return diag.Errorf("error getting Glue Partition Indexes: %s", err)
 	}

@@ -381,7 +381,7 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		d.Set("vpc_config", nil)
 	}
 
-	tg, err := conn.ListTagsForResource(&appstream.ListTagsForResourceInput{
+	tg, err := conn.ListTagsForResourceWithContext(ctx, &appstream.ListTagsForResourceInput{
 		ResourceArn: fleet.Arn,
 	})
 
@@ -496,7 +496,7 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		arn := aws.StringValue(resp.Fleet.Arn)
 
 		o, n := d.GetChange("tags")
-		if err := UpdateTags(conn, arn, o, n); err != nil {
+		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
 			return diag.FromErr(fmt.Errorf("error updating Appstream Fleet tags (%s): %w", d.Id(), err))
 		}
 	}

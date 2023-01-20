@@ -106,5 +106,3 @@ linters-settings:
 
 run:
   timeout: 75m
-  skip-dirs:
-    - .ci/providerlint/vendor

@@ -33,6 +33,7 @@ func init() {
 }
 
 func sweepTables(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
@@ -45,7 +46,7 @@ func sweepTables(region string) error {
 	var g multierror.Group
 	var mutex = &sync.Mutex{}
 
-	err = conn.ListTablesPages(&dynamodb.ListTablesInput{}, func(page *dynamodb.ListTablesOutput, lastPage bool) bool {
+	err = conn.ListTablesPagesWithContext(ctx, &dynamodb.ListTablesInput{}, func(page *dynamodb.ListTablesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -90,7 +91,7 @@ func sweepTables(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error concurrently reading DynamoDB Tables: %w", err))
 	}
 
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping DynamoDB Tables for %s: %w", region, err))
 	}
 
@@ -103,6 +104,7 @@ func sweepTables(region string) error {
 }
 
 func sweepBackups(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
@@ -117,7 +119,7 @@ func sweepBackups(region string) error {
 	input := &dynamodb.ListBackupsInput{
 		BackupType: aws.String(dynamodb.BackupTypeFilterAll),
 	}
-	err = listBackupsPages(conn, input, func(page *dynamodb.ListBackupsOutput, lastPage bool) bool {
+	err = listBackupsPages(ctx, conn, input, func(page *dynamodb.ListBackupsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -145,7 +147,7 @@ func sweepBackups(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("reading DynamoDB Backups: %w", err))
 	}
 
-	if err = sweep.SweepOrchestrator(sweepables); err != nil {
+	if err = sweep.SweepOrchestratorWithContext(ctx, sweepables); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("sweeping DynamoDB Backups for %s: %w", region, err))
 	}
 

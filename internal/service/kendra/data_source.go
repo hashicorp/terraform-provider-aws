@@ -627,8 +627,7 @@ func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	log.Printf("[DEBUG] Creating Kendra Data Source %#v", input)
 
-	outputRaw, err := tfresource.RetryWhen(
-		propagationTimeout,
+	outputRaw, err := tfresource.RetryWhenContext(ctx, propagationTimeout,
 		func() (interface{}, error) {
 			return conn.CreateDataSource(ctx, input)
 		},
@@ -779,8 +778,7 @@ func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 		log.Printf("[DEBUG] Updating Kendra Data Source (%s): %#v", d.Id(), input)
 
-		_, err = tfresource.RetryWhen(
-			propagationTimeout,
+		_, err = tfresource.RetryWhenContext(ctx, propagationTimeout,
 			func() (interface{}, error) {
 				return conn.UpdateDataSource(ctx, input)
 			},

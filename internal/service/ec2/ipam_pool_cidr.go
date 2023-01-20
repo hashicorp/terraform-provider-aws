@@ -1,6 +1,7 @@
 package ec2
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -9,21 +10,23 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceIPAMPoolCIDR() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceIPAMPoolCIDRCreate,
-		Read:   resourceIPAMPoolCIDRRead,
-		Delete: resourceIPAMPoolCIDRDelete,
+		CreateWithoutTimeout: resourceIPAMPoolCIDRCreate,
+		ReadWithoutTimeout:   resourceIPAMPoolCIDRRead,
+		DeleteWithoutTimeout: resourceIPAMPoolCIDRDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -72,7 +75,8 @@ func ResourceIPAMPoolCIDR() *schema.Resource {
 	}
 }
 
-func resourceIPAMPoolCIDRCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceIPAMPoolCIDRCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	poolID := d.Get("ipam_pool_id").(string)
@@ -88,78 +92,80 @@ func resourceIPAMPoolCIDRCreate(d *schema.ResourceData, meta interface{}) error 
 		input.CidrAuthorizationContext = expandIPAMCIDRAuthorizationContext(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	output, err := conn.ProvisionIpamPoolCidr(input)
+	output, err := conn.ProvisionIpamPoolCidrWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("creating IPAM Pool (%s) CIDR: %w", poolID, err)
+		return sdkdiag.AppendErrorf(diags, "creating IPAM Pool (%s) CIDR: %s", poolID, err)
 	}
 
 	cidrBlock := aws.StringValue(output.IpamPoolCidr.Cidr)
 	d.SetId(IPAMPoolCIDRCreateResourceID(cidrBlock, poolID))
 
-	if _, err := WaitIPAMPoolCIDRCreated(conn, cidrBlock, poolID, d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("waiting for IPAM Pool CIDR (%s) create: %w", d.Id(), err)
+	if _, err := WaitIPAMPoolCIDRCreated(ctx, conn, cidrBlock, poolID, d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for IPAM Pool CIDR (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceIPAMPoolCIDRRead(d, meta)
+	return append(diags, resourceIPAMPoolCIDRRead(ctx, d, meta)...)
 }
 
-func resourceIPAMPoolCIDRRead(d *schema.ResourceData, meta interface{}) error {
+func resourceIPAMPoolCIDRRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	cidrBlock, poolID, err := IPAMPoolCIDRParseResourceID(d.Id())
 
 	if err != nil {
-		return fmt.Errorf("reading IPAM Pool CIDR (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading IPAM Pool CIDR (%s): %s", d.Id(), err)
 	}
 
-	output, err := FindIPAMPoolCIDRByTwoPartKey(conn, cidrBlock, poolID)
+	output, err := FindIPAMPoolCIDRByTwoPartKey(ctx, conn, cidrBlock, poolID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] IPAM Pool CIDR (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading IPAM Pool CIDR (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading IPAM Pool CIDR (%s): %s", d.Id(), err)
 	}
 
 	d.Set("cidr", output.Cidr)
 	d.Set("ipam_pool_id", poolID)
 
-	return nil
+	return diags
 }
 
-func resourceIPAMPoolCIDRDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceIPAMPoolCIDRDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	cidrBlock, poolID, err := IPAMPoolCIDRParseResourceID(d.Id())
 
 	if err != nil {
-		return fmt.Errorf("deleting IPAM Pool CIDR (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting IPAM Pool CIDR (%s): %s", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Deleting IPAM Pool CIDR: %s", d.Id())
-	_, err = conn.DeprovisionIpamPoolCidr(&ec2.DeprovisionIpamPoolCidrInput{
+	_, err = conn.DeprovisionIpamPoolCidrWithContext(ctx, &ec2.DeprovisionIpamPoolCidrInput{
 		Cidr:       aws.String(cidrBlock),
 		IpamPoolId: aws.String(poolID),
 	})
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidIPAMPoolIdNotFound) {
-		return nil
+		return diags
 	}
 
 	// IncorrectState error can mean: State = "deprovisioned" || State = "pending-deprovision".
 	if err != nil && !tfawserr.ErrCodeEquals(err, errCodeIncorrectState) {
-		return fmt.Errorf("deleting IPAM Pool CIDR (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting IPAM Pool CIDR (%s): %s", d.Id(), err)
 	}
 
-	if _, err := WaitIPAMPoolCIDRDeleted(conn, cidrBlock, poolID, d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("waiting for IPAM Pool CIDR (%s) delete: %w", d.Id(), err)
+	if _, err := WaitIPAMPoolCIDRDeleted(ctx, conn, cidrBlock, poolID, d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for IPAM Pool CIDR (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 const ipamPoolCIDRIDSeparator = "_"

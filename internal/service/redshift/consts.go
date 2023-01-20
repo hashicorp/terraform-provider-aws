@@ -1,6 +1,8 @@
 package redshift
 
-import "time"
+import (
+	"time"
+)
 
 const (
 	clusterAvailabilityStatusAvailable   = "Available"

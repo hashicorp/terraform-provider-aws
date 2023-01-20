@@ -1,6 +1,8 @@
 package cognitoidp
 
-import "time"
+import (
+	"time"
+)
 
 const (
 	ResNameIdentityProvider  = "Identity Provider"

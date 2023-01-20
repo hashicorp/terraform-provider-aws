@@ -33,7 +33,7 @@ var testAccProviderWafLoggingConfiguration *schema.Provider
 var testAccProviderWafLoggingConfigurationConfigure sync.Once
 
 // testAccPreCheckLoggingConfiguration verifies AWS credentials and that WAF Logging Configurations is supported
-func testAccPreCheckLoggingConfiguration(t *testing.T) {
+func testAccPreCheckLoggingConfiguration(ctx context.Context, t *testing.T) {
 	acctest.PreCheckPartitionHasService(waf.EndpointsID, t)
 
 	region := testAccGetLoggingConfigurationRegion()
@@ -45,7 +45,6 @@ func testAccPreCheckLoggingConfiguration(t *testing.T) {
 	// Since we are outside the scope of the Terraform configuration we must
 	// call Configure() to properly initialize the provider configuration.
 	testAccProviderWafLoggingConfigurationConfigure.Do(func() {
-		ctx := context.Background()
 		var err error
 		testAccProviderWafLoggingConfiguration, err = provider.New(ctx)
 

@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccRDSClustersDataSource_filter(t *testing.T) {
+	ctx := acctest.Context(t)
 	var dbCluster rds.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_rds_clusters.test"
@@ -20,12 +21,12 @@ func TestAccRDSClustersDataSource_filter(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClustersDataSourceConfig_filter(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(dataSourceName, "cluster_arns.#", "1"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "cluster_arns.0", resourceName, "arn"),
 					resource.TestCheckResourceAttr(dataSourceName, "cluster_identifiers.#", "1"),

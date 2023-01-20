@@ -1,6 +1,8 @@
 package transfer
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/transfer"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -11,9 +13,9 @@ const (
 	userStateExists = "exists"
 )
 
-func statusServerState(conn *transfer.Transfer, id string) resource.StateRefreshFunc {
+func statusServerState(ctx context.Context, conn *transfer.Transfer, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindServerByID(conn, id)
+		output, err := FindServerByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -27,9 +29,9 @@ func statusServerState(conn *transfer.Transfer, id string) resource.StateRefresh
 	}
 }
 
-func statusUserState(conn *transfer.Transfer, serverID, userName string) resource.StateRefreshFunc {
+func statusUserState(ctx context.Context, conn *transfer.Transfer, serverID, userName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindUserByServerIDAndUserName(conn, serverID, userName)
+		output, err := FindUserByServerIDAndUserName(ctx, conn, serverID, userName)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

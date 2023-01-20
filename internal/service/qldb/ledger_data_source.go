@@ -68,7 +68,7 @@ func dataSourceLedgerRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("name", ledger.Name)
 	d.Set("permissions_mode", ledger.PermissionsMode)
 
-	tags, err := ListTags(conn, d.Get("arn").(string))
+	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
 
 	if err != nil {
 		return diag.Errorf("listing tags for QLDB Ledger (%s): %s", d.Id(), err)
