@@ -1,6 +1,7 @@
 package ses
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"regexp"
@@ -11,10 +12,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ses"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -22,13 +25,13 @@ import (
 
 func ResourceReceiptRule() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceReceiptRuleCreate,
-		Update: resourceReceiptRuleUpdate,
-		Read:   resourceReceiptRuleRead,
-		Delete: resourceReceiptRuleDelete,
+		CreateWithoutTimeout: resourceReceiptRuleCreate,
+		UpdateWithoutTimeout: resourceReceiptRuleUpdate,
+		ReadWithoutTimeout:   resourceReceiptRuleRead,
+		DeleteWithoutTimeout: resourceReceiptRuleDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: resourceReceiptRuleImport,
+			StateContext: resourceReceiptRuleImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -265,7 +268,8 @@ func ResourceReceiptRule() *schema.Resource {
 	}
 }
 
-func resourceReceiptRuleCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceReceiptRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESConn()
 
 	name := d.Get("name").(string)
@@ -278,22 +282,23 @@ func resourceReceiptRuleCreate(d *schema.ResourceData, meta interface{}) error {
 		input.After = aws.String(v.(string))
 	}
 
-	_, err := conn.CreateReceiptRule(input)
+	_, err := conn.CreateReceiptRuleWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("creating SES Receipt Rule (%s): %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating SES Receipt Rule (%s): %s", name, err)
 	}
 
 	d.SetId(name)
 
-	return resourceReceiptRuleRead(d, meta)
+	return resourceReceiptRuleRead(ctx, d, meta)
 }
 
-func resourceReceiptRuleRead(d *schema.ResourceData, meta interface{}) error {
+func resourceReceiptRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESConn()
 
 	ruleSetName := d.Get("rule_set_name").(string)
-	rule, err := FindReceiptRuleByTwoPartKey(conn, d.Id(), ruleSetName)
+	rule, err := FindReceiptRuleByTwoPartKey(ctx, conn, d.Id(), ruleSetName)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SES Receipt Rule (%s) not found, removing from state", d.Id())
@@ -302,7 +307,7 @@ func resourceReceiptRuleRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading SES Receipt Rule (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SES Receipt Rule (%s): %s", d.Id(), err)
 	}
 
 	d.Set("enabled", rule.Enabled)
@@ -424,37 +429,37 @@ func resourceReceiptRuleRead(d *schema.ResourceData, meta interface{}) error {
 
 	err = d.Set("add_header_action", addHeaderActionList)
 	if err != nil {
-		return fmt.Errorf("setting add_header_action: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting add_header_action: %s", err)
 	}
 
 	err = d.Set("bounce_action", bounceActionList)
 	if err != nil {
-		return fmt.Errorf("setting bounce_action: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting bounce_action: %s", err)
 	}
 
 	err = d.Set("lambda_action", lambdaActionList)
 	if err != nil {
-		return fmt.Errorf("setting lambda_action: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting lambda_action: %s", err)
 	}
 
 	err = d.Set("s3_action", s3ActionList)
 	if err != nil {
-		return fmt.Errorf("setting s3_action: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting s3_action: %s", err)
 	}
 
 	err = d.Set("sns_action", snsActionList)
 	if err != nil {
-		return fmt.Errorf("setting sns_action: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting sns_action: %s", err)
 	}
 
 	err = d.Set("stop_action", stopActionList)
 	if err != nil {
-		return fmt.Errorf("setting stop_action: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting stop_action: %s", err)
 	}
 
 	err = d.Set("workmail_action", workmailActionList)
 	if err != nil {
-		return fmt.Errorf("setting workmail_action: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting workmail_action: %s", err)
 	}
 
 	arn := arn.ARN{
@@ -469,7 +474,8 @@ func resourceReceiptRuleRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceReceiptRuleUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceReceiptRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESConn()
 
 	input := &ses.UpdateReceiptRuleInput{
@@ -477,10 +483,10 @@ func resourceReceiptRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 		RuleSetName: aws.String(d.Get("rule_set_name").(string)),
 	}
 
-	_, err := conn.UpdateReceiptRule(input)
+	_, err := conn.UpdateReceiptRuleWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("updating SES Receipt Rule (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating SES Receipt Rule (%s): %s", d.Id(), err)
 	}
 
 	if d.HasChange("after") {
@@ -490,33 +496,34 @@ func resourceReceiptRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 			RuleSetName: aws.String(d.Get("rule_set_name").(string)),
 		}
 
-		_, err := conn.SetReceiptRulePosition(input)
+		_, err := conn.SetReceiptRulePositionWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("setting SES Receipt Rule (%s) position: %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "setting SES Receipt Rule (%s) position: %s", d.Id(), err)
 		}
 	}
 
-	return resourceReceiptRuleRead(d, meta)
+	return resourceReceiptRuleRead(ctx, d, meta)
 }
 
-func resourceReceiptRuleDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceReceiptRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESConn()
 
 	log.Printf("[DEBUG] Deleting SES Receipt Rule: %s", d.Id())
-	_, err := conn.DeleteReceiptRule(&ses.DeleteReceiptRuleInput{
+	_, err := conn.DeleteReceiptRuleWithContext(ctx, &ses.DeleteReceiptRuleInput{
 		RuleName:    aws.String(d.Id()),
 		RuleSetName: aws.String(d.Get("rule_set_name").(string)),
 	})
 
 	if err != nil {
-		return fmt.Errorf("deleting SES Receipt Rule (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting SES Receipt Rule (%s): %s", d.Id(), err)
 	}
 
 	return nil
 }
 
-func resourceReceiptRuleImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceReceiptRuleImport(_ context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	idParts := strings.Split(d.Id(), ":")
 	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
 		return nil, fmt.Errorf("unexpected format of ID (%q), expected <ruleset-name>:<rule-name>", d.Id())
@@ -532,13 +539,13 @@ func resourceReceiptRuleImport(d *schema.ResourceData, meta interface{}) ([]*sch
 	return []*schema.ResourceData{d}, nil
 }
 
-func FindReceiptRuleByTwoPartKey(conn *ses.SES, ruleName, ruleSetName string) (*ses.ReceiptRule, error) {
+func FindReceiptRuleByTwoPartKey(ctx context.Context, conn *ses.SES, ruleName, ruleSetName string) (*ses.ReceiptRule, error) {
 	input := &ses.DescribeReceiptRuleInput{
 		RuleName:    aws.String(ruleName),
 		RuleSetName: aws.String(ruleSetName),
 	}
 
-	output, err := conn.DescribeReceiptRule(input)
+	output, err := conn.DescribeReceiptRuleWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, ses.ErrCodeRuleDoesNotExistException, ses.ErrCodeRuleSetDoesNotExistException) {
 		return nil, &resource.NotFoundError{
