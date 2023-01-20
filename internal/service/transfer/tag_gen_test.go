@@ -31,7 +31,7 @@ func testAccCheckTagDestroy(ctx context.Context) resource.TestCheckFunc {
 				return err
 			}
 
-			_, err = tftransfer.GetTagWithContext(ctx, conn, identifier, key)
+			_, err = tftransfer.GetTag(ctx, conn, identifier, key)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -66,7 +66,7 @@ func testAccCheckTagExists(ctx context.Context, resourceName string) resource.Te
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn()
 
-		_, err = tftransfer.GetTagWithContext(ctx, conn, identifier, key)
+		_, err = tftransfer.GetTag(ctx, conn, identifier, key)
 
 		return err
 	}
