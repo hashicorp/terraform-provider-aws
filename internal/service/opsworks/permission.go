@@ -1,25 +1,27 @@
 package opsworks
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/opsworks"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourcePermission() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceSetPermission,
-		Read:   resourcePermissionRead,
-		Update: resourceSetPermission,
-		Delete: schema.Noop,
+		CreateWithoutTimeout: resourceSetPermission,
+		ReadWithoutTimeout:   resourcePermissionRead,
+		UpdateWithoutTimeout: resourceSetPermission,
+		DeleteWithoutTimeout: schema.NoopContext,
 
 		Schema: map[string]*schema.Schema{
 			"allow_ssh": {
@@ -58,7 +60,8 @@ func ResourcePermission() *schema.Resource {
 	}
 }
 
-func resourceSetPermission(d *schema.ResourceData, meta interface{}) error {
+func resourceSetPermission(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpsWorksConn()
 
 	iamUserARN := d.Get("user_arn").(string)
@@ -79,25 +82,26 @@ func resourceSetPermission(d *schema.ResourceData, meta interface{}) error {
 		input.Level = aws.String(d.Get("level").(string))
 	}
 
-	_, err := tfresource.RetryWhenAWSErrMessageContains(propagationTimeout, func() (interface{}, error) {
-		return conn.SetPermission(input)
+	_, err := tfresource.RetryWhenAWSErrMessageContainsContext(ctx, propagationTimeout, func() (interface{}, error) {
+		return conn.SetPermissionWithContext(ctx, input)
 	}, opsworks.ErrCodeResourceNotFoundException, "Unable to find user with ARN")
 
 	if err != nil {
-		return fmt.Errorf("setting OpsWorks Permission (%s): %w", id, err)
+		return sdkdiag.AppendErrorf(diags, "setting OpsWorks Permission (%s): %s", id, err)
 	}
 
 	if d.IsNewResource() {
 		d.SetId(id)
 	}
 
-	return resourcePermissionRead(d, meta)
+	return resourcePermissionRead(ctx, d, meta)
 }
 
-func resourcePermissionRead(d *schema.ResourceData, meta interface{}) error {
+func resourcePermissionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpsWorksConn()
 
-	permission, err := FindPermissionByTwoPartKey(conn, d.Get("user_arn").(string), d.Get("stack_id").(string))
+	permission, err := FindPermissionByTwoPartKey(ctx, conn, d.Get("user_arn").(string), d.Get("stack_id").(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] OpsWorks Permission %s not found, removing from state", d.Id())
@@ -106,7 +110,7 @@ func resourcePermissionRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading OpsWorks Permission (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading OpsWorks Permission (%s): %s", d.Id(), err)
 	}
 
 	d.Set("allow_ssh", permission.AllowSsh)
@@ -118,13 +122,13 @@ func resourcePermissionRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func FindPermissionByTwoPartKey(conn *opsworks.OpsWorks, iamUserARN, stackID string) (*opsworks.Permission, error) {
+func FindPermissionByTwoPartKey(ctx context.Context, conn *opsworks.OpsWorks, iamUserARN, stackID string) (*opsworks.Permission, error) {
 	input := &opsworks.DescribePermissionsInput{
 		IamUserArn: aws.String(iamUserARN),
 		StackId:    aws.String(stackID),
 	}
 
-	output, err := conn.DescribePermissions(input)
+	output, err := conn.DescribePermissionsWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, opsworks.ErrCodeResourceNotFoundException) {
 		return nil, &resource.NotFoundError{
