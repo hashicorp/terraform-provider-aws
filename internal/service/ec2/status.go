@@ -1334,7 +1334,8 @@ func StatusIPAMPoolCIDRState(ctx context.Context, conn *ec2.EC2, cidrBlock, pool
 }
 
 const (
-	IpamPoolCIDRAllocationCreateComplete = "create-complete"
+	// naming mapes to the SDK constants that exist for IPAM
+	IpamPoolCIDRAllocationCreateComplete = "create-complete" // nosemgrep:ci.caps2-in-const-name  // nosemgrep:ci.caps2-in-var-name // nosemgrep:ci.caps5-in-const-name  // nosemgrep:ci.caps5-in-var-name
 )
 
 func StatusIPAMPoolCIDRAllocationState(ctx context.Context, conn *ec2.EC2, allocationID, poolID string) resource.StateRefreshFunc {
