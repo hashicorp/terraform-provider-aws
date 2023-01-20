@@ -17,6 +17,7 @@ import (
 )
 
 func TestAccS3ControlAccessPointPolicy_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_s3control_access_point_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -24,12 +25,12 @@ func TestAccS3ControlAccessPointPolicy_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccessPointPolicyDestroy,
+		CheckDestroy:             testAccCheckAccessPointPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccessPointPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccessPointPolicyExists(resourceName),
+					testAccCheckAccessPointPolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "has_public_access_policy", "true"),
 					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`s3:GetObjectTagging`)),
 				),
@@ -45,6 +46,7 @@ func TestAccS3ControlAccessPointPolicy_basic(t *testing.T) {
 }
 
 func TestAccS3ControlAccessPointPolicy_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_s3control_access_point_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -52,12 +54,12 @@ func TestAccS3ControlAccessPointPolicy_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccessPointPolicyDestroy,
+		CheckDestroy:             testAccCheckAccessPointPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccessPointPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccessPointPolicyExists(resourceName),
+					testAccCheckAccessPointPolicyExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfs3control.ResourceAccessPointPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -67,6 +69,7 @@ func TestAccS3ControlAccessPointPolicy_disappears(t *testing.T) {
 }
 
 func TestAccS3ControlAccessPointPolicy_disappears_AccessPoint(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_s3control_access_point_policy.test"
 	accessPointResourceName := "aws_s3_access_point.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -75,12 +78,12 @@ func TestAccS3ControlAccessPointPolicy_disappears_AccessPoint(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccessPointPolicyDestroy,
+		CheckDestroy:             testAccCheckAccessPointPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccessPointPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccessPointPolicyExists(resourceName),
+					testAccCheckAccessPointPolicyExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfs3control.ResourceAccessPoint(), accessPointResourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -90,6 +93,7 @@ func TestAccS3ControlAccessPointPolicy_disappears_AccessPoint(t *testing.T) {
 }
 
 func TestAccS3ControlAccessPointPolicy_update(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_s3control_access_point_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -97,12 +101,12 @@ func TestAccS3ControlAccessPointPolicy_update(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccessPointPolicyDestroy,
+		CheckDestroy:             testAccCheckAccessPointPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccessPointPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccessPointPolicyExists(resourceName),
+					testAccCheckAccessPointPolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "has_public_access_policy", "true"),
 					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`s3:GetObjectTagging`)),
 				),
@@ -116,7 +120,7 @@ func TestAccS3ControlAccessPointPolicy_update(t *testing.T) {
 			{
 				Config: testAccAccessPointPolicyConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccessPointPolicyExists(resourceName),
+					testAccCheckAccessPointPolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "has_public_access_policy", "true"),
 					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`s3:GetObjectLegalHold`)),
 				),
@@ -136,37 +140,39 @@ func testAccAccessPointPolicyImportStateIdFunc(n string) resource.ImportStateIdF
 	}
 }
 
-func testAccCheckAccessPointPolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn()
+func testAccCheckAccessPointPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_s3control_access_point_policy" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_s3control_access_point_policy" {
+				continue
+			}
+
+			accountID, name, err := tfs3control.AccessPointParseResourceID(rs.Primary.ID)
+
+			if err != nil {
+				return err
+			}
+
+			_, _, err = tfs3control.FindAccessPointPolicyAndStatusByTwoPartKey(ctx, conn, accountID, name)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("S3 Access Point Policy %s still exists", rs.Primary.ID)
 		}
 
-		accountID, name, err := tfs3control.AccessPointParseResourceID(rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		_, _, err = tfs3control.FindAccessPointPolicyAndStatusByTwoPartKey(context.Background(), conn, accountID, name)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("S3 Access Point Policy %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckAccessPointPolicyExists(n string) resource.TestCheckFunc {
+func testAccCheckAccessPointPolicyExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -185,7 +191,7 @@ func testAccCheckAccessPointPolicyExists(n string) resource.TestCheckFunc {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn()
 
-		_, _, err = tfs3control.FindAccessPointPolicyAndStatusByTwoPartKey(context.Background(), conn, accountID, name)
+		_, _, err = tfs3control.FindAccessPointPolicyAndStatusByTwoPartKey(ctx, conn, accountID, name)
 
 		return err
 	}
