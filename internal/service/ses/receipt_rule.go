@@ -1,7 +1,6 @@
 package ses
 
 import (
-	"bytes"
 	"fmt"
 	"log"
 	"regexp"
@@ -12,11 +11,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ses"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -26,63 +26,12 @@ func ResourceReceiptRule() *schema.Resource {
 		Update: resourceReceiptRuleUpdate,
 		Read:   resourceReceiptRuleRead,
 		Delete: resourceReceiptRuleDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: resourceReceiptRuleImport,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 64),
-					validation.StringMatch(regexp.MustCompile(`^[0-9a-zA-Z._-]+$`), "must contain only alphanumeric, period, underscore, and hyphen characters"),
-					validation.StringMatch(regexp.MustCompile(`^[0-9a-zA-Z]`), "must begin with a alphanumeric character"),
-					validation.StringMatch(regexp.MustCompile(`[0-9a-zA-Z]$`), "must end with a alphanumeric character"),
-				),
-			},
-
-			"rule_set_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-
-			"after": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-
-			"enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-
-			"recipients": {
-				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Optional: true,
-			},
-
-			"scan_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-
-			"tls_policy": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringInSlice(ses.TlsPolicy_Values(), false),
-			},
-
 			"add_header_action": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -96,30 +45,26 @@ func ResourceReceiptRule() *schema.Resource {
 								validation.StringMatch(regexp.MustCompile(`^[0-9a-zA-Z-]+$`), "must contain only alphanumeric and dash characters"),
 							),
 						},
-
 						"header_value": {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(0, 2048),
 						},
-
 						"position": {
 							Type:     schema.TypeInt,
 							Required: true,
 						},
 					},
 				},
-				Set: func(v interface{}) int {
-					var buf bytes.Buffer
-					m := v.(map[string]interface{})
-					buf.WriteString(fmt.Sprintf("%s-", m["header_name"].(string)))
-					buf.WriteString(fmt.Sprintf("%s-", m["header_value"].(string)))
-					buf.WriteString(fmt.Sprintf("%d-", m["position"].(int)))
-
-					return create.StringHashcode(buf.String())
-				},
 			},
-
+			"after": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"bounce_action": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -129,55 +74,35 @@ func ResourceReceiptRule() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-
+						"position": {
+							Type:     schema.TypeInt,
+							Required: true,
+						},
 						"sender": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-
 						"smtp_reply_code": {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-
 						"status_code": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-
 						"topic_arn": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: verify.ValidARN,
 						},
-
-						"position": {
-							Type:     schema.TypeInt,
-							Required: true,
-						},
 					},
 				},
-				Set: func(v interface{}) int {
-					var buf bytes.Buffer
-					m := v.(map[string]interface{})
-					buf.WriteString(fmt.Sprintf("%s-", m["message"].(string)))
-					buf.WriteString(fmt.Sprintf("%s-", m["sender"].(string)))
-					buf.WriteString(fmt.Sprintf("%s-", m["smtp_reply_code"].(string)))
-
-					if _, ok := m["status_code"]; ok {
-						buf.WriteString(fmt.Sprintf("%s-", m["status_code"].(string)))
-					}
-
-					if _, ok := m["topic_arn"]; ok {
-						buf.WriteString(fmt.Sprintf("%s-", m["topic_arn"].(string)))
-					}
-
-					buf.WriteString(fmt.Sprintf("%d-", m["position"].(int)))
-
-					return create.StringHashcode(buf.String())
-				},
 			},
-
+			"enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"lambda_action": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -188,45 +113,45 @@ func ResourceReceiptRule() *schema.Resource {
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
 						},
-
 						"invocation_type": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Default:      ses.InvocationTypeEvent,
 							ValidateFunc: validation.StringInSlice(ses.InvocationType_Values(), false),
 						},
-
+						"position": {
+							Type:     schema.TypeInt,
+							Required: true,
+						},
 						"topic_arn": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: verify.ValidARN,
 						},
-
-						"position": {
-							Type:     schema.TypeInt,
-							Required: true,
-						},
 					},
 				},
-				Set: func(v interface{}) int {
-					var buf bytes.Buffer
-					m := v.(map[string]interface{})
-					buf.WriteString(fmt.Sprintf("%s-", m["function_arn"].(string)))
-
-					if _, ok := m["invocation_type"]; ok {
-						buf.WriteString(fmt.Sprintf("%s-", m["invocation_type"].(string)))
-					}
-
-					if _, ok := m["topic_arn"]; ok {
-						buf.WriteString(fmt.Sprintf("%s-", m["topic_arn"].(string)))
-					}
-
-					buf.WriteString(fmt.Sprintf("%d-", m["position"].(int)))
-
-					return create.StringHashcode(buf.String())
-				},
 			},
-
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 64),
+					validation.StringMatch(regexp.MustCompile(`^[0-9a-zA-Z._-]+$`), "must contain only alphanumeric, period, underscore, and hyphen characters"),
+					validation.StringMatch(regexp.MustCompile(`^[0-9a-zA-Z]`), "must begin with a alphanumeric character"),
+					validation.StringMatch(regexp.MustCompile(`[0-9a-zA-Z]$`), "must end with a alphanumeric character"),
+				),
+			},
+			"recipients": {
+				Type:     schema.TypeSet,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Optional: true,
+			},
+			"rule_set_name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
 			"s3_action": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -236,54 +161,33 @@ func ResourceReceiptRule() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-
 						"kms_key_arn": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: verify.ValidARN,
 						},
-
 						"object_key_prefix": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-
-						"topic_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-
 						"position": {
 							Type:         schema.TypeInt,
 							Required:     true,
 							ValidateFunc: validation.IntAtLeast(1),
 						},
+						"topic_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: verify.ValidARN,
+						},
 					},
 				},
-				Set: func(v interface{}) int {
-					var buf bytes.Buffer
-					m := v.(map[string]interface{})
-					buf.WriteString(fmt.Sprintf("%s-", m["bucket_name"].(string)))
-
-					if _, ok := m["kms_key_arn"]; ok {
-						buf.WriteString(fmt.Sprintf("%s-", m["kms_key_arn"].(string)))
-					}
-
-					if _, ok := m["object_key_prefix"]; ok {
-						buf.WriteString(fmt.Sprintf("%s-", m["object_key_prefix"].(string)))
-					}
-
-					if _, ok := m["topic_arn"]; ok {
-						buf.WriteString(fmt.Sprintf("%s-", m["topic_arn"].(string)))
-					}
-
-					buf.WriteString(fmt.Sprintf("%d-", m["position"].(int)))
-
-					return create.StringHashcode(buf.String())
-				},
 			},
-
+			"scan_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"sns_action": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -295,29 +199,18 @@ func ResourceReceiptRule() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validation.StringInSlice(ses.SNSActionEncoding_Values(), false),
 						},
+						"position": {
+							Type:     schema.TypeInt,
+							Required: true,
+						},
 						"topic_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
 						},
-
-						"position": {
-							Type:     schema.TypeInt,
-							Required: true,
-						},
 					},
 				},
-				Set: func(v interface{}) int {
-					var buf bytes.Buffer
-					m := v.(map[string]interface{})
-					buf.WriteString(fmt.Sprintf("%s-", m["encoding"].(string)))
-					buf.WriteString(fmt.Sprintf("%s-", m["topic_arn"].(string)))
-					buf.WriteString(fmt.Sprintf("%d-", m["position"].(int)))
-
-					return create.StringHashcode(buf.String())
-				},
 			},
-
 			"stop_action": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -328,34 +221,24 @@ func ResourceReceiptRule() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(ses.StopScope_Values(), false),
 						},
-
+						"position": {
+							Type:     schema.TypeInt,
+							Required: true,
+						},
 						"topic_arn": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: verify.ValidARN,
 						},
-
-						"position": {
-							Type:     schema.TypeInt,
-							Required: true,
-						},
 					},
 				},
-				Set: func(v interface{}) int {
-					var buf bytes.Buffer
-					m := v.(map[string]interface{})
-					buf.WriteString(fmt.Sprintf("%s-", m["scope"].(string)))
-
-					if _, ok := m["topic_arn"]; ok {
-						buf.WriteString(fmt.Sprintf("%s-", m["topic_arn"].(string)))
-					}
-
-					buf.WriteString(fmt.Sprintf("%d-", m["position"].(int)))
-
-					return create.StringHashcode(buf.String())
-				},
 			},
-
+			"tls_policy": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(ses.TlsPolicy_Values(), false),
+			},
 			"workmail_action": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -366,100 +249,42 @@ func ResourceReceiptRule() *schema.Resource {
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
 						},
-
+						"position": {
+							Type:     schema.TypeInt,
+							Required: true,
+						},
 						"topic_arn": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: verify.ValidARN,
 						},
-
-						"position": {
-							Type:     schema.TypeInt,
-							Required: true,
-						},
 					},
-				},
-				Set: func(v interface{}) int {
-					var buf bytes.Buffer
-					m := v.(map[string]interface{})
-					buf.WriteString(fmt.Sprintf("%s-", m["organization_arn"].(string)))
-
-					if _, ok := m["topic_arn"]; ok {
-						buf.WriteString(fmt.Sprintf("%s-", m["topic_arn"].(string)))
-					}
-
-					buf.WriteString(fmt.Sprintf("%d-", m["position"].(int)))
-
-					return create.StringHashcode(buf.String())
 				},
 			},
 		},
 	}
 }
 
-func resourceReceiptRuleImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	idParts := strings.Split(d.Id(), ":")
-	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
-		return nil, fmt.Errorf("unexpected format of ID (%q), expected <ruleset-name>:<rule-name>", d.Id())
-	}
-
-	ruleSetName := idParts[0]
-	ruleName := idParts[1]
-
-	d.Set("rule_set_name", ruleSetName)
-	d.Set("name", ruleName)
-	d.SetId(ruleName)
-
-	return []*schema.ResourceData{d}, nil
-}
-
 func resourceReceiptRuleCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SESConn()
 
-	createOpts := &ses.CreateReceiptRuleInput{
+	name := d.Get("name").(string)
+	input := &ses.CreateReceiptRuleInput{
 		Rule:        buildReceiptRule(d),
 		RuleSetName: aws.String(d.Get("rule_set_name").(string)),
 	}
 
 	if v, ok := d.GetOk("after"); ok {
-		createOpts.After = aws.String(v.(string))
+		input.After = aws.String(v.(string))
 	}
 
-	_, err := conn.CreateReceiptRule(createOpts)
+	_, err := conn.CreateReceiptRule(input)
+
 	if err != nil {
-		return fmt.Errorf("Error creating SES rule: %s", err)
+		return fmt.Errorf("creating SES Receipt Rule (%s): %w", name, err)
 	}
 
-	d.SetId(d.Get("name").(string))
-
-	return resourceReceiptRuleRead(d, meta)
-}
-
-func resourceReceiptRuleUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn()
-
-	updateOpts := &ses.UpdateReceiptRuleInput{
-		Rule:        buildReceiptRule(d),
-		RuleSetName: aws.String(d.Get("rule_set_name").(string)),
-	}
-
-	_, err := conn.UpdateReceiptRule(updateOpts)
-	if err != nil {
-		return fmt.Errorf("Error updating SES rule: %s", err)
-	}
-
-	if d.HasChange("after") {
-		changePosOpts := &ses.SetReceiptRulePositionInput{
-			After:       aws.String(d.Get("after").(string)),
-			RuleName:    aws.String(d.Get("name").(string)),
-			RuleSetName: aws.String(d.Get("rule_set_name").(string)),
-		}
-
-		_, err := conn.SetReceiptRulePosition(changePosOpts)
-		if err != nil {
-			return fmt.Errorf("Error updating SES rule: %s", err)
-		}
-	}
+	d.SetId(name)
 
 	return resourceReceiptRuleRead(d, meta)
 }
@@ -468,30 +293,22 @@ func resourceReceiptRuleRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SESConn()
 
 	ruleSetName := d.Get("rule_set_name").(string)
-	describeOpts := &ses.DescribeReceiptRuleInput{
-		RuleName:    aws.String(d.Id()),
-		RuleSetName: aws.String(ruleSetName),
+	rule, err := FindReceiptRuleByTwoPartKey(conn, d.Id(), ruleSetName)
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] SES Receipt Rule (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
 
-	response, err := conn.DescribeReceiptRule(describeOpts)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, ses.ErrCodeRuleDoesNotExistException) {
-			log.Printf("[WARN] SES Receipt Rule (%s) not found", d.Id())
-			d.SetId("")
-			return nil
-		}
-		if tfawserr.ErrCodeEquals(err, ses.ErrCodeRuleSetDoesNotExistException) {
-			log.Printf("[WARN] SES Receipt Rule Set (%s) belonging to SES Receipt Rule (%s) not found, removing from state", aws.StringValue(describeOpts.RuleSetName), d.Id())
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("reading SES Receipt Rule (%s): %s", d.Id(), err)
+		return fmt.Errorf("reading SES Receipt Rule (%s): %w", d.Id(), err)
 	}
 
-	d.Set("enabled", response.Rule.Enabled)
-	d.Set("recipients", flex.FlattenStringSet(response.Rule.Recipients))
-	d.Set("scan_enabled", response.Rule.ScanEnabled)
-	d.Set("tls_policy", response.Rule.TlsPolicy)
+	d.Set("enabled", rule.Enabled)
+	d.Set("recipients", flex.FlattenStringSet(rule.Recipients))
+	d.Set("scan_enabled", rule.ScanEnabled)
+	d.Set("tls_policy", rule.TlsPolicy)
 
 	addHeaderActionList := []map[string]interface{}{}
 	bounceActionList := []map[string]interface{}{}
@@ -501,7 +318,7 @@ func resourceReceiptRuleRead(d *schema.ResourceData, meta interface{}) error {
 	stopActionList := []map[string]interface{}{}
 	workmailActionList := []map[string]interface{}{}
 
-	for i, element := range response.Rule.Actions {
+	for i, element := range rule.Actions {
 		if element.AddHeaderAction != nil {
 			addHeaderAction := map[string]interface{}{
 				"header_name":  aws.StringValue(element.AddHeaderAction.HeaderName),
@@ -652,20 +469,93 @@ func resourceReceiptRuleRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceReceiptRuleDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceReceiptRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).SESConn()
 
-	deleteOpts := &ses.DeleteReceiptRuleInput{
-		RuleName:    aws.String(d.Id()),
+	input := &ses.UpdateReceiptRuleInput{
+		Rule:        buildReceiptRule(d),
 		RuleSetName: aws.String(d.Get("rule_set_name").(string)),
 	}
 
-	_, err := conn.DeleteReceiptRule(deleteOpts)
+	_, err := conn.UpdateReceiptRule(input)
+
 	if err != nil {
-		return fmt.Errorf("Error deleting SES receipt rule: %s", err)
+		return fmt.Errorf("updating SES Receipt Rule (%s): %w", d.Id(), err)
+	}
+
+	if d.HasChange("after") {
+		input := &ses.SetReceiptRulePositionInput{
+			After:       aws.String(d.Get("after").(string)),
+			RuleName:    aws.String(d.Get("name").(string)),
+			RuleSetName: aws.String(d.Get("rule_set_name").(string)),
+		}
+
+		_, err := conn.SetReceiptRulePosition(input)
+
+		if err != nil {
+			return fmt.Errorf("setting SES Receipt Rule (%s) position: %w", d.Id(), err)
+		}
+	}
+
+	return resourceReceiptRuleRead(d, meta)
+}
+
+func resourceReceiptRuleDelete(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).SESConn()
+
+	log.Printf("[DEBUG] Deleting SES Receipt Rule: %s", d.Id())
+	_, err := conn.DeleteReceiptRule(&ses.DeleteReceiptRuleInput{
+		RuleName:    aws.String(d.Id()),
+		RuleSetName: aws.String(d.Get("rule_set_name").(string)),
+	})
+
+	if err != nil {
+		return fmt.Errorf("deleting SES Receipt Rule (%s): %w", d.Id(), err)
 	}
 
 	return nil
+}
+
+func resourceReceiptRuleImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	idParts := strings.Split(d.Id(), ":")
+	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
+		return nil, fmt.Errorf("unexpected format of ID (%q), expected <ruleset-name>:<rule-name>", d.Id())
+	}
+
+	ruleSetName := idParts[0]
+	ruleName := idParts[1]
+
+	d.Set("rule_set_name", ruleSetName)
+	d.Set("name", ruleName)
+	d.SetId(ruleName)
+
+	return []*schema.ResourceData{d}, nil
+}
+
+func FindReceiptRuleByTwoPartKey(conn *ses.SES, ruleName, ruleSetName string) (*ses.ReceiptRule, error) {
+	input := &ses.DescribeReceiptRuleInput{
+		RuleName:    aws.String(ruleName),
+		RuleSetName: aws.String(ruleSetName),
+	}
+
+	output, err := conn.DescribeReceiptRule(input)
+
+	if tfawserr.ErrCodeEquals(err, ses.ErrCodeRuleDoesNotExistException, ses.ErrCodeRuleSetDoesNotExistException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Rule == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Rule, nil
 }
 
 func buildReceiptRule(d *schema.ResourceData) *ses.ReceiptRule {
