@@ -230,7 +230,7 @@ func resourceBudgetActionCreate(ctx context.Context, d *schema.ResourceData, met
 		Subscribers:      expandBudgetActionSubscriber(d.Get("subscriber").(*schema.Set)),
 	}
 
-	outputRaw, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (interface{}, error) {
 		return conn.CreateBudgetActionWithContext(ctx, input)
 	}, budgets.ErrCodeAccessDeniedException)
 

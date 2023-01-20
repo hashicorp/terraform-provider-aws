@@ -497,7 +497,7 @@ func resourceVPCDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	log.Printf("[INFO] Deleting EC2 VPC: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, vpcDeletedTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, vpcDeletedTimeout, func() (interface{}, error) {
 		return conn.DeleteVpcWithContext(ctx, input)
 	}, errCodeDependencyViolation)
 

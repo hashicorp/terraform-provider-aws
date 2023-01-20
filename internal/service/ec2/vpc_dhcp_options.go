@@ -224,7 +224,7 @@ func resourceVPCDHCPOptionsDelete(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	log.Printf("[INFO] Deleting EC2 DHCP Options Set: %s", d.Id())
-	_, err = tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, dhcpOptionSetDeletedTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, dhcpOptionSetDeletedTimeout, func() (interface{}, error) {
 		return conn.DeleteDhcpOptionsWithContext(ctx, input)
 	}, errCodeDependencyViolation)
 

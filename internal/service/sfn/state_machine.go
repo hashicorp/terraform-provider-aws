@@ -157,7 +157,7 @@ func resourceStateMachineCreate(ctx context.Context, d *schema.ResourceData, met
 	// Note: the instance may be in a deleting mode, hence the retry
 	// when creating the step function. This can happen when we are
 	// updating the resource (since there is no update API call).
-	outputRaw, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, stateMachineCreatedTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, stateMachineCreatedTimeout, func() (interface{}, error) {
 		return conn.CreateStateMachineWithContext(ctx, input)
 	}, sfn.ErrCodeStateMachineDeleting, "AccessDeniedException")
 

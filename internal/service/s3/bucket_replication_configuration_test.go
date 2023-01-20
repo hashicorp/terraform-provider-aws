@@ -1189,7 +1189,7 @@ func testAccCheckBucketReplicationConfigurationDestroyWithProvider(ctx context.C
 			}
 			input := &s3.GetBucketReplicationInput{Bucket: aws.String(rs.Primary.ID)}
 
-			output, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, 2*time.Minute, func() (interface{}, error) {
+			output, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
 				return conn.GetBucketReplicationWithContext(ctx, input)
 			}, s3.ErrCodeNoSuchBucket)
 

@@ -61,7 +61,7 @@ func resourceWebACLAssociationCreate(ctx context.Context, d *schema.ResourceData
 	}
 
 	log.Printf("[INFO] Creating WAFv2 WebACL Association: %s", input)
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, webACLAssociationCreateTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, webACLAssociationCreateTimeout, func() (interface{}, error) {
 		return conn.AssociateWebACLWithContext(ctx, input)
 	}, wafv2.ErrCodeWAFUnavailableEntityException)
 

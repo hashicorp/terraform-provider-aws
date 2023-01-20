@@ -105,7 +105,7 @@ func resourcePermissionsBoundaryAttachmentCreate(ctx context.Context, d *schema.
 	}
 
 	log.Printf("[INFO] Attaching permissions boundary to permission set: %s", input)
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, permissionsBoundaryAttachmentTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, permissionsBoundaryAttachmentTimeout, func() (interface{}, error) {
 		return conn.PutPermissionsBoundaryToPermissionSetWithContext(ctx, input)
 	}, ssoadmin.ErrCodeConflictException, ssoadmin.ErrCodeThrottlingException)
 
@@ -170,7 +170,7 @@ func resourcePermissionsBoundaryAttachmentDelete(ctx context.Context, d *schema.
 	}
 
 	log.Printf("[INFO] Detaching permissions boundary from permission set: %s", input)
-	_, err = tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, permissionsBoundaryAttachmentTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, permissionsBoundaryAttachmentTimeout, func() (interface{}, error) {
 		return conn.DeletePermissionsBoundaryFromPermissionSetWithContext(ctx, input)
 	}, ssoadmin.ErrCodeConflictException, ssoadmin.ErrCodeThrottlingException)
 

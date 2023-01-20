@@ -182,7 +182,7 @@ func resourceEIPCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	eniID := d.Get("network_interface").(string)
 
 	if instanceID != "" || eniID != "" {
-		_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, d.Timeout(schema.TimeoutCreate),
+		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate),
 			func() (interface{}, error) {
 				return nil, associateEIP(ctx, conn, d.Id(), instanceID, eniID, d.Get("associate_with_private_ip").(string))
 			}, errCodeInvalidAllocationIDNotFound)

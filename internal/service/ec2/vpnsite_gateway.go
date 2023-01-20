@@ -198,7 +198,7 @@ func resourceVPNGatewayDelete(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	log.Printf("[INFO] Deleting EC2 VPN Gateway: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, VPNGatewayDeletedTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, VPNGatewayDeletedTimeout, func() (interface{}, error) {
 		return conn.DeleteVpnGatewayWithContext(ctx, &ec2.DeleteVpnGatewayInput{
 			VpnGatewayId: aws.String(d.Id()),
 		})
@@ -222,7 +222,7 @@ func attachVPNGatewayToVPC(ctx context.Context, conn *ec2.EC2, vpnGatewayID, vpc
 	}
 
 	log.Printf("[INFO] Attaching EC2 VPN Gateway (%s) to VPC (%s)", vpnGatewayID, vpcID)
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, propagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (interface{}, error) {
 		return conn.AttachVpnGatewayWithContext(ctx, input)
 	}, errCodeInvalidVPNGatewayIDNotFound)
 

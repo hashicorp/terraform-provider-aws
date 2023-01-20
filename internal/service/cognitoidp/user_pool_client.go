@@ -500,7 +500,7 @@ func resourceUserPoolClientUpdate(ctx context.Context, d *schema.ResourceData, m
 
 	log.Printf("[DEBUG] Updating Cognito User Pool Client: %s", params)
 
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, 2*time.Minute, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
 		return conn.UpdateUserPoolClientWithContext(ctx, params)
 	}, cognitoidentityprovider.ErrCodeConcurrentModificationException)
 	if err != nil {

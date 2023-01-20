@@ -225,7 +225,7 @@ func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	log.Printf("[DEBUG] Registering WorkSpaces Directory: %s", input)
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, DirectoryRegisterInvalidResourceStateTimeout,
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, DirectoryRegisterInvalidResourceStateTimeout,
 		func() (interface{}, error) {
 			return conn.RegisterWorkspaceDirectoryWithContext(ctx, input)
 		},
@@ -454,7 +454,7 @@ func resourceDirectoryDelete(ctx context.Context, d *schema.ResourceData, meta i
 	conn := meta.(*conns.AWSClient).WorkSpacesConn()
 
 	log.Printf("[DEBUG] Deregistering WorkSpaces Directory: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, DirectoryDeregisterInvalidResourceStateTimeout,
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, DirectoryDeregisterInvalidResourceStateTimeout,
 		func() (interface{}, error) {
 			return conn.DeregisterWorkspaceDirectoryWithContext(ctx, &workspaces.DeregisterWorkspaceDirectoryInput{
 				DirectoryId: aws.String(d.Id()),

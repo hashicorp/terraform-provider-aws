@@ -903,7 +903,7 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta in
 		expandTopLevelConnectionInfo(d, input)
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, d.Timeout(schema.TimeoutCreate),
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate),
 		func() (interface{}, error) {
 			return conn.CreateEndpointWithContext(ctx, input)
 		},

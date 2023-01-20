@@ -541,7 +541,7 @@ func resourceLaunchConfigurationDelete(ctx context.Context, d *schema.ResourceDa
 	conn := meta.(*conns.AWSClient).AutoScalingConn()
 
 	log.Printf("[DEBUG] Deleting Auto Scaling Launch Configuration: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, propagationTimeout,
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout,
 		func() (interface{}, error) {
 			return conn.DeleteLaunchConfigurationWithContext(ctx, &autoscaling.DeleteLaunchConfigurationInput{
 				LaunchConfigurationName: aws.String(d.Id()),

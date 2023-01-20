@@ -1650,7 +1650,7 @@ func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	log.Printf("[DEBUG] Deleting Auto Scaling Group: %s", d.Id())
-	_, err = tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, d.Timeout(schema.TimeoutDelete),
+	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutDelete),
 		func() (interface{}, error) {
 			return conn.DeleteAutoScalingGroupWithContext(ctx, &autoscaling.DeleteAutoScalingGroupInput{
 				AutoScalingGroupName: aws.String(d.Id()),
@@ -1739,7 +1739,7 @@ func deleteWarmPool(ctx context.Context, conn *autoscaling.AutoScaling, name str
 	}
 
 	log.Printf("[DEBUG] Deleting Auto Scaling Warm Pool: %s", name)
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, timeout,
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout,
 		func() (interface{}, error) {
 			return conn.DeleteWarmPoolWithContext(ctx, &autoscaling.DeleteWarmPoolInput{
 				AutoScalingGroupName: aws.String(name),

@@ -380,7 +380,7 @@ func resourceSecurityGroupDelete(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	log.Printf("[DEBUG] Deleting Security Group: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(
 		ctx,
 		2*time.Minute, // short initial attempt followed by full length attempt
 		func() (interface{}, error) {
@@ -400,7 +400,7 @@ func resourceSecurityGroupDelete(ctx context.Context, d *schema.ResourceData, me
 			}
 		}
 
-		_, err = tfresource.RetryWhenAWSErrCodeEqualsContext(
+		_, err = tfresource.RetryWhenAWSErrCodeEquals(
 			ctx,
 			d.Timeout(schema.TimeoutDelete),
 			func() (interface{}, error) {
