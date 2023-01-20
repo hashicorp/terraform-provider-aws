@@ -962,7 +962,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		createInput.VPCZoneIdentifier = expandVPCZoneIdentifiers(v.(*schema.Set).List())
 	}
 
-	_, err := tfresource.RetryWhenAWSErrMessageContainsContext(ctx, propagationTimeout,
+	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
 		func() (interface{}, error) {
 			return conn.CreateAutoScalingGroupWithContext(ctx, createInput)
 		},
@@ -977,7 +977,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if twoPhases {
 		for _, input := range expandPutLifecycleHookInputs(asgName, initialLifecycleHooks) {
-			_, err := tfresource.RetryWhenAWSErrMessageContainsContext(ctx, 5*time.Minute,
+			_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, 5*time.Minute,
 				func() (interface{}, error) {
 					return conn.PutLifecycleHookWithContext(ctx, input)
 				},

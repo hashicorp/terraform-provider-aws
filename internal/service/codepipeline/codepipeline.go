@@ -229,7 +229,7 @@ func resourcePipelineCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	outputRaw, err := tfresource.RetryWhenAWSErrMessageContainsContext(ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
 		return conn.CreatePipelineWithContext(ctx, input)
 	}, codepipeline.ErrCodeInvalidStructureException, "not authorized")
 

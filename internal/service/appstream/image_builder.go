@@ -227,7 +227,7 @@ func resourceImageBuilderCreate(ctx context.Context, d *schema.ResourceData, met
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	outputRaw, err := tfresource.RetryWhenAWSErrMessageContainsContext(ctx, iamPropagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, iamPropagationTimeout, func() (interface{}, error) {
 		return conn.CreateImageBuilderWithContext(ctx, input)
 	}, appstream.ErrCodeInvalidRoleException, "encountered an error because your IAM role")
 

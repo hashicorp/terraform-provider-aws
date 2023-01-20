@@ -941,7 +941,7 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			FunctionName: aws.String(d.Id()),
 		}
 
-		outputRaw, err := tfresource.RetryWhenAWSErrMessageContainsContext(ctx, propagationTimeout, func() (interface{}, error) {
+		outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
 			return conn.PublishVersionWithContext(ctx, input)
 		}, lambda.ErrCodeResourceConflictException, "in progress")
 

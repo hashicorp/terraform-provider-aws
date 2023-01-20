@@ -1175,7 +1175,7 @@ func resourceTopicRuleCreate(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	log.Printf("[INFO] Creating IoT Topic Rule: %s", input)
-	_, err := tfresource.RetryWhenAWSErrMessageContainsContext(ctx, propagationTimeout,
+	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
 		func() (interface{}, error) {
 			return conn.CreateTopicRuleWithContext(ctx, input)
 		},

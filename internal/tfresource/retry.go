@@ -62,8 +62,8 @@ func RetryWhenAWSErrCodeEquals(ctx context.Context, timeout time.Duration, f fun
 	})
 }
 
-// RetryWhenAWSErrMessageContainsContext retries the specified function when it returns an AWS error containing the specified message.
-func RetryWhenAWSErrMessageContainsContext(ctx context.Context, timeout time.Duration, f func() (interface{}, error), code, message string) (interface{}, error) { // nosemgrep:ci.aws-in-func-name
+// RetryWhenAWSErrMessageContains retries the specified function when it returns an AWS error containing the specified message.
+func RetryWhenAWSErrMessageContains(ctx context.Context, timeout time.Duration, f func() (interface{}, error), code, message string) (interface{}, error) { // nosemgrep:ci.aws-in-func-name
 	return RetryWhen(ctx, timeout, f, func(err error) (bool, error) {
 		if tfawserr.ErrMessageContains(err, code, message) {
 			return true, err
@@ -71,11 +71,6 @@ func RetryWhenAWSErrMessageContainsContext(ctx context.Context, timeout time.Dur
 
 		return false, err
 	})
-}
-
-// RetryWhenAWSErrMessageContains retries the specified function when it returns an AWS error containing the specified message.
-func RetryWhenAWSErrMessageContains(timeout time.Duration, f func() (interface{}, error), code, message string) (interface{}, error) { // nosemgrep:ci.aws-in-func-name
-	return RetryWhenAWSErrMessageContainsContext(context.Background(), timeout, f, code, message)
 }
 
 var errFoundResource = errors.New(`found resource`)
