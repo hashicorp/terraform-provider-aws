@@ -1161,7 +1161,7 @@ func resourceSpotFleetRequestDelete(ctx context.Context, d *schema.ResourceData,
 		return diags
 	}
 
-	_, err = tfresource.RetryUntilNotFoundContext(ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
 		input := &ec2.DescribeSpotFleetInstancesInput{
 			SpotFleetRequestId: aws.String(d.Id()),
 		}

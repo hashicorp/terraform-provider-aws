@@ -185,7 +185,7 @@ func resourceSnapshotCopyGrantDelete(ctx context.Context, d *schema.ResourceData
 
 // Used by the tests as well
 func WaitForSnapshotCopyGrantToBeDeleted(ctx context.Context, conn *redshift.Redshift, grantName string) error {
-	_, err := tfresource.RetryUntilNotFoundContext(ctx, 3*time.Minute, func() (any, error) {
+	_, err := tfresource.RetryUntilNotFound(ctx, 3*time.Minute, func() (any, error) {
 		return findSnapshotCopyGrant(ctx, conn, grantName)
 	})
 	return err

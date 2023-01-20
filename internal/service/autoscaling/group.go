@@ -1667,7 +1667,7 @@ func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "deleting Auto Scaling Group (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFoundContext(ctx, d.Timeout(schema.TimeoutDelete),
+	_, err = tfresource.RetryUntilNotFound(ctx, d.Timeout(schema.TimeoutDelete),
 		func() (interface{}, error) {
 			return FindGroupByName(ctx, conn, d.Id())
 		})

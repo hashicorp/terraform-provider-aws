@@ -161,7 +161,7 @@ func resourceTargetDelete(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "deleting Application AutoScaling Target (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFoundContext(ctx, 5*time.Minute, func() (interface{}, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, 5*time.Minute, func() (interface{}, error) {
 		return FindTargetByThreePartKey(ctx, conn, d.Id(), d.Get("service_namespace").(string), d.Get("scalable_dimension").(string))
 	})
 

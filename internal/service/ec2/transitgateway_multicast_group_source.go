@@ -136,7 +136,7 @@ func deregisterTransitGatewayMulticastGroupSource(ctx context.Context, conn *ec2
 		return fmt.Errorf("deleting EC2 Transit Gateway Multicast Group Source (%s): %w", id, err)
 	}
 
-	_, err = tfresource.RetryUntilNotFoundContext(ctx, propagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, propagationTimeout, func() (interface{}, error) {
 		return FindTransitGatewayMulticastGroupSourceByThreePartKey(ctx, conn, multicastDomainID, groupIPAddress, eniID)
 	})
 

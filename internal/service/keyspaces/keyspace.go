@@ -168,7 +168,7 @@ func resourceKeyspaceDelete(ctx context.Context, d *schema.ResourceData, meta in
 		return diag.Errorf("deleting Keyspaces Keyspace (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFoundContext(ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
 		return FindKeyspaceByName(ctx, conn, d.Id())
 	})
 

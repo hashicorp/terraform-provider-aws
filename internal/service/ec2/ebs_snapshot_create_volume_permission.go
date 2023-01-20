@@ -136,7 +136,7 @@ func resourceSnapshotCreateVolumePermissionDelete(ctx context.Context, d *schema
 		return sdkdiag.AppendErrorf(diags, "deleting EBS Snapshot CreateVolumePermission (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFoundContext(ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
 		return FindCreateSnapshotCreateVolumePermissionByTwoPartKey(ctx, conn, snapshotID, accountID)
 	})
 

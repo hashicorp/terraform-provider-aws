@@ -420,7 +420,7 @@ func resourceSecurityGroupDelete(ctx context.Context, d *schema.ResourceData, me
 		return diag.Errorf("deleting Security Group (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFoundContext(ctx, propagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, propagationTimeout, func() (interface{}, error) {
 		return FindSecurityGroupByID(ctx, conn, d.Id())
 	})
 

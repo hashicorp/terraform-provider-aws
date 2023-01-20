@@ -509,7 +509,7 @@ func resourceVPCDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "deleting EC2 VPC (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFoundContext(ctx, vpcDeletedTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, vpcDeletedTimeout, func() (interface{}, error) {
 		return FindVPCByID(ctx, conn, d.Id())
 	})
 

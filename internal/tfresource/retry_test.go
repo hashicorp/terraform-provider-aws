@@ -304,6 +304,7 @@ func TestRetryWhenNotFound(t *testing.T) { //nolint:tparallel
 }
 
 func TestRetryUntilNotFound(t *testing.T) { //nolint:tparallel
+	ctx := acctest.Context(t)
 	t.Parallel()
 
 	var retryCount int32
@@ -357,7 +358,7 @@ func TestRetryUntilNotFound(t *testing.T) { //nolint:tparallel
 		t.Run(testCase.Name, func(t *testing.T) {
 			retryCount = 0
 
-			_, err := tfresource.RetryUntilNotFound(5*time.Second, testCase.F)
+			_, err := tfresource.RetryUntilNotFound(ctx, 5*time.Second, testCase.F)
 
 			if testCase.ExpectError && err == nil {
 				t.Fatal("expected error")
