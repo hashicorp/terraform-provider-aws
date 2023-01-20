@@ -191,18 +191,19 @@ same type of resource. The definition of a complete test looks like this:
 
 ```go
 func TestAccCloudWatchDashboard_basic(t *testing.T) {
+  ctx := acctest.Context(t)
 	var dashboard cloudwatch.GetDashboardOutput
 	rInt := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloudwatch.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDashboardDestroy,
+		CheckDestroy:             testAccCheckDashboardDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDashboardConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDashboardExists("aws_cloudwatch_dashboard.foobar", &dashboard),
+					testAccCheckDashboardExists(ctx, "aws_cloudwatch_dashboard.foobar", &dashboard),
 					resource.TestCheckResourceAttr("aws_cloudwatch_dashboard.foobar", "dashboard_name", testAccDashboardName(rInt)),
 				),
 			},
@@ -243,7 +244,7 @@ When executing the test, the following steps are taken for each `TestStep`:
    successfully, a test function like this is used:
 
     ```go
-    func testAccCheckDashboardExists(n string, dashboard *cloudwatch.GetDashboardOutput) resource.TestCheckFunc {
+    func testAccCheckDashboardExists(ctx context.Context, n string, dashboard *cloudwatch.GetDashboardOutput) resource.TestCheckFunc {
       return func(s *terraform.State) error {
         rs, ok := s.RootModule().Resources[n]
         if !ok {
@@ -255,7 +256,7 @@ When executing the test, the following steps are taken for each `TestStep`:
           DashboardName: aws.String(rs.Primary.ID),
         }
 
-        resp, err := conn.GetDashboard(&params)
+        resp, err := conn.GetDashboardWithContext(ctx, &params)
         if err != nil {
           return err
         }
@@ -285,28 +286,30 @@ When executing the test, the following steps are taken for each `TestStep`:
    above has been destroyed looks like this:
 
     ```go
-    func testAccCheckDashboardDestroy(s *terraform.State) error {
-      conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn()
+    func testAccCheckDashboardDestroy(ctx context.Context) resource.TestCheckFunc {
+	    return func(s *terraform.State) error {
+        conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn()
 
-      for _, rs := range s.RootModule().Resources {
-        if rs.Type != "aws_cloudwatch_dashboard" {
-          continue
+        for _, rs := range s.RootModule().Resources {
+          if rs.Type != "aws_cloudwatch_dashboard" {
+            continue
+          }
+
+          params := cloudwatch.GetDashboardInput{
+            DashboardName: aws.String(rs.Primary.ID),
+          }
+
+          _, err := conn.GetDashboardWithContext(ctx, &params)
+          if err == nil {
+            return fmt.Errorf("Dashboard still exists: %s", rs.Primary.ID)
+          }
+          if !isDashboardNotFoundErr(err) {
+            return err
+          }
         }
 
-        params := cloudwatch.GetDashboardInput{
-          DashboardName: aws.String(rs.Primary.ID),
-        }
-
-        _, err := conn.GetDashboard(&params)
-        if err == nil {
-          return fmt.Errorf("Dashboard still exists: %s", rs.Primary.ID)
-        }
-        if !isDashboardNotFoundErr(err) {
-          return err
-        }
+        return nil
       }
-
-      return nil
     }
     ```
 
@@ -467,7 +470,7 @@ func TestAccExampleThing_basic(t *testing.T) {
       {
         // ... omitted for brevity ...
         Check: resource.ComposeTestCheckFunc(
-          testAccCheckExampleThingExists(resourceName),
+          testAccCheckExampleThingExists(ctx, resourceName),
           acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "example", fmt.Sprintf("thing/%s", rName)),
           resource.TestCheckResourceAttr(resourceName, "description", ""),
           resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -503,6 +506,7 @@ For example:
 
 ```go
 func TestAccExampleThing_basic(t *testing.T) {
+  ctx := acctest.Context(t)
   rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
   resourceName := "aws_example_thing.test"
 
@@ -510,12 +514,12 @@ func TestAccExampleThing_basic(t *testing.T) {
     PreCheck:                 func() { acctest.PreCheck(t) },
     ErrorCheck:               acctest.ErrorCheck(t, service.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-    CheckDestroy:             testAccCheckExampleThingDestroy,
+    CheckDestroy:             testAccCheckExampleThingDestroy(ctx),
     Steps: []resource.TestStep{
       {
         Config: testAccExampleThingConfigName(rName),
         Check: resource.ComposeTestCheckFunc(
-          testAccCheckExampleThingExists(resourceName),
+          testAccCheckExampleThingExists(ctx, resourceName),
           acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "example", fmt.Sprintf("thing/%s", rName)),
           resource.TestCheckResourceAttr(resourceName, "description", ""),
           resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -594,6 +598,7 @@ Below is an example of adding a custom PreCheck function. For a new or preview s
 
 ```go
 func TestAccExampleThing_basic(t *testing.T) {
+  ctx := acctest.Context(t)
   rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
   resourceName := "aws_example_thing.test"
 
@@ -603,10 +608,10 @@ func TestAccExampleThing_basic(t *testing.T) {
   })
 }
 
-func testAccPreCheckExample(t *testing.T) {
+func testAccPreCheckExample(ctx context.Context, t *testing.T) {
   conn := acctest.Provider.Meta().(*conns.AWSClient).ExampleConn()
 	input := &example.ListThingsInput{}
-	_, err := conn.ListThings(input)
+	_, err := conn.ListThingsWithContext(ctx, input)
 	if testAccPreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
@@ -701,6 +706,7 @@ For example:
 
 ```go
 func TestAccExampleThing_disappears(t *testing.T) {
+  ctx := acctest.Context(t)
   rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
   resourceName := "aws_example_thing.test"
 
@@ -708,12 +714,12 @@ func TestAccExampleThing_disappears(t *testing.T) {
     PreCheck:                 func() { acctest.PreCheck(t) },
     ErrorCheck:               acctest.ErrorCheck(t, service.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-    CheckDestroy:             testAccCheckExampleThingDestroy,
+    CheckDestroy:             testAccCheckExampleThingDestroy(ctx),
     Steps: []resource.TestStep{
       {
         Config: testAccExampleThingConfigName(rName),
         Check: resource.ComposeTestCheckFunc(
-          testAccCheckExampleThingExists(resourceName, &job),
+          testAccCheckExampleThingExists(ctx, resourceName, &job),
           acctest.CheckResourceDisappears(acctest.Provider, ResourceExampleThing(), resourceName),
         ),
         ExpectNonEmptyPlan: true,
@@ -743,6 +749,7 @@ For children resources that are encapsulated by a parent resource, it is also pr
 
 ```go
 func TestAccExampleChildThing_disappears_ParentThing(t *testing.T) {
+  ctx := acctest.Context(t)
   rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
   parentResourceName := "aws_example_parent_thing.test"
   resourceName := "aws_example_child_thing.test"
@@ -751,12 +758,12 @@ func TestAccExampleChildThing_disappears_ParentThing(t *testing.T) {
     PreCheck:                 func() { acctest.PreCheck(t) },
     ErrorCheck:               acctest.ErrorCheck(t, service.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-    CheckDestroy:             testAccCheckExampleChildThingDestroy,
+    CheckDestroy:             testAccCheckExampleChildThingDestroy(ctx),
     Steps: []resource.TestStep{
       {
         Config: testAccExampleThingConfigName(rName),
         Check: resource.ComposeTestCheckFunc(
-          testAccCheckExampleThingExists(resourceName),
+          testAccCheckExampleThingExists(ctx, resourceName),
           acctest.CheckResourceDisappears(acctest.Provider, ResourceExampleParentThing(), parentResourceName),
         ),
         ExpectNonEmptyPlan: true,
@@ -774,6 +781,7 @@ For example:
 
 ```go
 func TestAccExampleThing_Description(t *testing.T) {
+  ctx := acctest.Context(t)
   rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
   resourceName := "aws_example_thing.test"
 
@@ -781,12 +789,12 @@ func TestAccExampleThing_Description(t *testing.T) {
     PreCheck:                 func() { acctest.PreCheck(t) },
     ErrorCheck:               acctest.ErrorCheck(t, service.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-    CheckDestroy:             testAccCheckExampleThingDestroy,
+    CheckDestroy:             testAccCheckExampleThingDestroy(ctx),
     Steps: []resource.TestStep{
       {
         Config: testAccExampleThingConfigDescription(rName, "description1"),
         Check: resource.ComposeTestCheckFunc(
-          testAccCheckExampleThingExists(resourceName),
+          testAccCheckExampleThingExists(ctx, resourceName),
           resource.TestCheckResourceAttr(resourceName, "description", "description1"),
         ),
       },
@@ -798,7 +806,7 @@ func TestAccExampleThing_Description(t *testing.T) {
       {
         Config: testAccExampleThingConfigDescription(rName, "description2"),
         Check: resource.ComposeTestCheckFunc(
-          testAccCheckExampleThingExists(resourceName),
+          testAccCheckExampleThingExists(ctx, resourceName),
           resource.TestCheckResourceAttr(resourceName, "description", "description2"),
         ),
       },
@@ -831,6 +839,7 @@ An example acceptance test implementation can be seen below:
 
 ```go
 func TestAccExample_basic(t *testing.T) {
+  ctx := acctest.Context(t)
   resourceName := "aws_example.test"
 
   resource.ParallelTest(t, resource.TestCase{
@@ -840,12 +849,12 @@ func TestAccExample_basic(t *testing.T) {
     },
     ErrorCheck:               acctest.ErrorCheck(t, service.EndpointsID),
     ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
-    CheckDestroy:             testAccCheckExampleDestroy,
+    CheckDestroy:             testAccCheckExampleDestroy(ctx),
     Steps: []resource.TestStep{
       {
         Config: testAccExampleConfig(),
         Check: resource.ComposeTestCheckFunc(
-          testAccCheckExampleExists(resourceName),
+          testAccCheckExampleExists(ctx, resourceName),
           // ... additional checks ...
         ),
       },
@@ -893,6 +902,7 @@ An example acceptance test implementation can be seen below:
 
 ```go
 func TestAccExample_basic(t *testing.T) {
+  ctx := acctest.Context(t)
   var providers []*schema.Provider
   resourceName := "aws_example.test"
 
@@ -903,12 +913,12 @@ func TestAccExample_basic(t *testing.T) {
     },
     ErrorCheck:               acctest.ErrorCheck(t, service.EndpointsID),
     ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 2),
-    CheckDestroy:             testAccCheckExampleDestroy,
+    CheckDestroy:             testAccCheckExampleDestroy(ctx),
     Steps: []resource.TestStep{
       {
         Config: testAccExampleConfig(),
         Check: resource.ComposeTestCheckFunc(
-          testAccCheckExampleExists(resourceName),
+          testAccCheckExampleExists(ctx, resourceName),
           // ... additional checks ...
         ),
       },
@@ -1104,6 +1114,7 @@ For example:
 
 ```go
 func TestAccExampleThingDataSource_Name(t *testing.T) {
+  ctx := acctest.Context(t)
   rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
   dataSourceName := "data.aws_example_thing.test"
   resourceName := "aws_example_thing.test"
@@ -1112,12 +1123,12 @@ func TestAccExampleThingDataSource_Name(t *testing.T) {
     PreCheck:                 func() { acctest.PreCheck(t) },
     ErrorCheck:               acctest.ErrorCheck(t, service.EndpointsID),
     ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-    CheckDestroy:             testAccCheckExampleThingDestroy,
+    CheckDestroy:             testAccCheckExampleThingDestroy(ctx),
     Steps: []resource.TestStep{
       {
         Config: testAccExampleThingDataSourceConfigName(rName),
         Check: resource.ComposeTestCheckFunc(
-          testAccCheckExampleThingExists(resourceName),
+          testAccCheckExampleThingExists(ctx, resourceName),
           resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
           resource.TestCheckResourceAttrPair(resourceName, "description", dataSourceName, "description"),
           resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
