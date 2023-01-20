@@ -914,7 +914,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.VpcSecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
-		_, err := tfresource.RetryWhenContext(ctx, propagationTimeout,
+		_, err := tfresource.RetryWhen(ctx, propagationTimeout,
 			func() (interface{}, error) {
 				return conn.RestoreDBInstanceFromS3WithContext(ctx, input)
 			},
@@ -1131,7 +1131,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.VpcSecurityGroupIds = flex.ExpandStringSet(v)
 		}
 
-		_, err := tfresource.RetryWhenContext(ctx, propagationTimeout,
+		_, err := tfresource.RetryWhen(ctx, propagationTimeout,
 			func() (interface{}, error) {
 				return conn.RestoreDBInstanceFromDBSnapshotWithContext(ctx, input)
 			},
@@ -1293,7 +1293,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.VpcSecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
-		_, err := tfresource.RetryWhenContext(ctx, propagationTimeout,
+		_, err := tfresource.RetryWhen(ctx, propagationTimeout,
 			func() (interface{}, error) {
 				return conn.RestoreDBInstanceToPointInTimeWithContext(ctx, input)
 			},
@@ -1473,7 +1473,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.VpcSecurityGroupIds = flex.ExpandStringSet(v)
 		}
 
-		outputRaw, err := tfresource.RetryWhenContext(ctx, propagationTimeout,
+		outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
 			func() (interface{}, error) {
 				return conn.CreateDBInstanceWithContext(ctx, input)
 			},
@@ -1813,7 +1813,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 				DBInstanceIdentifier: aws.String(sourceARN.Identifier),
 				SkipFinalSnapshot:    true,
 			}
-			_, err = tfresource.RetryWhenContext(ctx, 5*time.Minute,
+			_, err = tfresource.RetryWhen(ctx, 5*time.Minute,
 				func() (any, error) {
 					return conn.DeleteDBInstance(ctx, deleteInput)
 				},
@@ -2083,7 +2083,7 @@ func dbInstancePopulateModify(input *rds_sdkv2.ModifyDBInstanceInput, d *schema.
 }
 
 func dbInstanceModify(ctx context.Context, conn *rds_sdkv2.Client, input *rds_sdkv2.ModifyDBInstanceInput, timeout time.Duration) error {
-	_, err := tfresource.RetryWhenContext(ctx, timeout,
+	_, err := tfresource.RetryWhen(ctx, timeout,
 		func() (interface{}, error) {
 			return conn.ModifyDBInstance(ctx, input)
 		},
@@ -2137,7 +2137,7 @@ func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta in
 
 	if tfawserr.ErrMessageContains(err, errCodeInvalidParameterCombination, "disable deletion pro") {
 		if v, ok := d.GetOk("deletion_protection"); (!ok || !v.(bool)) && d.Get("apply_immediately").(bool) {
-			_, ierr := tfresource.RetryWhenContext(ctx, d.Timeout(schema.TimeoutUpdate),
+			_, ierr := tfresource.RetryWhen(ctx, d.Timeout(schema.TimeoutUpdate),
 				func() (interface{}, error) {
 					return conn.ModifyDBInstanceWithContext(ctx, &rds.ModifyDBInstanceInput{
 						ApplyImmediately:     aws.Bool(true),

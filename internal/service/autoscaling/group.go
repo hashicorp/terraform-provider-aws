@@ -3597,7 +3597,7 @@ func cancelInstanceRefresh(ctx context.Context, conn *autoscaling.AutoScaling, n
 func startInstanceRefresh(ctx context.Context, conn *autoscaling.AutoScaling, input *autoscaling.StartInstanceRefreshInput) error {
 	name := aws.StringValue(input.AutoScalingGroupName)
 
-	_, err := tfresource.RetryWhenContext(ctx, instanceRefreshStartedTimeout,
+	_, err := tfresource.RetryWhen(ctx, instanceRefreshStartedTimeout,
 		func() (interface{}, error) {
 			return conn.StartInstanceRefreshWithContext(ctx, input)
 		},

@@ -359,7 +359,7 @@ func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 			PolicyDocument: aws.String(assumeRolePolicy),
 		}
 
-		_, err = tfresource.RetryWhenContext(ctx, propagationTimeout,
+		_, err = tfresource.RetryWhen(ctx, propagationTimeout,
 			func() (interface{}, error) {
 				return conn.UpdateAssumeRolePolicyWithContext(ctx, input)
 			},
@@ -620,7 +620,7 @@ func deleteRoleInstanceProfiles(ctx context.Context, conn *iam.IAM, roleName str
 }
 
 func retryCreateRole(ctx context.Context, conn *iam.IAM, input *iam.CreateRoleInput) (*iam.CreateRoleOutput, error) {
-	outputRaw, err := tfresource.RetryWhenContext(ctx, propagationTimeout,
+	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
 		func() (interface{}, error) {
 			return conn.CreateRoleWithContext(ctx, input)
 		},

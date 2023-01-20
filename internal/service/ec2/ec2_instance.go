@@ -856,7 +856,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	log.Printf("[DEBUG] Creating EC2 Instance: %s", input)
-	outputRaw, err := tfresource.RetryWhenContext(ctx, propagationTimeout,
+	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
 		func() (interface{}, error) {
 			return conn.RunInstancesWithContext(ctx, input)
 		},

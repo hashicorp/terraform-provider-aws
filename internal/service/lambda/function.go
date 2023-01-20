@@ -1119,7 +1119,7 @@ func waitFunctionUpdated(ctx context.Context, conn *lambda.Lambda, functionName 
 // retryFunctionOp retries a Lambda Function Create or Update operation.
 // It handles IAM eventual consistency and EC2 throttling.
 func retryFunctionOp(ctx context.Context, f func() (interface{}, error)) (interface{}, error) { //nolint:unparam
-	output, err := tfresource.RetryWhenContext(ctx, propagationTimeout,
+	output, err := tfresource.RetryWhen(ctx, propagationTimeout,
 		f,
 		func(err error) (bool, error) {
 			if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "The role defined for the function cannot be assumed by Lambda") {
@@ -1147,7 +1147,7 @@ func retryFunctionOp(ctx context.Context, f func() (interface{}, error)) (interf
 
 	// Additional retries when throttled.
 	if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "throttled by EC2") {
-		output, err = tfresource.RetryWhenContext(ctx, functionExtraThrottlingTimeout,
+		output, err = tfresource.RetryWhen(ctx, functionExtraThrottlingTimeout,
 			f,
 			func(err error) (bool, error) {
 				if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "throttled by EC2") {

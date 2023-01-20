@@ -116,7 +116,7 @@ func resourceQuerySuggestionsBlockListCreate(ctx context.Context, d *schema.Reso
 		in.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	outputRaw, err := tfresource.RetryWhenContext(ctx, propagationTimeout,
+	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
 		func() (interface{}, error) {
 			return conn.CreateQuerySuggestionsBlockList(ctx, in)
 		},
@@ -245,7 +245,7 @@ func resourceQuerySuggestionsBlockListUpdate(ctx context.Context, d *schema.Reso
 
 		log.Printf("[DEBUG] Updating Kendra QuerySuggestionsBlockList (%s): %#v", d.Id(), input)
 
-		_, err = tfresource.RetryWhenContext(ctx, propagationTimeout,
+		_, err = tfresource.RetryWhen(ctx, propagationTimeout,
 			func() (interface{}, error) {
 				return conn.UpdateQuerySuggestionsBlockList(ctx, input)
 			},

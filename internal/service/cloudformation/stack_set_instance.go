@@ -197,7 +197,7 @@ func resourceStackSetInstanceCreate(ctx context.Context, d *schema.ResourceData,
 	}
 
 	log.Printf("[DEBUG] Creating CloudFormation StackSet Instance: %s", input)
-	_, err := tfresource.RetryWhenContext(ctx, propagationTimeout,
+	_, err := tfresource.RetryWhen(ctx, propagationTimeout,
 		func() (interface{}, error) {
 			input.OperationId = aws.String(resource.UniqueId())
 

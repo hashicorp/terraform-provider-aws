@@ -266,7 +266,7 @@ func resourceThingGroupDelete(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).IoTConn()
 
 	log.Printf("[DEBUG] Deleting IoT Thing Group: %s", d.Id())
-	_, err := tfresource.RetryWhenContext(ctx, thingGroupDeleteTimeout,
+	_, err := tfresource.RetryWhen(ctx, thingGroupDeleteTimeout,
 		func() (interface{}, error) {
 			return conn.DeleteThingGroupWithContext(ctx, &iot.DeleteThingGroupInput{
 				ThingGroupName: aws.String(d.Id()),

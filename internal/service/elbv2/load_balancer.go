@@ -869,7 +869,7 @@ func waitForNLBNetworkInterfacesToDetach(ctx context.Context, conn *ec2.EC2, lbA
 
 	errAttached := errors.New("attached")
 
-	_, err = tfresource.RetryWhenContext(ctx, loadBalancerNetworkInterfaceDetachTimeout,
+	_, err = tfresource.RetryWhen(ctx, loadBalancerNetworkInterfaceDetachTimeout,
 		func() (interface{}, error) {
 			networkInterfaces, err := tfec2.FindNetworkInterfacesByAttachmentInstanceOwnerIDAndDescription(ctx, conn, "amazon-aws", "ELB "+name)
 

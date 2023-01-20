@@ -442,7 +442,7 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 			input.SSESpecificationOverride = expandEncryptAtRestOptions(v.([]interface{}))
 		}
 
-		_, err := tfresource.RetryWhenContext(ctx, createTableTimeout, func() (interface{}, error) {
+		_, err := tfresource.RetryWhen(ctx, createTableTimeout, func() (interface{}, error) {
 			return conn.RestoreTableToPointInTimeWithContext(ctx, input)
 		}, func(err error) (bool, error) {
 			if tfawserr.ErrCodeEquals(err, "ThrottlingException") {
@@ -522,7 +522,7 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 			input.TableClass = aws.String(v.(string))
 		}
 
-		_, err := tfresource.RetryWhenContext(ctx, createTableTimeout, func() (interface{}, error) {
+		_, err := tfresource.RetryWhen(ctx, createTableTimeout, func() (interface{}, error) {
 			return conn.CreateTableWithContext(ctx, input)
 		}, func(err error) (bool, error) {
 			if tfawserr.ErrCodeEquals(err, "ThrottlingException") {
@@ -1436,7 +1436,7 @@ func deleteTable(ctx context.Context, conn *dynamodb.DynamoDB, tableName string)
 		TableName: aws.String(tableName),
 	}
 
-	_, err := tfresource.RetryWhenContext(ctx, deleteTableTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhen(ctx, deleteTableTimeout, func() (interface{}, error) {
 		return conn.DeleteTableWithContext(ctx, input)
 	}, func(err error) (bool, error) {
 		// Subscriber limit exceeded: Only 10 tables can be created, updated, or deleted simultaneously

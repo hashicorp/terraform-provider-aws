@@ -315,7 +315,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	outputRaw, err := tfresource.RetryWhenContext(ctx, propagationTimeout,
+	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
 		func() (interface{}, error) {
 			return conn.CreateClusterWithContext(ctx, input)
 		},

@@ -372,7 +372,7 @@ func associateEIP(ctx context.Context, conn *ec2.EC2, id, instanceID, networkInt
 	}
 
 	if associationID := aws.StringValue(output.AssociationId); associationID != "" {
-		_, err := tfresource.RetryWhenContext(ctx, propagationTimeout,
+		_, err := tfresource.RetryWhen(ctx, propagationTimeout,
 			func() (interface{}, error) {
 				return FindEIPByAssociationID(ctx, conn, associationID)
 			},
