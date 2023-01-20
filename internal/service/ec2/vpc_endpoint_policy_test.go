@@ -12,6 +12,7 @@ import (
 )
 
 func TestAccVPCEndpointPolicy_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var endpoint ec2.VpcEndpoint
 
 	resourceName := "aws_vpc_endpoint_policy.test"
@@ -21,12 +22,12 @@ func TestAccVPCEndpointPolicy_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCEndpointDestroy,
+		CheckDestroy:             testAccCheckVPCEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCEndpointPolicyConfig_basic(rName, policy1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCEndpointExists(resourceName, &endpoint),
+					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
 				),
 			},
 			{
@@ -37,7 +38,7 @@ func TestAccVPCEndpointPolicy_basic(t *testing.T) {
 			{
 				Config: testAccVPCEndpointPolicyConfig_basic(rName, policy2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCEndpointExists(resourceName, &endpoint),
+					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
 				),
 			},
 		},
@@ -45,6 +46,7 @@ func TestAccVPCEndpointPolicy_basic(t *testing.T) {
 }
 
 func TestAccVPCEndpointPolicy_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var endpoint ec2.VpcEndpoint
 	resourceName := "aws_vpc_endpoint_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -53,13 +55,13 @@ func TestAccVPCEndpointPolicy_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCEndpointDestroy,
+		CheckDestroy:             testAccCheckVPCEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCEndpointPolicyConfig_basic(rName, policy1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCEndpointExists(resourceName, &endpoint),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceVPCEndpointPolicy(), resourceName),
+					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPCEndpointPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -68,6 +70,7 @@ func TestAccVPCEndpointPolicy_disappears(t *testing.T) {
 }
 
 func TestAccVPCEndpointPolicy_disappears_endpoint(t *testing.T) {
+	ctx := acctest.Context(t)
 	var endpoint ec2.VpcEndpoint
 	resourceName := "aws_vpc_endpoint_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -76,13 +79,13 @@ func TestAccVPCEndpointPolicy_disappears_endpoint(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCEndpointDestroy,
+		CheckDestroy:             testAccCheckVPCEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCEndpointPolicyConfig_basic(rName, policy1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCEndpointExists(resourceName, &endpoint),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceVPCEndpoint(), "aws_vpc_endpoint.test"),
+					testAccCheckVPCEndpointExists(ctx, resourceName, &endpoint),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPCEndpoint(), "aws_vpc_endpoint.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},

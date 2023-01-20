@@ -68,7 +68,7 @@ func dataSourceHTTPNamespaceRead(ctx context.Context, d *schema.ResourceData, me
 	}
 	d.Set("name", ns.Name)
 
-	tags, err := ListTagsWithContext(ctx, conn, arn)
+	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
 		return diag.Errorf("listing tags for Service Discovery HTTP Namespace (%s): %s", arn, err)

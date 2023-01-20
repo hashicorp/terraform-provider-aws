@@ -24,7 +24,7 @@ func ResourceListener() *schema.Resource {
 		DeleteWithoutTimeout: resourceListenerDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{

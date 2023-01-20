@@ -1,6 +1,7 @@
 package gamelift
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"time"
@@ -15,15 +16,15 @@ const (
 	buildReadyTimeout = 1 * time.Minute
 )
 
-func waitBuildReady(conn *gamelift.GameLift, id string) (*gamelift.Build, error) {
+func waitBuildReady(ctx context.Context, conn *gamelift.GameLift, id string) (*gamelift.Build, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{gamelift.BuildStatusInitialized},
 		Target:  []string{gamelift.BuildStatusReady},
-		Refresh: statusBuild(conn, id),
+		Refresh: statusBuild(ctx, conn, id),
 		Timeout: buildReadyTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*gamelift.Build); ok {
 		return output, err
@@ -32,7 +33,7 @@ func waitBuildReady(conn *gamelift.GameLift, id string) (*gamelift.Build, error)
 	return nil, err
 }
 
-func waitFleetActive(conn *gamelift.GameLift, id string, timeout time.Duration) (*gamelift.FleetAttributes, error) {
+func waitFleetActive(ctx context.Context, conn *gamelift.GameLift, id string, timeout time.Duration) (*gamelift.FleetAttributes, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			gamelift.FleetStatusActivating,
@@ -42,11 +43,11 @@ func waitFleetActive(conn *gamelift.GameLift, id string, timeout time.Duration) 
 			gamelift.FleetStatusValidating,
 		},
 		Target:  []string{gamelift.FleetStatusActive},
-		Refresh: statusFleet(conn, id),
+		Refresh: statusFleet(ctx, conn, id),
 		Timeout: timeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*gamelift.FleetAttributes); ok {
 		return output, err
@@ -55,7 +56,7 @@ func waitFleetActive(conn *gamelift.GameLift, id string, timeout time.Duration) 
 	return nil, err
 }
 
-func waitFleetTerminated(conn *gamelift.GameLift, id string, timeout time.Duration) (*gamelift.FleetAttributes, error) {
+func waitFleetTerminated(ctx context.Context, conn *gamelift.GameLift, id string, timeout time.Duration) (*gamelift.FleetAttributes, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			gamelift.FleetStatusActive,
@@ -64,14 +65,14 @@ func waitFleetTerminated(conn *gamelift.GameLift, id string, timeout time.Durati
 			gamelift.FleetStatusTerminated,
 		},
 		Target:  []string{},
-		Refresh: statusFleet(conn, id),
+		Refresh: statusFleet(ctx, conn, id),
 		Timeout: timeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if err != nil {
-		events, fErr := getFleetFailures(conn, id)
+		events, fErr := getFleetFailures(ctx, conn, id)
 		if fErr != nil {
 			log.Printf("[WARN] Failed to poll fleet failures: %s", fErr)
 		}
@@ -87,14 +88,14 @@ func waitFleetTerminated(conn *gamelift.GameLift, id string, timeout time.Durati
 	return nil, err
 }
 
-func getFleetFailures(conn *gamelift.GameLift, id string) ([]*gamelift.Event, error) {
+func getFleetFailures(ctx context.Context, conn *gamelift.GameLift, id string) ([]*gamelift.Event, error) {
 	var events []*gamelift.Event
-	err := _getFleetFailures(conn, id, nil, &events)
+	err := _getFleetFailures(ctx, conn, id, nil, &events)
 	return events, err
 }
 
-func _getFleetFailures(conn *gamelift.GameLift, id string, nextToken *string, events *[]*gamelift.Event) error {
-	eOut, err := conn.DescribeFleetEvents(&gamelift.DescribeFleetEventsInput{
+func _getFleetFailures(ctx context.Context, conn *gamelift.GameLift, id string, nextToken *string, events *[]*gamelift.Event) error {
+	eOut, err := conn.DescribeFleetEventsWithContext(ctx, &gamelift.DescribeFleetEventsInput{
 		FleetId:   aws.String(id),
 		NextToken: nextToken,
 	})
@@ -109,7 +110,7 @@ func _getFleetFailures(conn *gamelift.GameLift, id string, nextToken *string, ev
 	}
 
 	if eOut.NextToken != nil {
-		err := _getFleetFailures(conn, id, nextToken, events)
+		err := _getFleetFailures(ctx, conn, id, nextToken, events)
 		if err != nil {
 			return err
 		}
@@ -146,18 +147,18 @@ func isEventFailure(event *gamelift.Event) bool {
 	return false
 }
 
-func waitGameServerGroupActive(conn *gamelift.GameLift, name string, timeout time.Duration) (*gamelift.GameServerGroup, error) {
+func waitGameServerGroupActive(ctx context.Context, conn *gamelift.GameLift, name string, timeout time.Duration) (*gamelift.GameServerGroup, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			gamelift.GameServerGroupStatusNew,
 			gamelift.GameServerGroupStatusActivating,
 		},
 		Target:  []string{gamelift.GameServerGroupStatusActive},
-		Refresh: statusGameServerGroup(conn, name),
+		Refresh: statusGameServerGroup(ctx, conn, name),
 		Timeout: timeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*gamelift.GameServerGroup); ok {
 		return output, err
@@ -166,18 +167,18 @@ func waitGameServerGroupActive(conn *gamelift.GameLift, name string, timeout tim
 	return nil, err
 }
 
-func waitGameServerGroupTerminated(conn *gamelift.GameLift, name string, timeout time.Duration) error {
+func waitGameServerGroupTerminated(ctx context.Context, conn *gamelift.GameLift, name string, timeout time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			gamelift.GameServerGroupStatusDeleteScheduled,
 			gamelift.GameServerGroupStatusDeleting,
 		},
 		Target:  []string{},
-		Refresh: statusGameServerGroup(conn, name),
+		Refresh: statusGameServerGroup(ctx, conn, name),
 		Timeout: timeout,
 	}
 
-	_, err := stateConf.WaitForState()
+	_, err := stateConf.WaitForStateContext(ctx)
 
 	if tfawserr.ErrCodeEquals(err, gamelift.ErrCodeNotFoundException) {
 		return nil

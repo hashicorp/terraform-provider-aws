@@ -2,7 +2,6 @@ package elasticache
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"strings"
 	"time"
@@ -10,8 +9,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -20,13 +21,13 @@ import (
 
 func ResourceSubnetGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceSubnetGroupCreate,
-		Read:   resourceSubnetGroupRead,
-		Update: resourceSubnetGroupUpdate,
-		Delete: resourceSubnetGroupDelete,
+		CreateWithoutTimeout: resourceSubnetGroupCreate,
+		ReadWithoutTimeout:   resourceSubnetGroupRead,
+		UpdateWithoutTimeout: resourceSubnetGroupUpdate,
+		DeleteWithoutTimeout: resourceSubnetGroupDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -63,7 +64,7 @@ func ResourceSubnetGroup() *schema.Resource {
 	}
 }
 
-func resourceSubnetGroupDiff(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+func resourceSubnetGroupDiff(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
 	// Reserved ElastiCache Subnet Groups with the name "default" do not support tagging;
 	// thus we must suppress the diff originating from the provider-level default_tags configuration
 	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/19213
@@ -72,10 +73,11 @@ func resourceSubnetGroupDiff(_ context.Context, diff *schema.ResourceDiff, meta 
 		return nil
 	}
 
-	return verify.SetTagsDiff(context.Background(), diff, meta)
+	return verify.SetTagsDiff(ctx, diff, meta)
 }
 
-func resourceSubnetGroupCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
@@ -91,7 +93,7 @@ func resourceSubnetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	output, err := conn.CreateCacheSubnetGroup(input)
+	output, err := conn.CreateCacheSubnetGroupWithContext(ctx, input)
 
 	if input.Tags != nil && verify.ErrorISOUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] failed creating ElastiCache Subnet Group with tags: %s. Trying create without tags.", err)
@@ -101,7 +103,7 @@ func resourceSubnetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("creating ElastiCache Subnet Group (%s): %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating ElastiCache Subnet Group (%s): %s", name, err)
 	}
 
 	// Assign the group name as the resource ID
@@ -112,27 +114,28 @@ func resourceSubnetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 
 	// In some partitions, only post-create tagging supported
 	if input.Tags == nil && len(tags) > 0 {
-		err := UpdateTags(conn, aws.StringValue(output.CacheSubnetGroup.ARN), nil, tags)
+		err := UpdateTags(ctx, conn, aws.StringValue(output.CacheSubnetGroup.ARN), nil, tags)
 
 		if err != nil {
 			if v, ok := d.GetOk("tags"); (ok && len(v.(map[string]interface{})) > 0) || !verify.ErrorISOUnsupported(conn.PartitionID, err) {
 				// explicitly setting tags or not an iso-unsupported error
-				return fmt.Errorf("adding tags after create for ElastiCache Subnet Group (%s): %w", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "adding tags after create for ElastiCache Subnet Group (%s): %s", d.Id(), err)
 			}
 
 			log.Printf("[WARN] failed adding tags after create for ElastiCache Subnet Group (%s): %s", d.Id(), err)
 		}
 	}
 
-	return resourceSubnetGroupRead(d, meta)
+	return resourceSubnetGroupRead(ctx, d, meta)
 }
 
-func resourceSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
+func resourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	group, err := FindCacheSubnetGroupByName(conn, d.Id())
+	group, err := FindCacheSubnetGroupByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ElastiCache Subnet Group (%s) not found, removing from state", d.Id())
@@ -141,7 +144,7 @@ func resourceSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading ElastiCache Subnet Group (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading ElastiCache Subnet Group (%s): %s", d.Id(), err)
 	}
 
 	var subnetIDs []*string
@@ -154,10 +157,10 @@ func resourceSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("description", group.CacheSubnetGroupDescription)
 	d.Set("subnet_ids", aws.StringValueSlice(subnetIDs))
 
-	tags, err := ListTags(conn, d.Get("arn").(string))
+	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
 
 	if err != nil && !verify.ErrorISOUnsupported(conn.PartitionID, err) {
-		return fmt.Errorf("listing tags for ElastiCache Subnet Group (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for ElastiCache Subnet Group (%s): %s", d.Id(), err)
 	}
 
 	// tags not supported in all partitions
@@ -170,18 +173,19 @@ func resourceSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
 
 		//lintignore:AWSR002
 		if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-			return fmt.Errorf("setting tags: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 		}
 
 		if err := d.Set("tags_all", tags.Map()); err != nil {
-			return fmt.Errorf("setting tags_all: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 		}
 	}
 
 	return nil
 }
 
-func resourceSubnetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceSubnetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 
 	if d.HasChanges("subnet_ids", "description") {
@@ -191,36 +195,37 @@ func resourceSubnetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 			SubnetIds:                   flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
 		}
 
-		_, err := conn.ModifyCacheSubnetGroup(input)
+		_, err := conn.ModifyCacheSubnetGroupWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("updating ElastiCache Subnet Group (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating ElastiCache Subnet Group (%s): %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		err := UpdateTags(conn, d.Get("arn").(string), o, n)
+		err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n)
 
 		if err != nil {
 			if v, ok := d.GetOk("tags"); (ok && len(v.(map[string]interface{})) > 0) || !verify.ErrorISOUnsupported(conn.PartitionID, err) {
 				// explicitly setting tags or not an iso-unsupported error
-				return fmt.Errorf("updating ElastiCache Subnet Group (%s) tags: %w", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "updating ElastiCache Subnet Group (%s) tags: %s", d.Id(), err)
 			}
 
 			log.Printf("[WARN] failed updating tags for ElastiCache Subnet Group (%s): %s", d.Id(), err)
 		}
 	}
 
-	return resourceSubnetGroupRead(d, meta)
+	return resourceSubnetGroupRead(ctx, d, meta)
 }
-func resourceSubnetGroupDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceSubnetGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 
 	log.Printf("[DEBUG] Deleting ElastiCache Subnet Group: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(5*time.Minute, func() (interface{}, error) {
-		return conn.DeleteCacheSubnetGroup(&elasticache.DeleteCacheSubnetGroupInput{
+	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, 5*time.Minute, func() (interface{}, error) {
+		return conn.DeleteCacheSubnetGroupWithContext(ctx, &elasticache.DeleteCacheSubnetGroupInput{
 			CacheSubnetGroupName: aws.String(d.Id()),
 		})
 	}, "DependencyViolation")
@@ -230,7 +235,7 @@ func resourceSubnetGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("deleting ElastiCache Subnet Group (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting ElastiCache Subnet Group (%s): %s", d.Id(), err)
 	}
 
 	return nil

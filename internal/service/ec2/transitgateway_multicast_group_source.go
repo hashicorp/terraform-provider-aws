@@ -78,7 +78,7 @@ func resourceTransitGatewayMulticastGroupSourceRead(ctx context.Context, d *sche
 	}
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFoundContext(ctx, propagationTimeout, func() (interface{}, error) {
-		return FindTransitGatewayMulticastGroupSourceByThreePartKey(conn, multicastDomainID, groupIPAddress, eniID)
+		return FindTransitGatewayMulticastGroupSourceByThreePartKey(ctx, conn, multicastDomainID, groupIPAddress, eniID)
 	}, d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -137,7 +137,7 @@ func deregisterTransitGatewayMulticastGroupSource(ctx context.Context, conn *ec2
 	}
 
 	_, err = tfresource.RetryUntilNotFoundContext(ctx, propagationTimeout, func() (interface{}, error) {
-		return FindTransitGatewayMulticastGroupSourceByThreePartKey(conn, multicastDomainID, groupIPAddress, eniID)
+		return FindTransitGatewayMulticastGroupSourceByThreePartKey(ctx, conn, multicastDomainID, groupIPAddress, eniID)
 	})
 
 	if err != nil {

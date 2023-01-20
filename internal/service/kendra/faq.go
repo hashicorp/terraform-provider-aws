@@ -174,8 +174,7 @@ func resourceFaqCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	log.Printf("[DEBUG] Creating Kendra Faq %#v", input)
 
-	outputRaw, err := tfresource.RetryWhen(
-		propagationTimeout,
+	outputRaw, err := tfresource.RetryWhenContext(ctx, propagationTimeout,
 		func() (interface{}, error) {
 			return conn.CreateFaq(ctx, input)
 		},

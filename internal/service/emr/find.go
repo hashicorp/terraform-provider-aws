@@ -1,6 +1,8 @@
 package emr
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/emr"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -8,8 +10,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindCluster(conn *emr.EMR, input *emr.DescribeClusterInput) (*emr.Cluster, error) {
-	output, err := conn.DescribeCluster(input)
+func FindCluster(ctx context.Context, conn *emr.EMR, input *emr.DescribeClusterInput) (*emr.Cluster, error) {
+	output, err := conn.DescribeClusterWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, ErrCodeClusterNotFound) || tfawserr.ErrMessageContains(err, emr.ErrCodeInvalidRequestException, "is not valid") {
 		return nil, &resource.NotFoundError{
@@ -29,12 +31,12 @@ func FindCluster(conn *emr.EMR, input *emr.DescribeClusterInput) (*emr.Cluster, 
 	return output.Cluster, nil
 }
 
-func FindClusterByID(conn *emr.EMR, id string) (*emr.Cluster, error) {
+func FindClusterByID(ctx context.Context, conn *emr.EMR, id string) (*emr.Cluster, error) {
 	input := &emr.DescribeClusterInput{
 		ClusterId: aws.String(id),
 	}
 
-	output, err := FindCluster(conn, input)
+	output, err := FindCluster(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -57,12 +59,12 @@ func FindClusterByID(conn *emr.EMR, id string) (*emr.Cluster, error) {
 	return output, nil
 }
 
-func FindStudioByID(conn *emr.EMR, id string) (*emr.Studio, error) {
+func FindStudioByID(ctx context.Context, conn *emr.EMR, id string) (*emr.Studio, error) {
 	input := &emr.DescribeStudioInput{
 		StudioId: aws.String(id),
 	}
 
-	output, err := conn.DescribeStudio(input)
+	output, err := conn.DescribeStudioWithContext(ctx, input)
 
 	if tfawserr.ErrMessageContains(err, emr.ErrCodeInvalidRequestException, "Studio does not exist") {
 		return nil, &resource.NotFoundError{
@@ -82,7 +84,7 @@ func FindStudioByID(conn *emr.EMR, id string) (*emr.Studio, error) {
 	return output.Studio, nil
 }
 
-func FindStudioSessionMappingByID(conn *emr.EMR, id string) (*emr.SessionMappingDetail, error) {
+func FindStudioSessionMappingByID(ctx context.Context, conn *emr.EMR, id string) (*emr.SessionMappingDetail, error) {
 	studioId, identityType, identityId, err := readStudioSessionMapping(id)
 	if err != nil {
 		return nil, err
@@ -94,7 +96,7 @@ func FindStudioSessionMappingByID(conn *emr.EMR, id string) (*emr.SessionMapping
 		IdentityId:   aws.String(identityId),
 	}
 
-	output, err := conn.GetStudioSessionMapping(input)
+	output, err := conn.GetStudioSessionMappingWithContext(ctx, input)
 
 	if tfawserr.ErrMessageContains(err, emr.ErrCodeInvalidRequestException, "Studio session mapping does not exist") ||
 		tfawserr.ErrMessageContains(err, emr.ErrCodeInvalidRequestException, "Studio does not exist") {

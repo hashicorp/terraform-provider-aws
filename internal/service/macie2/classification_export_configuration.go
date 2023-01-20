@@ -55,7 +55,7 @@ func resourceClassificationExportConfigurationCreate(ctx context.Context, d *sch
 	conn := meta.(*conns.AWSClient).Macie2Conn()
 
 	if d.IsNewResource() {
-		output, err := conn.GetClassificationExportConfiguration(&macie2.GetClassificationExportConfigurationInput{})
+		output, err := conn.GetClassificationExportConfigurationWithContext(ctx, &macie2.GetClassificationExportConfigurationInput{})
 		if err != nil {
 			return diag.FromErr(fmt.Errorf("reading Macie classification export configuration failed: %w", err))
 		}
@@ -75,7 +75,7 @@ func resourceClassificationExportConfigurationCreate(ctx context.Context, d *sch
 
 	log.Printf("[DEBUG] Creating Macie classification export configuration: %s", input)
 
-	_, err := conn.PutClassificationExportConfiguration(&input)
+	_, err := conn.PutClassificationExportConfigurationWithContext(ctx, &input)
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("creating Macie classification export configuration failed: %w", err))
@@ -99,7 +99,7 @@ func resourceClassificationExportConfigurationUpdate(ctx context.Context, d *sch
 
 	log.Printf("[DEBUG] Creating Macie classification export configuration: %s", input)
 
-	_, err := conn.PutClassificationExportConfiguration(&input)
+	_, err := conn.PutClassificationExportConfigurationWithContext(ctx, &input)
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("creating Macie classification export configuration failed: %w", err))
@@ -112,7 +112,7 @@ func resourceClassificationExportConfigurationRead(ctx context.Context, d *schem
 	conn := meta.(*conns.AWSClient).Macie2Conn()
 
 	input := macie2.GetClassificationExportConfigurationInput{} // api does not have a getById() like endpoint.
-	output, err := conn.GetClassificationExportConfiguration(&input)
+	output, err := conn.GetClassificationExportConfigurationWithContext(ctx, &input)
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("reading Macie classification export configuration failed: %w", err))
@@ -140,7 +140,7 @@ func resourceClassificationExportConfigurationDelete(ctx context.Context, d *sch
 
 	log.Printf("[DEBUG] deleting Macie classification export configuration: %s", input)
 
-	_, err := conn.PutClassificationExportConfiguration(&input)
+	_, err := conn.PutClassificationExportConfigurationWithContext(ctx, &input)
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("deleting Macie classification export configuration failed: %w", err))

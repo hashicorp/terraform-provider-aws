@@ -18,7 +18,7 @@ func waitMemberInvited(ctx context.Context, conn *macie2.Macie2, adminAccountID 
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{macie2.RelationshipStatusCreated, macie2.RelationshipStatusEmailVerificationInProgress},
 		Target:  []string{macie2.RelationshipStatusInvited, macie2.RelationshipStatusEnabled, macie2.RelationshipStatusPaused},
-		Refresh: statusMemberRelationship(conn, adminAccountID),
+		Refresh: statusMemberRelationship(ctx, conn, adminAccountID),
 		Timeout: memberInvitedTimeout,
 	}
 

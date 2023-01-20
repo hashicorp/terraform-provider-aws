@@ -1,15 +1,17 @@
 package redshift
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func statusClusterAvailability(conn *redshift.Redshift, id string) resource.StateRefreshFunc {
+func statusClusterAvailability(ctx context.Context, conn *redshift.Redshift, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindClusterByID(conn, id)
+		output, err := FindClusterByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -23,9 +25,9 @@ func statusClusterAvailability(conn *redshift.Redshift, id string) resource.Stat
 	}
 }
 
-func statusClusterAvailabilityZoneRelocation(conn *redshift.Redshift, id string) resource.StateRefreshFunc {
+func statusClusterAvailabilityZoneRelocation(ctx context.Context, conn *redshift.Redshift, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindClusterByID(conn, id)
+		output, err := FindClusterByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -39,9 +41,9 @@ func statusClusterAvailabilityZoneRelocation(conn *redshift.Redshift, id string)
 	}
 }
 
-func statusCluster(conn *redshift.Redshift, id string) resource.StateRefreshFunc {
+func statusCluster(ctx context.Context, conn *redshift.Redshift, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindClusterByID(conn, id)
+		output, err := FindClusterByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -55,9 +57,9 @@ func statusCluster(conn *redshift.Redshift, id string) resource.StateRefreshFunc
 	}
 }
 
-func statusClusterAqua(conn *redshift.Redshift, id string) resource.StateRefreshFunc {
+func statusClusterAqua(ctx context.Context, conn *redshift.Redshift, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindClusterByID(conn, id)
+		output, err := FindClusterByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -71,9 +73,9 @@ func statusClusterAqua(conn *redshift.Redshift, id string) resource.StateRefresh
 	}
 }
 
-func statusScheduleAssociation(conn *redshift.Redshift, id string) resource.StateRefreshFunc {
+func statusScheduleAssociation(ctx context.Context, conn *redshift.Redshift, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		_, output, err := FindScheduleAssociationById(conn, id)
+		_, output, err := FindScheduleAssociationById(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -87,9 +89,9 @@ func statusScheduleAssociation(conn *redshift.Redshift, id string) resource.Stat
 	}
 }
 
-func statusEndpointAccess(conn *redshift.Redshift, name string) resource.StateRefreshFunc {
+func statusEndpointAccess(ctx context.Context, conn *redshift.Redshift, name string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindEndpointAccessByName(conn, name)
+		output, err := FindEndpointAccessByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

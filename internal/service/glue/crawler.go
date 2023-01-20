@@ -1,6 +1,7 @@
 package glue
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"regexp"
@@ -10,11 +11,13 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -27,12 +30,12 @@ func targets() []string {
 
 func ResourceCrawler() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceCrawlerCreate,
-		Read:   resourceCrawlerRead,
-		Update: resourceCrawlerUpdate,
-		Delete: resourceCrawlerDelete,
+		CreateWithoutTimeout: resourceCrawlerCreate,
+		ReadWithoutTimeout:   resourceCrawlerRead,
+		UpdateWithoutTimeout: resourceCrawlerUpdate,
+		DeleteWithoutTimeout: resourceCrawlerDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -355,18 +358,19 @@ func ResourceCrawler() *schema.Resource {
 	}
 }
 
-func resourceCrawlerCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceCrawlerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	glueConn := meta.(*conns.AWSClient).GlueConn()
 	name := d.Get("name").(string)
 
 	crawlerInput, err := createCrawlerInput(d, name, meta.(*conns.AWSClient).DefaultTagsConfig)
 	if err != nil {
-		return fmt.Errorf("creating Glue Crawler (%s): %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating Glue Crawler (%s): %s", name, err)
 	}
 
 	// Retry for IAM eventual consistency
-	err = resource.Retry(propagationTimeout, func() *resource.RetryError {
-		_, err = glueConn.CreateCrawler(crawlerInput)
+	err = resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+		_, err = glueConn.CreateCrawlerWithContext(ctx, crawlerInput)
 		if err != nil {
 			// InvalidInputException: Insufficient Lake Formation permission(s) on xxx
 			if tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "Insufficient Lake Formation permission") {
@@ -392,14 +396,14 @@ func resourceCrawlerCreate(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		_, err = glueConn.CreateCrawler(crawlerInput)
+		_, err = glueConn.CreateCrawlerWithContext(ctx, crawlerInput)
 	}
 	if err != nil {
-		return fmt.Errorf("creating Glue Crawler (%s): %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating Glue Crawler (%s): %s", name, err)
 	}
 	d.SetId(name)
 
-	return resourceCrawlerRead(d, meta)
+	return append(diags, resourceCrawlerRead(ctx, d, meta)...)
 }
 
 func createCrawlerInput(d *schema.ResourceData, crawlerName string, defaultTagsConfig *tftags.DefaultConfig) (*glue.CreateCrawlerInput, error) {
@@ -743,19 +747,20 @@ func expandDeltaTarget(cfg map[string]interface{}) *glue.DeltaTarget {
 	return target
 }
 
-func resourceCrawlerUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceCrawlerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	glueConn := meta.(*conns.AWSClient).GlueConn()
 	name := d.Get("name").(string)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		updateCrawlerInput, err := updateCrawlerInput(d, name)
 		if err != nil {
-			return fmt.Errorf("updating Glue Crawler (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Glue Crawler (%s): %s", d.Id(), err)
 		}
 
 		// Retry for IAM eventual consistency
-		err = resource.Retry(propagationTimeout, func() *resource.RetryError {
-			_, err := glueConn.UpdateCrawler(updateCrawlerInput)
+		err = resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+			_, err := glueConn.UpdateCrawlerWithContext(ctx, updateCrawlerInput)
 			if err != nil {
 				// InvalidInputException: Insufficient Lake Formation permission(s) on xxx
 				if tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "Insufficient Lake Formation permission") {
@@ -782,38 +787,39 @@ func resourceCrawlerUpdate(d *schema.ResourceData, meta interface{}) error {
 		})
 
 		if tfresource.TimedOut(err) {
-			_, err = glueConn.UpdateCrawler(updateCrawlerInput)
+			_, err = glueConn.UpdateCrawlerWithContext(ctx, updateCrawlerInput)
 		}
 
 		if err != nil {
-			return fmt.Errorf("updating Glue Crawler (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Glue Crawler (%s): %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(glueConn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %w", err)
+		if err := UpdateTags(ctx, glueConn, d.Get("arn").(string), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
 		}
 	}
 
-	return resourceCrawlerRead(d, meta)
+	return append(diags, resourceCrawlerRead(ctx, d, meta)...)
 }
 
-func resourceCrawlerRead(d *schema.ResourceData, meta interface{}) error {
+func resourceCrawlerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	crawler, err := FindCrawlerByName(conn, d.Id())
+	crawler, err := FindCrawlerByName(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Glue Crawler (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Glue Crawler (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Glue Crawler (%s): %s", d.Id(), err)
 	}
 
 	crawlerARN := arn.ARN{
@@ -835,72 +841,72 @@ func resourceCrawlerRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("schedule", crawler.Schedule.ScheduleExpression)
 	}
 	if err := d.Set("classifiers", flex.FlattenStringList(crawler.Classifiers)); err != nil {
-		return fmt.Errorf("error setting classifiers: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting classifiers: %s", err)
 	}
 	d.Set("table_prefix", crawler.TablePrefix)
 
 	if crawler.SchemaChangePolicy != nil {
 		if err := d.Set("schema_change_policy", flattenCrawlerSchemaChangePolicy(crawler.SchemaChangePolicy)); err != nil {
-			return fmt.Errorf("error setting schema_change_policy: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting schema_change_policy: %s", err)
 		}
 	}
 
 	if crawler.Targets != nil {
 		if err := d.Set("dynamodb_target", flattenDynamoDBTargets(crawler.Targets.DynamoDBTargets)); err != nil {
-			return fmt.Errorf("error setting dynamodb_target: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting dynamodb_target: %s", err)
 		}
 
 		if err := d.Set("jdbc_target", flattenJDBCTargets(crawler.Targets.JdbcTargets)); err != nil {
-			return fmt.Errorf("error setting jdbc_target: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting jdbc_target: %s", err)
 		}
 
 		if err := d.Set("s3_target", flattenS3Targets(crawler.Targets.S3Targets)); err != nil {
-			return fmt.Errorf("error setting s3_target: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting s3_target: %s", err)
 		}
 
 		if err := d.Set("catalog_target", flattenCatalogTargets(crawler.Targets.CatalogTargets)); err != nil {
-			return fmt.Errorf("error setting catalog_target: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting catalog_target: %s", err)
 		}
 
 		if err := d.Set("mongodb_target", flattenMongoDBTargets(crawler.Targets.MongoDBTargets)); err != nil {
-			return fmt.Errorf("error setting mongodb_target: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting mongodb_target: %s", err)
 		}
 
 		if err := d.Set("delta_target", flattenDeltaTargets(crawler.Targets.DeltaTargets)); err != nil {
-			return fmt.Errorf("error setting delta_target: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting delta_target: %s", err)
 		}
 	}
 
-	tags, err := ListTags(conn, crawlerARN)
+	tags, err := ListTags(ctx, conn, crawlerARN)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for Glue Crawler (%s): %w", crawlerARN, err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for Glue Crawler (%s): %s", crawlerARN, err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
 	if err := d.Set("lineage_configuration", flattenCrawlerLineageConfiguration(crawler.LineageConfiguration)); err != nil {
-		return fmt.Errorf("error setting lineage_configuration: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting lineage_configuration: %s", err)
 	}
 
 	if err := d.Set("lake_formation_configuration", flattenLakeFormationConfiguration(crawler.LakeFormationConfiguration)); err != nil {
-		return fmt.Errorf("error setting lake_formation_configuration: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting lake_formation_configuration: %s", err)
 	}
 
 	if err := d.Set("recrawl_policy", flattenCrawlerRecrawlPolicy(crawler.RecrawlPolicy)); err != nil {
-		return fmt.Errorf("error setting recrawl_policy: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting recrawl_policy: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
 func flattenS3Targets(s3Targets []*glue.S3Target) []map[string]interface{} {
@@ -997,20 +1003,21 @@ func flattenDeltaTargets(deltaTargets []*glue.DeltaTarget) []map[string]interfac
 	return result
 }
 
-func resourceCrawlerDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceCrawlerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	glueConn := meta.(*conns.AWSClient).GlueConn()
 
 	log.Printf("[DEBUG] deleting Glue Crawler: %s", d.Id())
-	_, err := glueConn.DeleteCrawler(&glue.DeleteCrawlerInput{
+	_, err := glueConn.DeleteCrawlerWithContext(ctx, &glue.DeleteCrawlerInput{
 		Name: aws.String(d.Id()),
 	})
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
-			return nil
+			return diags
 		}
-		return fmt.Errorf("error deleting Glue Crawler: %w", err)
+		return sdkdiag.AppendErrorf(diags, "deleting Glue Crawler: %s", err)
 	}
-	return nil
+	return diags
 }
 
 func flattenCrawlerSchemaChangePolicy(cfg *glue.SchemaChangePolicy) []map[string]interface{} {

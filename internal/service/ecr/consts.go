@@ -1,6 +1,8 @@
 package ecr
 
-import "time"
+import (
+	"time"
+)
 
 const (
 	propagationTimeout = 2 * time.Minute

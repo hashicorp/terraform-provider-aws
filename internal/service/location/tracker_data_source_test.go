@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccLocationTrackerDataSource_indexName(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_location_tracker.test"
 	resourceName := "aws_location_tracker.test"
@@ -19,7 +20,7 @@ func TestAccLocationTrackerDataSource_indexName(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, locationservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTrackerDestroy,
+		CheckDestroy:             testAccCheckTrackerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTrackerDataSourceConfig_indexName(rName),

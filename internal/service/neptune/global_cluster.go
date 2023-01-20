@@ -411,7 +411,7 @@ func resourceGlobalClusterUpgradeEngineVersion(ctx context.Context, d *schema.Re
 		if err != nil {
 			return err
 		}
-		_, err = WaitDBClusterAvailable(conn, aws.StringValue(dbCluster.DBClusterIdentifier), d.Timeout(schema.TimeoutUpdate))
+		_, err = WaitDBClusterAvailable(ctx, conn, aws.StringValue(dbCluster.DBClusterIdentifier), d.Timeout(schema.TimeoutUpdate))
 		if err != nil {
 			return err
 		}

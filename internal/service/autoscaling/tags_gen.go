@@ -19,10 +19,7 @@ import (
 // This function will optimise the handling over ListTags, if possible.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func GetTag(conn autoscalingiface.AutoScalingAPI, identifier string, resourceType string, key string) (*tftags.TagData, error) {
-	return GetTagWithContext(context.Background(), conn, identifier, resourceType, key)
-}
-func GetTagWithContext(ctx context.Context, conn autoscalingiface.AutoScalingAPI, identifier string, resourceType string, key string) (*tftags.TagData, error) {
+func GetTag(ctx context.Context, conn autoscalingiface.AutoScalingAPI, identifier string, resourceType string, key string) (*tftags.TagData, error) {
 	input := &autoscaling.DescribeTagsInput{
 		Filters: []*autoscaling.Filter{
 			{
@@ -54,11 +51,7 @@ func GetTagWithContext(ctx context.Context, conn autoscalingiface.AutoScalingAPI
 // ListTags lists autoscaling service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn autoscalingiface.AutoScalingAPI, identifier string, resourceType string) (tftags.KeyValueTags, error) {
-	return ListTagsWithContext(context.Background(), conn, identifier, resourceType)
-}
-
-func ListTagsWithContext(ctx context.Context, conn autoscalingiface.AutoScalingAPI, identifier string, resourceType string) (tftags.KeyValueTags, error) {
+func ListTags(ctx context.Context, conn autoscalingiface.AutoScalingAPI, identifier string, resourceType string) (tftags.KeyValueTags, error) {
 	input := &autoscaling.DescribeTagsInput{
 		Filters: []*autoscaling.Filter{
 			{
@@ -238,10 +231,7 @@ func KeyValueTags(tags interface{}, identifier string, resourceType string) tfta
 // UpdateTags updates autoscaling service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn autoscalingiface.AutoScalingAPI, identifier string, resourceType string, oldTags interface{}, newTags interface{}) error {
-	return UpdateTagsWithContext(context.Background(), conn, identifier, resourceType, oldTags, newTags)
-}
-func UpdateTagsWithContext(ctx context.Context, conn autoscalingiface.AutoScalingAPI, identifier string, resourceType string, oldTagsSet interface{}, newTagsSet interface{}) error {
+func UpdateTags(ctx context.Context, conn autoscalingiface.AutoScalingAPI, identifier string, resourceType string, oldTagsSet interface{}, newTagsSet interface{}) error {
 	oldTags := KeyValueTags(oldTagsSet, identifier, resourceType)
 	newTags := KeyValueTags(newTagsSet, identifier, resourceType)
 
