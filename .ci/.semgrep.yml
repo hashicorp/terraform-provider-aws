@@ -870,16 +870,6 @@ rules:
       - pattern: "[]string{..., string($X), ...}"
     severity: WARNING
 
-  - id: avoid-context-TODO-in-tests
-    languages: [go]
-    message: Prefer using context.Background() instead of context.TODO()
-    paths:
-      include:
-        - "internal/**/*_test.go"
-    patterns:
-      - pattern: context.TODO
-    severity: ERROR
-
   - id: avoid-context-CRUD-handlers
     languages: [go]
     message: Prefer using WithoutTimeout CRUD handlers instead of Context variants
