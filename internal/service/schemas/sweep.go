@@ -37,6 +37,7 @@ func init() {
 }
 
 func sweepDiscoverers(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
@@ -47,7 +48,7 @@ func sweepDiscoverers(region string) error {
 	var sweeperErrs *multierror.Error
 
 	input := &schemas.ListDiscoverersInput{}
-	err = conn.ListDiscoverersPages(input, func(page *schemas.ListDiscoverersOutput, lastPage bool) bool {
+	err = conn.ListDiscoverersPagesWithContext(ctx, input, func(page *schemas.ListDiscoverersOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -71,7 +72,7 @@ func sweepDiscoverers(region string) error {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("listing EventBridge Schemas Discoverers: %w", err))
 	}
 
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("sweeping EventBridge Schemas Discoverers: %w", err))
 	}
 
@@ -79,6 +80,7 @@ func sweepDiscoverers(region string) error {
 }
 
 func sweepRegistries(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
@@ -89,7 +91,7 @@ func sweepRegistries(region string) error {
 	var sweeperErrs *multierror.Error
 
 	input := &schemas.ListRegistriesInput{}
-	err = conn.ListRegistriesPages(input, func(page *schemas.ListRegistriesOutput, lastPage bool) bool {
+	err = conn.ListRegistriesPagesWithContext(ctx, input, func(page *schemas.ListRegistriesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -118,7 +120,7 @@ func sweepRegistries(region string) error {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("listing EventBridge Schemas Registries: %w", err))
 	}
 
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping EventBridge Schemas Registries: %w", err))
 	}
 
@@ -126,6 +128,7 @@ func sweepRegistries(region string) error {
 }
 
 func sweepSchemas(region string) error { // nosemgrep:ci.schemas-in-func-name
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
@@ -136,7 +139,7 @@ func sweepSchemas(region string) error { // nosemgrep:ci.schemas-in-func-name
 	var sweeperErrs *multierror.Error
 
 	input := &schemas.ListRegistriesInput{}
-	err = conn.ListRegistriesPages(input, func(page *schemas.ListRegistriesOutput, lastPage bool) bool {
+	err = conn.ListRegistriesPagesWithContext(ctx, input, func(page *schemas.ListRegistriesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -148,7 +151,7 @@ func sweepSchemas(region string) error { // nosemgrep:ci.schemas-in-func-name
 				RegistryName: aws.String(registryName),
 			}
 
-			err = conn.ListSchemasPages(input, func(page *schemas.ListSchemasOutput, lastPage bool) bool {
+			err = conn.ListSchemasPagesWithContext(ctx, input, func(page *schemas.ListSchemasOutput, lastPage bool) bool {
 				if page == nil {
 					return !lastPage
 				}
@@ -185,7 +188,7 @@ func sweepSchemas(region string) error { // nosemgrep:ci.schemas-in-func-name
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("listing EventBridge Schemas Schemas (%s): %w", region, err))
 	}
 
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping EventBridge Schemas Schemas (%s): %w", region, err))
 	}
 
