@@ -135,7 +135,7 @@ func ResourceTopicSubscription() *schema.Resource {
 		DeleteWithoutTimeout: resourceTopicSubscriptionDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		CustomizeDiff: resourceTopicSubscriptionCustomizeDiff,
