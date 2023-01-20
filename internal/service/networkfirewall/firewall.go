@@ -114,6 +114,11 @@ func ResourceFirewall() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
+						"ip_addr_type": {
+							Type:     schema.TypeString,
+							Required: false,
+							Default: "IPV4"
+						},
 					},
 				},
 			},
@@ -434,6 +439,7 @@ func expandSubnetMappings(l []interface{}) []*networkfirewall.SubnetMapping {
 		}
 		mapping := &networkfirewall.SubnetMapping{
 			SubnetId: aws.String(tfMap["subnet_id"].(string)),
+			IPAddressType: aws.String(tfMap["ip_addr_type"].(string)),
 		}
 		mappings = append(mappings, mapping)
 	}
@@ -503,6 +509,7 @@ func flattenSubnetMappings(sm []*networkfirewall.SubnetMapping) []interface{} {
 	for _, s := range sm {
 		m := map[string]interface{}{
 			"subnet_id": aws.StringValue(s.SubnetId),
+			"ip_addr_type": aws.StringValue(s.IPAddressType),
 		}
 		mappings = append(mappings, m)
 	}
@@ -520,7 +527,6 @@ func subnetMappingsHash(v interface{}) int {
 	if id, ok := tfMap["subnet_id"].(string); ok {
 		buf.WriteString(fmt.Sprintf("%s-", id))
 	}
-
 	return create.StringHashcode(buf.String())
 }
 
