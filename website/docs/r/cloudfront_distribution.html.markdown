@@ -273,7 +273,8 @@ of several sub-resources - these resources are laid out below.
     response to requests using the specified HTTP methods.
 
 * `cache_policy_id` (Optional) - The unique identifier of the cache policy that
-    is attached to the cache behavior.
+    is attached to the cache behavior. Either [`cache_policy_id` and or `origin_request_policy_id`] or
+    `forwarded_values` must be set.
 
 * `compress` (Optional) - Whether you want CloudFront to automatically
     compress content for web requests that include `Accept-Encoding: gzip` in
@@ -286,7 +287,9 @@ of several sub-resources - these resources are laid out below.
 * `field_level_encryption_id` (Optional) - Field level encryption configuration ID
 
 * `forwarded_values` (Optional) - The [forwarded values configuration](#forwarded-values-arguments) that specifies how CloudFront
-    handles query strings, cookies and headers (maximum one).
+    handles query strings, cookies and headers (maximum one). Either [`cache_policy_id` and or `origin_request_policy_id`] or
+    `forwarded_values` must be set. Note, AWS recommend that you use a cache policy or an 
+    origin request policy instead of this field.
 
 * `lambda_function_association` (Optional) - A [config block](#lambda-function-association) that triggers a lambda
     function with specific actions (maximum 4).
@@ -305,7 +308,8 @@ of several sub-resources - these resources are laid out below.
     whether the object has been updated. Defaults to 0 seconds.
 
 * `origin_request_policy_id` (Optional) - The unique identifier of the origin request policy
-    that is attached to the behavior.
+    that is attached to the behavior. Either [`cache_policy_id` and or `origin_request_policy_id`] or
+    `forwarded_values` must be set.
 
 * `path_pattern` (Required) - The pattern (for example, `images/*.jpg`) that
     specifies which requests you want this cache behavior to apply to.
