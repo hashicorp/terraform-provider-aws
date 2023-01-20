@@ -336,7 +336,7 @@ func updateRegionsInput(d *schema.ResourceData, in *ssmincidents.UpdateReplicati
 			newcmk := newVal["kms_key_arn"].(string)
 
 			if oldcmk != newcmk {
-				return fmt.Errorf("error: modifying the KMS key of a region must be split into two separate updates")
+				return fmt.Errorf("error: Incident Manager does not support updating Customer Managed Keys. To do this, remove the region, and then re-create it with the new key.")
 			}
 		}
 	}
