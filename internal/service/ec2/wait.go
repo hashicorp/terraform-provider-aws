@@ -2926,6 +2926,27 @@ func WaitIPAMPoolCIDRDeleted(conn *ec2.EC2, cidrBlock, poolID string, timeout ti
 	return nil, err
 }
 
+func WaitIPAMPoolCIDRAllocationCreated(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.IpamPoolAllocation, error) {
+	allocationID, poolID, err := IPAMPoolCIDRAllocationParseResourceID(id)
+
+	stateConf := &resource.StateChangeConf{
+		Pending:        []string{},
+		Target:         []string{IpamPoolCIDRAllocationCreateComplete},
+		Refresh:        StatusIPAMPoolCIDRAllocationState(conn, allocationID, poolID),
+		Timeout:        timeout,
+		NotFoundChecks: 20,
+		Delay:          5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.IpamPoolAllocation); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
 func WaitIPAMScopeCreated(conn *ec2.EC2, id string, timeout time.Duration) (*ec2.IpamScope, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ec2.IpamScopeStateCreateInProgress},

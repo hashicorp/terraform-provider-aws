@@ -121,6 +121,10 @@ func resourceIPAMPoolCIDRAllocationCreate(d *schema.ResourceData, meta interface
 	}
 	d.SetId(IPAMPoolCIDRAllocationCreateResourceID(aws.StringValue(output.IpamPoolAllocation.IpamPoolAllocationId), ipamPoolID))
 
+	if _, err := WaitIPAMPoolCIDRAllocationCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return fmt.Errorf("waiting for IPAM Pool CIDR Allocation (%s) create: %w", d.Id(), err)
+	}
+
 	return resourceIPAMPoolCIDRAllocationRead(d, meta)
 }
 

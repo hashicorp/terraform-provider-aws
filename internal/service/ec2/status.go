@@ -1333,6 +1333,26 @@ func StatusIPAMPoolCIDRState(conn *ec2.EC2, cidrBlock, poolID string) resource.S
 	}
 }
 
+const (
+	IpamPoolCIDRAllocationCreateComplete = "create-complete"
+)
+
+func StatusIPAMPoolCIDRAllocationState(conn *ec2.EC2, allocationID, poolID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindIPAMPoolAllocationByTwoPartKey(conn, allocationID, poolID)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, IpamPoolCIDRAllocationCreateComplete, nil
+	}
+}
+
 func StatusIPAMScopeState(conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindIPAMScopeByID(conn, id)
