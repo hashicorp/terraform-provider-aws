@@ -88,7 +88,7 @@ func TestAccKeyspacesTable_disappears(t *testing.T) {
 				Config: testAccTableConfig_basic(rName1, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTableExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfkeyspaces.ResourceTable(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfkeyspaces.ResourceTable(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

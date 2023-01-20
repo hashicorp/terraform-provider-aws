@@ -194,7 +194,7 @@ func TestAccEvidentlySegment_disappears(t *testing.T) {
 				Config: testAccSegmentConfig_basic(rName, pattern),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSegmentExists(ctx, resourceName, &segment),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcloudwatchevidently.ResourceSegment(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudwatchevidently.ResourceSegment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

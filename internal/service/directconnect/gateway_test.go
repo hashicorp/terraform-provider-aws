@@ -61,7 +61,7 @@ func TestAccDirectConnectGateway_disappears(t *testing.T) {
 				Config: testAccGatewayConfig_basic(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfdirectconnect.ResourceGateway(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdirectconnect.ResourceGateway(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -566,7 +566,7 @@ func TestAccEventsConnection_disappears(t *testing.T) {
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfevents.ResourceConnection(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfevents.ResourceConnection(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

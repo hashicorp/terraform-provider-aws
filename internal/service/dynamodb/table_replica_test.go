@@ -70,7 +70,7 @@ func TestAccDynamoDBTableReplica_disappears(t *testing.T) {
 				Config: testAccTableReplicaConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfdynamodb.ResourceTableReplica(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdynamodb.ResourceTableReplica(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

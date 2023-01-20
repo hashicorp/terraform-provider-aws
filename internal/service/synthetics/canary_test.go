@@ -549,8 +549,8 @@ func TestAccSyntheticsCanary_disappears(t *testing.T) {
 				Config: testAccCanaryConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCanaryExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(acctest.Provider, tfsynthetics.ResourceCanary(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfsynthetics.ResourceCanary(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsynthetics.ResourceCanary(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsynthetics.ResourceCanary(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -74,7 +74,7 @@ func testAccTransitGatewayPeeringAttachment_disappears(t *testing.T) {
 				Config: testAccTransitGatewayPeeringAttachmentConfig_sameAccount(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayPeeringAttachmentExists(ctx, resourceName, &transitGatewayPeeringAttachment),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceTransitGatewayPeeringAttachment(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceTransitGatewayPeeringAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

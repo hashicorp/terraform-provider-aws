@@ -70,7 +70,7 @@ func testAccTransitGatewayRegistration_disappears(t *testing.T) {
 				Config: testAccTransitGatewayRegistrationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayRegistrationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfnetworkmanager.ResourceTransitGatewayRegistration(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfnetworkmanager.ResourceTransitGatewayRegistration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -94,7 +94,7 @@ func testAccTransitGatewayRegistration_Disappears_transitGateway(t *testing.T) {
 				Config: testAccTransitGatewayRegistrationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayRegistrationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceTransitGateway(), transitGatewayResourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceTransitGateway(), transitGatewayResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

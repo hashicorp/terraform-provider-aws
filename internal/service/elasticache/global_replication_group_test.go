@@ -96,7 +96,7 @@ func TestAccElastiCacheGlobalReplicationGroup_disappears(t *testing.T) {
 				Config: testAccGlobalReplicationGroupConfig_basic(rName, primaryReplicationGroupId),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGlobalReplicationGroupExists(ctx, resourceName, &globalReplicationGroup),
-					acctest.CheckResourceDisappears(acctest.Provider, tfelasticache.ResourceGlobalReplicationGroup(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfelasticache.ResourceGlobalReplicationGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

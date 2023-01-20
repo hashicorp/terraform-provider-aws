@@ -224,7 +224,7 @@ func testAccHoursOfOperation_disappears(t *testing.T) {
 				Config: testAccHoursOfOperationConfig_basic(rName, rName2, "Disappear"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHoursOfOperationExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfconnect.ResourceHoursOfOperation(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfconnect.ResourceHoursOfOperation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

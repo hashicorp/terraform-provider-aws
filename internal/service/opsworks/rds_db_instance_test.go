@@ -79,7 +79,7 @@ func TestAccOpsWorksRDSDBInstance_disappears(t *testing.T) {
 				Config: testAccRDSDBInstanceConfig_basic(rName, "user1", "password1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRDSDBInstanceExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfopsworks.ResourceRDSDBInstance(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfopsworks.ResourceRDSDBInstance(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

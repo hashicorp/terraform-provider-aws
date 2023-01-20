@@ -63,7 +63,7 @@ func testAccWebhook_disappears(t *testing.T) {
 				Config: testAccWebhookConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWebhookExists(ctx, resourceName, &webhook),
-					acctest.CheckResourceDisappears(acctest.Provider, tfamplify.ResourceWebhook(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfamplify.ResourceWebhook(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

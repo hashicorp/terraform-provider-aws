@@ -67,7 +67,7 @@ func TestAccAMPRuleGroupNamespace_disappears(t *testing.T) {
 				Config: testAccRuleGroupNamespaceConfig_basic(defaultRuleGroupNamespace()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupNamespaceExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfamp.ResourceRuleGroupNamespace(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfamp.ResourceRuleGroupNamespace(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

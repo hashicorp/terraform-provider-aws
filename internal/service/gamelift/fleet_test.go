@@ -625,8 +625,8 @@ func TestAccGameLiftFleet_disappears(t *testing.T) {
 				Config: testAccFleetConfig_basic(rName, launchPath, params, bucketName, key, roleArn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(acctest.Provider, tfgamelift.ResourceFleet(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfgamelift.ResourceFleet(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfgamelift.ResourceFleet(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfgamelift.ResourceFleet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

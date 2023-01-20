@@ -59,7 +59,7 @@ func TestAccVPCEndpointSubnetAssociation_disappears(t *testing.T) {
 				Config: testAccVPCEndpointSubnetAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointSubnetAssociationExists(ctx, resourceName, &vpce),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceVPCEndpointSubnetAssociation(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPCEndpointSubnetAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

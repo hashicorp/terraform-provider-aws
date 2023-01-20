@@ -67,7 +67,7 @@ func TestAccVPCNetworkACL_disappears(t *testing.T) {
 				Config: testAccVPCNetworkACLConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkACLExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceNetworkACL(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceNetworkACL(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

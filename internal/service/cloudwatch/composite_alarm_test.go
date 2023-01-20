@@ -66,7 +66,7 @@ func TestAccCloudWatchCompositeAlarm_disappears(t *testing.T) {
 				Config: testAccCompositeAlarmConfig_basic(suffix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCompositeAlarmExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcloudwatch.ResourceCompositeAlarm(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudwatch.ResourceCompositeAlarm(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -1941,7 +1941,7 @@ func testAccRoute_disappears(t *testing.T) {
 				Config: testAccRouteConfig_grpcRoute(meshName, vrName, vn1Name, vn2Name, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteExists(ctx, resourceName, &r),
-					acctest.CheckResourceDisappears(acctest.Provider, tfappmesh.ResourceRoute(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappmesh.ResourceRoute(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

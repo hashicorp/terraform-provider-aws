@@ -62,7 +62,7 @@ func testAccPublishingDestination_disappears(t *testing.T) {
 				Config: testAccPublishingDestinationConfig_basic(bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPublishingDestinationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfguardduty.ResourcePublishingDestination(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfguardduty.ResourcePublishingDestination(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

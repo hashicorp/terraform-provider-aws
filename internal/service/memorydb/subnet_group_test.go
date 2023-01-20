@@ -75,7 +75,7 @@ func TestAccMemoryDBSubnetGroup_disappears(t *testing.T) {
 				Config: testAccSubnetGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetGroupExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfmemorydb.ResourceSubnetGroup(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfmemorydb.ResourceSubnetGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

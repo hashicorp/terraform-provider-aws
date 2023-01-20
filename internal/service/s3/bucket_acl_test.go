@@ -303,7 +303,7 @@ func TestAccS3BucketACL_disappears(t *testing.T) {
 					testAccCheckBucketACLExists(ctx, resourceName),
 					// Bucket ACL cannot be destroyed, but we can verify Bucket deletion
 					// will result in a missing Bucket ACL resource
-					acctest.CheckResourceDisappears(acctest.Provider, tfs3.ResourceBucket(), "aws_s3_bucket.test"),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfs3.ResourceBucket(), "aws_s3_bucket.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},

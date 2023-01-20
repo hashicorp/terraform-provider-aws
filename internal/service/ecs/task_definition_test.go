@@ -900,7 +900,7 @@ func TestAccECSTaskDefinition_disappears(t *testing.T) {
 				Config: testAccTaskDefinitionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
-					acctest.CheckResourceDisappears(acctest.Provider, tfecs.ResourceTaskDefinition(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfecs.ResourceTaskDefinition(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

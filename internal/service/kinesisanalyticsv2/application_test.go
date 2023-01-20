@@ -264,7 +264,7 @@ func TestAccKinesisAnalyticsV2Application_disappears(t *testing.T) {
 				Config: testAccApplicationConfig_basicSQL(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfkinesisanalyticsv2.ResourceApplication(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfkinesisanalyticsv2.ResourceApplication(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

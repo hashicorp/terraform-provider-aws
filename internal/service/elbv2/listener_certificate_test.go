@@ -172,7 +172,7 @@ func TestAccELBV2ListenerCertificate_disappears(t *testing.T) {
 				Config: testAccListenerCertificateConfig_basic(rName, key, certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerCertificateExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfelbv2.ResourceListenerCertificate(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfelbv2.ResourceListenerCertificate(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

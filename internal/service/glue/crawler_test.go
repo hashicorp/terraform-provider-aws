@@ -1033,7 +1033,7 @@ func TestAccGlueCrawler_disappears(t *testing.T) {
 				Config: testAccCrawlerConfig_s3Target(rName, "s3://bucket1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
-					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourceCrawler(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglue.ResourceCrawler(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

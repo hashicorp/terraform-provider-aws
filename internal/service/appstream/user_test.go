@@ -72,7 +72,7 @@ func TestAccAppStreamUser_disappears(t *testing.T) {
 				Config: testAccUserConfig_basic(authType, rEmail),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &userOutput),
-					acctest.CheckResourceDisappears(acctest.Provider, tfappstream.ResourceUser(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappstream.ResourceUser(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

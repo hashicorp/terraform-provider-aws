@@ -72,8 +72,8 @@ func TestAccCloud9EnvironmentMembership_disappears(t *testing.T) {
 				Config: testAccEnvironmentMembershipConfig_basic(rName, "read-only"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentMemberExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcloud9.ResourceEnvironmentMembership(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcloud9.ResourceEnvironmentMembership(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloud9.ResourceEnvironmentMembership(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloud9.ResourceEnvironmentMembership(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -98,8 +98,8 @@ func TestAccCloud9EnvironmentMembership_disappears_env(t *testing.T) {
 				Config: testAccEnvironmentMembershipConfig_basic(rName, "read-only"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentMemberExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcloud9.ResourceEnvironmentEC2(), "aws_cloud9_environment_ec2.test"),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcloud9.ResourceEnvironmentMembership(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloud9.ResourceEnvironmentEC2(), "aws_cloud9_environment_ec2.test"),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloud9.ResourceEnvironmentMembership(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

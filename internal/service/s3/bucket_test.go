@@ -360,7 +360,7 @@ func TestAccS3Bucket_disappears(t *testing.T) {
 				Config: testAccBucketConfig_basic(bucketName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfs3.ResourceBucket(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfs3.ResourceBucket(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -555,7 +555,7 @@ func TestAccS3Bucket_Tags_withSystemTags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					acctest.CheckResourceDisappears(acctest.Provider, tfs3.ResourceBucket(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfs3.ResourceBucket(), resourceName),
 					testAccCheckBucketCreateViaCloudFormation(ctx, bucketName, &stackID),
 				),
 			},

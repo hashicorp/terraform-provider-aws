@@ -179,7 +179,7 @@ func TestAccConfigServiceConfigurationAggregator_disappears(t *testing.T) {
 				Config: testAccConfigurationAggregatorConfig_account(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationAggregatorExists(ctx, resourceName, &ca),
-					acctest.CheckResourceDisappears(acctest.Provider, tfconfig.ResourceConfigurationAggregator(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfconfig.ResourceConfigurationAggregator(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

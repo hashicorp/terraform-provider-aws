@@ -78,7 +78,7 @@ func TestAccServiceCatalogProvisioningArtifact_disappears(t *testing.T) {
 				Config: testAccProvisioningArtifactConfig_basic(rName, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProvisioningArtifactExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfservicecatalog.ResourceProvisioningArtifact(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfservicecatalog.ResourceProvisioningArtifact(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

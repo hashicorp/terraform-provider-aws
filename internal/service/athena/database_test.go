@@ -312,7 +312,7 @@ func TestAccAthenaDatabase_disppears(t *testing.T) {
 				Config: testAccDatabaseConfig_basic(rName, dbName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfathena.ResourceDatabase(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfathena.ResourceDatabase(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -175,7 +175,7 @@ func TestAccXRaySamplingRule_disappears(t *testing.T) {
 				Config: testAccSamplingRuleConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSamplingRuleExists(ctx, resourceName, &samplingRule),
-					acctest.CheckResourceDisappears(acctest.Provider, tfxray.ResourceSamplingRule(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfxray.ResourceSamplingRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

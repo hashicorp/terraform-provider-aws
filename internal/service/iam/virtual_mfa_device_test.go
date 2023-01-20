@@ -113,8 +113,8 @@ func TestAccIAMVirtualMFADevice_disappears(t *testing.T) {
 				Config: testAccVirtualMFADeviceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVirtualMFADeviceExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(acctest.Provider, tfiam.ResourceVirtualMFADevice(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfiam.ResourceVirtualMFADevice(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceVirtualMFADevice(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceVirtualMFADevice(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

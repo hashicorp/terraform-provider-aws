@@ -61,7 +61,7 @@ func TestAccIoTThingGroupMembership_disappears(t *testing.T) {
 				Config: testAccThingGroupMembershipConfig_basic(rName1, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThingGroupMembershipExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfiot.ResourceThingGroupMembership(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiot.ResourceThingGroupMembership(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -86,7 +86,7 @@ func TestAccIoTThingGroupMembership_disappears_Thing(t *testing.T) {
 				Config: testAccThingGroupMembershipConfig_basic(rName1, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThingGroupMembershipExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfiot.ResourceThing(), thingResourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiot.ResourceThing(), thingResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -111,7 +111,7 @@ func TestAccIoTThingGroupMembership_disappears_ThingGroup(t *testing.T) {
 				Config: testAccThingGroupMembershipConfig_basic(rName1, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThingGroupMembershipExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfiot.ResourceThingGroup(), thingGroupResourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiot.ResourceThingGroup(), thingGroupResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

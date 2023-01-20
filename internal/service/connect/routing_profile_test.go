@@ -94,7 +94,7 @@ func testAccRoutingProfile_disappears(t *testing.T) {
 				Config: testAccRoutingProfileConfig_basic(rName, rName2, rName3, "Disappear"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoutingProfileExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfconnect.ResourceRoutingProfile(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfconnect.ResourceRoutingProfile(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -59,7 +59,7 @@ func TestAccIPAMPoolCIDR_disappears(t *testing.T) {
 				Config: testAccIPAMPoolCIDRConfig_provisionedIPv4(cidrBlock),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMPoolCIDRExists(ctx, resourceName, &cidr),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceIPAMPoolCIDR(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceIPAMPoolCIDR(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -84,7 +84,7 @@ func TestAccIPAMPoolCIDR_Disappears_ipam(t *testing.T) {
 				Config: testAccIPAMPoolCIDRConfig_provisionedIPv4(cidrBlock),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMPoolCIDRExists(ctx, resourceName, &cidr),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceIPAM(), ipamResourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceIPAM(), ipamResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -415,7 +415,7 @@ func TestAccGlueMlTransform_disappears(t *testing.T) {
 				Config: testAccMLTransformConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMLTransformExists(ctx, resourceName, &transform),
-					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourceMLTransform(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglue.ResourceMLTransform(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -140,7 +140,7 @@ func TestAccPinpointEmailChannel_disappears(t *testing.T) {
 				Config: testAccEmailChannelConfig_fromAddress(domain, address),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEmailChannelExists(ctx, resourceName, &channel),
-					acctest.CheckResourceDisappears(acctest.Provider, tfpinpoint.ResourceEmailChannel(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfpinpoint.ResourceEmailChannel(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

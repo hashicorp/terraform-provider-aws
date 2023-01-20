@@ -246,8 +246,8 @@ func TestAccCodePipelineWebhook_disappears(t *testing.T) {
 				Config: testAccWebhookConfig_basic(rName, githubToken),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebhookExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcodepipeline.ResourceWebhook(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcodepipeline.ResourceWebhook(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcodepipeline.ResourceWebhook(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcodepipeline.ResourceWebhook(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

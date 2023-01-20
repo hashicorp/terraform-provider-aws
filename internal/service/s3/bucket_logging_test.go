@@ -62,7 +62,7 @@ func TestAccS3BucketLogging_disappears(t *testing.T) {
 				Config: testAccBucketLoggingConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketLoggingExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfs3.ResourceBucketLogging(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfs3.ResourceBucketLogging(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

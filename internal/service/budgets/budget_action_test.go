@@ -73,7 +73,7 @@ func TestAccBudgetsBudgetAction_disappears(t *testing.T) {
 				Config: testAccBudgetActionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccBudgetActionExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(acctest.Provider, tfbudgets.ResourceBudgetAction(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfbudgets.ResourceBudgetAction(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

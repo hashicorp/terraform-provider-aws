@@ -105,10 +105,10 @@ func TestAccIAMServiceLinkedRole_basic(t *testing.T) {
 					r := tfiam.ResourceServiceLinkedRole()
 					d := r.Data(nil)
 					d.SetId(arn)
-					err := acctest.DeleteResource(r, d, client)
+					err := acctest.DeleteResource(ctx, r, d, client)
 
 					if err != nil {
-						t.Fatalf("Error deleting service-linked role %s: %s", name, err)
+						t.Fatalf("deleting service-linked role %s: %s", name, err)
 					}
 				},
 				Config: testAccServiceLinkedRoleConfig_basic(awsServiceName),
@@ -292,8 +292,8 @@ func TestAccIAMServiceLinkedRole_disappears(t *testing.T) {
 				Config: testAccServiceLinkedRoleConfig_customSuffix(awsServiceName, customSuffix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceLinkedRoleExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfiam.ResourceServiceLinkedRole(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfiam.ResourceServiceLinkedRole(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceServiceLinkedRole(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceServiceLinkedRole(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -86,7 +86,7 @@ func TestAccLogsQueryDefinition_disappears(t *testing.T) {
 				Config: testAccQueryDefinitionConfig_basic(queryName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueryDefinitionExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tflogs.ResourceQueryDefinition(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflogs.ResourceQueryDefinition(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

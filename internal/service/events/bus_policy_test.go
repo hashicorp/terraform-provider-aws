@@ -91,7 +91,7 @@ func TestAccEventsBusPolicy_disappears(t *testing.T) {
 				Config: testAccBusPolicyConfig_basic(rstring),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBusPolicyExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfevents.ResourceBusPolicy(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfevents.ResourceBusPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

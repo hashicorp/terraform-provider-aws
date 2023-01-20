@@ -53,7 +53,7 @@ func testAccTransitGatewayMulticastGroupMember_disappears(t *testing.T) {
 				Config: testAccTransitGatewayMulticastGroupMemberConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayMulticastGroupMemberExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceTransitGatewayMulticastGroupMember(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceTransitGatewayMulticastGroupMember(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -78,7 +78,7 @@ func testAccTransitGatewayMulticastGroupMember_Disappears_domain(t *testing.T) {
 				Config: testAccTransitGatewayMulticastGroupMemberConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayMulticastGroupMemberExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceTransitGatewayMulticastDomain(), domainResourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceTransitGatewayMulticastDomain(), domainResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

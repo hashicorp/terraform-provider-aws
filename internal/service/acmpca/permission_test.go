@@ -59,7 +59,7 @@ func TestAccACMPCAPermission_disappears(t *testing.T) {
 				Config: testAccPermissionConfig_basic(commonName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionExists(ctx, resourceName, &permission),
-					acctest.CheckResourceDisappears(acctest.Provider, tfacmpca.ResourcePermission(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfacmpca.ResourcePermission(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

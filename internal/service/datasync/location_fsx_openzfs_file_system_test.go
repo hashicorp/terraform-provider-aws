@@ -73,8 +73,8 @@ func TestAccDataSyncLocationFSxOpenZFSFileSystem_disappears(t *testing.T) {
 				Config: testAccLocationFSxOpenZFSFileSystemConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationFSxOpenZFSExists(ctx, resourceName, &locationFsxOpenZfs1),
-					acctest.CheckResourceDisappears(acctest.Provider, tfdatasync.ResourceLocationFSxOpenZFSFileSystem(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfdatasync.ResourceLocationFSxOpenZFSFileSystem(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdatasync.ResourceLocationFSxOpenZFSFileSystem(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdatasync.ResourceLocationFSxOpenZFSFileSystem(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

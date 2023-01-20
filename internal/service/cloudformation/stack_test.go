@@ -144,7 +144,7 @@ func TestAccCloudFormationStack_disappears(t *testing.T) {
 				Config: testAccStackConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackExists(ctx, resourceName, &stack),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcloudformation.ResourceStack(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudformation.ResourceStack(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

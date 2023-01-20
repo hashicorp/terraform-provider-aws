@@ -68,8 +68,8 @@ func TestAccCloudFrontOriginRequestPolicy_disappears(t *testing.T) {
 				Config: testAccOriginRequestPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOriginRequestPolicyExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcloudfront.ResourceOriginRequestPolicy(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcloudfront.ResourceOriginRequestPolicy(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudfront.ResourceOriginRequestPolicy(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudfront.ResourceOriginRequestPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -160,7 +160,7 @@ func TestAccEMRInstanceFleet_disappears(t *testing.T) {
 					testAccCheckInstanceFleetExists(ctx, resourceName, &fleet),
 					// EMR Instance Fleet can only be scaled down and are not removed until the
 					// Cluster is removed. Verify EMR Cluster disappearance handling.
-					acctest.CheckResourceDisappears(acctest.Provider, tfemr.ResourceCluster(), emrClusterResourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfemr.ResourceCluster(), emrClusterResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -58,7 +58,7 @@ func TestAccLicenseManagerAssociation_disappears(t *testing.T) {
 				Config: testAccAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAssociationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tflicensemanager.ResourceAssociation(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflicensemanager.ResourceAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

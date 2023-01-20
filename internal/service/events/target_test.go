@@ -90,7 +90,7 @@ func TestAccEventsTarget_disappears(t *testing.T) {
 				Config: testAccTargetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfevents.ResourceTarget(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfevents.ResourceTarget(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -71,7 +71,7 @@ func TestAccVPCIPv4CIDRBlockAssociation_disappears(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCIPv4CIDRBlockAssociationExists(ctx, resource1Name, &associationSecondary),
 					testAccCheckVPCIPv4CIDRBlockAssociationExists(ctx, resource2Name, &associationTertiary),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceVPCIPv4CIDRBlockAssociation(), resource1Name),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPCIPv4CIDRBlockAssociation(), resource1Name),
 				),
 				ExpectNonEmptyPlan: true,
 			},

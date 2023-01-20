@@ -201,7 +201,7 @@ func testAccTransitGateway_disappears(t *testing.T) {
 				Config: testAccTransitGatewayConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayExists(ctx, resourceName, &transitGateway1),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceTransitGateway(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceTransitGateway(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

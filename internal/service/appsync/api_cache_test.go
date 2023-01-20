@@ -61,7 +61,7 @@ func testAccAPICache_disappears(t *testing.T) {
 				Config: testAccAPICacheConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAPICacheExists(ctx, resourceName, &apiCache),
-					acctest.CheckResourceDisappears(acctest.Provider, tfappsync.ResourceAPICache(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappsync.ResourceAPICache(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

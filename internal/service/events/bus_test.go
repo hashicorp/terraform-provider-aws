@@ -160,7 +160,7 @@ func TestAccEventsBus_disappears(t *testing.T) {
 				Config: testAccBusConfig_basic(busName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBusExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfevents.ResourceBus(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfevents.ResourceBus(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

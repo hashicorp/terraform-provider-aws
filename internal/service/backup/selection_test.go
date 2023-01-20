@@ -59,7 +59,7 @@ func TestAccBackupSelection_disappears(t *testing.T) {
 				Config: testAccSelectionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSelectionExists(ctx, resourceName, &selection1),
-					acctest.CheckResourceDisappears(acctest.Provider, tfbackup.ResourceSelection(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfbackup.ResourceSelection(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -84,8 +84,8 @@ func TestAccBackupSelection_Disappears_backupPlan(t *testing.T) {
 				Config: testAccSelectionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSelectionExists(ctx, resourceName, &selection1),
-					acctest.CheckResourceDisappears(acctest.Provider, tfbackup.ResourceSelection(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfbackup.ResourcePlan(), backupPlanResourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfbackup.ResourceSelection(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfbackup.ResourcePlan(), backupPlanResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

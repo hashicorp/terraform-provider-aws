@@ -75,7 +75,7 @@ func TestAccMemoryDBSnapshot_disappears(t *testing.T) {
 				Config: testAccSnapshotConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfmemorydb.ResourceSnapshot(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfmemorydb.ResourceSnapshot(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

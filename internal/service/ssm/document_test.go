@@ -581,7 +581,7 @@ func TestAccSSMDocument_disappears(t *testing.T) {
 				Config: testAccDocumentConfig_basic(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDocumentExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfssm.ResourceDocument(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfssm.ResourceDocument(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -69,7 +69,7 @@ func TestAccEC2EBSVolume_disappears(t *testing.T) {
 				Config: testAccEBSVolumeConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceEBSVolume(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceEBSVolume(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -976,7 +976,7 @@ func testAccCheckVolumeFinalSnapshotExists(ctx context.Context, v *ec2.Volume) r
 		d := r.Data(nil)
 		d.SetId(aws.StringValue(output.SnapshotId))
 
-		err = acctest.DeleteResource(r, d, acctest.Provider.Meta())
+		err = acctest.DeleteResource(ctx, r, d, acctest.Provider.Meta())
 
 		return err
 	}

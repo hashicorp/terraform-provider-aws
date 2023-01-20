@@ -73,7 +73,7 @@ func testAccGraphQLAPI_disappears(t *testing.T) {
 				Config: testAccGraphQLAPIConfig_authenticationType(rName, "API_KEY"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGraphQLAPIExists(ctx, resourceName, &api1),
-					acctest.CheckResourceDisappears(acctest.Provider, tfappsync.ResourceGraphQLAPI(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappsync.ResourceGraphQLAPI(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

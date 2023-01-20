@@ -309,7 +309,7 @@ func testAccReportDefinition_disappears(t *testing.T) {
 				Config: testAccReportDefinitionConfig_basic(reportName, bucketName, ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReportDefinitionExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcur.ResourceReportDefinition(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcur.ResourceReportDefinition(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

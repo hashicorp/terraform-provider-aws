@@ -639,7 +639,7 @@ func TestAccVPCSubnet_disappears(t *testing.T) {
 				Config: testAccVPCSubnetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceSubnet(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceSubnet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

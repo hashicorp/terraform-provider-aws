@@ -145,8 +145,8 @@ func TestAccDeviceFarmNetworkProfile_disappears(t *testing.T) {
 				Config: testAccNetworkProfileConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkProfileExists(ctx, resourceName, &pool),
-					acctest.CheckResourceDisappears(acctest.Provider, tfdevicefarm.ResourceNetworkProfile(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfdevicefarm.ResourceNetworkProfile(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdevicefarm.ResourceNetworkProfile(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdevicefarm.ResourceNetworkProfile(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -176,8 +176,8 @@ func TestAccDeviceFarmNetworkProfile_disappears_project(t *testing.T) {
 				Config: testAccNetworkProfileConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkProfileExists(ctx, resourceName, &pool),
-					acctest.CheckResourceDisappears(acctest.Provider, tfdevicefarm.ResourceProject(), "aws_devicefarm_project.test"),
-					acctest.CheckResourceDisappears(acctest.Provider, tfdevicefarm.ResourceNetworkProfile(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdevicefarm.ResourceProject(), "aws_devicefarm_project.test"),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdevicefarm.ResourceNetworkProfile(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

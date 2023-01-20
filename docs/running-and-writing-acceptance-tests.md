@@ -720,7 +720,7 @@ func TestAccExampleThing_disappears(t *testing.T) {
         Config: testAccExampleThingConfigName(rName),
         Check: resource.ComposeTestCheckFunc(
           testAccCheckExampleThingExists(ctx, resourceName, &job),
-          acctest.CheckResourceDisappears(acctest.Provider, ResourceExampleThing(), resourceName),
+          acctest.CheckResourceDisappears(ctx, acctest.Provider, ResourceExampleThing(), resourceName),
         ),
         ExpectNonEmptyPlan: true,
       },
@@ -764,7 +764,7 @@ func TestAccExampleChildThing_disappears_ParentThing(t *testing.T) {
         Config: testAccExampleThingConfigName(rName),
         Check: resource.ComposeTestCheckFunc(
           testAccCheckExampleThingExists(ctx, resourceName),
-          acctest.CheckResourceDisappears(acctest.Provider, ResourceExampleParentThing(), parentResourceName),
+          acctest.CheckResourceDisappears(ctx, acctest.Provider, ResourceExampleParentThing(), parentResourceName),
         ),
         ExpectNonEmptyPlan: true,
       },

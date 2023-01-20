@@ -104,7 +104,7 @@ func TestAccWAFRateBasedRule_disappears(t *testing.T) {
 				Config: testAccRateBasedRuleConfig_basic(wafRuleName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRateBasedRuleExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfwaf.ResourceRateBasedRule(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfwaf.ResourceRateBasedRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

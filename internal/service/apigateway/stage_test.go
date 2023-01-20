@@ -274,8 +274,8 @@ func TestAccAPIGatewayStage_disappears(t *testing.T) {
 				Config: testAccStageConfig_referencingDeployment(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(ctx, resourceName, &stage),
-					acctest.CheckResourceDisappears(acctest.Provider, tfapigateway.ResourceStage(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfapigateway.ResourceStage(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigateway.ResourceStage(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigateway.ResourceStage(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -299,8 +299,8 @@ func TestAccAPIGatewayStage_Disappears_restAPI(t *testing.T) {
 				Config: testAccStageConfig_referencingDeployment(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(ctx, resourceName, &stage),
-					acctest.CheckResourceDisappears(acctest.Provider, tfapigateway.ResourceRestAPI(), "aws_api_gateway_rest_api.test"),
-					acctest.CheckResourceDisappears(acctest.Provider, tfapigateway.ResourceStage(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigateway.ResourceRestAPI(), "aws_api_gateway_rest_api.test"),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigateway.ResourceStage(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

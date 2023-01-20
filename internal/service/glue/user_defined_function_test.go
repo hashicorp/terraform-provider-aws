@@ -114,7 +114,7 @@ func TestAccGlueUserDefinedFunction_disappears(t *testing.T) {
 				Config: testAccUserDefinedFunctionConfig_basic(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserDefinedFunctionExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourceUserDefinedFunction(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglue.ResourceUserDefinedFunction(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

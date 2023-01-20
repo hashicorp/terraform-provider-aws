@@ -120,7 +120,7 @@ func TestAccSchemasSchema_disappears(t *testing.T) {
 				Config: testAccSchemaConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchemaExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfschemas.ResourceSchema(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfschemas.ResourceSchema(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -67,7 +67,7 @@ func testAccInsight_disappears(t *testing.T) {
 				Config: testAccInsightConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInsightExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfsecurityhub.ResourceInsight(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsecurityhub.ResourceInsight(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -93,7 +93,7 @@ func TestAccOpsWorksStack_disappears(t *testing.T) {
 				Config: testAccStackConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfopsworks.ResourceStack(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfopsworks.ResourceStack(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

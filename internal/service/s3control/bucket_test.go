@@ -64,7 +64,7 @@ func TestAccS3ControlBucket_disappears(t *testing.T) {
 				Config: testAccBucketConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfs3control.ResourceBucket(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfs3control.ResourceBucket(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -62,7 +62,7 @@ func TestAccSESV2EmailIdentityMailFromAttributes_disappears(t *testing.T) {
 				Config: testAccEmailIdentityMailFromAttributesConfig_behaviorOnMXFailureAndMailFromDomain(rName, string(types.BehaviorOnMxFailureUseDefaultValue), mailFromDomain.String()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEmailIdentityMailFromAttributesExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfsesv2.ResourceEmailIdentityMailFromAttributes(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsesv2.ResourceEmailIdentityMailFromAttributes(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -86,7 +86,7 @@ func TestAccSESV2EmailIdentityMailFromAttributes_disappearsEmailIdentity(t *test
 				Config: testAccEmailIdentityMailFromAttributesConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEmailIdentityMailFromAttributesExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfsesv2.ResourceEmailIdentity(), emailIdentityName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsesv2.ResourceEmailIdentity(), emailIdentityName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

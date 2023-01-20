@@ -60,7 +60,7 @@ func TestAccECRPullThroughCacheRule_disappears(t *testing.T) {
 				Config: testAccPullThroughCacheRuleConfig_basic(repositoryPrefix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPullThroughCacheRuleExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfecr.ResourcePullThroughCacheRule(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfecr.ResourcePullThroughCacheRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

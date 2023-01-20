@@ -67,7 +67,7 @@ func testAccBackendEnvironment_disappears(t *testing.T) {
 				Config: testAccBackendEnvironmentConfig_basic(rName, environmentName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBackendEnvironmentExists(ctx, resourceName, &env),
-					acctest.CheckResourceDisappears(acctest.Provider, tfamplify.ResourceBackendEnvironment(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfamplify.ResourceBackendEnvironment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

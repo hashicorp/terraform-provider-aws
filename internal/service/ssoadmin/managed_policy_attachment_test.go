@@ -101,7 +101,7 @@ func TestAccSSOAdminManagedPolicyAttachment_disappears(t *testing.T) {
 				Config: testAccManagedPolicyAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckManagedPolicyAttachmentExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfssoadmin.ResourceManagedPolicyAttachment(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfssoadmin.ResourceManagedPolicyAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -125,7 +125,7 @@ func TestAccSSOAdminManagedPolicyAttachment_Disappears_permissionSet(t *testing.
 				Config: testAccManagedPolicyAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckManagedPolicyAttachmentExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfssoadmin.ResourcePermissionSet(), permissionSetResourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfssoadmin.ResourcePermissionSet(), permissionSetResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

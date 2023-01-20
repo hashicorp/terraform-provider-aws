@@ -72,7 +72,7 @@ func testAccFindingAggregator_disappears(t *testing.T) {
 				Config: testAccFindingAggregatorConfig_allRegions(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFindingAggregatorExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfsecurityhub.ResourceFindingAggregator(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsecurityhub.ResourceFindingAggregator(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -232,7 +232,7 @@ func TestAccEC2Instance_disappears(t *testing.T) {
 				Config: testAccInstanceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceInstance(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceInstance(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -4946,7 +4946,7 @@ func testAccCheckDetachVolumes(ctx context.Context, instance *ec2.Instance) reso
 				d.Set("instance_id", instanceID)
 				d.Set("volume_id", volumeID)
 
-				if err := acctest.DeleteResource(r, d, acctest.Provider.Meta()); err != nil {
+				if err := acctest.DeleteResource(ctx, r, d, acctest.Provider.Meta()); err != nil {
 					return err
 				}
 			}

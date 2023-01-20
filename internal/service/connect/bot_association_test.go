@@ -63,7 +63,7 @@ func testAccBotAssociation_disappears(t *testing.T) {
 				Config: testAccBotAssociationConfig_v1Basic(rName, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBotAssociationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfconnect.ResourceBotAssociation(), instanceResourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfconnect.ResourceBotAssociation(), instanceResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -98,7 +98,7 @@ func TestAccWAFRule_disappears(t *testing.T) {
 				Config: testAccRuleConfig_basic(wafRuleName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfwaf.ResourceRule(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfwaf.ResourceRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

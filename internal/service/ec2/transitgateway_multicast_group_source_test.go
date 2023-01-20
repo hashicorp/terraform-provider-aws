@@ -53,7 +53,7 @@ func testAccTransitGatewayMulticastGroupSource_disappears(t *testing.T) {
 				Config: testAccTransitGatewayMulticastGroupSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayMulticastGroupSourceExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceTransitGatewayMulticastGroupSource(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceTransitGatewayMulticastGroupSource(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -78,7 +78,7 @@ func testAccTransitGatewayMulticastGroupSource_Disappears_domain(t *testing.T) {
 				Config: testAccTransitGatewayMulticastGroupSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayMulticastGroupSourceExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceTransitGatewayMulticastDomain(), domainResourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceTransitGatewayMulticastDomain(), domainResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

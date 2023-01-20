@@ -98,7 +98,7 @@ func TestAccSNSTopicPolicy_Disappears_topic(t *testing.T) {
 				Config: testAccTopicPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists(ctx, topicResourceName, &attributes),
-					acctest.CheckResourceDisappears(acctest.Provider, tfsns.ResourceTopic(), topicResourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsns.ResourceTopic(), topicResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -122,7 +122,7 @@ func TestAccSNSTopicPolicy_disappears(t *testing.T) {
 				Config: testAccTopicPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists(ctx, "aws_sns_topic.test", &attributes),
-					acctest.CheckResourceDisappears(acctest.Provider, tfsns.ResourceTopicPolicy(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsns.ResourceTopicPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

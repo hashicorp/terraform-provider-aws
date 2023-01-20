@@ -73,7 +73,7 @@ func TestAccKinesisAnalyticsApplication_disappears(t *testing.T) {
 				Config: testAccApplicationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfkinesisanalytics.ResourceApplication(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfkinesisanalytics.ResourceApplication(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -186,7 +186,7 @@ func testAccAccount_disappears(t *testing.T) {
 				Config: testAccAccountConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountExists(ctx, resourceName, &macie2Output),
-					acctest.CheckResourceDisappears(acctest.Provider, tfmacie2.ResourceAccount(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfmacie2.ResourceAccount(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

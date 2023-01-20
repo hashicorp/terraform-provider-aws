@@ -113,7 +113,7 @@ func TestAccWAFXSSMatchSet_disappears(t *testing.T) {
 				Config: testAccXSSMatchSetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckXSSMatchSetExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfwaf.ResourceXSSMatchSet(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfwaf.ResourceXSSMatchSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

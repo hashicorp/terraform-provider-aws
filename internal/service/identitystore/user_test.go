@@ -94,7 +94,7 @@ func TestAccIdentityStoreUser_disappears(t *testing.T) {
 				Config: testAccUserConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &user),
-					acctest.CheckResourceDisappears(acctest.Provider, tfidentitystore.ResourceUser(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfidentitystore.ResourceUser(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

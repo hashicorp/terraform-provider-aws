@@ -314,7 +314,7 @@ func TestAccLexModelsSlotType_disappears(t *testing.T) {
 				Config: testAccSlotTypeConfig_basic(testSlotTypeID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSlotTypeExists(ctx, rName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tflexmodels.ResourceSlotType(), rName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflexmodels.ResourceSlotType(), rName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

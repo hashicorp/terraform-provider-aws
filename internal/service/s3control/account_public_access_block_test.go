@@ -82,7 +82,7 @@ func testAccAccountPublicAccessBlock_disappears(t *testing.T) {
 				Config: testAccAccountPublicAccessBlockConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountPublicAccessBlockExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfs3control.ResourceAccountPublicAccessBlock(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfs3control.ResourceAccountPublicAccessBlock(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

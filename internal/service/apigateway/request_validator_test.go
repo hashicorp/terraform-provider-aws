@@ -78,7 +78,7 @@ func TestAccAPIGatewayRequestValidator_disappears(t *testing.T) {
 				Config: testAccRequestValidatorConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRequestValidatorExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(acctest.Provider, tfapigateway.ResourceRequestValidator(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigateway.ResourceRequestValidator(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

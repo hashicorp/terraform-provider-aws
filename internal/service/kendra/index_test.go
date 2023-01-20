@@ -1287,7 +1287,7 @@ func TestAccKendraIndex_disappears(t *testing.T) {
 				Config: testAccIndexConfig_basic(rName, rName2, rName3, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIndexExists(ctx, resourceName, &index),
-					acctest.CheckResourceDisappears(acctest.Provider, tfkendra.ResourceIndex(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfkendra.ResourceIndex(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

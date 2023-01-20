@@ -52,7 +52,7 @@ func TestAccEC2EBSSnapshotCopy_disappears(t *testing.T) {
 				Config: testAccEBSSnapshotCopyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotExists(ctx, resourceName, &snapshot),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceEBSSnapshotCopy(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceEBSSnapshotCopy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

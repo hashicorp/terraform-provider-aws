@@ -82,8 +82,8 @@ func TestAccEMRStudioSessionMapping_disappears(t *testing.T) {
 				Config: testAccStudioSessionMappingConfig_basic(rName, uName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStudioSessionMappingExists(ctx, resourceName, &studio),
-					acctest.CheckResourceDisappears(acctest.Provider, tfemr.ResourceStudioSessionMapping(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfemr.ResourceStudioSessionMapping(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfemr.ResourceStudioSessionMapping(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfemr.ResourceStudioSessionMapping(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

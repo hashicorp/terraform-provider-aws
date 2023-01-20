@@ -62,7 +62,7 @@ func TestAccEC2EIP_disappears(t *testing.T) {
 				Config: testAccEIPConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceEIP(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceEIP(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

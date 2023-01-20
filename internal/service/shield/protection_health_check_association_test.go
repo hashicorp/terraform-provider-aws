@@ -65,7 +65,7 @@ func TestAccShieldProtectionHealthCheckAssociation_disappears(t *testing.T) {
 				Config: testAccProtectionHealthCheckAssociationConfig_protectionaHealthCheckAssociation(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProtectionHealthCheckAssociationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfshield.ResourceProtectionHealthCheckAssociation(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfshield.ResourceProtectionHealthCheckAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

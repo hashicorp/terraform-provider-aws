@@ -226,7 +226,7 @@ func TestAccFSxOntapFileSystem_disappears(t *testing.T) {
 				Config: testAccONTAPFileSystemConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOntapFileSystemExists(ctx, resourceName, &filesystem),
-					acctest.CheckResourceDisappears(acctest.Provider, tffsx.ResourceOntapFileSystem(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tffsx.ResourceOntapFileSystem(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

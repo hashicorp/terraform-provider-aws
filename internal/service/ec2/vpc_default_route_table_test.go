@@ -82,7 +82,7 @@ func TestAccVPCDefaultRouteTable_Disappears_vpc(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
 					acctest.CheckVPCExists(ctx, vpcResourceName, &vpc),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceVPC(), vpcResourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPC(), vpcResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

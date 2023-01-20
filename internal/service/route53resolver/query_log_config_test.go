@@ -64,7 +64,7 @@ func TestAccRoute53ResolverQueryLogConfig_disappears(t *testing.T) {
 				Config: testAccQueryLogConfigConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueryLogConfigExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfroute53resolver.ResourceQueryLogConfig(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfroute53resolver.ResourceQueryLogConfig(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

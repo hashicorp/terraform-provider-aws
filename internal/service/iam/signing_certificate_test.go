@@ -113,8 +113,8 @@ func TestAccIAMSigningCertificate_disappears(t *testing.T) {
 				Config: testAccSigningCertificateConfig_basic(rName, certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSigningCertificateExists(ctx, resourceName, &cred),
-					acctest.CheckResourceDisappears(acctest.Provider, tfiam.ResourceSigningCertificate(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfiam.ResourceSigningCertificate(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceSigningCertificate(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceSigningCertificate(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

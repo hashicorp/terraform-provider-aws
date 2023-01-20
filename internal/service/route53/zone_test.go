@@ -138,7 +138,7 @@ func TestAccRoute53Zone_disappears(t *testing.T) {
 				Config: testAccZoneConfig_basic(zoneName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckZoneExists(ctx, resourceName, &zone),
-					acctest.CheckResourceDisappears(acctest.Provider, tfroute53.ResourceZone(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfroute53.ResourceZone(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

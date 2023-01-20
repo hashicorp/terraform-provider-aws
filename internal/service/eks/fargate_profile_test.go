@@ -70,7 +70,7 @@ func TestAccEKSFargateProfile_disappears(t *testing.T) {
 				Config: testAccFargateProfileConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFargateProfileExists(ctx, resourceName, &fargateProfile),
-					acctest.CheckResourceDisappears(acctest.Provider, tfeks.ResourceFargateProfile(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfeks.ResourceFargateProfile(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

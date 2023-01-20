@@ -57,7 +57,7 @@ func TestAccNetworkManagerGlobalNetwork_disappears(t *testing.T) {
 				Config: testAccGlobalNetworkConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalNetworkExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfnetworkmanager.ResourceGlobalNetwork(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfnetworkmanager.ResourceGlobalNetwork(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

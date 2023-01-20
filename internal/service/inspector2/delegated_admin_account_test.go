@@ -99,7 +99,7 @@ func testAccDelegatedAdminAccount_disappears(t *testing.T) {
 				Config: testAccDelegatedAdminAccountConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDelegatedAdminAccountExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfinspector2.ResourceDelegatedAdminAccount(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfinspector2.ResourceDelegatedAdminAccount(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

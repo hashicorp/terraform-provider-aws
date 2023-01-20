@@ -292,7 +292,7 @@ func TestAccGlueSchema_disappears(t *testing.T) {
 				Config: testAccSchemaConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchemaExists(ctx, resourceName, &schema),
-					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourceSchema(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglue.ResourceSchema(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -317,7 +317,7 @@ func TestAccGlueSchema_Disappears_registry(t *testing.T) {
 				Config: testAccSchemaConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSchemaExists(ctx, resourceName, &schema),
-					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourceRegistry(), "aws_glue_registry.test"),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglue.ResourceRegistry(), "aws_glue_registry.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -103,7 +103,7 @@ func testAccDomainName_disappears(t *testing.T) {
 				Config: testAccDomainNameConfig_basic(rName, appsyncCertDomain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainNameExists(ctx, resourceName, &domainName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfappsync.ResourceDomainName(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappsync.ResourceDomainName(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

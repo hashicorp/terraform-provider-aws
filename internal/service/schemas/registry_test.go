@@ -62,7 +62,7 @@ func TestAccSchemasRegistry_disappears(t *testing.T) {
 				Config: testAccRegistryConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRegistryExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfschemas.ResourceRegistry(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfschemas.ResourceRegistry(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

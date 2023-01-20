@@ -432,7 +432,7 @@ func TestAccGlueClassifier_disappears(t *testing.T) {
 				Config: testAccClassifierConfig_csv(rName, false, "PRESENT", "|", false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClassifierExists(ctx, resourceName, &classifier),
-					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourceClassifier(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglue.ResourceClassifier(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

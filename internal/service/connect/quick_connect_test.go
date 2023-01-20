@@ -165,7 +165,7 @@ func testAccQuickConnect_disappears(t *testing.T) {
 				Config: testAccQuickConnectConfig_phoneNumber(rName, rName2, "Disappear", "+12345678912"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQuickConnectExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfconnect.ResourceQuickConnect(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfconnect.ResourceQuickConnect(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

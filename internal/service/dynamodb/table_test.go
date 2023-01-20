@@ -378,7 +378,7 @@ func TestAccDynamoDBTable_disappears(t *testing.T) {
 				Config: testAccTableConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(acctest.Provider, tfdynamodb.ResourceTable(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdynamodb.ResourceTable(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -402,7 +402,7 @@ func TestAccDynamoDBTable_Disappears_payPerRequestWithGSI(t *testing.T) {
 				Config: testAccTableConfig_billingPayPerRequestGSI(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &table1),
-					acctest.CheckResourceDisappears(acctest.Provider, tfdynamodb.ResourceTable(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdynamodb.ResourceTable(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

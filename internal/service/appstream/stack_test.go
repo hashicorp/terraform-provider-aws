@@ -74,7 +74,7 @@ func TestAccAppStreamStack_disappears(t *testing.T) {
 				Config: testAccStackConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStackExists(ctx, resourceName, &stackOutput),
-					acctest.CheckResourceDisappears(acctest.Provider, tfappstream.ResourceStack(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappstream.ResourceStack(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -60,7 +60,7 @@ func TestAccServiceCatalogBudgetResourceAssociation_disappears(t *testing.T) {
 				Config: testAccBudgetResourceAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBudgetResourceAssociationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfservicecatalog.ResourceBudgetResourceAssociation(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfservicecatalog.ResourceBudgetResourceAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

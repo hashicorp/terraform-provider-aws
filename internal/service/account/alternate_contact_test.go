@@ -80,7 +80,7 @@ func TestAccAccountAlternateContact_disappears(t *testing.T) {
 				Config: testAccAlternateContactConfig_basic(rName, emailAddress),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAlternateContactExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfaccount.ResourceAlternateContact(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfaccount.ResourceAlternateContact(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

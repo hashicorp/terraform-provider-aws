@@ -67,7 +67,7 @@ func TestAccAMPAlertManagerDefinition_disappears(t *testing.T) {
 				Config: testAccAlertManagerDefinitionConfig_basic(defaultAlertManagerDefinition()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAlertManagerDefinitionExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfamp.ResourceAlertManagerDefinition(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfamp.ResourceAlertManagerDefinition(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

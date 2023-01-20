@@ -2611,8 +2611,8 @@ func TestAccCodeBuildProject_disappears(t *testing.T) {
 				Config: testAccProjectConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &project),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcodebuild.ResourceProject(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcodebuild.ResourceProject(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcodebuild.ResourceProject(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcodebuild.ResourceProject(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

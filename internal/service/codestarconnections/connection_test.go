@@ -98,7 +98,7 @@ func TestAccCodeStarConnectionsConnection_disappears(t *testing.T) {
 				Config: testAccConnectionConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectionExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcodestarconnections.ResourceConnection(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcodestarconnections.ResourceConnection(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

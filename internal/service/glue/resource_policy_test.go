@@ -90,8 +90,8 @@ func testAccResourcePolicy_disappears(t *testing.T) {
 				Config: testAccResourcePolicyConfig_required("glue:CreateTable"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccResourcePolicy(ctx, resourceName, "glue:CreateTable"),
-					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourceResourcePolicy(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourceResourcePolicy(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglue.ResourceResourcePolicy(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglue.ResourceResourcePolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

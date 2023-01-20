@@ -61,7 +61,7 @@ func TestAccVPCInternetGateway_disappears(t *testing.T) {
 				Config: testAccVPCInternetGatewayConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInternetGatewayExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceInternetGateway(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceInternetGateway(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

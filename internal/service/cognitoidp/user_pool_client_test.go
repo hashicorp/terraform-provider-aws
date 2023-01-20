@@ -587,7 +587,7 @@ func TestAccCognitoIDPUserPoolClient_disappears(t *testing.T) {
 				Config: testAccUserPoolClientConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolClientExists(ctx, resourceName, &client),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcognitoidp.ResourceUserPoolClient(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcognitoidp.ResourceUserPoolClient(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -611,7 +611,7 @@ func TestAccCognitoIDPUserPoolClient_Disappears_userPool(t *testing.T) {
 				Config: testAccUserPoolClientConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolClientExists(ctx, resourceName, &client),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcognitoidp.ResourceUserPool(), "aws_cognito_user_pool.test"),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcognitoidp.ResourceUserPool(), "aws_cognito_user_pool.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},

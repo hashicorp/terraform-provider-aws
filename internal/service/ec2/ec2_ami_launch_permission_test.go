@@ -61,7 +61,7 @@ func TestAccEC2AMILaunchPermission_disappears(t *testing.T) {
 				Config: testAccAMILaunchPermissionConfig_accountID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAMILaunchPermissionExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceAMILaunchPermission(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceAMILaunchPermission(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -84,7 +84,7 @@ func TestAccEC2AMILaunchPermission_Disappears_ami(t *testing.T) {
 				Config: testAccAMILaunchPermissionConfig_accountID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAMILaunchPermissionExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceAMICopy(), "aws_ami_copy.test"),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceAMICopy(), "aws_ami_copy.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},

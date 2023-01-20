@@ -71,7 +71,7 @@ func TestAccAPIGatewayModel_disappears(t *testing.T) {
 				Config: testAccModelConfig_basic(rName, modelName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckModelExists(ctx, resourceName, modelName, &conf),
-					acctest.CheckResourceDisappears(acctest.Provider, tfapigateway.ResourceModel(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigateway.ResourceModel(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

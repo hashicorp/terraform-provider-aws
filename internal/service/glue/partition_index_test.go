@@ -63,8 +63,8 @@ func TestAccGluePartitionIndex_disappears(t *testing.T) {
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPartitionIndexExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourcePartitionIndex(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourcePartitionIndex(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglue.ResourcePartitionIndex(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglue.ResourcePartitionIndex(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -88,8 +88,8 @@ func TestAccGluePartitionIndex_Disappears_table(t *testing.T) {
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPartitionIndexExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourceCatalogTable(), "aws_glue_catalog_table.test"),
-					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourcePartitionIndex(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglue.ResourceCatalogTable(), "aws_glue_catalog_table.test"),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglue.ResourcePartitionIndex(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -113,8 +113,8 @@ func TestAccGluePartitionIndex_Disappears_database(t *testing.T) {
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPartitionIndexExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourceCatalogDatabase(), "aws_glue_catalog_database.test"),
-					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourcePartitionIndex(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglue.ResourceCatalogDatabase(), "aws_glue_catalog_database.test"),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglue.ResourcePartitionIndex(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

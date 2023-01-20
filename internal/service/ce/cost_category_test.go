@@ -99,7 +99,7 @@ func TestAccCECostCategory_disappears(t *testing.T) {
 				Config: testAccCostCategoryConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCostCategoryExists(ctx, resourceName, &output),
-					acctest.CheckResourceDisappears(acctest.Provider, tfce.ResourceCostCategory(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfce.ResourceCostCategory(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

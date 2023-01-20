@@ -357,8 +357,8 @@ func TestAccGlueConnection_disappears(t *testing.T) {
 				Config: testAccConnectionConfig_required(rName, jdbcConnectionUrl),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionExists(ctx, resourceName, &connection),
-					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourceConnection(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourceConnection(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglue.ResourceConnection(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglue.ResourceConnection(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

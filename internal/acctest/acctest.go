@@ -1019,10 +1019,9 @@ func RegionProviderFunc(region string, providers *[]*schema.Provider) func() *sc
 	}
 }
 
-func DeleteResource(resource *schema.Resource, d *schema.ResourceData, meta interface{}) error {
+func DeleteResource(ctx context.Context, resource *schema.Resource, d *schema.ResourceData, meta interface{}) error {
 	if resource.DeleteContext != nil || resource.DeleteWithoutTimeout != nil {
 		var diags diag.Diagnostics
-		ctx := context.TODO()
 
 		if resource.DeleteContext != nil {
 			diags = resource.DeleteContext(ctx, d, meta)
@@ -1042,7 +1041,7 @@ func DeleteResource(resource *schema.Resource, d *schema.ResourceData, meta inte
 	return resource.Delete(d, meta)
 }
 
-func CheckResourceDisappears(provo *schema.Provider, resource *schema.Resource, n string) resource.TestCheckFunc {
+func CheckResourceDisappears(ctx context.Context, provo *schema.Provider, resource *schema.Resource, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -1053,7 +1052,7 @@ func CheckResourceDisappears(provo *schema.Provider, resource *schema.Resource, 
 			return fmt.Errorf("resource ID missing: %s", n)
 		}
 
-		return DeleteResource(resource, resource.Data(rs.Primary), provo.Meta())
+		return DeleteResource(ctx, resource, resource.Data(rs.Primary), provo.Meta())
 	}
 }
 

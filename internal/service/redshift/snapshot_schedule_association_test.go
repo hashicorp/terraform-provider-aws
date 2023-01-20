@@ -60,7 +60,7 @@ func TestAccRedshiftSnapshotScheduleAssociation_disappears(t *testing.T) {
 				Config: testAccSnapshotScheduleAssociationConfig_basic(rName, "rate(12 hours)"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotScheduleAssociationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfredshift.ResourceSnapshotScheduleAssociation(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfredshift.ResourceSnapshotScheduleAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -84,7 +84,7 @@ func TestAccRedshiftSnapshotScheduleAssociation_disappears_cluster(t *testing.T)
 				Config: testAccSnapshotScheduleAssociationConfig_basic(rName, "rate(12 hours)"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotScheduleAssociationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfredshift.ResourceCluster(), clusterResourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfredshift.ResourceCluster(), clusterResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

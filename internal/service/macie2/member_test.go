@@ -81,7 +81,7 @@ func testAccMember_disappears(t *testing.T) {
 				Config: testAccMemberConfig_basic(acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMemberExists(ctx, resourceName, &macie2Output),
-					acctest.CheckResourceDisappears(acctest.Provider, tfmacie2.ResourceMember(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfmacie2.ResourceMember(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

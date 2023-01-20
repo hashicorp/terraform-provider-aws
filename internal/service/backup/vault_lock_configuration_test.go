@@ -63,7 +63,7 @@ func TestAccBackupVaultLockConfiguration_disappears(t *testing.T) {
 				Config: testAccVaultLockConfigurationConfig_all(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultLockConfigurationExists(ctx, resourceName, &vault),
-					acctest.CheckResourceDisappears(acctest.Provider, tfbackup.ResourceVaultLockConfiguration(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfbackup.ResourceVaultLockConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

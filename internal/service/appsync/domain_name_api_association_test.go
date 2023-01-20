@@ -73,7 +73,7 @@ func testAccDomainNameAPIAssociation_disappears(t *testing.T) {
 				Config: testAccDomainNameAPIAssociationConfig_basic(appsyncCertDomain, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainNameAPIAssociationExists(ctx, resourceName, &association),
-					acctest.CheckResourceDisappears(acctest.Provider, tfappsync.ResourceDomainNameAPIAssociation(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappsync.ResourceDomainNameAPIAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

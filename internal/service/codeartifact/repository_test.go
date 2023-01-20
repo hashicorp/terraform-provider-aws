@@ -271,7 +271,7 @@ func testAccRepository_disappears(t *testing.T) {
 				Config: testAccRepositoryConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcodeartifact.ResourceRepository(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcodeartifact.ResourceRepository(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

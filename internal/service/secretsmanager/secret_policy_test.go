@@ -115,7 +115,7 @@ func TestAccSecretsManagerSecretPolicy_disappears(t *testing.T) {
 				Config: testAccSecretPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretPolicyExists(ctx, resourceName, &policy),
-					acctest.CheckResourceDisappears(acctest.Provider, tfsecretsmanager.ResourceSecretPolicy(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsecretsmanager.ResourceSecretPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

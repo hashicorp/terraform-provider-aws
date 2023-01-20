@@ -61,7 +61,7 @@ func TestAccCloudFrontPublicKey_disappears(t *testing.T) {
 				Config: testAccPublicKeyConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPublicKeyExistence(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcloudfront.ResourcePublicKey(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudfront.ResourcePublicKey(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

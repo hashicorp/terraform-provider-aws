@@ -107,7 +107,7 @@ func testAccEnabler_disappears(t *testing.T) {
 				Config: testAccEnablerConfig_basic([]string{"ECR"}),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnablerExists(ctx, []string{"ECR"}),
-					acctest.CheckResourceDisappears(acctest.Provider, tfinspector2.ResourceEnabler(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfinspector2.ResourceEnabler(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -66,7 +66,7 @@ func TestAccVPCNetworkInsightsAnalysis_disappears(t *testing.T) {
 				Config: testAccVPCNetworkInsightsAnalysisConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkInsightsAnalysisExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceNetworkInsightsAnalysis(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceNetworkInsightsAnalysis(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

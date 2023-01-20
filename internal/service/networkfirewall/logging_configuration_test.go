@@ -602,7 +602,7 @@ func TestAccNetworkFirewallLoggingConfiguration_disappears(t *testing.T) {
 				Config: testAccLoggingConfigurationConfig_s3(bucketName, rName, networkfirewall.LogDestinationTypeS3, networkfirewall.LogTypeFlow),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingConfigurationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfnetworkfirewall.ResourceLoggingConfiguration(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfnetworkfirewall.ResourceLoggingConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

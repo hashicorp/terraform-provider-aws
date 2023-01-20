@@ -857,7 +857,7 @@ func TestAccWAFV2RuleGroup_disappears(t *testing.T) {
 				Config: testAccRuleGroupConfig_minimal(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfwafv2.ResourceRuleGroup(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfwafv2.ResourceRuleGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

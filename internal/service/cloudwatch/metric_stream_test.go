@@ -79,7 +79,7 @@ func TestAccCloudWatchMetricStream_disappears(t *testing.T) {
 				Config: testAccMetricStreamConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMetricStreamExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcloudwatch.ResourceMetricStream(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudwatch.ResourceMetricStream(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -87,7 +87,7 @@ func TestAccOpsWorksRailsAppLayer_disappears(t *testing.T) {
 				Config: testAccRailsAppLayerConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLayerExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfopsworks.ResourceRailsAppLayer(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfopsworks.ResourceRailsAppLayer(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

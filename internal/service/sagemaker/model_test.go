@@ -391,7 +391,7 @@ func TestAccSageMakerModel_disappears(t *testing.T) {
 				Config: testAccModelConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckModelExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfsagemaker.ResourceModel(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceModel(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

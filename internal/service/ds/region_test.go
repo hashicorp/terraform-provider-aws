@@ -71,7 +71,7 @@ func TestAccDSRegion_disappears(t *testing.T) {
 				Config: testAccRegionConfig_basic(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRegionExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfds.ResourceRegion(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfds.ResourceRegion(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

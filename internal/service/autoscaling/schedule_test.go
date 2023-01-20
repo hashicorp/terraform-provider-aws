@@ -67,7 +67,7 @@ func TestAccAutoScalingSchedule_disappears(t *testing.T) {
 				Config: testAccScheduleConfig_basic(rName1, rName2, startTime, endTime),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScalingScheduleExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfautoscaling.ResourceSchedule(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfautoscaling.ResourceSchedule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

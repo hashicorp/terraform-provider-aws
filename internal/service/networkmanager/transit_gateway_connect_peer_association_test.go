@@ -69,7 +69,7 @@ func testAccTransitGatewayConnectPeerAssociation_disappears(t *testing.T) {
 				Config: testAccTransitGatewayConnectPeerAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayConnectPeerAssociationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfnetworkmanager.ResourceTransitGatewayConnectPeerAssociation(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfnetworkmanager.ResourceTransitGatewayConnectPeerAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -93,7 +93,7 @@ func testAccTransitGatewayConnectPeerAssociation_Disappears_connectPeer(t *testi
 				Config: testAccTransitGatewayConnectPeerAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayConnectPeerAssociationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceTransitGatewayConnectPeer(), connetPeerResourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceTransitGatewayConnectPeer(), connetPeerResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -64,7 +64,7 @@ func TestAccRDSClusterRoleAssociation_disappears(t *testing.T) {
 				Config: testAccClusterRoleAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterRoleAssociationExists(ctx, resourceName, &dbClusterRole),
-					acctest.CheckResourceDisappears(acctest.Provider, tfrds.ResourceClusterRoleAssociation(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfrds.ResourceClusterRoleAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -89,7 +89,7 @@ func TestAccRDSClusterRoleAssociation_Disappears_cluster(t *testing.T) {
 				Config: testAccClusterRoleAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterRoleAssociationExists(ctx, resourceName, &dbClusterRole),
-					acctest.CheckResourceDisappears(acctest.Provider, tfrds.ResourceCluster(), clusterResourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfrds.ResourceCluster(), clusterResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -114,7 +114,7 @@ func TestAccRDSClusterRoleAssociation_Disappears_role(t *testing.T) {
 				Config: testAccClusterRoleAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterRoleAssociationExists(ctx, resourceName, &dbClusterRole),
-					acctest.CheckResourceDisappears(acctest.Provider, iam.ResourceRole(), roleResourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, iam.ResourceRole(), roleResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

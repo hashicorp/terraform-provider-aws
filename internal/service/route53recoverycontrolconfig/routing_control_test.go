@@ -61,7 +61,7 @@ func testAccRoutingControl_disappears(t *testing.T) {
 				Config: testAccRoutingControlConfig_inDefaultPanel(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoutingControlExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfroute53recoverycontrolconfig.ResourceRoutingControl(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfroute53recoverycontrolconfig.ResourceRoutingControl(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -249,7 +249,7 @@ func TestAccAPIGatewayV2Stage_disappears(t *testing.T) {
 				Config: testAccStageConfig_basicWebSocket(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(ctx, resourceName, &apiId, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfapigatewayv2.ResourceStage(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigatewayv2.ResourceStage(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

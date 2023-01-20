@@ -341,7 +341,7 @@ func TestAccSageMakerNotebookInstance_disappears(t *testing.T) {
 				Config: testAccNotebookInstanceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNotebookInstanceExists(ctx, resourceName, &notebook),
-					acctest.CheckResourceDisappears(acctest.Provider, tfsagemaker.ResourceNotebookInstance(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceNotebookInstance(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

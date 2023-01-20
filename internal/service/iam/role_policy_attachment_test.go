@@ -117,7 +117,7 @@ func TestAccIAMRolePolicyAttachment_Disappears_role(t *testing.T) {
 					testAccCheckRolePolicyAttachmentExists(ctx, resourceName, 1, &attachedRolePolicies),
 					// DeleteConflict: Cannot delete entity, must detach all policies first.
 					testAccCheckRolePolicyAttachmentDisappears(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfiam.ResourceRole(), iamRoleResourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceRole(), iamRoleResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -62,7 +62,7 @@ func TestAccAppRunnerVPCConnector_disappears(t *testing.T) {
 				Config: testAccVPCConnectorConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCConnectorExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfapprunner.ResourceVPCConnector(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapprunner.ResourceVPCConnector(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

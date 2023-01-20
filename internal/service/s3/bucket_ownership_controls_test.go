@@ -60,7 +60,7 @@ func TestAccS3BucketOwnershipControls_disappears(t *testing.T) {
 				Config: testAccBucketOwnershipControlsConfig_ruleObject(rName, s3.ObjectOwnershipBucketOwnerPreferred),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketOwnershipControlsExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfs3.ResourceBucketOwnershipControls(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfs3.ResourceBucketOwnershipControls(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -84,7 +84,7 @@ func TestAccS3BucketOwnershipControls_Disappears_bucket(t *testing.T) {
 				Config: testAccBucketOwnershipControlsConfig_ruleObject(rName, s3.ObjectOwnershipBucketOwnerPreferred),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketOwnershipControlsExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfs3.ResourceBucket(), s3BucketResourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfs3.ResourceBucket(), s3BucketResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

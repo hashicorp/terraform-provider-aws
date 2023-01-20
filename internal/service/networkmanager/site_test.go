@@ -61,7 +61,7 @@ func TestAccNetworkManagerSite_disappears(t *testing.T) {
 				Config: testAccSiteConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSiteExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfnetworkmanager.ResourceSite(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfnetworkmanager.ResourceSite(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

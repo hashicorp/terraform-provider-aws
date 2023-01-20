@@ -61,7 +61,7 @@ func testAccPermissions_disappears(t *testing.T) {
 				Config: testAccPermissionsConfig_twcBasic(rName, "\"event\", \"timestamp\""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionsExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tflakeformation.ResourcePermissions(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflakeformation.ResourcePermissions(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

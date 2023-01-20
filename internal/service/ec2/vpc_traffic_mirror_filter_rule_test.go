@@ -128,7 +128,7 @@ func TestAccVPCTrafficMirrorFilterRule_disappears(t *testing.T) {
 				Config: testAccVPCTrafficMirrorFilterRuleConfig_basic(dstCidr, srcCidr, action, direction, ruleNum),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficMirrorFilterRuleExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceTrafficMirrorFilterRule(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceTrafficMirrorFilterRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

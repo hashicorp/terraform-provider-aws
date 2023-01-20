@@ -133,7 +133,7 @@ func testAccPolicyAttachment_disappears(t *testing.T) {
 				Config: testAccPolicyAttachmentConfig_organizationalUnit(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyAttachmentExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tforganizations.ResourcePolicyAttachment(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tforganizations.ResourcePolicyAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

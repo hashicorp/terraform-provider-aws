@@ -61,7 +61,7 @@ func TestAccS3BucketServerSideEncryptionConfiguration_disappears(t *testing.T) {
 				Config: testAccBucketServerSideEncryptionConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketServerSideEncryptionConfigurationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfs3.ResourceBucketServerSideEncryptionConfiguration(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfs3.ResourceBucketServerSideEncryptionConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -163,7 +163,7 @@ func testAccClientVPNEndpoint_disappears(t *testing.T) {
 				Config: testAccClientVPNEndpointConfig_basic(t, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNEndpointExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceClientVPNEndpoint(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceClientVPNEndpoint(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

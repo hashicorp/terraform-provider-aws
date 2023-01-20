@@ -71,7 +71,7 @@ func TestAccOpenSearchDomainSAMLOptions_disappears(t *testing.T) {
 				Config: testAccDomainSAMLOptionsConfig_basic(rUserName, rName, idpEntityId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckESDomainSAMLOptions(ctx, esDomainResourceName, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfopensearch.ResourceDomainSAMLOptions(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfopensearch.ResourceDomainSAMLOptions(), resourceName),
 				),
 			},
 		},
@@ -97,7 +97,7 @@ func TestAccOpenSearchDomainSAMLOptions_disappears_Domain(t *testing.T) {
 				Config: testAccDomainSAMLOptionsConfig_basic(rUserName, rName, idpEntityId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckESDomainSAMLOptions(ctx, esDomainResourceName, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfopensearch.ResourceDomain(), esDomainResourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfopensearch.ResourceDomain(), esDomainResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -138,8 +138,8 @@ func TestAccDeviceFarmDevicePool_disappears(t *testing.T) {
 				Config: testAccDevicePoolConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDevicePoolExists(ctx, resourceName, &pool),
-					acctest.CheckResourceDisappears(acctest.Provider, tfdevicefarm.ResourceDevicePool(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfdevicefarm.ResourceDevicePool(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdevicefarm.ResourceDevicePool(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdevicefarm.ResourceDevicePool(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -169,8 +169,8 @@ func TestAccDeviceFarmDevicePool_disappears_project(t *testing.T) {
 				Config: testAccDevicePoolConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDevicePoolExists(ctx, resourceName, &pool),
-					acctest.CheckResourceDisappears(acctest.Provider, tfdevicefarm.ResourceProject(), "aws_devicefarm_project.test"),
-					acctest.CheckResourceDisappears(acctest.Provider, tfdevicefarm.ResourceDevicePool(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdevicefarm.ResourceProject(), "aws_devicefarm_project.test"),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdevicefarm.ResourceDevicePool(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

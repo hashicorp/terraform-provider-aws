@@ -69,7 +69,7 @@ func TestAccAPIGatewayRestAPIPolicy_disappears(t *testing.T) {
 				Config: testAccRestAPIPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRestAPIPolicyExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfapigateway.ResourceRestAPIPolicy(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigateway.ResourceRestAPIPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -93,7 +93,7 @@ func TestAccAPIGatewayRestAPIPolicy_Disappears_restAPI(t *testing.T) {
 				Config: testAccRestAPIPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRestAPIPolicyExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfapigateway.ResourceRestAPI(), "aws_api_gateway_rest_api.test"),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigateway.ResourceRestAPI(), "aws_api_gateway_rest_api.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},

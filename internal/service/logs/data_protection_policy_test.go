@@ -95,7 +95,7 @@ func TestAccLogsDataProtectionPolicy_disappears(t *testing.T) {
 				Config: testAccDataProtectionPolicy_basic(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataProtectionPolicyExists(ctx, resourceName, &policy),
-					acctest.CheckResourceDisappears(acctest.Provider, tflogs.ResourceDataProtectionPolicy(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflogs.ResourceDataProtectionPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -69,7 +69,7 @@ func TestAccNetworkManagerTransitGatewayPeering_disappears(t *testing.T) {
 				Config: testAccTransitGatewayPeeringConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayPeeringExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfnetworkmanager.ResourceTransitGatewayPeering(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfnetworkmanager.ResourceTransitGatewayPeering(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

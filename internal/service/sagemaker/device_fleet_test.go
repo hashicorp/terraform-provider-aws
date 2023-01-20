@@ -148,7 +148,7 @@ func TestAccSageMakerDeviceFleet_disappears(t *testing.T) {
 				Config: testAccDeviceFleetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeviceFleetExists(ctx, resourceName, &deviceFleet),
-					acctest.CheckResourceDisappears(acctest.Provider, tfsagemaker.ResourceDeviceFleet(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceDeviceFleet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

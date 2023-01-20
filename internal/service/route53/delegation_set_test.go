@@ -99,7 +99,7 @@ func TestAccRoute53DelegationSet_disappears(t *testing.T) {
 				Config: testAccDelegationSetConfig_basic(refName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDelegationSetExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfroute53.ResourceDelegationSet(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfroute53.ResourceDelegationSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

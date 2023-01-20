@@ -59,7 +59,7 @@ func TestAccSESV2EmailIdentityFeedbackAttributes_disappears(t *testing.T) {
 				Config: testAccEmailIdentityFeedbackAttributesConfig_emailForwardingEnabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEmailIdentityFeedbackAttributesExist(ctx, emailIdentityName, true),
-					acctest.CheckResourceDisappears(acctest.Provider, tfsesv2.ResourceEmailIdentityFeedbackAttributes(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsesv2.ResourceEmailIdentityFeedbackAttributes(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -82,7 +82,7 @@ func TestAccSESV2EmailIdentityFeedbackAttributes_disappears_emailIdentity(t *tes
 				Config: testAccEmailIdentityFeedbackAttributesConfig_emailForwardingEnabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEmailIdentityFeedbackAttributesExist(ctx, emailIdentityName, true),
-					acctest.CheckResourceDisappears(acctest.Provider, tfsesv2.ResourceEmailIdentity(), emailIdentityName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsesv2.ResourceEmailIdentity(), emailIdentityName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

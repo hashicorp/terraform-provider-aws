@@ -220,7 +220,7 @@ func TestAccGlueWorkflow_disappears(t *testing.T) {
 				Config: testAccWorkflowConfig_required(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkflowExists(ctx, resourceName, &workflow),
-					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourceWorkflow(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglue.ResourceWorkflow(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

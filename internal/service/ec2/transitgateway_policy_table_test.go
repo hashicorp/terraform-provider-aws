@@ -66,7 +66,7 @@ func testAccTransitGatewayPolicyTable_disappears(t *testing.T) {
 				Config: testAccTransitGatewayPolicyTableConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayPolicyTableExists(ctx, resourceName, &transitGatewayPolicyTable1),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceTransitGatewayPolicyTable(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceTransitGatewayPolicyTable(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -93,7 +93,7 @@ func testAccTransitGatewayPolicyTable_disappears_TransitGateway(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayExists(ctx, transitGatewayResourceName, &transitGateway1),
 					testAccCheckTransitGatewayPolicyTableExists(ctx, resourceName, &transitGatewayPolicyTable1),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceTransitGateway(), transitGatewayResourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceTransitGateway(), transitGatewayResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

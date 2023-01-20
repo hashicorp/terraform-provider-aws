@@ -75,7 +75,7 @@ func TestAccAppRunnerCustomDomainAssociation_disappears(t *testing.T) {
 				Config: testAccCustomDomainAssociationConfig_basic(rName, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomDomainAssociationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfapprunner.ResourceCustomDomainAssociation(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapprunner.ResourceCustomDomainAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

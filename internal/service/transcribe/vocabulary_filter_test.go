@@ -205,7 +205,7 @@ func TestAccTranscribeVocabularyFilter_disappears(t *testing.T) {
 				Config: testAccVocabularyFilterConfig_basicFile(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVocabularyFilterExists(ctx, resourceName, &vocabularyFilter),
-					acctest.CheckResourceDisappears(acctest.Provider, tftranscribe.ResourceVocabularyFilter(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tftranscribe.ResourceVocabularyFilter(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

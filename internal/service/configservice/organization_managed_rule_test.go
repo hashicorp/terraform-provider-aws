@@ -70,7 +70,7 @@ func testAccOrganizationManagedRule_disappears(t *testing.T) {
 				Config: testAccOrganizationManagedRuleConfig_identifier(rName, "IAM_PASSWORD_POLICY"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationManagedRuleExists(ctx, resourceName, &rule),
-					acctest.CheckResourceDisappears(acctest.Provider, tfconfig.ResourceOrganizationManagedRule(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfconfig.ResourceOrganizationManagedRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

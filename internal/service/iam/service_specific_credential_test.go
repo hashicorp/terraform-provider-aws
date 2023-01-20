@@ -150,8 +150,8 @@ func TestAccIAMServiceSpecificCredential_disappears(t *testing.T) {
 				Config: testAccServiceSpecificCredentialConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceSpecificCredentialExists(ctx, resourceName, &cred),
-					acctest.CheckResourceDisappears(acctest.Provider, tfiam.ResourceServiceSpecificCredential(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfiam.ResourceServiceSpecificCredential(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceServiceSpecificCredential(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceServiceSpecificCredential(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

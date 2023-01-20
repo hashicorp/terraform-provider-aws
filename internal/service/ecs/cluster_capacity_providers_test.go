@@ -65,7 +65,7 @@ func TestAccECSClusterCapacityProviders_disappears(t *testing.T) {
 				Config: testAccClusterCapacityProvidersConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, "aws_ecs_cluster.test", &cluster),
-					acctest.CheckResourceDisappears(acctest.Provider, tfecs.ResourceCluster(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfecs.ResourceCluster(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

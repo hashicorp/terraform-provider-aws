@@ -62,7 +62,7 @@ func TestAccAMPWorkspace_disappears(t *testing.T) {
 				Config: testAccWorkspaceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkspaceExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfamp.ResourceWorkspace(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfamp.ResourceWorkspace(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

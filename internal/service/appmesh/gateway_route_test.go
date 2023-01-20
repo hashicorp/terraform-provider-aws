@@ -82,7 +82,7 @@ func testAccGatewayRoute_disappears(t *testing.T) {
 				Config: testAccGatewayRouteConfig_httpRoute(meshName, vgName, grName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayRouteExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfappmesh.ResourceGatewayRoute(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappmesh.ResourceGatewayRoute(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

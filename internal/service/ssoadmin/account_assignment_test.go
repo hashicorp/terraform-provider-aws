@@ -105,7 +105,7 @@ func TestAccSSOAdminAccountAssignment_disappears(t *testing.T) {
 				Config: testAccAccountAssignmentConfig_basicGroup(groupName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountAssignmentExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfssoadmin.ResourceAccountAssignment(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfssoadmin.ResourceAccountAssignment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -106,8 +106,8 @@ func TestAccEMRStudio_disappears(t *testing.T) {
 				Config: testAccStudioConfig_sso(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStudioExists(ctx, resourceName, &studio),
-					acctest.CheckResourceDisappears(acctest.Provider, tfemr.ResourceStudio(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfemr.ResourceStudio(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfemr.ResourceStudio(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfemr.ResourceStudio(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

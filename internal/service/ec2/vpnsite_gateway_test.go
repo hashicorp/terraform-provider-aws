@@ -145,7 +145,7 @@ func TestAccSiteVPNGateway_disappears(t *testing.T) {
 				Config: testAccSiteVPNGatewayConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPNGatewayExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceVPNGateway(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPNGateway(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

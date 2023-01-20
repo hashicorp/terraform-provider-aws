@@ -71,7 +71,7 @@ func testAccTransitGatewayVPCAttachment_disappears(t *testing.T) {
 				Config: testAccTransitGatewayVPCAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayVPCAttachmentExists(ctx, resourceName, &transitGatewayVpcAttachment1),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceTransitGatewayVPCAttachment(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceTransitGatewayVPCAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -289,7 +289,7 @@ func TestAccStorageGatewayCachediSCSIVolume_disappears(t *testing.T) {
 				Config: testAccCachediSCSIVolumeConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCachediSCSIVolumeExists(ctx, resourceName, &storedIscsiVolume),
-					acctest.CheckResourceDisappears(acctest.Provider, tfstoragegateway.ResourceCachediSCSIVolume(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfstoragegateway.ResourceCachediSCSIVolume(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

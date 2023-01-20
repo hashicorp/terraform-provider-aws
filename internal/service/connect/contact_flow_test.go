@@ -136,7 +136,7 @@ func testAccContactFlow_disappears(t *testing.T) {
 				Config: testAccContactFlowConfig_basic(rName, rName2, "Disappear"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContactFlowExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfconnect.ResourceContactFlow(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfconnect.ResourceContactFlow(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

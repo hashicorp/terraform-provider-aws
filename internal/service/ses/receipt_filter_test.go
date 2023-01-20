@@ -60,7 +60,7 @@ func TestAccSESReceiptFilter_disappears(t *testing.T) {
 				Config: testAccReceiptFilterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReceiptFilterExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfses.ResourceReceiptFilter(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfses.ResourceReceiptFilter(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

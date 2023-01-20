@@ -609,7 +609,7 @@ func TestAccAPIGatewayMethodSettings_disappears(t *testing.T) {
 				Config: testAccMethodSettingsConfig_loggingLevel(rName, "INFO"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(ctx, resourceName, &stage),
-					acctest.CheckResourceDisappears(acctest.Provider, tfapigateway.ResourceMethodSettings(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigateway.ResourceMethodSettings(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -192,8 +192,8 @@ func TestAccTimestreamWriteTable_disappears(t *testing.T) {
 				Config: testAccTableConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTableExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tftimestreamwrite.ResourceTable(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tftimestreamwrite.ResourceTable(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tftimestreamwrite.ResourceTable(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tftimestreamwrite.ResourceTable(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

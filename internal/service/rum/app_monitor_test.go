@@ -174,8 +174,8 @@ func TestAccRUMAppMonitor_disappears(t *testing.T) {
 				Config: testAccAppMonitorConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppMonitorExists(ctx, resourceName, &appMon),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcloudwatchrum.ResourceAppMonitor(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcloudwatchrum.ResourceAppMonitor(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudwatchrum.ResourceAppMonitor(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudwatchrum.ResourceAppMonitor(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

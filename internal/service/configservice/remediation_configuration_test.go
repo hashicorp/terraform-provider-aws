@@ -123,7 +123,7 @@ func testAccRemediationConfiguration_disappears(t *testing.T) {
 				Config: testAccRemediationConfigurationConfig_basic(prefix, sseAlgorithm, rInt, rAttempts, rSeconds, rExecPct, rErrorPct, automatic),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRemediationConfigurationExists(ctx, resourceName, &rc),
-					acctest.CheckResourceDisappears(acctest.Provider, tfconfigservice.ResourceRemediationConfiguration(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfconfigservice.ResourceRemediationConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

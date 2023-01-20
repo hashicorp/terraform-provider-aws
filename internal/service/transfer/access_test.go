@@ -129,7 +129,7 @@ func testAccAccess_disappears(t *testing.T) {
 				Config: testAccAccessConfig_s3Basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(acctest.Provider, tftransfer.ResourceAccess(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tftransfer.ResourceAccess(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

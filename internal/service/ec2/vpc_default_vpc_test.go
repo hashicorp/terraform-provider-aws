@@ -63,7 +63,7 @@ func testAccPreCheckDefaultVPCNotFound(ctx context.Context, t *testing.T) {
 		d := r.Data(nil)
 		d.SetId(vpcID)
 
-		err = acctest.DeleteResource(r, d, acctest.Provider.Meta())
+		err = acctest.DeleteResource(ctx, r, d, acctest.Provider.Meta())
 
 		if err != nil {
 			t.Fatalf("error deleting default VPC: %s", err)
@@ -407,7 +407,7 @@ func testAccEmptyDefaultVPC(ctx context.Context, vpcID string) error {
 		d.SetId(aws.StringValue(igw.InternetGatewayId))
 		d.Set("vpc_id", vpcID)
 
-		err := acctest.DeleteResource(r, d, acctest.Provider.Meta())
+		err := acctest.DeleteResource(ctx, r, d, acctest.Provider.Meta())
 
 		if err != nil {
 			return err
@@ -434,7 +434,7 @@ func testAccEmptyDefaultVPC(ctx context.Context, vpcID string) error {
 		d := r.Data(nil)
 		d.SetId(aws.StringValue(v.SubnetId))
 
-		err := acctest.DeleteResource(r, d, acctest.Provider.Meta())
+		err := acctest.DeleteResource(ctx, r, d, acctest.Provider.Meta())
 
 		if err != nil {
 			return err

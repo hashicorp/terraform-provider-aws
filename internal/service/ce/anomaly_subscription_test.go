@@ -105,7 +105,7 @@ func TestAccCEAnomalySubscription_disappears(t *testing.T) {
 				Config: testAccAnomalySubscriptionConfig_basic(rName, address),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnomalySubscriptionExists(ctx, resourceName, &subscription),
-					acctest.CheckResourceDisappears(acctest.Provider, tfce.ResourceAnomalySubscription(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfce.ResourceAnomalySubscription(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

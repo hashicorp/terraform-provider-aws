@@ -69,7 +69,7 @@ func TestAccIPAMScope_disappears(t *testing.T) {
 				Config: testAccIPAMScopeConfig_basic("test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMScopeExists(ctx, resourceName, &scope),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceIPAMScope(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceIPAMScope(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

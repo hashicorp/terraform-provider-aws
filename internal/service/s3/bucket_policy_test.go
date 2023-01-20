@@ -98,7 +98,7 @@ func TestAccS3BucketPolicy_disappears(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(ctx, bucketResourceName),
 					testAccCheckBucketHasPolicy(ctx, bucketResourceName, expectedPolicyText),
-					acctest.CheckResourceDisappears(acctest.Provider, tfs3.ResourceBucketPolicy(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfs3.ResourceBucketPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -141,7 +141,7 @@ func TestAccS3BucketPolicy_disappears_bucket(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketExists(ctx, bucketResourceName),
 					testAccCheckBucketHasPolicy(ctx, bucketResourceName, expectedPolicyText),
-					acctest.CheckResourceDisappears(acctest.Provider, tfs3.ResourceBucket(), bucketResourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfs3.ResourceBucket(), bucketResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

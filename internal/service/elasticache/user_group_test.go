@@ -146,7 +146,7 @@ func TestAccElastiCacheUserGroup_disappears(t *testing.T) {
 				Config: testAccUserGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserGroupExists(ctx, resourceName, &userGroup),
-					acctest.CheckResourceDisappears(acctest.Provider, tfelasticache.ResourceUserGroup(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfelasticache.ResourceUserGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

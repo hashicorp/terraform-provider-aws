@@ -117,7 +117,7 @@ func TestAccRDSSnapshotCopy_disappears(t *testing.T) {
 				Config: testAccSnapshotCopyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotCopyExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfrds.ResourceSnapshotCopy(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfrds.ResourceSnapshotCopy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -299,7 +299,7 @@ func TestAccAPIGatewayDomainName_disappears(t *testing.T) {
 				Config: testAccDomainNameConfig_regionalCertificateARN(rName, key, certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainNameExists(ctx, resourceName, &domainName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfapigateway.ResourceDomainName(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigateway.ResourceDomainName(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

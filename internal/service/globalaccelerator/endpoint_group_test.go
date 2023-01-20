@@ -73,7 +73,7 @@ func TestAccGlobalAcceleratorEndpointGroup_disappears(t *testing.T) {
 				Config: testAccEndpointGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointGroupExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfglobalaccelerator.ResourceEndpointGroup(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglobalaccelerator.ResourceEndpointGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -498,7 +498,7 @@ func testAccCheckEndpointGroupDeleteSecurityGroup(ctx context.Context, vpc *ec2.
 		d.SetId(aws.StringValue(v.GroupId))
 		d.Set("revoke_rules_on_delete", true)
 
-		err = acctest.DeleteResource(r, d, meta)
+		err = acctest.DeleteResource(ctx, r, d, meta)
 
 		return err
 	}

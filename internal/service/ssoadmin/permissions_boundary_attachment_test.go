@@ -103,7 +103,7 @@ func TestAccSSOAdminPermissionsBoundaryAttachment_disappears(t *testing.T) {
 				Config: testAccPermissionsBoundaryAttachmentConfig_basic(rName, rNamePolicy1, rNamePolicy2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionsBoundaryAttachmentExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfssoadmin.ResourcePermissionsBoundaryAttachment(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfssoadmin.ResourcePermissionsBoundaryAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -129,7 +129,7 @@ func TestAccSSOAdminPermissionsBoundaryAttachment_Disappears_permissionSet(t *te
 				Config: testAccPermissionsBoundaryAttachmentConfig_basic(rName, rNamePolicy1, rNamePolicy2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionsBoundaryAttachmentExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfssoadmin.ResourcePermissionSet(), permissionSetResourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfssoadmin.ResourcePermissionSet(), permissionSetResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

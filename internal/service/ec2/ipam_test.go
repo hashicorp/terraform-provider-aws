@@ -61,7 +61,7 @@ func TestAccIPAM_disappears(t *testing.T) {
 				Config: testAccIPAMConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMExists(ctx, resourceName, &ipam),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceIPAM(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceIPAM(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -86,7 +86,7 @@ func TestAccCognitoIDPUserPoolUICustomization_AllClients_disappears(t *testing.T
 				Config: testAccUserPoolUICustomizationConfig_allClientsCSS(rName, css),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolUICustomizationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcognitoidp.ResourceUserPoolUICustomization(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcognitoidp.ResourceUserPoolUICustomization(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -286,7 +286,7 @@ func TestAccCognitoIDPUserPoolUICustomization_Client_disappears(t *testing.T) { 
 				Config: testAccUserPoolUICustomizationConfig_clientCSS(rName, css),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolUICustomizationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcognitoidp.ResourceUserPoolUICustomization(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcognitoidp.ResourceUserPoolUICustomization(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

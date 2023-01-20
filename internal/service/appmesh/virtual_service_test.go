@@ -195,7 +195,7 @@ func testAccVirtualService_disappears(t *testing.T) {
 				Config: testAccVirtualServiceConfig_virtualNode(meshName, vnName1, vnName2, vsName, "aws_appmesh_virtual_node.foo"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVirtualServiceExists(ctx, resourceName, &vs),
-					acctest.CheckResourceDisappears(acctest.Provider, tfappmesh.ResourceVirtualService(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappmesh.ResourceVirtualService(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

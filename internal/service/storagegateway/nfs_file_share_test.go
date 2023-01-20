@@ -670,8 +670,8 @@ func TestAccStorageGatewayNFSFileShare_disappears(t *testing.T) {
 				Config: testAccNFSFileShareConfig_required(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNFSFileShareExists(ctx, resourceName, &nfsFileShare),
-					acctest.CheckResourceDisappears(acctest.Provider, tfstoragegateway.ResourceNFSFileShare(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfstoragegateway.ResourceNFSFileShare(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfstoragegateway.ResourceNFSFileShare(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfstoragegateway.ResourceNFSFileShare(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

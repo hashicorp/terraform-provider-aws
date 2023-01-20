@@ -66,7 +66,7 @@ func testAccPreCheckDefaultSubnetNotFound(ctx context.Context, t *testing.T) {
 		d := r.Data(nil)
 		d.SetId(subnetID)
 
-		err := acctest.DeleteResource(r, d, acctest.Provider.Meta())
+		err := acctest.DeleteResource(ctx, r, d, acctest.Provider.Meta())
 
 		if err != nil {
 			t.Fatalf("error deleting default subnet: %s", err)

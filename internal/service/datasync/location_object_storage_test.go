@@ -68,8 +68,8 @@ func TestAccDataSyncLocationObjectStorage_disappears(t *testing.T) {
 				Config: testAccLocationObjectStorageConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationObjectStorageExists(ctx, resourceName, &locationObjectStorage1),
-					acctest.CheckResourceDisappears(acctest.Provider, tfdatasync.ResourceLocationObjectStorage(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfdatasync.ResourceLocationObjectStorage(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdatasync.ResourceLocationObjectStorage(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdatasync.ResourceLocationObjectStorage(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

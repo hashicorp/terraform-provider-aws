@@ -90,7 +90,7 @@ func testAccQueue_disappears(t *testing.T) {
 				Config: testAccQueueConfig_basic(rName, rName2, "Disappear"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfconnect.ResourceQueue(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfconnect.ResourceQueue(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -63,7 +63,7 @@ func TestAccRedshiftServerlessResourcePolicy_disappears(t *testing.T) {
 				Config: testAccResourcePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourcePolicyExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfredshiftserverless.ResourceResourcePolicy(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfredshiftserverless.ResourceResourcePolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

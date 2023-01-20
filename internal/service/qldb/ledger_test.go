@@ -65,7 +65,7 @@ func TestAccQLDBLedger_disappears(t *testing.T) {
 				Config: testAccLedgerConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLedgerExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfqldb.ResourceLedger(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfqldb.ResourceLedger(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

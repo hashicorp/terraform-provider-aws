@@ -151,7 +151,7 @@ func TestAccIAMServerCertificate_disappears(t *testing.T) {
 				Config: testAccServerCertificateConfig_random(key, certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertExists(ctx, resourceName, &cert),
-					acctest.CheckResourceDisappears(acctest.Provider, tfiam.ResourceServerCertificate(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceServerCertificate(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

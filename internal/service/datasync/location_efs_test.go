@@ -102,8 +102,8 @@ func TestAccDataSyncLocationEFS_disappears(t *testing.T) {
 				Config: testAccLocationEFSConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationEFSExists(ctx, resourceName, &locationEfs1),
-					acctest.CheckResourceDisappears(acctest.Provider, tfdatasync.ResourceLocationEFS(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfdatasync.ResourceLocationEFS(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdatasync.ResourceLocationEFS(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdatasync.ResourceLocationEFS(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

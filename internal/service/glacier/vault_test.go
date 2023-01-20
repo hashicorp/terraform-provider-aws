@@ -205,7 +205,7 @@ func TestAccGlacierVault_disappears(t *testing.T) {
 				Config: testAccVaultConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultExists(ctx, resourceName, &vault),
-					acctest.CheckResourceDisappears(acctest.Provider, tfglacier.ResourceVault(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglacier.ResourceVault(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

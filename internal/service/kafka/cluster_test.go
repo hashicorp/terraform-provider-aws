@@ -128,7 +128,7 @@ func TestAccKafkaCluster_disappears(t *testing.T) {
 				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					acctest.CheckResourceDisappears(acctest.Provider, tfkafka.ResourceCluster(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfkafka.ResourceCluster(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

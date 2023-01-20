@@ -239,7 +239,7 @@ func TestAccEFSAccessPoint_disappears(t *testing.T) {
 				Config: testAccAccessPointConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessPointExists(ctx, resourceName, &ap),
-					acctest.CheckResourceDisappears(acctest.Provider, tfefs.ResourceAccessPoint(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfefs.ResourceAccessPoint(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

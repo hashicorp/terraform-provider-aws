@@ -62,7 +62,7 @@ func TestAccVPCNetworkACLAssociation_disappears(t *testing.T) {
 				Config: testAccVPCNetworkACLAssociationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkACLAssociationExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceNetworkACLAssociation(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceNetworkACLAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -87,7 +87,7 @@ func TestAccVPCNetworkACLAssociation_disappears_NACL(t *testing.T) {
 				Config: testAccVPCNetworkACLAssociationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkACLAssociationExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceNetworkACL(), naclResourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceNetworkACL(), naclResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -112,7 +112,7 @@ func TestAccVPCNetworkACLAssociation_disappears_Subnet(t *testing.T) {
 				Config: testAccVPCNetworkACLAssociationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkACLAssociationExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceSubnet(), subnetResourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceSubnet(), subnetResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

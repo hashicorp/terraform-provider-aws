@@ -61,9 +61,9 @@ func testAccHSM_disappears(t *testing.T) {
 				Config: testAccHSMConfig_subnetID(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcloudhsmv2.ResourceHSM(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudhsmv2.ResourceHSM(), resourceName),
 					// Verify Delete error handling
-					acctest.CheckResourceDisappears(acctest.Provider, tfcloudhsmv2.ResourceHSM(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudhsmv2.ResourceHSM(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -86,8 +86,8 @@ func testAccHSM_disappears_Cluster(t *testing.T) {
 				Config: testAccHSMConfig_subnetID(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcloudhsmv2.ResourceHSM(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcloudhsmv2.ResourceCluster(), clusterResourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudhsmv2.ResourceHSM(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudhsmv2.ResourceCluster(), clusterResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

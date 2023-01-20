@@ -62,7 +62,7 @@ func TestAccRoute53ResolverDNSSECConfig_disappear(t *testing.T) {
 				Config: testAccDNSSECConfigConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDNSSECConfigExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfroute53resolver.ResourceDNSSECConfig(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfroute53resolver.ResourceDNSSECConfig(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -73,8 +73,8 @@ func TestAccDataSyncLocationFSxLustreFileSystem_disappears(t *testing.T) {
 				Config: testAccLocationFSxLustreFileSystemConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationFSxLustreExists(ctx, resourceName, &locationFsxLustre1),
-					acctest.CheckResourceDisappears(acctest.Provider, tfdatasync.ResourceLocationFSxLustreFileSystem(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfdatasync.ResourceLocationFSxLustreFileSystem(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdatasync.ResourceLocationFSxLustreFileSystem(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdatasync.ResourceLocationFSxLustreFileSystem(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

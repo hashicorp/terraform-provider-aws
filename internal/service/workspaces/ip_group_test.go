@@ -126,7 +126,7 @@ func testAccIPGroup_disappears(t *testing.T) {
 				Config: testAccIPGroupConfig_a(ipGroupName, ipGroupDescription),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIPGroupExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfworkspaces.ResourceIPGroup(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfworkspaces.ResourceIPGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

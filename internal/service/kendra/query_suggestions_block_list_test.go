@@ -259,7 +259,7 @@ func TestAccKendraQuerySuggestionsBlockList_disappears(t *testing.T) {
 				Config: testAccQuerySuggestionsBlockListConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQuerySuggestionsBlockListExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfkendra.ResourceQuerySuggestionsBlockList(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfkendra.ResourceQuerySuggestionsBlockList(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -58,7 +58,7 @@ func TestAccSchemasRegistryPolicy_disappears(t *testing.T) {
 				Config: testAccRegistryPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRegistryPolicyExists(ctx, resourceName, &schemas.GetResourcePolicyOutput{}),
-					acctest.CheckResourceDisappears(acctest.Provider, tfschemas.ResourceRegistry(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfschemas.ResourceRegistry(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -82,7 +82,7 @@ func TestAccSchemasRegistryPolicy_disappears_Registry(t *testing.T) {
 				Config: testAccRegistryPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRegistryPolicyExists(ctx, resourceName, &schemas.GetResourcePolicyOutput{}),
-					acctest.CheckResourceDisappears(acctest.Provider, tfschemas.ResourceRegistry(), parentResourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfschemas.ResourceRegistry(), parentResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

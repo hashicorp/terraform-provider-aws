@@ -118,7 +118,7 @@ func TestAccNeptuneClusterEndpoint_disappears(t *testing.T) {
 				Config: testAccClusterEndpointConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterEndpointExists(ctx, resourceName, &dbCluster),
-					acctest.CheckResourceDisappears(acctest.Provider, tfneptune.ResourceClusterEndpoint(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfneptune.ResourceClusterEndpoint(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -142,7 +142,7 @@ func TestAccNeptuneClusterEndpoint_Disappears_cluster(t *testing.T) {
 				Config: testAccClusterEndpointConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterEndpointExists(ctx, resourceName, &dbCluster),
-					acctest.CheckResourceDisappears(acctest.Provider, tfneptune.ResourceCluster(), "aws_neptune_cluster.test"),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfneptune.ResourceCluster(), "aws_neptune_cluster.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},

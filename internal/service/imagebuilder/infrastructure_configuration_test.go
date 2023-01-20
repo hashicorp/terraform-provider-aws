@@ -74,7 +74,7 @@ func TestAccImageBuilderInfrastructureConfiguration_disappears(t *testing.T) {
 				Config: testAccInfrastructureConfigurationConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInfrastructureConfigurationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfimagebuilder.ResourceInfrastructureConfiguration(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfimagebuilder.ResourceInfrastructureConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

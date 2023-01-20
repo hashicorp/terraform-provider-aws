@@ -96,7 +96,7 @@ func TestAccSSOAdminPermissionSetInlinePolicy_disappears(t *testing.T) {
 				Config: testAccPermissionSetInlinePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionSetInlinePolicyExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfssoadmin.ResourcePermissionSetInlinePolicy(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfssoadmin.ResourcePermissionSetInlinePolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -120,7 +120,7 @@ func TestAccSSOAdminPermissionSetInlinePolicy_Disappears_permissionSet(t *testin
 				Config: testAccPermissionSetInlinePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionSetInlinePolicyExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfssoadmin.ResourcePermissionSet(), permissionSetResourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfssoadmin.ResourcePermissionSet(), permissionSetResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -61,7 +61,7 @@ func TestAccAutoScalingLifecycleHook_disappears(t *testing.T) {
 				Config: testAccLifecycleHookConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLifecycleHookExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfautoscaling.ResourceLifecycleHook(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfautoscaling.ResourceLifecycleHook(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

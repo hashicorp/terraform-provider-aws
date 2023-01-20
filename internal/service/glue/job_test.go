@@ -70,7 +70,7 @@ func TestAccGlueJob_disappears(t *testing.T) {
 				Config: testAccJobConfig_required(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(ctx, resourceName, &job),
-					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourceJob(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglue.ResourceJob(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

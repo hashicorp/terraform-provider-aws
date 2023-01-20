@@ -57,7 +57,7 @@ func TestAccVPCDHCPOptionsAssociation_Disappears_vpc(t *testing.T) {
 				Config: testAccVPCDHCPOptionsAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCDHCPOptionsAssociationExist(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceVPC(), "aws_vpc.test"),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPC(), "aws_vpc.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -80,7 +80,7 @@ func TestAccVPCDHCPOptionsAssociation_Disappears_dhcp(t *testing.T) {
 				Config: testAccVPCDHCPOptionsAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCDHCPOptionsAssociationExist(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceVPCDHCPOptions(), "aws_vpc_dhcp_options.test"),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPCDHCPOptions(), "aws_vpc_dhcp_options.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -103,7 +103,7 @@ func TestAccVPCDHCPOptionsAssociation_disappears(t *testing.T) {
 				Config: testAccVPCDHCPOptionsAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCDHCPOptionsAssociationExist(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceVPCDHCPOptionsAssociation(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPCDHCPOptionsAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

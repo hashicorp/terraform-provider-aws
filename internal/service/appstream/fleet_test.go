@@ -84,7 +84,7 @@ func TestAccAppStreamFleet_disappears(t *testing.T) {
 				Config: testAccFleetConfig_basic(rName, instanceType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleetOutput),
-					acctest.CheckResourceDisappears(acctest.Provider, tfappstream.ResourceFleet(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappstream.ResourceFleet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

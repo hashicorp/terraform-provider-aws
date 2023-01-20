@@ -54,7 +54,7 @@ func TestAccDynamoDBTag_disappears(t *testing.T) {
 				Config: testAccTagConfig_basic(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTagExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfdynamodb.ResourceTag(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdynamodb.ResourceTag(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

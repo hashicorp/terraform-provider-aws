@@ -67,7 +67,7 @@ func testAccOrganizationConformancePack_disappears(t *testing.T) {
 				Config: testAccOrganizationConformancePackConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationConformancePackExists(ctx, resourceName, &pack),
-					acctest.CheckResourceDisappears(acctest.Provider, tfconfig.ResourceOrganizationConformancePack(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfconfig.ResourceOrganizationConformancePack(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

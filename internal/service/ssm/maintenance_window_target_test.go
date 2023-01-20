@@ -221,7 +221,7 @@ func TestAccSSMMaintenanceWindowTarget_disappears(t *testing.T) {
 				Config: testAccMaintenanceWindowTargetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMaintenanceWindowTargetExists(ctx, resourceName, &maint),
-					acctest.CheckResourceDisappears(acctest.Provider, tfssm.ResourceMaintenanceWindowTarget(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfssm.ResourceMaintenanceWindowTarget(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -244,7 +244,7 @@ func TestAccSSMMaintenanceWindowTarget_Disappears_window(t *testing.T) {
 				Config: testAccMaintenanceWindowTargetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMaintenanceWindowTargetExists(ctx, resourceName, &maint),
-					acctest.CheckResourceDisappears(acctest.Provider, tfssm.ResourceMaintenanceWindow(), "aws_ssm_maintenance_window.test"),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfssm.ResourceMaintenanceWindow(), "aws_ssm_maintenance_window.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},

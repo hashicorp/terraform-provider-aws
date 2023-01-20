@@ -60,7 +60,7 @@ func testAccOrganizationAdminAccount_disappears(t *testing.T) {
 				Config: testAccOrganizationAdminAccountConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationAdminAccountExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfmacie2.ResourceAccount(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfmacie2.ResourceAccount(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

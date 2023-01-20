@@ -70,7 +70,7 @@ func TestAccServiceDiscoveryPrivateDNSNamespace_disappears(t *testing.T) {
 				Config: testAccPrivateDNSNamespaceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPrivateDNSNamespaceExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfservicediscovery.ResourcePrivateDNSNamespace(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfservicediscovery.ResourcePrivateDNSNamespace(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

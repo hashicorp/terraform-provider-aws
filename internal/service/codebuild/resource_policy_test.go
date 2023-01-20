@@ -60,8 +60,8 @@ func TestAccCodeBuildResourcePolicy_disappears(t *testing.T) {
 				Config: testAccResourcePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourcePolicyExists(ctx, resourceName, &reportGroup),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcodebuild.ResourceResourcePolicy(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcodebuild.ResourceResourcePolicy(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcodebuild.ResourceResourcePolicy(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcodebuild.ResourceResourcePolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -85,8 +85,8 @@ func TestAccCodeBuildResourcePolicy_disappears_resource(t *testing.T) {
 				Config: testAccResourcePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourcePolicyExists(ctx, resourceName, &reportGroup),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcodebuild.ResourceReportGroup(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcodebuild.ResourceResourcePolicy(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcodebuild.ResourceReportGroup(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcodebuild.ResourceResourcePolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

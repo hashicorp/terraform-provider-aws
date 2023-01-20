@@ -80,7 +80,7 @@ func TestAccS3ControlAccessPoint_disappears(t *testing.T) {
 				Config: testAccAccessPointConfig_basic(bucketName, accessPointName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessPointExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfs3control.ResourceAccessPoint(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfs3control.ResourceAccessPoint(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -236,7 +236,7 @@ func TestAccSESV2ConfigurationSetEventDestination_disappears(t *testing.T) {
 				Config: testAccConfigurationSetEventDestinationConfig_basic(rName, "SEND"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationSetEventDestinationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfsesv2.ResourceConfigurationSetEventDestination(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsesv2.ResourceConfigurationSetEventDestination(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

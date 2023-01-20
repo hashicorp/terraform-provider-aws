@@ -64,7 +64,7 @@ func TestAccMemoryDBACL_disappears(t *testing.T) {
 				Config: testAccACLConfig_basic(rName, nil, nil),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckACLExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfmemorydb.ResourceACL(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfmemorydb.ResourceACL(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

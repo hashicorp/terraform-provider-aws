@@ -70,7 +70,7 @@ func TestAccAppStreamUserStackAssociation_disappears(t *testing.T) {
 				Config: testAccUserStackAssociationConfig_basic(rName, authType, rEmail),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserStackAssociationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfappstream.ResourceUserStackAssociation(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappstream.ResourceUserStackAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

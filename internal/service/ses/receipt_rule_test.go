@@ -352,7 +352,7 @@ func TestAccSESReceiptRule_disappears(t *testing.T) {
 				Config: testAccReceiptRuleConfig_basic(rName, acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReceiptRuleExists(ctx, resourceName, &rule),
-					acctest.CheckResourceDisappears(acctest.Provider, tfses.ResourceReceiptRuleSet(), ruleSetResourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfses.ResourceReceiptRuleSet(), ruleSetResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -360,7 +360,7 @@ func TestAccSESReceiptRule_disappears(t *testing.T) {
 				Config: testAccReceiptRuleConfig_basic(rName, acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReceiptRuleExists(ctx, resourceName, &rule),
-					acctest.CheckResourceDisappears(acctest.Provider, tfses.ResourceReceiptRule(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfses.ResourceReceiptRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

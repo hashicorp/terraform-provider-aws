@@ -82,7 +82,7 @@ func TestAccKendraExperience_disappears(t *testing.T) {
 				Config: testAccExperienceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExperienceExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfkendra.ResourceExperience(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfkendra.ResourceExperience(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

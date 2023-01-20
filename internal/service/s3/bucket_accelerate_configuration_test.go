@@ -105,7 +105,7 @@ func TestAccS3BucketAccelerateConfiguration_disappears(t *testing.T) {
 				Config: testAccBucketAccelerateConfigurationConfig_basic(bucketName, s3.BucketAccelerateStatusEnabled),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketAccelerateConfigurationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfs3.ResourceBucketAccelerateConfiguration(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfs3.ResourceBucketAccelerateConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

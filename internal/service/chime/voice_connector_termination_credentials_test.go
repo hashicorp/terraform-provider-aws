@@ -59,7 +59,7 @@ func TestAccChimeVoiceConnectorTerminationCredentials_disappears(t *testing.T) {
 				Config: testAccVoiceConnectorTerminationCredentialsConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVoiceConnectorTerminationCredentialsExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfchime.ResourceVoiceConnectorTerminationCredentials(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfchime.ResourceVoiceConnectorTerminationCredentials(), resourceName),
 				),
 				ExpectNonEmptyPlan: false,
 			},

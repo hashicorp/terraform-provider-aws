@@ -61,7 +61,7 @@ func TestAccSchemasDiscoverer_disappears(t *testing.T) {
 				Config: testAccDiscovererConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDiscovererExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfschemas.ResourceDiscoverer(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfschemas.ResourceDiscoverer(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

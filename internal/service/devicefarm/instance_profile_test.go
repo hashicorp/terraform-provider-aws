@@ -139,8 +139,8 @@ func TestAccDeviceFarmInstanceProfile_disappears(t *testing.T) {
 				Config: testAccInstanceProfileConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceProfileExists(ctx, resourceName, &profile),
-					acctest.CheckResourceDisappears(acctest.Provider, tfdevicefarm.ResourceInstanceProfile(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfdevicefarm.ResourceInstanceProfile(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdevicefarm.ResourceInstanceProfile(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdevicefarm.ResourceInstanceProfile(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

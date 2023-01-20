@@ -383,7 +383,7 @@ func TestAccDynamoDBTableItem_disappears(t *testing.T) {
 				Config: testAccTableItemConfig_basic(rName, hashKey, itemContent),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableItemExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(acctest.Provider, tfdynamodb.ResourceTableItem(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdynamodb.ResourceTableItem(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -155,7 +155,7 @@ func TestAccLightsailDisk_disappears(t *testing.T) {
 				Config: testAccDiskConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDiskExists(ctx, resourceName, &disk),
-					acctest.CheckResourceDisappears(acctest.Provider, tflightsail.ResourceDisk(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflightsail.ResourceDisk(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

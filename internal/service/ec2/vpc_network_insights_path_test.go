@@ -65,7 +65,7 @@ func TestAccVPCNetworkInsightsPath_disappears(t *testing.T) {
 				Config: testAccVPCNetworkInsightsPathConfig_basic(rName, "udp"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkInsightsPathExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceNetworkInsightsPath(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceNetworkInsightsPath(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

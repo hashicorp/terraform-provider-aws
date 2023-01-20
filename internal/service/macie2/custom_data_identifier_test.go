@@ -95,7 +95,7 @@ func testAccCustomDataIdentifier_disappears(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomDataIdentifierExists(ctx, resourceName, &macie2Output),
 					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
-					acctest.CheckResourceDisappears(acctest.Provider, tfmacie2.ResourceAccount(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfmacie2.ResourceAccount(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

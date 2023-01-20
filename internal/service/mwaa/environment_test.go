@@ -94,7 +94,7 @@ func TestAccMWAAEnvironment_disappears(t *testing.T) {
 				Config: testAccEnvironmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
-					acctest.CheckResourceDisappears(acctest.Provider, tfmwaa.ResourceEnvironment(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfmwaa.ResourceEnvironment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

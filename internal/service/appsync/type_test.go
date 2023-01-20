@@ -63,7 +63,7 @@ func testAccType_disappears(t *testing.T) {
 				Config: testAccTypeConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTypeResourceExists(ctx, resourceName, &typ),
-					acctest.CheckResourceDisappears(acctest.Provider, tfappsync.ResourceType(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappsync.ResourceType(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

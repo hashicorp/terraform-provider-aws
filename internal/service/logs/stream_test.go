@@ -59,7 +59,7 @@ func TestAccLogsStream_disappears(t *testing.T) {
 				Config: testAccStreamConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStreamExists(ctx, resourceName, &ls),
-					acctest.CheckResourceDisappears(acctest.Provider, tflogs.ResourceStream(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflogs.ResourceStream(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -84,7 +84,7 @@ func TestAccLogsStream_Disappears_logGroup(t *testing.T) {
 				Config: testAccStreamConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStreamExists(ctx, resourceName, &ls),
-					acctest.CheckResourceDisappears(acctest.Provider, tflogs.ResourceGroup(), logGroupResourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflogs.ResourceGroup(), logGroupResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

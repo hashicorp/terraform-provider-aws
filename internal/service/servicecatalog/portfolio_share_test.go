@@ -172,7 +172,7 @@ func testAccPortfolioShare_disappears(t *testing.T) {
 				Config: testAccPortfolioShareConfig_basic(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPortfolioShareExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfservicecatalog.ResourcePortfolioShare(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfservicecatalog.ResourcePortfolioShare(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

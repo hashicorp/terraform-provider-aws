@@ -224,7 +224,7 @@ func TestAccServiceDiscoveryService_disappears(t *testing.T) {
 				Config: testAccServiceConfig_http(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfservicediscovery.ResourceService(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfservicediscovery.ResourceService(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

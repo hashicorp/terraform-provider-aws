@@ -213,7 +213,7 @@ func TestAccRAMResourceShare_disappears(t *testing.T) {
 				Config: testAccResourceShareConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceShareExists(ctx, resourceName, &resourceShare),
-					acctest.CheckResourceDisappears(acctest.Provider, tfram.ResourceResourceShare(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfram.ResourceResourceShare(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

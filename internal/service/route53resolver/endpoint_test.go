@@ -66,7 +66,7 @@ func TestAccRoute53ResolverEndpoint_disappears(t *testing.T) {
 				Config: testAccEndpointConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName, &ep),
-					acctest.CheckResourceDisappears(acctest.Provider, tfroute53resolver.ResourceEndpoint(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfroute53resolver.ResourceEndpoint(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

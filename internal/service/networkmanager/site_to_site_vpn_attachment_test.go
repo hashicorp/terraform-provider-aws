@@ -83,7 +83,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_disappears(t *testing.T) {
 				Config: testAccSiteToSiteVPNAttachmentConfig_basic(rName, bgpASN, vpnIP),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSiteToSiteVPNAttachmentExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfnetworkmanager.ResourceSiteToSiteVPNAttachment(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfnetworkmanager.ResourceSiteToSiteVPNAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

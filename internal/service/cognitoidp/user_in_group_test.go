@@ -58,7 +58,7 @@ func TestAccCognitoIDPUserInGroup_disappears(t *testing.T) {
 				Config: testAccUserInGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserInGroupExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcognitoidp.ResourceUserInGroup(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcognitoidp.ResourceUserInGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

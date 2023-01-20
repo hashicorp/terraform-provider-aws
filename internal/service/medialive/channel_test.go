@@ -318,7 +318,7 @@ func TestAccMediaLiveChannel_disappears(t *testing.T) {
 				Config: testAccChannelConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckChannelExists(ctx, resourceName, &channel),
-					acctest.CheckResourceDisappears(acctest.Provider, tfmedialive.ResourceChannel(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfmedialive.ResourceChannel(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

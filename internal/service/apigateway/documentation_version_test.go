@@ -115,7 +115,7 @@ func TestAccAPIGatewayDocumentationVersion_disappears(t *testing.T) {
 				Config: testAccDocumentationVersionConfig_basic(version, apiName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDocumentationVersionExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(acctest.Provider, tfapigateway.ResourceDocumentationVersion(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigateway.ResourceDocumentationVersion(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

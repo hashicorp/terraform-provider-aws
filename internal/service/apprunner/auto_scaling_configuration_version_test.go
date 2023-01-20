@@ -250,7 +250,7 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_disappears(t *testing.T) {
 				Config: testAccAutoScalingConfigurationVersionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAutoScalingConfigurationVersionExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfapprunner.ResourceAutoScalingConfigurationVersion(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapprunner.ResourceAutoScalingConfigurationVersion(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

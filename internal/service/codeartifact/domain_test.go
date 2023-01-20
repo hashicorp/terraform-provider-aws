@@ -143,7 +143,7 @@ func testAccDomain_disappears(t *testing.T) {
 				Config: testAccDomainConfig_defaultEncryptionKey(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcodeartifact.ResourceDomain(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcodeartifact.ResourceDomain(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

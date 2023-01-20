@@ -557,7 +557,7 @@ func TestAccCloudWatchMetricAlarm_disappears(t *testing.T) {
 				Config: testAccMetricAlarmConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricAlarmExists(ctx, resourceName, &alarm),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcloudwatch.ResourceMetricAlarm(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudwatch.ResourceMetricAlarm(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -69,7 +69,7 @@ func TestAccIoTThingGroup_disappears(t *testing.T) {
 				Config: testAccThingGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThingGroupExists(ctx, resourceName, &thingGroup),
-					acctest.CheckResourceDisappears(acctest.Provider, tfiot.ResourceThingGroup(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiot.ResourceThingGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

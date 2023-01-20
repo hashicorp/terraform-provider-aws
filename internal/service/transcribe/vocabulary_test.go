@@ -205,7 +205,7 @@ func TestAccTranscribeVocabulary_disappears(t *testing.T) {
 				Config: testAccVocabularyConfig_basicFile(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVocabularyExists(ctx, resourceName, &vocabulary),
-					acctest.CheckResourceDisappears(acctest.Provider, tftranscribe.ResourceVocabulary(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tftranscribe.ResourceVocabulary(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

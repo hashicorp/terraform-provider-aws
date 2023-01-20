@@ -189,7 +189,7 @@ func TestAccBudgetsBudget_disappears(t *testing.T) {
 				Config: testAccBudgetConfig_deprecated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccBudgetExists(ctx, resourceName, &budget),
-					acctest.CheckResourceDisappears(acctest.Provider, tfbudgets.ResourceBudget(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfbudgets.ResourceBudget(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

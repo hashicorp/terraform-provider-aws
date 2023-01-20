@@ -171,7 +171,7 @@ func TestAccGlueCatalogDatabase_disappears(t *testing.T) {
 				Config: testAccCatalogDatabaseConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCatalogDatabaseExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourceCatalogDatabase(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglue.ResourceCatalogDatabase(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

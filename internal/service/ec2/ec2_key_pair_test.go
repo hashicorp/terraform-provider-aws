@@ -195,7 +195,7 @@ func TestAccEC2KeyPair_disappears(t *testing.T) {
 				Config: testAccKeyPairConfig_basic(rName, publicKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckKeyPairExists(ctx, resourceName, &keyPair),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceKeyPair(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceKeyPair(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

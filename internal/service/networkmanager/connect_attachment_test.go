@@ -102,7 +102,7 @@ func TestAccNetworkManagerConnectAttachment_disappears(t *testing.T) {
 				Config: testAccConnectAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfnetworkmanager.ResourceConnectAttachment(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfnetworkmanager.ResourceConnectAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

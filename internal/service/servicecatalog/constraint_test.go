@@ -67,7 +67,7 @@ func TestAccServiceCatalogConstraint_disappears(t *testing.T) {
 				Config: testAccConstraintConfig_basic(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConstraintExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfservicecatalog.ResourceConstraint(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfservicecatalog.ResourceConstraint(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

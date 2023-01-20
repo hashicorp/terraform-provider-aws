@@ -729,7 +729,7 @@ func TestAccLexModelsBot_disappears(t *testing.T) {
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBotExists(ctx, rName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tflexmodels.ResourceBot(), rName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflexmodels.ResourceBot(), rName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

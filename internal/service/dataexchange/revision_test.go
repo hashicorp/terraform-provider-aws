@@ -108,8 +108,8 @@ func TestAccDataExchangeRevision_disappears(t *testing.T) {
 				Config: testAccRevisionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRevisionExists(ctx, resourceName, &proj),
-					acctest.CheckResourceDisappears(acctest.Provider, tfdataexchange.ResourceRevision(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfdataexchange.ResourceRevision(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdataexchange.ResourceRevision(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdataexchange.ResourceRevision(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -133,8 +133,8 @@ func TestAccDataExchangeRevision_disappears_dataSet(t *testing.T) {
 				Config: testAccRevisionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRevisionExists(ctx, resourceName, &proj),
-					acctest.CheckResourceDisappears(acctest.Provider, tfdataexchange.ResourceDataSet(), "aws_dataexchange_data_set.test"),
-					acctest.CheckResourceDisappears(acctest.Provider, tfdataexchange.ResourceRevision(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdataexchange.ResourceDataSet(), "aws_dataexchange_data_set.test"),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdataexchange.ResourceRevision(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

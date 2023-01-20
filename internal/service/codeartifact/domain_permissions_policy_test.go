@@ -133,7 +133,7 @@ func testAccDomainPermissionsPolicy_disappears(t *testing.T) {
 				Config: testAccDomainPermissionsPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainPermissionsExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcodeartifact.ResourceDomainPermissionsPolicy(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcodeartifact.ResourceDomainPermissionsPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -156,7 +156,7 @@ func testAccDomainPermissionsPolicy_Disappears_domain(t *testing.T) {
 				Config: testAccDomainPermissionsPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainPermissionsExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcodeartifact.ResourceDomain(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcodeartifact.ResourceDomain(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -67,7 +67,7 @@ func TestAccNetworkManagerDevice_disappears(t *testing.T) {
 				Config: testAccDeviceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDeviceExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfnetworkmanager.ResourceDevice(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfnetworkmanager.ResourceDevice(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

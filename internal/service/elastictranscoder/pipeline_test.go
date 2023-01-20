@@ -224,7 +224,7 @@ func TestAccElasticTranscoderPipeline_disappears(t *testing.T) {
 				Config: testAccPipelineConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineExists(ctx, resourceName, pipeline),
-					acctest.CheckResourceDisappears(acctest.Provider, tfelastictranscoder.ResourcePipeline(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfelastictranscoder.ResourcePipeline(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

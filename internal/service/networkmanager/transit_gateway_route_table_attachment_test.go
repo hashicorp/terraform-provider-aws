@@ -68,7 +68,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_disappears(t *testi
 				Config: testAccTransitGatewayRouteTableAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfnetworkmanager.ResourceTransitGatewayRouteTableAttachment(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfnetworkmanager.ResourceTransitGatewayRouteTableAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

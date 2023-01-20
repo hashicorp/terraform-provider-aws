@@ -80,7 +80,7 @@ func TestAccFSxDataRepositoryAssociation_disappears(t *testing.T) {
 				Config: testAccDataRepositoryAssociationConfig_fileSystemPath(bucketName, fileSystemPath),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataRepositoryAssociationExists(ctx, resourceName, &association),
-					acctest.CheckResourceDisappears(acctest.Provider, tffsx.ResourceDataRepositoryAssociation(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tffsx.ResourceDataRepositoryAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -110,7 +110,7 @@ func TestAccFSxDataRepositoryAssociation_disappears_ParentFileSystem(t *testing.
 				Config: testAccDataRepositoryAssociationConfig_fileSystemPath(bucketName, fileSystemPath),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataRepositoryAssociationExists(ctx, resourceName, &association),
-					acctest.CheckResourceDisappears(acctest.Provider, tffsx.ResourceLustreFileSystem(), parentResourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tffsx.ResourceLustreFileSystem(), parentResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

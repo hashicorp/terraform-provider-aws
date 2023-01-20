@@ -64,7 +64,7 @@ func TestAccQLDBStream_disappears(t *testing.T) {
 				Config: testAccStreamConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStreamExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfqldb.ResourceStream(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfqldb.ResourceStream(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

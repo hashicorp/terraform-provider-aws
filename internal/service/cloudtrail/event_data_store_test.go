@@ -72,7 +72,7 @@ func TestAccCloudTrailEventDataStore_disappears(t *testing.T) {
 				Config: testAccEventDataStoreConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventDataStoreExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcloudtrail.ResourceEventDataStore(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudtrail.ResourceEventDataStore(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

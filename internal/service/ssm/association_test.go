@@ -69,7 +69,7 @@ func TestAccSSMAssociation_disappears(t *testing.T) {
 				Config: testAccAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAssociationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfssm.ResourceAssociation(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfssm.ResourceAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -92,7 +92,7 @@ func TestAccSSMAssociation_disappears_document(t *testing.T) {
 				Config: testAccAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAssociationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfssm.ResourceDocument(), "aws_ssm_document.test"),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfssm.ResourceDocument(), "aws_ssm_document.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},

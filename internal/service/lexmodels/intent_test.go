@@ -557,7 +557,7 @@ func TestAccLexModelsIntent_disappears(t *testing.T) {
 				Config: testAccIntentConfig_basic(testIntentID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntentExists(ctx, rName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tflexmodels.ResourceIntent(), rName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflexmodels.ResourceIntent(), rName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

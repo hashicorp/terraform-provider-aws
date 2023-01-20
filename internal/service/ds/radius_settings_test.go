@@ -90,7 +90,7 @@ func TestAccDSRadiusSettings_disappears(t *testing.T) {
 				Config: testAccRadiusSettingsConfig_basic(rName, domainName, radiusServer),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRadiusSettingsExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfds.ResourceRadiusSettings(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfds.ResourceRadiusSettings(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

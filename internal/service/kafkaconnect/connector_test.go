@@ -92,7 +92,7 @@ func TestAccKafkaConnectConnector_disappears(t *testing.T) {
 				Config: testAccConnectorConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectorExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfkafkaconnect.ResourceConnector(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfkafkaconnect.ResourceConnector(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

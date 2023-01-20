@@ -120,7 +120,7 @@ func testAccFindingsFilter_disappears(t *testing.T) {
 					testAccCheckFindingsFilterExists(ctx, resourceName, &macie2Output),
 					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
-					acctest.CheckResourceDisappears(acctest.Provider, tfmacie2.ResourceAccount(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfmacie2.ResourceAccount(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

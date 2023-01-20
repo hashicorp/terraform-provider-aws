@@ -75,7 +75,7 @@ func testAccOrganizationCustomRule_disappears(t *testing.T) {
 				Config: testAccOrganizationCustomRuleConfig_triggerTypes1(rName, "ConfigurationItemChangeNotification"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationCustomRuleExists(ctx, resourceName, &rule),
-					acctest.CheckResourceDisappears(acctest.Provider, tfconfigservice.ResourceOrganizationCustomRule(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfconfigservice.ResourceOrganizationCustomRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

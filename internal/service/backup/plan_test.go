@@ -648,7 +648,7 @@ func TestAccBackupPlan_disappears(t *testing.T) {
 				Config: testAccPlanConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlanExists(ctx, resourceName, &plan),
-					acctest.CheckResourceDisappears(acctest.Provider, tfbackup.ResourcePlan(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfbackup.ResourcePlan(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

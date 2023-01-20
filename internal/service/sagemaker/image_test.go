@@ -193,7 +193,7 @@ func TestAccSageMakerImage_disappears(t *testing.T) {
 				Config: testAccImageConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImageExists(ctx, resourceName, &image),
-					acctest.CheckResourceDisappears(acctest.Provider, tfsagemaker.ResourceImage(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceImage(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

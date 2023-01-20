@@ -69,7 +69,7 @@ func TestAccRedshiftClusterIAMRoles_disappears(t *testing.T) {
 				Config: testAccClusterIAMRolesConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfredshift.ResourceCluster(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfredshift.ResourceCluster(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

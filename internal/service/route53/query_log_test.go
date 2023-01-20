@@ -73,7 +73,7 @@ func TestAccRoute53QueryLog_disappears(t *testing.T) {
 				Config: testAccQueryLogConfig_basic(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueryLogExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfroute53.ResourceQueryLog(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfroute53.ResourceQueryLog(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -99,7 +99,7 @@ func TestAccRoute53QueryLog_Disappears_hostedZone(t *testing.T) {
 				Config: testAccQueryLogConfig_basic(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueryLogExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfroute53.ResourceZone(), route53ZoneResourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfroute53.ResourceZone(), route53ZoneResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

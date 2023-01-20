@@ -62,7 +62,7 @@ func TestAccS3BucketWebsiteConfiguration_disappears(t *testing.T) {
 				Config: testAccBucketWebsiteConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketWebsiteConfigurationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfs3.ResourceBucketWebsiteConfiguration(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfs3.ResourceBucketWebsiteConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

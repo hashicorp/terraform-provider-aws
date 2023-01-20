@@ -479,7 +479,7 @@ func testAccFramework_disappears(t *testing.T) {
 				Config: testAccFrameworkConfig_basic(rName, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFrameworkExists(ctx, resourceName, &framework),
-					acctest.CheckResourceDisappears(acctest.Provider, tfbackup.ResourceFramework(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfbackup.ResourceFramework(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

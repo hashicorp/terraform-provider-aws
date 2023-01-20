@@ -53,7 +53,7 @@ func TestAccSiteVPNGatewayAttachment_disappears(t *testing.T) {
 				Config: testAccSiteVPNGatewayAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPNGatewayAttachmentExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceVPNGatewayAttachment(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPNGatewayAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

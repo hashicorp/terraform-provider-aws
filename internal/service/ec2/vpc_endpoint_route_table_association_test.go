@@ -57,7 +57,7 @@ func TestAccVPCEndpointRouteTableAssociation_disappears(t *testing.T) {
 				Config: testAccVPCEndpointRouteTableAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCEndpointRouteTableAssociationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceVPCEndpointRouteTableAssociation(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPCEndpointRouteTableAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

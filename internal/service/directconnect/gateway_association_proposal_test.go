@@ -108,7 +108,7 @@ func TestAccDirectConnectGatewayAssociationProposal_disappears(t *testing.T) {
 				Config: testAccGatewayAssociationProposalConfig_basicVPN(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayAssociationProposalExists(ctx, resourceName, &proposal),
-					acctest.CheckResourceDisappears(acctest.Provider, tfdirectconnect.ResourceGatewayAssociationProposal(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdirectconnect.ResourceGatewayAssociationProposal(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -134,7 +134,7 @@ func TestAccDirectConnectGatewayAssociationProposal_endOfLifeVPN(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayAssociationProposalExists(ctx, resourceName, &proposal),
 					testAccCheckGatewayAssociationProposalAccepted(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfdirectconnect.ResourceGatewayAssociationProposal(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdirectconnect.ResourceGatewayAssociationProposal(), resourceName),
 				),
 			},
 			{
@@ -171,7 +171,7 @@ func TestAccDirectConnectGatewayAssociationProposal_endOfLifeTgw(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayAssociationProposalExists(ctx, resourceName, &proposal),
 					testAccCheckGatewayAssociationProposalAccepted(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfdirectconnect.ResourceGatewayAssociationProposal(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdirectconnect.ResourceGatewayAssociationProposal(), resourceName),
 				),
 			},
 			{

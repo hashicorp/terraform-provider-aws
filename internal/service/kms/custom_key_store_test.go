@@ -146,7 +146,7 @@ func testAccCustomKeyStore_disappears(t *testing.T) {
 				Config: testAccCustomKeyStoreConfig_basic(rName, clusterId, trustAnchorCertificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomKeyStoreExists(ctx, resourceName, &customkeystore),
-					acctest.CheckResourceDisappears(acctest.Provider, tfkms.ResourceCustomKeyStore(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfkms.ResourceCustomKeyStore(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -607,7 +607,7 @@ func TestAccSNSTopicSubscription_disappears(t *testing.T) {
 				Config: testAccTopicSubscriptionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicSubscriptionExists(ctx, resourceName, &attributes),
-					acctest.CheckResourceDisappears(acctest.Provider, tfsns.ResourceTopicSubscription(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsns.ResourceTopicSubscription(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -631,7 +631,7 @@ func TestAccSNSTopicSubscription_Disappears_topic(t *testing.T) {
 				Config: testAccTopicSubscriptionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicSubscriptionExists(ctx, resourceName, &attributes),
-					acctest.CheckResourceDisappears(acctest.Provider, tfsns.ResourceTopic(), "aws_sns_topic.test"),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsns.ResourceTopic(), "aws_sns_topic.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -67,7 +67,7 @@ func TestAccAppConfigConfigurationProfile_disappears(t *testing.T) {
 				Config: testAccConfigurationProfileConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationProfileExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfappconfig.ResourceConfigurationProfile(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappconfig.ResourceConfigurationProfile(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -206,7 +206,7 @@ func TestAccRedshiftEventSubscription_disappears(t *testing.T) {
 				Config: testAccEventSubscriptionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfredshift.ResourceEventSubscription(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfredshift.ResourceEventSubscription(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

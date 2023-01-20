@@ -79,7 +79,7 @@ func TestAccS3ControlMultiRegionAccessPoint_disappears(t *testing.T) {
 				Config: testAccMultiRegionAccessPointConfig_basic(bucketName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMultiRegionAccessPointExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfs3control.ResourceMultiRegionAccessPoint(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfs3control.ResourceMultiRegionAccessPoint(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

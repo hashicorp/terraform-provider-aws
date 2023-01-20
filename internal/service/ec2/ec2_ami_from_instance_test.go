@@ -99,7 +99,7 @@ func TestAccEC2AMIFromInstance_disappears(t *testing.T) {
 				Config: testAccAMIFromInstanceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAMIExists(ctx, resourceName, &image),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceAMIFromInstance(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceAMIFromInstance(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -352,7 +352,7 @@ func TestAccNetworkFirewallFirewall_disappears(t *testing.T) {
 				Config: testAccFirewallConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfnetworkfirewall.ResourceFirewall(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfnetworkfirewall.ResourceFirewall(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

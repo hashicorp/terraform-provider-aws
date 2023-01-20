@@ -74,8 +74,8 @@ func TestAccDataSyncLocationHDFS_disappears(t *testing.T) {
 				Config: testAccLocationHDFSConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationHDFSExists(ctx, resourceName, &locationHDFS1),
-					acctest.CheckResourceDisappears(acctest.Provider, tfdatasync.ResourceLocationHDFS(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfdatasync.ResourceLocationHDFS(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdatasync.ResourceLocationHDFS(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdatasync.ResourceLocationHDFS(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

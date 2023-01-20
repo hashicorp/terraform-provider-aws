@@ -186,8 +186,8 @@ func testAccFlowDefinition_disappears(t *testing.T) {
 				Config: testAccFlowDefinitionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowDefinitionExists(ctx, resourceName, &flowDefinition),
-					acctest.CheckResourceDisappears(acctest.Provider, tfsagemaker.ResourceFlowDefinition(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfsagemaker.ResourceFlowDefinition(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceFlowDefinition(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceFlowDefinition(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

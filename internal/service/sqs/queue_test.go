@@ -90,7 +90,7 @@ func TestAccSQSQueue_disappears(t *testing.T) {
 				Config: testAccQueueConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queueAttributes),
-					acctest.CheckResourceDisappears(acctest.Provider, tfsqs.ResourceQueue(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsqs.ResourceQueue(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -446,7 +446,7 @@ func TestAccSQSQueue_recentlyDeleted(t *testing.T) {
 				Config: testAccQueueConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queueAttributes),
-					acctest.CheckResourceDisappears(acctest.Provider, tfsqs.ResourceQueue(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsqs.ResourceQueue(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

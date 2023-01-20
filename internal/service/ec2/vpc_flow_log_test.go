@@ -569,7 +569,7 @@ func TestAccVPCFlowLog_disappears(t *testing.T) {
 				Config: testAccVPCFlowLogConfig_id(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowLogExists(ctx, resourceName, &flowLog),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceFlowLog(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceFlowLog(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

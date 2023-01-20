@@ -62,7 +62,7 @@ func TestAccTimestreamWriteDatabase_disappears(t *testing.T) {
 				Config: testAccDatabaseConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tftimestreamwrite.ResourceDatabase(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tftimestreamwrite.ResourceDatabase(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

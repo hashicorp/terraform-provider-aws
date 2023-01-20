@@ -75,7 +75,7 @@ func TestAccMemoryDBParameterGroup_disappears(t *testing.T) {
 				Config: testAccParameterGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfmemorydb.ResourceParameterGroup(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfmemorydb.ResourceParameterGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

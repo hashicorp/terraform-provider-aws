@@ -246,7 +246,7 @@ func testAccSpace_disappears(t *testing.T) {
 				Config: testAccSpaceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSpaceExists(ctx, resourceName, &domain),
-					acctest.CheckResourceDisappears(acctest.Provider, tfsagemaker.ResourceSpace(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceSpace(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

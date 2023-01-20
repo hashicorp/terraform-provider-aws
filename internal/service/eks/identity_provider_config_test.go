@@ -76,7 +76,7 @@ func TestAccEKSIdentityProviderConfig_disappears(t *testing.T) {
 				Config: testAccIdentityProviderConfigConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIdentityProviderExistsConfig(ctx, resourceName, &config),
-					acctest.CheckResourceDisappears(acctest.Provider, tfeks.ResourceIdentityProviderConfig(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfeks.ResourceIdentityProviderConfig(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

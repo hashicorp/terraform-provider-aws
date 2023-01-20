@@ -108,7 +108,7 @@ func TestAccAthenaWorkGroup_disappears(t *testing.T) {
 				Config: testAccWorkGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkGroupExists(ctx, resourceName, &workgroup1),
-					acctest.CheckResourceDisappears(acctest.Provider, tfathena.ResourceWorkGroup(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfathena.ResourceWorkGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

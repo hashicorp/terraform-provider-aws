@@ -77,7 +77,7 @@ func TestAccNetworkManagerVPCAttachment_disappears(t *testing.T) {
 				Config: testAccVPCAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCAttachmentExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfnetworkmanager.ResourceVPCAttachment(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfnetworkmanager.ResourceVPCAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

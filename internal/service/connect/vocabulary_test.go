@@ -85,7 +85,7 @@ func testAccVocabulary_disappears(t *testing.T) {
 				Config: testAccVocabularyConfig_basic(rName, rName2, content, languageCode),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVocabularyExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfconnect.ResourceVocabulary(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfconnect.ResourceVocabulary(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

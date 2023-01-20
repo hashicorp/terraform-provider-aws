@@ -101,7 +101,7 @@ func TestAccRedshiftEndpointAccess_disappears(t *testing.T) {
 				Config: testAccEndpointAccessConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointAccessExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfredshift.ResourceEndpointAccess(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfredshift.ResourceEndpointAccess(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -125,7 +125,7 @@ func TestAccRedshiftEndpointAccess_disappears_cluster(t *testing.T) {
 				Config: testAccEndpointAccessConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointAccessExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfredshift.ResourceCluster(), "aws_redshift_cluster.test"),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfredshift.ResourceCluster(), "aws_redshift_cluster.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -76,7 +76,7 @@ func testAccVirtualNode_disappears(t *testing.T) {
 				Config: testAccVirtualNodeConfig_basic(meshName, vnName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVirtualNodeExists(ctx, resourceName, &vn),
-					acctest.CheckResourceDisappears(acctest.Provider, tfappmesh.ResourceVirtualNode(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappmesh.ResourceVirtualNode(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

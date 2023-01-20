@@ -67,7 +67,7 @@ func TestAccBatchComputeEnvironment_disappears(t *testing.T) {
 				Config: testAccComputeEnvironmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(ctx, resourceName, &ce),
-					acctest.CheckResourceDisappears(acctest.Provider, tfbatch.ResourceComputeEnvironment(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfbatch.ResourceComputeEnvironment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

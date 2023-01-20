@@ -185,8 +185,8 @@ func TestAccSageMakerCodeRepository_disappears(t *testing.T) {
 				Config: testAccCodeRepositoryConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCodeRepositoryExists(ctx, resourceName, &repo),
-					acctest.CheckResourceDisappears(acctest.Provider, tfsagemaker.ResourceCodeRepository(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfsagemaker.ResourceCodeRepository(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceCodeRepository(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceCodeRepository(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

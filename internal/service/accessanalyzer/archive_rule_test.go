@@ -138,7 +138,7 @@ func testAccAnalyzerArchiveRule_disappears(t *testing.T) {
 				Config: testAccArchiveRuleConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckArchiveRuleExists(ctx, resourceName, &archiveRule),
-					acctest.CheckResourceDisappears(acctest.Provider, tfaccessanalyzer.ResourceArchiveRule(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfaccessanalyzer.ResourceArchiveRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

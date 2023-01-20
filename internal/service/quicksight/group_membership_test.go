@@ -59,7 +59,7 @@ func TestAccQuickSightGroupMembership_disappears(t *testing.T) {
 				Config: testAccGroupMembershipConfig_basic(groupName, memberName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupMembershipExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfquicksight.ResourceGroupMembership(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfquicksight.ResourceGroupMembership(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

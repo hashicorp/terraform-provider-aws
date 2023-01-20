@@ -68,7 +68,7 @@ func testAccDelegatedAdministrator_disappears(t *testing.T) {
 				Config: testAccDelegatedAdministratorConfig_basic(servicePrincipal),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDelegatedAdministratorExists(ctx, resourceName, &organization),
-					acctest.CheckResourceDisappears(acctest.Provider, tforganizations.ResourceDelegatedAdministrator(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tforganizations.ResourceDelegatedAdministrator(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

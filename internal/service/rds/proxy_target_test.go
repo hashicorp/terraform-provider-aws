@@ -109,7 +109,7 @@ func TestAccRDSProxyTarget_disappears(t *testing.T) {
 				Config: testAccProxyTargetConfig_instance(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProxyTargetExists(ctx, resourceName, &dbProxyTarget),
-					acctest.CheckResourceDisappears(acctest.Provider, tfrds.ResourceProxyTarget(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfrds.ResourceProxyTarget(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

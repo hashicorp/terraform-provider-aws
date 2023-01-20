@@ -124,7 +124,7 @@ func TestAccAutoScalingGroup_disappears(t *testing.T) {
 				Config: testAccGroupConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &group),
-					acctest.CheckResourceDisappears(acctest.Provider, tfautoscaling.ResourceGroup(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfautoscaling.ResourceGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

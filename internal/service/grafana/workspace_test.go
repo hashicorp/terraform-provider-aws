@@ -205,7 +205,7 @@ func testAccWorkspace_disappears(t *testing.T) {
 				Config: testAccWorkspaceConfig_authenticationProvider(rName, "SAML"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWorkspaceExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfgrafana.ResourceWorkspace(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfgrafana.ResourceWorkspace(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

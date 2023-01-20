@@ -70,7 +70,7 @@ func testAccSpotDatafeedSubscription_disappears(t *testing.T) {
 				Config: testAccSpotDatafeedSubscriptionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSpotDatafeedSubscriptionExists(ctx, resourceName, &subscription),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceSpotDataFeedSubscription(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceSpotDataFeedSubscription(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

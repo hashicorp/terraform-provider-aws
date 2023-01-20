@@ -60,7 +60,7 @@ func TestAccServiceCatalogTagOptionResourceAssociation_disappears(t *testing.T) 
 				Config: testAccTagOptionResourceAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTagOptionResourceAssociationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfservicecatalog.ResourceTagOptionResourceAssociation(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfservicecatalog.ResourceTagOptionResourceAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

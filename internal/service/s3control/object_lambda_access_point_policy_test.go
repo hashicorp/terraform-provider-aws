@@ -60,7 +60,7 @@ func TestAccS3ControlObjectLambdaAccessPointPolicy_disappears(t *testing.T) {
 				Config: testAccObjectLambdaAccessPointPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectLambdaAccessPointPolicyExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfs3control.ResourceObjectLambdaAccessPointPolicy(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfs3control.ResourceObjectLambdaAccessPointPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -84,7 +84,7 @@ func TestAccS3ControlObjectLambdaAccessPointPolicy_Disappears_accessPoint(t *tes
 				Config: testAccObjectLambdaAccessPointPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectLambdaAccessPointPolicyExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfs3control.ResourceObjectLambdaAccessPoint(), accessPointResourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfs3control.ResourceObjectLambdaAccessPoint(), accessPointResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

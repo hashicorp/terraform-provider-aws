@@ -59,7 +59,7 @@ func TestAccBackupVaultNotification_disappears(t *testing.T) {
 				Config: testAccVaultNotificationsConfig_notification(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultNotificationExists(ctx, resourceName, &vault),
-					acctest.CheckResourceDisappears(acctest.Provider, tfbackup.ResourceVaultNotifications(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfbackup.ResourceVaultNotifications(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

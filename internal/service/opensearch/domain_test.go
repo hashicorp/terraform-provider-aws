@@ -1733,7 +1733,7 @@ func TestAccOpenSearchDomain_disappears(t *testing.T) {
 			{
 				Config: testAccDomainConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceDisappears(acctest.Provider, tfopensearch.ResourceDomain(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfopensearch.ResourceDomain(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

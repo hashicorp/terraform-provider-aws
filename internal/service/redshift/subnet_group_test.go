@@ -60,7 +60,7 @@ func TestAccRedshiftSubnetGroup_disappears(t *testing.T) {
 				Config: testAccSubnetGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetGroupExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfredshift.ResourceSubnetGroup(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfredshift.ResourceSubnetGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

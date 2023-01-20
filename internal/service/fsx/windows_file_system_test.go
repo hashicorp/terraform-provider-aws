@@ -220,7 +220,7 @@ func TestAccFSxWindowsFileSystem_disappears(t *testing.T) {
 				Config: testAccWindowsFileSystemConfig_subnetIDs1(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWindowsFileSystemExists(ctx, resourceName, &filesystem),
-					acctest.CheckResourceDisappears(acctest.Provider, tffsx.ResourceWindowsFileSystem(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tffsx.ResourceWindowsFileSystem(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

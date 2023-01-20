@@ -64,7 +64,7 @@ func testAccTransitGatewayRouteTableAssociation_disappears(t *testing.T) {
 				Config: testAccTransitGatewayRouteTableAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayRouteTableAssociationExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceTransitGatewayRouteTableAssociation(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceTransitGatewayRouteTableAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -153,7 +153,7 @@ func TestAccEC2LaunchTemplate_disappears(t *testing.T) {
 				Config: testAccLaunchTemplateConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchTemplateExists(ctx, resourceName, &launchTemplate),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceLaunchTemplate(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceLaunchTemplate(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

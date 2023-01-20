@@ -58,7 +58,7 @@ func TestAccRoute53ZoneAssociation_disappears(t *testing.T) {
 				Config: testAccZoneAssociationConfig_basic(domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckZoneAssociationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfroute53.ResourceZoneAssociation(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfroute53.ResourceZoneAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -83,7 +83,7 @@ func TestAccRoute53ZoneAssociation_Disappears_vpc(t *testing.T) {
 				Config: testAccZoneAssociationConfig_basic(domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckZoneAssociationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, ec2.ResourceVPC(), vpcResourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, ec2.ResourceVPC(), vpcResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -108,7 +108,7 @@ func TestAccRoute53ZoneAssociation_Disappears_zone(t *testing.T) {
 				Config: testAccZoneAssociationConfig_basic(domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckZoneAssociationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfroute53.ResourceZone(), route53ZoneResourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfroute53.ResourceZone(), route53ZoneResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -123,7 +123,7 @@ func testAccClientVPNNetworkAssociation_disappears(t *testing.T) {
 				Config: testAccClientVPNNetworkAssociationConfig_basic(t, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNNetworkAssociationExists(ctx, resourceName, &assoc),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceClientVPNNetworkAssociation(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceClientVPNNetworkAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

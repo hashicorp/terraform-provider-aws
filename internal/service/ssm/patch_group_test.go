@@ -50,7 +50,7 @@ func TestAccSSMPatchGroup_disappears(t *testing.T) {
 				Config: testAccPatchGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPatchGroupExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfssm.ResourcePatchGroup(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfssm.ResourcePatchGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

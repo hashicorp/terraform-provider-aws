@@ -355,7 +355,7 @@ func TestAccECRPublicRepository_disappears(t *testing.T) {
 				Config: testAccRepositoryConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfecrpublic.ResourceRepository(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfecrpublic.ResourceRepository(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -170,7 +170,7 @@ func TestAccRoute53ResolverFirewallRuleGroupAssociation_disappears(t *testing.T)
 				Config: testAccFirewallRuleGroupAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallRuleGroupAssociationExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfroute53resolver.ResourceFirewallRuleGroupAssociation(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfroute53resolver.ResourceFirewallRuleGroupAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

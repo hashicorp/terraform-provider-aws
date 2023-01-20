@@ -60,7 +60,7 @@ func testAccCluster_disappears(t *testing.T) {
 				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfroute53recoverycontrolconfig.ResourceCluster(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfroute53recoverycontrolconfig.ResourceCluster(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

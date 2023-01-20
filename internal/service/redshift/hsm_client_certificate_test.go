@@ -105,7 +105,7 @@ func TestAccRedshiftHSMClientCertificate_disappears(t *testing.T) {
 				Config: testAccHSMClientCertificateConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHSMClientCertificateExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfredshift.ResourceHSMClientCertificate(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfredshift.ResourceHSMClientCertificate(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

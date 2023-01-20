@@ -112,7 +112,7 @@ func TestAccECSService_disappears(t *testing.T) {
 				Config: testAccServiceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
-					acctest.CheckResourceDisappears(acctest.Provider, tfecs.ResourceService(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfecs.ResourceService(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -79,7 +79,7 @@ func testAccVirtualGateway_disappears(t *testing.T) {
 				Config: testAccVirtualGatewayConfig_basic(meshName, vgName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVirtualGatewayExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfappmesh.ResourceVirtualGateway(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappmesh.ResourceVirtualGateway(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

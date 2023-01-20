@@ -126,7 +126,7 @@ func TestAccCognitoIdentityPoolRolesAttachment_disappears(t *testing.T) {
 				Config: testAccPoolRolesAttachmentConfig_basic(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPoolRolesAttachmentExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcognitoidentity.ResourcePoolRolesAttachment(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcognitoidentity.ResourcePoolRolesAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

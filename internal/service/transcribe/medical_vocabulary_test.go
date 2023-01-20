@@ -170,7 +170,7 @@ func TestAccTranscribeMedicalVocabulary_disappears(t *testing.T) {
 				Config: testAccMedicalVocabularyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMedicalVocabularyExists(ctx, resourceName, &medicalVocabulary),
-					acctest.CheckResourceDisappears(acctest.Provider, tftranscribe.ResourceMedicalVocabulary(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tftranscribe.ResourceMedicalVocabulary(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

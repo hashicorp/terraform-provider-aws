@@ -72,7 +72,7 @@ func TestAccIdentityStoreGroup_disappears(t *testing.T) {
 				Config: testAccGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &group),
-					acctest.CheckResourceDisappears(acctest.Provider, tfidentitystore.ResourceGroup(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfidentitystore.ResourceGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

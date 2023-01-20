@@ -52,7 +52,7 @@ func testAccDataLakeSettings_disappears(t *testing.T) {
 				Config: testAccDataLakeSettingsConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataLakeSettingsExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tflakeformation.ResourceDataLakeSettings(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflakeformation.ResourceDataLakeSettings(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

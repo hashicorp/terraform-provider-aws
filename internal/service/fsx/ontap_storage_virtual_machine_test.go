@@ -151,7 +151,7 @@ func TestAccFSxOntapStorageVirtualMachine_disappears(t *testing.T) {
 				Config: testAccONTAPStorageVirtualMachineConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOntapStorageVirtualMachineExists(ctx, resourceName, &storageVirtualMachine),
-					acctest.CheckResourceDisappears(acctest.Provider, tffsx.ResourceOntapStorageVirtualMachine(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tffsx.ResourceOntapStorageVirtualMachine(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

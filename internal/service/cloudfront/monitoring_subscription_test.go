@@ -59,7 +59,7 @@ func TestAccCloudFrontMonitoringSubscription_disappears(t *testing.T) {
 				Config: testAccMonitoringSubscriptionConfig_basic("Enabled"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMonitoringSubscriptionExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcloudfront.ResourceMonitoringSubscription(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudfront.ResourceMonitoringSubscription(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

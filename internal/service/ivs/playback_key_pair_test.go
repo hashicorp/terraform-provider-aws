@@ -179,7 +179,7 @@ func testAccPlaybackKeyPair_disappears(t *testing.T) {
 				Config: testAccPlaybackKeyPairConfig_basic(publicKey),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlaybackKeyPairExists(ctx, resourceName, &playbackkeypair),
-					acctest.CheckResourceDisappears(acctest.Provider, tfivs.ResourcePlaybackKeyPair(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfivs.ResourcePlaybackKeyPair(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

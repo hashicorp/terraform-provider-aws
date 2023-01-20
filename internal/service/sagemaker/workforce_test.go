@@ -220,7 +220,7 @@ func testAccWorkforce_disappears(t *testing.T) {
 				Config: testAccWorkforceConfig_cognito(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkforceExists(ctx, resourceName, &workforce),
-					acctest.CheckResourceDisappears(acctest.Provider, tfsagemaker.ResourceWorkforce(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceWorkforce(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

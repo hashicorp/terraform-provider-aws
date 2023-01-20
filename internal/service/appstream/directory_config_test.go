@@ -92,7 +92,7 @@ func TestAccAppStreamDirectoryConfig_disappears(t *testing.T) {
 				Config: testAccDirectoryConfigConfig_basic(rName, domain, rUserName, rPassword, orgUnitDN),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDirectoryConfigExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfappstream.ResourceDirectoryConfig(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappstream.ResourceDirectoryConfig(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

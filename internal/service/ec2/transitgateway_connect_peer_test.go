@@ -65,7 +65,7 @@ func testAccTransitGatewayConnectPeer_disappears(t *testing.T) {
 				Config: testAccTransitGatewayConnectPeerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayConnectPeerExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceTransitGatewayConnectPeer(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceTransitGatewayConnectPeer(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

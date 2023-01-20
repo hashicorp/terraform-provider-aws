@@ -78,7 +78,7 @@ func TestAccLicenseManagerLicenseConfiguration_disappears(t *testing.T) {
 				Config: testAccLicenseConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLicenseConfigurationExists(ctx, resourceName, &licenseConfiguration),
-					acctest.CheckResourceDisappears(acctest.Provider, tflicensemanager.ResourceLicenseConfiguration(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflicensemanager.ResourceLicenseConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

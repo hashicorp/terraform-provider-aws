@@ -72,7 +72,7 @@ func TestAccShieldProtectionGroup_disappears(t *testing.T) {
 				Config: testAccProtectionGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProtectionGroupExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfshield.ResourceProtectionGroup(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfshield.ResourceProtectionGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

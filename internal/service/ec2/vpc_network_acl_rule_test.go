@@ -103,7 +103,7 @@ func TestAccVPCNetworkACLRule_disappears(t *testing.T) {
 				Config: testAccVPCNetworkACLRuleConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkACLRuleExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceNetworkACLRule(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceNetworkACLRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -126,7 +126,7 @@ func TestAccVPCNetworkACLRule_Disappears_networkACL(t *testing.T) {
 				Config: testAccVPCNetworkACLRuleConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkACLRuleExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceNetworkACL(), "aws_network_acl.test"),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceNetworkACL(), "aws_network_acl.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -149,7 +149,7 @@ func TestAccVPCNetworkACLRule_Disappears_ingressEgressSameNumber(t *testing.T) {
 				Config: testAccVPCNetworkACLRuleConfig_ingressEgressSameNumberMissing(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkACLRuleExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceNetworkACLRule(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceNetworkACLRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

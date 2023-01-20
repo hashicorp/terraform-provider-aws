@@ -187,7 +187,7 @@ func TestAccAPIGatewayDocumentationPart_disappears(t *testing.T) {
 				Config: testAccDocumentationPartConfig_basic(apiName, strconv.Quote(properties)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDocumentationPartExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(acctest.Provider, tfapigateway.ResourceDocumentationPart(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigateway.ResourceDocumentationPart(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

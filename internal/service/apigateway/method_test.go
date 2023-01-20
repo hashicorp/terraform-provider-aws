@@ -204,7 +204,7 @@ func TestAccAPIGatewayMethod_disappears(t *testing.T) {
 				Config: testAccMethodConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMethodExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(acctest.Provider, tfapigateway.ResourceMethod(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigateway.ResourceMethod(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

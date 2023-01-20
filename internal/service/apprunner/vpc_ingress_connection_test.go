@@ -68,7 +68,7 @@ func TestAccAppRunnerVPCIngressConnection_disappears(t *testing.T) {
 				Config: testAccVPCIngressConnectionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCIngressConnectionExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfapprunner.ResourceVPCIngressConnection(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapprunner.ResourceVPCIngressConnection(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

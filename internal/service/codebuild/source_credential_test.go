@@ -111,8 +111,8 @@ func TestAccCodeBuildSourceCredential_disappears(t *testing.T) {
 				Config: testAccSourceCredentialConfig_basic("PERSONAL_ACCESS_TOKEN", "GITHUB_ENTERPRISE", token),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSourceCredentialExists(ctx, resourceName, &sourceCredentialsInfo),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcodebuild.ResourceSourceCredential(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcodebuild.ResourceSourceCredential(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcodebuild.ResourceSourceCredential(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcodebuild.ResourceSourceCredential(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

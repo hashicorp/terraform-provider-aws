@@ -76,7 +76,7 @@ func TestAccSageMakerImageVersion_disappears(t *testing.T) {
 				Config: testAccImageVersionConfig_basic(rName, baseImage),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImageVersionExists(ctx, resourceName, &image),
-					acctest.CheckResourceDisappears(acctest.Provider, tfsagemaker.ResourceImageVersion(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceImageVersion(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -105,7 +105,7 @@ func TestAccSageMakerImageVersion_Disappears_image(t *testing.T) {
 				Config: testAccImageVersionConfig_basic(rName, baseImage),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImageVersionExists(ctx, resourceName, &image),
-					acctest.CheckResourceDisappears(acctest.Provider, tfsagemaker.ResourceImage(), "aws_sagemaker_image.test"),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceImage(), "aws_sagemaker_image.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},

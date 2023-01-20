@@ -147,7 +147,7 @@ func TestAccCognitoIDPRiskConfiguration_disappears_userPool(t *testing.T) {
 				Config: testAccRiskConfigurationConfig_riskException(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRiskConfigurationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcognitoidp.ResourceUserPool(), "aws_cognito_user_pool.test"),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcognitoidp.ResourceUserPool(), "aws_cognito_user_pool.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},

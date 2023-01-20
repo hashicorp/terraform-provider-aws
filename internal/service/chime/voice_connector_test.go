@@ -63,7 +63,7 @@ func TestAccChimeVoiceConnector_disappears(t *testing.T) {
 				Config: testAccVoiceConnectorConfig_basic(vcName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVoiceConnectorExists(ctx, resourceName, voiceConnector),
-					acctest.CheckResourceDisappears(acctest.Provider, tfchime.ResourceVoiceConnector(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfchime.ResourceVoiceConnector(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

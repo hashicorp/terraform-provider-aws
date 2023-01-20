@@ -127,7 +127,7 @@ func TestAccAPIGatewayRestAPI_disappears(t *testing.T) {
 				Config: testAccRestAPIConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRestAPIExists(ctx, resourceName, &restApi),
-					acctest.CheckResourceDisappears(acctest.Provider, tfapigateway.ResourceRestAPI(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigateway.ResourceRestAPI(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

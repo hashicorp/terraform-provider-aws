@@ -974,7 +974,7 @@ func TestAccNetworkFirewallRuleGroup_disappears(t *testing.T) {
 				Config: testAccRuleGroupConfig_basicSourceList(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &ruleGroup),
-					acctest.CheckResourceDisappears(acctest.Provider, tfnetworkfirewall.ResourceRuleGroup(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfnetworkfirewall.ResourceRuleGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

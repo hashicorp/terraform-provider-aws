@@ -64,7 +64,7 @@ func TestAccServiceCatalogProductPortfolioAssociation_disappears(t *testing.T) {
 				Config: testAccProductPortfolioAssociationConfig_basic(rName, domain, acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProductPortfolioAssociationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfservicecatalog.ResourceProductPortfolioAssociation(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfservicecatalog.ResourceProductPortfolioAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

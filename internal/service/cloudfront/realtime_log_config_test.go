@@ -74,7 +74,7 @@ func TestAccCloudFrontRealtimeLogConfig_disappears(t *testing.T) {
 				Config: testAccRealtimeLogConfigConfig_basic(rName, samplingRate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRealtimeLogConfigExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcloudfront.ResourceRealtimeLogConfig(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudfront.ResourceRealtimeLogConfig(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

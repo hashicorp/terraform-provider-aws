@@ -65,7 +65,7 @@ func TestAccLocationMap_disappears(t *testing.T) {
 				Config: testAccMapConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMapExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tflocation.ResourceMap(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflocation.ResourceMap(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

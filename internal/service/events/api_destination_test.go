@@ -196,7 +196,7 @@ func TestAccEventsAPIDestination_disappears(t *testing.T) {
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAPIDestinationExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfevents.ResourceAPIDestination(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfevents.ResourceAPIDestination(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

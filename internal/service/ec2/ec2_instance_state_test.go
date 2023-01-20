@@ -93,7 +93,7 @@ func TestAccEC2InstanceState_disappears_Instance(t *testing.T) {
 				Config: testAccInstanceStateConfig_basic(state, force),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceStateExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceInstance(), parentResourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceInstance(), parentResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

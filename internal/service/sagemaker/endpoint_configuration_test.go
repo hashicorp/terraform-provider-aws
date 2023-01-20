@@ -300,8 +300,8 @@ func TestAccSageMakerEndpointConfiguration_disappears(t *testing.T) {
 				Config: testAccEndpointConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointConfigurationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfsagemaker.ResourceEndpointConfiguration(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfsagemaker.ResourceEndpointConfiguration(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceEndpointConfiguration(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceEndpointConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

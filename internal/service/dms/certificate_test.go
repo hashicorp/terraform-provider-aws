@@ -58,7 +58,7 @@ func TestAccDMSCertificate_disappears(t *testing.T) {
 				Config: testAccCertificateConfig_basic(randId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCertificateExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfdms.ResourceCertificate(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdms.ResourceCertificate(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

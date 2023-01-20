@@ -67,7 +67,7 @@ func TestAccLocationGeofenceCollection_disappears(t *testing.T) {
 				Config: testAccGeofenceCollectionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGeofenceCollectionExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tflocation.ResourceGeofenceCollection(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflocation.ResourceGeofenceCollection(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

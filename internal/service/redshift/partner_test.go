@@ -61,7 +61,7 @@ func TestAccRedshiftPartner_disappears(t *testing.T) {
 				Config: testAccPartnerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPartnerExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfredshift.ResourcePartner(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfredshift.ResourcePartner(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -84,7 +84,7 @@ func TestAccRedshiftPartner_disappears_cluster(t *testing.T) {
 				Config: testAccPartnerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPartnerExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfredshift.ResourceCluster(), "aws_redshift_cluster.test"),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfredshift.ResourceCluster(), "aws_redshift_cluster.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -141,7 +141,7 @@ func TestAccGluePartition_disappears(t *testing.T) {
 				Config: testAccPartitionConfig_basic(rName, parValue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPartitionExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourcePartition(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglue.ResourcePartition(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -165,7 +165,7 @@ func TestAccGluePartition_Disappears_table(t *testing.T) {
 				Config: testAccPartitionConfig_basic(rName, parValue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPartitionExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourceCatalogTable(), "aws_glue_catalog_table.test"),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglue.ResourceCatalogTable(), "aws_glue_catalog_table.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -273,7 +273,7 @@ func TestAccDMSReplicationTask_disappears(t *testing.T) {
 				Config: testAccReplicationTaskConfig_basic(rName, tags),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationTaskExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfdms.ResourceReplicationTask(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdms.ResourceReplicationTask(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

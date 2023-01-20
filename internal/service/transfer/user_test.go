@@ -153,7 +153,7 @@ func testAccUser_disappears(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerExists(ctx, "aws_transfer_server.test", &serverConf),
 					testAccCheckUserExists(ctx, "aws_transfer_user.test", &userConf),
-					acctest.CheckResourceDisappears(acctest.Provider, tftransfer.ResourceUser(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tftransfer.ResourceUser(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

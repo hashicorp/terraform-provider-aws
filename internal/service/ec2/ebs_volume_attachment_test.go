@@ -190,7 +190,7 @@ func TestAccEC2EBSVolumeAttachment_disappears(t *testing.T) {
 					testAccCheckInstanceExists(ctx, "aws_instance.test", &i),
 					testAccCheckVolumeExists(ctx, "aws_ebs_volume.test", &v),
 					testAccCheckVolumeAttachmentExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceVolumeAttachment(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVolumeAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

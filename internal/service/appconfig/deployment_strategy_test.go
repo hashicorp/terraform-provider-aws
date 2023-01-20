@@ -145,7 +145,7 @@ func TestAccAppConfigDeploymentStrategy_disappears(t *testing.T) {
 				Config: testAccDeploymentStrategyConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentStrategyExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfappconfig.ResourceDeploymentStrategy(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappconfig.ResourceDeploymentStrategy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

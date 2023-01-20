@@ -55,7 +55,7 @@ func TestAccLightsailDomain_disappears(t *testing.T) {
 				Config: testAccDomainConfig_basic(lightsailDomainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					acctest.CheckResourceDisappears(testAccProviderLightsailDomain, tflightsail.ResourceDomain(), resourceName),
+					acctest.CheckResourceDisappears(ctx, testAccProviderLightsailDomain, tflightsail.ResourceDomain(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

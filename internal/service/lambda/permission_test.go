@@ -434,7 +434,7 @@ func TestAccLambdaPermission_disappears(t *testing.T) {
 			{
 				Config: testAccPermissionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceDisappears(acctest.Provider, tflambda.ResourcePermission(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflambda.ResourcePermission(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

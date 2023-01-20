@@ -67,7 +67,7 @@ func TestAccMemoryDBUser_disappears(t *testing.T) {
 				Config: testAccUserConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfmemorydb.ResourceUser(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfmemorydb.ResourceUser(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

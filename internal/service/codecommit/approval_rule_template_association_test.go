@@ -60,7 +60,7 @@ func TestAccCodeCommitApprovalRuleTemplateAssociation_disappears(t *testing.T) {
 				Config: testAccApprovalRuleTemplateAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApprovalRuleTemplateAssociationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcodecommit.ResourceApprovalRuleTemplateAssociation(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcodecommit.ResourceApprovalRuleTemplateAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -84,7 +84,7 @@ func TestAccCodeCommitApprovalRuleTemplateAssociation_Disappears_repository(t *t
 				Config: testAccApprovalRuleTemplateAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApprovalRuleTemplateAssociationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcodecommit.ResourceRepository(), repoResourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcodecommit.ResourceRepository(), repoResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -66,7 +66,7 @@ func testAccTransitGatewayMulticastDomain_disappears(t *testing.T) {
 				Config: testAccTransitGatewayMulticastDomainConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayMulticastDomainExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceTransitGatewayMulticastDomain(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceTransitGatewayMulticastDomain(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -122,7 +122,7 @@ func TestAccLogsGroup_disappears(t *testing.T) {
 				Config: testAccGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(ctx, t, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tflogs.ResourceGroup(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflogs.ResourceGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

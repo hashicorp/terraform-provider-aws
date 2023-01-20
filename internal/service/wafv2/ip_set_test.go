@@ -81,7 +81,7 @@ func TestAccWAFV2IPSet_disappears(t *testing.T) {
 				Config: testAccIPSetConfig_basic(ipSetName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPSetExists(ctx, resourceName, &r),
-					acctest.CheckResourceDisappears(acctest.Provider, tfwafv2.ResourceIPSet(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfwafv2.ResourceIPSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

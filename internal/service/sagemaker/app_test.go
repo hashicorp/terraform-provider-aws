@@ -231,7 +231,7 @@ func testAccApp_disappears(t *testing.T) {
 				Config: testAccAppConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppExists(ctx, resourceName, &app),
-					acctest.CheckResourceDisappears(acctest.Provider, tfsagemaker.ResourceApp(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceApp(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

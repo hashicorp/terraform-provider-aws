@@ -148,7 +148,7 @@ func TestAccLightsailLoadBalancerStickinessPolicy_disappears(t *testing.T) {
 				Config: testAccLoadBalancerStickinessPolicyConfig_basic(rName, enabled, cookieDuration),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerStickinessPolicyExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tflightsail.ResourceLoadBalancerStickinessPolicy(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflightsail.ResourceLoadBalancerStickinessPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

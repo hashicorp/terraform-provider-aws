@@ -75,7 +75,7 @@ func TestAccCognitoIDPUser_disappears(t *testing.T) {
 				Config: testAccUserConfig_basic(rUserPoolName, rUserName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, cognitoidp.ResourceUser(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, cognitoidp.ResourceUser(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

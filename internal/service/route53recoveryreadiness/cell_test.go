@@ -61,7 +61,7 @@ func TestAccRoute53RecoveryReadinessCell_disappears(t *testing.T) {
 				Config: testAccCellConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCellExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfroute53recoveryreadiness.ResourceCell(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfroute53recoveryreadiness.ResourceCell(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

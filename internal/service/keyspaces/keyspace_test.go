@@ -64,7 +64,7 @@ func TestAccKeyspacesKeyspace_disappears(t *testing.T) {
 				Config: testAccKeyspaceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyspaceExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfkeyspaces.ResourceKeyspace(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfkeyspaces.ResourceKeyspace(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

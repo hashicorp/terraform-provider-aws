@@ -319,7 +319,7 @@ func TestAccSFNStateMachine_disappears(t *testing.T) {
 				Config: testAccStateMachineConfig_basic(rName, 5),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExists(ctx, resourceName, &sm),
-					acctest.CheckResourceDisappears(acctest.Provider, tfsfn.ResourceStateMachine(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsfn.ResourceStateMachine(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

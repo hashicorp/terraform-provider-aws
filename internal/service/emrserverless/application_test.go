@@ -221,8 +221,8 @@ func TestAccEMRServerlessApplication_disappears(t *testing.T) {
 				Config: testAccApplicationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &application),
-					acctest.CheckResourceDisappears(acctest.Provider, tfemrserverless.ResourceApplication(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfemrserverless.ResourceApplication(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfemrserverless.ResourceApplication(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfemrserverless.ResourceApplication(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

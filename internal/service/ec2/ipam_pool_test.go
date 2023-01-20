@@ -92,7 +92,7 @@ func TestAccIPAMPool_disappears(t *testing.T) {
 				Config: testAccIPAMPoolConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMPoolExists(ctx, resourceName, &pool),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceIPAMPool(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceIPAMPool(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

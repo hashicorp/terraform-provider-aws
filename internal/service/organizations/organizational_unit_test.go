@@ -67,7 +67,7 @@ func testAccOrganizationalUnit_disappears(t *testing.T) {
 				Config: testAccOrganizationalUnitConfig_basic(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationalUnitExists(ctx, resourceName, &unit),
-					acctest.CheckResourceDisappears(acctest.Provider, tforganizations.ResourceOrganizationalUnit(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tforganizations.ResourceOrganizationalUnit(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

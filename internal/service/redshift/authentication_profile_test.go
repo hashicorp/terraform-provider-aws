@@ -65,7 +65,7 @@ func TestAccRedshiftAuthenticationProfile_disappears(t *testing.T) {
 				Config: testAccAuthenticationProfileConfig_basic(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAuthenticationProfileExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfredshift.ResourceAuthenticationProfile(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfredshift.ResourceAuthenticationProfile(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

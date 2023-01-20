@@ -122,7 +122,7 @@ func testAccClassificationJob_disappears(t *testing.T) {
 				Config: testAccClassificationJobConfig_nameGenerated(bucketName, macie2.JobTypeOneTime),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClassificationJobExists(ctx, resourceName, &macie2Output),
-					acctest.CheckResourceDisappears(acctest.Provider, tfmacie2.ResourceClassificationJob(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfmacie2.ResourceClassificationJob(), resourceName),
 				),
 			},
 		},

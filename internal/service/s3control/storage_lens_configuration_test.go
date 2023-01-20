@@ -76,7 +76,7 @@ func TestAccS3ControlStorageLensConfiguration_disappears(t *testing.T) {
 				Config: testAccStorageLensConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStorageLensConfigurationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfs3control.ResourceStorageLensConfiguration(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfs3control.ResourceStorageLensConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

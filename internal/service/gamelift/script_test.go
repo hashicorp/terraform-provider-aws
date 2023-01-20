@@ -141,8 +141,8 @@ func TestAccGameLiftScript_disappears(t *testing.T) {
 				Config: testAccScriptConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScriptExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(acctest.Provider, tfgamelift.ResourceScript(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfgamelift.ResourceScript(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfgamelift.ResourceScript(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfgamelift.ResourceScript(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

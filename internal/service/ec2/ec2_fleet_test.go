@@ -86,7 +86,7 @@ func TestAccEC2Fleet_disappears(t *testing.T) {
 				Config: testAccFleetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet1),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceFleet(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceFleet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

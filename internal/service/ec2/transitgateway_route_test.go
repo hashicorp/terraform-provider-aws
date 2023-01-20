@@ -129,7 +129,7 @@ func testAccTransitGatewayRoute_disappears(t *testing.T) {
 				Config: testAccTransitGatewayRouteConfig_destinationCIDRBlock(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayRouteExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceTransitGatewayRoute(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceTransitGatewayRoute(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -154,7 +154,7 @@ func testAccTransitGatewayRoute_disappears_TransitGatewayAttachment(t *testing.T
 				Config: testAccTransitGatewayRouteConfig_destinationCIDRBlock(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayRouteExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceTransitGatewayVPCAttachment(), transitGatewayVpcAttachmentResourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceTransitGatewayVPCAttachment(), transitGatewayVpcAttachmentResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

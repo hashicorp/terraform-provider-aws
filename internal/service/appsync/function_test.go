@@ -216,7 +216,7 @@ func testAccFunction_disappears(t *testing.T) {
 				Config: testAccFunctionConfig_basic(rName1, rName2, acctest.Region()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &config),
-					acctest.CheckResourceDisappears(acctest.Provider, tfappsync.ResourceFunction(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappsync.ResourceFunction(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

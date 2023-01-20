@@ -145,7 +145,7 @@ func testAccServer_disappears(t *testing.T) {
 				Config: testAccServerConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(acctest.Provider, tftransfer.ResourceServer(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tftransfer.ResourceServer(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

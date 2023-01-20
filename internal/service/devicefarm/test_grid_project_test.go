@@ -173,8 +173,8 @@ func TestAccDeviceFarmTestGridProject_disappears(t *testing.T) {
 				Config: testAccTestGridProjectConfig_project(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectTestGridProjectExists(ctx, resourceName, &proj),
-					acctest.CheckResourceDisappears(acctest.Provider, tfdevicefarm.ResourceTestGridProject(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfdevicefarm.ResourceTestGridProject(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdevicefarm.ResourceTestGridProject(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdevicefarm.ResourceTestGridProject(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

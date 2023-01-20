@@ -198,7 +198,7 @@ func testAccUserHierarchyStructure_disappears(t *testing.T) {
 				Config: testAccUserHierarchyStructureConfig_basic(rName, levelOneName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserHierarchyStructureExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfconnect.ResourceUserHierarchyStructure(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfconnect.ResourceUserHierarchyStructure(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

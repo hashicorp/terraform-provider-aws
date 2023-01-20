@@ -65,7 +65,7 @@ func TestAccFSxOpenzfsSnapshot_disappears(t *testing.T) {
 				Config: testAccOpenZFSSnapshotConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenzfsSnapshotExists(ctx, resourceName, &snapshot),
-					acctest.CheckResourceDisappears(acctest.Provider, tffsx.ResourceOpenzfsSnapshot(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tffsx.ResourceOpenzfsSnapshot(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

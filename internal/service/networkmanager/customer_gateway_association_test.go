@@ -69,7 +69,7 @@ func testAccCustomerGatewayAssociation_disappears(t *testing.T) {
 				Config: testAccCustomerGatewayAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomerGatewayAssociationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfnetworkmanager.ResourceCustomerGatewayAssociation(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfnetworkmanager.ResourceCustomerGatewayAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -94,8 +94,8 @@ func testAccCustomerGatewayAssociation_Disappears_customerGateway(t *testing.T) 
 				Config: testAccCustomerGatewayAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomerGatewayAssociationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceVPNConnection(), vpnConnectionResourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceCustomerGateway(), customerGatewayResourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPNConnection(), vpnConnectionResourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceCustomerGateway(), customerGatewayResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

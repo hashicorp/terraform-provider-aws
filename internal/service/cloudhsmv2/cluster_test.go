@@ -65,9 +65,9 @@ func testAccCluster_disappears(t *testing.T) {
 				Config: testAccClusterConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcloudhsmv2.ResourceCluster(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudhsmv2.ResourceCluster(), resourceName),
 					// Verify Delete error handling
-					acctest.CheckResourceDisappears(acctest.Provider, tfcloudhsmv2.ResourceCluster(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudhsmv2.ResourceCluster(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

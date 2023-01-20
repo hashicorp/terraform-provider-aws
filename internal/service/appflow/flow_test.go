@@ -200,7 +200,7 @@ func TestAccAppFlowFlow_disappears(t *testing.T) {
 				Config: testAccFlowConfig_basic(rSourceName, rDestinationName, rFlowName, scheduleStartTime),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowExists(ctx, resourceName, &flowOutput),
-					acctest.CheckResourceDisappears(acctest.Provider, tfappflow.ResourceFlow(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappflow.ResourceFlow(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -62,7 +62,7 @@ func TestAccAppRunnerConnection_disappears(t *testing.T) {
 				Config: testAccConnectionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfapprunner.ResourceConnection(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapprunner.ResourceConnection(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

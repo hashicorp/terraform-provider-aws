@@ -81,7 +81,7 @@ func testAccSSMDefaultPatchBaseline_disappears(t *testing.T) {
 				Config: testAccDefaultPatchBaselineConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDefaultPatchBaselineExists(ctx, resourceName, &defaultpatchbaseline),
-					acctest.CheckResourceDisappears(acctest.Provider, tfssm.ResourceDefaultPatchBaseline(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfssm.ResourceDefaultPatchBaseline(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -65,7 +65,7 @@ func TestAccAthenaDataCatalog_disappears(t *testing.T) {
 				Config: testAccDataCatalogConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataCatalogExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfathena.ResourceDataCatalog(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfathena.ResourceDataCatalog(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

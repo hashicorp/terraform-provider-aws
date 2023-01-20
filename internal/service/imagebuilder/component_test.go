@@ -73,7 +73,7 @@ func TestAccImageBuilderComponent_disappears(t *testing.T) {
 				Config: testAccComponentConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckComponentExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfimagebuilder.ResourceComponent(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfimagebuilder.ResourceComponent(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -88,7 +88,7 @@ func TestAccDSDirectory_disappears(t *testing.T) {
 				Config: testAccDirectoryConfig_basic(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDirectoryExists(ctx, resourceName, &ds),
-					acctest.CheckResourceDisappears(acctest.Provider, tfds.ResourceDirectory(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfds.ResourceDirectory(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

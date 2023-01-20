@@ -61,7 +61,7 @@ func TestAccSESV2ConfigurationSet_disappears(t *testing.T) {
 				Config: testAccConfigurationSetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationSetExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfsesv2.ResourceConfigurationSet(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsesv2.ResourceConfigurationSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -75,7 +75,7 @@ func TestAccEC2CapacityReservation_disappears(t *testing.T) {
 				Config: testAccCapacityReservationConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCapacityReservationExists(ctx, resourceName, &cr),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceCapacityReservation(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceCapacityReservation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

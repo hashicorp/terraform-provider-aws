@@ -271,7 +271,7 @@ func TestAccLightsailInstance_disappears(t *testing.T) {
 				Config: testAccInstanceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tflightsail.ResourceInstance(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflightsail.ResourceInstance(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -64,7 +64,7 @@ func TestAccSQSQueuePolicy_disappears(t *testing.T) {
 				Config: testAccQueuePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, queueResourceName, &queueAttributes),
-					acctest.CheckResourceDisappears(acctest.Provider, tfsqs.ResourceQueuePolicy(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsqs.ResourceQueuePolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -88,7 +88,7 @@ func TestAccSQSQueuePolicy_Disappears_queue(t *testing.T) {
 				Config: testAccQueuePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, queueResourceName, &queueAttributes),
-					acctest.CheckResourceDisappears(acctest.Provider, tfsqs.ResourceQueue(), queueResourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsqs.ResourceQueue(), queueResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

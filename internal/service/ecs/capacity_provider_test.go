@@ -70,7 +70,7 @@ func TestAccECSCapacityProvider_disappears(t *testing.T) {
 				Config: testAccCapacityProviderConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCapacityProviderExists(ctx, resourceName, &provider),
-					acctest.CheckResourceDisappears(acctest.Provider, tfecs.ResourceCapacityProvider(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfecs.ResourceCapacityProvider(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

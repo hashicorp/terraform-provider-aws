@@ -106,7 +106,7 @@ func TestAccRedshiftHSMConfiguration_disappears(t *testing.T) {
 				Config: testAccHSMConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHSMConfigurationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfredshift.ResourceHSMConfiguration(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfredshift.ResourceHSMConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

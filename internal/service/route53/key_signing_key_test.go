@@ -84,7 +84,7 @@ func TestAccRoute53KeySigningKey_disappears(t *testing.T) {
 				Config: testAccKeySigningKeyConfig_name(rName, domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccKeySigningKeyExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfroute53.ResourceKeySigningKey(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfroute53.ResourceKeySigningKey(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -59,7 +59,7 @@ func TestAccDynamoDBKinesisStreamingDestination_disappears(t *testing.T) {
 				Config: testAccKinesisStreamingDestinationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisStreamingDestinationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfdynamodb.ResourceKinesisStreamingDestination(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdynamodb.ResourceKinesisStreamingDestination(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -84,7 +84,7 @@ func TestAccDynamoDBKinesisStreamingDestination_Disappears_dynamoDBTable(t *test
 				Config: testAccKinesisStreamingDestinationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisStreamingDestinationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfdynamodb.ResourceTable(), tableResourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdynamodb.ResourceTable(), tableResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

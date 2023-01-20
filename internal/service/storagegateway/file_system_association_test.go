@@ -209,7 +209,7 @@ func TestAccStorageGatewayFileSystemAssociation_disappears(t *testing.T) {
 				Config: testAccFileSystemAssociationConfig_required(rName, domainName, username),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileSystemAssociationExists(ctx, resourceName, &fileSystemAssociation),
-					acctest.CheckResourceDisappears(acctest.Provider, tfstoragegateway.ResourceFileSystemAssociation(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfstoragegateway.ResourceFileSystemAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -235,7 +235,7 @@ func TestAccStorageGatewayFileSystemAssociation_Disappears_storageGateway(t *tes
 				Config: testAccFileSystemAssociationConfig_required(rName, domainName, username),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileSystemAssociationExists(ctx, resourceName, &fileSystemAssociation),
-					acctest.CheckResourceDisappears(acctest.Provider, tfstoragegateway.ResourceGateway(), "aws_storagegateway_gateway.test"),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfstoragegateway.ResourceGateway(), "aws_storagegateway_gateway.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -263,7 +263,7 @@ func TestAccStorageGatewayFileSystemAssociation_Disappears_fsxFileSystem(t *test
 				Config: testAccFileSystemAssociationConfig_required(rName, domainName, username),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileSystemAssociationExists(ctx, resourceName, &fileSystemAssociation),
-					acctest.CheckResourceDisappears(acctest.Provider, tffsx.ResourceWindowsFileSystem(), "aws_fsx_windows_file_system.test"),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tffsx.ResourceWindowsFileSystem(), "aws_fsx_windows_file_system.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},

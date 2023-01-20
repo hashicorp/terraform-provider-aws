@@ -79,7 +79,7 @@ func TestAccRDSClusterActivityStream_disappears(t *testing.T) {
 				Config: testAccClusterActivityStreamConfig_basic(clusterName, instanceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterActivityStreamExists(ctx, resourceName, &dbCluster),
-					acctest.CheckResourceDisappears(acctest.Provider, tfrds.ResourceClusterActivityStream(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfrds.ResourceClusterActivityStream(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

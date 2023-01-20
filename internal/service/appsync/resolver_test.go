@@ -129,7 +129,7 @@ func testAccResolver_disappears(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGraphQLAPIExists(ctx, appsyncGraphqlApiResourceName, &api1),
 					testAccCheckResolverExists(ctx, resourceName, &resolver1),
-					acctest.CheckResourceDisappears(acctest.Provider, tfappsync.ResourceResolver(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappsync.ResourceResolver(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

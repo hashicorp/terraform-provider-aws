@@ -349,7 +349,7 @@ func TestAccEvidentlyProject_disappears(t *testing.T) {
 				Config: testAccProjectConfig_basic(rName, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &project),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcloudwatchevidently.ResourceProject(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudwatchevidently.ResourceProject(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

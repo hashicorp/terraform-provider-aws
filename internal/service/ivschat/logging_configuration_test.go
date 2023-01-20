@@ -279,7 +279,7 @@ func TestAccIVSChatLoggingConfiguration_disappears(t *testing.T) {
 				Config: testAccLoggingConfigurationConfig_basic_s3(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingConfigurationExists(ctx, resourceName, &loggingconfiguration),
-					acctest.CheckResourceDisappears(acctest.Provider, tfivschat.ResourceLoggingConfiguration(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfivschat.ResourceLoggingConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

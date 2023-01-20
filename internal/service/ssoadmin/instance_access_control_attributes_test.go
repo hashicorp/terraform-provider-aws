@@ -70,7 +70,7 @@ func testAccInstanceAccessControlAttributes_disappears(t *testing.T) {
 				Config: testAccInstanceAccessControlAttributesConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceAccessControlAttributesExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfssoadmin.ResourceAccessControlAttributes(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfssoadmin.ResourceAccessControlAttributes(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

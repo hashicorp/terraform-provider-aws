@@ -66,7 +66,7 @@ func testAccClientVPNRoute_disappears(t *testing.T) {
 				Config: testAccClientVPNRouteConfig_basic(t, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNRouteExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceClientVPNRoute(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceClientVPNRoute(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

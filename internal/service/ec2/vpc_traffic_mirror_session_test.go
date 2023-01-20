@@ -153,7 +153,7 @@ func TestAccVPCTrafficMirrorSession_disappears(t *testing.T) {
 				Config: testAccVPCTrafficMirrorSessionConfig_basic(rName, session),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrafficMirrorSessionExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceTrafficMirrorSession(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceTrafficMirrorSession(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
