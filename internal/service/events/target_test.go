@@ -130,10 +130,9 @@ func TestAccEventsTarget_eventBusName(t *testing.T) {
 }
 
 func TestAccEventsTarget_eventBusARN(t *testing.T) {
-	ctx :=
-		// "ValidationException: Adding an EventBus as a target within an account is not allowed."
-		acctest.Context(t)
+	ctx := acctest.Context(t)
 
+	// "ValidationException: Adding an EventBus as a target within an account is not allowed."
 	if got, want := acctest.Partition(), endpoints.AwsUsGovPartitionID; got == want {
 		t.Skipf("EventBridge Target EventBus ARNs are not supported in %s partition", got)
 	}

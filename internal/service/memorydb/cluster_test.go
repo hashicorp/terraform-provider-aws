@@ -197,10 +197,9 @@ func TestAccMemoryDBCluster_namePrefix(t *testing.T) {
 	})
 }
 
+// Only the open-access ACL is permitted when TLS is disabled.
 func TestAccMemoryDBCluster_create_noTLS(t *testing.T) {
-	ctx :=
-		// Only the open-access ACL is permitted when TLS is disabled.
-		acctest.Context(t)
+	ctx := acctest.Context(t)
 
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_memorydb_cluster.test"
@@ -468,14 +467,13 @@ func TestAccMemoryDBCluster_Update_description(t *testing.T) {
 	})
 }
 
+// As of writing, 6.2 is the one and only MemoryDB engine version available,
+// so we cannot check upgrade behaviour.
+//
+// The API should allow upgrades with some unknown waiting time, and disallow
+// downgrades.
 func TestAccMemoryDBCluster_Update_engineVersion(t *testing.T) {
-	ctx :=
-		// As of writing, 6.2 is the one and only MemoryDB engine version available,
-		// so we cannot check upgrade behaviour.
-		//
-		// The API should allow upgrades with some unknown waiting time, and disallow
-		// downgrades.
-		acctest.Context(t)
+	ctx := acctest.Context(t)
 
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_memorydb_cluster.test"
@@ -592,11 +590,10 @@ func TestAccMemoryDBCluster_Update_nodeType(t *testing.T) {
 	})
 }
 
+// As updating MemoryDB clusters can be slow, scaling up and down have been
+// split into separate tests for timeout management
 func TestAccMemoryDBCluster_Update_numShards_scaleUp(t *testing.T) {
-	ctx :=
-		// As updating MemoryDB clusters can be slow, scaling up and down have been
-		// split into separate tests for timeout management
-		acctest.Context(t)
+	ctx := acctest.Context(t)
 
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_memorydb_cluster.test"
@@ -630,11 +627,10 @@ func TestAccMemoryDBCluster_Update_numShards_scaleUp(t *testing.T) {
 	})
 }
 
+// As updating MemoryDB clusters can be slow, scaling up and down have been
+// split into separate tests for timeout management
 func TestAccMemoryDBCluster_Update_numShards_scaleDown(t *testing.T) {
-	ctx :=
-		// As updating MemoryDB clusters can be slow, scaling up and down have been
-		// split into separate tests for timeout management
-		acctest.Context(t)
+	ctx := acctest.Context(t)
 
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_memorydb_cluster.test"
@@ -668,11 +664,10 @@ func TestAccMemoryDBCluster_Update_numShards_scaleDown(t *testing.T) {
 	})
 }
 
+// As updating MemoryDB clusters can be slow, scaling up and down have been
+// split into separate tests for timeout management
 func TestAccMemoryDBCluster_Update_numReplicasPerShard_scaleUp(t *testing.T) {
-	ctx :=
-		// As updating MemoryDB clusters can be slow, scaling up and down have been
-		// split into separate tests for timeout management
-		acctest.Context(t)
+	ctx := acctest.Context(t)
 
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_memorydb_cluster.test"
@@ -706,11 +701,10 @@ func TestAccMemoryDBCluster_Update_numReplicasPerShard_scaleUp(t *testing.T) {
 	})
 }
 
+// As updating MemoryDB clusters can be slow, scaling up and down have been
+// split into separate tests for timeout management
 func TestAccMemoryDBCluster_Update_numReplicasPerShard_scaleDown(t *testing.T) {
-	ctx :=
-		// As updating MemoryDB clusters can be slow, scaling up and down have been
-		// split into separate tests for timeout management
-		acctest.Context(t)
+	ctx := acctest.Context(t)
 
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_memorydb_cluster.test"
