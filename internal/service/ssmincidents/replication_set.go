@@ -169,7 +169,7 @@ func resourceReplicationSetRead(ctx context.Context, d *schema.ResourceData, met
 		return create.DiagError(names.SSMIncidents, create.ErrActionSetting, ResNameReplicationSet, d.Id(), err)
 	}
 
-	if diagErr := GetSetResourceTags(ctx, d, meta, conn, ResNameReplicationSet); diagErr != nil {
+	if diagErr := SetResourceDataTags(ctx, d, meta, conn, ResNameReplicationSet); diagErr != nil {
 		return diagErr
 	}
 
@@ -336,7 +336,7 @@ func updateRegionsInput(d *schema.ResourceData, in *ssmincidents.UpdateReplicati
 			newcmk := newVal["kms_key_arn"].(string)
 
 			if oldcmk != newcmk {
-				return fmt.Errorf("error: Incident Manager does not support updating Customer Managed Keys. To do this, remove the region, and then re-create it with the new key.")
+				return fmt.Errorf("error: Incident Manager does not support updating Customer Managed Keys. To do this, remove the region, and then re-create it with the new key")
 			}
 		}
 	}
@@ -374,10 +374,6 @@ func resourceReplicationSetImport(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	d.SetId(arn)
-
-	if diagErr := GetSetResourceTags(ctx, d, meta, conn, ResNameReplicationSet); diagErr != nil {
-		return nil, fmt.Errorf("tags could not be imported")
-	}
 
 	return []*schema.ResourceData{d}, nil
 }

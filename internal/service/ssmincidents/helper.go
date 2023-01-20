@@ -5,7 +5,6 @@ package ssmincidents
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/service/ssmincidents"
 )
@@ -17,10 +16,6 @@ func ConvertInterfaceMapToStringMap(in map[string]interface{}) map[string]string
 		result[k] = v.(string)
 	}
 	return result
-}
-
-func TrimQuotes(s string) string {
-	return strings.Trim(s, "\"")
 }
 
 func GetReplicationSetARN(ctx context.Context, conn *ssmincidents.Client) (string, error) {
