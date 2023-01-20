@@ -49,6 +49,7 @@ func init() {
 }
 
 func sweepResourceDefaultPatchBaselines(region string) error {
+	ctx := sweep.Context(region)
 	c, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
@@ -56,7 +57,6 @@ func sweepResourceDefaultPatchBaselines(region string) error {
 	client := c.(ssmClient)
 
 	conn := client.SSMClient()
-	ctx := context.Background()
 
 	var sweepables []sweep.Sweepable
 	var errs *multierror.Error
@@ -85,7 +85,7 @@ func sweepResourceDefaultPatchBaselines(region string) error {
 		}
 	}
 
-	if err := sweep.SweepOrchestrator(sweepables); err != nil {
+	if err := sweep.SweepOrchestratorWithContext(ctx, sweepables); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("sweeping Default Patch Baselines for %s: %w", region, err))
 	}
 
@@ -116,6 +116,7 @@ func (s defaultPatchBaselineSweeper) Delete(ctx context.Context, timeout time.Du
 }
 
 func sweepMaintenanceWindows(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
@@ -127,7 +128,7 @@ func sweepMaintenanceWindows(region string) error {
 	var sweeperErrs *multierror.Error
 
 	for {
-		output, err := conn.DescribeMaintenanceWindows(input)
+		output, err := conn.DescribeMaintenanceWindowsWithContext(ctx, input)
 
 		if sweep.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping SSM Maintenance Window sweep for %s: %s", region, err)
@@ -146,7 +147,7 @@ func sweepMaintenanceWindows(region string) error {
 
 			log.Printf("[INFO] Deleting SSM Maintenance Window: %s", id)
 
-			_, err := conn.DeleteMaintenanceWindow(input)
+			_, err := conn.DeleteMaintenanceWindowWithContext(ctx, input)
 
 			if tfawserr.ErrCodeEquals(err, ssm.ErrCodeDoesNotExistException) {
 				continue
@@ -171,6 +172,7 @@ func sweepMaintenanceWindows(region string) error {
 }
 
 func sweepResourcePatchBaselines(region string) error {
+	ctx := sweep.Context(region)
 	c, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
@@ -178,7 +180,6 @@ func sweepResourcePatchBaselines(region string) error {
 	client := c.(ssmClient)
 
 	conn := client.SSMClient()
-	ctx := context.Background()
 
 	var sweepables []sweep.Sweepable
 	var errs *multierror.Error
@@ -202,7 +203,7 @@ func sweepResourcePatchBaselines(region string) error {
 		}
 	}
 
-	if err := sweep.SweepOrchestrator(sweepables); err != nil {
+	if err := sweep.SweepOrchestratorWithContext(ctx, sweepables); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("sweeping Patch Baselines for %s: %w", region, err))
 	}
 
@@ -215,6 +216,7 @@ func sweepResourcePatchBaselines(region string) error {
 }
 
 func sweepResourceDataSyncs(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
@@ -227,7 +229,7 @@ func sweepResourceDataSyncs(region string) error {
 
 	input := &ssm.ListResourceDataSyncInput{}
 
-	err = conn.ListResourceDataSyncPages(input, func(page *ssm.ListResourceDataSyncOutput, lastPage bool) bool {
+	err = conn.ListResourceDataSyncPagesWithContext(ctx, input, func(page *ssm.ListResourceDataSyncOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -249,7 +251,7 @@ func sweepResourceDataSyncs(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("listing SSM Resource Data Sync for %s: %w", region, err))
 	}
 
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("sweeping SSM Resource Data Sync for %s: %w", region, err))
 	}
 
