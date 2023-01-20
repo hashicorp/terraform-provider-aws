@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -114,10 +115,12 @@ func ResourceFirewall() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"ip_addr_type": {
-							Type:     schema.TypeString,
-							Required: false,
-							Default: "IPV4"
+						"ip_address_type": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.StringInSlice(networkfirewall.IPAddressType_Values(), false),
+							Default:      networkfirewall.IPAddressTypeIpv4,
 						},
 					},
 				},
@@ -438,8 +441,8 @@ func expandSubnetMappings(l []interface{}) []*networkfirewall.SubnetMapping {
 			continue
 		}
 		mapping := &networkfirewall.SubnetMapping{
-			SubnetId: aws.String(tfMap["subnet_id"].(string)),
-			IPAddressType: aws.String(tfMap["ip_addr_type"].(string)),
+			SubnetId:      aws.String(tfMap["subnet_id"].(string)),
+			IPAddressType: aws.String(tfMap["ip_address_type"].(string)),
 		}
 		mappings = append(mappings, mapping)
 	}
@@ -508,8 +511,8 @@ func flattenSubnetMappings(sm []*networkfirewall.SubnetMapping) []interface{} {
 	mappings := make([]interface{}, 0, len(sm))
 	for _, s := range sm {
 		m := map[string]interface{}{
-			"subnet_id": aws.StringValue(s.SubnetId),
-			"ip_addr_type": aws.StringValue(s.IPAddressType),
+			"subnet_id":       aws.StringValue(s.SubnetId),
+			"ip_address_type": aws.StringValue(s.IPAddressType),
 		}
 		mappings = append(mappings, m)
 	}
@@ -527,6 +530,10 @@ func subnetMappingsHash(v interface{}) int {
 	if id, ok := tfMap["subnet_id"].(string); ok {
 		buf.WriteString(fmt.Sprintf("%s-", id))
 	}
+	if id, ok := tfMap["ip_address_type"].(string); ok {
+		buf.WriteString(fmt.Sprintf("%s-", id))
+	}
+
 	return create.StringHashcode(buf.String())
 }
 

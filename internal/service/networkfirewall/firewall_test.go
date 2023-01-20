@@ -48,6 +48,53 @@ func TestAccNetworkFirewallFirewall_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", vpcResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_mapping.*.subnet_id", subnetResourceName, "id"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "subnet_mapping.*.ip_address_type", networkfirewall.IPAddressTypeIpv4),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "update_token"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccNetworkFirewallFirewall_basic_dualstack_subnet(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_networkfirewall_firewall.test"
+	policyResourceName := "aws_networkfirewall_firewall_policy.test"
+	subnetResourceName := "aws_subnet.test"
+	vpcResourceName := "aws_vpc.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, networkfirewall.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFirewallDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFirewallConfig_basic_dualstack_subnet(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFirewallExists(resourceName),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "network-firewall", fmt.Sprintf("firewall/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "delete_protection", "false"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "firewall_policy_arn", policyResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_status.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_status.0.sync_states.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_status.0.sync_states.*.availability_zone", subnetResourceName, "availability_zone"),
+					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "firewall_status.0.sync_states.*", map[string]*regexp.Regexp{
+						"attachment.0.endpoint_id": regexp.MustCompile(`vpce-`),
+					}),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_status.0.sync_states.*.attachment.0.subnet_id", subnetResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", vpcResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_mapping.*.subnet_id", subnetResourceName, "id"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "subnet_mapping.*.ip_address_type", networkfirewall.IPAddressTypeDualstack),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "update_token"),
 				),
@@ -203,6 +250,7 @@ func TestAccNetworkFirewallFirewall_SubnetMappings_updateSubnet(t *testing.T) {
 					testAccCheckFirewallExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_mapping.*.subnet_id", subnetResourceName, "id"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "subnet_mapping.*.ip_address_type", networkfirewall.IPAddressTypeIpv4),
 				),
 			},
 			{
@@ -218,6 +266,54 @@ func TestAccNetworkFirewallFirewall_SubnetMappings_updateSubnet(t *testing.T) {
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_status.0.sync_states.*.attachment.0.subnet_id", updateSubnetResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_mapping.*.subnet_id", updateSubnetResourceName, "id"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "subnet_mapping.*.ip_address_type", networkfirewall.IPAddressTypeIpv4),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccNetworkFirewallFirewall_SubnetMappings_updateSubnet_dualstack(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_networkfirewall_firewall.test"
+	subnetResourceName := "aws_subnet.test"
+	updateSubnetResourceName := "aws_subnet.example"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, networkfirewall.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFirewallDestroy,
+		Steps: []resource.TestStep{
+
+			{
+				Config: testAccFirewallConfig_basic_dualstack_subnet(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFirewallExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_mapping.*.subnet_id", subnetResourceName, "id"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "subnet_mapping.*.ip_address_type", networkfirewall.IPAddressTypeDualstack),
+				),
+			},
+			{
+				Config: testAccFirewallConfig_updateSubnet_dualstack(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFirewallExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "firewall_status.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_status.0.sync_states.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_status.0.sync_states.*.availability_zone", updateSubnetResourceName, "availability_zone"),
+					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "firewall_status.0.sync_states.*", map[string]*regexp.Regexp{
+						"attachment.0.endpoint_id": regexp.MustCompile(`vpce-`),
+					}),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_status.0.sync_states.*.attachment.0.subnet_id", updateSubnetResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_mapping.*.subnet_id", updateSubnetResourceName, "id"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "subnet_mapping.*.ip_address_type", networkfirewall.IPAddressTypeDualstack),
 				),
 			},
 			{
@@ -247,6 +343,7 @@ func TestAccNetworkFirewallFirewall_SubnetMappings_updateMultipleSubnets(t *test
 					testAccCheckFirewallExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_mapping.*.subnet_id", subnetResourceName, "id"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "subnet_mapping.*.ip_address_type", networkfirewall.IPAddressTypeIpv4),
 				),
 			},
 			{
@@ -262,6 +359,7 @@ func TestAccNetworkFirewallFirewall_SubnetMappings_updateMultipleSubnets(t *test
 					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "2"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_mapping.*.subnet_id", subnetResourceName, "id"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_mapping.*.subnet_id", updateSubnetResourceName, "id"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "subnet_mapping.*.ip_address_type", networkfirewall.IPAddressTypeIpv4),
 				),
 			},
 			{
@@ -277,6 +375,69 @@ func TestAccNetworkFirewallFirewall_SubnetMappings_updateMultipleSubnets(t *test
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_status.0.sync_states.*.attachment.0.subnet_id", subnetResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_mapping.*.subnet_id", subnetResourceName, "id"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "subnet_mapping.*.ip_address_type", networkfirewall.IPAddressTypeIpv4),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccNetworkFirewallFirewall_SubnetMappings_updateMultipleSubnets_dualstack(t *testing.T) {
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_networkfirewall_firewall.test"
+	subnetResourceName := "aws_subnet.test"
+	updateSubnetResourceName := "aws_subnet.example"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, networkfirewall.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFirewallDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFirewallConfig_basic_dualstack_subnet(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFirewallExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_mapping.*.subnet_id", subnetResourceName, "id"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "subnet_mapping.*.ip_address_type", networkfirewall.IPAddressTypeDualstack),
+				),
+			},
+			{
+				Config: testAccFirewallConfig_updateMultipleSubnets_dualstack(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFirewallExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "firewall_status.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_status.0.sync_states.#", "2"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_status.0.sync_states.*.availability_zone", subnetResourceName, "availability_zone"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_status.0.sync_states.*.attachment.0.subnet_id", subnetResourceName, "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_status.0.sync_states.*.availability_zone", updateSubnetResourceName, "availability_zone"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_status.0.sync_states.*.attachment.0.subnet_id", updateSubnetResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "2"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_mapping.*.subnet_id", subnetResourceName, "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_mapping.*.subnet_id", updateSubnetResourceName, "id"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "subnet_mapping.*.ip_address_type", networkfirewall.IPAddressTypeDualstack),
+				),
+			},
+			{
+				Config: testAccFirewallConfig_basic_dualstack_subnet(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFirewallExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "firewall_status.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "firewall_status.0.sync_states.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_status.0.sync_states.*.availability_zone", subnetResourceName, "availability_zone"),
+					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "firewall_status.0.sync_states.*", map[string]*regexp.Regexp{
+						"attachment.0.endpoint_id": regexp.MustCompile(`vpce-`),
+					}),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_status.0.sync_states.*.attachment.0.subnet_id", subnetResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_mapping.*.subnet_id", subnetResourceName, "id"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "subnet_mapping.*.ip_address_type", networkfirewall.IPAddressTypeDualstack),
 				),
 			},
 			{
@@ -618,6 +779,86 @@ resource "aws_networkfirewall_firewall" "test" {
 
   subnet_mapping {
     subnet_id = aws_subnet.test.id
+  }
+}
+`, rName))
+}
+
+func testAccFirewallConfig_basic_dualstack_subnet(rName string) string {
+	return acctest.ConfigCompose(
+		testAccFirewallDependenciesConfig(rName),
+		fmt.Sprintf(`
+resource "aws_networkfirewall_firewall" "test" {
+  name                = %[1]q
+  firewall_policy_arn = aws_networkfirewall_firewall_policy.test.arn
+  vpc_id              = aws_vpc.test.id
+
+  subnet_mapping {
+    subnet_id = aws_subnet.test.id
+    ip_address_type = "DUALSTACK"
+  }
+}
+`, rName))
+}
+
+func testAccFirewallConfig_updateSubnet_dualstack(rName string) string {
+	return acctest.ConfigCompose(
+		testAccFirewallDependenciesConfig(rName),
+		fmt.Sprintf(`
+resource "aws_subnet" "example" {
+  availability_zone = data.aws_availability_zones.available.names[1]
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, 1)
+  vpc_id            = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_networkfirewall_firewall" "test" {
+  name                = %[1]q
+  firewall_policy_arn = aws_networkfirewall_firewall_policy.test.arn
+  vpc_id              = aws_vpc.test.id
+
+  subnet_mapping {
+    subnet_id = aws_subnet.example.id
+	ip_address_type = "DUALSTACK"
+  }
+}
+`, rName))
+}
+
+func testAccFirewallConfig_updateMultipleSubnets_dualstack(rName string) string {
+	return acctest.ConfigCompose(
+		testAccFirewallDependenciesConfig(rName),
+		fmt.Sprintf(`
+resource "aws_subnet" "example" {
+  availability_zone = data.aws_availability_zones.available.names[1]
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, 1)
+  vpc_id            = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "aws_networkfirewall_firewall" "test" {
+  name                = %[1]q
+  firewall_policy_arn = aws_networkfirewall_firewall_policy.test.arn
+  vpc_id              = aws_vpc.test.id
+
+  subnet_mapping {
+    subnet_id = aws_subnet.test.id
+	ip_address_type = "DUALSTACK"
+  }
+
+  subnet_mapping {
+    subnet_id = aws_subnet.example.id
+	ip_address_type = "DUALSTACK"
   }
 }
 `, rName))
