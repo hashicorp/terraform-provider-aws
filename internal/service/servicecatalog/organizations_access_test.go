@@ -20,7 +20,7 @@ func testAccOrganizationsAccess_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckOrganizationsEnabled(t)
+			acctest.PreCheckOrganizationsEnabled(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),

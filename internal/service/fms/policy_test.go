@@ -24,7 +24,7 @@ func testAccPolicy_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheckAdmin(ctx, t)
-			acctest.PreCheckOrganizationsEnabled(t)
+			acctest.PreCheckOrganizationsEnabled(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, fms.EndpointsID),
@@ -61,7 +61,7 @@ func testAccPolicy_cloudFrontDistribution(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheckAdmin(ctx, t)
-			acctest.PreCheckOrganizationsEnabled(t)
+			acctest.PreCheckOrganizationsEnabled(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, fms.EndpointsID),
@@ -95,7 +95,7 @@ func testAccPolicy_includeMap(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheckAdmin(ctx, t)
-			acctest.PreCheckOrganizationsEnabled(t)
+			acctest.PreCheckOrganizationsEnabled(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, fms.EndpointsID),
@@ -130,7 +130,7 @@ func testAccPolicy_update(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheckAdmin(ctx, t)
-			acctest.PreCheckOrganizationsEnabled(t)
+			acctest.PreCheckOrganizationsEnabled(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, fms.EndpointsID),
@@ -161,7 +161,7 @@ func testAccPolicy_resourceTags(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheckAdmin(ctx, t)
-			acctest.PreCheckOrganizationsEnabled(t)
+			acctest.PreCheckOrganizationsEnabled(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, fms.EndpointsID),
@@ -197,7 +197,7 @@ func testAccPolicy_tags(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheckAdmin(ctx, t)
-			acctest.PreCheckOrganizationsEnabled(t)
+			acctest.PreCheckOrganizationsEnabled(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, fms.EndpointsID),

@@ -760,15 +760,13 @@ func PreCheckOrganizationsAccount(ctx context.Context, t *testing.T) {
 	}
 
 	if err != nil {
-		t.Fatalf("error describing AWS Organization: %s", err)
+		t.Fatalf("describing AWS Organization: %s", err)
 	}
 
 	t.Skip("skipping tests; this AWS account must not be an existing member of an AWS Organization")
 }
 
-func PreCheckOrganizationsEnabled(t *testing.T) {
-	ctx := context.TODO()
-
+func PreCheckOrganizationsEnabled(ctx context.Context, t *testing.T) {
 	_, err := tforganizations.FindOrganization(ctx, Provider.Meta().(*conns.AWSClient).OrganizationsConn())
 
 	if tfresource.NotFound(err) {
@@ -776,7 +774,7 @@ func PreCheckOrganizationsEnabled(t *testing.T) {
 	}
 
 	if err != nil {
-		t.Fatalf("error describing AWS Organization: %s", err)
+		t.Fatalf("describing AWS Organization: %s", err)
 	}
 }
 
@@ -786,13 +784,13 @@ func PreCheckOrganizationManagementAccount(t *testing.T) {
 	organization, err := tforganizations.FindOrganization(ctx, Provider.Meta().(*conns.AWSClient).OrganizationsConn())
 
 	if err != nil {
-		t.Fatalf("error describing AWS Organization: %s", err)
+		t.Fatalf("describing AWS Organization: %s", err)
 	}
 
 	callerIdentity, err := tfsts.FindCallerIdentity(ctx, Provider.Meta().(*conns.AWSClient).STSConn())
 
 	if err != nil {
-		t.Fatalf("error getting current identity: %s", err)
+		t.Fatalf("getting current identity: %s", err)
 	}
 
 	if aws.StringValue(organization.MasterAccountId) != aws.StringValue(callerIdentity.Account) {
@@ -824,7 +822,7 @@ func PreCheckSSOAdminInstances(t *testing.T) {
 	}
 
 	if err != nil {
-		t.Fatalf("error listing SSO Instances: %s", err)
+		t.Fatalf("listing SSO Instances: %s", err)
 	}
 }
 
@@ -869,7 +867,7 @@ func PreCheckIAMServiceLinkedRole(t *testing.T, pathPrefix string) {
 	}
 
 	if err != nil {
-		t.Fatalf("error listing IAM roles: %s", err)
+		t.Fatalf("listing IAM roles: %s", err)
 	}
 
 	if role == nil {

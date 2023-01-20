@@ -240,7 +240,7 @@ func TestAccCloudFormationStackSetInstance_deploymentTargets(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheckStackSet(ctx, t)
-			acctest.PreCheckOrganizationsEnabled(t)
+			acctest.PreCheckOrganizationsEnabled(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(t)
 			acctest.PreCheckIAMServiceLinkedRole(t, "/aws-service-role/stacksets.cloudformation.amazonaws.com")
 		},
@@ -286,7 +286,7 @@ func TestAccCloudFormationStackSetInstance_operationPreferences(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheckStackSet(ctx, t)
-			acctest.PreCheckOrganizationsEnabled(t)
+			acctest.PreCheckOrganizationsEnabled(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(t)
 			acctest.PreCheckIAMServiceLinkedRole(t, "/aws-service-role/stacksets.cloudformation.amazonaws.com")
 		},

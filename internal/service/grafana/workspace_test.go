@@ -222,7 +222,7 @@ func testAccWorkspace_organization(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t)
-			acctest.PreCheckOrganizationsEnabled(t)
+			acctest.PreCheckOrganizationsEnabled(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, managedgrafana.EndpointsID),
