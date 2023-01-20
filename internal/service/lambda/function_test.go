@@ -355,7 +355,7 @@ func TestAccLambdaFunction_expectFilenameAndS3Attributes(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccFunctionConfig_noFilenameAndS3Attributes(rName),
-				ExpectError: regexp.MustCompile(`filename, s3_\* or image_uri attributes must be set`),
+				ExpectError: regexp.MustCompile("one of `filename,image_uri,s3_bucket` must be specified"),
 			},
 		},
 	})
@@ -1158,16 +1158,12 @@ func TestAccLambdaFunction_tracing(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	if got, want := acctest.Partition(), endpoints.AwsUsGovPartitionID; got == want {
-		t.Skipf("Lambda tracing config is not supported in %s partition", got)
-	}
-
 	var conf lambda.GetFunctionOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID) },
 		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFunctionDestroy,
@@ -3531,6 +3527,7 @@ func testAccFunctionConfig_zipNoHandler(rName string) string {
 		acctest.ConfigLambdaBase(rName, rName, rName),
 		fmt.Sprintf(`
 resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   runtime       = "nodejs16.x"
@@ -3543,6 +3540,7 @@ func testAccFunctionConfig_zipNoRuntime(rName string) string {
 		acctest.ConfigLambdaBase(rName, rName, rName),
 		fmt.Sprintf(`
 resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"

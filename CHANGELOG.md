@@ -1,4 +1,5 @@
-## 4.51.0 (Unreleased)
+## 4.52.0 (Unreleased)
+## 4.51.0 (January 19, 2023)
 
 NOTES:
 
@@ -6,27 +7,42 @@ NOTES:
 
 FEATURES:
 
+* **New Data Source:** `aws_auditmanager_control` ([#28967](https://github.com/hashicorp/terraform-provider-aws/issues/28967))
 * **New Resource:** `aws_datasync_location_object_storage` ([#23154](https://github.com/hashicorp/terraform-provider-aws/issues/23154))
+* **New Resource:** `aws_rds_export_task` ([#28831](https://github.com/hashicorp/terraform-provider-aws/issues/28831))
 * **New Resource:** `aws_resourceexplorer2_view` ([#28841](https://github.com/hashicorp/terraform-provider-aws/issues/28841))
 
 ENHANCEMENTS:
 
+* resource/aws_appmesh_gateway_route: Add `port` on the `match` attribute for routes ([#27799](https://github.com/hashicorp/terraform-provider-aws/issues/27799))
+* resource/aws_appmesh_route: Add `port` on the `weighted_target` attribute ([#27799](https://github.com/hashicorp/terraform-provider-aws/issues/27799))
+* resource/aws_appmesh_virtual_gateway: Add the functionality to be able specify multi listeners ([#27799](https://github.com/hashicorp/terraform-provider-aws/issues/27799))
+* resource/aws_appmesh_virtual_node: Add the functionality to be able specify multi listeners ([#27799](https://github.com/hashicorp/terraform-provider-aws/issues/27799))
+* resource/aws_appmesh_virtual_router: Add the functionality to be able specify multi listeners ([#27799](https://github.com/hashicorp/terraform-provider-aws/issues/27799))
 * resource/aws_apprunner_service: Add `source_configuration.code_repository.code_configuration.runtime_environment_secrets` and `source_configuration.image_repository.image_configuration.runtime_environment_secrets` argument ([#28871](https://github.com/hashicorp/terraform-provider-aws/issues/28871))
 * resource/aws_ce_anomaly_subscription: Add `threshold_expression` argument ([#28573](https://github.com/hashicorp/terraform-provider-aws/issues/28573))
 * resource/aws_grafana_workspace: Add `configuration` argument ([#28569](https://github.com/hashicorp/terraform-provider-aws/issues/28569))
 * resource/aws_imagbuilder_component: Add `skip_destroy` argument ([#28905](https://github.com/hashicorp/terraform-provider-aws/issues/28905))
 * resource/aws_lambda_event_source_mapping: Add `scaling_config` argument ([#28876](https://github.com/hashicorp/terraform-provider-aws/issues/28876))
+* resource/aws_lambda_function: Add configurable timeout for Update ([#28963](https://github.com/hashicorp/terraform-provider-aws/issues/28963))
 * resource/aws_rum_app_monitor: Add `custom_events` argument ([#28431](https://github.com/hashicorp/terraform-provider-aws/issues/28431))
+* resource/aws_servicecatalog_portfolio_share: Add `share_principals` argument ([#28619](https://github.com/hashicorp/terraform-provider-aws/issues/28619))
 
 BUG FIXES:
 
 * data-source/aws_eks_cluster: Add `outpost_config.control_plane_placement` attribute ([#28924](https://github.com/hashicorp/terraform-provider-aws/issues/28924))
 * data-source/aws_identitystore_group: Restore use of `ListGroups` API when `filter` is specified ([#28937](https://github.com/hashicorp/terraform-provider-aws/issues/28937))
 * data-source/aws_identitystore_user: Restore use of `ListUsers` API when `filter` is specified ([#28937](https://github.com/hashicorp/terraform-provider-aws/issues/28937))
+* data-source/aws_lambda_function: Fix `AccessDeniedException` errors in [AWS Regions where AWS Signer is not supported](https://docs.aws.amazon.com/general/latest/gr/signer.html#signer_lambda_region) ([#28963](https://github.com/hashicorp/terraform-provider-aws/issues/28963))
+* data-source/aws_lambda_function: Remove any qualifier from `invoke_arn` ([#28963](https://github.com/hashicorp/terraform-provider-aws/issues/28963))
 * resource/aws_appstream_image_builder: Fix IAM eventual consistency error for optional role ([#26677](https://github.com/hashicorp/terraform-provider-aws/issues/26677))
 * resource/aws_appstream_image_builder: Fix refresh error when `domain_join_info` and `vpc_config` are not empty ([#26677](https://github.com/hashicorp/terraform-provider-aws/issues/26677))
 * resource/aws_elasticsearch_domain: Prevent persistent `iops` diff ([#28901](https://github.com/hashicorp/terraform-provider-aws/issues/28901))
 * resource/aws_grafana_workspace: Fix updating `vpc_configuration` ([#28569](https://github.com/hashicorp/terraform-provider-aws/issues/28569))
+* resource/aws_iam_server_certificate: Avoid errors on delete when no error occurred ([#28968](https://github.com/hashicorp/terraform-provider-aws/issues/28968))
+* resource/aws_lambda_function: Don't persist invalid `filename`, `s3_bucket`, `s3_key` or `s3_object_version` values on resource Update ([#28963](https://github.com/hashicorp/terraform-provider-aws/issues/28963))
+* resource/aws_lambda_function: Retry `ResourceNotFoundException` errors on resource Create ([#28963](https://github.com/hashicorp/terraform-provider-aws/issues/28963))
+* resource/aws_lb_listener_certificate: Show errors in certain cases where they were previously only logged and resource was removed from state ([#28968](https://github.com/hashicorp/terraform-provider-aws/issues/28968))
 * resource/aws_opensearch_domain: Omit `throughput` and `iops` for unsupported volume types ([#28862](https://github.com/hashicorp/terraform-provider-aws/issues/28862))
 * resource/aws_sagemaker_app: Correctly list all apps so as not to lose track in an environment where there are many apps ([#28561](https://github.com/hashicorp/terraform-provider-aws/issues/28561))
 

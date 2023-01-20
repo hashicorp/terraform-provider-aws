@@ -68,6 +68,11 @@ func ResourcePortfolioShare() *schema.Resource {
 					return old == parts[len(parts)-1]
 				},
 			},
+			"share_principals": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"share_tag_options": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -92,11 +97,9 @@ func resourcePortfolioShareCreate(d *schema.ResourceData, meta interface{}) erro
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 
 	input := &servicecatalog.CreatePortfolioShareInput{
-		PortfolioId: aws.String(d.Get("portfolio_id").(string)),
-	}
-
-	if v, ok := d.GetOk("accept_language"); ok {
-		input.AcceptLanguage = aws.String(v.(string))
+		PortfolioId:     aws.String(d.Get("portfolio_id").(string)),
+		SharePrincipals: aws.Bool(d.Get("share_principals").(bool)),
+		AcceptLanguage:  aws.String(d.Get("accept_language").(string)),
 	}
 
 	if v, ok := d.GetOk("type"); ok && v.(string) == servicecatalog.DescribePortfolioShareTypeAccount {
@@ -185,23 +188,20 @@ func resourcePortfolioShareRead(d *schema.ResourceData, meta interface{}) error 
 
 	output, err := WaitPortfolioShareReady(conn, portfolioID, shareType, principalID, waitForAcceptance, d.Timeout(schema.TimeoutRead))
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Service Catalog Portfolio Share (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error describing Service Catalog Portfolio Share (%s): %w", d.Id(), err)
-	}
-
-	if output == nil {
-		return fmt.Errorf("error getting Service Catalog Portfolio Share (%s): empty response", d.Id())
+		return fmt.Errorf("readingService Catalog Portfolio Share (%s): %w", d.Id(), err)
 	}
 
 	d.Set("accepted", output.Accepted)
 	d.Set("portfolio_id", portfolioID)
 	d.Set("principal_id", output.PrincipalId)
+	d.Set("share_principals", output.SharePrincipals)
 	d.Set("share_tag_options", output.ShareTagOptions)
 	d.Set("type", output.Type)
 	d.Set("wait_for_acceptance", waitForAcceptance)
@@ -212,40 +212,55 @@ func resourcePortfolioShareRead(d *schema.ResourceData, meta interface{}) error 
 func resourcePortfolioShareUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 
-	if d.HasChanges("accept_language", "share_tag_options") {
-		input := &servicecatalog.UpdatePortfolioShareInput{
-			PortfolioId: aws.String(d.Get("portfolio_id").(string)),
+	input := &servicecatalog.UpdatePortfolioShareInput{
+		PortfolioId:    aws.String(d.Get("portfolio_id").(string)),
+		AcceptLanguage: aws.String(d.Get("accept_language").(string)),
+	}
+
+	if d.HasChange("share_principals") {
+		input.SharePrincipals = aws.Bool(d.Get("share_principals").(bool))
+	}
+
+	if d.HasChange("share_tag_options") {
+		input.ShareTagOptions = aws.Bool(d.Get("share_tag_options").(bool))
+	}
+
+	if v, ok := d.GetOk("type"); ok && v.(string) == servicecatalog.DescribePortfolioShareTypeAccount {
+		input.AccountId = aws.String(d.Get("principal_id").(string))
+	} else {
+		orgNode := &servicecatalog.OrganizationNode{}
+		orgNode.Value = aws.String(d.Get("principal_id").(string))
+
+		if v.(string) == servicecatalog.DescribePortfolioShareTypeOrganizationMemberAccount {
+			// portfolio_share type ORGANIZATION_MEMBER_ACCOUNT = org node type ACCOUNT
+			orgNode.Type = aws.String(servicecatalog.OrganizationNodeTypeAccount)
+		} else {
+			orgNode.Type = aws.String(d.Get("type").(string))
 		}
 
-		if v, ok := d.GetOk("accept_language"); ok {
-			input.AcceptLanguage = aws.String(v.(string))
-		}
+		input.OrganizationNode = orgNode
+	}
 
-		if v, ok := d.GetOk("share_tag_options"); ok {
-			input.ShareTagOptions = aws.Bool(v.(bool))
-		}
+	err := resource.Retry(d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
+		_, err := conn.UpdatePortfolioShare(input)
 
-		err := resource.Retry(d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
-			_, err := conn.UpdatePortfolioShare(input)
-
-			if tfawserr.ErrMessageContains(err, servicecatalog.ErrCodeInvalidParametersException, "profile does not exist") {
-				return resource.RetryableError(err)
-			}
-
-			if err != nil {
-				return resource.NonRetryableError(err)
-			}
-
-			return nil
-		})
-
-		if tfresource.TimedOut(err) {
-			_, err = conn.UpdatePortfolioShare(input)
+		if tfawserr.ErrMessageContains(err, servicecatalog.ErrCodeInvalidParametersException, "profile does not exist") {
+			return resource.RetryableError(err)
 		}
 
 		if err != nil {
-			return fmt.Errorf("error updating Service Catalog Portfolio Share (%s): %w", d.Id(), err)
+			return resource.NonRetryableError(err)
 		}
+
+		return nil
+	})
+
+	if tfresource.TimedOut(err) {
+		_, err = conn.UpdatePortfolioShare(input)
+	}
+
+	if err != nil {
+		return fmt.Errorf("error updating Service Catalog Portfolio Share (%s): %w", d.Id(), err)
 	}
 
 	return resourcePortfolioShareRead(d, meta)

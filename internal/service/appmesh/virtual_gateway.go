@@ -278,7 +278,6 @@ func ResourceVirtualGateway() *schema.Resource {
 							Type:     schema.TypeList,
 							Required: true,
 							MinItems: 1,
-							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"connection_pool": {
@@ -302,11 +301,6 @@ func ResourceVirtualGateway() *schema.Resource {
 															},
 														},
 													},
-													ExactlyOneOf: []string{
-														"spec.0.listener.0.connection_pool.0.grpc",
-														"spec.0.listener.0.connection_pool.0.http",
-														"spec.0.listener.0.connection_pool.0.http2",
-													},
 												},
 
 												"http": {
@@ -329,11 +323,6 @@ func ResourceVirtualGateway() *schema.Resource {
 															},
 														},
 													},
-													ExactlyOneOf: []string{
-														"spec.0.listener.0.connection_pool.0.grpc",
-														"spec.0.listener.0.connection_pool.0.http",
-														"spec.0.listener.0.connection_pool.0.http2",
-													},
 												},
 
 												"http2": {
@@ -349,11 +338,6 @@ func ResourceVirtualGateway() *schema.Resource {
 																ValidateFunc: validation.IntAtLeast(1),
 															},
 														},
-													},
-													ExactlyOneOf: []string{
-														"spec.0.listener.0.connection_pool.0.grpc",
-														"spec.0.listener.0.connection_pool.0.http",
-														"spec.0.listener.0.connection_pool.0.http2",
 													},
 												},
 											},
@@ -462,11 +446,6 @@ func ResourceVirtualGateway() *schema.Resource {
 																		},
 																	},
 																},
-																ExactlyOneOf: []string{
-																	"spec.0.listener.0.tls.0.certificate.0.acm",
-																	"spec.0.listener.0.tls.0.certificate.0.file",
-																	"spec.0.listener.0.tls.0.certificate.0.sds",
-																},
 															},
 
 															"file": {
@@ -489,11 +468,6 @@ func ResourceVirtualGateway() *schema.Resource {
 																		},
 																	},
 																},
-																ExactlyOneOf: []string{
-																	"spec.0.listener.0.tls.0.certificate.0.acm",
-																	"spec.0.listener.0.tls.0.certificate.0.file",
-																	"spec.0.listener.0.tls.0.certificate.0.sds",
-																},
 															},
 
 															"sds": {
@@ -508,11 +482,6 @@ func ResourceVirtualGateway() *schema.Resource {
 																			Required: true,
 																		},
 																	},
-																},
-																ExactlyOneOf: []string{
-																	"spec.0.listener.0.tls.0.certificate.0.acm",
-																	"spec.0.listener.0.tls.0.certificate.0.file",
-																	"spec.0.listener.0.tls.0.certificate.0.sds",
 																},
 															},
 														},
@@ -580,10 +549,6 @@ func ResourceVirtualGateway() *schema.Resource {
 																					},
 																				},
 																			},
-																			ExactlyOneOf: []string{
-																				"spec.0.listener.0.tls.0.validation.0.trust.0.file",
-																				"spec.0.listener.0.tls.0.validation.0.trust.0.sds",
-																			},
 																		},
 
 																		"sds": {
@@ -599,10 +564,6 @@ func ResourceVirtualGateway() *schema.Resource {
 																						ValidateFunc: validation.StringLenBetween(1, 255),
 																					},
 																				},
-																			},
-																			ExactlyOneOf: []string{
-																				"spec.0.listener.0.tls.0.validation.0.trust.0.file",
-																				"spec.0.listener.0.tls.0.validation.0.trust.0.sds",
 																			},
 																		},
 																	},
@@ -1308,142 +1269,143 @@ func flattenVirtualGatewaySpec(spec *appmesh.VirtualGatewaySpec) []interface{} {
 		mSpec["backend_defaults"] = []interface{}{mBackendDefaults}
 	}
 
-	if spec.Listeners != nil && spec.Listeners[0] != nil {
-		// Per schema definition, set at most 1 Listener
-		listener := spec.Listeners[0]
-		mListener := map[string]interface{}{}
+	if spec.Listeners != nil && len(spec.Listeners) > 0 {
+		var mListeners []interface{}
+		for _, listener := range spec.Listeners {
+			mListener := map[string]interface{}{}
 
-		if connectionPool := listener.ConnectionPool; connectionPool != nil {
-			mConnectionPool := map[string]interface{}{}
+			if connectionPool := listener.ConnectionPool; connectionPool != nil {
+				mConnectionPool := map[string]interface{}{}
 
-			if grpcConnectionPool := connectionPool.Grpc; grpcConnectionPool != nil {
-				mGrpcConnectionPool := map[string]interface{}{
-					"max_requests": int(aws.Int64Value(grpcConnectionPool.MaxRequests)),
-				}
-				mConnectionPool["grpc"] = []interface{}{mGrpcConnectionPool}
-			}
-
-			if httpConnectionPool := connectionPool.Http; httpConnectionPool != nil {
-				mHttpConnectionPool := map[string]interface{}{
-					"max_connections":      int(aws.Int64Value(httpConnectionPool.MaxConnections)),
-					"max_pending_requests": int(aws.Int64Value(httpConnectionPool.MaxPendingRequests)),
-				}
-				mConnectionPool["http"] = []interface{}{mHttpConnectionPool}
-			}
-
-			if http2ConnectionPool := connectionPool.Http2; http2ConnectionPool != nil {
-				mHttp2ConnectionPool := map[string]interface{}{
-					"max_requests": int(aws.Int64Value(http2ConnectionPool.MaxRequests)),
-				}
-				mConnectionPool["http2"] = []interface{}{mHttp2ConnectionPool}
-			}
-
-			mListener["connection_pool"] = []interface{}{mConnectionPool}
-		}
-
-		if healthCheck := listener.HealthCheck; healthCheck != nil {
-			mHealthCheck := map[string]interface{}{
-				"healthy_threshold":   int(aws.Int64Value(healthCheck.HealthyThreshold)),
-				"interval_millis":     int(aws.Int64Value(healthCheck.IntervalMillis)),
-				"path":                aws.StringValue(healthCheck.Path),
-				"port":                int(aws.Int64Value(healthCheck.Port)),
-				"protocol":            aws.StringValue(healthCheck.Protocol),
-				"timeout_millis":      int(aws.Int64Value(healthCheck.TimeoutMillis)),
-				"unhealthy_threshold": int(aws.Int64Value(healthCheck.UnhealthyThreshold)),
-			}
-			mListener["health_check"] = []interface{}{mHealthCheck}
-		}
-
-		if portMapping := listener.PortMapping; portMapping != nil {
-			mPortMapping := map[string]interface{}{
-				"port":     int(aws.Int64Value(portMapping.Port)),
-				"protocol": aws.StringValue(portMapping.Protocol),
-			}
-			mListener["port_mapping"] = []interface{}{mPortMapping}
-		}
-
-		if tls := listener.Tls; tls != nil {
-			mTls := map[string]interface{}{
-				"mode": aws.StringValue(tls.Mode),
-			}
-
-			if certificate := tls.Certificate; certificate != nil {
-				mCertificate := map[string]interface{}{}
-
-				if acm := certificate.Acm; acm != nil {
-					mAcm := map[string]interface{}{
-						"certificate_arn": aws.StringValue(acm.CertificateArn),
+				if grpcConnectionPool := connectionPool.Grpc; grpcConnectionPool != nil {
+					mGrpcConnectionPool := map[string]interface{}{
+						"max_requests": int(aws.Int64Value(grpcConnectionPool.MaxRequests)),
 					}
-
-					mCertificate["acm"] = []interface{}{mAcm}
+					mConnectionPool["grpc"] = []interface{}{mGrpcConnectionPool}
 				}
 
-				if file := certificate.File; file != nil {
-					mFile := map[string]interface{}{
-						"certificate_chain": aws.StringValue(file.CertificateChain),
-						"private_key":       aws.StringValue(file.PrivateKey),
+				if httpConnectionPool := connectionPool.Http; httpConnectionPool != nil {
+					mHttpConnectionPool := map[string]interface{}{
+						"max_connections":      int(aws.Int64Value(httpConnectionPool.MaxConnections)),
+						"max_pending_requests": int(aws.Int64Value(httpConnectionPool.MaxPendingRequests)),
 					}
-
-					mCertificate["file"] = []interface{}{mFile}
+					mConnectionPool["http"] = []interface{}{mHttpConnectionPool}
 				}
 
-				if sds := certificate.Sds; sds != nil {
-					mSds := map[string]interface{}{
-						"secret_name": aws.StringValue(sds.SecretName),
+				if http2ConnectionPool := connectionPool.Http2; http2ConnectionPool != nil {
+					mHttp2ConnectionPool := map[string]interface{}{
+						"max_requests": int(aws.Int64Value(http2ConnectionPool.MaxRequests)),
 					}
-
-					mCertificate["sds"] = []interface{}{mSds}
+					mConnectionPool["http2"] = []interface{}{mHttp2ConnectionPool}
 				}
 
-				mTls["certificate"] = []interface{}{mCertificate}
+				mListener["connection_pool"] = []interface{}{mConnectionPool}
 			}
 
-			if validation := tls.Validation; validation != nil {
-				mValidation := map[string]interface{}{}
+			if healthCheck := listener.HealthCheck; healthCheck != nil {
+				mHealthCheck := map[string]interface{}{
+					"healthy_threshold":   int(aws.Int64Value(healthCheck.HealthyThreshold)),
+					"interval_millis":     int(aws.Int64Value(healthCheck.IntervalMillis)),
+					"path":                aws.StringValue(healthCheck.Path),
+					"port":                int(aws.Int64Value(healthCheck.Port)),
+					"protocol":            aws.StringValue(healthCheck.Protocol),
+					"timeout_millis":      int(aws.Int64Value(healthCheck.TimeoutMillis)),
+					"unhealthy_threshold": int(aws.Int64Value(healthCheck.UnhealthyThreshold)),
+				}
+				mListener["health_check"] = []interface{}{mHealthCheck}
+			}
 
-				if subjectAlternativeNames := validation.SubjectAlternativeNames; subjectAlternativeNames != nil {
-					mSubjectAlternativeNames := map[string]interface{}{}
+			if portMapping := listener.PortMapping; portMapping != nil {
+				mPortMapping := map[string]interface{}{
+					"port":     int(aws.Int64Value(portMapping.Port)),
+					"protocol": aws.StringValue(portMapping.Protocol),
+				}
+				mListener["port_mapping"] = []interface{}{mPortMapping}
+			}
 
-					if match := subjectAlternativeNames.Match; match != nil {
-						mMatch := map[string]interface{}{
-							"exact": flex.FlattenStringSet(match.Exact),
+			if tls := listener.Tls; tls != nil {
+				mTls := map[string]interface{}{
+					"mode": aws.StringValue(tls.Mode),
+				}
+
+				if certificate := tls.Certificate; certificate != nil {
+					mCertificate := map[string]interface{}{}
+
+					if acm := certificate.Acm; acm != nil {
+						mAcm := map[string]interface{}{
+							"certificate_arn": aws.StringValue(acm.CertificateArn),
 						}
 
-						mSubjectAlternativeNames["match"] = []interface{}{mMatch}
+						mCertificate["acm"] = []interface{}{mAcm}
 					}
 
-					mValidation["subject_alternative_names"] = []interface{}{mSubjectAlternativeNames}
-				}
-
-				if trust := validation.Trust; trust != nil {
-					mTrust := map[string]interface{}{}
-
-					if file := trust.File; file != nil {
+					if file := certificate.File; file != nil {
 						mFile := map[string]interface{}{
 							"certificate_chain": aws.StringValue(file.CertificateChain),
+							"private_key":       aws.StringValue(file.PrivateKey),
 						}
 
-						mTrust["file"] = []interface{}{mFile}
+						mCertificate["file"] = []interface{}{mFile}
 					}
 
-					if sds := trust.Sds; sds != nil {
+					if sds := certificate.Sds; sds != nil {
 						mSds := map[string]interface{}{
 							"secret_name": aws.StringValue(sds.SecretName),
 						}
 
-						mTrust["sds"] = []interface{}{mSds}
+						mCertificate["sds"] = []interface{}{mSds}
 					}
 
-					mValidation["trust"] = []interface{}{mTrust}
+					mTls["certificate"] = []interface{}{mCertificate}
 				}
 
-				mTls["validation"] = []interface{}{mValidation}
+				if validation := tls.Validation; validation != nil {
+					mValidation := map[string]interface{}{}
+
+					if subjectAlternativeNames := validation.SubjectAlternativeNames; subjectAlternativeNames != nil {
+						mSubjectAlternativeNames := map[string]interface{}{}
+
+						if match := subjectAlternativeNames.Match; match != nil {
+							mMatch := map[string]interface{}{
+								"exact": flex.FlattenStringSet(match.Exact),
+							}
+
+							mSubjectAlternativeNames["match"] = []interface{}{mMatch}
+						}
+
+						mValidation["subject_alternative_names"] = []interface{}{mSubjectAlternativeNames}
+					}
+
+					if trust := validation.Trust; trust != nil {
+						mTrust := map[string]interface{}{}
+
+						if file := trust.File; file != nil {
+							mFile := map[string]interface{}{
+								"certificate_chain": aws.StringValue(file.CertificateChain),
+							}
+
+							mTrust["file"] = []interface{}{mFile}
+						}
+
+						if sds := trust.Sds; sds != nil {
+							mSds := map[string]interface{}{
+								"secret_name": aws.StringValue(sds.SecretName),
+							}
+
+							mTrust["sds"] = []interface{}{mSds}
+						}
+
+						mValidation["trust"] = []interface{}{mTrust}
+					}
+
+					mTls["validation"] = []interface{}{mValidation}
+				}
+
+				mListener["tls"] = []interface{}{mTls}
 			}
-
-			mListener["tls"] = []interface{}{mTls}
+			mListeners = append(mListeners, mListener)
 		}
-
-		mSpec["listener"] = []interface{}{mListener}
+		mSpec["listener"] = mListeners
 	}
 
 	if logging := spec.Logging; logging != nil {
