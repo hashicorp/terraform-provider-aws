@@ -223,7 +223,7 @@ func testAccWorkspace_organization(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t)
 			acctest.PreCheckOrganizationsEnabled(ctx, t)
-			acctest.PreCheckOrganizationManagementAccount(t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, managedgrafana.EndpointsID),
 		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx),

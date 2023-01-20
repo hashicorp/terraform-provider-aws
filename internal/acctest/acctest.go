@@ -778,9 +778,7 @@ func PreCheckOrganizationsEnabled(ctx context.Context, t *testing.T) {
 	}
 }
 
-func PreCheckOrganizationManagementAccount(t *testing.T) {
-	ctx := context.TODO()
-
+func PreCheckOrganizationManagementAccount(ctx context.Context, t *testing.T) {
 	organization, err := tforganizations.FindOrganization(ctx, Provider.Meta().(*conns.AWSClient).OrganizationsConn())
 
 	if err != nil {
