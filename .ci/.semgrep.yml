@@ -840,24 +840,8 @@ rules:
         - internal/
     patterns:
       - pattern-either:
-          - pattern: if $AWSERR, $OK := $ORIGINALERR.(awserr.Error); $OK && ... { $BODY }
-          - pattern: |
-              if $AWSERR, $OK := $ORIGINALERR.(awserr.Error); $OK {
-                ...
-              }
-          - pattern: |
-              $AWSERR, $OK := $ORIGINALERR.(awserr.Error)
-              if !$OK {
-                ...
-              }
-              if ... {
-                ...
-              }
-          - pattern: |
-              $AWSERR, $OK := $ORIGINALERR.(awserr.Error)
-              if $OK && ... {
-                ...
-              }
+          - pattern: $AWSERR, $OK := $ORIGINALERR.(awserr.Error)
+          - pattern: var $AWSERR awserr.Error
     severity: WARNING
 
   - id: fmt-Errorf-awserr-Error-Code
