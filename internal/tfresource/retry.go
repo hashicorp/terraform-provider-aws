@@ -101,8 +101,8 @@ func RetryWhenNotFound(ctx context.Context, timeout time.Duration, f func() (int
 	})
 }
 
-// RetryWhenNewResourceNotFoundContext retries the specified function when it returns a resource.NotFoundError and `isNewResource` is true.
-func RetryWhenNewResourceNotFoundContext(ctx context.Context, timeout time.Duration, f func() (interface{}, error), isNewResource bool) (interface{}, error) {
+// RetryWhenNewResourceNotFound retries the specified function when it returns a resource.NotFoundError and `isNewResource` is true.
+func RetryWhenNewResourceNotFound(ctx context.Context, timeout time.Duration, f func() (interface{}, error), isNewResource bool) (interface{}, error) {
 	return RetryWhen(ctx, timeout, f, func(err error) (bool, error) {
 		if isNewResource && NotFound(err) {
 			return true, err
@@ -110,11 +110,6 @@ func RetryWhenNewResourceNotFoundContext(ctx context.Context, timeout time.Durat
 
 		return false, err
 	})
-}
-
-// RetryWhenNewResourceNotFound retries the specified function when it returns a resource.NotFoundError and `isNewResource` is true.
-func RetryWhenNewResourceNotFound(timeout time.Duration, f func() (interface{}, error), isNewResource bool) (interface{}, error) {
-	return RetryWhenNewResourceNotFoundContext(context.Background(), timeout, f, isNewResource)
 }
 
 type Options struct {

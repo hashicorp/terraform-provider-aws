@@ -53,9 +53,6 @@ rules:
       - pattern-either:
           - pattern: $X.WaitForState()
           - pattern: resource.Retry()
-          - pattern: tfresource.RetryUntilNotFound(...)
-          - pattern: tfresource.RetryWhenNotFound(...)
-          - pattern: tfresource.RetryWhenNewResourceNotFound(...)
           - pattern: tfresource.WaitUntil(...)
     severity: WARNING
   - id: context-todo

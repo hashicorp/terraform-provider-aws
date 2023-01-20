@@ -103,7 +103,7 @@ func resourceManagedPrefixListEntryRead(ctx context.Context, d *schema.ResourceD
 		return diag.FromErr(err)
 	}
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFoundContext(ctx, ManagedPrefixListEntryCreateTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ManagedPrefixListEntryCreateTimeout, func() (interface{}, error) {
 		return FindManagedPrefixListEntryByIDAndCIDR(ctx, conn, plID, cidr)
 	}, d.IsNewResource())
 

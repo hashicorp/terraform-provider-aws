@@ -173,7 +173,7 @@ func resourcePermissionRead(ctx context.Context, d *schema.ResourceData, meta in
 	conn := meta.(*conns.AWSClient).LambdaConn()
 
 	functionName := d.Get("function_name").(string)
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFoundContext(ctx, propagationTimeout,
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout,
 		func() (interface{}, error) {
 			return FindPolicyStatementByTwoPartKey(ctx, conn, functionName, d.Id(), d.Get("qualifier").(string))
 		}, d.IsNewResource())
