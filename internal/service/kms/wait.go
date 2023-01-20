@@ -74,7 +74,7 @@ func WaitKeyDescriptionPropagated(ctx context.Context, conn *kms.KMS, id string,
 		MinTimeout:                2 * time.Second,
 	}
 
-	return tfresource.WaitUntilContext(ctx, KeyDescriptionPropagationTimeout, checkFunc, opts)
+	return tfresource.WaitUntil(ctx, KeyDescriptionPropagationTimeout, checkFunc, opts)
 }
 
 func WaitKeyMaterialImported(ctx context.Context, conn *kms.KMS, id string) (*kms.KeyMetadata, error) {
@@ -119,7 +119,7 @@ func WaitKeyPolicyPropagated(ctx context.Context, conn *kms.KMS, id, policy stri
 		MinTimeout:                1 * time.Second,
 	}
 
-	return tfresource.WaitUntilContext(ctx, KeyPolicyPropagationTimeout, checkFunc, opts)
+	return tfresource.WaitUntil(ctx, KeyPolicyPropagationTimeout, checkFunc, opts)
 }
 
 func WaitKeyRotationEnabledPropagated(ctx context.Context, conn *kms.KMS, id string, enabled bool) error {
@@ -141,7 +141,7 @@ func WaitKeyRotationEnabledPropagated(ctx context.Context, conn *kms.KMS, id str
 		MinTimeout:                1 * time.Second,
 	}
 
-	return tfresource.WaitUntilContext(ctx, KeyRotationUpdatedTimeout, checkFunc, opts)
+	return tfresource.WaitUntil(ctx, KeyRotationUpdatedTimeout, checkFunc, opts)
 }
 
 func WaitKeyStatePropagated(ctx context.Context, conn *kms.KMS, id string, enabled bool) error {
@@ -163,7 +163,7 @@ func WaitKeyStatePropagated(ctx context.Context, conn *kms.KMS, id string, enabl
 		MinTimeout:                2 * time.Second,
 	}
 
-	return tfresource.WaitUntilContext(ctx, KeyStatePropagationTimeout, checkFunc, opts)
+	return tfresource.WaitUntil(ctx, KeyStatePropagationTimeout, checkFunc, opts)
 }
 
 func WaitKeyValidToPropagated(ctx context.Context, conn *kms.KMS, id string, validTo string) error {
@@ -189,7 +189,7 @@ func WaitKeyValidToPropagated(ctx context.Context, conn *kms.KMS, id string, val
 		MinTimeout:                2 * time.Second,
 	}
 
-	return tfresource.WaitUntilContext(ctx, KeyValidToPropagationTimeout, checkFunc, opts)
+	return tfresource.WaitUntil(ctx, KeyValidToPropagationTimeout, checkFunc, opts)
 }
 
 func WaitTagsPropagated(ctx context.Context, conn *kms.KMS, id string, tags tftags.KeyValueTags) error {
@@ -211,7 +211,7 @@ func WaitTagsPropagated(ctx context.Context, conn *kms.KMS, id string, tags tfta
 		MinTimeout:                1 * time.Second,
 	}
 
-	return tfresource.WaitUntilContext(ctx, KeyTagsPropagationTimeout, checkFunc, opts)
+	return tfresource.WaitUntil(ctx, KeyTagsPropagationTimeout, checkFunc, opts)
 }
 
 func WaitReplicaExternalKeyCreated(ctx context.Context, conn *kms.KMS, id string) (*kms.KeyMetadata, error) {
