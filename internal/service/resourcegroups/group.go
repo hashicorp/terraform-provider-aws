@@ -27,7 +27,7 @@ func ResourceGroup() *schema.Resource {
 		DeleteWithoutTimeout: resourceGroupDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -210,7 +210,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		}
 	}
 
-	tags, err := ListTagsWithContext(ctx, conn, arn)
+	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
 		return diag.Errorf("listing tags for Resource Groups Group (%s): %s", arn, err)
@@ -284,7 +284,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTagsWithContext(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.Errorf("updating tags: %s", err)
 		}
 	}

@@ -37,6 +37,7 @@ func init() {
 }
 
 func sweepAccessPoints(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -46,7 +47,7 @@ func sweepAccessPoints(region string) error {
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeFileSystemsPages(input, func(page *efs.DescribeFileSystemsOutput, lastPage bool) bool {
+	err = conn.DescribeFileSystemsPagesWithContext(ctx, input, func(page *efs.DescribeFileSystemsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -56,7 +57,7 @@ func sweepAccessPoints(region string) error {
 				FileSystemId: v.FileSystemId,
 			}
 
-			err := conn.DescribeAccessPointsPages(input, func(page *efs.DescribeAccessPointsOutput, lastPage bool) bool {
+			err := conn.DescribeAccessPointsPagesWithContext(ctx, input, func(page *efs.DescribeAccessPointsOutput, lastPage bool) bool {
 				if page == nil {
 					return !lastPage
 				}
@@ -93,7 +94,7 @@ func sweepAccessPoints(region string) error {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EFS File Systems (%s): %w", region, err))
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping EFS Access Points (%s): %w", region, err))
@@ -103,6 +104,7 @@ func sweepAccessPoints(region string) error {
 }
 
 func sweepFileSystems(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -111,7 +113,7 @@ func sweepFileSystems(region string) error {
 	input := &efs.DescribeFileSystemsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeFileSystemsPages(input, func(page *efs.DescribeFileSystemsOutput, lastPage bool) bool {
+	err = conn.DescribeFileSystemsPagesWithContext(ctx, input, func(page *efs.DescribeFileSystemsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -136,7 +138,7 @@ func sweepFileSystems(region string) error {
 		return fmt.Errorf("error listing EFS File Systems (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping EFS File Systems (%s): %w", region, err)
@@ -146,6 +148,7 @@ func sweepFileSystems(region string) error {
 }
 
 func sweepMountTargets(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -155,7 +158,7 @@ func sweepMountTargets(region string) error {
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeFileSystemsPages(input, func(page *efs.DescribeFileSystemsOutput, lastPage bool) bool {
+	err = conn.DescribeFileSystemsPagesWithContext(ctx, input, func(page *efs.DescribeFileSystemsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -165,7 +168,7 @@ func sweepMountTargets(region string) error {
 				FileSystemId: v.FileSystemId,
 			}
 
-			err := describeMountTargetsPages(conn, input, func(page *efs.DescribeMountTargetsOutput, lastPage bool) bool {
+			err := describeMountTargetsPages(ctx, conn, input, func(page *efs.DescribeMountTargetsOutput, lastPage bool) bool {
 				if page == nil {
 					return !lastPage
 				}
@@ -202,7 +205,7 @@ func sweepMountTargets(region string) error {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EFS File Systems (%s): %w", region, err))
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping EFS Mount Targets (%s): %w", region, err))

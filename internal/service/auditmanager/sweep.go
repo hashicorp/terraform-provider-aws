@@ -4,7 +4,6 @@
 package auditmanager
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"log"
@@ -53,12 +52,12 @@ func isCompleteSetupError(err error) bool {
 }
 
 func sweepAssessments(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		fmt.Errorf("error getting client: %s", err)
 	}
 
-	ctx := context.Background()
 	conn := client.(*conns.AWSClient).AuditManagerClient()
 	sweepResources := make([]sweep.Sweepable, 0)
 	in := &auditmanager.ListAssessmentsInput{}
@@ -84,7 +83,7 @@ func sweepAssessments(region string) error {
 		}
 	}
 
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping AuditManager Assessments for %s: %w", region, err))
 	}
 	if sweep.SkipSweepError(err) {
@@ -96,12 +95,12 @@ func sweepAssessments(region string) error {
 }
 
 func sweepControls(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		fmt.Errorf("error getting client: %s", err)
 	}
 
-	ctx := context.Background()
 	conn := client.(*conns.AWSClient).AuditManagerClient()
 	sweepResources := make([]sweep.Sweepable, 0)
 	in := &auditmanager.ListControlsInput{ControlType: types.ControlTypeCustom}
@@ -127,7 +126,7 @@ func sweepControls(region string) error {
 		}
 	}
 
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping AuditManager Controls for %s: %w", region, err))
 	}
 	if sweep.SkipSweepError(err) {
@@ -139,12 +138,12 @@ func sweepControls(region string) error {
 }
 
 func sweepFrameworks(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		fmt.Errorf("error getting client: %s", err)
 	}
 
-	ctx := context.Background()
 	conn := client.(*conns.AWSClient).AuditManagerClient()
 	sweepResources := make([]sweep.Sweepable, 0)
 	in := &auditmanager.ListAssessmentFrameworksInput{FrameworkType: types.FrameworkTypeCustom}
@@ -170,7 +169,7 @@ func sweepFrameworks(region string) error {
 		}
 	}
 
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping AuditManager Frameworks for %s: %w", region, err))
 	}
 	if sweep.SkipSweepError(err) {

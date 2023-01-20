@@ -1,6 +1,7 @@
 package apigateway_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -17,6 +18,7 @@ import (
 )
 
 func TestAccAPIGatewayIntegration_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf apigateway.Integration
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(7))
 	resourceName := "aws_api_gateway_integration.test"
@@ -25,12 +27,12 @@ func TestAccAPIGatewayIntegration_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIntegrationDestroy,
+		CheckDestroy:             testAccCheckIntegrationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIntegrationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntegrationExists(resourceName, &conf),
+					testAccCheckIntegrationExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "type", "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "integration_http_method", "GET"),
 					resource.TestCheckResourceAttr(resourceName, "uri", "https://www.google.de"),
@@ -51,7 +53,7 @@ func TestAccAPIGatewayIntegration_basic(t *testing.T) {
 			{
 				Config: testAccIntegrationConfig_update(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntegrationExists(resourceName, &conf),
+					testAccCheckIntegrationExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "type", "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "integration_http_method", "GET"),
 					resource.TestCheckResourceAttr(resourceName, "uri", "https://www.google.de"),
@@ -71,7 +73,7 @@ func TestAccAPIGatewayIntegration_basic(t *testing.T) {
 			{
 				Config: testAccIntegrationConfig_updateURI(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntegrationExists(resourceName, &conf),
+					testAccCheckIntegrationExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "type", "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "integration_http_method", "GET"),
 					resource.TestCheckResourceAttr(resourceName, "uri", "https://www.google.de/updated"),
@@ -91,7 +93,7 @@ func TestAccAPIGatewayIntegration_basic(t *testing.T) {
 			{
 				Config: testAccIntegrationConfig_updateNoTemplates(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntegrationExists(resourceName, &conf),
+					testAccCheckIntegrationExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "type", "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "integration_http_method", "GET"),
 					resource.TestCheckResourceAttr(resourceName, "uri", "https://www.google.de"),
@@ -107,7 +109,7 @@ func TestAccAPIGatewayIntegration_basic(t *testing.T) {
 			{
 				Config: testAccIntegrationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntegrationExists(resourceName, &conf),
+					testAccCheckIntegrationExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "type", "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "integration_http_method", "GET"),
 					resource.TestCheckResourceAttr(resourceName, "uri", "https://www.google.de"),
@@ -133,6 +135,7 @@ func TestAccAPIGatewayIntegration_basic(t *testing.T) {
 }
 
 func TestAccAPIGatewayIntegration_contentHandling(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf apigateway.Integration
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(7))
 	resourceName := "aws_api_gateway_integration.test"
@@ -141,12 +144,12 @@ func TestAccAPIGatewayIntegration_contentHandling(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIntegrationDestroy,
+		CheckDestroy:             testAccCheckIntegrationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIntegrationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntegrationExists(resourceName, &conf),
+					testAccCheckIntegrationExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "type", "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "integration_http_method", "GET"),
 					resource.TestCheckResourceAttr(resourceName, "uri", "https://www.google.de"),
@@ -165,7 +168,7 @@ func TestAccAPIGatewayIntegration_contentHandling(t *testing.T) {
 			{
 				Config: testAccIntegrationConfig_updateContentHandling(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntegrationExists(resourceName, &conf),
+					testAccCheckIntegrationExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "type", "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "integration_http_method", "GET"),
 					resource.TestCheckResourceAttr(resourceName, "uri", "https://www.google.de"),
@@ -183,7 +186,7 @@ func TestAccAPIGatewayIntegration_contentHandling(t *testing.T) {
 			{
 				Config: testAccIntegrationConfig_removeContentHandling(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntegrationExists(resourceName, &conf),
+					testAccCheckIntegrationExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "type", "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "integration_http_method", "GET"),
 					resource.TestCheckResourceAttr(resourceName, "uri", "https://www.google.de"),
@@ -209,6 +212,7 @@ func TestAccAPIGatewayIntegration_contentHandling(t *testing.T) {
 }
 
 func TestAccAPIGatewayIntegration_CacheKey_parameters(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf apigateway.Integration
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(7))
 	resourceName := "aws_api_gateway_integration.test"
@@ -217,12 +221,12 @@ func TestAccAPIGatewayIntegration_CacheKey_parameters(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIntegrationDestroy,
+		CheckDestroy:             testAccCheckIntegrationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIntegrationConfig_cacheKeyParameters(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntegrationExists(resourceName, &conf),
+					testAccCheckIntegrationExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "type", "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "integration_http_method", "GET"),
 					resource.TestCheckResourceAttr(resourceName, "uri", "https://www.google.de"),
@@ -252,6 +256,7 @@ func TestAccAPIGatewayIntegration_CacheKey_parameters(t *testing.T) {
 }
 
 func TestAccAPIGatewayIntegration_integrationType(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf apigateway.Integration
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(7))
 	resourceName := "aws_api_gateway_integration.test"
@@ -260,12 +265,12 @@ func TestAccAPIGatewayIntegration_integrationType(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIntegrationDestroy,
+		CheckDestroy:             testAccCheckIntegrationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIntegrationConfig_typeInternet(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntegrationExists(resourceName, &conf),
+					testAccCheckIntegrationExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "INTERNET"),
 					resource.TestCheckResourceAttr(resourceName, "connection_id", ""),
 				),
@@ -273,7 +278,7 @@ func TestAccAPIGatewayIntegration_integrationType(t *testing.T) {
 			{
 				Config: testAccIntegrationConfig_typeVPCLink(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntegrationExists(resourceName, &conf),
+					testAccCheckIntegrationExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "VPC_LINK"),
 					resource.TestMatchResourceAttr(resourceName, "connection_id", regexp.MustCompile("^[0-9a-z]+$")),
 				),
@@ -281,7 +286,7 @@ func TestAccAPIGatewayIntegration_integrationType(t *testing.T) {
 			{
 				Config: testAccIntegrationConfig_typeInternet(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntegrationExists(resourceName, &conf),
+					testAccCheckIntegrationExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "INTERNET"),
 					resource.TestCheckResourceAttr(resourceName, "connection_id", ""),
 				),
@@ -297,6 +302,7 @@ func TestAccAPIGatewayIntegration_integrationType(t *testing.T) {
 }
 
 func TestAccAPIGatewayIntegration_TLS_insecureSkipVerification(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf apigateway.Integration
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(7))
 	resourceName := "aws_api_gateway_integration.test"
@@ -305,12 +311,12 @@ func TestAccAPIGatewayIntegration_TLS_insecureSkipVerification(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIntegrationDestroy,
+		CheckDestroy:             testAccCheckIntegrationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIntegrationConfig_tlsInsecureSkipVerification(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntegrationExists(resourceName, &conf),
+					testAccCheckIntegrationExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tls_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tls_config.0.insecure_skip_verification", "true"),
 				),
@@ -324,7 +330,7 @@ func TestAccAPIGatewayIntegration_TLS_insecureSkipVerification(t *testing.T) {
 			{
 				Config: testAccIntegrationConfig_tlsInsecureSkipVerification(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntegrationExists(resourceName, &conf),
+					testAccCheckIntegrationExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tls_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tls_config.0.insecure_skip_verification", "false"),
 				),
@@ -334,6 +340,7 @@ func TestAccAPIGatewayIntegration_TLS_insecureSkipVerification(t *testing.T) {
 }
 
 func TestAccAPIGatewayIntegration_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf apigateway.Integration
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(7))
 	resourceName := "aws_api_gateway_integration.test"
@@ -342,13 +349,13 @@ func TestAccAPIGatewayIntegration_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIntegrationDestroy,
+		CheckDestroy:             testAccCheckIntegrationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIntegrationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntegrationExists(resourceName, &conf),
-					acctest.CheckResourceDisappears(acctest.Provider, tfapigateway.ResourceIntegration(), resourceName),
+					testAccCheckIntegrationExists(ctx, resourceName, &conf),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigateway.ResourceIntegration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -356,7 +363,7 @@ func TestAccAPIGatewayIntegration_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckIntegrationExists(n string, res *apigateway.Integration) resource.TestCheckFunc {
+func testAccCheckIntegrationExists(ctx context.Context, n string, res *apigateway.Integration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -374,7 +381,7 @@ func testAccCheckIntegrationExists(n string, res *apigateway.Integration) resour
 			ResourceId: aws.String(s.RootModule().Resources["aws_api_gateway_resource.test"].Primary.ID),
 			RestApiId:  aws.String(s.RootModule().Resources["aws_api_gateway_rest_api.test"].Primary.ID),
 		}
-		describe, err := conn.GetIntegration(req)
+		describe, err := conn.GetIntegrationWithContext(ctx, req)
 		if err != nil {
 			return err
 		}
@@ -385,37 +392,39 @@ func testAccCheckIntegrationExists(n string, res *apigateway.Integration) resour
 	}
 }
 
-func testAccCheckIntegrationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
+func testAccCheckIntegrationDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_api_gateway_integration" {
-			continue
-		}
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_api_gateway_integration" {
+				continue
+			}
 
-		req := &apigateway.GetIntegrationInput{
-			HttpMethod: aws.String("GET"),
-			ResourceId: aws.String(s.RootModule().Resources["aws_api_gateway_resource.test"].Primary.ID),
-			RestApiId:  aws.String(s.RootModule().Resources["aws_api_gateway_rest_api.test"].Primary.ID),
-		}
-		_, err := conn.GetIntegration(req)
+			req := &apigateway.GetIntegrationInput{
+				HttpMethod: aws.String("GET"),
+				ResourceId: aws.String(s.RootModule().Resources["aws_api_gateway_resource.test"].Primary.ID),
+				RestApiId:  aws.String(s.RootModule().Resources["aws_api_gateway_rest_api.test"].Primary.ID),
+			}
+			_, err := conn.GetIntegrationWithContext(ctx, req)
 
-		if err == nil {
-			return fmt.Errorf("API Gateway Method still exists")
-		}
+			if err == nil {
+				return fmt.Errorf("API Gateway Method still exists")
+			}
 
-		aws2err, ok := err.(awserr.Error)
-		if !ok {
-			return err
-		}
-		if aws2err.Code() != "NotFoundException" {
-			return err
+			aws2err, ok := err.(awserr.Error)
+			if !ok {
+				return err
+			}
+			if aws2err.Code() != "NotFoundException" {
+				return err
+			}
+
+			return nil
 		}
 
 		return nil
 	}
-
-	return nil
 }
 
 func testAccIntegrationImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {

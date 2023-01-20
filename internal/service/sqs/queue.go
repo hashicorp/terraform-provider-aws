@@ -249,7 +249,7 @@ func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	// Only post-create tagging supported in some partitions
 	if input.Tags == nil && len(tags) > 0 {
-		err := UpdateTagsWithContext(ctx, conn, d.Id(), nil, tags)
+		err := UpdateTags(ctx, conn, d.Id(), nil, tags)
 
 		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.ErrorISOUnsupported(conn.PartitionID, err) {
 			// if default tags only, log and continue (i.e., should error if explicitly setting tags and they can't be)
@@ -312,7 +312,7 @@ func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("url", d.Id())
 
 	outputRaw, err = tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, queueTagsTimeout, func() (interface{}, error) {
-		return ListTagsWithContext(ctx, conn, d.Id())
+		return ListTags(ctx, conn, d.Id())
 	}, sqs.ErrCodeQueueDoesNotExist)
 
 	if verify.ErrorISOUnsupported(conn.PartitionID, err) {
@@ -370,7 +370,7 @@ func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		err := UpdateTagsWithContext(ctx, conn, d.Id(), o, n)
+		err := UpdateTags(ctx, conn, d.Id(), o, n)
 
 		if verify.ErrorISOUnsupported(conn.PartitionID, err) {
 			// Some partitions may not support tagging, giving error

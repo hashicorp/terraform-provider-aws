@@ -1,13 +1,15 @@
 package elbv2
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/elbv2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -83,7 +85,7 @@ var HostedZoneIdPerRegionNLBMap = map[string]string{
 
 func DataSourceHostedZoneID() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceHostedZoneIDRead,
+		ReadWithoutTimeout: dataSourceHostedZoneIDRead,
 
 		Schema: map[string]*schema.Schema{
 			"region": {
@@ -101,7 +103,8 @@ func DataSourceHostedZoneID() *schema.Resource {
 	}
 }
 
-func dataSourceHostedZoneIDRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceHostedZoneIDRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	region := meta.(*conns.AWSClient).Region
 	if v, ok := d.GetOk("region"); ok {
 		region = v.(string)
@@ -116,15 +119,15 @@ func dataSourceHostedZoneIDRead(d *schema.ResourceData, meta interface{}) error 
 		if zoneId, ok := HostedZoneIdPerRegionALBMap[region]; ok {
 			d.SetId(zoneId)
 		} else {
-			return fmt.Errorf("unsupported AWS Region: %s", region)
+			return sdkdiag.AppendErrorf(diags, "unsupported AWS Region: %s", region)
 		}
 	} else if lbType == elbv2.LoadBalancerTypeEnumNetwork {
 		if zoneId, ok := HostedZoneIdPerRegionNLBMap[region]; ok {
 			d.SetId(zoneId)
 		} else {
-			return fmt.Errorf("unsupported AWS Region: %s", region)
+			return sdkdiag.AppendErrorf(diags, "unsupported AWS Region: %s", region)
 		}
 	}
 
-	return nil
+	return diags
 }

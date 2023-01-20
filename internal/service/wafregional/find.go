@@ -12,8 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func FindRegexMatchSetByID(conn *wafregional.WAFRegional, id string) (*waf.RegexMatchSet, error) {
-	result, err := conn.GetRegexMatchSet(&waf.GetRegexMatchSetInput{
+func FindRegexMatchSetByID(ctx context.Context, conn *wafregional.WAFRegional, id string) (*waf.RegexMatchSet, error) {
+	result, err := conn.GetRegexMatchSetWithContext(ctx, &waf.GetRegexMatchSetInput{
 		RegexMatchSetId: aws.String(id),
 	})
 

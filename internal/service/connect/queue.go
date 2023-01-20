@@ -352,7 +352,7 @@ func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	// updates to tags
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.FromErr(fmt.Errorf("error updating tags: %w", err))
 		}
 	}

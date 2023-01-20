@@ -11,15 +11,16 @@ import (
 )
 
 func TestAccKafkaClusterDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_msk_cluster.test"
 	resourceName := "aws_msk_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, kafka.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterDataSourceConfig_basic(rName),

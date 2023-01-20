@@ -23,7 +23,7 @@ func ResourceManagedPrefixListEntry() *schema.Resource {
 		DeleteWithoutTimeout: resourceManagedPrefixListEntryDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: resourceManagedPrefixListEntryImport,
+			StateContext: resourceManagedPrefixListEntryImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -167,7 +167,7 @@ func resourceManagedPrefixListEntryDelete(ctx context.Context, d *schema.Resourc
 	return nil
 }
 
-func resourceManagedPrefixListEntryImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceManagedPrefixListEntryImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	plID, cidr, err := ManagedPrefixListEntryParseResourceID(d.Id())
 
 	if err != nil {
