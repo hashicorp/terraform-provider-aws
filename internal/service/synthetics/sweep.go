@@ -28,6 +28,7 @@ func init() {
 }
 
 func sweepCanaries(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -39,7 +40,7 @@ func sweepCanaries(region string) error {
 
 	input := &synthetics.DescribeCanariesInput{}
 	for {
-		output, err := conn.DescribeCanaries(input)
+		output, err := conn.DescribeCanariesWithContext(ctx, input)
 		if sweep.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping Synthetics Canary sweep for %s: %s", region, err)
 			return nil
@@ -65,7 +66,7 @@ func sweepCanaries(region string) error {
 		input.NextToken = output.NextToken
 	}
 
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Synthetics Canaries: %w", err))
 	}
 
