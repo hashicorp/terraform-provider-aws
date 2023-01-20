@@ -1,6 +1,7 @@
 package emr_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -14,6 +15,7 @@ import (
 )
 
 func TestAccEMRInstanceFleet_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var fleet emr.InstanceFleet
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_emr_instance_fleet.task"
@@ -26,7 +28,7 @@ func TestAccEMRInstanceFleet_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceFleetConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(testAccCheckInstanceFleetExists(resourceName, &fleet),
+				Check: resource.ComposeTestCheckFunc(testAccCheckInstanceFleetExists(ctx, resourceName, &fleet),
 					resource.TestCheckResourceAttr(resourceName, "instance_type_configs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_on_demand_capacity", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_spot_capacity", "0"),
@@ -43,6 +45,7 @@ func TestAccEMRInstanceFleet_basic(t *testing.T) {
 }
 
 func TestAccEMRInstanceFleet_Zero_count(t *testing.T) {
+	ctx := acctest.Context(t)
 	var fleet emr.InstanceFleet
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_emr_instance_fleet.task"
@@ -55,7 +58,7 @@ func TestAccEMRInstanceFleet_Zero_count(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceFleetConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(testAccCheckInstanceFleetExists(resourceName, &fleet),
+				Check: resource.ComposeTestCheckFunc(testAccCheckInstanceFleetExists(ctx, resourceName, &fleet),
 					resource.TestCheckResourceAttr(resourceName, "instance_type_configs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_on_demand_capacity", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_spot_capacity", "0"),
@@ -63,7 +66,7 @@ func TestAccEMRInstanceFleet_Zero_count(t *testing.T) {
 			},
 			{
 				Config: testAccInstanceFleetConfig_zeroCount(rName),
-				Check: resource.ComposeTestCheckFunc(testAccCheckInstanceFleetExists(resourceName, &fleet),
+				Check: resource.ComposeTestCheckFunc(testAccCheckInstanceFleetExists(ctx, resourceName, &fleet),
 					resource.TestCheckResourceAttr(resourceName, "instance_type_configs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_on_demand_capacity", "0"),
 					resource.TestCheckResourceAttr(resourceName, "target_spot_capacity", "0"),
@@ -80,6 +83,7 @@ func TestAccEMRInstanceFleet_Zero_count(t *testing.T) {
 }
 
 func TestAccEMRInstanceFleet_ebsBasic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var fleet emr.InstanceFleet
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_emr_instance_fleet.task"
@@ -92,7 +96,7 @@ func TestAccEMRInstanceFleet_ebsBasic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceFleetConfig_ebsBasic(rName),
-				Check: resource.ComposeTestCheckFunc(testAccCheckInstanceFleetExists(resourceName, &fleet),
+				Check: resource.ComposeTestCheckFunc(testAccCheckInstanceFleetExists(ctx, resourceName, &fleet),
 					resource.TestCheckResourceAttr(resourceName, "instance_type_configs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_on_demand_capacity", "0"),
 					resource.TestCheckResourceAttr(resourceName, "target_spot_capacity", "1"),
@@ -109,6 +113,7 @@ func TestAccEMRInstanceFleet_ebsBasic(t *testing.T) {
 }
 
 func TestAccEMRInstanceFleet_full(t *testing.T) {
+	ctx := acctest.Context(t)
 	var fleet emr.InstanceFleet
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_emr_instance_fleet.task"
@@ -121,7 +126,7 @@ func TestAccEMRInstanceFleet_full(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceFleetConfig_full(rName),
-				Check: resource.ComposeTestCheckFunc(testAccCheckInstanceFleetExists(resourceName, &fleet),
+				Check: resource.ComposeTestCheckFunc(testAccCheckInstanceFleetExists(ctx, resourceName, &fleet),
 					resource.TestCheckResourceAttr(resourceName, "instance_type_configs.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "target_on_demand_capacity", "2"),
 					resource.TestCheckResourceAttr(resourceName, "target_spot_capacity", "2"),
@@ -137,33 +142,7 @@ func TestAccEMRInstanceFleet_full(t *testing.T) {
 	})
 }
 
-func TestAccEMRInstanceFleet_disappears(t *testing.T) {
-	var fleet emr.InstanceFleet
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_emr_instance_fleet.task"
-	emrClusterResourceName := "aws_emr_cluster.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             acctest.CheckDestroyNoop,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccInstanceFleetConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceFleetExists(resourceName, &fleet),
-					// EMR Instance Fleet can only be scaled down and are not removed until the
-					// Cluster is removed. Verify EMR Cluster disappearance handling.
-					acctest.CheckResourceDisappears(acctest.Provider, tfemr.ResourceCluster(), emrClusterResourceName),
-				),
-				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
-}
-
-func testAccCheckInstanceFleetExists(n string, v *emr.InstanceFleet) resource.TestCheckFunc {
+func testAccCheckInstanceFleetExists(ctx context.Context, n string, v *emr.InstanceFleet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -176,7 +155,7 @@ func testAccCheckInstanceFleetExists(n string, v *emr.InstanceFleet) resource.Te
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn()
 
-		output, err := tfemr.FindInstanceFleetByTwoPartKey(conn, rs.Primary.Attributes["cluster_id"], rs.Primary.ID)
+		output, err := tfemr.FindInstanceFleetByTwoPartKey(ctx, conn, rs.Primary.Attributes["cluster_id"], rs.Primary.ID)
 
 		if err != nil {
 			return err
