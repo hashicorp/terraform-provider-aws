@@ -29,7 +29,7 @@ func ResourceStateMachine() *schema.Resource {
 		DeleteWithoutTimeout: resourceStateMachineDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -214,7 +214,7 @@ func resourceStateMachineRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 	d.Set("type", output.Type)
 
-	tags, err := ListTagsWithContext(ctx, conn, d.Id())
+	tags, err := ListTags(ctx, conn, d.Id())
 
 	if tfawserr.ErrCodeEquals(err, "UnknownOperationException") {
 		return nil
@@ -294,7 +294,7 @@ func resourceStateMachineUpdate(ctx context.Context, d *schema.ResourceData, met
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTagsWithContext(ctx, conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
 			return diag.Errorf("updating Step Functions State Machine (%s) tags: %s", d.Id(), err)
 		}
 	}
