@@ -80,7 +80,7 @@ resource "aws_ssmincidents_replication_set" "replicationSetName" {
 
 ~> **NOTE:** After creation, regions can only be added or deleted one at a time.
 
-~> **NOTE:** Changing the Customer Managed Key for a single region requires us to first delete that region then recreate it with an updated Customer Managed Key in separate terraform apply operations. Performing this when the Replication Set contains only one region requires deleting the Replication Set. This can be done by commenting out the Replication Set, running Terraform Apply and recreating the Replication Set with the new correct KMS keys.
+~> **NOTE:** Incident Manager does not support updating Customer Managed Keys. To do this, you must first delete that region then recreate it with an updated Customer Managed Key in separate terraform apply operations. Performing this when the Replication Set contains only one region requires deleting the Replication Set (which will delete all associated Response Plans). This can be done by commenting out the Replication Set and all Response Plans, running Terraform Apply and recreating the Replication Set and Response Plans with the new correct KMS keys.
 
 ~> **NOTE:** Either all regions must have a Customer Managed KMS key or None. Changing from using Amazon owned keys to customer managed keys or vice versa requires the Replication Set and all associated data to be destroyed and recreated.
 
@@ -118,11 +118,13 @@ In addition to the arguments above, The `region` configuration block exports the
 
 ## Timeouts
 
-~> **NOTE:** Update and Delete operations on Replication Sets with large amounts of response plans and data take longer to complete. It may be required for custom timeouts are configured in these circumstances.
+~> **NOTE:** Update and Delete operations on Replication Sets with large amounts of response plans and data take longer to complete. It may be required for custom timeouts to be configured in these circumstances.
+
+~> **NOTE:** Creating a new Replication Set will take additional time for each extra region in the created Replication Set beyond the first.
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `120m`) This operation will take additional time for each extra region in the created Replication Set beyond the first.
+* `create` - (Default `120m`)
 * `update` - (Default `120m`)
 * `delete` - (Default `120m`)
 
