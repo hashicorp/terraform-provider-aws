@@ -253,7 +253,7 @@ func testAccCheckImageBuilderDestroy(ctx context.Context) resource.TestCheckFunc
 				continue
 			}
 
-			_, err := tfappstream.FindImageBuilderByName(context.Background(), conn, rs.Primary.ID)
+			_, err := tfappstream.FindImageBuilderByName(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue

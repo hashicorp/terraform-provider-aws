@@ -4,7 +4,6 @@
 package cloudfront
 
 import (
-	"context"
 	"fmt"
 	"log"
 
@@ -676,7 +675,7 @@ func sweepOriginAccessControls(region string) error {
 		for _, v := range page.OriginAccessControlList.Items {
 			id := aws.StringValue(v.Id)
 
-			output, err := findOriginAccessControlByID(context.Background(), conn, id)
+			output, err := findOriginAccessControlByID(ctx, conn, id)
 
 			if tfresource.NotFound(err) {
 				continue

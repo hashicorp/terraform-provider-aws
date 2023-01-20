@@ -238,7 +238,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	d.SetId(aws.StringValue(out.Cluster.ClusterArn))
 
-	if _, err := waitClusterAvailable(context.Background(), conn, d.Id()); err != nil {
+	if _, err := waitClusterAvailable(ctx, conn, d.Id()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for ECS Cluster (%s) to become Available while creating: %s", d.Id(), err)
 	}
 
@@ -269,7 +269,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	var cluster *ecs.Cluster
 	err := resource.RetryContext(ctx, clusterReadTimeout, func() *resource.RetryError {
 		var err error
-		cluster, err = FindClusterByNameOrARN(context.Background(), conn, d.Id())
+		cluster, err = FindClusterByNameOrARN(ctx, conn, d.Id())
 
 		if d.IsNewResource() && tfresource.NotFound(err) {
 			return resource.RetryableError(err)
@@ -283,7 +283,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	})
 
 	if tfresource.TimedOut(err) {
-		cluster, err = FindClusterByNameOrARN(context.Background(), conn, d.Id())
+		cluster, err = FindClusterByNameOrARN(ctx, conn, d.Id())
 	}
 
 	if tfresource.NotFound(err) {

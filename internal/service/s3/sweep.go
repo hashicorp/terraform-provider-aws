@@ -67,7 +67,7 @@ func sweepObjects(region string) error {
 	sweepables := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
-	buckets, err := filterBuckets(output.Buckets, bucketRegionFilter(conn, region))
+	buckets, err := filterBuckets(output.Buckets, bucketRegionFilter(ctx, conn, region))
 	if err != nil {
 		errs = multierror.Append(errs, err)
 	}
@@ -144,7 +144,7 @@ func sweepBuckets(region string) error {
 	var errs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	buckets, err := filterBuckets(output.Buckets, bucketRegionFilter(conn, region))
+	buckets, err := filterBuckets(output.Buckets, bucketRegionFilter(ctx, conn, region))
 	if err != nil {
 		errs = multierror.Append(errs, err)
 	}
@@ -171,8 +171,8 @@ func sweepBuckets(region string) error {
 	return errs.ErrorOrNil()
 }
 
-func bucketRegion(conn *s3.S3, bucket string) (string, error) {
-	region, err := s3manager.GetBucketRegionWithClient(context.Background(), conn, bucket, func(r *request.Request) {
+func bucketRegion(ctx context.Context, conn *s3.S3, bucket string) (string, error) {
+	region, err := s3manager.GetBucketRegionWithClient(ctx, conn, bucket, func(r *request.Request) {
 		// By default, GetBucketRegion forces virtual host addressing, which
 		// is not compatible with many non-AWS implementations. Instead, pass
 		// the provider s3_force_path_style configuration, which defaults to
@@ -248,11 +248,11 @@ var (
 	defaultNameRegexp = regexp.MustCompile(fmt.Sprintf(`^%s\d+$`, resource.UniqueIdPrefix))
 )
 
-func bucketRegionFilter(conn *s3.S3, region string) bucketFilter {
+func bucketRegionFilter(ctx context.Context, conn *s3.S3, region string) bucketFilter {
 	return func(bucket *s3.Bucket) (bool, error) {
 		name := aws.StringValue(bucket.Name)
 
-		bucketRegion, err := bucketRegion(conn, name)
+		bucketRegion, err := bucketRegion(ctx, conn, name)
 		if err != nil {
 			return false, err
 		}

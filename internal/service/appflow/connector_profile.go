@@ -1444,7 +1444,7 @@ func resourceConnectorProfileCreate(ctx context.Context, d *schema.ResourceData,
 func resourceConnectorProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).AppFlowConn()
 
-	connectorProfile, err := FindConnectorProfileByARN(context.Background(), conn, d.Id())
+	connectorProfile, err := FindConnectorProfileByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] AppFlow Connector Profile (%s) not found, removing from state", d.Id())

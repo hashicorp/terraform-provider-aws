@@ -151,7 +151,7 @@ func waitClusterDeleted(ctx context.Context, conn *ecs.ECS, arn string) (*ecs.Cl
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"ACTIVE", "DEPROVISIONING"},
 		Target:  []string{"INACTIVE"},
-		Refresh: statusCluster(context.Background(), conn, arn),
+		Refresh: statusCluster(ctx, conn, arn),
 		Timeout: clusterDeleteTimeout,
 	}
 
