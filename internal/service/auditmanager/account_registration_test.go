@@ -30,6 +30,7 @@ func TestAccAuditManagerAccountRegistration_serial(t *testing.T) {
 }
 
 func testAccAccountRegistration_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_auditmanager_account_registration.test"
 
 	resource.Test(t, resource.TestCase{
@@ -39,12 +40,12 @@ func testAccAccountRegistration_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccountRegistrationDestroy,
+		CheckDestroy:             testAccCheckAccountRegistrationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccountRegistrationConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccountRegisterationIsActive(resourceName),
+					testAccCheckAccountRegisterationIsActive(ctx, resourceName),
 				),
 			},
 			{
@@ -57,6 +58,7 @@ func testAccAccountRegistration_basic(t *testing.T) {
 }
 
 func testAccAccountRegistration_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	if os.Getenv("AUDITMANAGER_DEREGISTER_ACCOUNT_ON_DESTROY") == "" {
 		t.Skip("Environment variable AUDITMANAGER_DEREGISTER_ACCOUNT_ON_DESTROY is not set")
 	}
@@ -70,14 +72,14 @@ func testAccAccountRegistration_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccountRegistrationDestroy,
+		CheckDestroy:             testAccCheckAccountRegistrationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				// deregister_on_destroy must be enabled for the disappears helper to disable
 				// audit manager on destroy and trigger the non-empty plan after state refresh
 				Config: testAccAccountRegistrationConfig_deregisterOnDestroy(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccountRegisterationIsActive(resourceName),
+					testAccCheckAccountRegisterationIsActive(ctx, resourceName),
 					acctest.CheckFrameworkResourceDisappears(acctest.Provider, tfauditmanager.ResourceAccountRegistration, resourceName),
 				),
 			},
@@ -90,6 +92,7 @@ func testAccAccountRegistration_disappears(t *testing.T) {
 }
 
 func testAccAccountRegistration_optionalKMSKey(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_auditmanager_account_registration.test"
 
 	resource.Test(t, resource.TestCase{
@@ -99,26 +102,26 @@ func testAccAccountRegistration_optionalKMSKey(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AuditManagerEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccountRegistrationDestroy,
+		CheckDestroy:             testAccCheckAccountRegistrationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccountRegistrationConfig_KMSKey(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccountRegisterationIsActive(resourceName),
+					testAccCheckAccountRegisterationIsActive(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "kms_key"),
 				),
 			},
 			{
 				Config: testAccAccountRegistrationConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccountRegisterationIsActive(resourceName),
+					testAccCheckAccountRegisterationIsActive(ctx, resourceName),
 					resource.TestCheckNoResourceAttr(resourceName, "kms_key"),
 				),
 			},
 			{
 				Config: testAccAccountRegistrationConfig_KMSKey(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccountRegisterationIsActive(resourceName),
+					testAccCheckAccountRegisterationIsActive(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "kms_key"),
 				),
 			},
@@ -132,26 +135,27 @@ func testAccAccountRegistration_optionalKMSKey(t *testing.T) {
 // to destroy. Additionally, because registration may remain active depending on whether
 // the deactivate_on_destroy attribute was set, this function does not check that account
 // registration is inactive, simply that the status check returns a valid response.
-func testAccCheckAccountRegistrationDestroy(s *terraform.State) error {
-	ctx := context.Background()
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AuditManagerClient()
+func testAccCheckAccountRegistrationDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AuditManagerClient()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_auditmanager_account_registration" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_auditmanager_account_registration" {
+				continue
+			}
+
+			_, err := conn.GetAccountStatus(ctx, &auditmanager.GetAccountStatusInput{})
+			if err != nil {
+				return err
+			}
 		}
 
-		_, err := conn.GetAccountStatus(ctx, &auditmanager.GetAccountStatusInput{})
-		if err != nil {
-			return err
-		}
+		return nil
 	}
-
-	return nil
 }
 
 // testAccCheckAccountRegisterationIsActive verifies AuditManager is active in the current account/region combination
-func testAccCheckAccountRegisterationIsActive(name string) resource.TestCheckFunc {
+func testAccCheckAccountRegisterationIsActive(ctx context.Context, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -162,7 +166,6 @@ func testAccCheckAccountRegisterationIsActive(name string) resource.TestCheckFun
 			return create.Error(names.AuditManager, create.ErrActionCheckingExistence, tfauditmanager.ResNameAccountRegistration, name, errors.New("not set"))
 		}
 
-		ctx := context.Background()
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AuditManagerClient()
 		out, err := conn.GetAccountStatus(ctx, &auditmanager.GetAccountStatusInput{})
 		if err != nil {

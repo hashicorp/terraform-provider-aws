@@ -59,7 +59,7 @@ func dataSourceTransitGatewayConnectRead(ctx context.Context, d *schema.Resource
 		d.Get("filter").(*schema.Set),
 	)...)
 
-	transitGatewayConnect, err := FindTransitGatewayConnect(conn, input)
+	transitGatewayConnect, err := FindTransitGatewayConnect(ctx, conn, input)
 
 	if err != nil {
 		return diag.FromErr(tfresource.SingularDataSourceFindError("EC2 Transit Gateway Connect", err))

@@ -124,7 +124,7 @@ func resourceVPCConnectorRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("vpc_connector_name", vpcConnector.VpcConnectorName)
 	d.Set("vpc_connector_revision", vpcConnector.VpcConnectorRevision)
 
-	tags, err := ListTagsWithContext(ctx, conn, arn)
+	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
 		return diag.Errorf("listing tags for App Runner VPC Connector (%s): %s", d.Id(), err)
@@ -150,7 +150,7 @@ func resourceVPCConnectorUpdate(ctx context.Context, d *schema.ResourceData, met
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTagsWithContext(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.Errorf("updating App Runner VPC Connector (%s) tags: %s", d.Id(), err)
 		}
 	}

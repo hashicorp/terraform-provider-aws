@@ -10,6 +10,7 @@ rules:
       - metavariable-regex:
           metavariable: "$FUNCNAME"
           regex: "^TestAcc[^_]+_([a-zA-Z]+[dD]isappears|[^_]+_disappears)$"
+      - focus-metavariable: $FUNCNAME
     severity: WARNING
 
   - id: aws-sdk-go-multiple-service-imports
@@ -225,6 +226,8 @@ rules:
     paths:
       include:
         - internal/
+      exclude:
+        - internal/service/apigateway/integration.go
     patterns:
       - pattern-either:
           - pattern: |
@@ -868,16 +871,6 @@ rules:
     patterns:
       - pattern: "[]string{..., string($X), ...}"
     severity: WARNING
-
-  - id: avoid-context-TODO-in-tests
-    languages: [go]
-    message: Prefer using context.Background() instead of context.TODO()
-    paths:
-      include:
-        - "internal/**/*_test.go"
-    patterns:
-      - pattern: context.TODO
-    severity: ERROR
 
   - id: avoid-context-CRUD-handlers
     languages: [go]

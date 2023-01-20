@@ -152,7 +152,7 @@ func resourceNetworkInsightsPathUpdate(ctx context.Context, d *schema.ResourceDa
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTagsWithContext(ctx, conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
 			return diag.Errorf("updating EC2 Network Insights Path (%s) tags: %s", d.Id(), err)
 		}
 	}

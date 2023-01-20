@@ -1,6 +1,3 @@
-//go:build sweep
-// +build sweep
-
 package sweep
 
 import (
@@ -80,9 +77,5 @@ func DeleteFrameworkResource(factory func(context.Context) (fwresource.ResourceW
 	response := fwresource.DeleteResponse{}
 	resource.Delete(ctx, fwresource.DeleteRequest{State: state}, &response)
 
-	if response.Diagnostics.HasError() {
-		return fwdiag.DiagnosticsError(response.Diagnostics)
-	}
-
-	return nil
+	return fwdiag.DiagnosticsError(response.Diagnostics)
 }

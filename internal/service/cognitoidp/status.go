@@ -1,6 +1,8 @@
 package cognitoidp
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -12,13 +14,13 @@ const (
 )
 
 // statusUserPoolDomain fetches the Operation and its Status
-func statusUserPoolDomain(conn *cognitoidentityprovider.CognitoIdentityProvider, domain string) resource.StateRefreshFunc {
+func statusUserPoolDomain(ctx context.Context, conn *cognitoidentityprovider.CognitoIdentityProvider, domain string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &cognitoidentityprovider.DescribeUserPoolDomainInput{
 			Domain: aws.String(domain),
 		}
 
-		output, err := conn.DescribeUserPoolDomain(input)
+		output, err := conn.DescribeUserPoolDomainWithContext(ctx, input)
 
 		if err != nil {
 			return nil, userPoolDomainStatusUnknown, err

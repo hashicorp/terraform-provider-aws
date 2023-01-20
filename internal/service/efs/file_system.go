@@ -28,7 +28,7 @@ func ResourceFileSystem() *schema.Resource {
 		DeleteWithoutTimeout: resourceFileSystemDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -324,7 +324,7 @@ func resourceFileSystemUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTagsWithContext(ctx, conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
 			return diag.Errorf("updating EFS file system (%s) tags: %s", d.Id(), err)
 		}
 	}

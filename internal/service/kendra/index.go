@@ -414,8 +414,7 @@ func resourceIndexCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	log.Printf("[DEBUG] Creating Kendra Index %#v", input)
 
-	outputRaw, err := tfresource.RetryWhen(
-		propagationTimeout,
+	outputRaw, err := tfresource.RetryWhenContext(ctx, propagationTimeout,
 		func() (interface{}, error) {
 			return conn.CreateIndex(ctx, input)
 		},
@@ -578,8 +577,7 @@ func resourceIndexUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			input.UserTokenConfigurations = expandUserTokenConfigurations(d.Get("user_token_configurations").([]interface{}))
 		}
 
-		_, err := tfresource.RetryWhen(
-			propagationTimeout,
+		_, err := tfresource.RetryWhenContext(ctx, propagationTimeout,
 			func() (interface{}, error) {
 				return conn.UpdateIndex(ctx, input)
 			},

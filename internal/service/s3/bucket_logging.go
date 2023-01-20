@@ -121,7 +121,7 @@ func resourceBucketLoggingCreate(ctx context.Context, d *schema.ResourceData, me
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, 2*time.Minute, func() (interface{}, error) {
 		return conn.PutBucketLoggingWithContext(ctx, input)
 	}, s3.ErrCodeNoSuchBucket)
 
@@ -150,7 +150,7 @@ func resourceBucketLoggingRead(ctx context.Context, d *schema.ResourceData, meta
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	resp, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
+	resp, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, 2*time.Minute, func() (interface{}, error) {
 		return conn.GetBucketLoggingWithContext(ctx, input)
 	}, s3.ErrCodeNoSuchBucket)
 
@@ -217,7 +217,7 @@ func resourceBucketLoggingUpdate(ctx context.Context, d *schema.ResourceData, me
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	_, err = tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, 2*time.Minute, func() (interface{}, error) {
 		return conn.PutBucketLoggingWithContext(ctx, input)
 	}, s3.ErrCodeNoSuchBucket)
 

@@ -14,11 +14,7 @@ import (
 // ListLogGroupTags lists logs service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListLogGroupTags(conn cloudwatchlogsiface.CloudWatchLogsAPI, identifier string) (tftags.KeyValueTags, error) {
-	return ListLogGroupTagsWithContext(context.Background(), conn, identifier)
-}
-
-func ListLogGroupTagsWithContext(ctx context.Context, conn cloudwatchlogsiface.CloudWatchLogsAPI, identifier string) (tftags.KeyValueTags, error) {
+func ListLogGroupTags(ctx context.Context, conn cloudwatchlogsiface.CloudWatchLogsAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &cloudwatchlogs.ListTagsLogGroupInput{
 		LogGroupName: aws.String(identifier),
 	}
@@ -35,10 +31,7 @@ func ListLogGroupTagsWithContext(ctx context.Context, conn cloudwatchlogsiface.C
 // UpdateLogGroupTags updates logs service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateLogGroupTags(conn cloudwatchlogsiface.CloudWatchLogsAPI, identifier string, oldTags interface{}, newTags interface{}) error {
-	return UpdateLogGroupTagsWithContext(context.Background(), conn, identifier, oldTags, newTags)
-}
-func UpdateLogGroupTagsWithContext(ctx context.Context, conn cloudwatchlogsiface.CloudWatchLogsAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateLogGroupTags(ctx context.Context, conn cloudwatchlogsiface.CloudWatchLogsAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 

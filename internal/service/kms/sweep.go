@@ -9,7 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kms"
-	multierror "github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
@@ -24,6 +24,7 @@ func init() {
 }
 
 func sweepKeys(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -35,14 +36,14 @@ func sweepKeys(region string) error {
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListKeysPages(input, func(page *kms.ListKeysOutput, lastPage bool) bool {
+	err = conn.ListKeysPagesWithContext(ctx, input, func(page *kms.ListKeysOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
 		for _, v := range page.Keys {
 			keyID := aws.StringValue(v.KeyId)
-			key, err := FindKeyByID(conn, keyID)
+			key, err := FindKeyByID(ctx, conn, keyID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -54,18 +55,19 @@ func sweepKeys(region string) error {
 			}
 
 			if aws.StringValue(key.KeyManager) == kms.KeyManagerTypeAws {
-				// Skip (default) keys which are managed by AWS
+				log.Printf("[DEBUG] Skipping KMS Key (%s): managed by AWS", keyID)
 				continue
 			}
 			if aws.StringValue(key.KeyState) == kms.KeyStatePendingDeletion {
-				// Skip keys which are already scheduled for deletion
+				log.Printf("[DEBUG] Skipping KMS Key (%s): pending deletion", keyID)
 				continue
 			}
 
 			r := ResourceKey()
 			d := r.Data(nil)
 			d.SetId(keyID)
-			d.Set("deletion_window_in_days", 7)
+			d.Set("key_id", keyID)
+			d.Set("deletion_window_in_days", "7")
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -82,7 +84,7 @@ func sweepKeys(region string) error {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing KMS Keys (%s): %w", region, err))
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping KMS Keys (%s): %w", region, err))

@@ -26,7 +26,7 @@ func ResourceManagedPrefixList() *schema.Resource {
 		DeleteWithoutTimeout: resourceManagedPrefixListDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -309,7 +309,7 @@ func resourceManagedPrefixListUpdate(ctx context.Context, d *schema.ResourceData
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTagsWithContext(ctx, conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
 			return diag.Errorf("updating EC2 Managed Prefix List (%s) tags: %s", d.Id(), err)
 		}
 	}
