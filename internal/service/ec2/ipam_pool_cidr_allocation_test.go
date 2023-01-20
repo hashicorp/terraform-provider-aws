@@ -169,41 +169,40 @@ func TestAccIPAMPoolCIDRAllocation_multiple(t *testing.T) {
 	})
 }
 
-/*
-	 func TestAccIPAMPoolCIDRAllocation_differentRegion(t *testing.T) {
-		var allocation ec2.IpamPoolAllocation
-		var providers []*schema.Provider
-		resourceName := "aws_vpc_ipam_pool_cidr_allocation.test"
-		cidr := "172.2.0.0/28"
+func TestAccIPAMPoolCIDRAllocation_differentRegion(t *testing.T) {
+	var allocation ec2.IpamPoolAllocation
+	var providers []*schema.Provider
+	resourceName := "aws_vpc_ipam_pool_cidr_allocation.test"
+	cidr := "172.2.0.0/28"
 
-		resource.ParallelTest(t, resource.TestCase{
-			PreCheck: func() {
-				acctest.PreCheck(t)
-				acctest.PreCheckMultipleRegion(t, 2)
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
+		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProviderFactories: acctest.FactoriesAlternate(t, &providers),
+		CheckDestroy:      testAccCheckIPAMPoolAllocationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIPAMPoolCIDRAllocationConfig_differentRegion(cidr),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIPAMPoolCIDRAllocationExistsWithProvider(resourceName, &allocation, acctest.RegionProviderFunc(acctest.AlternateRegion(), &providers)),
+					resource.TestCheckResourceAttr(resourceName, "cidr", cidr),
+					resource.TestMatchResourceAttr(resourceName, "id", regexp.MustCompile(`^ipam-pool-alloc-[\da-f]+_ipam-pool(-[\da-f]+)$`)),
+					resource.TestMatchResourceAttr(resourceName, "ipam_pool_allocation_id", regexp.MustCompile(`^ipam-pool-alloc-[\da-f]+$`)),
+					resource.TestCheckResourceAttrPair(resourceName, "ipam_pool_id", "aws_vpc_ipam_pool.test", "id"),
+				),
 			},
-			ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-			ProviderFactories: acctest.FactoriesAlternate(t, &providers),
-			CheckDestroy:      testAccCheckIPAMPoolAllocationDestroy,
-			Steps: []resource.TestStep{
-				{
-					Config: testAccIPAMPoolCIDRAllocationConfig_differentRegion(cidr),
-					Check: resource.ComposeTestCheckFunc(
-						testAccCheckIPAMPoolCIDRAllocationExistsWithProvider(resourceName, &allocation, acctest.RegionProviderFunc(acctest.AlternateRegion(), &providers)),
-						resource.TestCheckResourceAttr(resourceName, "cidr", cidr),
-						resource.TestMatchResourceAttr(resourceName, "id", regexp.MustCompile(`^ipam-pool-alloc-[\da-f]+_ipam-pool(-[\da-f]+)$`)),
-						resource.TestMatchResourceAttr(resourceName, "ipam_pool_allocation_id", regexp.MustCompile(`^ipam-pool-alloc-[\da-f]+$`)),
-						resource.TestCheckResourceAttrPair(resourceName, "ipam_pool_id", "aws_vpc_ipam_pool.test", "id"),
-					),
-				},
-				{
-					ResourceName:      resourceName,
-					ImportState:       true,
-					ImportStateVerify: true,
-				},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
-		})
-	}
-*/
+		},
+	})
+}
+
 func testAccCheckIPAMCIDRPrefix(allocation *ec2.IpamPoolAllocation, expected string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if strings.Split(aws.StringValue(allocation.Cidr), "/")[1] != expected {
@@ -327,33 +326,6 @@ resource "aws_vpc_ipam_pool_cidr" "test" {
 }
 `
 
-const testAccIPAMPoolCIDRAllocationConfig_baseDifferentRegion = `
-data "aws_region" "current" {}
-data "aws_region" "alternate" {
-	provider = "awsalternate"
-}
-
-resource "aws_vpc_ipam" "test" {
-  operating_regions {
-    region_name = data.aws_region.current.name
-  }
-  operating_regions {
-	region_name = data.aws_region.alternate.name
-  }
-}
-
-resource "aws_vpc_ipam_pool" "test" {
-  address_family = "ipv4"
-  ipam_scope_id  = aws_vpc_ipam.test.private_default_scope_id
-  locale         = data.aws_region.alternate.name
-}
-
-resource "aws_vpc_ipam_pool_cidr" "test" {
-  ipam_pool_id = aws_vpc_ipam_pool.test.id
-  cidr         = "172.2.0.0/24"
-}
-`
-
 func testAccIPAMPoolCIDRAllocationConfig_ipv4(cidr string) string {
 	return acctest.ConfigCompose(testAccIPAMPoolCIDRAllocationConfig_base, fmt.Sprintf(`
 resource "aws_vpc_ipam_pool_cidr_allocation" "test" {
@@ -425,9 +397,28 @@ resource "aws_vpc_ipam_pool_cidr_allocation" "test2" {
 
 func testAccIPAMPoolCIDRAllocationConfig_differentRegion(cidr string) string {
 	return acctest.ConfigCompose(acctest.ConfigMultipleRegionProvider(2),
-		testAccIPAMPoolCIDRAllocationConfig_baseDifferentRegion,
 		fmt.Sprintf(`
-resource "aws_vpc_ipam_pool_cidr_allocation" "test1" {
+resource "aws_vpc_ipam" "test" {
+  operating_regions {
+    region_name = %[2]q
+  }
+  operating_regions {
+    region_name = %[3]q
+  }
+}
+
+resource "aws_vpc_ipam_pool" "test" {
+  address_family = "ipv4"
+  ipam_scope_id  = aws_vpc_ipam.test.private_default_scope_id
+  locale         = %[3]q
+}
+
+resource "aws_vpc_ipam_pool_cidr" "test" {
+  ipam_pool_id = aws_vpc_ipam_pool.test.id
+  cidr         = "172.2.0.0/24"
+}
+
+resource "aws_vpc_ipam_pool_cidr_allocation" "test" {
   provider = "awsalternate"
   ipam_pool_id = aws_vpc_ipam_pool.test.id
   cidr         = %[1]q
@@ -436,5 +427,5 @@ resource "aws_vpc_ipam_pool_cidr_allocation" "test1" {
     aws_vpc_ipam_pool_cidr.test
   ]
 }
-`, cidr))
+`, cidr, acctest.Region(), acctest.AlternateRegion()))
 }
