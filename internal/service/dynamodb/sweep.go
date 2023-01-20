@@ -168,7 +168,7 @@ func (bs backupSweeper) Delete(ctx context.Context, timeout time.Duration, optFn
 	input := &dynamodb.DeleteBackupInput{
 		BackupArn: bs.arn,
 	}
-	err := tfresource.RetryContext(ctx, timeout, func() *resource.RetryError {
+	err := tfresource.Retry(ctx, timeout, func() *resource.RetryError {
 		_, err := bs.conn.DeleteBackupWithContext(ctx, input)
 		if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeBackupNotFoundException) {
 			return nil

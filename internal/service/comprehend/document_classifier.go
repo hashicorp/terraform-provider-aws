@@ -512,7 +512,7 @@ func documentClassifierPublishVersion(ctx context.Context, conn *comprehend.Clie
 	}
 
 	var out *comprehend.CreateDocumentClassifierOutput
-	err := tfresource.RetryContext(ctx, timeout, func() *resource.RetryError {
+	err := tfresource.Retry(ctx, timeout, func() *resource.RetryError {
 		var err error
 		out, err = conn.CreateDocumentClassifier(ctx, in)
 

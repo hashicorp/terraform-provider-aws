@@ -540,7 +540,7 @@ func entityRecognizerPublishVersion(ctx context.Context, conn *comprehend.Client
 	}
 
 	var out *comprehend.CreateEntityRecognizerOutput
-	err := tfresource.RetryContext(ctx, timeout, func() *resource.RetryError {
+	err := tfresource.Retry(ctx, timeout, func() *resource.RetryError {
 		var err error
 		out, err = conn.CreateEntityRecognizer(ctx, in)
 

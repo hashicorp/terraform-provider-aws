@@ -1,7 +1,6 @@
 package tfresource_test
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"sync/atomic"
@@ -372,6 +371,7 @@ func TestRetryUntilNotFound(t *testing.T) { //nolint:tparallel
 }
 
 func TestRetryContext_error(t *testing.T) {
+	ctx := acctest.Context(t)
 	t.Parallel()
 
 	expected := fmt.Errorf("nope")
@@ -381,7 +381,7 @@ func TestRetryContext_error(t *testing.T) {
 
 	errCh := make(chan error)
 	go func() {
-		errCh <- tfresource.RetryContext(context.Background(), 1*time.Second, f)
+		errCh <- tfresource.Retry(ctx, 1*time.Second, f)
 	}()
 
 	select {

@@ -22,7 +22,7 @@ type Retryable func(error) (bool, error)
 func RetryWhen(ctx context.Context, timeout time.Duration, f func() (interface{}, error), retryable Retryable) (interface{}, error) {
 	var output interface{}
 
-	err := RetryContext(ctx, timeout, func() *resource.RetryError { // nosemgrep:ci.helper-schema-resource-Retry-without-TimeoutError-check
+	err := Retry(ctx, timeout, func() *resource.RetryError { // nosemgrep:ci.helper-schema-resource-Retry-without-TimeoutError-check
 		var err error
 		var retry bool
 
@@ -181,10 +181,10 @@ func WithContinuousTargetOccurence(continuousTargetOccurence int) OptionsFunc {
 	}
 }
 
-// RetryContext allows configuration of StateChangeConf's various time arguments.
+// Retry allows configuration of StateChangeConf's various time arguments.
 // This is especially useful for AWS services that are prone to throttling, such as Route53, where
 // the default durations cause problems.
-func RetryContext(ctx context.Context, timeout time.Duration, f resource.RetryFunc, optFns ...OptionsFunc) error {
+func Retry(ctx context.Context, timeout time.Duration, f resource.RetryFunc, optFns ...OptionsFunc) error {
 	// These are used to pull the error out of the function; need a mutex to
 	// avoid a data race.
 	var resultErr error
