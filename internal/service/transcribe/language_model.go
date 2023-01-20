@@ -123,7 +123,7 @@ func resourceLanguageModelCreate(ctx context.Context, d *schema.ResourceData, me
 		in.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	outputRaw, err := tfresource.RetryWhen(propagationTimeout,
+	outputRaw, err := tfresource.RetryWhenContext(ctx, propagationTimeout,
 		func() (interface{}, error) {
 			return conn.CreateLanguageModel(ctx, in)
 		},
