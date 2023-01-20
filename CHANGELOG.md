@@ -1,4 +1,9 @@
 ## 4.52.0 (Unreleased)
+
+FEATURES:
+
+* **New Data Source:** `aws_auditmanager_framework` ([#28989](https://github.com/hashicorp/terraform-provider-aws/issues/28989))
+
 ## 4.51.0 (January 19, 2023)
 
 NOTES:
