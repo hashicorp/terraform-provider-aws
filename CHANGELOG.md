@@ -4,6 +4,10 @@ FEATURES:
 
 * **New Data Source:** `aws_auditmanager_framework` ([#28989](https://github.com/hashicorp/terraform-provider-aws/issues/28989))
 
+BUG FIXES:
+
+* resource/aws_api_gateway_integration: Prevent drift of `connection_type` attribute when `aws_api_gateway_deployment` `triggers` are used ([#29016](https://github.com/hashicorp/terraform-provider-aws/issues/29016))
+
 ## 4.51.0 (January 19, 2023)
 
 NOTES:
