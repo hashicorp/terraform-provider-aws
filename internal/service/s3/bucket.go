@@ -1333,7 +1333,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	// Add the region as an attribute
 	discoveredRegion, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, d.Timeout(schema.TimeoutRead), func() (interface{}, error) {
-		return s3manager.GetBucketRegionWithClient(context.Background(), conn, d.Id(), func(r *request.Request) {
+		return s3manager.GetBucketRegionWithClient(ctx, conn, d.Id(), func(r *request.Request) {
 			// By default, GetBucketRegion forces virtual host addressing, which
 			// is not compatible with many non-AWS implementations. Instead, pass
 			// the provider s3_force_path_style configuration, which defaults to

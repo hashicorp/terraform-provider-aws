@@ -83,7 +83,7 @@ func dataSourceBucketRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("arn", arn)
 	d.Set("bucket_domain_name", meta.(*conns.AWSClient).PartitionHostname(fmt.Sprintf("%s.s3", bucket)))
 
-	err = bucketLocation(meta.(*conns.AWSClient), d, bucket)
+	err = bucketLocation(ctx, meta.(*conns.AWSClient), d, bucket)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "getting S3 Bucket location: %s", err)
 	}
@@ -97,8 +97,8 @@ func dataSourceBucketRead(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func bucketLocation(client *conns.AWSClient, d *schema.ResourceData, bucket string) error {
-	region, err := s3manager.GetBucketRegionWithClient(context.Background(), client.S3Conn(), bucket, func(r *request.Request) {
+func bucketLocation(ctx context.Context, client *conns.AWSClient, d *schema.ResourceData, bucket string) error {
+	region, err := s3manager.GetBucketRegionWithClient(ctx, client.S3Conn(), bucket, func(r *request.Request) {
 		// By default, GetBucketRegion forces virtual host addressing, which
 		// is not compatible with many non-AWS implementations. Instead, pass
 		// the provider s3_force_path_style configuration, which defaults to
