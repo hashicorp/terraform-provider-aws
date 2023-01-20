@@ -508,7 +508,7 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	d.SetId(functionName)
 
-	_, err = tfresource.RetryWhenNotFoundContext(ctx, propagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, propagationTimeout, func() (interface{}, error) {
 		return FindFunctionByName(ctx, conn, d.Id())
 	})
 

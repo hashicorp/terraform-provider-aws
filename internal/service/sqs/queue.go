@@ -270,7 +270,7 @@ func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	outputRaw, err := tfresource.RetryWhenNotFoundContext(ctx, queueReadTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNotFound(ctx, queueReadTimeout, func() (interface{}, error) {
 		return FindQueueAttributesByURL(ctx, conn, d.Id())
 	})
 

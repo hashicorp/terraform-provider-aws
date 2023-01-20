@@ -71,7 +71,7 @@ func resourceSnapshotCreateVolumePermissionCreate(ctx context.Context, d *schema
 
 	d.SetId(id)
 
-	_, err = tfresource.RetryWhenNotFoundContext(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
 		return FindCreateSnapshotCreateVolumePermissionByTwoPartKey(ctx, conn, snapshotID, accountID)
 	})
 

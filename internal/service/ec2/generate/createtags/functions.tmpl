@@ -49,7 +49,7 @@ func {{ .CreateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 
 	{{- if .RetryCreateOnNotFound }}
 
-	_, err := tfresource.RetryWhenNotFoundContext(ctx, eventualConsistencyTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenNotFound(ctx, eventualConsistencyTimeout, func() (interface{}, error) {
 		output, err := conn.{{ .TagOp }}WithContext(ctx, input)
 
 		{{ .ParentNotFoundError }}

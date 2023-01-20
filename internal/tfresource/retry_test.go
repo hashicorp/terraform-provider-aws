@@ -149,6 +149,7 @@ func TestRetryWhenAWSErrMessageContains(t *testing.T) { // nosemgrep:ci.aws-in-f
 }
 
 func TestRetryWhenNewResourceNotFound(t *testing.T) { //nolint:tparallel
+	ctx := acctest.Context(t)
 	t.Parallel()
 
 	var retryCount int32
@@ -227,7 +228,7 @@ func TestRetryWhenNewResourceNotFound(t *testing.T) { //nolint:tparallel
 		t.Run(testCase.Name, func(t *testing.T) {
 			retryCount = 0
 
-			_, err := tfresource.RetryWhenNotFound(5*time.Second, testCase.F)
+			_, err := tfresource.RetryWhenNotFound(ctx, 5*time.Second, testCase.F)
 
 			if testCase.ExpectError && err == nil {
 				t.Fatal("expected error")
@@ -239,6 +240,7 @@ func TestRetryWhenNewResourceNotFound(t *testing.T) { //nolint:tparallel
 }
 
 func TestRetryWhenNotFound(t *testing.T) { //nolint:tparallel
+	ctx := acctest.Context(t)
 	t.Parallel()
 
 	var retryCount int32
@@ -292,7 +294,7 @@ func TestRetryWhenNotFound(t *testing.T) { //nolint:tparallel
 		t.Run(testCase.Name, func(t *testing.T) {
 			retryCount = 0
 
-			_, err := tfresource.RetryWhenNotFound(5*time.Second, testCase.F)
+			_, err := tfresource.RetryWhenNotFound(ctx, 5*time.Second, testCase.F)
 
 			if testCase.ExpectError && err == nil {
 				t.Fatal("expected error")
