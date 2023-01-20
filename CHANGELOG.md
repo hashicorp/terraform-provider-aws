@@ -3,6 +3,7 @@
 FEATURES:
 
 * **New Data Source:** `aws_auditmanager_framework` ([#28989](https://github.com/hashicorp/terraform-provider-aws/issues/28989))
+* **New Resource:** `aws_auditmanager_organization_admin_account_registration` ([#29018](https://github.com/hashicorp/terraform-provider-aws/issues/29018))
 
 BUG FIXES:
 
