@@ -1,6 +1,7 @@
 package opsworks_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -15,6 +16,7 @@ import (
 )
 
 func TestAccOpsWorksUserProfile_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opsworks_user_profile.test"
@@ -23,12 +25,12 @@ func TestAccOpsWorksUserProfile_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserProfileDestroy,
+		CheckDestroy:             testAccCheckUserProfileDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserProfileConfig_create(rName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserProfileExists(resourceName),
+					testAccCheckUserProfileExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "ssh_public_key", ""),
 					resource.TestCheckResourceAttr(resourceName, "ssh_username", rName1),
 					resource.TestCheckResourceAttr(resourceName, "allow_self_management", "false"),
@@ -37,7 +39,7 @@ func TestAccOpsWorksUserProfile_basic(t *testing.T) {
 			{
 				Config: testAccUserProfileConfig_update(rName1, rName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserProfileExists(resourceName),
+					testAccCheckUserProfileExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "ssh_public_key", ""),
 					resource.TestCheckResourceAttr(resourceName, "ssh_username", rName2),
 					resource.TestCheckResourceAttr(resourceName, "allow_self_management", "false"),
@@ -48,6 +50,7 @@ func TestAccOpsWorksUserProfile_basic(t *testing.T) {
 }
 
 func TestAccOpsWorksUserProfile_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opsworks_user_profile.test"
 
@@ -55,13 +58,13 @@ func TestAccOpsWorksUserProfile_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserProfileDestroy,
+		CheckDestroy:             testAccCheckUserProfileDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserProfileConfig_create(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserProfileExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfopsworks.ResourceUserProfile(), resourceName),
+					testAccCheckUserProfileExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfopsworks.ResourceUserProfile(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -69,7 +72,7 @@ func TestAccOpsWorksUserProfile_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckUserProfileExists(n string) resource.TestCheckFunc {
+func testAccCheckUserProfileExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -82,34 +85,36 @@ func testAccCheckUserProfileExists(n string) resource.TestCheckFunc {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn()
 
-		_, err := tfopsworks.FindUserProfileByARN(conn, rs.Primary.ID)
+		_, err := tfopsworks.FindUserProfileByARN(ctx, conn, rs.Primary.ID)
 
 		return err
 	}
 }
 
-func testAccCheckUserProfileDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn()
+func testAccCheckUserProfileDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_opsworks_user_profile" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_opsworks_user_profile" {
+				continue
+			}
+
+			_, err := tfopsworks.FindUserProfileByARN(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("OpsWorks User Profile %s still exists", rs.Primary.ID)
 		}
 
-		_, err := tfopsworks.FindUserProfileByARN(conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("OpsWorks User Profile %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
 func testAccUserProfileConfig_create(rName string) string {

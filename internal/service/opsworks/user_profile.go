@@ -1,24 +1,26 @@
 package opsworks
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/opsworks"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourceUserProfile() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceUserProfileCreate,
-		Read:   resourceUserProfileRead,
-		Update: resourceUserProfileUpdate,
-		Delete: resourceUserProfileDelete,
+		CreateWithoutTimeout: resourceUserProfileCreate,
+		ReadWithoutTimeout:   resourceUserProfileRead,
+		UpdateWithoutTimeout: resourceUserProfileUpdate,
+		DeleteWithoutTimeout: resourceUserProfileDelete,
 
 		Schema: map[string]*schema.Schema{
 			"allow_self_management": {
@@ -43,7 +45,8 @@ func ResourceUserProfile() *schema.Resource {
 	}
 }
 
-func resourceUserProfileCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceUserProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpsWorksConn()
 
 	iamUserARN := d.Get("user_arn").(string)
@@ -57,21 +60,22 @@ func resourceUserProfileCreate(d *schema.ResourceData, meta interface{}) error {
 		input.SshPublicKey = aws.String(v.(string))
 	}
 
-	_, err := conn.CreateUserProfile(input)
+	_, err := conn.CreateUserProfileWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("creating OpsWorks User Profile (%s): %w", iamUserARN, err)
+		return sdkdiag.AppendErrorf(diags, "creating OpsWorks User Profile (%s): %s", iamUserARN, err)
 	}
 
 	d.SetId(iamUserARN)
 
-	return resourceUserProfileUpdate(d, meta)
+	return resourceUserProfileUpdate(ctx, d, meta)
 }
 
-func resourceUserProfileRead(d *schema.ResourceData, meta interface{}) error {
+func resourceUserProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpsWorksConn()
 
-	profile, err := FindUserProfileByARN(conn, d.Id())
+	profile, err := FindUserProfileByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] OpsWorks User Profile %s not found, removing from state", d.Id())
@@ -80,7 +84,7 @@ func resourceUserProfileRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading OpsWorks User Profile (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading OpsWorks User Profile (%s): %s", d.Id(), err)
 	}
 
 	d.Set("allow_self_management", profile.AllowSelfManagement)
@@ -91,7 +95,8 @@ func resourceUserProfileRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceUserProfileUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceUserProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpsWorksConn()
 
 	input := &opsworks.UpdateUserProfileInput{
@@ -101,20 +106,21 @@ func resourceUserProfileUpdate(d *schema.ResourceData, meta interface{}) error {
 		SshUsername:         aws.String(d.Get("ssh_username").(string)),
 	}
 
-	_, err := conn.UpdateUserProfile(input)
+	_, err := conn.UpdateUserProfileWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("updating OpsWorks User Profile (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating OpsWorks User Profile (%s): %s", d.Id(), err)
 	}
 
-	return resourceUserProfileRead(d, meta)
+	return resourceUserProfileRead(ctx, d, meta)
 }
 
-func resourceUserProfileDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceUserProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpsWorksConn()
 
 	log.Printf("[DEBUG] Deleting OpsWorks User Profile: %s", d.Id())
-	_, err := conn.DeleteUserProfile(&opsworks.DeleteUserProfileInput{
+	_, err := conn.DeleteUserProfileWithContext(ctx, &opsworks.DeleteUserProfileInput{
 		IamUserArn: aws.String(d.Id()),
 	})
 
@@ -123,18 +129,18 @@ func resourceUserProfileDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("deleting OpsWorks User Profile (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting OpsWorks User Profile (%s): %s", d.Id(), err)
 	}
 
 	return nil
 }
 
-func FindUserProfileByARN(conn *opsworks.OpsWorks, arn string) (*opsworks.UserProfile, error) {
+func FindUserProfileByARN(ctx context.Context, conn *opsworks.OpsWorks, arn string) (*opsworks.UserProfile, error) {
 	input := &opsworks.DescribeUserProfilesInput{
 		IamUserArns: aws.StringSlice([]string{arn}),
 	}
 
-	output, err := conn.DescribeUserProfiles(input)
+	output, err := conn.DescribeUserProfilesWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, opsworks.ErrCodeResourceNotFoundException) {
 		return nil, &resource.NotFoundError{
