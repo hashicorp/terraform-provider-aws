@@ -432,7 +432,7 @@ func testAccIntegrationImportStateIdFunc(resourceName string) resource.ImportSta
 func testAccIntegrationConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
-  name = "%s"
+  name = %[1]q
 }
 
 resource "aws_api_gateway_resource" "test" {
@@ -479,7 +479,7 @@ resource "aws_api_gateway_integration" "test" {
 func testAccIntegrationConfig_update(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
-  name = "%s"
+  name = %[1]q
 }
 
 resource "aws_api_gateway_resource" "test" {
@@ -527,7 +527,7 @@ resource "aws_api_gateway_integration" "test" {
 func testAccIntegrationConfig_updateURI(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
-  name = "%s"
+  name = "%[1]q
 }
 
 resource "aws_api_gateway_resource" "test" {
@@ -575,7 +575,7 @@ resource "aws_api_gateway_integration" "test" {
 func testAccIntegrationConfig_updateContentHandling(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
-  name = "%s"
+  name = %[1]q
 }
 
 resource "aws_api_gateway_resource" "test" {
@@ -623,7 +623,7 @@ resource "aws_api_gateway_integration" "test" {
 func testAccIntegrationConfig_removeContentHandling(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
-  name = "%s"
+  name = %[1]q
 }
 
 resource "aws_api_gateway_resource" "test" {
@@ -670,7 +670,7 @@ resource "aws_api_gateway_integration" "test" {
 func testAccIntegrationConfig_updateNoTemplates(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
-  name = "%s"
+  name = %[1]q
 }
 
 resource "aws_api_gateway_resource" "test" {
@@ -708,7 +708,7 @@ resource "aws_api_gateway_integration" "test" {
 func testAccIntegrationConfig_cacheKeyParameters(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
-  name = "%s"
+  name = %[1]q
 }
 
 resource "aws_api_gateway_resource" "test" {
@@ -762,36 +762,9 @@ resource "aws_api_gateway_integration" "test" {
 }
 
 func testAccIntegrationConfig_IntegrationTypeBase(rName string) string {
-	return fmt.Sprintf(`
-variable "name" {
-  default = "%s"
-}
-
-data "aws_availability_zones" "test" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.10.0.0/16"
-
-  tags = {
-    Name = var.name
-  }
-}
-
-resource "aws_subnet" "test" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "10.10.0.0/24"
-  availability_zone = data.aws_availability_zones.test.names[0]
-}
-
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
-  name = var.name
+  name = %[1]q
 }
 
 resource "aws_api_gateway_resource" "test" {
@@ -812,21 +785,21 @@ resource "aws_api_gateway_method" "test" {
 }
 
 resource "aws_lb" "test" {
-  name               = var.name
+  name               = %[1]q
   internal           = true
   load_balancer_type = "network"
-  subnets            = [aws_subnet.test.id]
+  subnets            = aws_subnet.test[*].id
 }
 
 resource "aws_api_gateway_vpc_link" "test" {
-  name        = var.name
+  name        = %[1]q
   target_arns = [aws_lb.test.arn]
 }
-`, rName)
+`, rName))
 }
 
 func testAccIntegrationConfig_typeVPCLink(rName string) string {
-	return testAccIntegrationConfig_IntegrationTypeBase(rName) + `
+	return acctest.ConfigCompose(testAccIntegrationConfig_IntegrationTypeBase(rName), `
 resource "aws_api_gateway_integration" "test" {
   rest_api_id = aws_api_gateway_rest_api.test.id
   resource_id = aws_api_gateway_resource.test.id
@@ -841,11 +814,11 @@ resource "aws_api_gateway_integration" "test" {
   connection_type = "VPC_LINK"
   connection_id   = aws_api_gateway_vpc_link.test.id
 }
-`
+`)
 }
 
 func testAccIntegrationConfig_typeInternet(rName string) string {
-	return testAccIntegrationConfig_IntegrationTypeBase(rName) + `
+	return acctest.ConfigCompose(testAccIntegrationConfig_IntegrationTypeBase(rName), `
 resource "aws_api_gateway_integration" "test" {
   rest_api_id = aws_api_gateway_rest_api.test.id
   resource_id = aws_api_gateway_resource.test.id
@@ -857,7 +830,7 @@ resource "aws_api_gateway_integration" "test" {
   passthrough_behavior    = "WHEN_NO_MATCH"
   content_handling        = "CONVERT_TO_TEXT"
 }
-`
+`)
 }
 
 func testAccIntegrationConfig_tlsInsecureSkipVerification(rName string, insecureSkipVerification bool) string {
