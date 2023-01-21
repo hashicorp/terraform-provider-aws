@@ -139,7 +139,7 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
 }
 ```
 
-The following example below creates a Cloudfront distribution with an origin group for failover routing:
+The following example below creates a CloudFront distribution with an origin group for failover routing:
 
 ```terraform
 resource "aws_cloudfront_distribution" "s3_distribution" {
@@ -182,6 +182,50 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
     target_origin_id = "groupS3"
   }
 
+  # ... other configuration ...
+}
+```
+
+CloudFront distribution using managed cache policy (CachingDisabled):
+
+```terraform
+locals {
+  s3_origin_id = "myS3Origin"
+}
+
+resource "aws_cloudfront_distribution" "s3_distribution" {
+  origin {
+    domain_name = aws_s3_bucket.primary.bucket_regional_domain_name
+    origin_id   = "myS3Origin"
+
+    s3_origin_config {
+      origin_access_identity = aws_cloudfront_origin_access_identity.default.cloudfront_access_identity_path
+    }
+  }
+  enabled             = true
+  is_ipv6_enabled     = true
+  comment             = "Some comment"
+  default_root_object = "index.html"
+
+  # https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/using-managed-cache-policies.html#:~:text=Compression%20support.-,CachingDisabled,-View%20this%20policy
+  default_cache_behavior {
+    # Using the CachingDisabled managed policy ID:
+    cache_policy_id = "4135ea2d-6df8-44a3-9df3-4b5a84be39a"
+    allowed_methods = ["GET", "HEAD", "OPTIONS"]
+    path_pattern     = "/content/*"
+    target_origin_id = local.s3_origin_id
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "whitelist"
+      locations        = ["US", "CA", "GB", "DE"]
+    }
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
   # ... other configuration ...
 }
 ```
@@ -274,7 +318,7 @@ resource "aws_cloudfront_distribution" "example" {
 
 ##### Function Association
 
-With CloudFront Functions in Amazon CloudFront, you can write lightweight functions in JavaScript for high-scale, latency-sensitive CDN customizations. You can associate a single function per event type. See [Cloudfront Functions](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-functions.html)
+With CloudFront Functions in Amazon CloudFront, you can write lightweight functions in JavaScript for high-scale, latency-sensitive CDN customizations. You can associate a single function per event type. See [CloudFront Functions](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-functions.html)
 for more information.
 
 Example configuration:
@@ -296,7 +340,7 @@ resource "aws_cloudfront_distribution" "example" {
 ```
 
 * `event_type` (Required) - Specific event to trigger this function. Valid values: `viewer-request` or `viewer-response`.
-* `function_arn` (Required) - ARN of the Cloudfront function.
+* `function_arn` (Required) - ARN of the CloudFront function.
 
 ##### Cookies Arguments
 
@@ -420,7 +464,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Cloudfront Distributions can be imported using the `id`, e.g.,
+CloudFront Distributions can be imported using the `id`, e.g.,
 
 ```
 $ terraform import aws_cloudfront_distribution.distribution E74FTE3EXAMPLE
