@@ -559,7 +559,8 @@ func ResourceDistribution() *schema.Resource {
 									},
 									"origin_ssl_protocols": {
 										Type:     schema.TypeSet,
-										Required: true,
+										Optional: true,
+										Computed: true,
 										Elem: &schema.Schema{
 											Type:         schema.TypeString,
 											ValidateFunc: validation.StringInSlice(cloudfront.SslProtocol_Values(), false),

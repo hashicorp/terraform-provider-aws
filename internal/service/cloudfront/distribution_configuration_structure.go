@@ -1013,9 +1013,12 @@ func ExpandCustomOriginConfig(m map[string]interface{}) *cloudfront.CustomOrigin
 		OriginProtocolPolicy:   aws.String(m["origin_protocol_policy"].(string)),
 		HTTPPort:               aws.Int64(int64(m["http_port"].(int))),
 		HTTPSPort:              aws.Int64(int64(m["https_port"].(int))),
-		OriginSslProtocols:     ExpandCustomOriginConfigSSL(m["origin_ssl_protocols"].(*schema.Set).List()),
 		OriginReadTimeout:      aws.Int64(int64(m["origin_read_timeout"].(int))),
 		OriginKeepaliveTimeout: aws.Int64(int64(m["origin_keepalive_timeout"].(int))),
+	}
+
+	if v, ok := m["origin_ssl_protocols"].(*schema.Set); ok && len(v.List()) > 0 {
+		customOrigin.OriginSslProtocols = ExpandCustomOriginConfigSSL(v.List())
 	}
 
 	return customOrigin
@@ -1026,9 +1029,9 @@ func FlattenCustomOriginConfig(cor *cloudfront.CustomOriginConfig) map[string]in
 		"origin_protocol_policy":   aws.StringValue(cor.OriginProtocolPolicy),
 		"http_port":                int(aws.Int64Value(cor.HTTPPort)),
 		"https_port":               int(aws.Int64Value(cor.HTTPSPort)),
-		"origin_ssl_protocols":     FlattenCustomOriginConfigSSL(cor.OriginSslProtocols),
 		"origin_read_timeout":      int(aws.Int64Value(cor.OriginReadTimeout)),
 		"origin_keepalive_timeout": int(aws.Int64Value(cor.OriginKeepaliveTimeout)),
+		"origin_ssl_protocols":     FlattenCustomOriginConfigSSL(cor.OriginSslProtocols),
 	}
 
 	return customOrigin

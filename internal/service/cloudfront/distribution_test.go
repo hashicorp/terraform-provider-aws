@@ -683,7 +683,6 @@ func TestAccCloudFrontDistribution_noOptionalItems(t *testing.T) {
 						"custom_origin_config.0.origin_keepalive_timeout": "5",
 						"custom_origin_config.0.origin_protocol_policy":   "http-only",
 						"custom_origin_config.0.origin_read_timeout":      "30",
-						"custom_origin_config.0.origin_ssl_protocols.#":   "2",
 						"domain_name": "www.example.com",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "price_class", "PriceClass_All"),
@@ -2401,7 +2400,6 @@ resource "aws_cloudfront_distribution" "no_optional_items" {
       http_port              = 80
       https_port             = 443
       origin_protocol_policy = "http-only"
-      origin_ssl_protocols   = ["SSLv3", "TLSv1"]
     }
   }
 
