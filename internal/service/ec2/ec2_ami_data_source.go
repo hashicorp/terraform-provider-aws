@@ -54,6 +54,10 @@ func DataSourceAMI() *schema.Resource {
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
+						"kms_key_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						"no_device": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -359,6 +363,7 @@ func flattenAMIBlockDeviceMappings(m []*ec2.BlockDeviceMapping) *schema.Set {
 				"delete_on_termination": fmt.Sprintf("%t", aws.BoolValue(v.Ebs.DeleteOnTermination)),
 				"encrypted":             fmt.Sprintf("%t", aws.BoolValue(v.Ebs.Encrypted)),
 				"iops":                  fmt.Sprintf("%d", aws.Int64Value(v.Ebs.Iops)),
+				"kms_key_id":            aws.StringValue(v.Ebs.KmsKeyId),
 				"throughput":            fmt.Sprintf("%d", aws.Int64Value(v.Ebs.Throughput)),
 				"volume_size":           fmt.Sprintf("%d", aws.Int64Value(v.Ebs.VolumeSize)),
 				"snapshot_id":           aws.StringValue(v.Ebs.SnapshotId),
@@ -430,6 +435,10 @@ func amiBlockDeviceMappingHash(v interface{}) int {
 			buf.WriteString(fmt.Sprintf("%s-", e["volume_size"].(string)))
 			buf.WriteString(fmt.Sprintf("%s-", e["volume_type"].(string)))
 		}
+	}
+
+	if d, ok := m["kms_key_id"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", d.(string)))
 	}
 	if d, ok := m["no_device"]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", d.(string)))
