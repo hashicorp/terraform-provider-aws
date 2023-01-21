@@ -27,7 +27,6 @@ resource "aws_quicksight_user" "example" {
 
 The following arguments are supported:
 
-
 * `email` - (Required) The email address of the user that you want to register.
 * `identity_type` - (Required) Amazon QuickSight supports several ways of managing the identity of users. This parameter accepts either  `IAM` or `QUICKSIGHT`. If `IAM` is specified, the `iam_arn` must also be specified.
 * `user_role` - (Required) The Amazon QuickSight role of the user. The user role can be one of the following: `READER`, `AUTHOR`, or `ADMIN`

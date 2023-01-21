@@ -1,17 +1,19 @@
 package transfer
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/transfer"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -19,12 +21,12 @@ import (
 
 func ResourceWorkflow() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceWorkflowCreate,
-		Read:   resourceWorkflowRead,
-		Update: resourceWorkflowUpdate,
-		Delete: resourceWorkflowDelete,
+		CreateWithoutTimeout: resourceWorkflowCreate,
+		ReadWithoutTimeout:   resourceWorkflowRead,
+		UpdateWithoutTimeout: resourceWorkflowUpdate,
+		DeleteWithoutTimeout: resourceWorkflowDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -437,8 +439,9 @@ func ResourceWorkflow() *schema.Resource {
 	}
 }
 
-func resourceWorkflowCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).TransferConn
+func resourceWorkflowCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).TransferConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -461,89 +464,92 @@ func resourceWorkflowCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Creating Transfer Workflow: %s", input)
-	output, err := conn.CreateWorkflow(input)
+	output, err := conn.CreateWorkflowWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating Transfer Workflow: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating Transfer Workflow: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.WorkflowId))
 
-	return resourceWorkflowRead(d, meta)
+	return append(diags, resourceWorkflowRead(ctx, d, meta)...)
 }
 
-func resourceWorkflowRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).TransferConn
+func resourceWorkflowRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).TransferConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	output, err := FindWorkflowByID(conn, d.Id())
+	output, err := FindWorkflowByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Transfer Workflow (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Transfer Workflow (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Transfer Workflow (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", output.Arn)
 	d.Set("description", output.Description)
 
 	if err := d.Set("on_exception_steps", flattenWorkflows(output.OnExceptionSteps)); err != nil {
-		return fmt.Errorf("error setting on_exception_steps: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting on_exception_steps: %s", err)
 	}
 
 	if err := d.Set("steps", flattenWorkflows(output.Steps)); err != nil {
-		return fmt.Errorf("error setting steps: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting steps: %s", err)
 	}
 
 	tags := KeyValueTags(output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceWorkflowUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).TransferConn
+func resourceWorkflowUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).TransferConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %w", err)
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
 		}
 	}
 
-	return resourceWorkflowRead(d, meta)
+	return append(diags, resourceWorkflowRead(ctx, d, meta)...)
 }
 
-func resourceWorkflowDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).TransferConn
+func resourceWorkflowDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).TransferConn()
 
 	log.Printf("[DEBUG] Deleting Transfer Workflow: (%s)", d.Id())
-	_, err := conn.DeleteWorkflow(&transfer.DeleteWorkflowInput{
+	_, err := conn.DeleteWorkflowWithContext(ctx, &transfer.DeleteWorkflowInput{
 		WorkflowId: aws.String(d.Id()),
 	})
 
 	if tfawserr.ErrCodeEquals(err, transfer.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Transfer Workflow (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Transfer Workflow (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandWorkflows(tfList []interface{}) []*transfer.WorkflowStep {

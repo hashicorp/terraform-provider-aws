@@ -11,10 +11,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -22,18 +24,18 @@ import (
 
 func ResourceEndpoint() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceEndpointCreate,
-		Read:   resourceEndpointRead,
-		Update: resourceEndpointUpdate,
-		Delete: resourceEndpointDelete,
+		CreateWithoutTimeout: resourceEndpointCreate,
+		ReadWithoutTimeout:   resourceEndpointRead,
+		UpdateWithoutTimeout: resourceEndpointUpdate,
+		DeleteWithoutTimeout: resourceEndpointDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(5 * time.Minute),
-			Delete: schema.DefaultTimeout(5 * time.Minute),
+			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -333,6 +335,49 @@ func ResourceEndpoint() *schema.Resource {
 				Optional:      true,
 				ConflictsWith: []string{"secrets_manager_access_role_arn", "secrets_manager_arn"},
 			},
+			"redis_settings": {
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"auth_password": {
+							Type:      schema.TypeString,
+							Optional:  true,
+							Sensitive: true,
+						},
+						"auth_type": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(dms.RedisAuthTypeValue_Values(), false),
+						},
+						"auth_user_name": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"port": {
+							Type:         schema.TypeInt,
+							Required:     true,
+							ValidateFunc: validation.IntAtLeast(0),
+						},
+						"server_name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"ssl_ca_certificate_arn": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"ssl_security_protocol": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      dms.SslSecurityProtocolValueSslEncryption,
+							ValidateFunc: validation.StringInSlice(dms.SslSecurityProtocolValue_Values(), false),
+						},
+					},
+				},
+			},
 			"redshift_settings": {
 				Type:             schema.TypeList,
 				Optional:         true,
@@ -418,7 +463,7 @@ func ResourceEndpoint() *schema.Resource {
 						"cdc_min_file_size": {
 							Type:         schema.TypeInt,
 							Optional:     true,
-							Default:      32,
+							Default:      32000,
 							ValidateFunc: validation.IntAtLeast(0),
 						},
 						"cdc_path": {
@@ -518,6 +563,12 @@ func ResourceEndpoint() *schema.Resource {
 						"ignore_headers_row": {
 							Type:         schema.TypeInt,
 							Optional:     true,
+							ValidateFunc: validation.IntInSlice([]int{0, 1}),
+							Description:  "This setting has no effect, is deprecated, and will be removed in a future version",
+						},
+						"ignore_header_rows": {
+							Type:         schema.TypeInt,
+							Optional:     true,
 							Default:      0,
 							ValidateFunc: validation.IntInSlice([]int{0, 1}),
 						},
@@ -580,6 +631,11 @@ func ResourceEndpoint() *schema.Resource {
 							Optional: true,
 							Default:  false,
 						},
+						"use_task_start_time_for_full_load_timestamp": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
 					},
 				},
 			},
@@ -628,8 +684,9 @@ func ResourceEndpoint() *schema.Resource {
 	}
 }
 
-func resourceEndpointCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DMSConn
+func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DMSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -757,6 +814,8 @@ func resourceEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 			// Set connection info in top-level namespace as well
 			expandTopLevelConnectionInfo(d, input)
 		}
+	case engineNameRedis:
+		input.RedisSettings = expandRedisSettings(d.Get("redis_settings").([]interface{})[0].(map[string]interface{}))
 	case engineNameRedshift:
 		var settings = &dms.RedshiftSettings{
 			DatabaseName: aws.String(d.Get("database_name").(string)),
@@ -819,73 +878,93 @@ func resourceEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 			// Set connection info in top-level namespace as well
 			expandTopLevelConnectionInfo(d, input)
 		}
+	case engineNameSybase:
+		if _, ok := d.GetOk("secrets_manager_arn"); ok {
+			input.SybaseSettings = &dms.SybaseSettings{
+				SecretsManagerAccessRoleArn: aws.String(d.Get("secrets_manager_access_role_arn").(string)),
+				SecretsManagerSecretId:      aws.String(d.Get("secrets_manager_arn").(string)),
+				DatabaseName:                aws.String(d.Get("database_name").(string)),
+			}
+		} else {
+			input.SybaseSettings = &dms.SybaseSettings{
+				Username:     aws.String(d.Get("username").(string)),
+				Password:     aws.String(d.Get("password").(string)),
+				ServerName:   aws.String(d.Get("server_name").(string)),
+				Port:         aws.Int64(int64(d.Get("port").(int))),
+				DatabaseName: aws.String(d.Get("database_name").(string)),
+			}
+
+			// Set connection info in top-level namespace as well
+			expandTopLevelConnectionInfo(d, input)
+		}
 	case engineNameS3:
 		input.S3Settings = expandS3Settings(d.Get("s3_settings").([]interface{})[0].(map[string]interface{}))
 	default:
 		expandTopLevelConnectionInfo(d, input)
 	}
 
-	log.Printf("[DEBUG] Creating DMS Endpoint: %s", input)
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(d.Timeout(schema.TimeoutCreate),
+	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, d.Timeout(schema.TimeoutCreate),
 		func() (interface{}, error) {
-			return conn.CreateEndpoint(input)
+			return conn.CreateEndpointWithContext(ctx, input)
 		},
 		dms.ErrCodeAccessDeniedFault)
 
 	if err != nil {
-		return fmt.Errorf("creating DMS Endpoint (%s): %w", endpointID, err)
+		return sdkdiag.AppendErrorf(diags, "creating DMS Endpoint (%s): %s", endpointID, err)
 	}
 
 	d.SetId(endpointID)
 
-	return resourceEndpointRead(d, meta)
+	return append(diags, resourceEndpointRead(ctx, d, meta)...)
 }
 
-func resourceEndpointRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DMSConn
+func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DMSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	endpoint, err := FindEndpointByID(conn, d.Id())
+	endpoint, err := FindEndpointByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DMS Endpoint (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading DMS Endpoint (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading DMS Endpoint (%s): %s", d.Id(), err)
 	}
 
 	err = resourceEndpointSetState(d, endpoint)
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading DMS Endpoint (%s): %s", d.Id(), err)
 	}
 
-	tags, err := ListTags(conn, d.Get("endpoint_arn").(string))
+	tags, err := ListTags(ctx, conn, d.Get("endpoint_arn").(string))
 
 	if err != nil {
-		return fmt.Errorf("listing tags for DMS Endpoint (%s): %w", d.Get("endpoint_arn").(string), err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for DMS Endpoint (%s): %s", d.Get("endpoint_arn").(string), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DMSConn
+func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DMSConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &dms.ModifyEndpointInput{
@@ -1062,6 +1141,11 @@ func resourceEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 					expandTopLevelConnectionInfoModify(d, input)
 				}
 			}
+		case engineNameRedis:
+			if d.HasChanges("redis_settings") {
+				input.RedisSettings = expandRedisSettings(d.Get("redis_settings").([]interface{})[0].(map[string]interface{}))
+				input.EngineName = aws.String(engineName)
+			}
 		case engineNameRedshift:
 			if d.HasChanges(
 				"username", "password", "server_name", "port", "database_name",
@@ -1135,6 +1219,30 @@ func resourceEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 					expandTopLevelConnectionInfoModify(d, input)
 				}
 			}
+		case engineNameSybase:
+			if d.HasChanges(
+				"username", "password", "server_name", "port", "database_name", "secrets_manager_access_role_arn",
+				"secrets_manager_arn") {
+				if _, ok := d.GetOk("secrets_manager_arn"); ok {
+					input.SybaseSettings = &dms.SybaseSettings{
+						DatabaseName:                aws.String(d.Get("database_name").(string)),
+						SecretsManagerAccessRoleArn: aws.String(d.Get("secrets_manager_access_role_arn").(string)),
+						SecretsManagerSecretId:      aws.String(d.Get("secrets_manager_arn").(string)),
+					}
+				} else {
+					input.SybaseSettings = &dms.SybaseSettings{
+						Username:     aws.String(d.Get("username").(string)),
+						Password:     aws.String(d.Get("password").(string)),
+						ServerName:   aws.String(d.Get("server_name").(string)),
+						Port:         aws.Int64(int64(d.Get("port").(int))),
+						DatabaseName: aws.String(d.Get("database_name").(string)),
+					}
+					input.EngineName = aws.String(engineName) // Must be included (should be 'postgres')
+
+					// Update connection info in top-level namespace as well
+					expandTopLevelConnectionInfoModify(d, input)
+				}
+			}
 		case engineNameS3:
 			if d.HasChanges("s3_settings") {
 				input.S3Settings = expandS3Settings(d.Get("s3_settings").([]interface{})[0].(map[string]interface{}))
@@ -1162,11 +1270,10 @@ func resourceEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 
-		log.Printf("[DEBUG] Modifying DMS Endpoint: %s", input)
-		_, err := conn.ModifyEndpoint(input)
+		_, err := conn.ModifyEndpointWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("updating DMS Endpoint (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating DMS Endpoint (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -1174,35 +1281,36 @@ func resourceEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 		arn := d.Get("endpoint_arn").(string)
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, arn, o, n); err != nil {
-			return fmt.Errorf("updating DMS Endpoint (%s) tags: %w", arn, err)
+		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating DMS Endpoint (%s) tags: %s", arn, err)
 		}
 	}
 
-	return resourceEndpointRead(d, meta)
+	return append(diags, resourceEndpointRead(ctx, d, meta)...)
 }
 
-func resourceEndpointDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DMSConn
+func resourceEndpointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DMSConn()
 
 	log.Printf("[DEBUG] Deleting DMS Endpoint: (%s)", d.Id())
-	_, err := conn.DeleteEndpoint(&dms.DeleteEndpointInput{
+	_, err := conn.DeleteEndpointWithContext(ctx, &dms.DeleteEndpointInput{
 		EndpointArn: aws.String(d.Get("endpoint_arn").(string)),
 	})
 
 	if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("deleting DMS Endpoint (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting DMS Endpoint (%s): %s", d.Id(), err)
 	}
 
-	if _, err = waitEndpointDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("waiting for DMS Endpoint (%s) delete: %w", d.Id(), err)
+	if err = waitEndpointDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for DMS Endpoint (%s) delete: %s", d.Id(), err)
 	}
 
-	return err
+	return diags
 }
 
 func resourceEndpointCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
@@ -1222,6 +1330,10 @@ func resourceEndpointCustomizeDiff(_ context.Context, diff *schema.ResourceDiff,
 	case engineNameMongodb:
 		if v, ok := diff.GetOk("mongodb_settings"); !ok || len(v.([]interface{})) == 0 || v.([]interface{})[0] == nil {
 			return fmt.Errorf("mongodb_settings must be set when engine_name = %q", engineName)
+		}
+	case engineNameRedis:
+		if v, ok := diff.GetOk("redis_settings"); !ok || len(v.([]interface{})) == 0 || v.([]interface{})[0] == nil {
+			return fmt.Errorf("redis_settings must be set when engine_name = %q", engineName)
 		}
 	case engineNameS3:
 		if v, ok := diff.GetOk("s3_settings"); !ok || len(v.([]interface{})) == 0 || v.([]interface{})[0] == nil {
@@ -1317,6 +1429,14 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *dms.Endpoint) er
 		} else {
 			flattenTopLevelConnectionInfo(d, endpoint)
 		}
+	case engineNameRedis:
+		// Auth password isn't returned in API. Propagate state value.
+		tfMap := flattenRedisSettings(endpoint.RedisSettings)
+		tfMap["auth_password"] = d.Get("redis_settings.0.auth_password").(string)
+
+		if err := d.Set("redis_settings", []interface{}{tfMap}); err != nil {
+			return fmt.Errorf("setting redis_settings: %w", err)
+		}
 	case engineNameRedshift:
 		if endpoint.RedshiftSettings != nil {
 			d.Set("username", endpoint.RedshiftSettings.Username)
@@ -1339,6 +1459,17 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *dms.Endpoint) er
 			d.Set("database_name", endpoint.MicrosoftSQLServerSettings.DatabaseName)
 			d.Set("secrets_manager_access_role_arn", endpoint.MicrosoftSQLServerSettings.SecretsManagerAccessRoleArn)
 			d.Set("secrets_manager_arn", endpoint.MicrosoftSQLServerSettings.SecretsManagerSecretId)
+		} else {
+			flattenTopLevelConnectionInfo(d, endpoint)
+		}
+	case engineNameSybase:
+		if endpoint.SybaseSettings != nil {
+			d.Set("username", endpoint.SybaseSettings.Username)
+			d.Set("server_name", endpoint.SybaseSettings.ServerName)
+			d.Set("port", endpoint.SybaseSettings.Port)
+			d.Set("database_name", endpoint.SybaseSettings.DatabaseName)
+			d.Set("secrets_manager_access_role_arn", endpoint.SybaseSettings.SecretsManagerAccessRoleArn)
+			d.Set("secrets_manager_arn", endpoint.SybaseSettings.SecretsManagerSecretId)
 		} else {
 			flattenTopLevelConnectionInfo(d, endpoint)
 		}
@@ -1648,6 +1779,70 @@ func flattenMongoDBSettings(settings *dms.MongoDbSettings) []map[string]interfac
 	return []map[string]interface{}{m}
 }
 
+func expandRedisSettings(tfMap map[string]interface{}) *dms.RedisSettings {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &dms.RedisSettings{}
+
+	if v, ok := tfMap["auth_password"].(string); ok && v != "" {
+		apiObject.AuthPassword = aws.String(v)
+	}
+	if v, ok := tfMap["auth_type"].(string); ok && v != "" {
+		apiObject.AuthType = aws.String(v)
+	}
+	if v, ok := tfMap["auth_user_name"].(string); ok && v != "" {
+		apiObject.AuthUserName = aws.String(v)
+	}
+	if v, ok := tfMap["port"].(int); ok {
+		apiObject.Port = aws.Int64(int64(v))
+	}
+	if v, ok := tfMap["server_name"].(string); ok && v != "" {
+		apiObject.ServerName = aws.String(v)
+	}
+	if v, ok := tfMap["ssl_ca_certificate_arn"].(string); ok && v != "" {
+		apiObject.SslCaCertificateArn = aws.String(v)
+	}
+	if v, ok := tfMap["ssl_security_protocol"].(string); ok && v != "" {
+		apiObject.SslSecurityProtocol = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func flattenRedisSettings(apiObject *dms.RedisSettings) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.AuthPassword; v != nil {
+		tfMap["auth_password"] = aws.StringValue(v)
+	}
+	if v := apiObject.AuthType; v != nil {
+		tfMap["auth_type"] = aws.StringValue(v)
+	}
+	if v := apiObject.AuthUserName; v != nil {
+		tfMap["auth_user_name"] = aws.StringValue(v)
+	}
+	if v := apiObject.Port; v != nil {
+		tfMap["port"] = aws.Int64Value(v)
+	}
+	if v := apiObject.ServerName; v != nil {
+		tfMap["server_name"] = aws.StringValue(v)
+	}
+	if v := apiObject.SslCaCertificateArn; v != nil {
+		tfMap["ssl_ca_certificate_arn"] = aws.StringValue(v)
+	}
+	if v := apiObject.SslSecurityProtocol; v != nil {
+		tfMap["ssl_security_protocol"] = aws.StringValue(v)
+	}
+
+	return tfMap
+}
+
 func flattenRedshiftSettings(settings *dms.RedshiftSettings) []map[string]interface{} {
 	if settings == nil {
 		return []map[string]interface{}{}
@@ -1779,6 +1974,9 @@ func expandS3Settings(tfMap map[string]interface{}) *dms.S3Settings {
 	if v, ok := tfMap["use_csv_no_sup_value"].(bool); ok {
 		apiObject.UseCsvNoSupValue = aws.Bool(v)
 	}
+	if v, ok := tfMap["use_task_start_time_for_full_load_timestamp"].(bool); ok {
+		apiObject.UseTaskStartTimeForFullLoadTimestamp = aws.Bool(v)
+	}
 
 	return apiObject
 }
@@ -1894,6 +2092,9 @@ func flattenS3Settings(apiObject *dms.S3Settings) []map[string]interface{} {
 	}
 	if v := apiObject.UseCsvNoSupValue; v != nil {
 		tfMap["use_csv_no_sup_value"] = aws.BoolValue(v)
+	}
+	if v := apiObject.UseTaskStartTimeForFullLoadTimestamp; v != nil {
+		tfMap["use_task_start_time_for_full_load_timestamp"] = aws.BoolValue(v)
 	}
 
 	return []map[string]interface{}{tfMap}

@@ -1,19 +1,21 @@
 package autoscaling
 
 import (
-	"fmt"
+	"context"
 	"sort"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
 func DataSourceGroups() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceGroupsRead,
+		ReadWithoutTimeout: dataSourceGroupsRead,
 
 		Schema: map[string]*schema.Schema{
 			"arns": {
@@ -75,8 +77,9 @@ func buildFiltersDataSource(set *schema.Set) []*autoscaling.Filter {
 	return filters
 }
 
-func dataSourceGroupsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AutoScalingConn
+func dataSourceGroupsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AutoScalingConn()
 
 	input := &autoscaling.DescribeAutoScalingGroupsInput{}
 
@@ -88,10 +91,10 @@ func dataSourceGroupsRead(d *schema.ResourceData, meta interface{}) error {
 		input.Filters = buildFiltersDataSource(v.(*schema.Set))
 	}
 
-	groups, err := findGroups(conn, input)
+	groups, err := findGroups(ctx, conn, input)
 
 	if err != nil {
-		return fmt.Errorf("reading Auto Scaling Groups: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading Auto Scaling Groups: %s", err)
 	}
 
 	var arns, names []string
@@ -108,5 +111,5 @@ func dataSourceGroupsRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arns", arns)
 	d.Set("names", names)
 
-	return nil
+	return diags
 }

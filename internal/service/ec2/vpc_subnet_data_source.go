@@ -1,20 +1,22 @@
 package ec2
 
 import (
-	"fmt"
+	"context"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func DataSourceSubnet() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceSubnetRead,
+		ReadWithoutTimeout: dataSourceSubnetRead,
 
 		Timeouts: &schema.ResourceTimeout{
 			Read: schema.DefaultTimeout(20 * time.Minute),
@@ -123,8 +125,9 @@ func DataSourceSubnet() *schema.Resource {
 	}
 }
 
-func dataSourceSubnetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func dataSourceSubnetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeSubnetsInput{}
@@ -175,10 +178,10 @@ func dataSourceSubnetRead(d *schema.ResourceData, meta interface{}) error {
 		input.Filters = nil
 	}
 
-	subnet, err := FindSubnet(conn, input)
+	subnet, err := FindSubnet(ctx, conn, input)
 
 	if err != nil {
-		return tfresource.SingularDataSourceFindError("EC2 Subnet", err)
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Subnet", err))
 	}
 
 	d.SetId(aws.StringValue(subnet.SubnetId))
@@ -222,10 +225,10 @@ func dataSourceSubnetRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err := d.Set("tags", KeyValueTags(subnet.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	d.Set("vpc_id", subnet.VpcId)
 
-	return nil
+	return diags
 }

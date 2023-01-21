@@ -1,6 +1,7 @@
 package elastictranscoder_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -17,20 +18,21 @@ import (
 )
 
 func TestAccElasticTranscoderPreset_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var preset elastictranscoder.Preset
 	resourceName := "aws_elastictranscoder_preset.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elastictranscoder.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPresetDestroy,
+		CheckDestroy:             testAccCheckPresetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPresetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPresetExists(resourceName, &preset),
+					testAccCheckPresetExists(ctx, resourceName, &preset),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elastictranscoder", regexp.MustCompile(`preset/.+`)),
 				),
 			},
@@ -44,20 +46,21 @@ func TestAccElasticTranscoderPreset_basic(t *testing.T) {
 }
 
 func TestAccElasticTranscoderPreset_video_noCodec(t *testing.T) {
+	ctx := acctest.Context(t)
 	var preset elastictranscoder.Preset
 	resourceName := "aws_elastictranscoder_preset.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elastictranscoder.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPresetDestroy,
+		CheckDestroy:             testAccCheckPresetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPresetConfig_videoNoCodec(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPresetExists(resourceName, &preset),
+					testAccCheckPresetExists(ctx, resourceName, &preset),
 				),
 			},
 			{
@@ -71,20 +74,21 @@ func TestAccElasticTranscoderPreset_video_noCodec(t *testing.T) {
 
 // https://github.com/terraform-providers/terraform-provider-aws/issues/14090
 func TestAccElasticTranscoderPreset_audio_noBitRate(t *testing.T) {
+	ctx := acctest.Context(t)
 	var preset elastictranscoder.Preset
 	resourceName := "aws_elastictranscoder_preset.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elastictranscoder.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPresetDestroy,
+		CheckDestroy:             testAccCheckPresetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPresetConfig_noBitRate(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPresetExists(resourceName, &preset),
+					testAccCheckPresetExists(ctx, resourceName, &preset),
 				),
 			},
 			{
@@ -97,21 +101,22 @@ func TestAccElasticTranscoderPreset_audio_noBitRate(t *testing.T) {
 }
 
 func TestAccElasticTranscoderPreset_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var preset elastictranscoder.Preset
 	resourceName := "aws_elastictranscoder_preset.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elastictranscoder.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPresetDestroy,
+		CheckDestroy:             testAccCheckPresetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPresetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPresetExists(resourceName, &preset),
-					acctest.CheckResourceDisappears(acctest.Provider, tfet.ResourcePreset(), resourceName),
+					testAccCheckPresetExists(ctx, resourceName, &preset),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfet.ResourcePreset(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -121,20 +126,21 @@ func TestAccElasticTranscoderPreset_disappears(t *testing.T) {
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/14087
 func TestAccElasticTranscoderPreset_AudioCodecOptions_empty(t *testing.T) {
+	ctx := acctest.Context(t)
 	var preset elastictranscoder.Preset
 	resourceName := "aws_elastictranscoder_preset.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elastictranscoder.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPresetDestroy,
+		CheckDestroy:             testAccCheckPresetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPresetConfig_audioCodecOptionsEmpty(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPresetExists(resourceName, &preset),
+					testAccCheckPresetExists(ctx, resourceName, &preset),
 				),
 			},
 			{
@@ -148,20 +154,21 @@ func TestAccElasticTranscoderPreset_AudioCodecOptions_empty(t *testing.T) {
 }
 
 func TestAccElasticTranscoderPreset_description(t *testing.T) {
+	ctx := acctest.Context(t)
 	var preset elastictranscoder.Preset
 	resourceName := "aws_elastictranscoder_preset.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elastictranscoder.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPresetDestroy,
+		CheckDestroy:             testAccCheckPresetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPresetConfig_description(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPresetExists(resourceName, &preset),
+					testAccCheckPresetExists(ctx, resourceName, &preset),
 					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
 				),
 			},
@@ -176,20 +183,21 @@ func TestAccElasticTranscoderPreset_description(t *testing.T) {
 
 // Tests all configuration blocks
 func TestAccElasticTranscoderPreset_full(t *testing.T) {
+	ctx := acctest.Context(t)
 	var preset elastictranscoder.Preset
 	resourceName := "aws_elastictranscoder_preset.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elastictranscoder.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPresetDestroy,
+		CheckDestroy:             testAccCheckPresetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPresetConfig_full1(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPresetExists(resourceName, &preset),
+					testAccCheckPresetExists(ctx, resourceName, &preset),
 					resource.TestCheckResourceAttr(resourceName, "audio.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "audio_codec_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "thumbnails.#", "1"),
@@ -206,7 +214,7 @@ func TestAccElasticTranscoderPreset_full(t *testing.T) {
 			{
 				Config: testAccPresetConfig_full2(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPresetExists(resourceName, &preset),
+					testAccCheckPresetExists(ctx, resourceName, &preset),
 					resource.TestCheckResourceAttr(resourceName, "audio.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "audio_codec_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "thumbnails.#", "1"),
@@ -226,20 +234,21 @@ func TestAccElasticTranscoderPreset_full(t *testing.T) {
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/695
 func TestAccElasticTranscoderPreset_Video_frameRate(t *testing.T) {
+	ctx := acctest.Context(t)
 	var preset elastictranscoder.Preset
 	resourceName := "aws_elastictranscoder_preset.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elastictranscoder.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPresetDestroy,
+		CheckDestroy:             testAccCheckPresetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPresetConfig_videoFrameRate(rName, "29.97"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPresetExists(resourceName, &preset),
+					testAccCheckPresetExists(ctx, resourceName, &preset),
 					resource.TestCheckResourceAttr(resourceName, "video.0.frame_rate", "29.97"),
 				),
 			},
@@ -252,9 +261,9 @@ func TestAccElasticTranscoderPreset_Video_frameRate(t *testing.T) {
 	})
 }
 
-func testAccCheckPresetExists(name string, preset *elastictranscoder.Preset) resource.TestCheckFunc {
+func testAccCheckPresetExists(ctx context.Context, name string, preset *elastictranscoder.Preset) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticTranscoderConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticTranscoderConn()
 
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -264,7 +273,7 @@ func testAccCheckPresetExists(name string, preset *elastictranscoder.Preset) res
 			return fmt.Errorf("No Preset ID is set")
 		}
 
-		out, err := conn.ReadPreset(&elastictranscoder.ReadPresetInput{
+		out, err := conn.ReadPresetWithContext(ctx, &elastictranscoder.ReadPresetInput{
 			Id: aws.String(rs.Primary.ID),
 		})
 
@@ -278,30 +287,31 @@ func testAccCheckPresetExists(name string, preset *elastictranscoder.Preset) res
 	}
 }
 
-func testAccCheckPresetDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticTranscoderConn
+func testAccCheckPresetDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticTranscoderConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_elastictranscoder_preset" {
-			continue
-		}
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_elastictranscoder_preset" {
+				continue
+			}
 
-		out, err := conn.ReadPreset(&elastictranscoder.ReadPresetInput{
-			Id: aws.String(rs.Primary.ID),
-		})
+			out, err := conn.ReadPresetWithContext(ctx, &elastictranscoder.ReadPresetInput{
+				Id: aws.String(rs.Primary.ID),
+			})
 
-		if err == nil {
-			if out.Preset != nil && aws.StringValue(out.Preset.Id) == rs.Primary.ID {
-				return fmt.Errorf("Elastic Transcoder Preset still exists")
+			if err == nil {
+				if out.Preset != nil && aws.StringValue(out.Preset.Id) == rs.Primary.ID {
+					return fmt.Errorf("Elastic Transcoder Preset still exists")
+				}
+			}
+
+			if !tfawserr.ErrCodeEquals(err, elastictranscoder.ErrCodeResourceNotFoundException) {
+				return fmt.Errorf("unexpected error: %s", err)
 			}
 		}
-
-		if !tfawserr.ErrCodeEquals(err, elastictranscoder.ErrCodeResourceNotFoundException) {
-			return fmt.Errorf("unexpected error: %s", err)
-		}
-
+		return nil
 	}
-	return nil
 }
 
 func testAccPresetConfig_basic(rName string) string {

@@ -22,7 +22,7 @@ data "aws_sfn_state_machine" "example" {
 
 ## Argument Reference
 
-* `name` - (Required) The friendly name of the state machine to match.
+* `name` - (Required) Friendly name of the state machine to match.
 
 ## Attributes Reference
 
@@ -30,5 +30,5 @@ data "aws_sfn_state_machine" "example" {
 * `arn` - Set to the arn of the state function.
 * `role_arn` - Set to the role_arn used by the state function.
 * `definition` - Set to the state machine definition.
-* `creation_date` - The date the state machine was created.
+* `creation_date` - Date the state machine was created.
 * `status` - Set to the current status of the state machine.

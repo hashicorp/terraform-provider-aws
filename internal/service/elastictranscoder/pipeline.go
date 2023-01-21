@@ -1,29 +1,31 @@
 package elastictranscoder
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elastictranscoder"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourcePipeline() *schema.Resource {
 	return &schema.Resource{
-		Create: resourcePipelineCreate,
-		Read:   resourcePipelineRead,
-		Update: resourcePipelineUpdate,
-		Delete: resourcePipelineDelete,
+		CreateWithoutTimeout: resourcePipelineCreate,
+		ReadWithoutTimeout:   resourcePipelineRead,
+		UpdateWithoutTimeout: resourcePipelineUpdate,
+		DeleteWithoutTimeout: resourcePipelineDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -227,8 +229,9 @@ func ResourcePipeline() *schema.Resource {
 	}
 }
 
-func resourcePipelineCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticTranscoderConn
+func resourcePipelineCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ElasticTranscoderConn()
 
 	req := &elastictranscoder.CreatePipelineInput{
 		AwsKmsKeyArn:    aws.String(d.Get("aws_kms_key_arn").(string)),
@@ -253,13 +256,13 @@ func resourcePipelineCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if (req.OutputBucket == nil && (req.ContentConfig == nil || req.ContentConfig.Bucket == nil)) ||
 		(req.OutputBucket != nil && req.ContentConfig != nil && req.ContentConfig.Bucket != nil) {
-		return fmt.Errorf("you must specify only one of output_bucket or content_config.bucket")
+		return sdkdiag.AppendErrorf(diags, "you must specify only one of output_bucket or content_config.bucket")
 	}
 
 	log.Printf("[DEBUG] Elastic Transcoder Pipeline create opts: %s", req)
-	resp, err := conn.CreatePipeline(req)
+	resp, err := conn.CreatePipelineWithContext(ctx, req)
 	if err != nil {
-		return fmt.Errorf("Error creating Elastic Transcoder Pipeline: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Elastic Transcoder Pipeline: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resp.Pipeline.Id))
@@ -268,7 +271,7 @@ func resourcePipelineCreate(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[WARN] Elastic Transcoder Pipeline %v: %v", *w.Code, *w.Message)
 	}
 
-	return resourcePipelineRead(d, meta)
+	return append(diags, resourcePipelineRead(ctx, d, meta)...)
 }
 
 func expandETNotifications(d *schema.ResourceData) *elastictranscoder.Notifications {
@@ -403,8 +406,9 @@ func flattenETPermList(perms []*elastictranscoder.Permission) []map[string]inter
 	return set
 }
 
-func resourcePipelineUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticTranscoderConn
+func resourcePipelineUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ElasticTranscoderConn()
 
 	req := &elastictranscoder.UpdatePipelineInput{
 		Id: aws.String(d.Id()),
@@ -439,9 +443,9 @@ func resourcePipelineUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Updating Elastic Transcoder Pipeline: %#v", req)
-	output, err := conn.UpdatePipeline(req)
+	output, err := conn.UpdatePipelineWithContext(ctx, req)
 	if err != nil {
-		return fmt.Errorf("Error updating Elastic Transcoder pipeline: %s", err)
+		return sdkdiag.AppendErrorf(diags, "updating Elastic Transcoder pipeline: %s", err)
 	}
 
 	for _, w := range output.Warnings {
@@ -449,45 +453,42 @@ func resourcePipelineUpdate(d *schema.ResourceData, meta interface{}) error {
 			aws.StringValue(w.Message))
 	}
 
-	return resourcePipelineRead(d, meta)
+	return append(diags, resourcePipelineRead(ctx, d, meta)...)
 }
 
-func resourcePipelineRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticTranscoderConn
+func resourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ElasticTranscoderConn()
 
-	resp, err := conn.ReadPipeline(&elastictranscoder.ReadPipelineInput{
+	resp, err := conn.ReadPipelineWithContext(ctx, &elastictranscoder.ReadPipelineInput{
 		Id: aws.String(d.Id()),
 	})
 
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, elastictranscoder.ErrCodeResourceNotFoundException) {
-			log.Printf("[WARN] No such resource found for Elastic Transcoder Pipeline (%s)", d.Id())
+			log.Printf("[WARN] Elastic Transcoder Pipeline (%s) not found, removing from state", d.Id())
 			d.SetId("")
-			return nil
+			return diags
 		}
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading Elastic Transcoder Pipeline (%s): %s", d.Id(), err)
 	}
-
-	log.Printf("[DEBUG] Elastic Transcoder Pipeline Read response: %#v", resp)
 
 	pipeline := resp.Pipeline
 
 	d.Set("arn", pipeline.Arn)
 
-	if arn := pipeline.AwsKmsKeyArn; arn != nil {
-		d.Set("aws_kms_key_arn", arn)
-	}
+	d.Set("aws_kms_key_arn", pipeline.AwsKmsKeyArn)
 
 	if pipeline.ContentConfig != nil {
 		err := d.Set("content_config", flattenETPipelineOutputConfig(pipeline.ContentConfig))
 		if err != nil {
-			return fmt.Errorf("error setting content_config: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting content_config: %s", err)
 		}
 
 		if pipeline.ContentConfig.Permissions != nil {
 			err := d.Set("content_config_permissions", flattenETPermList(pipeline.ContentConfig.Permissions))
 			if err != nil {
-				return fmt.Errorf("error setting content_config_permissions: %s", err)
+				return sdkdiag.AppendErrorf(diags, "setting content_config_permissions: %s", err)
 			}
 		}
 	}
@@ -496,10 +497,8 @@ func resourcePipelineRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", pipeline.Name)
 
 	notifications := flattenETNotifications(pipeline.Notifications)
-	if notifications != nil {
-		if err := d.Set("notifications", notifications); err != nil {
-			return fmt.Errorf("error setting notifications: %s", err)
-		}
+	if err := d.Set("notifications", notifications); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting notifications: %s", err)
 	}
 
 	d.Set("role", pipeline.Role)
@@ -507,33 +506,32 @@ func resourcePipelineRead(d *schema.ResourceData, meta interface{}) error {
 	if pipeline.ThumbnailConfig != nil {
 		err := d.Set("thumbnail_config", flattenETPipelineOutputConfig(pipeline.ThumbnailConfig))
 		if err != nil {
-			return fmt.Errorf("error setting thumbnail_config: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting thumbnail_config: %s", err)
 		}
 
 		if pipeline.ThumbnailConfig.Permissions != nil {
 			err := d.Set("thumbnail_config_permissions", flattenETPermList(pipeline.ThumbnailConfig.Permissions))
 			if err != nil {
-				return fmt.Errorf("error setting thumbnail_config_permissions: %s", err)
+				return sdkdiag.AppendErrorf(diags, "setting thumbnail_config_permissions: %s", err)
 			}
 		}
 	}
 
-	if pipeline.OutputBucket != nil {
-		d.Set("output_bucket", pipeline.OutputBucket)
-	}
+	d.Set("output_bucket", pipeline.OutputBucket)
 
-	return nil
+	return diags
 }
 
-func resourcePipelineDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticTranscoderConn
+func resourcePipelineDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ElasticTranscoderConn()
 
 	log.Printf("[DEBUG] Elastic Transcoder Delete Pipeline: %s", d.Id())
-	_, err := conn.DeletePipeline(&elastictranscoder.DeletePipelineInput{
+	_, err := conn.DeletePipelineWithContext(ctx, &elastictranscoder.DeletePipelineInput{
 		Id: aws.String(d.Id()),
 	})
 	if err != nil {
-		return fmt.Errorf("error deleting Elastic Transcoder Pipeline: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting Elastic Transcoder Pipeline: %s", err)
 	}
-	return nil
+	return diags
 }

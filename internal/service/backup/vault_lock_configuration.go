@@ -1,26 +1,28 @@
 package backup
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/backup"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourceVaultLockConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceVaultLockConfigurationCreate,
-		Read:   resourceVaultLockConfigurationRead,
-		Delete: resourceVaultLockConfigurationDelete,
+		CreateWithoutTimeout: resourceVaultLockConfigurationCreate,
+		ReadWithoutTimeout:   resourceVaultLockConfigurationRead,
+		DeleteWithoutTimeout: resourceVaultLockConfigurationDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -54,8 +56,9 @@ func ResourceVaultLockConfiguration() *schema.Resource {
 	}
 }
 
-func resourceVaultLockConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BackupConn
+func resourceVaultLockConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).BackupConn()
 
 	name := d.Get("backup_vault_name").(string)
 	input := &backup.PutBackupVaultLockConfigurationInput{
@@ -74,30 +77,31 @@ func resourceVaultLockConfigurationCreate(d *schema.ResourceData, meta interface
 		input.MinRetentionDays = aws.Int64(int64(v.(int)))
 	}
 
-	_, err := conn.PutBackupVaultLockConfiguration(input)
+	_, err := conn.PutBackupVaultLockConfigurationWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating Backup Vault Lock Configuration (%s): %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating Backup Vault Lock Configuration (%s): %s", name, err)
 	}
 
 	d.SetId(name)
 
-	return resourceVaultLockConfigurationRead(d, meta)
+	return append(diags, resourceVaultLockConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceVaultLockConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BackupConn
+func resourceVaultLockConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).BackupConn()
 
-	output, err := FindVaultByName(conn, d.Id())
+	output, err := FindVaultByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Backup Vault Lock Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Backup Vault Lock Configuration (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Backup Vault Lock Configuration (%s): %s", d.Id(), err)
 	}
 
 	d.Set("backup_vault_arn", output.BackupVaultArn)
@@ -105,24 +109,25 @@ func resourceVaultLockConfigurationRead(d *schema.ResourceData, meta interface{}
 	d.Set("max_retention_days", output.MaxRetentionDays)
 	d.Set("min_retention_days", output.MinRetentionDays)
 
-	return nil
+	return diags
 }
 
-func resourceVaultLockConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BackupConn
+func resourceVaultLockConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).BackupConn()
 
 	log.Printf("[DEBUG] Deleting Backup Vault Lock Configuration: %s", d.Id())
-	_, err := conn.DeleteBackupVaultLockConfiguration(&backup.DeleteBackupVaultLockConfigurationInput{
+	_, err := conn.DeleteBackupVaultLockConfigurationWithContext(ctx, &backup.DeleteBackupVaultLockConfigurationInput{
 		BackupVaultName: aws.String(d.Id()),
 	})
 
 	if tfawserr.ErrCodeEquals(err, backup.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Backup Vault Lock Configuration (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Backup Vault Lock Configuration (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

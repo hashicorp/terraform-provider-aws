@@ -33,22 +33,23 @@ The following arguments are required:
 The following arguments are optional:
 
 * `options` - (Optional) Options for the VPC attachment.
-* `tags` - (Optional) Key-value tags for the Global Network. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value tags for the attachment. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### options
 
-* `ipv6_support` - (Required) Indicates whether IPv6 is supported.
+* `appliance_mode_support` - (Optional) Indicates whether appliance mode is supported. If enabled, traffic flow between a source and destination use the same Availability Zone for the VPC attachment for the lifetime of that flow.
+* `ipv6_support` - (Optional) Indicates whether IPv6 is supported.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The ARN of the attachment.
-* `attachment_id` - The ID of the attachment.
 * `attachment_policy_rule_number` - The policy rule number associated with the attachment.
 * `attachment_type` - The type of attachment.
 * `core_network_arn` - The ARN of a core network.
 * `edge_location` - The Region where the edge is located.
+* `id` - The ID of the attachment.
 * `owner_account_id` - The ID of the attachment account owner.
 * `resource_arn` - The attachment resource ARN.
 * `segment_name` - The name of the segment attachment.
@@ -57,7 +58,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-NetworkManager VpcAttachment can be imported using the `attachment_id`, e.g.,
+`aws_networkmanager_vpc_attachment` can be imported using the attachment ID, e.g.
 
 ```
 $ terraform import aws_networkmanager_vpc_attachment.example attachment-0f8fa60d2238d1bd8

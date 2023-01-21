@@ -1,29 +1,31 @@
 package cognitoidp
 
 import (
+	"context"
 	"errors"
-	"fmt"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func ResourceUserPoolDomain() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceUserPoolDomainCreate,
-		Read:   resourceUserPoolDomainRead,
-		Delete: resourceUserPoolDomainDelete,
+		CreateWithoutTimeout: resourceUserPoolDomainCreate,
+		ReadWithoutTimeout:   resourceUserPoolDomainRead,
+		DeleteWithoutTimeout: resourceUserPoolDomainDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -64,8 +66,9 @@ func ResourceUserPoolDomain() *schema.Resource {
 	}
 }
 
-func resourceUserPoolDomainCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
+func resourceUserPoolDomainCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CognitoIDPConn()
 
 	domain := d.Get("domain").(string)
 
@@ -86,35 +89,36 @@ func resourceUserPoolDomainCreate(d *schema.ResourceData, meta interface{}) erro
 
 	log.Printf("[DEBUG] Creating Cognito User Pool Domain: %s", params)
 
-	_, err := conn.CreateUserPoolDomain(params)
+	_, err := conn.CreateUserPoolDomainWithContext(ctx, params)
 	if err != nil {
-		return fmt.Errorf("Error creating Cognito User Pool Domain: %w", err)
+		return sdkdiag.AppendErrorf(diags, "Error creating Cognito User Pool Domain: %s", err)
 	}
 
 	d.SetId(domain)
 
-	if _, err := waitUserPoolDomainCreated(conn, d.Id(), timeout); err != nil {
-		return fmt.Errorf("error waiting for User Pool Domain (%s) creation: %w", d.Id(), err)
+	if _, err := waitUserPoolDomainCreated(ctx, conn, d.Id(), timeout); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for User Pool Domain (%s) creation: %s", d.Id(), err)
 	}
 
-	return resourceUserPoolDomainRead(d, meta)
+	return append(diags, resourceUserPoolDomainRead(ctx, d, meta)...)
 }
 
-func resourceUserPoolDomainRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
+func resourceUserPoolDomainRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CognitoIDPConn()
 	log.Printf("[DEBUG] Reading Cognito User Pool Domain: %s", d.Id())
 
-	domain, err := conn.DescribeUserPoolDomain(&cognitoidentityprovider.DescribeUserPoolDomainInput{
+	domain, err := conn.DescribeUserPoolDomainWithContext(ctx, &cognitoidentityprovider.DescribeUserPoolDomainInput{
 		Domain: aws.String(d.Id()),
 	})
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
 		create.LogNotFoundRemoveState(names.CognitoIDP, create.ErrActionReading, ResNameUserPoolDomain, d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.Error(names.CognitoIDP, create.ErrActionReading, ResNameUserPoolDomain, d.Id(), err)
+		return create.DiagError(names.CognitoIDP, create.ErrActionReading, ResNameUserPoolDomain, d.Id(), err)
 	}
 
 	desc := domain.DomainDescription
@@ -122,11 +126,11 @@ func resourceUserPoolDomainRead(d *schema.ResourceData, meta interface{}) error 
 	if !d.IsNewResource() && desc.Status == nil {
 		create.LogNotFoundRemoveState(names.CognitoIDP, create.ErrActionReading, ResNameUserPoolDomain, d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if d.IsNewResource() && desc.Status == nil {
-		return create.Error(names.CognitoIDP, create.ErrActionReading, ResNameUserPoolDomain, d.Id(), errors.New("not found after creation"))
+		return create.DiagError(names.CognitoIDP, create.ErrActionReading, ResNameUserPoolDomain, d.Id(), errors.New("not found after creation"))
 	}
 
 	d.Set("domain", d.Id())
@@ -140,28 +144,28 @@ func resourceUserPoolDomainRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("user_pool_id", desc.UserPoolId)
 	d.Set("version", desc.Version)
 
-	return nil
+	return diags
 }
 
-func resourceUserPoolDomainDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
+func resourceUserPoolDomainDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CognitoIDPConn()
 	log.Printf("[DEBUG] Deleting Cognito User Pool Domain: %s", d.Id())
 
-	_, err := conn.DeleteUserPoolDomain(&cognitoidentityprovider.DeleteUserPoolDomainInput{
+	_, err := conn.DeleteUserPoolDomainWithContext(ctx, &cognitoidentityprovider.DeleteUserPoolDomainInput{
 		Domain:     aws.String(d.Id()),
 		UserPoolId: aws.String(d.Get("user_pool_id").(string)),
 	})
 	if err != nil {
-		return fmt.Errorf("Error deleting User Pool Domain: %w", err)
+		return sdkdiag.AppendErrorf(diags, "Error deleting User Pool Domain: %s", err)
 	}
 
-	if _, err := waitUserPoolDomainDeleted(conn, d.Id()); err != nil {
+	if _, err := waitUserPoolDomainDeleted(ctx, conn, d.Id()); err != nil {
 		if tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
-			return nil
+			return diags
 		}
-		return fmt.Errorf("error waiting for User Pool Domain (%s) deletion: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for User Pool Domain (%s) deletion: %s", d.Id(), err)
 	}
 
-	return nil
-
+	return diags
 }

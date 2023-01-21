@@ -1,6 +1,7 @@
 package elb_test
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"testing"
@@ -18,6 +19,7 @@ import (
 )
 
 func TestAccELBListenerPolicy_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rChar := sdkacctest.RandStringFromCharSet(6, sdkacctest.CharSetAlpha)
 	lbName := rChar
 	mcName := rChar
@@ -25,26 +27,26 @@ func TestAccELBListenerPolicy_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckListenerPolicyDestroy,
+		CheckDestroy:             testAccCheckListenerPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccListenerPolicyConfig_basic0(lbName, mcName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyState("aws_elb.test-lb", "aws_load_balancer_policy.magic-cookie-sticky"),
-					testAccCheckListenerPolicyState(lbName, int64(80), mcName, true),
+					testAccCheckPolicyState(ctx, "aws_elb.test-lb", "aws_load_balancer_policy.magic-cookie-sticky"),
+					testAccCheckListenerPolicyState(ctx, lbName, int64(80), mcName, true),
 				),
 			},
 			{
 				Config: testAccListenerPolicyConfig_basic1(lbName, mcName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyState("aws_elb.test-lb", "aws_load_balancer_policy.magic-cookie-sticky"),
-					testAccCheckListenerPolicyState(lbName, int64(80), mcName, true),
+					testAccCheckPolicyState(ctx, "aws_elb.test-lb", "aws_load_balancer_policy.magic-cookie-sticky"),
+					testAccCheckListenerPolicyState(ctx, lbName, int64(80), mcName, true),
 				),
 			},
 			{
 				Config: testAccListenerPolicyConfig_basic2(lbName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckListenerPolicyState(lbName, int64(80), mcName, false),
+					testAccCheckListenerPolicyState(ctx, lbName, int64(80), mcName, false),
 				),
 			},
 		},
@@ -60,72 +62,72 @@ func policyInListenerPolicies(str string, list []string) bool {
 	return false
 }
 
-func testAccCheckListenerPolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn
+func testAccCheckListenerPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn()
 
-	for _, rs := range s.RootModule().Resources {
-		switch {
-		case rs.Type == "aws_load_balancer_policy":
-			loadBalancerName, policyName := tfelb.ListenerPoliciesParseID(rs.Primary.ID)
-			out, err := conn.DescribeLoadBalancerPolicies(
-				&elb.DescribeLoadBalancerPoliciesInput{
+		for _, rs := range s.RootModule().Resources {
+			switch {
+			case rs.Type == "aws_load_balancer_policy":
+				loadBalancerName, policyName := tfelb.ListenerPoliciesParseID(rs.Primary.ID)
+				out, err := conn.DescribeLoadBalancerPoliciesWithContext(ctx, &elb.DescribeLoadBalancerPoliciesInput{
 					LoadBalancerName: aws.String(loadBalancerName),
 					PolicyNames:      []*string{aws.String(policyName)},
 				})
-			if err != nil {
-				if ec2err, ok := err.(awserr.Error); ok && (ec2err.Code() == "PolicyNotFound" || ec2err.Code() == "LoadBalancerNotFound") {
-					continue
+				if err != nil {
+					if ec2err, ok := err.(awserr.Error); ok && (ec2err.Code() == "PolicyNotFound" || ec2err.Code() == "LoadBalancerNotFound") {
+						continue
+					}
+					return err
 				}
-				return err
-			}
-			if len(out.PolicyDescriptions) > 0 {
-				return fmt.Errorf("Policy still exists")
-			}
-		case rs.Type == "aws_load_listener_policy":
-			loadBalancerName, _ := tfelb.ListenerPoliciesParseID(rs.Primary.ID)
-			out, err := conn.DescribeLoadBalancers(
-				&elb.DescribeLoadBalancersInput{
+				if len(out.PolicyDescriptions) > 0 {
+					return fmt.Errorf("Policy still exists")
+				}
+			case rs.Type == "aws_load_listener_policy":
+				loadBalancerName, _ := tfelb.ListenerPoliciesParseID(rs.Primary.ID)
+				out, err := conn.DescribeLoadBalancersWithContext(ctx, &elb.DescribeLoadBalancersInput{
 					LoadBalancerNames: []*string{aws.String(loadBalancerName)},
 				})
 
-			if tfawserr.ErrCodeEquals(err, elb.ErrCodeAccessPointNotFoundException) {
+				if tfawserr.ErrCodeEquals(err, elb.ErrCodeAccessPointNotFoundException) {
+					continue
+				}
+
+				if err != nil {
+					return err
+				}
+
+				policyNames := []string{}
+				for k := range rs.Primary.Attributes {
+					if strings.HasPrefix(k, "policy_names.") && strings.HasSuffix(k, ".name") {
+						value_key := fmt.Sprintf("%s.value", strings.TrimSuffix(k, ".name"))
+						policyNames = append(policyNames, rs.Primary.Attributes[value_key])
+					}
+				}
+				for _, policyName := range policyNames {
+					for _, listener := range out.LoadBalancerDescriptions[0].ListenerDescriptions {
+						policyStrings := []string{}
+						for _, pol := range listener.PolicyNames {
+							policyStrings = append(policyStrings, *pol)
+						}
+						if policyInListenerPolicies(policyName, policyStrings) {
+							return fmt.Errorf("Policy still exists and is assigned")
+						}
+					}
+				}
+			default:
 				continue
 			}
-
-			if err != nil {
-				return err
-			}
-
-			policyNames := []string{}
-			for k := range rs.Primary.Attributes {
-				if strings.HasPrefix(k, "policy_names.") && strings.HasSuffix(k, ".name") {
-					value_key := fmt.Sprintf("%s.value", strings.TrimSuffix(k, ".name"))
-					policyNames = append(policyNames, rs.Primary.Attributes[value_key])
-				}
-			}
-			for _, policyName := range policyNames {
-				for _, listener := range out.LoadBalancerDescriptions[0].ListenerDescriptions {
-					policyStrings := []string{}
-					for _, pol := range listener.PolicyNames {
-						policyStrings = append(policyStrings, *pol)
-					}
-					if policyInListenerPolicies(policyName, policyStrings) {
-						return fmt.Errorf("Policy still exists and is assigned")
-					}
-				}
-			}
-		default:
-			continue
 		}
+		return nil
 	}
-	return nil
 }
 
-func testAccCheckListenerPolicyState(loadBalancerName string, loadBalancerListenerPort int64, loadBalancerListenerPolicyName string, assigned bool) resource.TestCheckFunc {
+func testAccCheckListenerPolicyState(ctx context.Context, loadBalancerName string, loadBalancerListenerPort int64, loadBalancerListenerPolicyName string, assigned bool) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn()
 
-		loadBalancerDescription, err := conn.DescribeLoadBalancers(&elb.DescribeLoadBalancersInput{
+		loadBalancerDescription, err := conn.DescribeLoadBalancersWithContext(ctx, &elb.DescribeLoadBalancersInput{
 			LoadBalancerNames: []*string{aws.String(loadBalancerName)},
 		})
 		if err != nil {

@@ -17,6 +17,7 @@ func TestAccRDSInstanceDataSource_basic(t *testing.T) {
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_db_instance.test"
+	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -26,46 +27,26 @@ func TestAccRDSInstanceDataSource_basic(t *testing.T) {
 			{
 				Config: testAccInstanceDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrSet(dataSourceName, "address"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "allocated_storage"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "auto_minor_version_upgrade"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "db_instance_class"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "db_name"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "db_subnet_group"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "endpoint"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "engine"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "hosted_zone_id"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "master_username"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "port"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "multi_az"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "enabled_cloudwatch_logs_exports.0"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "enabled_cloudwatch_logs_exports.1"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "resource_id", "aws_db_instance.test", "resource_id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", "aws_db_instance.test", "tags.%"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "tags.Environment", "aws_db_instance.test", "tags.Environment"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccRDSInstanceDataSource_ec2Classic(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	dataSourceName := "data.aws_db_instance.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckEC2Classic(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccInstanceDataSourceConfig_ec2Classic(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "db_subnet_group", ""),
+					resource.TestCheckResourceAttrPair(dataSourceName, "address", resourceName, "address"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "allocated_storage", resourceName, "allocated_storage"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "auto_minor_version_upgrade", resourceName, "auto_minor_version_upgrade"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "db_instance_arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "db_instance_class", resourceName, "instance_class"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "db_name", resourceName, "db_name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "db_subnet_group", resourceName, "db_subnet_group_name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "enabled_cloudwatch_logs_exports.#", resourceName, "enabled_cloudwatch_logs_exports.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "endpoint", resourceName, "endpoint"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "engine", resourceName, "engine"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "hosted_zone_id", resourceName, "hosted_zone_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "iops", resourceName, "iops"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "master_username", resourceName, "username"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "multi_az", resourceName, "multi_az"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "network_type", resourceName, "network_type"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "port", resourceName, "port"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "resource_id", resourceName, "resource_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "storage_throughput", resourceName, "storage_throughput"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "storage_type", resourceName, "storage_type"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
 				),
 			},
 		},
@@ -75,33 +56,8 @@ func TestAccRDSInstanceDataSource_ec2Classic(t *testing.T) {
 func testAccInstanceDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
 		testAccInstanceConfig_orderableClassMariadb(),
-		acctest.ConfigAvailableAZsNoOptIn(),
+		testAccInstanceConfig_baseVPC(rName),
 		fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  count = 2
-
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  cidr_block        = "10.0.${count.index}.0/24"
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_db_subnet_group" "test" {
-  name       = %[1]q
-  subnet_ids = aws_subnet.test[*].id
-}
-
 resource "aws_db_instance" "test" {
   allocated_storage       = 10
   backup_retention_period = 0
@@ -110,10 +66,10 @@ resource "aws_db_instance" "test" {
   engine_version          = data.aws_rds_engine_version.default.version
   identifier              = %[1]q
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  name                    = "baz"
-  password                = "barbarbarbar"
+  name                    = "test"
   skip_final_snapshot     = true
-  username                = "foo"
+  password                = "avoid-plaintext-passwords"
+  username                = "tfacctest"
 
   enabled_cloudwatch_logs_exports = [
     "audit",
@@ -121,45 +77,8 @@ resource "aws_db_instance" "test" {
   ]
 
   tags = {
-    Environment = "test"
+    Name = %[1]q
   }
-}
-
-data "aws_db_instance" "test" {
-  db_instance_identifier = aws_db_instance.test.identifier
-}
-`, rName))
-}
-
-func testAccInstanceDataSourceConfig_ec2Classic(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigEC2ClassicRegionProvider(),
-		fmt.Sprintf(`
-data "aws_rds_engine_version" "default" {
-  engine = "mysql"
-}
-
-# EC2-Classic specific
-data "aws_rds_orderable_db_instance" "test" {
-  engine                     = data.aws_rds_engine_version.default.engine
-  engine_version             = data.aws_rds_engine_version.default.version
-  preferred_instance_classes = ["db.m3.medium", "db.m3.large", "db.r3.large"]
-}
-
-resource "aws_db_instance" "test" {
-  identifier           = %[1]q
-  allocated_storage    = 10
-  engine               = data.aws_rds_orderable_db_instance.test.engine
-  engine_version       = data.aws_rds_orderable_db_instance.test.engine_version
-  instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
-  storage_type         = data.aws_rds_orderable_db_instance.test.storage_type
-  db_name              = "baz"
-  password             = "barbarbarbar"
-  username             = "foo"
-  publicly_accessible  = true
-  security_group_names = ["default"]
-  parameter_group_name = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
-  skip_final_snapshot  = true
 }
 
 data "aws_db_instance" "test" {

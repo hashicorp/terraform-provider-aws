@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"sort"
+	"strconv"
 )
 
 const (
@@ -13,7 +14,7 @@ const (
 type IAMPolicyDoc struct {
 	Version    string                `json:",omitempty"`
 	Id         string                `json:",omitempty"`
-	Statements []*IAMPolicyStatement `json:"Statement"`
+	Statements []*IAMPolicyStatement `json:"Statement,omitempty"`
 }
 
 type IAMPolicyStatement struct {
@@ -199,6 +200,8 @@ func (cs *IAMPolicyStatementConditionSet) UnmarshalJSON(b []byte) error {
 			switch var_values := var_values.(type) {
 			case string:
 				out = append(out, IAMPolicyStatementCondition{Test: test_key, Variable: var_key, Values: []string{var_values}})
+			case bool:
+				out = append(out, IAMPolicyStatementCondition{Test: test_key, Variable: var_key, Values: strconv.FormatBool(var_values)})
 			case []interface{}:
 				values := []string{}
 				for _, v := range var_values {

@@ -7,8 +7,8 @@ set -eo pipefail
 # find ./website/docs -type f \( -name '*.md' -o -name '*.markdown' \) \
 #   | ./.ci/scripts/validate-terraform.sh
 
-TERRAFMT_CMD="terrafmt"
-if [ -f ~/developer/terrafmt/terrafmt ]; then TERRAFMT_CMD="$HOME/developer/terrafmt/terrafmt"; fi
+if [ -z "${TERRAFMT_CMD}" ]; then TERRAFMT_CMD="terrafmt"; fi
+if [ -z "${TFLINT_CMD}" ]; then TFLINT_CMD="tflint"; fi
 
 exit_code=0
 
@@ -43,7 +43,7 @@ while read -r filename ; do
 
         # We need to capture the output and error code here. We don't want to exit on the first error
         set +e
-        tflint_output=$(tflint -c .ci/.tflint.hcl "${rules[@]}" "$tf" 2>&1)
+        tflint_output=$(${TFLINT_CMD} --config .ci/.tflint.hcl "${rules[@]}" "$tf" 2>&1)
         tflint_exitcode=$?
         set -e
 

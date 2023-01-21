@@ -46,7 +46,7 @@ func ResourceContributorInsights() *schema.Resource {
 }
 
 func resourceContributorInsightsCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DynamoDBConn
+	conn := meta.(*conns.AWSClient).DynamoDBConn()
 
 	input := &dynamodb.UpdateContributorInsightsInput{
 		ContributorInsightsAction: aws.String(dynamodb.ContributorInsightsActionEnable),
@@ -78,7 +78,7 @@ func resourceContributorInsightsCreate(ctx context.Context, d *schema.ResourceDa
 }
 
 func resourceContributorInsightsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DynamoDBConn
+	conn := meta.(*conns.AWSClient).DynamoDBConn()
 
 	tableName, indexName, err := DecodeContributorInsightsID(d.Id())
 	if err != nil {
@@ -104,7 +104,7 @@ func resourceContributorInsightsRead(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceContributorInsightsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DynamoDBConn
+	conn := meta.(*conns.AWSClient).DynamoDBConn()
 
 	log.Printf("[INFO] Deleting DynamoDB ContributorInsights %s", d.Id())
 

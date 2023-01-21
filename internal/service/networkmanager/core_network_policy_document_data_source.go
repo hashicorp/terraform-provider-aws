@@ -1,14 +1,17 @@
 package networkmanager
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"regexp"
 	"strconv"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -22,7 +25,7 @@ func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
 	}
 
 	return &schema.Resource{
-		Read: dataSourceCoreNetworkPolicyDocumentRead,
+		ReadWithoutTimeout: dataSourceCoreNetworkPolicyDocumentRead,
 		Schema: map[string]*schema.Schema{
 			"attachment_policies": {
 				Type:     schema.TypeList,
@@ -160,8 +163,9 @@ func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
 										ValidateFunc: verify.ValidRegionName,
 									},
 									"asn": {
-										Type:     schema.TypeInt,
-										Optional: true,
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: verify.Valid4ByteASN,
 									},
 									"inside_cidr_blocks": {
 										Type:     schema.TypeList,
@@ -306,8 +310,8 @@ func DataSourceCoreNetworkPolicyDocument() *schema.Resource {
 	}
 }
 
-func dataSourceCoreNetworkPolicyDocumentRead(d *schema.ResourceData, meta interface{}) error {
-
+func dataSourceCoreNetworkPolicyDocumentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	mergedDoc := &CoreNetworkPolicyDoc{
 		Version: d.Get("version").(string),
 	}
@@ -315,42 +319,42 @@ func dataSourceCoreNetworkPolicyDocumentRead(d *schema.ResourceData, meta interf
 	// CoreNetworkConfiguration
 	networkConfiguration, err := expandDataCoreNetworkPolicyNetworkConfiguration(d.Get("core_network_configuration").([]interface{}))
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "writing Network Manager Core Network Policy Document: %s", err)
 	}
 	mergedDoc.CoreNetworkConfiguration = networkConfiguration
 
 	// AttachmentPolicies
 	attachmentPolicies, err := expandDataCoreNetworkPolicyAttachmentPolicies(d.Get("attachment_policies").([]interface{}))
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "writing Network Manager Core Network Policy Document: %s", err)
 	}
 	mergedDoc.AttachmentPolicies = attachmentPolicies
 
 	// SegmentActions
 	segment_actions, err := expandDataCoreNetworkPolicySegmentActions(d.Get("segment_actions").([]interface{}))
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "writing Network Manager Core Network Policy Document: %s", err)
 	}
 	mergedDoc.SegmentActions = segment_actions
 
 	// Segments
 	segments, err := expandDataCoreNetworkPolicySegments(d.Get("segments").([]interface{}))
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "writing Network Manager Core Network Policy Document: %s", err)
 	}
 	mergedDoc.Segments = segments
 
 	jsonDoc, err := json.MarshalIndent(mergedDoc, "", "  ")
 	if err != nil {
 		// should never happen if the above code is correct
-		return err
+		return sdkdiag.AppendErrorf(diags, "writing Network Manager Core Network Policy Document: formatting JSON: %s", err)
 	}
 	jsonString := string(jsonDoc)
 
 	d.Set("json", jsonString)
 	d.SetId(strconv.Itoa(create.StringHashcode(jsonString)))
 
-	return nil
+	return diags
 }
 
 func expandDataCoreNetworkPolicySegmentActions(cfgSegmentActionsIntf []interface{}) ([]*CoreNetworkPolicySegmentAction, error) {
@@ -405,7 +409,6 @@ func expandDataCoreNetworkPolicySegmentActions(cfgSegmentActionsIntf []interface
 		}
 
 		sgmtActions[i] = sgmtAction
-
 	}
 	return sgmtActions, nil
 }
@@ -450,7 +453,6 @@ func expandDataCoreNetworkPolicyAttachmentPolicies(cfgAttachmentPolicyIntf []int
 
 	// adjust
 	return aPolicies, nil
-
 }
 
 func expandDataCoreNetworkPolicyAttachmentPoliciesConditions(tfList []interface{}) ([]*CoreNetworkAttachmentPolicyCondition, error) {
@@ -607,7 +609,6 @@ func expandDataCoreNetworkPolicyNetworkConfigurationEdgeLocations(tfList []inter
 	locMap := make(map[string]struct{})
 
 	for i, edgeLocationsRaw := range tfList {
-
 		cfgEdgeLocation, ok := edgeLocationsRaw.(map[string]interface{})
 		edgeLocation := &CoreNetworkEdgeLocation{}
 
@@ -625,8 +626,14 @@ func expandDataCoreNetworkPolicyNetworkConfigurationEdgeLocations(tfList []inter
 			locMap[edgeLocation.Location] = struct{}{}
 		}
 
-		if v, ok := cfgEdgeLocation["asn"]; ok {
-			edgeLocation.Asn = v.(int)
+		if v, ok := cfgEdgeLocation["asn"].(string); ok && v != "" {
+			v, err := strconv.ParseInt(v, 10, 64)
+
+			if err != nil {
+				return nil, err
+			}
+
+			edgeLocation.Asn = v
 		}
 
 		if cidrs := cfgEdgeLocation["inside_cidr_blocks"].([]interface{}); len(cidrs) > 0 {

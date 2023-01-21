@@ -1,15 +1,17 @@
 package cloudfront
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -17,12 +19,12 @@ import (
 
 func ResourceRealtimeLogConfig() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceRealtimeLogConfigCreate,
-		Read:   resourceRealtimeLogConfigRead,
-		Update: resourceRealtimeLogConfigUpdate,
-		Delete: resourceRealtimeLogConfigDelete,
+		CreateWithoutTimeout: resourceRealtimeLogConfigCreate,
+		ReadWithoutTimeout:   resourceRealtimeLogConfigRead,
+		UpdateWithoutTimeout: resourceRealtimeLogConfigUpdate,
+		DeleteWithoutTimeout: resourceRealtimeLogConfigDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -84,8 +86,9 @@ func ResourceRealtimeLogConfig() *schema.Resource {
 	}
 }
 
-func resourceRealtimeLogConfigCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+func resourceRealtimeLogConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 
 	name := d.Get("name").(string)
 	input := &cloudfront.CreateRealtimeLogConfigInput{
@@ -105,45 +108,47 @@ func resourceRealtimeLogConfigCreate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	log.Printf("[DEBUG] Creating CloudFront Real-time Log Config: %s", input)
-	output, err := conn.CreateRealtimeLogConfig(input)
+	output, err := conn.CreateRealtimeLogConfigWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating CloudFront Real-time Log Config (%s): %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating CloudFront Real-time Log Config (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.RealtimeLogConfig.ARN))
 
-	return resourceRealtimeLogConfigRead(d, meta)
+	return append(diags, resourceRealtimeLogConfigRead(ctx, d, meta)...)
 }
 
-func resourceRealtimeLogConfigRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+func resourceRealtimeLogConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 
-	logConfig, err := FindRealtimeLogConfigByARN(conn, d.Id())
+	logConfig, err := FindRealtimeLogConfigByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudFront Real-time Log Config (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading CloudFront Real-time Log Config (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading CloudFront Real-time Log Config (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", logConfig.ARN)
 	if err := d.Set("endpoint", flattenEndPoints(logConfig.EndPoints)); err != nil {
-		return fmt.Errorf("error setting endpoint: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting endpoint: %s", err)
 	}
 	d.Set("fields", aws.StringValueSlice(logConfig.Fields))
 	d.Set("name", logConfig.Name)
 	d.Set("sampling_rate", logConfig.SamplingRate)
 
-	return nil
+	return diags
 }
 
-func resourceRealtimeLogConfigUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+func resourceRealtimeLogConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 
 	//
 	// https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_UpdateRealtimeLogConfig.html:
@@ -166,32 +171,33 @@ func resourceRealtimeLogConfigUpdate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	log.Printf("[DEBUG] Updating CloudFront Real-time Log Config: %s", input)
-	_, err := conn.UpdateRealtimeLogConfig(input)
+	_, err := conn.UpdateRealtimeLogConfigWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error updating CloudFront Real-time Log Config (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating CloudFront Real-time Log Config (%s): %s", d.Id(), err)
 	}
 
-	return resourceRealtimeLogConfigRead(d, meta)
+	return append(diags, resourceRealtimeLogConfigRead(ctx, d, meta)...)
 }
 
-func resourceRealtimeLogConfigDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+func resourceRealtimeLogConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 
 	log.Printf("[DEBUG] Deleting CloudFront Real-time Log Config (%s)", d.Id())
-	_, err := conn.DeleteRealtimeLogConfig(&cloudfront.DeleteRealtimeLogConfigInput{
+	_, err := conn.DeleteRealtimeLogConfigWithContext(ctx, &cloudfront.DeleteRealtimeLogConfigInput{
 		ARN: aws.String(d.Id()),
 	})
 
 	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchRealtimeLogConfig) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting CloudFront Real-time Log Config (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting CloudFront Real-time Log Config (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandEndPoint(tfMap map[string]interface{}) *cloudfront.EndPoint {

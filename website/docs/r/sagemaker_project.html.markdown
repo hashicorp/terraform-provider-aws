@@ -33,7 +33,6 @@ The following arguments are supported:
 * `service_catalog_provisioning_details` - (Required) The product ID and provisioning artifact ID to provision a service catalog. See [Service Catalog Provisioning Details](#service-catalog-provisioning-details) below.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-
 ### Service Catalog Provisioning Details
 
 * `path_id` - (Optional) The path identifier of the product. This value is optional if the product has a default path, and required if the product has more than one path.
@@ -54,7 +53,6 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - The name of the Project.
 * `project_id` - The ID of the project.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
-
 
 ## Import
 

@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccImageBuilderInfrastructureConfigurationsDataSource_filter(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_imagebuilder_infrastructure_configurations.test"
 	resourceName := "aws_imagebuilder_infrastructure_configuration.test"
@@ -19,7 +20,7 @@ func TestAccImageBuilderInfrastructureConfigurationsDataSource_filter(t *testing
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInfrastructureConfigurationDestroy,
+		CheckDestroy:             testAccCheckInfrastructureConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInfrastructureConfigurationsDataSourceConfig_filter(rName),

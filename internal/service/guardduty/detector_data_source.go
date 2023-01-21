@@ -1,17 +1,19 @@
 package guardduty
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/guardduty"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func DataSourceDetector() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceDetectorRead,
+		ReadWithoutTimeout: dataSourceDetectorRead,
 
 		Schema: map[string]*schema.Schema{
 			"id": {
@@ -35,24 +37,25 @@ func DataSourceDetector() *schema.Resource {
 	}
 }
 
-func dataSourceDetectorRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GuardDutyConn
+func dataSourceDetectorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GuardDutyConn()
 
 	detectorId := d.Get("id").(string)
 
 	if detectorId == "" {
 		input := &guardduty.ListDetectorsInput{}
 
-		resp, err := conn.ListDetectors(input)
+		resp, err := conn.ListDetectorsWithContext(ctx, input)
 		if err != nil {
-			return fmt.Errorf("error listing GuardDuty Detectors: %w", err)
+			return sdkdiag.AppendErrorf(diags, "listing GuardDuty Detectors: %s", err)
 		}
 
 		if resp == nil || len(resp.DetectorIds) == 0 {
-			return fmt.Errorf("no GuardDuty Detectors found")
+			return sdkdiag.AppendErrorf(diags, "no GuardDuty Detectors found")
 		}
 		if len(resp.DetectorIds) > 1 {
-			return fmt.Errorf("multiple GuardDuty Detectors found; please use the `id` argument to look up a single detector")
+			return sdkdiag.AppendErrorf(diags, "multiple GuardDuty Detectors found; please use the `id` argument to look up a single detector")
 		}
 
 		detectorId = aws.StringValue(resp.DetectorIds[0])
@@ -62,13 +65,13 @@ func dataSourceDetectorRead(d *schema.ResourceData, meta interface{}) error {
 		DetectorId: aws.String(detectorId),
 	}
 
-	getResp, err := conn.GetDetector(getInput)
+	getResp, err := conn.GetDetectorWithContext(ctx, getInput)
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading GuardDuty Detector (%s): %s", detectorId, err)
 	}
 
 	if getResp == nil {
-		return fmt.Errorf("cannot receive GuardDuty Detector details")
+		return sdkdiag.AppendErrorf(diags, "reading GuardDuty Detector (%s): empty result", detectorId)
 	}
 
 	d.SetId(detectorId)
@@ -76,5 +79,5 @@ func dataSourceDetectorRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("service_role_arn", getResp.ServiceRole)
 	d.Set("finding_publishing_frequency", getResp.FindingPublishingFrequency)
 
-	return nil
+	return diags
 }

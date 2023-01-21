@@ -2,6 +2,7 @@ package redshiftdata
 
 import (
 	"strings"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/redshiftdataapiservice"
@@ -13,12 +14,12 @@ import (
 // FindStatementByID will only find full statement info for statements
 // created recently. For statements that AWS thinks are expired, FindStatementByID
 // will just return a bare bones DescribeStatementOutput w/ only the Id present.
-func FindStatementByID(conn *redshiftdataapiservice.RedshiftDataAPIService, id string) (*redshiftdataapiservice.DescribeStatementOutput, error) {
+func FindStatementByID(ctx context.Context, conn *redshiftdataapiservice.RedshiftDataAPIService, id string) (*redshiftdataapiservice.DescribeStatementOutput, error) {
 	input := &redshiftdataapiservice.DescribeStatementInput{
 		Id: aws.String(id),
 	}
 
-	output, err := conn.DescribeStatement(input)
+	output, err := conn.DescribeStatementWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, redshiftdataapiservice.ErrCodeResourceNotFoundException) {
 		return nil, &resource.NotFoundError{

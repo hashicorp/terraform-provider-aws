@@ -20,7 +20,7 @@ data "aws_networkfirewall_firewall_policy" "example" {
 }
 ```
 
-### Find firewall policy by Amazon Resource Name (ARN)
+### Find firewall policy by ARN
 
 ```terraform
 data "aws_networkfirewall_firewall_policy" "example" {
@@ -44,17 +44,17 @@ AWS Network Firewall does not allow multiple firewall policies with the same nam
 ## Argument Reference
 One or more of the following arguments are required:
 
-* `arn` - The Amazon Resource Name (ARN) of the firewall policy.
-* `name` - The descriptive name of the firewall policy.
+* `arn` - ARN of the firewall policy.
+* `name` - Descriptive name of the firewall policy.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `description` - A description of the firewall policy.
+* `description` - Description of the firewall policy.
 * `firewall_policy` - The [policy][2] for the specified firewall policy.
 * `tags` - Key-value tags for the firewall policy.
-* `update_token` - A token used for optimistic locking.
+* `update_token` - Token used for optimistic locking.
 
 [1]: https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ram_resource_share
 [2]: https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/networkfirewall_firewall_policy

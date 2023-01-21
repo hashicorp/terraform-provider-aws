@@ -1,6 +1,7 @@
 package acmpca
 
 import (
+	"context"
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
@@ -14,22 +15,26 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceCertificate() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceCertificateCreate,
-		Read:   resourceCertificateRead,
-		Delete: resourceCertificateRevoke,
+		CreateWithoutTimeout: resourceCertificateCreate,
+		ReadWithoutTimeout:   resourceCertificateRead,
+		DeleteWithoutTimeout: resourceCertificateRevoke,
 
+		// Expects ACM PCA ARN format, e.g:
+		// arn:aws:acm-pca:eu-west-1:555885746124:certificate-authority/08322ede-92f9-4200-8f21-c7d12b2b6edb/certificate/a4e9c2aa2ccfab625b1b9136464cd3a6
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				re := regexp.MustCompile(`arn:.+:certificate-authority/[^/]+`)
 				authorityARN := re.FindString(d.Id())
 				if authorityARN == "" {
@@ -105,8 +110,9 @@ func ResourceCertificate() *schema.Resource {
 	}
 }
 
-func resourceCertificateCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ACMPCAConn
+func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ACMPCAConn()
 
 	certificateAuthorityARN := d.Get("certificate_authority_arn").(string)
 	input := &acmpca.IssueCertificateInput{
@@ -117,7 +123,7 @@ func resourceCertificateCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 	validity, err := expandValidity(d.Get("validity").([]interface{}))
 	if err != nil {
-		return fmt.Errorf("error issuing ACM PCA Certificate with Certificate Authority (%s): %w", certificateAuthorityARN, err)
+		return sdkdiag.AppendErrorf(diags, "issuing ACM PCA Certificate with Certificate Authority (%s): %s", certificateAuthorityARN, err)
 	}
 	input.Validity = validity
 
@@ -126,9 +132,9 @@ func resourceCertificateCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	var output *acmpca.IssueCertificateOutput
-	err = resource.Retry(certificateAuthorityActiveTimeout, func() *resource.RetryError {
+	err = resource.RetryContext(ctx, certificateAuthorityActiveTimeout, func() *resource.RetryError {
 		var err error
-		output, err = conn.IssueCertificate(input)
+		output, err = conn.IssueCertificateWithContext(ctx, input)
 		if tfawserr.ErrMessageContains(err, acmpca.ErrCodeInvalidStateException, "The certificate authority is not in a valid state for issuing certificates") {
 			return resource.RetryableError(err)
 		}
@@ -138,11 +144,11 @@ func resourceCertificateCreate(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		output, err = conn.IssueCertificate(input)
+		output, err = conn.IssueCertificateWithContext(ctx, input)
 	}
 
 	if err != nil {
-		return fmt.Errorf("error issuing ACM PCA Certificate with Certificate Authority (%s): %w", certificateAuthorityARN, err)
+		return sdkdiag.AppendErrorf(diags, "issuing ACM PCA Certificate with Certificate Authority (%s): %s", certificateAuthorityARN, err)
 	}
 
 	d.SetId(aws.StringValue(output.CertificateArn))
@@ -152,16 +158,17 @@ func resourceCertificateCreate(d *schema.ResourceData, meta interface{}) error {
 		CertificateAuthorityArn: aws.String(d.Get("certificate_authority_arn").(string)),
 	}
 
-	err = conn.WaitUntilCertificateIssued(getCertificateInput)
+	err = conn.WaitUntilCertificateIssuedWithContext(ctx, getCertificateInput)
 	if err != nil {
-		return fmt.Errorf("error waiting for ACM PCA Certificate Authority (%s) to issue Certificate (%s), error: %w", certificateAuthorityARN, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for ACM PCA Certificate Authority (%s) to issue Certificate (%s), error: %s", certificateAuthorityARN, d.Id(), err)
 	}
 
-	return resourceCertificateRead(d, meta)
+	return append(diags, resourceCertificateRead(ctx, d, meta)...)
 }
 
-func resourceCertificateRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ACMPCAConn
+func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ACMPCAConn()
 
 	getCertificateInput := &acmpca.GetCertificateInput{
 		CertificateArn:          aws.String(d.Id()),
@@ -170,40 +177,41 @@ func resourceCertificateRead(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Reading ACM PCA Certificate: %s", getCertificateInput)
 
-	certificateOutput, err := conn.GetCertificate(getCertificateInput)
+	certificateOutput, err := conn.GetCertificateWithContext(ctx, getCertificateInput)
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, acmpca.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] ACM PCA Certificate (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading ACM PCA Certificate (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading ACM PCA Certificate (%s): %s", d.Id(), err)
 	}
 
 	if certificateOutput == nil {
-		return fmt.Errorf("error reading ACM PCA Certificate (%s): empty response", d.Id())
+		return sdkdiag.AppendErrorf(diags, "reading ACM PCA Certificate (%s): empty response", d.Id())
 	}
 
 	d.Set("arn", d.Id())
 	d.Set("certificate", certificateOutput.Certificate)
 	d.Set("certificate_chain", certificateOutput.CertificateChain)
 
-	return nil
+	return diags
 }
 
-func resourceCertificateRevoke(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ACMPCAConn
+func resourceCertificateRevoke(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ACMPCAConn()
 
 	block, _ := pem.Decode([]byte(d.Get("certificate").(string)))
 	if block == nil {
 		log.Printf("[WARN] Failed to parse ACM PCA Certificate (%s)", d.Id())
-		return nil
+		return diags
 	}
 	cert, err := x509.ParseCertificate(block.Bytes)
 	if err != nil {
-		return fmt.Errorf("Failed to parse ACM PCA Certificate (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "Failed to parse ACM PCA Certificate (%s): %s", d.Id(), err)
 	}
 
 	input := &acmpca.RevokeCertificateInput{
@@ -211,19 +219,19 @@ func resourceCertificateRevoke(d *schema.ResourceData, meta interface{}) error {
 		CertificateSerial:       aws.String(fmt.Sprintf("%x", cert.SerialNumber)),
 		RevocationReason:        aws.String(acmpca.RevocationReasonUnspecified),
 	}
-	_, err = conn.RevokeCertificate(input)
+	_, err = conn.RevokeCertificateWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, acmpca.ErrCodeResourceNotFoundException) ||
 		tfawserr.ErrCodeEquals(err, acmpca.ErrCodeRequestAlreadyProcessedException) ||
 		tfawserr.ErrCodeEquals(err, acmpca.ErrCodeRequestInProgressException) ||
 		tfawserr.ErrMessageContains(err, acmpca.ErrCodeInvalidRequestException, "Self-signed certificate can not be revoked") {
-		return nil
+		return diags
 	}
 	if err != nil {
-		return fmt.Errorf("error revoking ACM PCA Certificate (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "revoking ACM PCA Certificate (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func ValidTemplateARN(v interface{}, k string) (ws []string, errors []error) {

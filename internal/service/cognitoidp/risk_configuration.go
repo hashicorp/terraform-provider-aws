@@ -1,16 +1,19 @@
 package cognitoidp
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -18,12 +21,12 @@ import (
 
 func ResourceRiskConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceRiskConfigurationPut,
-		Read:   resourceRiskConfigurationRead,
-		Delete: resourceRiskConfigurationDelete,
-		Update: resourceRiskConfigurationPut,
+		CreateWithoutTimeout: resourceRiskConfigurationPut,
+		ReadWithoutTimeout:   resourceRiskConfigurationRead,
+		DeleteWithoutTimeout: resourceRiskConfigurationDelete,
+		UpdateWithoutTimeout: resourceRiskConfigurationPut,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -270,8 +273,9 @@ func ResourceRiskConfiguration() *schema.Resource {
 	}
 }
 
-func resourceRiskConfigurationPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
+func resourceRiskConfigurationPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CognitoIDPConn()
 
 	userPoolId := d.Get("user_pool_id").(string)
 	id := userPoolId
@@ -296,31 +300,35 @@ func resourceRiskConfigurationPut(d *schema.ResourceData, meta interface{}) erro
 		input.AccountTakeoverRiskConfiguration = expandAccountTakeoverRiskConfiguration(v.([]interface{}))
 	}
 
-	_, err := conn.SetRiskConfiguration(input)
+	_, err := conn.SetRiskConfigurationWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("setting risk configuration: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting risk configuration: %s", err)
 	}
 
 	d.SetId(id)
 
-	return resourceRiskConfigurationRead(d, meta)
+	return append(diags, resourceRiskConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceRiskConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
+func resourceRiskConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CognitoIDPConn()
 
-	riskConfig, err := FindRiskConfigurationById(conn, d.Id())
+	userPoolId, clientId, err := RiskConfigurationParseID(d.Id())
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Cognito Risk Configuration (%s): %s", d.Id(), err)
+	}
+
+	riskConfig, err := FindRiskConfigurationById(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
 		create.LogNotFoundRemoveState(names.CognitoIDP, create.ErrActionReading, ResNameRiskConfiguration, d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
-
-	userPoolId, clientId, err := RiskConfigurationParseID(d.Id())
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading Cognito Risk Configuration (%s): %s", d.Id(), err)
 	}
 
 	d.Set("user_pool_id", userPoolId)
@@ -331,27 +339,28 @@ func resourceRiskConfigurationRead(d *schema.ResourceData, meta interface{}) err
 
 	if riskConfig.RiskExceptionConfiguration != nil {
 		if err := d.Set("risk_exception_configuration", flattenRiskExceptionConfiguration(riskConfig.RiskExceptionConfiguration)); err != nil {
-			return fmt.Errorf("setting risk_exception_configuration: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting risk_exception_configuration: %s", err)
 		}
 	}
 
 	if err := d.Set("compromised_credentials_risk_configuration", flattenCompromisedCredentialsRiskConfiguration(riskConfig.CompromisedCredentialsRiskConfiguration)); err != nil {
-		return fmt.Errorf("setting compromised_credentials_risk_configuration: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting compromised_credentials_risk_configuration: %s", err)
 	}
 
 	if err := d.Set("account_takeover_risk_configuration", flattenAccountTakeoverRiskConfiguration(riskConfig.AccountTakeoverRiskConfiguration)); err != nil {
-		return fmt.Errorf("setting account_takeover_risk_configuration: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting account_takeover_risk_configuration: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceRiskConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
+func resourceRiskConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CognitoIDPConn()
 
 	userPoolId, clientId, err := RiskConfigurationParseID(d.Id())
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "deleting Cognito Risk Configuration (%s): %s", d.Id(), err)
 	}
 
 	input := &cognitoidentityprovider.SetRiskConfigurationInput{
@@ -362,13 +371,13 @@ func resourceRiskConfigurationDelete(d *schema.ResourceData, meta interface{}) e
 		input.ClientId = aws.String(clientId)
 	}
 
-	_, err = conn.SetRiskConfiguration(input)
+	_, err = conn.SetRiskConfigurationWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("removing risk configuration: %w", err)
+		return sdkdiag.AppendErrorf(diags, "deleting Cognito Risk Configuration (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandRiskExceptionConfiguration(riskConfig []interface{}) *cognitoidentityprovider.RiskExceptionConfigurationType {
@@ -694,6 +703,5 @@ func RiskConfigurationParseID(id string) (string, string, error) {
 		return parts[0], parts[1], nil
 	} else {
 		return parts[0], "", nil
-
 	}
 }

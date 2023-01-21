@@ -224,5 +224,5 @@ In addition to all arguments above, the following attributes are exported:
 CloudWatch metric streams can be imported using the `name`, e.g.,
 
 ```
-$ terraform import aws_cloudwatch_metric_stream.sample <name>
+$ terraform import aws_cloudwatch_metric_stream.sample sample-stream-name
 ```

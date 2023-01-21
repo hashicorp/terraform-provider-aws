@@ -1,19 +1,21 @@
 package codecommit
 
 import (
-	"fmt"
+	"context"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codecommit"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func DataSourceApprovalRuleTemplate() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceApprovalRuleTemplateRead,
+		ReadWithoutTimeout: dataSourceApprovalRuleTemplateRead,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -53,22 +55,23 @@ func DataSourceApprovalRuleTemplate() *schema.Resource {
 	}
 }
 
-func dataSourceApprovalRuleTemplateRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeCommitConn
+func dataSourceApprovalRuleTemplateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CodeCommitConn()
 
 	templateName := d.Get("name").(string)
 	input := &codecommit.GetApprovalRuleTemplateInput{
 		ApprovalRuleTemplateName: aws.String(templateName),
 	}
 
-	output, err := conn.GetApprovalRuleTemplate(input)
+	output, err := conn.GetApprovalRuleTemplateWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error reading CodeCommit Approval Rule Template (%s): %w", templateName, err)
+		return sdkdiag.AppendErrorf(diags, "reading CodeCommit Approval Rule Template (%s): %s", templateName, err)
 	}
 
 	if output == nil || output.ApprovalRuleTemplate == nil {
-		return fmt.Errorf("error reading CodeCommit Approval Rule Template (%s): empty output", templateName)
+		return sdkdiag.AppendErrorf(diags, "reading CodeCommit Approval Rule Template (%s): empty output", templateName)
 	}
 
 	result := output.ApprovalRuleTemplate
@@ -83,5 +86,5 @@ func dataSourceApprovalRuleTemplateRead(d *schema.ResourceData, meta interface{}
 	d.Set("last_modified_user", result.LastModifiedUser)
 	d.Set("rule_content_sha256", result.RuleContentSha256)
 
-	return nil
+	return diags
 }

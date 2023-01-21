@@ -12,10 +12,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/kinesisanalyticsv2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -24,10 +26,10 @@ import (
 
 func ResourceApplication() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceApplicationCreate,
-		Read:   resourceApplicationRead,
-		Update: resourceApplicationUpdate,
-		Delete: resourceApplicationDelete,
+		CreateWithoutTimeout: resourceApplicationCreate,
+		ReadWithoutTimeout:   resourceApplicationRead,
+		UpdateWithoutTimeout: resourceApplicationUpdate,
+		DeleteWithoutTimeout: resourceApplicationDelete,
 
 		CustomizeDiff: customdiff.Sequence(
 			verify.SetTagsDiff,
@@ -38,7 +40,7 @@ func ResourceApplication() *schema.Resource {
 		),
 
 		Importer: &schema.ResourceImporter{
-			State: resourceApplicationImport,
+			StateContext: resourceApplicationImport,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -927,8 +929,9 @@ func ResourceApplication() *schema.Resource {
 	}
 }
 
-func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KinesisAnalyticsV2Conn
+func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).KinesisAnalyticsV2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -948,12 +951,12 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Creating Kinesis Analytics v2 Application: %s", input)
 
-	outputRaw, err := waitIAMPropagation(func() (interface{}, error) {
-		return conn.CreateApplication(input)
+	outputRaw, err := waitIAMPropagation(ctx, func() (interface{}, error) {
+		return conn.CreateApplicationWithContext(ctx, input)
 	})
 
 	if err != nil {
-		return fmt.Errorf("error creating Kinesis Analytics v2 Application (%s): %w", applicationName, err)
+		return sdkdiag.AppendErrorf(diags, "creating Kinesis Analytics v2 Application (%s): %s", applicationName, err)
 	}
 
 	output := outputRaw.(*kinesisanalyticsv2.CreateApplicationOutput)
@@ -963,29 +966,30 @@ func resourceApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 	d.Set("create_timestamp", aws.TimeValue(output.ApplicationDetail.CreateTimestamp).Format(time.RFC3339))
 
 	if _, ok := d.GetOk("start_application"); ok {
-		if err := startApplication(conn, expandStartApplicationInput(d), d.Timeout(schema.TimeoutCreate)); err != nil {
-			return err
+		if err := startApplication(ctx, conn, expandStartApplicationInput(d), d.Timeout(schema.TimeoutCreate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "creating Kinesis Analytics v2 Application (%s): %s", applicationName, err)
 		}
 	}
 
-	return resourceApplicationRead(d, meta)
+	return append(diags, resourceApplicationRead(ctx, d, meta)...)
 }
 
-func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KinesisAnalyticsV2Conn
+func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).KinesisAnalyticsV2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	application, err := FindApplicationDetailByName(conn, d.Get("name").(string))
+	application, err := FindApplicationDetailByName(ctx, conn, d.Get("name").(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Kinesis Analytics v2 Application (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Kinesis Analytics v2 Application (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Kinesis Analytics v2 Application (%s): %s", d.Id(), err)
 	}
 
 	arn := aws.StringValue(application.ApplicationARN)
@@ -1000,35 +1004,36 @@ func resourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("version_id", application.ApplicationVersionId)
 
 	if err := d.Set("application_configuration", flattenApplicationConfigurationDescription(application.ApplicationConfigurationDescription)); err != nil {
-		return fmt.Errorf("error setting application_configuration: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting application_configuration: %s", err)
 	}
 
 	if err := d.Set("cloudwatch_logging_options", flattenCloudWatchLoggingOptionDescriptions(application.CloudWatchLoggingOptionDescriptions)); err != nil {
-		return fmt.Errorf("error setting cloudwatch_logging_options: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting cloudwatch_logging_options: %s", err)
 	}
 
-	tags, err := ListTags(conn, arn)
+	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for Kinesis Analytics v2 Application (%s): %w", arn, err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for Kinesis Analytics v2 Application (%s): %s", arn, err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KinesisAnalyticsV2Conn
+func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).KinesisAnalyticsV2Conn()
 	applicationName := d.Get("name").(string)
 
 	if d.HasChanges("application_configuration", "cloudwatch_logging_options", "service_execution_role") {
@@ -1082,25 +1087,25 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 
 						log.Printf("[DEBUG] Adding Kinesis Analytics v2 Application (%s) input: %s", d.Id(), input)
 
-						outputRaw, err := waitIAMPropagation(func() (interface{}, error) {
-							return conn.AddApplicationInput(input)
+						outputRaw, err := waitIAMPropagation(ctx, func() (interface{}, error) {
+							return conn.AddApplicationInputWithContext(ctx, input)
 						})
 
 						if err != nil {
-							return fmt.Errorf("error adding Kinesis Analytics v2 Application (%s) input: %w", d.Id(), err)
+							return sdkdiag.AppendErrorf(diags, "adding Kinesis Analytics v2 Application (%s) input: %s", d.Id(), err)
 						}
 
 						output := outputRaw.(*kinesisanalyticsv2.AddApplicationInputOutput)
 
-						if _, err := waitApplicationUpdated(conn, applicationName, d.Timeout(schema.TimeoutUpdate)); err != nil {
-							return fmt.Errorf("error waiting for Kinesis Analytics v2 Application (%s) to update: %w", d.Id(), err)
+						if _, err := waitApplicationUpdated(ctx, conn, applicationName, d.Timeout(schema.TimeoutUpdate)); err != nil {
+							return sdkdiag.AppendErrorf(diags, "waiting for Kinesis Analytics v2 Application (%s) to update: %s", d.Id(), err)
 						}
 
 						currentApplicationVersionId = aws.Int64Value(output.ApplicationVersionId)
 					} else if len(n.([]interface{})) == 0 {
 						// The existing input cannot be deleted.
 						// This should be handled by the CustomizeDiff function above.
-						return fmt.Errorf("error deleting Kinesis Analytics v2 Application (%s) input", d.Id())
+						return sdkdiag.AppendErrorf(diags, "deleting Kinesis Analytics v2 Application (%s) input", d.Id())
 					} else {
 						// Update existing input.
 						inputUpdate := expandInputUpdate(n.([]interface{}))
@@ -1121,18 +1126,18 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 
 								log.Printf("[DEBUG] Adding Kinesis Analytics v2 Application (%s) input processing configuration: %s", d.Id(), input)
 
-								outputRaw, err := waitIAMPropagation(func() (interface{}, error) {
-									return conn.AddApplicationInputProcessingConfiguration(input)
+								outputRaw, err := waitIAMPropagation(ctx, func() (interface{}, error) {
+									return conn.AddApplicationInputProcessingConfigurationWithContext(ctx, input)
 								})
 
 								if err != nil {
-									return fmt.Errorf("error adding Kinesis Analytics v2 Application (%s) input processing configuration: %w", d.Id(), err)
+									return sdkdiag.AppendErrorf(diags, "adding Kinesis Analytics v2 Application (%s) input processing configuration: %s", d.Id(), err)
 								}
 
 								output := outputRaw.(*kinesisanalyticsv2.AddApplicationInputProcessingConfigurationOutput)
 
-								if _, err := waitApplicationUpdated(conn, applicationName, d.Timeout(schema.TimeoutUpdate)); err != nil {
-									return fmt.Errorf("error waiting for Kinesis Analytics v2 Application (%s) to update: %w", d.Id(), err)
+								if _, err := waitApplicationUpdated(ctx, conn, applicationName, d.Timeout(schema.TimeoutUpdate)); err != nil {
+									return sdkdiag.AppendErrorf(diags, "waiting for Kinesis Analytics v2 Application (%s) to update: %s", d.Id(), err)
 								}
 
 								currentApplicationVersionId = aws.Int64Value(output.ApplicationVersionId)
@@ -1146,18 +1151,18 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 
 								log.Printf("[DEBUG] Deleting Kinesis Analytics v2 Application (%s) input processing configuration: %s", d.Id(), input)
 
-								outputRaw, err := waitIAMPropagation(func() (interface{}, error) {
-									return conn.DeleteApplicationInputProcessingConfiguration(input)
+								outputRaw, err := waitIAMPropagation(ctx, func() (interface{}, error) {
+									return conn.DeleteApplicationInputProcessingConfigurationWithContext(ctx, input)
 								})
 
 								if err != nil {
-									return fmt.Errorf("error deleting Kinesis Analytics v2 Application (%s) input processing configuration: %w", d.Id(), err)
+									return sdkdiag.AppendErrorf(diags, "deleting Kinesis Analytics v2 Application (%s) input processing configuration: %s", d.Id(), err)
 								}
 
 								output := outputRaw.(*kinesisanalyticsv2.DeleteApplicationInputProcessingConfigurationOutput)
 
-								if _, err := waitApplicationUpdated(conn, applicationName, d.Timeout(schema.TimeoutUpdate)); err != nil {
-									return fmt.Errorf("error waiting for Kinesis Analytics v2 Application (%s) to update: %w", d.Id(), err)
+								if _, err := waitApplicationUpdated(ctx, conn, applicationName, d.Timeout(schema.TimeoutUpdate)); err != nil {
+									return sdkdiag.AppendErrorf(diags, "waiting for Kinesis Analytics v2 Application (%s) to update: %s", d.Id(), err)
 								}
 
 								currentApplicationVersionId = aws.Int64Value(output.ApplicationVersionId)
@@ -1208,18 +1213,18 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 
 						log.Printf("[DEBUG] Deleting Kinesis Analytics v2 Application (%s) output: %s", d.Id(), input)
 
-						outputRaw, err := waitIAMPropagation(func() (interface{}, error) {
-							return conn.DeleteApplicationOutput(input)
+						outputRaw, err := waitIAMPropagation(ctx, func() (interface{}, error) {
+							return conn.DeleteApplicationOutputWithContext(ctx, input)
 						})
 
 						if err != nil {
-							return fmt.Errorf("error deleting Kinesis Analytics v2 Application (%s) output: %w", d.Id(), err)
+							return sdkdiag.AppendErrorf(diags, "deleting Kinesis Analytics v2 Application (%s) output: %s", d.Id(), err)
 						}
 
 						output := outputRaw.(*kinesisanalyticsv2.DeleteApplicationOutputOutput)
 
-						if _, err := waitApplicationUpdated(conn, applicationName, d.Timeout(schema.TimeoutUpdate)); err != nil {
-							return fmt.Errorf("error waiting for Kinesis Analytics v2 Application (%s) to update: %w", d.Id(), err)
+						if _, err := waitApplicationUpdated(ctx, conn, applicationName, d.Timeout(schema.TimeoutUpdate)); err != nil {
+							return sdkdiag.AppendErrorf(diags, "waiting for Kinesis Analytics v2 Application (%s) to update: %s", d.Id(), err)
 						}
 
 						currentApplicationVersionId = aws.Int64Value(output.ApplicationVersionId)
@@ -1235,18 +1240,18 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 
 						log.Printf("[DEBUG] Adding Kinesis Analytics v2 Application (%s) output: %s", d.Id(), input)
 
-						outputRaw, err := waitIAMPropagation(func() (interface{}, error) {
-							return conn.AddApplicationOutput(input)
+						outputRaw, err := waitIAMPropagation(ctx, func() (interface{}, error) {
+							return conn.AddApplicationOutputWithContext(ctx, input)
 						})
 
 						if err != nil {
-							return fmt.Errorf("error adding Kinesis Analytics v2 Application (%s) output: %w", d.Id(), err)
+							return sdkdiag.AppendErrorf(diags, "adding Kinesis Analytics v2 Application (%s) output: %s", d.Id(), err)
 						}
 
 						output := outputRaw.(*kinesisanalyticsv2.AddApplicationOutputOutput)
 
-						if _, err := waitApplicationUpdated(conn, applicationName, d.Timeout(schema.TimeoutUpdate)); err != nil {
-							return fmt.Errorf("error waiting for Kinesis Analytics v2 Application (%s) to update: %w", d.Id(), err)
+						if _, err := waitApplicationUpdated(ctx, conn, applicationName, d.Timeout(schema.TimeoutUpdate)); err != nil {
+							return sdkdiag.AppendErrorf(diags, "waiting for Kinesis Analytics v2 Application (%s) to update: %s", d.Id(), err)
 						}
 
 						currentApplicationVersionId = aws.Int64Value(output.ApplicationVersionId)
@@ -1266,18 +1271,18 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 
 						log.Printf("[DEBUG] Adding Kinesis Analytics v2 Application (%s) reference data source: %s", d.Id(), input)
 
-						outputRaw, err := waitIAMPropagation(func() (interface{}, error) {
-							return conn.AddApplicationReferenceDataSource(input)
+						outputRaw, err := waitIAMPropagation(ctx, func() (interface{}, error) {
+							return conn.AddApplicationReferenceDataSourceWithContext(ctx, input)
 						})
 
 						if err != nil {
-							return fmt.Errorf("error adding Kinesis Analytics v2 Application (%s) reference data source: %w", d.Id(), err)
+							return sdkdiag.AppendErrorf(diags, "adding Kinesis Analytics v2 Application (%s) reference data source: %s", d.Id(), err)
 						}
 
 						output := outputRaw.(*kinesisanalyticsv2.AddApplicationReferenceDataSourceOutput)
 
-						if _, err := waitApplicationUpdated(conn, applicationName, d.Timeout(schema.TimeoutUpdate)); err != nil {
-							return fmt.Errorf("error waiting for Kinesis Analytics v2 Application (%s) to update: %w", d.Id(), err)
+						if _, err := waitApplicationUpdated(ctx, conn, applicationName, d.Timeout(schema.TimeoutUpdate)); err != nil {
+							return sdkdiag.AppendErrorf(diags, "waiting for Kinesis Analytics v2 Application (%s) to update: %s", d.Id(), err)
 						}
 
 						currentApplicationVersionId = aws.Int64Value(output.ApplicationVersionId)
@@ -1293,18 +1298,18 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 
 						log.Printf("[DEBUG] Deleting Kinesis Analytics v2 Application (%s) reference data source: %s", d.Id(), input)
 
-						outputRaw, err := waitIAMPropagation(func() (interface{}, error) {
-							return conn.DeleteApplicationReferenceDataSource(input)
+						outputRaw, err := waitIAMPropagation(ctx, func() (interface{}, error) {
+							return conn.DeleteApplicationReferenceDataSourceWithContext(ctx, input)
 						})
 
 						if err != nil {
-							return fmt.Errorf("error deleting Kinesis Analytics v2 Application (%s) reference data source: %w", d.Id(), err)
+							return sdkdiag.AppendErrorf(diags, "deleting Kinesis Analytics v2 Application (%s) reference data source: %s", d.Id(), err)
 						}
 
 						output := outputRaw.(*kinesisanalyticsv2.DeleteApplicationReferenceDataSourceOutput)
 
-						if _, err := waitApplicationUpdated(conn, applicationName, d.Timeout(schema.TimeoutUpdate)); err != nil {
-							return fmt.Errorf("error waiting for Kinesis Analytics v2 Application (%s) to update: %w", d.Id(), err)
+						if _, err := waitApplicationUpdated(ctx, conn, applicationName, d.Timeout(schema.TimeoutUpdate)); err != nil {
+							return sdkdiag.AppendErrorf(diags, "waiting for Kinesis Analytics v2 Application (%s) to update: %s", d.Id(), err)
 						}
 
 						currentApplicationVersionId = aws.Int64Value(output.ApplicationVersionId)
@@ -1334,18 +1339,18 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 
 					log.Printf("[DEBUG] Adding Kinesis Analytics v2 Application (%s) VPC configuration: %s", d.Id(), input)
 
-					outputRaw, err := waitIAMPropagation(func() (interface{}, error) {
-						return conn.AddApplicationVpcConfiguration(input)
+					outputRaw, err := waitIAMPropagation(ctx, func() (interface{}, error) {
+						return conn.AddApplicationVpcConfigurationWithContext(ctx, input)
 					})
 
 					if err != nil {
-						return fmt.Errorf("error adding Kinesis Analytics v2 Application (%s) VPC configuration: %w", d.Id(), err)
+						return sdkdiag.AppendErrorf(diags, "adding Kinesis Analytics v2 Application (%s) VPC configuration: %s", d.Id(), err)
 					}
 
 					output := outputRaw.(*kinesisanalyticsv2.AddApplicationVpcConfigurationOutput)
 
-					if _, err := waitApplicationUpdated(conn, applicationName, d.Timeout(schema.TimeoutUpdate)); err != nil {
-						return fmt.Errorf("error waiting for Kinesis Analytics v2 Application (%s) to update: %w", d.Id(), err)
+					if _, err := waitApplicationUpdated(ctx, conn, applicationName, d.Timeout(schema.TimeoutUpdate)); err != nil {
+						return sdkdiag.AppendErrorf(diags, "waiting for Kinesis Analytics v2 Application (%s) to update: %s", d.Id(), err)
 					}
 
 					currentApplicationVersionId = aws.Int64Value(output.ApplicationVersionId)
@@ -1361,18 +1366,18 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 
 					log.Printf("[DEBUG] Deleting Kinesis Analytics v2 Application (%s) VPC configuration: %s", d.Id(), input)
 
-					outputRaw, err := waitIAMPropagation(func() (interface{}, error) {
-						return conn.DeleteApplicationVpcConfiguration(input)
+					outputRaw, err := waitIAMPropagation(ctx, func() (interface{}, error) {
+						return conn.DeleteApplicationVpcConfigurationWithContext(ctx, input)
 					})
 
 					if err != nil {
-						return fmt.Errorf("error deleting Kinesis Analytics v2 Application (%s) VPC configuration: %w", d.Id(), err)
+						return sdkdiag.AppendErrorf(diags, "deleting Kinesis Analytics v2 Application (%s) VPC configuration: %s", d.Id(), err)
 					}
 
 					output := outputRaw.(*kinesisanalyticsv2.DeleteApplicationVpcConfigurationOutput)
 
-					if _, err := waitApplicationUpdated(conn, applicationName, d.Timeout(schema.TimeoutUpdate)); err != nil {
-						return fmt.Errorf("error waiting for Kinesis Analytics v2 Application (%s) to update: %w", d.Id(), err)
+					if _, err := waitApplicationUpdated(ctx, conn, applicationName, d.Timeout(schema.TimeoutUpdate)); err != nil {
+						return sdkdiag.AppendErrorf(diags, "waiting for Kinesis Analytics v2 Application (%s) to update: %s", d.Id(), err)
 					}
 
 					currentApplicationVersionId = aws.Int64Value(output.ApplicationVersionId)
@@ -1387,10 +1392,10 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 
 			if d.HasChange("application_configuration.0.run_configuration") {
-				application, err := FindApplicationDetailByName(conn, applicationName)
+				application, err := FindApplicationDetailByName(ctx, conn, applicationName)
 
 				if err != nil {
-					return fmt.Errorf("error reading Kinesis Analytics v2 Application (%s): %w", applicationName, err)
+					return sdkdiag.AppendErrorf(diags, "reading Kinesis Analytics v2 Application (%s): %s", applicationName, err)
 				}
 
 				if actual, expected := aws.StringValue(application.ApplicationStatus), kinesisanalyticsv2.ApplicationStatusRunning; actual == expected {
@@ -1420,18 +1425,18 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 
 				log.Printf("[DEBUG] Adding Kinesis Analytics v2 Application (%s) CloudWatch logging option: %s", d.Id(), input)
 
-				outputRaw, err := waitIAMPropagation(func() (interface{}, error) {
-					return conn.AddApplicationCloudWatchLoggingOption(input)
+				outputRaw, err := waitIAMPropagation(ctx, func() (interface{}, error) {
+					return conn.AddApplicationCloudWatchLoggingOptionWithContext(ctx, input)
 				})
 
 				if err != nil {
-					return fmt.Errorf("error adding Kinesis Analytics v2 Application (%s) CloudWatch logging option: %w", d.Id(), err)
+					return sdkdiag.AppendErrorf(diags, "adding Kinesis Analytics v2 Application (%s) CloudWatch logging option: %s", d.Id(), err)
 				}
 
 				output := outputRaw.(*kinesisanalyticsv2.AddApplicationCloudWatchLoggingOptionOutput)
 
-				if _, err := waitApplicationUpdated(conn, applicationName, d.Timeout(schema.TimeoutUpdate)); err != nil {
-					return fmt.Errorf("error waiting for Kinesis Analytics v2 Application (%s) to update: %w", d.Id(), err)
+				if _, err := waitApplicationUpdated(ctx, conn, applicationName, d.Timeout(schema.TimeoutUpdate)); err != nil {
+					return sdkdiag.AppendErrorf(diags, "waiting for Kinesis Analytics v2 Application (%s) to update: %s", d.Id(), err)
 				}
 
 				currentApplicationVersionId = aws.Int64Value(output.ApplicationVersionId)
@@ -1447,18 +1452,18 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 
 				log.Printf("[DEBUG] Deleting Kinesis Analytics v2 Application (%s) CloudWatch logging option: %s", d.Id(), input)
 
-				outputRaw, err := waitIAMPropagation(func() (interface{}, error) {
-					return conn.DeleteApplicationCloudWatchLoggingOption(input)
+				outputRaw, err := waitIAMPropagation(ctx, func() (interface{}, error) {
+					return conn.DeleteApplicationCloudWatchLoggingOptionWithContext(ctx, input)
 				})
 
 				if err != nil {
-					return fmt.Errorf("error deleting Kinesis Analytics v2 Application (%s) CloudWatch logging option: %w", d.Id(), err)
+					return sdkdiag.AppendErrorf(diags, "deleting Kinesis Analytics v2 Application (%s) CloudWatch logging option: %s", d.Id(), err)
 				}
 
 				output := outputRaw.(*kinesisanalyticsv2.DeleteApplicationCloudWatchLoggingOptionOutput)
 
-				if _, err := waitApplicationUpdated(conn, applicationName, d.Timeout(schema.TimeoutUpdate)); err != nil {
-					return fmt.Errorf("error waiting for Kinesis Analytics v2 Application (%s) to update: %w", d.Id(), err)
+				if _, err := waitApplicationUpdated(ctx, conn, applicationName, d.Timeout(schema.TimeoutUpdate)); err != nil {
+					return sdkdiag.AppendErrorf(diags, "waiting for Kinesis Analytics v2 Application (%s) to update: %s", d.Id(), err)
 				}
 
 				currentApplicationVersionId = aws.Int64Value(output.ApplicationVersionId)
@@ -1489,16 +1494,16 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 
 			log.Printf("[DEBUG] Updating Kinesis Analytics v2 Application (%s): %s", d.Id(), input)
 
-			_, err := waitIAMPropagation(func() (interface{}, error) {
-				return conn.UpdateApplication(input)
+			_, err := waitIAMPropagation(ctx, func() (interface{}, error) {
+				return conn.UpdateApplicationWithContext(ctx, input)
 			})
 
 			if err != nil {
-				return fmt.Errorf("error updating Kinesis Analytics v2 Application (%s): %w", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "updating Kinesis Analytics v2 Application (%s): %s", d.Id(), err)
 			}
 
-			if _, err := waitApplicationUpdated(conn, applicationName, d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return fmt.Errorf("error waiting for Kinesis Analytics v2 Application (%s) to update: %w", d.Id(), err)
+			if _, err := waitApplicationUpdated(ctx, conn, applicationName, d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for Kinesis Analytics v2 Application (%s) to update: %s", d.Id(), err)
 			}
 		}
 	}
@@ -1506,69 +1511,70 @@ func resourceApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		arn := d.Get("arn").(string)
 		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, arn, o, n); err != nil {
-			return fmt.Errorf("error updating Kinesis Analytics v2 Application (%s) tags: %s", arn, err)
+		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Kinesis Analytics v2 Application (%s) tags: %s", arn, err)
 		}
 	}
 
 	if d.HasChange("start_application") {
 		if _, ok := d.GetOk("start_application"); ok {
-			if err := startApplication(conn, expandStartApplicationInput(d), d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return err
+			if err := startApplication(ctx, conn, expandStartApplicationInput(d), d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating Kinesis Analytics v2 Application (%s): %s", d.Id(), err)
 			}
 		} else {
-			if err := stopApplication(conn, expandStopApplicationInput(d), d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return err
+			if err := stopApplication(ctx, conn, expandStopApplicationInput(d), d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating Kinesis Analytics v2 Application (%s): %s", d.Id(), err)
 			}
 		}
 	}
 
-	return resourceApplicationRead(d, meta)
+	return append(diags, resourceApplicationRead(ctx, d, meta)...)
 }
 
-func resourceApplicationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KinesisAnalyticsV2Conn
+func resourceApplicationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).KinesisAnalyticsV2Conn()
 
 	createTimestamp, err := time.Parse(time.RFC3339, d.Get("create_timestamp").(string))
 	if err != nil {
-		return fmt.Errorf("error parsing create_timestamp: %w", err)
+		return sdkdiag.AppendErrorf(diags, "deleting Kinesis Analytics v2 Application (%s): parsing create_timestamp: %s", d.Id(), err)
 	}
 
 	applicationName := d.Get("name").(string)
 
 	log.Printf("[DEBUG] Deleting Kinesis Analytics v2 Application (%s)", d.Id())
-	_, err = conn.DeleteApplication(&kinesisanalyticsv2.DeleteApplicationInput{
+	_, err = conn.DeleteApplicationWithContext(ctx, &kinesisanalyticsv2.DeleteApplicationInput{
 		ApplicationName: aws.String(applicationName),
 		CreateTimestamp: aws.Time(createTimestamp),
 	})
 
 	if tfawserr.ErrCodeEquals(err, kinesisanalyticsv2.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Kinesis Analytics v2 Application (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Kinesis Analytics v2 Application (%s): %s", d.Id(), err)
 	}
 
-	_, err = waitApplicationDeleted(conn, applicationName, d.Timeout(schema.TimeoutDelete))
+	_, err = waitApplicationDeleted(ctx, conn, applicationName, d.Timeout(schema.TimeoutDelete))
 
 	if err != nil {
-		return fmt.Errorf("error waiting for Kinesis Analytics v2 Application (%s) deletion: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Kinesis Analytics v2 Application (%s): waiting for completion: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceApplicationImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceApplicationImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	arn, err := arn.Parse(d.Id())
 	if err != nil {
-		return []*schema.ResourceData{}, fmt.Errorf("Error parsing ARN %q: %w", d.Id(), err)
+		return []*schema.ResourceData{}, fmt.Errorf("parsing ARN %q: %w", d.Id(), err)
 	}
 
 	// application/<name>
 	parts := strings.Split(arn.Resource, "/")
 	if len(parts) != 2 {
-		return []*schema.ResourceData{}, fmt.Errorf("Unexpected ARN format: %q", d.Id())
+		return []*schema.ResourceData{}, fmt.Errorf("unexpected ARN format: %q", d.Id())
 	}
 
 	d.Set("name", parts[1])
@@ -1576,13 +1582,13 @@ func resourceApplicationImport(d *schema.ResourceData, meta interface{}) ([]*sch
 	return []*schema.ResourceData{d}, nil
 }
 
-func startApplication(conn *kinesisanalyticsv2.KinesisAnalyticsV2, input *kinesisanalyticsv2.StartApplicationInput, timeout time.Duration) error {
+func startApplication(ctx context.Context, conn *kinesisanalyticsv2.KinesisAnalyticsV2, input *kinesisanalyticsv2.StartApplicationInput, timeout time.Duration) error {
 	applicationName := aws.StringValue(input.ApplicationName)
 
-	application, err := FindApplicationDetailByName(conn, applicationName)
+	application, err := FindApplicationDetailByName(ctx, conn, applicationName)
 
 	if err != nil {
-		return fmt.Errorf("error reading Kinesis Analytics v2 Application (%s): %w", applicationName, err)
+		return fmt.Errorf("starting application: %w", err)
 	}
 
 	applicationARN := aws.StringValue(application.ApplicationARN)
@@ -1604,24 +1610,24 @@ func startApplication(conn *kinesisanalyticsv2.KinesisAnalyticsV2, input *kinesi
 
 	log.Printf("[DEBUG] Starting Kinesis Analytics v2 Application (%s): %s", applicationARN, input)
 
-	if _, err := conn.StartApplication(input); err != nil {
-		return fmt.Errorf("error starting Kinesis Analytics v2 Application (%s): %w", applicationARN, err)
+	if _, err := conn.StartApplicationWithContext(ctx, input); err != nil {
+		return fmt.Errorf("starting application: %w", err)
 	}
 
-	if _, err := waitApplicationStarted(conn, applicationName, timeout); err != nil {
-		return fmt.Errorf("error waiting for Kinesis Analytics v2 Application (%s) to start: %w", applicationARN, err)
+	if _, err := waitApplicationStarted(ctx, conn, applicationName, timeout); err != nil {
+		return fmt.Errorf("starting application: waiting for completion: %w", err)
 	}
 
 	return nil
 }
 
-func stopApplication(conn *kinesisanalyticsv2.KinesisAnalyticsV2, input *kinesisanalyticsv2.StopApplicationInput, timeout time.Duration) error {
+func stopApplication(ctx context.Context, conn *kinesisanalyticsv2.KinesisAnalyticsV2, input *kinesisanalyticsv2.StopApplicationInput, timeout time.Duration) error {
 	applicationName := aws.StringValue(input.ApplicationName)
 
-	application, err := FindApplicationDetailByName(conn, applicationName)
+	application, err := FindApplicationDetailByName(ctx, conn, applicationName)
 
 	if err != nil {
-		return fmt.Errorf("error reading Kinesis Analytics v2 Application (%s): %w", applicationName, err)
+		return fmt.Errorf("stopping application: %w", err)
 	}
 
 	applicationARN := aws.StringValue(application.ApplicationARN)
@@ -1633,12 +1639,12 @@ func stopApplication(conn *kinesisanalyticsv2.KinesisAnalyticsV2, input *kinesis
 
 	log.Printf("[DEBUG] Stopping Kinesis Analytics v2 Application (%s): %s", applicationARN, input)
 
-	if _, err := conn.StopApplication(input); err != nil {
-		return fmt.Errorf("error stopping Kinesis Analytics v2 Application (%s): %w", applicationARN, err)
+	if _, err := conn.StopApplicationWithContext(ctx, input); err != nil {
+		return fmt.Errorf("stopping application: %w", err)
 	}
 
-	if _, err := waitApplicationStopped(conn, applicationName, timeout); err != nil {
-		return fmt.Errorf("error waiting for Kinesis Analytics v2 Application (%s) to stop: %w", applicationARN, err)
+	if _, err := waitApplicationStopped(ctx, conn, applicationName, timeout); err != nil {
+		return fmt.Errorf("stopping application: waiting for completion: %w", err)
 	}
 
 	return nil

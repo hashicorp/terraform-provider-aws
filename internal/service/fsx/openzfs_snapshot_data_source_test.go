@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccFSxOpenzfsSnapshotDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_fsx_openzfs_snapshot.test"
 	resourceName := "aws_fsx_openzfs_snapshot.test"
 	mostRecentResourceName := "aws_fsx_openzfs_snapshot.latest"
@@ -21,7 +22,7 @@ func TestAccFSxOpenzfsSnapshotDataSource_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOpenzfsSnapshotDestroy,
+		CheckDestroy:             testAccCheckOpenzfsSnapshotDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOpenzfsSnapshotDataSourceConfig_basic(rName),

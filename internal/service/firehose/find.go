@@ -1,6 +1,8 @@
 package firehose
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/firehose"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -8,12 +10,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindDeliveryStreamByName(conn *firehose.Firehose, name string) (*firehose.DeliveryStreamDescription, error) {
+func FindDeliveryStreamByName(ctx context.Context, conn *firehose.Firehose, name string) (*firehose.DeliveryStreamDescription, error) {
 	input := &firehose.DescribeDeliveryStreamInput{
 		DeliveryStreamName: aws.String(name),
 	}
 
-	output, err := conn.DescribeDeliveryStream(input)
+	output, err := conn.DescribeDeliveryStreamWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, firehose.ErrCodeResourceNotFoundException) {
 		return nil, &resource.NotFoundError{
@@ -33,8 +35,8 @@ func FindDeliveryStreamByName(conn *firehose.Firehose, name string) (*firehose.D
 	return output.DeliveryStreamDescription, nil
 }
 
-func FindDeliveryStreamEncryptionConfigurationByName(conn *firehose.Firehose, name string) (*firehose.DeliveryStreamEncryptionConfiguration, error) {
-	output, err := FindDeliveryStreamByName(conn, name)
+func FindDeliveryStreamEncryptionConfigurationByName(ctx context.Context, conn *firehose.Firehose, name string) (*firehose.DeliveryStreamEncryptionConfiguration, error) {
+	output, err := FindDeliveryStreamByName(ctx, conn, name)
 
 	if err != nil {
 		return nil, err

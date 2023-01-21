@@ -73,7 +73,6 @@ IP space. The public scope is intended for all internet-routable IP space.
 * `scope_count` - The number of scopes in the IPAM.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
-
 ## Import
 
 IPAMs can be imported using the `ipam id`, e.g.

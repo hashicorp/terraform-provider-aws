@@ -11,10 +11,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -28,13 +30,13 @@ const (
 
 func ResourceIntent() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceIntentCreate,
-		Read:   resourceIntentRead,
-		Update: resourceIntentUpdate,
-		Delete: resourceIntentDelete,
+		CreateWithoutTimeout: resourceIntentCreate,
+		ReadWithoutTimeout:   resourceIntentRead,
+		UpdateWithoutTimeout: resourceIntentUpdate,
+		DeleteWithoutTimeout: resourceIntentDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -281,8 +283,9 @@ func hasIntentConfigChanges(d verify.ResourceDiffer) bool {
 	return false
 }
 
-func resourceIntentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LexModelsConn
+func resourceIntentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).LexModelsConn()
 	name := d.Get("name").(string)
 
 	input := &lexmodelbuildingservice.PutIntentInput{
@@ -327,8 +330,8 @@ func resourceIntentCreate(d *schema.ResourceData, meta interface{}) error {
 		input.Slots = expandSlots(v.(*schema.Set).List())
 	}
 
-	err := resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-		output, err := conn.PutIntent(input)
+	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
+		output, err := conn.PutIntentWithContext(ctx, input)
 
 		if tfawserr.ErrCodeEquals(err, lexmodelbuildingservice.ErrCodeConflictException) {
 			input.Checksum = output.Checksum
@@ -342,32 +345,33 @@ func resourceIntentCreate(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if tfresource.TimedOut(err) { // nosemgrep:ci.helper-schema-TimeoutError-check-doesnt-return-output
-		_, err = conn.PutIntent(input)
+		_, err = conn.PutIntentWithContext(ctx, input)
 	}
 
 	if err != nil {
-		return fmt.Errorf("error creating intent %s: %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating intent %s: %s", name, err)
 	}
 
 	d.SetId(name)
 
-	return resourceIntentRead(d, meta)
+	return append(diags, resourceIntentRead(ctx, d, meta)...)
 }
 
-func resourceIntentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LexModelsConn
+func resourceIntentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).LexModelsConn()
 
-	resp, err := conn.GetIntent(&lexmodelbuildingservice.GetIntentInput{
+	resp, err := conn.GetIntentWithContext(ctx, &lexmodelbuildingservice.GetIntentInput{
 		Name:    aws.String(d.Id()),
 		Version: aws.String(IntentVersionLatest),
 	})
 	if tfawserr.ErrCodeEquals(err, lexmodelbuildingservice.ErrCodeNotFoundException) {
 		log.Printf("[WARN] Intent (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 	if err != nil {
-		return fmt.Errorf("error getting intent %s: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "getting intent %s: %s", d.Id(), err)
 	}
 
 	arn := arn.ARN{
@@ -385,10 +389,10 @@ func resourceIntentRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("last_updated_date", resp.LastUpdatedDate.Format(time.RFC3339))
 	d.Set("name", resp.Name)
 
-	version, err := FindLatestIntentVersionByName(conn, d.Id())
+	version, err := FindLatestIntentVersionByName(ctx, conn, d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error reading Lex Intent (%s) latest version: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Lex Intent (%s) latest version: %s", d.Id(), err)
 	}
 
 	d.Set("version", version)
@@ -413,27 +417,24 @@ func resourceIntentRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("fulfillment_activity", flattenFulfilmentActivity(resp.FulfillmentActivity))
 	}
 
-	if resp.ParentIntentSignature != nil {
-		d.Set("parent_intent_signature", resp.ParentIntentSignature)
-	}
+	d.Set("parent_intent_signature", resp.ParentIntentSignature)
 
 	if resp.RejectionStatement != nil {
 		d.Set("rejection_statement", flattenStatement(resp.RejectionStatement))
 	}
 
-	if resp.SampleUtterances != nil {
-		d.Set("sample_utterances", resp.SampleUtterances)
-	}
+	d.Set("sample_utterances", resp.SampleUtterances)
 
 	if resp.Slots != nil {
 		d.Set("slot", flattenSlots(resp.Slots))
 	}
 
-	return nil
+	return diags
 }
 
-func resourceIntentUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LexModelsConn
+func resourceIntentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).LexModelsConn()
 
 	input := &lexmodelbuildingservice.PutIntentInput{
 		Checksum:      aws.String(d.Get("checksum").(string)),
@@ -478,8 +479,8 @@ func resourceIntentUpdate(d *schema.ResourceData, meta interface{}) error {
 		input.Slots = expandSlots(v.(*schema.Set).List())
 	}
 
-	err := resource.Retry(d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
-		_, err := conn.PutIntent(input)
+	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
+		_, err := conn.PutIntentWithContext(ctx, input)
 
 		if tfawserr.ErrCodeEquals(err, lexmodelbuildingservice.ErrCodeConflictException) {
 			return resource.RetryableError(fmt.Errorf("%q: intent still updating", d.Id()))
@@ -492,25 +493,26 @@ func resourceIntentUpdate(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if tfresource.TimedOut(err) {
-		_, err = conn.PutIntent(input)
+		_, err = conn.PutIntentWithContext(ctx, input)
 	}
 
 	if err != nil {
-		return fmt.Errorf("error updating intent %s: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating intent %s: %s", d.Id(), err)
 	}
 
-	return resourceIntentRead(d, meta)
+	return append(diags, resourceIntentRead(ctx, d, meta)...)
 }
 
-func resourceIntentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LexModelsConn
+func resourceIntentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).LexModelsConn()
 
 	input := &lexmodelbuildingservice.DeleteIntentInput{
 		Name: aws.String(d.Id()),
 	}
 
-	err := resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
-		_, err := conn.DeleteIntent(input)
+	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
+		_, err := conn.DeleteIntentWithContext(ctx, input)
 
 		if tfawserr.ErrCodeEquals(err, lexmodelbuildingservice.ErrCodeConflictException) {
 			return resource.RetryableError(fmt.Errorf("%q: there is a pending operation, intent still deleting", d.Id()))
@@ -523,16 +525,18 @@ func resourceIntentDelete(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteIntent(input)
+		_, err = conn.DeleteIntentWithContext(ctx, input)
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting intent %s: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Lex Model Intent (%s): %s", d.Id(), err)
 	}
 
-	_, err = waitIntentDeleted(conn, d.Id())
+	if _, err := waitIntentDeleted(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting Lex Model Intent (%s): waiting for completion: %s", d.Id(), err)
+	}
 
-	return err
+	return diags
 }
 
 var codeHookResource = &schema.Resource{

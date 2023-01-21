@@ -1,6 +1,7 @@
 package elb_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -17,11 +18,12 @@ import (
 )
 
 func TestAccELBBackendServerPolicy_basic(t *testing.T) {
-	privateKey1 := acctest.TLSRSAPrivateKeyPEM(2048)
-	privateKey2 := acctest.TLSRSAPrivateKeyPEM(2048)
-	publicKey1 := acctest.TLSRSAPublicKeyPEM(privateKey1)
-	publicKey2 := acctest.TLSRSAPublicKeyPEM(privateKey2)
-	certificate1 := acctest.TLSRSAX509SelfSignedCertificatePEM(privateKey1, "example.com")
+	ctx := acctest.Context(t)
+	privateKey1 := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	privateKey2 := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	publicKey1 := acctest.TLSRSAPublicKeyPEM(t, privateKey1)
+	publicKey2 := acctest.TLSRSAPublicKeyPEM(t, privateKey2)
+	certificate1 := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKey1, "example.com")
 	rString := sdkacctest.RandString(8)
 	lbName := fmt.Sprintf("tf-acc-lb-bsp-basic-%s", rString)
 
@@ -29,29 +31,29 @@ func TestAccELBBackendServerPolicy_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBackendServerPolicyDestroy,
+		CheckDestroy:             testAccCheckBackendServerPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBackendServerPolicyConfig_basic0(lbName, privateKey1, publicKey1, certificate1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyState("aws_elb.test-lb", "aws_load_balancer_policy.test-pubkey-policy0"),
-					testAccCheckPolicyState("aws_elb.test-lb", "aws_load_balancer_policy.test-backend-auth-policy0"),
-					testAccCheckBackendServerPolicyState(lbName, "test-backend-auth-policy0", true),
+					testAccCheckPolicyState(ctx, "aws_elb.test-lb", "aws_load_balancer_policy.test-pubkey-policy0"),
+					testAccCheckPolicyState(ctx, "aws_elb.test-lb", "aws_load_balancer_policy.test-backend-auth-policy0"),
+					testAccCheckBackendServerPolicyState(ctx, lbName, "test-backend-auth-policy0", true),
 				),
 			},
 			{
 				Config: testAccBackendServerPolicyConfig_basic1(lbName, privateKey1, publicKey1, certificate1, publicKey2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyState("aws_elb.test-lb", "aws_load_balancer_policy.test-pubkey-policy0"),
-					testAccCheckPolicyState("aws_elb.test-lb", "aws_load_balancer_policy.test-pubkey-policy1"),
-					testAccCheckPolicyState("aws_elb.test-lb", "aws_load_balancer_policy.test-backend-auth-policy0"),
-					testAccCheckBackendServerPolicyState(lbName, "test-backend-auth-policy0", true),
+					testAccCheckPolicyState(ctx, "aws_elb.test-lb", "aws_load_balancer_policy.test-pubkey-policy0"),
+					testAccCheckPolicyState(ctx, "aws_elb.test-lb", "aws_load_balancer_policy.test-pubkey-policy1"),
+					testAccCheckPolicyState(ctx, "aws_elb.test-lb", "aws_load_balancer_policy.test-backend-auth-policy0"),
+					testAccCheckBackendServerPolicyState(ctx, lbName, "test-backend-auth-policy0", true),
 				),
 			},
 			{
 				Config: testAccBackendServerPolicyConfig_basic2(lbName, privateKey1, certificate1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBackendServerPolicyState(lbName, "test-backend-auth-policy0", false),
+					testAccCheckBackendServerPolicyState(ctx, lbName, "test-backend-auth-policy0", false),
 				),
 			},
 		},
@@ -67,63 +69,63 @@ func policyInBackendServerPolicies(str string, list []string) bool {
 	return false
 }
 
-func testAccCheckBackendServerPolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn
+func testAccCheckBackendServerPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn()
 
-	for _, rs := range s.RootModule().Resources {
-		switch {
-		case rs.Type == "aws_load_balancer_policy":
-			loadBalancerName, policyName := tfelb.BackendServerPoliciesParseID(rs.Primary.ID)
-			out, err := conn.DescribeLoadBalancerPolicies(
-				&elb.DescribeLoadBalancerPoliciesInput{
+		for _, rs := range s.RootModule().Resources {
+			switch {
+			case rs.Type == "aws_load_balancer_policy":
+				loadBalancerName, policyName := tfelb.BackendServerPoliciesParseID(rs.Primary.ID)
+				out, err := conn.DescribeLoadBalancerPoliciesWithContext(ctx, &elb.DescribeLoadBalancerPoliciesInput{
 					LoadBalancerName: aws.String(loadBalancerName),
 					PolicyNames:      []*string{aws.String(policyName)},
 				})
-			if err != nil {
-				if ec2err, ok := err.(awserr.Error); ok && (ec2err.Code() == "PolicyNotFound" || ec2err.Code() == "LoadBalancerNotFound") {
-					continue
+				if err != nil {
+					if ec2err, ok := err.(awserr.Error); ok && (ec2err.Code() == "PolicyNotFound" || ec2err.Code() == "LoadBalancerNotFound") {
+						continue
+					}
+					return err
 				}
-				return err
-			}
-			if len(out.PolicyDescriptions) > 0 {
-				return fmt.Errorf("Policy still exists")
-			}
-		case rs.Type == "aws_load_balancer_backend_policy":
-			loadBalancerName, policyName := tfelb.BackendServerPoliciesParseID(rs.Primary.ID)
-			out, err := conn.DescribeLoadBalancers(
-				&elb.DescribeLoadBalancersInput{
+				if len(out.PolicyDescriptions) > 0 {
+					return fmt.Errorf("Policy still exists")
+				}
+			case rs.Type == "aws_load_balancer_backend_policy":
+				loadBalancerName, policyName := tfelb.BackendServerPoliciesParseID(rs.Primary.ID)
+				out, err := conn.DescribeLoadBalancersWithContext(ctx, &elb.DescribeLoadBalancersInput{
 					LoadBalancerNames: []*string{aws.String(loadBalancerName)},
 				})
 
-			if tfawserr.ErrCodeEquals(err, elb.ErrCodeAccessPointNotFoundException) {
+				if tfawserr.ErrCodeEquals(err, elb.ErrCodeAccessPointNotFoundException) {
+					continue
+				}
+
+				if err != nil {
+					return err
+				}
+
+				for _, backendServer := range out.LoadBalancerDescriptions[0].BackendServerDescriptions {
+					policyStrings := []string{}
+					for _, pol := range backendServer.PolicyNames {
+						policyStrings = append(policyStrings, *pol)
+					}
+					if policyInBackendServerPolicies(policyName, policyStrings) {
+						return fmt.Errorf("Policy still exists and is assigned")
+					}
+				}
+			default:
 				continue
 			}
-
-			if err != nil {
-				return err
-			}
-
-			for _, backendServer := range out.LoadBalancerDescriptions[0].BackendServerDescriptions {
-				policyStrings := []string{}
-				for _, pol := range backendServer.PolicyNames {
-					policyStrings = append(policyStrings, *pol)
-				}
-				if policyInBackendServerPolicies(policyName, policyStrings) {
-					return fmt.Errorf("Policy still exists and is assigned")
-				}
-			}
-		default:
-			continue
 		}
+		return nil
 	}
-	return nil
 }
 
-func testAccCheckBackendServerPolicyState(loadBalancerName string, loadBalancerBackendAuthPolicyName string, assigned bool) resource.TestCheckFunc {
+func testAccCheckBackendServerPolicyState(ctx context.Context, loadBalancerName string, loadBalancerBackendAuthPolicyName string, assigned bool) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn()
 
-		loadBalancerDescription, err := conn.DescribeLoadBalancers(&elb.DescribeLoadBalancersInput{
+		loadBalancerDescription, err := conn.DescribeLoadBalancersWithContext(ctx, &elb.DescribeLoadBalancersInput{
 			LoadBalancerNames: []*string{aws.String(loadBalancerName)},
 		})
 		if err != nil {

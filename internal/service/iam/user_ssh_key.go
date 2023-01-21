@@ -1,6 +1,7 @@
 package iam
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -8,21 +9,23 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourceUserSSHKey() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceUserSSHKeyCreate,
-		Read:   resourceUserSSHKeyRead,
-		Update: resourceUserSSHKeyUpdate,
-		Delete: resourceUserSSHKeyDelete,
+		CreateWithoutTimeout: resourceUserSSHKeyCreate,
+		ReadWithoutTimeout:   resourceUserSSHKeyRead,
+		UpdateWithoutTimeout: resourceUserSSHKeyUpdate,
+		DeleteWithoutTimeout: resourceUserSSHKeyDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceUserSSHKeyImport,
+			StateContext: resourceUserSSHKeyImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -71,8 +74,9 @@ func ResourceUserSSHKey() *schema.Resource {
 	}
 }
 
-func resourceUserSSHKeyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+func resourceUserSSHKeyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IAMConn()
 	username := d.Get("username").(string)
 	publicKey := d.Get("public_key").(string)
 
@@ -82,18 +86,19 @@ func resourceUserSSHKeyCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Println("[DEBUG] Create IAM User SSH Key Request:", request)
-	createResp, err := conn.UploadSSHPublicKey(request)
+	createResp, err := conn.UploadSSHPublicKeyWithContext(ctx, request)
 	if err != nil {
-		return fmt.Errorf("Error creating IAM User SSH Key %s: %s", username, err)
+		return sdkdiag.AppendErrorf(diags, "creating IAM User SSH Key %s: %s", username, err)
 	}
 
 	d.SetId(aws.StringValue(createResp.SSHPublicKey.SSHPublicKeyId))
 
-	return resourceUserSSHKeyUpdate(d, meta)
+	return append(diags, resourceUserSSHKeyUpdate(ctx, d, meta)...)
 }
 
-func resourceUserSSHKeyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+func resourceUserSSHKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IAMConn()
 	username := d.Get("username").(string)
 	encoding := d.Get("encoding").(string)
 	request := &iam.GetSSHPublicKeyInput{
@@ -104,10 +109,10 @@ func resourceUserSSHKeyRead(d *schema.ResourceData, meta interface{}) error {
 
 	var getResp *iam.GetSSHPublicKeyOutput
 
-	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
+	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
 		var err error
 
-		getResp, err = conn.GetSSHPublicKey(request)
+		getResp, err = conn.GetSSHPublicKeyWithContext(ctx, request)
 
 		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 			return resource.RetryableError(err)
@@ -121,21 +126,21 @@ func resourceUserSSHKeyRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if tfresource.TimedOut(err) {
-		getResp, err = conn.GetSSHPublicKey(request)
+		getResp, err = conn.GetSSHPublicKeyWithContext(ctx, request)
 	}
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 		log.Printf("[WARN] IAM User SSH Key (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading IAM User SSH Key (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading IAM User SSH Key (%s): %s", d.Id(), err)
 	}
 
 	if getResp == nil || getResp.SSHPublicKey == nil {
-		return fmt.Errorf("error reading IAM User SSH Key (%s): empty response", d.Id())
+		return sdkdiag.AppendErrorf(diags, "reading IAM User SSH Key (%s): empty response", d.Id())
 	}
 
 	publicKey := aws.StringValue(getResp.SSHPublicKey.SSHPublicKeyBody)
@@ -147,12 +152,13 @@ func resourceUserSSHKeyRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("status", getResp.SSHPublicKey.Status)
 	d.Set("ssh_public_key_id", getResp.SSHPublicKey.SSHPublicKeyId)
 	d.Set("public_key", publicKey)
-	return nil
+	return diags
 }
 
-func resourceUserSSHKeyUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceUserSSHKeyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	if d.HasChange("status") {
-		conn := meta.(*conns.AWSClient).IAMConn
+		conn := meta.(*conns.AWSClient).IAMConn()
 
 		request := &iam.UpdateSSHPublicKeyInput{
 			UserName:       aws.String(d.Get("username").(string)),
@@ -160,16 +166,17 @@ func resourceUserSSHKeyUpdate(d *schema.ResourceData, meta interface{}) error {
 			Status:         aws.String(d.Get("status").(string)),
 		}
 
-		_, err := conn.UpdateSSHPublicKey(request)
+		_, err := conn.UpdateSSHPublicKeyWithContext(ctx, request)
 		if err != nil {
-			return fmt.Errorf("error updating IAM User SSH Key (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating IAM User SSH Key (%s): %s", d.Id(), err)
 		}
 	}
-	return resourceUserSSHKeyRead(d, meta)
+	return append(diags, resourceUserSSHKeyRead(ctx, d, meta)...)
 }
 
-func resourceUserSSHKeyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+func resourceUserSSHKeyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	request := &iam.DeleteSSHPublicKeyInput{
 		UserName:       aws.String(d.Get("username").(string)),
@@ -177,13 +184,13 @@ func resourceUserSSHKeyDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Println("[DEBUG] Delete IAM User SSH Key request:", request)
-	if _, err := conn.DeleteSSHPublicKey(request); err != nil {
-		return fmt.Errorf("error deleting IAM User SSH Key (%s): %w", d.Id(), err)
+	if _, err := conn.DeleteSSHPublicKeyWithContext(ctx, request); err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting IAM User SSH Key (%s): %s", d.Id(), err)
 	}
-	return nil
+	return diags
 }
 
-func resourceUserSSHKeyImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceUserSSHKeyImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	idParts := strings.SplitN(d.Id(), ":", 3)
 
 	if len(idParts) != 3 || idParts[0] == "" || idParts[1] == "" || idParts[2] == "" {

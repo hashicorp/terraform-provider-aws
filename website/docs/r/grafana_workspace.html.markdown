@@ -50,6 +50,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `configuration` - (Optional) The configuration string for the workspace that you create. For more information about the format and configuration options available, see [Working in your Grafana workspace](https://docs.aws.amazon.com/grafana/latest/userguide/AMG-configure-workspace.html).
 * `data_sources` - (Optional) The data sources for the workspace. Valid values are `AMAZON_OPENSEARCH_SERVICE`, `ATHENA`, `CLOUDWATCH`, `PROMETHEUS`, `REDSHIFT`, `SITEWISE`, `TIMESTREAM`, `XRAY`
 * `description` - (Optional) The workspace description.
 * `name` - (Optional) The Grafana workspace name.
@@ -59,6 +60,12 @@ The following arguments are optional:
 * `role_arn` - (Optional) The IAM role ARN that the workspace assumes.
 * `stack_set_name` - (Optional) The AWS CloudFormation stack set name that provisions IAM roles to be used by the workspace.
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `vpc_configuration` - (Optional) The configuration settings for an Amazon VPC that contains data sources for your Grafana workspace to connect to. See [VPC Configuration](#vpc-configuration) below.
+
+### VPC Configuration
+
+* `security_group_ids` - (Required) - The list of Amazon EC2 security group IDs attached to the Amazon VPC for your Grafana workspace to connect.
+* `subnet_ids` - (Required) - The list of Amazon EC2 subnet IDs created in the Amazon VPC for your Grafana workspace to connect.
 
 ## Attributes Reference
 

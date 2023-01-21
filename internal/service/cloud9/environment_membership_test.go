@@ -1,6 +1,7 @@
 package cloud9_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -15,6 +16,7 @@ import (
 )
 
 func TestAccCloud9EnvironmentMembership_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf cloud9.EnvironmentMember
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -24,12 +26,12 @@ func TestAccCloud9EnvironmentMembership_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloud9.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloud9.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEnvironmentMemberDestroy,
+		CheckDestroy:             testAccCheckEnvironmentMemberDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnvironmentMembershipConfig_basic(rName, "read-only"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEnvironmentMemberExists(resourceName, &conf),
+					testAccCheckEnvironmentMemberExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "permissions", "read-only"),
 					resource.TestCheckResourceAttrPair(resourceName, "user_arn", "aws_iam_user.test", "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "environment_id", "aws_cloud9_environment_ec2.test", "id"),
@@ -43,7 +45,7 @@ func TestAccCloud9EnvironmentMembership_basic(t *testing.T) {
 			{
 				Config: testAccEnvironmentMembershipConfig_basic(rName, "read-write"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEnvironmentMemberExists(resourceName, &conf),
+					testAccCheckEnvironmentMemberExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "permissions", "read-write"),
 					resource.TestCheckResourceAttrPair(resourceName, "user_arn", "aws_iam_user.test", "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "environment_id", "aws_cloud9_environment_ec2.test", "id"),
@@ -54,6 +56,7 @@ func TestAccCloud9EnvironmentMembership_basic(t *testing.T) {
 }
 
 func TestAccCloud9EnvironmentMembership_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf cloud9.EnvironmentMember
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -63,14 +66,14 @@ func TestAccCloud9EnvironmentMembership_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloud9.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloud9.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEnvironmentMemberDestroy,
+		CheckDestroy:             testAccCheckEnvironmentMemberDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnvironmentMembershipConfig_basic(rName, "read-only"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEnvironmentMemberExists(resourceName, &conf),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcloud9.ResourceEnvironmentMembership(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcloud9.ResourceEnvironmentMembership(), resourceName),
+					testAccCheckEnvironmentMemberExists(ctx, resourceName, &conf),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloud9.ResourceEnvironmentMembership(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloud9.ResourceEnvironmentMembership(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -79,6 +82,7 @@ func TestAccCloud9EnvironmentMembership_disappears(t *testing.T) {
 }
 
 func TestAccCloud9EnvironmentMembership_disappears_env(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf cloud9.EnvironmentMember
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -88,14 +92,14 @@ func TestAccCloud9EnvironmentMembership_disappears_env(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloud9.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloud9.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEnvironmentMemberDestroy,
+		CheckDestroy:             testAccCheckEnvironmentMemberDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnvironmentMembershipConfig_basic(rName, "read-only"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEnvironmentMemberExists(resourceName, &conf),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcloud9.ResourceEnvironmentEC2(), "aws_cloud9_environment_ec2.test"),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcloud9.ResourceEnvironmentMembership(), resourceName),
+					testAccCheckEnvironmentMemberExists(ctx, resourceName, &conf),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloud9.ResourceEnvironmentEC2(), "aws_cloud9_environment_ec2.test"),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloud9.ResourceEnvironmentMembership(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -103,7 +107,7 @@ func TestAccCloud9EnvironmentMembership_disappears_env(t *testing.T) {
 	})
 }
 
-func testAccCheckEnvironmentMemberExists(n string, res *cloud9.EnvironmentMember) resource.TestCheckFunc {
+func testAccCheckEnvironmentMemberExists(ctx context.Context, n string, res *cloud9.EnvironmentMember) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -114,14 +118,14 @@ func testAccCheckEnvironmentMemberExists(n string, res *cloud9.EnvironmentMember
 			return fmt.Errorf("No Cloud9 Environment Member ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Cloud9Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Cloud9Conn()
 
 		envId, userArn, err := tfcloud9.DecodeEnviornmentMemberId(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
 
-		out, err := tfcloud9.FindEnvironmentMembershipByID(conn, envId, userArn)
+		out, err := tfcloud9.FindEnvironmentMembershipByID(ctx, conn, envId, userArn)
 		if err != nil {
 			return err
 		}
@@ -132,32 +136,34 @@ func testAccCheckEnvironmentMemberExists(n string, res *cloud9.EnvironmentMember
 	}
 }
 
-func testAccCheckEnvironmentMemberDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).Cloud9Conn
+func testAccCheckEnvironmentMemberDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Cloud9Conn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_cloud9_environment_membership" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_cloud9_environment_membership" {
+				continue
+			}
+
+			envId, userArn, err := tfcloud9.DecodeEnviornmentMemberId(rs.Primary.ID)
+			if err != nil {
+				return err
+			}
+
+			_, err = tfcloud9.FindEnvironmentMembershipByID(ctx, conn, envId, userArn)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Cloud9 Environment Membership %q still exists.", rs.Primary.ID)
 		}
-
-		envId, userArn, err := tfcloud9.DecodeEnviornmentMemberId(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
-		_, err = tfcloud9.FindEnvironmentMembershipByID(conn, envId, userArn)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("Cloud9 Environment Membership %q still exists.", rs.Primary.ID)
+		return nil
 	}
-	return nil
 }
 
 func testAccEnvironmentMemberBaseConfig(rName string) string {

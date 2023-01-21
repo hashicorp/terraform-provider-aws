@@ -53,6 +53,15 @@ func FlattenStringValueList(list []string) []interface{} {
 	return vs
 }
 
+// Expands a map of string to interface to a map of string to *int32
+func ExpandInt32Map(m map[string]interface{}) map[string]int32 {
+	intMap := make(map[string]int32, len(m))
+	for k, v := range m {
+		intMap[k] = int32(v.(int))
+	}
+	return intMap
+}
+
 // Expands a map of string to interface to a map of string to *string
 func ExpandStringMap(m map[string]interface{}) map[string]*string {
 	stringMap := make(map[string]*string, len(m))

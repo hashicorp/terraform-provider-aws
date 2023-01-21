@@ -1,20 +1,22 @@
 package ecrpublic
 
 import (
+	"context"
 	"encoding/base64"
-	"fmt"
 	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecrpublic"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func DataSourceAuthorizationToken() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAuthorizationTokenRead,
+		ReadWithoutTimeout: dataSourceAuthorizationTokenRead,
 
 		Schema: map[string]*schema.Schema{
 			"authorization_token": {
@@ -39,14 +41,15 @@ func DataSourceAuthorizationToken() *schema.Resource {
 	}
 }
 
-func dataSourceAuthorizationTokenRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECRPublicConn
+func dataSourceAuthorizationTokenRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ECRPublicConn()
 	params := &ecrpublic.GetAuthorizationTokenInput{}
 
-	out, err := conn.GetAuthorizationToken(params)
+	out, err := conn.GetAuthorizationTokenWithContext(ctx, params)
 
 	if err != nil {
-		return fmt.Errorf("error getting Public ECR authorization token: %w", err)
+		return sdkdiag.AppendErrorf(diags, "getting Public ECR authorization token: %s", err)
 	}
 
 	authorizationData := out.AuthorizationData
@@ -54,12 +57,12 @@ func dataSourceAuthorizationTokenRead(d *schema.ResourceData, meta interface{}) 
 	expiresAt := aws.TimeValue(authorizationData.ExpiresAt).Format(time.RFC3339)
 	authBytes, err := base64.URLEncoding.DecodeString(authorizationToken)
 	if err != nil {
-		return fmt.Errorf("error decoding Public ECR authorization token: %w", err)
+		return sdkdiag.AppendErrorf(diags, "decoding Public ECR authorization token: %s", err)
 	}
 
 	basicAuthorization := strings.Split(string(authBytes), ":")
 	if len(basicAuthorization) != 2 {
-		return fmt.Errorf("unknown Public ECR authorization token format")
+		return sdkdiag.AppendErrorf(diags, "unknown Public ECR authorization token format")
 	}
 
 	userName := basicAuthorization[0]
@@ -70,5 +73,5 @@ func dataSourceAuthorizationTokenRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("user_name", userName)
 	d.Set("password", password)
 
-	return nil
+	return diags
 }

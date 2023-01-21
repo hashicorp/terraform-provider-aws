@@ -1,34 +1,31 @@
 package ec2
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-const (
-	// There is no constant in the SDK for this resource type
-	resourceTypeCapacityReservation = "capacity-reservation"
-)
-
 func ResourceCapacityReservation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceCapacityReservationCreate,
-		Read:   resourceCapacityReservationRead,
-		Update: resourceCapacityReservationUpdate,
-		Delete: resourceCapacityReservationDelete,
+		CreateWithoutTimeout: resourceCapacityReservationCreate,
+		ReadWithoutTimeout:   resourceCapacityReservationRead,
+		UpdateWithoutTimeout: resourceCapacityReservationUpdate,
+		DeleteWithoutTimeout: resourceCapacityReservationDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -97,6 +94,11 @@ func ResourceCapacityReservation() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"placement_group_arn": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: verify.ValidARN,
+			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 			"tenancy": {
@@ -110,8 +112,9 @@ func ResourceCapacityReservation() *schema.Resource {
 	}
 }
 
-func resourceCapacityReservationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceCapacityReservationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -121,7 +124,7 @@ func resourceCapacityReservationCreate(d *schema.ResourceData, meta interface{})
 		InstanceCount:     aws.Int64(int64(d.Get("instance_count").(int))),
 		InstancePlatform:  aws.String(d.Get("instance_platform").(string)),
 		InstanceType:      aws.String(d.Get("instance_type").(string)),
-		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, resourceTypeCapacityReservation),
+		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeCapacityReservation),
 	}
 
 	if v, ok := d.GetOk("ebs_optimized"); ok {
@@ -146,41 +149,46 @@ func resourceCapacityReservationCreate(d *schema.ResourceData, meta interface{})
 		input.OutpostArn = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("placement_group_arn"); ok {
+		input.PlacementGroupArn = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("tenancy"); ok {
 		input.Tenancy = aws.String(v.(string))
 	}
 
 	log.Printf("[DEBUG] Creating EC2 Capacity Reservation: %s", input)
-	output, err := conn.CreateCapacityReservation(input)
+	output, err := conn.CreateCapacityReservationWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating EC2 Capacity Reservation: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating EC2 Capacity Reservation: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.CapacityReservation.CapacityReservationId))
 
-	if _, err := WaitCapacityReservationActive(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for EC2 Capacity Reservation (%s) create: %w", d.Id(), err)
+	if _, err := WaitCapacityReservationActive(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Capacity Reservation (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceCapacityReservationRead(d, meta)
+	return append(diags, resourceCapacityReservationRead(ctx, d, meta)...)
 }
 
-func resourceCapacityReservationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceCapacityReservationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	reservation, err := FindCapacityReservationByID(conn, d.Id())
+	reservation, err := FindCapacityReservationByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Capacity Reservation %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 Capacity Reservation (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Capacity Reservation (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", reservation.CapacityReservationArn)
@@ -199,24 +207,26 @@ func resourceCapacityReservationRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("instance_type", reservation.InstanceType)
 	d.Set("outpost_arn", reservation.OutpostArn)
 	d.Set("owner_id", reservation.OwnerId)
+	d.Set("placement_group_arn", reservation.PlacementGroupArn)
 	d.Set("tenancy", reservation.Tenancy)
 
 	tags := KeyValueTags(reservation.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceCapacityReservationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceCapacityReservationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &ec2.ModifyCapacityReservationInput{
@@ -232,47 +242,48 @@ func resourceCapacityReservationUpdate(d *schema.ResourceData, meta interface{})
 		}
 
 		log.Printf("[DEBUG] Updating EC2 Capacity Reservation: %s", input)
-		_, err := conn.ModifyCapacityReservation(input)
+		_, err := conn.ModifyCapacityReservationWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error updating EC2 Capacity Reservation (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating EC2 Capacity Reservation (%s): %s", d.Id(), err)
 		}
 
-		if _, err := WaitCapacityReservationActive(conn, d.Id()); err != nil {
-			return fmt.Errorf("error waiting for EC2 Capacity Reservation (%s) update: %w", d.Id(), err)
+		if _, err := WaitCapacityReservationActive(ctx, conn, d.Id()); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for EC2 Capacity Reservation (%s) update: %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %s", err)
+		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
 		}
 	}
 
-	return resourceCapacityReservationRead(d, meta)
+	return append(diags, resourceCapacityReservationRead(ctx, d, meta)...)
 }
 
-func resourceCapacityReservationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceCapacityReservationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	log.Printf("[DEBUG] Deleting EC2 Capacity Reservation: %s", d.Id())
-	_, err := conn.CancelCapacityReservation(&ec2.CancelCapacityReservationInput{
+	_, err := conn.CancelCapacityReservationWithContext(ctx, &ec2.CancelCapacityReservationInput{
 		CapacityReservationId: aws.String(d.Id()),
 	})
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidCapacityReservationIdNotFound) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting EC2 Capacity Reservation (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting EC2 Capacity Reservation (%s): %s", d.Id(), err)
 	}
 
-	if _, err := WaitCapacityReservationDeleted(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for EC2 Capacity Reservation (%s) delete: %w", d.Id(), err)
+	if _, err := WaitCapacityReservationDeleted(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Capacity Reservation (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

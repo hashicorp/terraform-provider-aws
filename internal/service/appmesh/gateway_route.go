@@ -1,6 +1,7 @@
 package appmesh
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"regexp"
@@ -10,10 +11,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appmesh"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -21,12 +24,12 @@ import (
 
 func ResourceGatewayRoute() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceGatewayRouteCreate,
-		Read:   resourceGatewayRouteRead,
-		Update: resourceGatewayRouteUpdate,
-		Delete: resourceGatewayRouteDelete,
+		CreateWithoutTimeout: resourceGatewayRouteCreate,
+		ReadWithoutTimeout:   resourceGatewayRouteRead,
+		UpdateWithoutTimeout: resourceGatewayRouteUpdate,
+		DeleteWithoutTimeout: resourceGatewayRouteDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceGatewayRouteImport,
+			StateContext: resourceGatewayRouteImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -119,6 +122,11 @@ func ResourceGatewayRoute() *schema.Resource {
 												"service_name": {
 													Type:     schema.TypeString,
 													Required: true,
+												},
+												"port": {
+													Type:         schema.TypeInt,
+													Optional:     true,
+													ValidateFunc: validation.IntBetween(1, 65535),
 												},
 											},
 										},
@@ -282,6 +290,11 @@ func ResourceGatewayRoute() *schema.Resource {
 														"spec.0.http2_route.0.match.0.hostname",
 													},
 												},
+												"port": {
+													Type:         schema.TypeInt,
+													Optional:     true,
+													ValidateFunc: validation.IntBetween(1, 65535),
+												},
 											},
 										},
 									},
@@ -443,6 +456,11 @@ func ResourceGatewayRoute() *schema.Resource {
 														"spec.0.http_route.0.match.0.hostname",
 													},
 												},
+												"port": {
+													Type:         schema.TypeInt,
+													Optional:     true,
+													ValidateFunc: validation.IntBetween(1, 65535),
+												},
 											},
 										},
 									},
@@ -487,8 +505,9 @@ func ResourceGatewayRoute() *schema.Resource {
 	}
 }
 
-func resourceGatewayRouteCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppMeshConn
+func resourceGatewayRouteCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppMeshConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -504,28 +523,29 @@ func resourceGatewayRouteCreate(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	log.Printf("[DEBUG] Creating App Mesh gateway route: %s", input)
-	output, err := conn.CreateGatewayRoute(input)
+	output, err := conn.CreateGatewayRouteWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating App Mesh gateway route: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating App Mesh gateway route: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.GatewayRoute.Metadata.Uid))
 
-	return resourceGatewayRouteRead(d, meta)
+	return append(diags, resourceGatewayRouteRead(ctx, d, meta)...)
 }
 
-func resourceGatewayRouteRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppMeshConn
+func resourceGatewayRouteRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppMeshConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	var gatewayRoute *appmesh.GatewayRouteData
 
-	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
+	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
 		var err error
 
-		gatewayRoute, err = FindGatewayRoute(conn, d.Get("mesh_name").(string), d.Get("virtual_gateway_name").(string), d.Get("name").(string), d.Get("mesh_owner").(string))
+		gatewayRoute, err = FindGatewayRoute(ctx, conn, d.Get("mesh_name").(string), d.Get("virtual_gateway_name").(string), d.Get("name").(string), d.Get("mesh_owner").(string))
 
 		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
 			return resource.RetryableError(err)
@@ -539,37 +559,37 @@ func resourceGatewayRouteRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if tfresource.TimedOut(err) {
-		gatewayRoute, err = FindGatewayRoute(conn, d.Get("mesh_name").(string), d.Get("virtual_gateway_name").(string), d.Get("name").(string), d.Get("mesh_owner").(string))
+		gatewayRoute, err = FindGatewayRoute(ctx, conn, d.Get("mesh_name").(string), d.Get("virtual_gateway_name").(string), d.Get("name").(string), d.Get("mesh_owner").(string))
 	}
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
 		log.Printf("[WARN] App Mesh Gateway Route (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading App Mesh Gateway Route: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading App Mesh Gateway Route: %s", err)
 	}
 
 	if gatewayRoute == nil {
 		if d.IsNewResource() {
-			return fmt.Errorf("error reading App Mesh Gateway Route: not found after creation")
+			return sdkdiag.AppendErrorf(diags, "reading App Mesh Gateway Route: not found after creation")
 		}
 
 		log.Printf("[WARN] App Mesh Gateway Route (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if aws.StringValue(gatewayRoute.Status.Status) == appmesh.GatewayRouteStatusCodeDeleted {
 		if d.IsNewResource() {
-			return fmt.Errorf("error reading App Mesh Gateway Route: %s after creation", aws.StringValue(gatewayRoute.Status.Status))
+			return sdkdiag.AppendErrorf(diags, "reading App Mesh Gateway Route: %s after creation", aws.StringValue(gatewayRoute.Status.Status))
 		}
 
 		log.Printf("[WARN] App Mesh Gateway Route (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	arn := aws.StringValue(gatewayRoute.Metadata.Arn)
@@ -582,32 +602,33 @@ func resourceGatewayRouteRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("resource_owner", gatewayRoute.Metadata.ResourceOwner)
 	err = d.Set("spec", flattenGatewayRouteSpec(gatewayRoute.Spec))
 	if err != nil {
-		return fmt.Errorf("error setting spec: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting spec: %s", err)
 	}
 	d.Set("virtual_gateway_name", gatewayRoute.VirtualGatewayName)
 
-	tags, err := ListTags(conn, arn)
+	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for App Mesh gateway route (%s): %s", arn, err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for App Mesh gateway route (%s): %s", arn, err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceGatewayRouteUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppMeshConn
+func resourceGatewayRouteUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppMeshConn()
 
 	if d.HasChange("spec") {
 		input := &appmesh.UpdateGatewayRouteInput{
@@ -621,10 +642,10 @@ func resourceGatewayRouteUpdate(d *schema.ResourceData, meta interface{}) error 
 		}
 
 		log.Printf("[DEBUG] Updating App Mesh gateway route: %s", input)
-		_, err := conn.UpdateGatewayRoute(input)
+		_, err := conn.UpdateGatewayRouteWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error updating App Mesh gateway route (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating App Mesh gateway route (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -632,36 +653,37 @@ func resourceGatewayRouteUpdate(d *schema.ResourceData, meta interface{}) error 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, arn, o, n); err != nil {
-			return fmt.Errorf("error updating App Mesh gateway route (%s) tags: %s", arn, err)
+		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating App Mesh gateway route (%s) tags: %s", arn, err)
 		}
 	}
 
-	return resourceGatewayRouteRead(d, meta)
+	return append(diags, resourceGatewayRouteRead(ctx, d, meta)...)
 }
 
-func resourceGatewayRouteDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppMeshConn
+func resourceGatewayRouteDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppMeshConn()
 
-	log.Printf("[DEBUG] Deleting App Mesh gateway route (%s)", d.Id())
-	_, err := conn.DeleteGatewayRoute(&appmesh.DeleteGatewayRouteInput{
+	log.Printf("[DEBUG] Deleting App Mesh Gateway Route (%s)", d.Id())
+	_, err := conn.DeleteGatewayRouteWithContext(ctx, &appmesh.DeleteGatewayRouteInput{
 		GatewayRouteName:   aws.String(d.Get("name").(string)),
 		MeshName:           aws.String(d.Get("mesh_name").(string)),
 		VirtualGatewayName: aws.String(d.Get("virtual_gateway_name").(string)),
 	})
 
 	if tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting App Mesh gateway route (%s) : %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting App Mesh gateway route (%s) : %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceGatewayRouteImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceGatewayRouteImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), "/")
 	if len(parts) != 3 {
 		return []*schema.ResourceData{}, fmt.Errorf("wrong format of import ID (%s), use: 'mesh-name/virtual-gateway-name/gateway-route-name'", d.Id())
@@ -672,9 +694,9 @@ func resourceGatewayRouteImport(d *schema.ResourceData, meta interface{}) ([]*sc
 	name := parts[2]
 	log.Printf("[DEBUG] Importing App Mesh gateway route %s from mesh %s/virtual gateway %s ", name, mesh, vgName)
 
-	conn := meta.(*conns.AWSClient).AppMeshConn
+	conn := meta.(*conns.AWSClient).AppMeshConn()
 
-	gatewayRoute, err := FindGatewayRoute(conn, mesh, vgName, name, "")
+	gatewayRoute, err := FindGatewayRoute(ctx, conn, mesh, vgName, name, "")
 
 	if err != nil {
 		return nil, err
@@ -766,6 +788,10 @@ func expandGRPCGatewayRoute(vGrpcRoute []interface{}) *appmesh.GrpcGatewayRoute 
 			routeMatch.ServiceName = aws.String(vServiceName)
 		}
 
+		if vPort, ok := mRouteMatch["port"].(int); ok && vPort > 0 {
+			routeMatch.Port = aws.Int64(int64(vPort))
+		}
+
 		route.Match = routeMatch
 	}
 
@@ -826,7 +852,12 @@ func expandHTTPGatewayRouteMatch(vHttpRouteMatch []interface{}) *appmesh.HttpGat
 		if vSuffix, ok := mHostnameMatch["suffix"].(string); ok && vSuffix != "" {
 			hostnameMatch.Suffix = aws.String(vSuffix)
 		}
+
 		routeMatch.Hostname = hostnameMatch
+	}
+
+	if vPort, ok := mRouteMatch["port"].(int); ok && vPort > 0 {
+		routeMatch.Port = aws.Int64(int64(vPort))
 	}
 
 	return routeMatch
@@ -915,6 +946,9 @@ func flattenGRPCGatewayRoute(grpcRoute *appmesh.GrpcGatewayRoute) []interface{} 
 		mRouteMatch := map[string]interface{}{
 			"service_name": aws.StringValue(routeMatch.ServiceName),
 		}
+		if routeMatch.Port != nil {
+			mRouteMatch["port"] = int(aws.Int64Value(routeMatch.Port))
+		}
 
 		mGrpcRoute["match"] = []interface{}{mRouteMatch}
 	}
@@ -934,7 +968,6 @@ func flattenHTTPGatewayRouteMatch(routeMatch *appmesh.HttpGatewayRouteMatch) []i
 	}
 
 	if hostnameMatch := routeMatch.Hostname; hostnameMatch != nil {
-
 		mHostnameMatch := map[string]interface{}{}
 		if hostnameMatch.Exact != nil {
 			mHostnameMatch["exact"] = aws.StringValue(hostnameMatch.Exact)
@@ -944,8 +977,12 @@ func flattenHTTPGatewayRouteMatch(routeMatch *appmesh.HttpGatewayRouteMatch) []i
 		}
 
 		mRouteMatch["hostname"] = []interface{}{mHostnameMatch}
-
 	}
+
+	if routeMatch.Port != nil {
+		mRouteMatch["port"] = int(aws.Int64Value(routeMatch.Port))
+	}
+
 	return []interface{}{mRouteMatch}
 }
 

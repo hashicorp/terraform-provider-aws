@@ -19,10 +19,10 @@ import (
 
 func ResourceUser() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceUserCreate,
-		ReadContext:   resourceUserRead,
-		UpdateContext: resourceUserUpdate,
-		DeleteContext: resourceUserDelete,
+		CreateWithoutTimeout: resourceUserCreate,
+		ReadWithoutTimeout:   resourceUserRead,
+		UpdateWithoutTimeout: resourceUserUpdate,
+		DeleteWithoutTimeout: resourceUserDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -86,7 +86,7 @@ func ResourceUser() *schema.Resource {
 }
 
 func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MemoryDBConn
+	conn := meta.(*conns.AWSClient).MemoryDBConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -102,7 +102,6 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		UserName: aws.String(userName),
 	}
 
-	log.Printf("[DEBUG] Creating MemoryDB User: %s", input)
 	_, err := conn.CreateUserWithContext(ctx, input)
 
 	if err != nil {
@@ -115,7 +114,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MemoryDBConn
+	conn := meta.(*conns.AWSClient).MemoryDBConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &memorydb.UpdateUserInput{
@@ -149,7 +148,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		o, n := d.GetChange("tags_all")
 
 		log.Printf("[DEBUG] Updating MemoryDB User (%s) tags", d.Id())
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.Errorf("error updating MemoryDB User (%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -158,7 +157,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MemoryDBConn
+	conn := meta.(*conns.AWSClient).MemoryDBConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -192,7 +191,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("minimum_engine_version", user.MinimumEngineVersion)
 	d.Set("user_name", user.Name)
 
-	tags, err := ListTags(conn, d.Get("arn").(string))
+	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
 
 	if err != nil {
 		return diag.Errorf("error listing tags for MemoryDB User (%s): %s", d.Id(), err)
@@ -213,7 +212,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 }
 
 func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MemoryDBConn
+	conn := meta.(*conns.AWSClient).MemoryDBConn()
 
 	log.Printf("[DEBUG] Deleting MemoryDB User: (%s)", d.Id())
 	_, err := conn.DeleteUserWithContext(ctx, &memorydb.DeleteUserInput{

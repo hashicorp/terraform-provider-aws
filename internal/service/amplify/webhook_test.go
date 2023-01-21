@@ -1,6 +1,7 @@
 package amplify_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -16,6 +17,7 @@ import (
 )
 
 func testAccWebhook_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var webhook amplify.Webhook
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_amplify_webhook.test"
@@ -24,12 +26,12 @@ func testAccWebhook_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, amplify.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWebhookDestroy,
+		CheckDestroy:             testAccCheckWebhookDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWebhookConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWebhookExists(resourceName, &webhook),
+					testAccCheckWebhookExists(ctx, resourceName, &webhook),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "amplify", regexp.MustCompile(`apps/.+/webhooks/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "branch_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
@@ -46,6 +48,7 @@ func testAccWebhook_basic(t *testing.T) {
 }
 
 func testAccWebhook_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var webhook amplify.Webhook
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_amplify_webhook.test"
@@ -54,13 +57,13 @@ func testAccWebhook_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, amplify.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWebhookDestroy,
+		CheckDestroy:             testAccCheckWebhookDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWebhookConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWebhookExists(resourceName, &webhook),
-					acctest.CheckResourceDisappears(acctest.Provider, tfamplify.ResourceWebhook(), resourceName),
+					testAccCheckWebhookExists(ctx, resourceName, &webhook),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfamplify.ResourceWebhook(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -69,6 +72,7 @@ func testAccWebhook_disappears(t *testing.T) {
 }
 
 func testAccWebhook_update(t *testing.T) {
+	ctx := acctest.Context(t)
 	var webhook amplify.Webhook
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_amplify_webhook.test"
@@ -77,12 +81,12 @@ func testAccWebhook_update(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, amplify.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWebhookDestroy,
+		CheckDestroy:             testAccCheckWebhookDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWebhookConfig_description(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWebhookExists(resourceName, &webhook),
+					testAccCheckWebhookExists(ctx, resourceName, &webhook),
 					resource.TestCheckResourceAttr(resourceName, "branch_name", fmt.Sprintf("%s-1", rName)),
 					resource.TestCheckResourceAttr(resourceName, "description", "testdescription1"),
 				),
@@ -95,7 +99,7 @@ func testAccWebhook_update(t *testing.T) {
 			{
 				Config: testAccWebhookConfig_descriptionUpdated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWebhookExists(resourceName, &webhook),
+					testAccCheckWebhookExists(ctx, resourceName, &webhook),
 					resource.TestCheckResourceAttr(resourceName, "branch_name", fmt.Sprintf("%s-2", rName)),
 					resource.TestCheckResourceAttr(resourceName, "description", "testdescription2"),
 				),
@@ -104,7 +108,7 @@ func testAccWebhook_update(t *testing.T) {
 	})
 }
 
-func testAccCheckWebhookExists(resourceName string, v *amplify.Webhook) resource.TestCheckFunc {
+func testAccCheckWebhookExists(ctx context.Context, resourceName string, v *amplify.Webhook) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -115,9 +119,9 @@ func testAccCheckWebhookExists(resourceName string, v *amplify.Webhook) resource
 			return fmt.Errorf("No Amplify Webhook ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AmplifyConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AmplifyConn()
 
-		webhook, err := tfamplify.FindWebhookByID(conn, rs.Primary.ID)
+		webhook, err := tfamplify.FindWebhookByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -129,28 +133,30 @@ func testAccCheckWebhookExists(resourceName string, v *amplify.Webhook) resource
 	}
 }
 
-func testAccCheckWebhookDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AmplifyConn
+func testAccCheckWebhookDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AmplifyConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_amplify_webhook" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_amplify_webhook" {
+				continue
+			}
+
+			_, err := tfamplify.FindWebhookByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Amplify Webhook %s still exists", rs.Primary.ID)
 		}
 
-		_, err := tfamplify.FindWebhookByID(conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("Amplify Webhook %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
 func testAccWebhookConfig_basic(rName string) string {

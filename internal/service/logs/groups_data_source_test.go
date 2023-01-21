@@ -12,7 +12,9 @@ import (
 
 func TestAccLogsGroupsDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "data.aws_cloudwatch_log_groups.test"
+	dataSourceName := "data.aws_cloudwatch_log_groups.test"
+	resource1Name := "aws_cloudwatch_log_group.test.0"
+	resource2Name := "aws_cloudwatch_log_group.test.1"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -21,13 +23,13 @@ func TestAccLogsGroupsDataSource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupsDataSourceConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "arns.#", "2"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "arns.*", "aws_cloudwatch_log_group.test1", "arn"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "arns.*", "aws_cloudwatch_log_group.test2", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "log_group_names.#", "2"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "log_group_names.*", "aws_cloudwatch_log_group.test1", "name"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "log_group_names.*", "aws_cloudwatch_log_group.test2", "name"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "arns.#", "2"),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "arns.*", resource1Name, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "arns.*", resource2Name, "arn"),
+					resource.TestCheckResourceAttr(dataSourceName, "log_group_names.#", "2"),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "log_group_names.*", resource1Name, "name"),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "log_group_names.*", resource2Name, "name"),
 				),
 			},
 		},
@@ -36,7 +38,9 @@ func TestAccLogsGroupsDataSource_basic(t *testing.T) {
 
 func TestAccLogsGroupsDataSource_noPrefix(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "data.aws_cloudwatch_log_groups.test"
+	dataSourceName := "data.aws_cloudwatch_log_groups.test"
+	resource1Name := "aws_cloudwatch_log_group.test.0"
+	resource2Name := "aws_cloudwatch_log_group.test.1"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -45,11 +49,13 @@ func TestAccLogsGroupsDataSource_noPrefix(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupsDataSourceConfig_noPrefix(rName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "arns.*", "aws_cloudwatch_log_group.test1", "arn"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "arns.*", "aws_cloudwatch_log_group.test2", "arn"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "log_group_names.*", "aws_cloudwatch_log_group.test1", "name"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "log_group_names.*", "aws_cloudwatch_log_group.test2", "name"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "arns.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "arns.*", resource1Name, "arn"),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "arns.*", resource2Name, "arn"),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "log_group_names.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "log_group_names.*", resource1Name, "name"),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "log_group_names.*", resource2Name, "name"),
 				),
 			},
 		},
@@ -58,34 +64,30 @@ func TestAccLogsGroupsDataSource_noPrefix(t *testing.T) {
 
 func testAccGroupsDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
-resource aws_cloudwatch_log_group "test1" {
-  name = "%[1]s/1"
-}
+resource aws_cloudwatch_log_group "test" {
+  count = 2
 
-resource aws_cloudwatch_log_group "test2" {
-  name = "%[1]s/2"
+  name = "%[1]s-${count.index}"
 }
 
 data aws_cloudwatch_log_groups "test" {
   log_group_name_prefix = %[1]q
 
-  depends_on = [aws_cloudwatch_log_group.test1,aws_cloudwatch_log_group.test2]
+  depends_on = [aws_cloudwatch_log_group.test[0], aws_cloudwatch_log_group.test[1]]
 }
 `, rName)
 }
 
 func testAccGroupsDataSourceConfig_noPrefix(rName string) string {
 	return fmt.Sprintf(`
-resource aws_cloudwatch_log_group "test1" {
-  name = "%[1]s/1"
-}
+resource aws_cloudwatch_log_group "test" {
+  count = 2
 
-resource aws_cloudwatch_log_group "test2" {
-  name = "%[1]s/2"
+  name = "%[1]s-${count.index}"
 }
 
 data aws_cloudwatch_log_groups "test" {
-  depends_on = [aws_cloudwatch_log_group.test1,aws_cloudwatch_log_group.test2]
+  depends_on = [aws_cloudwatch_log_group.test[0], aws_cloudwatch_log_group.test[1]]
 }
 `, rName)
 }

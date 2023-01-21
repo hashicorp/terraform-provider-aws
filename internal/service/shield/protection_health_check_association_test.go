@@ -1,6 +1,7 @@
 package shield_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -16,6 +17,7 @@ import (
 )
 
 func TestAccShieldProtectionHealthCheckAssociation_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_shield_protection_health_check_association.test"
 
@@ -23,16 +25,16 @@ func TestAccShieldProtectionHealthCheckAssociation_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(shield.EndpointsID, t)
-			testAccPreCheck(t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, shield.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProtectionHealthCheckAssociationDestroy,
+		CheckDestroy:             testAccCheckProtectionHealthCheckAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProtectionHealthCheckAssociationConfig_protectionaHealthCheckAssociation(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProtectionHealthCheckAssociationExists(resourceName),
+					testAccCheckProtectionHealthCheckAssociationExists(ctx, resourceName),
 				),
 			},
 			{
@@ -45,6 +47,7 @@ func TestAccShieldProtectionHealthCheckAssociation_basic(t *testing.T) {
 }
 
 func TestAccShieldProtectionHealthCheckAssociation_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_shield_protection_health_check_association.test"
 
@@ -52,17 +55,17 @@ func TestAccShieldProtectionHealthCheckAssociation_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(shield.EndpointsID, t)
-			testAccPreCheck(t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, shield.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProtectionHealthCheckAssociationDestroy,
+		CheckDestroy:             testAccCheckProtectionHealthCheckAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProtectionHealthCheckAssociationConfig_protectionaHealthCheckAssociation(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProtectionHealthCheckAssociationExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfshield.ResourceProtectionHealthCheckAssociation(), resourceName),
+					testAccCheckProtectionHealthCheckAssociationExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfshield.ResourceProtectionHealthCheckAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -70,43 +73,45 @@ func TestAccShieldProtectionHealthCheckAssociation_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckProtectionHealthCheckAssociationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldConn
+func testAccCheckProtectionHealthCheckAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_shield_protection_health_check_association" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_shield_protection_health_check_association" {
+				continue
+			}
+
+			protectionId, _, err := tfshield.ProtectionHealthCheckAssociationParseResourceID(rs.Primary.ID)
+
+			if err != nil {
+				return err
+			}
+
+			input := &shield.DescribeProtectionInput{
+				ProtectionId: aws.String(protectionId),
+			}
+
+			resp, err := conn.DescribeProtectionWithContext(ctx, input)
+
+			if tfawserr.ErrCodeEquals(err, shield.ErrCodeResourceNotFoundException) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			if resp != nil && resp.Protection != nil && len(aws.StringValueSlice(resp.Protection.HealthCheckIds)) == 0 {
+				return fmt.Errorf("The Shield protection HealthCheck with IDs %v still exists", aws.StringValueSlice(resp.Protection.HealthCheckIds))
+			}
 		}
 
-		protectionId, _, err := tfshield.ProtectionHealthCheckAssociationParseResourceID(rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		input := &shield.DescribeProtectionInput{
-			ProtectionId: aws.String(protectionId),
-		}
-
-		resp, err := conn.DescribeProtection(input)
-
-		if tfawserr.ErrCodeEquals(err, shield.ErrCodeResourceNotFoundException) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		if resp != nil && resp.Protection != nil && len(aws.StringValueSlice(resp.Protection.HealthCheckIds)) == 0 {
-			return fmt.Errorf("The Shield protection HealthCheck with IDs %v still exists", aws.StringValueSlice(resp.Protection.HealthCheckIds))
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckProtectionHealthCheckAssociationExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckProtectionHealthCheckAssociationExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -123,13 +128,13 @@ func testAccCheckProtectionHealthCheckAssociationExists(resourceName string) res
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldConn()
 
 		input := &shield.DescribeProtectionInput{
 			ProtectionId: aws.String(protectionId),
 		}
 
-		resp, err := conn.DescribeProtection(input)
+		resp, err := conn.DescribeProtectionWithContext(ctx, input)
 
 		if err != nil {
 			return err

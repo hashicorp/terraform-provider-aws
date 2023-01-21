@@ -48,13 +48,13 @@ The following arguments are supported:
 
 ### Broker Instance Options
 
-* `availability_zones` - The list of available AZs. See Availability Zones. below
-* `engine_type` - The broker's engine type.
-* `host_instance_type` - The broker's instance type.
-* `storage_type` - The broker's storage type.
+* `availability_zones` - List of available AZs. See Availability Zones. below
+* `engine_type` - Broker's engine type.
+* `host_instance_type` - Broker's instance type.
+* `storage_type` - Broker's storage type.
 * `supported_deployment_modes` - The list of supported deployment modes.
 * `supported_engine_versions` - The list of supported engine versions.
 
 ### Availability Zones
 
-* `name` - The name of the Availability Zone.
+* `name` - Name of the Availability Zone.

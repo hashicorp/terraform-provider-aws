@@ -3,10 +3,11 @@
 package ecs
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/service/ecs"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -15,12 +16,13 @@ import (
 
 func ResourceTag() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceTagCreate,
-		Read:   resourceTagRead,
-		Update: resourceTagUpdate,
-		Delete: resourceTagDelete,
+		CreateWithoutTimeout: resourceTagCreate,
+		ReadWithoutTimeout:   resourceTagRead,
+		UpdateWithoutTimeout: resourceTagUpdate,
+		DeleteWithoutTimeout: resourceTagDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -42,31 +44,31 @@ func ResourceTag() *schema.Resource {
 	}
 }
 
-func resourceTagCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECSConn
+func resourceTagCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).ECSConn()
 
 	identifier := d.Get("resource_arn").(string)
 	key := d.Get("key").(string)
 	value := d.Get("value").(string)
 
-	if err := UpdateTags(conn, identifier, nil, map[string]string{key: value}); err != nil {
-		return fmt.Errorf("error creating %s resource (%s) tag (%s): %w", ecs.ServiceID, identifier, key, err)
+	if err := UpdateTags(ctx, conn, identifier, nil, map[string]string{key: value}); err != nil {
+		return diag.Errorf("creating %s resource (%s) tag (%s): %s", ecs.ServiceID, identifier, key, err)
 	}
 
 	d.SetId(tftags.SetResourceID(identifier, key))
 
-	return resourceTagRead(d, meta)
+	return resourceTagRead(ctx, d, meta)
 }
 
-func resourceTagRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECSConn
+func resourceTagRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).ECSConn()
 	identifier, key, err := tftags.GetResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	value, err := GetTag(conn, identifier, key)
+	value, err := GetTag(ctx, conn, identifier, key)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] %s resource (%s) tag (%s) not found, removing from state", ecs.ServiceID, identifier, key)
@@ -75,7 +77,7 @@ func resourceTagRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading %s resource (%s) tag (%s): %w", ecs.ServiceID, identifier, key, err)
+		return diag.Errorf("reading %s resource (%s) tag (%s): %s", ecs.ServiceID, identifier, key, err)
 	}
 
 	d.Set("resource_arn", identifier)
@@ -85,31 +87,31 @@ func resourceTagRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceTagUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECSConn
+func resourceTagUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).ECSConn()
 	identifier, key, err := tftags.GetResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	if err := UpdateTags(conn, identifier, nil, map[string]string{key: d.Get("value").(string)}); err != nil {
-		return fmt.Errorf("error updating %s resource (%s) tag (%s): %w", ecs.ServiceID, identifier, key, err)
+	if err := UpdateTags(ctx, conn, identifier, nil, map[string]string{key: d.Get("value").(string)}); err != nil {
+		return diag.Errorf("updating %s resource (%s) tag (%s): %s", ecs.ServiceID, identifier, key, err)
 	}
 
-	return resourceTagRead(d, meta)
+	return resourceTagRead(ctx, d, meta)
 }
 
-func resourceTagDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECSConn
+func resourceTagDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).ECSConn()
 	identifier, key, err := tftags.GetResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	if err := UpdateTags(conn, identifier, map[string]string{key: d.Get("value").(string)}, nil); err != nil {
-		return fmt.Errorf("error deleting %s resource (%s) tag (%s): %w", ecs.ServiceID, identifier, key, err)
+	if err := UpdateTags(ctx, conn, identifier, map[string]string{key: d.Get("value").(string)}, nil); err != nil {
+		return diag.Errorf("deleting %s resource (%s) tag (%s): %s", ecs.ServiceID, identifier, key, err)
 	}
 
 	return nil

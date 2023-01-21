@@ -1,6 +1,7 @@
 package appsync_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -15,6 +16,7 @@ import (
 )
 
 func testAccAPICache_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var apiCache appsync.ApiCache
 	resourceName := "aws_appsync_api_cache.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -23,12 +25,12 @@ func testAccAPICache_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, appsync.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAPICacheDestroy,
+		CheckDestroy:             testAccCheckAPICacheDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAPICacheConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPICacheExists(resourceName, &apiCache),
+					testAccCheckAPICacheExists(ctx, resourceName, &apiCache),
 					resource.TestCheckResourceAttrPair(resourceName, "api_id", "aws_appsync_graphql_api.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "type", "SMALL"),
 					resource.TestCheckResourceAttr(resourceName, "api_caching_behavior", "FULL_REQUEST_CACHING"),
@@ -44,6 +46,7 @@ func testAccAPICache_basic(t *testing.T) {
 }
 
 func testAccAPICache_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var apiCache appsync.ApiCache
 	resourceName := "aws_appsync_api_cache.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -52,13 +55,13 @@ func testAccAPICache_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, appsync.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAPICacheDestroy,
+		CheckDestroy:             testAccCheckAPICacheDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAPICacheConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPICacheExists(resourceName, &apiCache),
-					acctest.CheckResourceDisappears(acctest.Provider, tfappsync.ResourceAPICache(), resourceName),
+					testAccCheckAPICacheExists(ctx, resourceName, &apiCache),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappsync.ResourceAPICache(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -66,37 +69,37 @@ func testAccAPICache_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAPICacheDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_appsync_api_cache" {
-			continue
-		}
-
-		_, err := tfappsync.FindAPICacheByID(conn, rs.Primary.ID)
-		if err == nil {
-			if tfresource.NotFound(err) {
-				return nil
+func testAccCheckAPICacheDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn()
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_appsync_api_cache" {
+				continue
 			}
-			return err
+
+			_, err := tfappsync.FindAPICacheByID(ctx, conn, rs.Primary.ID)
+			if err == nil {
+				if tfresource.NotFound(err) {
+					return nil
+				}
+				return err
+			}
+
+			return nil
 		}
-
 		return nil
-
 	}
-	return nil
 }
 
-func testAccCheckAPICacheExists(resourceName string, apiCache *appsync.ApiCache) resource.TestCheckFunc {
+func testAccCheckAPICacheExists(ctx context.Context, resourceName string, apiCache *appsync.ApiCache) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
 			return fmt.Errorf("Appsync Api Cache Not found in state: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn
-		cache, err := tfappsync.FindAPICacheByID(conn, rs.Primary.ID)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn()
+		cache, err := tfappsync.FindAPICacheByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}

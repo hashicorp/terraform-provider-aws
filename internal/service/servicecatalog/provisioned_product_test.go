@@ -1,6 +1,7 @@
 package servicecatalog_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -18,6 +19,7 @@ import (
 // add sweeper to delete known test servicecat provisioned products
 
 func TestAccServiceCatalogProvisionedProduct_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_servicecatalog_provisioned_product.test"
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -27,12 +29,12 @@ func TestAccServiceCatalogProvisionedProduct_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProvisionedProductDestroy,
+		CheckDestroy:             testAccCheckProvisionedProductDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProvisionedProductConfig_basic(rName, domain, acctest.DefaultEmailAddress, "10.1.0.0/16"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProvisionedProductExists(resourceName),
+					testAccCheckProvisionedProductExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "accept_language", tfservicecatalog.AcceptLanguageEnglish),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", servicecatalog.ServiceName, regexp.MustCompile(fmt.Sprintf(`stack/%s/pp-.*`, rName))),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
@@ -77,6 +79,7 @@ func TestAccServiceCatalogProvisionedProduct_basic(t *testing.T) {
 // TestAccServiceCatalogProvisionedProduct_update verifies the resource update
 // of only a change in provisioning_parameters
 func TestAccServiceCatalogProvisionedProduct_update(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_servicecatalog_provisioned_product.test"
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -86,18 +89,18 @@ func TestAccServiceCatalogProvisionedProduct_update(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProvisionedProductDestroy,
+		CheckDestroy:             testAccCheckProvisionedProductDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProvisionedProductConfig_basic(rName, domain, acctest.DefaultEmailAddress, "10.1.0.0/16"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProvisionedProductExists(resourceName),
+					testAccCheckProvisionedProductExists(ctx, resourceName),
 				),
 			},
 			{
 				Config: testAccProvisionedProductConfig_basic(rName, domain, acctest.DefaultEmailAddress, "10.10.0.0/16"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProvisionedProductExists(resourceName),
+					testAccCheckProvisionedProductExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "accept_language", tfservicecatalog.AcceptLanguageEnglish),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", servicecatalog.ServiceName, regexp.MustCompile(fmt.Sprintf(`stack/%s/pp-.*`, rName))),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
@@ -140,6 +143,7 @@ func TestAccServiceCatalogProvisionedProduct_update(t *testing.T) {
 }
 
 func TestAccServiceCatalogProvisionedProduct_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_servicecatalog_provisioned_product.test"
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -149,13 +153,13 @@ func TestAccServiceCatalogProvisionedProduct_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProvisionedProductDestroy,
+		CheckDestroy:             testAccCheckProvisionedProductDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProvisionedProductConfig_basic(rName, domain, acctest.DefaultEmailAddress, "10.1.0.0/16"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProvisionedProductExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfservicecatalog.ResourceProvisionedProduct(), resourceName),
+					testAccCheckProvisionedProductExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfservicecatalog.ResourceProvisionedProduct(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -164,6 +168,7 @@ func TestAccServiceCatalogProvisionedProduct_disappears(t *testing.T) {
 }
 
 func TestAccServiceCatalogProvisionedProduct_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_servicecatalog_provisioned_product.test"
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -173,12 +178,12 @@ func TestAccServiceCatalogProvisionedProduct_tags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProvisionedProductDestroy,
+		CheckDestroy:             testAccCheckProvisionedProductDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProvisionedProductConfig_tags(rName, "Name", rName, domain, acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProvisionedProductExists(resourceName),
+					testAccCheckProvisionedProductExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
@@ -186,7 +191,7 @@ func TestAccServiceCatalogProvisionedProduct_tags(t *testing.T) {
 			{
 				Config: testAccProvisionedProductConfig_tags(rName, "NotName", rName, domain, acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProvisionedProductExists(resourceName),
+					testAccCheckProvisionedProductExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.NotName", rName),
 				),
@@ -197,6 +202,7 @@ func TestAccServiceCatalogProvisionedProduct_tags(t *testing.T) {
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/24574
 func TestAccServiceCatalogProvisionedProduct_tainted(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_servicecatalog_provisioned_product.test"
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -206,12 +212,12 @@ func TestAccServiceCatalogProvisionedProduct_tainted(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProvisionedProductDestroy,
+		CheckDestroy:             testAccCheckProvisionedProductDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProvisionedProductConfig_basic(rName, domain, acctest.DefaultEmailAddress, "10.1.0.0/16"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProvisionedProductExists(resourceName),
+					testAccCheckProvisionedProductExists(ctx, resourceName),
 				),
 			},
 			{
@@ -227,29 +233,31 @@ func TestAccServiceCatalogProvisionedProduct_tainted(t *testing.T) {
 	})
 }
 
-func testAccCheckProvisionedProductDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn
+func testAccCheckProvisionedProductDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_servicecatalog_provisioned_product" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_servicecatalog_provisioned_product" {
+				continue
+			}
+
+			err := tfservicecatalog.WaitProvisionedProductTerminated(ctx, conn, tfservicecatalog.AcceptLanguageEnglish, rs.Primary.ID, "", tfservicecatalog.ProvisionedProductDeleteTimeout)
+
+			if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
+				continue
+			}
+
+			if err != nil {
+				return fmt.Errorf("error getting Service Catalog Provisioned Product (%s): %w", rs.Primary.ID, err)
+			}
 		}
 
-		err := tfservicecatalog.WaitProvisionedProductTerminated(conn, tfservicecatalog.AcceptLanguageEnglish, rs.Primary.ID, "", tfservicecatalog.ProvisionedProductDeleteTimeout)
-
-		if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
-			continue
-		}
-
-		if err != nil {
-			return fmt.Errorf("error getting Service Catalog Provisioned Product (%s): %w", rs.Primary.ID, err)
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckProvisionedProductExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckProvisionedProductExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 
@@ -257,9 +265,9 @@ func testAccCheckProvisionedProductExists(resourceName string) resource.TestChec
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn()
 
-		_, err := tfservicecatalog.WaitProvisionedProductReady(conn, tfservicecatalog.AcceptLanguageEnglish, rs.Primary.ID, "", tfservicecatalog.ProvisionedProductReadyTimeout)
+		_, err := tfservicecatalog.WaitProvisionedProductReady(ctx, conn, tfservicecatalog.AcceptLanguageEnglish, rs.Primary.ID, "", tfservicecatalog.ProvisionedProductReadyTimeout)
 
 		if err != nil {
 			return fmt.Errorf("error describing Service Catalog Provisioned Product (%s): %w", rs.Primary.ID, err)

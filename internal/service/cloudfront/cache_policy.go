@@ -1,27 +1,29 @@
 package cloudfront
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourceCachePolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceCachePolicyCreate,
-		Read:   resourceCachePolicyRead,
-		Update: resourceCachePolicyUpdate,
-		Delete: resourceCachePolicyDelete,
+		CreateWithoutTimeout: resourceCachePolicyCreate,
+		ReadWithoutTimeout:   resourceCachePolicyRead,
+		UpdateWithoutTimeout: resourceCachePolicyUpdate,
+		DeleteWithoutTimeout: resourceCachePolicyDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -156,8 +158,9 @@ func ResourceCachePolicy() *schema.Resource {
 	}
 }
 
-func resourceCachePolicyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+func resourceCachePolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 
 	name := d.Get("name").(string)
 	apiObject := &cloudfront.CachePolicyConfig{
@@ -180,30 +183,31 @@ func resourceCachePolicyCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Creating CloudFront Cache Policy: (%s)", input)
-	output, err := conn.CreateCachePolicy(input)
+	output, err := conn.CreateCachePolicyWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating CloudFront Cache Policy (%s): %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating CloudFront Cache Policy (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.CachePolicy.Id))
 
-	return resourceCachePolicyRead(d, meta)
+	return append(diags, resourceCachePolicyRead(ctx, d, meta)...)
 }
 
-func resourceCachePolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+func resourceCachePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 
-	output, err := FindCachePolicyByID(conn, d.Id())
+	output, err := FindCachePolicyByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudFront Cache Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading CloudFront Cache Policy (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading CloudFront Cache Policy (%s): %s", d.Id(), err)
 	}
 
 	apiObject := output.CachePolicy.CachePolicyConfig
@@ -215,17 +219,18 @@ func resourceCachePolicyRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", apiObject.Name)
 	if apiObject.ParametersInCacheKeyAndForwardedToOrigin != nil {
 		if err := d.Set("parameters_in_cache_key_and_forwarded_to_origin", []interface{}{flattenParametersInCacheKeyAndForwardedToOrigin(apiObject.ParametersInCacheKeyAndForwardedToOrigin)}); err != nil {
-			return fmt.Errorf("error setting parameters_in_cache_key_and_forwarded_to_origin: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting parameters_in_cache_key_and_forwarded_to_origin: %s", err)
 		}
 	} else {
 		d.Set("parameters_in_cache_key_and_forwarded_to_origin", nil)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceCachePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+func resourceCachePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 
 	//
 	// https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_UpdateCachePolicy.html:
@@ -253,33 +258,34 @@ func resourceCachePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Updating CloudFront Cache Policy: (%s)", input)
-	_, err := conn.UpdateCachePolicy(input)
+	_, err := conn.UpdateCachePolicyWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error updating CloudFront Cache Policy (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating CloudFront Cache Policy (%s): %s", d.Id(), err)
 	}
 
-	return resourceCachePolicyRead(d, meta)
+	return append(diags, resourceCachePolicyRead(ctx, d, meta)...)
 }
 
-func resourceCachePolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+func resourceCachePolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 
 	log.Printf("[DEBUG] Deleting CloudFront Cache Policy: (%s)", d.Id())
-	_, err := conn.DeleteCachePolicy(&cloudfront.DeleteCachePolicyInput{
+	_, err := conn.DeleteCachePolicyWithContext(ctx, &cloudfront.DeleteCachePolicyInput{
 		Id:      aws.String(d.Id()),
 		IfMatch: aws.String(d.Get("etag").(string)),
 	})
 
 	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchCachePolicy) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting CloudFront Cache Policy (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting CloudFront Cache Policy (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandParametersInCacheKeyAndForwardedToOrigin(tfMap map[string]interface{}) *cloudfront.ParametersInCacheKeyAndForwardedToOrigin {

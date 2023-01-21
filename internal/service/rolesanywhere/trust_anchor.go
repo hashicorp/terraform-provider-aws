@@ -19,10 +19,10 @@ import (
 
 func ResourceTrustAnchor() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceTrustAnchorCreate,
-		ReadContext:   resourceTrustAnchorRead,
-		UpdateContext: resourceTrustAnchorUpdate,
-		DeleteContext: resourceTrustAnchorDelete,
+		CreateWithoutTimeout: resourceTrustAnchorCreate,
+		ReadWithoutTimeout:   resourceTrustAnchorRead,
+		UpdateWithoutTimeout: resourceTrustAnchorUpdate,
+		DeleteWithoutTimeout: resourceTrustAnchorDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -85,7 +85,7 @@ func ResourceTrustAnchor() *schema.Resource {
 }
 
 func resourceTrustAnchorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RolesAnywhereConn
+	conn := meta.(*conns.AWSClient).RolesAnywhereClient()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 	name := d.Get("name").(string)
@@ -110,7 +110,7 @@ func resourceTrustAnchorCreate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceTrustAnchorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RolesAnywhereConn
+	conn := meta.(*conns.AWSClient).RolesAnywhereClient()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -155,7 +155,7 @@ func resourceTrustAnchorRead(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceTrustAnchorUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RolesAnywhereConn
+	conn := meta.(*conns.AWSClient).RolesAnywhereClient()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &rolesanywhere.UpdateTrustAnchorInput{
@@ -173,7 +173,7 @@ func resourceTrustAnchorUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 		if d.HasChange("enabled") {
 			_, n := d.GetChange("enabled")
-			if n == "true" {
+			if n == true {
 				if err := enableTrustAnchor(ctx, d.Id(), meta); err != nil {
 					diag.Errorf("enabling RolesAnywhere Trust Anchor (%s): %s", d.Id(), err)
 				}
@@ -196,7 +196,7 @@ func resourceTrustAnchorUpdate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceTrustAnchorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RolesAnywhereConn
+	conn := meta.(*conns.AWSClient).RolesAnywhereClient()
 
 	log.Printf("[DEBUG] Deleting RolesAnywhere Trust Anchor (%s)", d.Id())
 	_, err := conn.DeleteTrustAnchor(ctx, &rolesanywhere.DeleteTrustAnchorInput{
@@ -297,7 +297,7 @@ func expandSourceDataCertificateBundle(tfMap map[string]interface{}) *types.Sour
 }
 
 func disableTrustAnchor(ctx context.Context, trustAnchorId string, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RolesAnywhereConn
+	conn := meta.(*conns.AWSClient).RolesAnywhereClient()
 
 	input := &rolesanywhere.DisableTrustAnchorInput{
 		TrustAnchorId: aws.String(trustAnchorId),
@@ -308,7 +308,7 @@ func disableTrustAnchor(ctx context.Context, trustAnchorId string, meta interfac
 }
 
 func enableTrustAnchor(ctx context.Context, trustAnchorId string, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RolesAnywhereConn
+	conn := meta.(*conns.AWSClient).RolesAnywhereClient()
 
 	input := &rolesanywhere.EnableTrustAnchorInput{
 		TrustAnchorId: aws.String(trustAnchorId),

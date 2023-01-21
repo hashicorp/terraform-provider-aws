@@ -1,6 +1,7 @@
 package rds
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"time"
@@ -8,21 +9,23 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceSnapshot() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceSnapshotCreate,
-		Read:   resourceSnapshotRead,
-		Update: resourceSnapshotUpdate,
-		Delete: resourceSnapshotDelete,
+		CreateWithoutTimeout: resourceSnapshotCreate,
+		ReadWithoutTimeout:   resourceSnapshotRead,
+		UpdateWithoutTimeout: resourceSnapshotUpdate,
+		DeleteWithoutTimeout: resourceSnapshotDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -117,8 +120,9 @@ func ResourceSnapshot() *schema.Resource {
 	}
 }
 
-func resourceSnapshotCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+func resourceSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RDSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 	dBInstanceIdentifier := d.Get("db_instance_identifier").(string)
@@ -129,48 +133,48 @@ func resourceSnapshotCreate(d *schema.ResourceData, meta interface{}) error {
 		Tags:                 Tags(tags.IgnoreAWS()),
 	}
 
-	resp, err := conn.CreateDBSnapshot(params)
+	resp, err := conn.CreateDBSnapshotWithContext(ctx, params)
 	if err != nil {
-		return fmt.Errorf("Error creating AWS DB Snapshot %s: %s", dBInstanceIdentifier, err)
+		return sdkdiag.AppendErrorf(diags, "creating AWS DB Snapshot (%s): %s", dBInstanceIdentifier, err)
 	}
 	d.SetId(aws.StringValue(resp.DBSnapshot.DBSnapshotIdentifier))
 
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"creating"},
 		Target:     []string{"available"},
-		Refresh:    resourceSnapshotStateRefreshFunc(d, meta),
+		Refresh:    resourceSnapshotStateRefreshFunc(ctx, d, meta),
 		Timeout:    d.Timeout(schema.TimeoutRead),
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second, // Wait 30 secs before starting
 	}
 
-	// Wait, catching any errors
-	_, err = stateConf.WaitForState()
+	_, err = stateConf.WaitForStateContext(ctx)
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "creating AWS DB Snapshot (%s): waiting for completion: %s", dBInstanceIdentifier, err)
 	}
 
-	return resourceSnapshotRead(d, meta)
+	return append(diags, resourceSnapshotRead(ctx, d, meta)...)
 }
 
-func resourceSnapshotRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+func resourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RDSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	params := &rds.DescribeDBSnapshotsInput{
 		DBSnapshotIdentifier: aws.String(d.Id()),
 	}
-	resp, err := conn.DescribeDBSnapshots(params)
+	resp, err := conn.DescribeDBSnapshotsWithContext(ctx, params)
 
 	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBSnapshotNotFoundFault) {
 		log.Printf("[WARN] AWS DB Snapshot (%s) is already gone", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error describing AWS DB Snapshot %s: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "describing AWS DB Snapshot %s: %s", d.Id(), err)
 	}
 
 	snapshot := resp.DBSnapshots[0]
@@ -195,62 +199,65 @@ func resourceSnapshotRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("status", snapshot.Status)
 	d.Set("vpc_id", snapshot.VpcId)
 
-	tags, err := ListTags(conn, arn)
+	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for RDS DB Snapshot (%s): %s", arn, err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for RDS DB Snapshot (%s): %s", arn, err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceSnapshotDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+func resourceSnapshotDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RDSConn()
 
-	params := &rds.DeleteDBSnapshotInput{
+	log.Printf("[DEBUG] Deleting RDS DB Snapshot: %s", d.Id())
+	_, err := conn.DeleteDBSnapshotWithContext(ctx, &rds.DeleteDBSnapshotInput{
 		DBSnapshotIdentifier: aws.String(d.Id()),
-	}
-	_, err := conn.DeleteDBSnapshot(params)
+	})
+
 	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBSnapshotNotFoundFault) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error deleting AWS DB Snapshot %s: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting RDS DB Snapshot (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceSnapshotUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+func resourceSnapshotUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("db_snapshot_arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating RDS DB Snapshot (%s) tags: %s", d.Get("db_snapshot_arn").(string), err)
+		if err := UpdateTags(ctx, conn, d.Get("db_snapshot_arn").(string), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating RDS DB Snapshot (%s) tags: %s", d.Get("db_snapshot_arn").(string), err)
 		}
 	}
 
-	return nil
+	return diags
 }
 
-func resourceSnapshotStateRefreshFunc(
+func resourceSnapshotStateRefreshFunc(ctx context.Context,
 	d *schema.ResourceData, meta interface{}) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		conn := meta.(*conns.AWSClient).RDSConn
+		conn := meta.(*conns.AWSClient).RDSConn()
 
 		opts := &rds.DescribeDBSnapshotsInput{
 			DBSnapshotIdentifier: aws.String(d.Id()),
@@ -258,7 +265,7 @@ func resourceSnapshotStateRefreshFunc(
 
 		log.Printf("[DEBUG] DB Snapshot describe configuration: %#v", opts)
 
-		resp, err := conn.DescribeDBSnapshots(opts)
+		resp, err := conn.DescribeDBSnapshotsWithContext(ctx, opts)
 		if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBSnapshotNotFoundFault) {
 			return nil, "", nil
 		}

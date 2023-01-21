@@ -25,4 +25,4 @@ There are no arguments available for this data source.
 
 ## Attributes Reference
 
-* `location_codes` - The code for the locations.
+* `location_codes` - Code for the locations.

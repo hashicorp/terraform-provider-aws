@@ -1,15 +1,17 @@
 package devicefarm
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/devicefarm"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -17,12 +19,12 @@ import (
 
 func ResourceProject() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceProjectCreate,
-		Read:   resourceProjectRead,
-		Update: resourceProjectUpdate,
-		Delete: resourceProjectDelete,
+		CreateWithoutTimeout: resourceProjectCreate,
+		ReadWithoutTimeout:   resourceProjectRead,
+		UpdateWithoutTimeout: resourceProjectUpdate,
+		DeleteWithoutTimeout: resourceProjectDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -47,8 +49,9 @@ func ResourceProject() *schema.Resource {
 	}
 }
 
-func resourceProjectCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DeviceFarmConn
+func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DeviceFarmConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -62,9 +65,9 @@ func resourceProjectCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Creating DeviceFarm Project: %s", name)
-	out, err := conn.CreateProject(input)
+	out, err := conn.CreateProjectWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("Error creating DeviceFarm Project: %w", err)
+		return sdkdiag.AppendErrorf(diags, "Error creating DeviceFarm Project: %s", err)
 	}
 
 	arn := aws.StringValue(out.Project.Arn)
@@ -72,29 +75,30 @@ func resourceProjectCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(arn)
 
 	if len(tags) > 0 {
-		if err := UpdateTags(conn, arn, nil, tags); err != nil {
-			return fmt.Errorf("error updating DeviceFarm Project (%s) tags: %w", arn, err)
+		if err := UpdateTags(ctx, conn, arn, nil, tags); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating DeviceFarm Project (%s) tags: %s", arn, err)
 		}
 	}
 
-	return resourceProjectRead(d, meta)
+	return append(diags, resourceProjectRead(ctx, d, meta)...)
 }
 
-func resourceProjectRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DeviceFarmConn
+func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DeviceFarmConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	project, err := FindProjectByARN(conn, d.Id())
+	project, err := FindProjectByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DeviceFarm Project (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading DeviceFarm Project (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading DeviceFarm Project (%s): %s", d.Id(), err)
 	}
 
 	arn := aws.StringValue(project.Arn)
@@ -102,28 +106,29 @@ func resourceProjectRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", arn)
 	d.Set("default_job_timeout_minutes", project.DefaultJobTimeoutMinutes)
 
-	tags, err := ListTags(conn, arn)
+	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for DeviceFarm Project (%s): %w", arn, err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for DeviceFarm Project (%s): %s", arn, err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceProjectUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DeviceFarmConn
+func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DeviceFarmConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &devicefarm.UpdateProjectInput{
@@ -139,38 +144,39 @@ func resourceProjectUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		log.Printf("[DEBUG] Updating DeviceFarm Project: %s", d.Id())
-		_, err := conn.UpdateProject(input)
+		_, err := conn.UpdateProjectWithContext(ctx, input)
 		if err != nil {
-			return fmt.Errorf("Error Updating DeviceFarm Project: %w", err)
+			return sdkdiag.AppendErrorf(diags, "Error Updating DeviceFarm Project: %s", err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating DeviceFarm Project (%s) tags: %w", d.Get("arn").(string), err)
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating DeviceFarm Project (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
 
-	return resourceProjectRead(d, meta)
+	return append(diags, resourceProjectRead(ctx, d, meta)...)
 }
 
-func resourceProjectDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DeviceFarmConn
+func resourceProjectDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DeviceFarmConn()
 
 	input := &devicefarm.DeleteProjectInput{
 		Arn: aws.String(d.Id()),
 	}
 
 	log.Printf("[DEBUG] Deleting DeviceFarm Project: %s", d.Id())
-	_, err := conn.DeleteProject(input)
+	_, err := conn.DeleteProjectWithContext(ctx, input)
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, devicefarm.ErrCodeNotFoundException) {
-			return nil
+			return diags
 		}
-		return fmt.Errorf("Error deleting DeviceFarm Project: %w", err)
+		return sdkdiag.AppendErrorf(diags, "Error deleting DeviceFarm Project: %s", err)
 	}
 
-	return nil
+	return diags
 }

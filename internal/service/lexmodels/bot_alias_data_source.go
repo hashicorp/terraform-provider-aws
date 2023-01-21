@@ -1,19 +1,22 @@
 package lexmodels
 
 import (
+	"context"
 	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func DataSourceBotAlias() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceBotAliasRead,
+		ReadWithoutTimeout: dataSourceBotAliasRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -54,19 +57,20 @@ func DataSourceBotAlias() *schema.Resource {
 	}
 }
 
-func dataSourceBotAliasRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LexModelsConn
+func dataSourceBotAliasRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).LexModelsConn()
 
 	botName := d.Get("bot_name").(string)
 	botAliasName := d.Get("name").(string)
 	d.SetId(fmt.Sprintf("%s:%s", botName, botAliasName))
 
-	resp, err := conn.GetBotAlias(&lexmodelbuildingservice.GetBotAliasInput{
+	resp, err := conn.GetBotAliasWithContext(ctx, &lexmodelbuildingservice.GetBotAliasInput{
 		BotName: aws.String(botName),
 		Name:    aws.String(botAliasName),
 	})
 	if err != nil {
-		return fmt.Errorf("error reading Lex bot alias (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Lex bot alias (%s): %s", d.Id(), err)
 	}
 
 	arn := arn.ARN{
@@ -86,5 +90,5 @@ func dataSourceBotAliasRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("last_updated_date", resp.LastUpdatedDate.Format(time.RFC3339))
 	d.Set("name", resp.Name)
 
-	return nil
+	return diags
 }

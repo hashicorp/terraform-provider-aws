@@ -1,24 +1,27 @@
 package grafana
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/managedgrafana"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourceRoleAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceRoleAssociationUpsert,
-		Read:   resourceRoleAssociationRead,
-		Update: resourceRoleAssociationUpsert,
-		Delete: resourceRoleAssociationDelete,
+		CreateWithoutTimeout: resourceRoleAssociationUpsert,
+		ReadWithoutTimeout:   resourceRoleAssociationRead,
+		UpdateWithoutTimeout: resourceRoleAssociationUpsert,
+		DeleteWithoutTimeout: resourceRoleAssociationDelete,
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
@@ -49,8 +52,9 @@ func ResourceRoleAssociation() *schema.Resource {
 	}
 }
 
-func resourceRoleAssociationUpsert(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GrafanaConn
+func resourceRoleAssociationUpsert(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GrafanaConn()
 
 	role := d.Get("role").(string)
 	workspaceID := d.Get("workspace_id").(string)
@@ -72,21 +76,21 @@ func resourceRoleAssociationUpsert(d *schema.ResourceData, meta interface{}) err
 	}
 
 	log.Printf("[DEBUG] Creating Grafana Workspace Role Association: %s", input)
-	response, err := conn.UpdatePermissions(input)
+	response, err := conn.UpdatePermissionsWithContext(ctx, input)
 
 	for _, updateError := range response.Errors {
-		return fmt.Errorf("error creating Grafana Workspace Role Association: %s", aws.StringValue(updateError.Message))
+		return sdkdiag.AppendErrorf(diags, "creating Grafana Workspace Role Association: %s", aws.StringValue(updateError.Message))
 	}
 
 	if err != nil {
-		return fmt.Errorf("error creating Grafana Workspace Role Association: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating Grafana Workspace Role Association: %s", err)
 	}
 
 	if d.Id() == "" {
 		d.SetId(fmt.Sprintf("%s/%s", workspaceID, role))
 	}
 
-	return resourceRoleAssociationRead(d, meta)
+	return append(diags, resourceRoleAssociationRead(ctx, d, meta)...)
 }
 
 func populateUpdateInstructions(role string, list []*string, action string, typeSsoUser string, updateInstructions []*managedgrafana.UpdateInstruction) []*managedgrafana.UpdateInstruction {
@@ -106,29 +110,31 @@ func populateUpdateInstructions(role string, list []*string, action string, type
 	return updateInstructions
 }
 
-func resourceRoleAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GrafanaConn
+func resourceRoleAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GrafanaConn()
 
-	roleAssociations, err := FindRoleAssociationsByRoleAndWorkspaceID(conn, d.Get("role").(string), d.Get("workspace_id").(string))
+	roleAssociations, err := FindRoleAssociationsByRoleAndWorkspaceID(ctx, conn, d.Get("role").(string), d.Get("workspace_id").(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Grafana Workspace Role Association %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Grafana Workspace Role Association (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Grafana Workspace Role Association (%s): %s", d.Id(), err)
 	}
 
 	d.Set("group_ids", roleAssociations[managedgrafana.UserTypeSsoGroup])
 	d.Set("user_ids", roleAssociations[managedgrafana.UserTypeSsoUser])
 
-	return nil
+	return diags
 }
 
-func resourceRoleAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GrafanaConn
+func resourceRoleAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GrafanaConn()
 
 	updateInstructions := make([]*managedgrafana.UpdateInstruction, 0)
 	if v, ok := d.GetOk("user_ids"); ok && v.(*schema.Set).Len() > 0 {
@@ -147,11 +153,11 @@ func resourceRoleAssociationDelete(d *schema.ResourceData, meta interface{}) err
 	}
 
 	log.Printf("[DEBUG] Deleting Grafana Workspace Role Association: %s", input)
-	_, err := conn.UpdatePermissions(input)
+	_, err := conn.UpdatePermissionsWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error deleting Grafana Workspace Role Association: %w", err)
+		return sdkdiag.AppendErrorf(diags, "deleting Grafana Workspace Role Association: %s", err)
 	}
 
-	return nil
+	return diags
 }

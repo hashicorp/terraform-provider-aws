@@ -16,20 +16,21 @@ import (
 )
 
 func TestAccRolesAnywhereProfile_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	roleName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rolesanywhere_profile.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RolesAnywhereEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProfileDestroy,
+		CheckDestroy:             testAccCheckProfileDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProfileConfig_basic(rName, roleName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProfileExists(resourceName),
+					testAccCheckProfileExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "role_arns.#", "1"),
 					acctest.CheckResourceAttrGlobalARN(resourceName, "role_arns.0", "iam", fmt.Sprintf("role/%s", roleName)),
@@ -46,21 +47,21 @@ func TestAccRolesAnywhereProfile_basic(t *testing.T) {
 }
 
 func TestAccRolesAnywhereProfile_tags(t *testing.T) {
-
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	roleName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rolesanywhere_profile.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RolesAnywhereEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProfileDestroy,
+		CheckDestroy:             testAccCheckProfileDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProfileConfig_tags1(rName, roleName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProfileExists(resourceName),
+					testAccCheckProfileExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -73,7 +74,7 @@ func TestAccRolesAnywhereProfile_tags(t *testing.T) {
 			{
 				Config: testAccProfileConfig_tags2(rName, roleName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProfileExists(resourceName),
+					testAccCheckProfileExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -82,7 +83,7 @@ func TestAccRolesAnywhereProfile_tags(t *testing.T) {
 			{
 				Config: testAccProfileConfig_tags1(rName, roleName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProfileExists(resourceName),
+					testAccCheckProfileExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -92,22 +93,22 @@ func TestAccRolesAnywhereProfile_tags(t *testing.T) {
 }
 
 func TestAccRolesAnywhereProfile_disappears(t *testing.T) {
-
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	roleName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rolesanywhere_profile.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.RolesAnywhereEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProfileDestroy,
+		CheckDestroy:             testAccCheckProfileDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProfileConfig_basic(rName, roleName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProfileExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfrolesanywhere.ResourceProfile(), resourceName),
+					testAccCheckProfileExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfrolesanywhere.ResourceProfile(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -115,31 +116,75 @@ func TestAccRolesAnywhereProfile_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckProfileDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RolesAnywhereConn
+func TestAccRolesAnywhereProfile_enabled(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	roleName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rolesanywhere_profile.test"
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_rolesanywhere_profile" {
-			continue
-		}
-
-		_, err := tfrolesanywhere.FindProfileByID(context.Background(), conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("RolesAnywhere Profile %s still exists", rs.Primary.ID)
-	}
-
-	return nil
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RolesAnywhereEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProfileDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProfileConfig_enabled(rName, roleName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProfileExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccProfileConfig_enabled(rName, roleName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProfileExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
+				),
+			},
+			{
+				Config: testAccProfileConfig_enabled(rName, roleName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProfileExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+				),
+			},
+		},
+	})
 }
 
-func testAccCheckProfileExists(name string) resource.TestCheckFunc {
+func testAccCheckProfileDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RolesAnywhereClient()
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_rolesanywhere_profile" {
+				continue
+			}
+
+			_, err := tfrolesanywhere.FindProfileByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("RolesAnywhere Profile %s still exists", rs.Primary.ID)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckProfileExists(ctx context.Context, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 
@@ -151,9 +196,9 @@ func testAccCheckProfileExists(name string) resource.TestCheckFunc {
 			return fmt.Errorf("No Profile is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RolesAnywhereConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RolesAnywhereClient()
 
-		_, err := tfrolesanywhere.FindProfileByID(context.Background(), conn, rs.Primary.ID)
+		_, err := tfrolesanywhere.FindProfileByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return fmt.Errorf("Error describing Profile: %s", err.Error())
@@ -224,4 +269,16 @@ resource "aws_rolesanywhere_profile" "test" {
   }
 }
 `, rName, tag1, value1, tag2, value2))
+}
+
+func testAccProfileConfig_enabled(rName, roleName string, enabled bool) string {
+	return acctest.ConfigCompose(
+		testAccProfileConfig_base(roleName),
+		fmt.Sprintf(`
+resource "aws_rolesanywhere_profile" "test" {
+  name      = %[1]q
+  role_arns = [aws_iam_role.test.arn]
+  enabled   = %[2]t
+}
+`, rName, enabled))
 }

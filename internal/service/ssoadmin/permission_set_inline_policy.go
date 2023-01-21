@@ -1,26 +1,29 @@
 package ssoadmin
 
 import (
+	"context"
 	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourcePermissionSetInlinePolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourcePermissionSetInlinePolicyPut,
-		Read:   resourcePermissionSetInlinePolicyRead,
-		Update: resourcePermissionSetInlinePolicyPut,
-		Delete: resourcePermissionSetInlinePolicyDelete,
+		CreateWithoutTimeout: resourcePermissionSetInlinePolicyPut,
+		ReadWithoutTimeout:   resourcePermissionSetInlinePolicyRead,
+		UpdateWithoutTimeout: resourcePermissionSetInlinePolicyPut,
+		DeleteWithoutTimeout: resourcePermissionSetInlinePolicyDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"inline_policy": {
@@ -51,8 +54,9 @@ func ResourcePermissionSetInlinePolicy() *schema.Resource {
 	}
 }
 
-func resourcePermissionSetInlinePolicyPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSOAdminConn
+func resourcePermissionSetInlinePolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SSOAdminConn()
 
 	instanceArn := d.Get("instance_arn").(string)
 	permissionSetArn := d.Get("permission_set_arn").(string)
@@ -60,7 +64,7 @@ func resourcePermissionSetInlinePolicyPut(d *schema.ResourceData, meta interface
 	policy, err := structure.NormalizeJsonString(d.Get("inline_policy").(string))
 
 	if err != nil {
-		return fmt.Errorf("policy (%s) is invalid JSON: %w", d.Get("inline_policy").(string), err)
+		return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", d.Get("inline_policy").(string), err)
 	}
 
 	input := &ssoadmin.PutInlinePolicyToPermissionSetInput{
@@ -69,27 +73,28 @@ func resourcePermissionSetInlinePolicyPut(d *schema.ResourceData, meta interface
 		PermissionSetArn: aws.String(permissionSetArn),
 	}
 
-	_, err = conn.PutInlinePolicyToPermissionSet(input)
+	_, err = conn.PutInlinePolicyToPermissionSetWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("error putting Inline Policy for SSO Permission Set (%s): %w", permissionSetArn, err)
+		return sdkdiag.AppendErrorf(diags, "putting Inline Policy for SSO Permission Set (%s): %s", permissionSetArn, err)
 	}
 
 	d.SetId(fmt.Sprintf("%s,%s", permissionSetArn, instanceArn))
 
 	// (Re)provision ALL accounts after making the above changes
-	if err := provisionPermissionSet(conn, permissionSetArn, instanceArn); err != nil {
-		return err
+	if err := provisionPermissionSet(ctx, conn, permissionSetArn, instanceArn); err != nil {
+		return sdkdiag.AppendErrorf(diags, "provisioning SSO Permission Set (%s): %s", permissionSetArn, err)
 	}
 
-	return resourcePermissionSetInlinePolicyRead(d, meta)
+	return append(diags, resourcePermissionSetInlinePolicyRead(ctx, d, meta)...)
 }
 
-func resourcePermissionSetInlinePolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSOAdminConn
+func resourcePermissionSetInlinePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SSOAdminConn()
 
 	permissionSetArn, instanceArn, err := ParseResourceID(d.Id())
 	if err != nil {
-		return fmt.Errorf("error parsing SSO Permission Set Inline Policy ID: %w", err)
+		return sdkdiag.AppendErrorf(diags, "parsing SSO Permission Set Inline Policy ID: %s", err)
 	}
 
 	input := &ssoadmin.GetInlinePolicyForPermissionSetInput{
@@ -97,26 +102,26 @@ func resourcePermissionSetInlinePolicyRead(d *schema.ResourceData, meta interfac
 		PermissionSetArn: aws.String(permissionSetArn),
 	}
 
-	output, err := conn.GetInlinePolicyForPermissionSet(input)
+	output, err := conn.GetInlinePolicyForPermissionSetWithContext(ctx, input)
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ssoadmin.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Inline Policy for SSO Permission Set (%s) not found, removing from state", permissionSetArn)
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Inline Policy for SSO Permission Set (%s): %w", permissionSetArn, err)
+		return sdkdiag.AppendErrorf(diags, "reading Inline Policy for SSO Permission Set (%s): %s", permissionSetArn, err)
 	}
 
 	if output == nil {
-		return fmt.Errorf("error reading Inline Policy for SSO Permission Set (%s): empty output", permissionSetArn)
+		return sdkdiag.AppendErrorf(diags, "reading Inline Policy for SSO Permission Set (%s): empty output", permissionSetArn)
 	}
 
 	policyToSet, err := verify.PolicyToSet(d.Get("inline_policy").(string), aws.StringValue(output.InlinePolicy))
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading Inline Policy for SSO Permission Set (%s): %s", permissionSetArn, err)
 	}
 
 	d.Set("inline_policy", policyToSet)
@@ -124,15 +129,16 @@ func resourcePermissionSetInlinePolicyRead(d *schema.ResourceData, meta interfac
 	d.Set("instance_arn", instanceArn)
 	d.Set("permission_set_arn", permissionSetArn)
 
-	return nil
+	return diags
 }
 
-func resourcePermissionSetInlinePolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSOAdminConn
+func resourcePermissionSetInlinePolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SSOAdminConn()
 
 	permissionSetArn, instanceArn, err := ParseResourceID(d.Id())
 	if err != nil {
-		return fmt.Errorf("error parsing SSO Permission Set Inline Policy ID: %w", err)
+		return sdkdiag.AppendErrorf(diags, "parsing SSO Permission Set Inline Policy ID: %s", err)
 	}
 
 	input := &ssoadmin.DeleteInlinePolicyFromPermissionSetInput{
@@ -140,14 +146,14 @@ func resourcePermissionSetInlinePolicyDelete(d *schema.ResourceData, meta interf
 		PermissionSetArn: aws.String(permissionSetArn),
 	}
 
-	_, err = conn.DeleteInlinePolicyFromPermissionSet(input)
+	_, err = conn.DeleteInlinePolicyFromPermissionSetWithContext(ctx, input)
 
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, ssoadmin.ErrCodeResourceNotFoundException) {
-			return nil
+			return diags
 		}
-		return fmt.Errorf("error detaching Inline Policy from SSO Permission Set (%s): %w", permissionSetArn, err)
+		return sdkdiag.AppendErrorf(diags, "detaching Inline Policy from SSO Permission Set (%s): %s", permissionSetArn, err)
 	}
 
-	return nil
+	return diags
 }

@@ -16,6 +16,7 @@ import (
 )
 
 func TestAccS3BucketPolicyDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf s3.GetBucketPolicyOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_s3_bucket_policy.test"
@@ -28,7 +29,7 @@ func TestAccS3BucketPolicyDataSource_basic(t *testing.T) {
 			{
 				Config: testAccBucketPolicyDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketPolicyExists(resourceName, &conf),
+					testAccCheckBucketPolicyExists(ctx, resourceName, &conf),
 					testAccCheckBucketPolicyMatch(dataSourceName, "policy", resourceName, "policy"),
 				),
 			},
@@ -75,7 +76,7 @@ func testAccCheckBucketPolicyMatch(resource1, attr1, resource2, attr2 string) re
 	}
 }
 
-func testAccCheckBucketPolicyExists(n string, ci *s3.GetBucketPolicyOutput) resource.TestCheckFunc {
+func testAccCheckBucketPolicyExists(ctx context.Context, n string, ci *s3.GetBucketPolicyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -86,9 +87,9 @@ func testAccCheckBucketPolicyExists(n string, ci *s3.GetBucketPolicyOutput) reso
 			return fmt.Errorf("no S3 Bucket Policy ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
 
-		output, err := tfs3.FindBucketPolicy(context.Background(), conn, rs.Primary.ID)
+		output, err := tfs3.FindBucketPolicy(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}

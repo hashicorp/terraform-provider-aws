@@ -1,6 +1,7 @@
 package neptune_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -18,6 +19,7 @@ import (
 )
 
 func TestAccNeptuneClusterInstance_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v neptune.DBInstance
 	rInt := sdkacctest.RandInt()
 
@@ -31,12 +33,12 @@ func TestAccNeptuneClusterInstance_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterInstanceConfig_basic(clusterInstanceName, rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterInstanceExists(resourceName, &v),
+					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
 					testAccCheckClusterInstanceAttributes(&v),
 					testAccCheckClusterAddress(&v, resourceName, tfneptune.DefaultPort),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "rds", fmt.Sprintf("db:%s", clusterInstanceName)),
@@ -63,7 +65,7 @@ func TestAccNeptuneClusterInstance_basic(t *testing.T) {
 			{
 				Config: testAccClusterInstanceConfig_modified(clusterInstanceName, rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterInstanceExists(resourceName, &v),
+					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
 					testAccCheckClusterInstanceAttributes(&v),
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
 				),
@@ -73,6 +75,7 @@ func TestAccNeptuneClusterInstance_basic(t *testing.T) {
 }
 
 func TestAccNeptuneClusterInstance_withAZ(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v neptune.DBInstance
 	rInt := sdkacctest.RandInt()
 
@@ -83,12 +86,12 @@ func TestAccNeptuneClusterInstance_withAZ(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterInstanceConfig_az(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterInstanceExists(resourceName, &v),
+					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
 					testAccCheckClusterInstanceAttributes(&v),
 					resource.TestMatchResourceAttr(resourceName, "availability_zone", regexp.MustCompile(fmt.Sprintf("^%s[a-z]{1}$", acctest.Region()))), // NOPE
 					resource.TestCheckResourceAttrPair(resourceName, "availability_zone", availabiltyZonesDataSourceName, "names.0"),
@@ -99,6 +102,7 @@ func TestAccNeptuneClusterInstance_withAZ(t *testing.T) {
 }
 
 func TestAccNeptuneClusterInstance_namePrefix(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v neptune.DBInstance
 	rInt := sdkacctest.RandInt()
 
@@ -110,12 +114,12 @@ func TestAccNeptuneClusterInstance_namePrefix(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterInstanceConfig_namePrefix(namePrefix, rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterInstanceExists(resourceName, &v),
+					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
 					testAccCheckClusterInstanceAttributes(&v),
 					resource.TestMatchResourceAttr(resourceName, "identifier", regexp.MustCompile(fmt.Sprintf("^%s", namePrefix))),
 				),
@@ -125,6 +129,7 @@ func TestAccNeptuneClusterInstance_namePrefix(t *testing.T) {
 }
 
 func TestAccNeptuneClusterInstance_withSubnetGroup(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v neptune.DBInstance
 	rInt := sdkacctest.RandInt()
 
@@ -135,12 +140,12 @@ func TestAccNeptuneClusterInstance_withSubnetGroup(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterInstanceConfig_subnetGroup(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterInstanceExists(resourceName, &v),
+					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
 					testAccCheckClusterInstanceAttributes(&v),
 					resource.TestCheckResourceAttrPair(resourceName, "neptune_subnet_group_name", subnetGroupResourceName, "name"),
 				),
@@ -150,6 +155,7 @@ func TestAccNeptuneClusterInstance_withSubnetGroup(t *testing.T) {
 }
 
 func TestAccNeptuneClusterInstance_generatedName(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v neptune.DBInstance
 	rInt := sdkacctest.RandInt()
 
@@ -159,12 +165,12 @@ func TestAccNeptuneClusterInstance_generatedName(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterInstanceConfig_generatedName(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterInstanceExists(resourceName, &v),
+					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
 					testAccCheckClusterInstanceAttributes(&v),
 					resource.TestMatchResourceAttr(resourceName, "identifier", regexp.MustCompile("^tf-")),
 				),
@@ -174,6 +180,7 @@ func TestAccNeptuneClusterInstance_generatedName(t *testing.T) {
 }
 
 func TestAccNeptuneClusterInstance_kmsKey(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v neptune.DBInstance
 	rInt := sdkacctest.RandInt()
 
@@ -184,12 +191,12 @@ func TestAccNeptuneClusterInstance_kmsKey(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterInstanceConfig_kmsKey(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterInstanceExists(resourceName, &v),
+					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "kms_key_arn", kmsKeyResourceName, "arn"),
 				),
 			},
@@ -197,7 +204,7 @@ func TestAccNeptuneClusterInstance_kmsKey(t *testing.T) {
 	})
 }
 
-func testAccCheckClusterInstanceExists(n string, v *neptune.DBInstance) resource.TestCheckFunc {
+func testAccCheckClusterInstanceExists(ctx context.Context, n string, v *neptune.DBInstance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -208,8 +215,8 @@ func testAccCheckClusterInstanceExists(n string, v *neptune.DBInstance) resource
 			return fmt.Errorf("No Neptune Instance ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn
-		resp, err := conn.DescribeDBInstances(&neptune.DescribeDBInstancesInput{
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn()
+		resp, err := conn.DescribeDBInstancesWithContext(ctx, &neptune.DescribeDBInstancesInput{
 			DBInstanceIdentifier: aws.String(rs.Primary.ID),
 		})
 

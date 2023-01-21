@@ -42,13 +42,14 @@ func init() {
 }
 
 func sweepAggregateAuthorizations(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("Error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).ConfigServiceConn
+	conn := client.(*conns.AWSClient).ConfigServiceConn()
 
-	aggregateAuthorizations, err := DescribeAggregateAuthorizations(conn)
+	aggregateAuthorizations, err := DescribeAggregateAuthorizations(ctx, conn)
 	if err != nil {
 		if sweep.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping Config Aggregate Authorizations sweep for %s: %s", region, err)
@@ -66,7 +67,7 @@ func sweepAggregateAuthorizations(region string) error {
 
 	for _, auth := range aggregateAuthorizations {
 		log.Printf("[INFO] Deleting config authorization %s", *auth.AggregationAuthorizationArn)
-		_, err := conn.DeleteAggregationAuthorization(&configservice.DeleteAggregationAuthorizationInput{
+		_, err := conn.DeleteAggregationAuthorizationWithContext(ctx, &configservice.DeleteAggregationAuthorizationInput{
 			AuthorizedAccountId: auth.AuthorizedAccountId,
 			AuthorizedAwsRegion: auth.AuthorizedAwsRegion,
 		})
@@ -79,13 +80,14 @@ func sweepAggregateAuthorizations(region string) error {
 }
 
 func sweepConfigurationAggregators(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("Error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).ConfigServiceConn
+	conn := client.(*conns.AWSClient).ConfigServiceConn()
 
-	resp, err := conn.DescribeConfigurationAggregators(&configservice.DescribeConfigurationAggregatorsInput{})
+	resp, err := conn.DescribeConfigurationAggregatorsWithContext(ctx, &configservice.DescribeConfigurationAggregatorsInput{})
 	if err != nil {
 		if sweep.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping Config Configuration Aggregators sweep for %s: %s", region, err)
@@ -103,7 +105,7 @@ func sweepConfigurationAggregators(region string) error {
 
 	for _, agg := range resp.ConfigurationAggregators {
 		log.Printf("[INFO] Deleting config configuration aggregator %s", *agg.ConfigurationAggregatorName)
-		_, err := conn.DeleteConfigurationAggregator(&configservice.DeleteConfigurationAggregatorInput{
+		_, err := conn.DeleteConfigurationAggregatorWithContext(ctx, &configservice.DeleteConfigurationAggregatorInput{
 			ConfigurationAggregatorName: agg.ConfigurationAggregatorName,
 		})
 
@@ -117,14 +119,15 @@ func sweepConfigurationAggregators(region string) error {
 }
 
 func sweepConfigurationRecorder(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).ConfigServiceConn
+	conn := client.(*conns.AWSClient).ConfigServiceConn()
 
 	req := &configservice.DescribeConfigurationRecordersInput{}
-	resp, err := conn.DescribeConfigurationRecorders(req)
+	resp, err := conn.DescribeConfigurationRecordersWithContext(ctx, req)
 	if err != nil {
 		if sweep.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping Config Configuration Recorders sweep for %s: %s", region, err)
@@ -139,14 +142,14 @@ func sweepConfigurationRecorder(region string) error {
 	}
 
 	for _, cr := range resp.ConfigurationRecorders {
-		_, err := conn.StopConfigurationRecorder(&configservice.StopConfigurationRecorderInput{
+		_, err := conn.StopConfigurationRecorderWithContext(ctx, &configservice.StopConfigurationRecorderInput{
 			ConfigurationRecorderName: cr.Name,
 		})
 		if err != nil {
 			return err
 		}
 
-		_, err = conn.DeleteConfigurationRecorder(&configservice.DeleteConfigurationRecorderInput{
+		_, err = conn.DeleteConfigurationRecorderWithContext(ctx, &configservice.DeleteConfigurationRecorderInput{
 			ConfigurationRecorderName: cr.Name,
 		})
 		if err != nil {
@@ -160,17 +163,18 @@ func sweepConfigurationRecorder(region string) error {
 }
 
 func sweepDeliveryChannels(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).ConfigServiceConn
+	conn := client.(*conns.AWSClient).ConfigServiceConn()
 
 	req := &configservice.DescribeDeliveryChannelsInput{}
 	var resp *configservice.DescribeDeliveryChannelsOutput
-	err = resource.Retry(1*time.Minute, func() *resource.RetryError {
+	err = resource.RetryContext(ctx, 1*time.Minute, func() *resource.RetryError {
 		var err error
-		resp, err = conn.DescribeDeliveryChannels(req)
+		resp, err = conn.DescribeDeliveryChannelsWithContext(ctx, req)
 		if err != nil {
 			// ThrottlingException: Rate exceeded
 			if tfawserr.ErrMessageContains(err, "ThrottlingException", "Rate exceeded") {
@@ -194,7 +198,7 @@ func sweepDeliveryChannels(region string) error {
 	}
 
 	for _, dc := range resp.DeliveryChannels {
-		_, err := conn.DeleteDeliveryChannel(&configservice.DeleteDeliveryChannelInput{
+		_, err := conn.DeleteDeliveryChannelWithContext(ctx, &configservice.DeleteDeliveryChannelInput{
 			DeliveryChannelName: dc.Name,
 		})
 		if err != nil {

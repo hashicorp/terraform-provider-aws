@@ -1,6 +1,7 @@
 package ec2_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -14,21 +15,22 @@ import (
 )
 
 func TestAccIPAMPoolCIDR_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var cidr ec2.IpamPoolCidr
 	resourceName := "aws_vpc_ipam_pool_cidr.test"
-	cidr_range := "10.0.0.0/24"
+	cidrBlock := "10.0.0.0/24"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccIPAMPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIPAMProvisionedPoolCIDRDestroy,
+		CheckDestroy:             testAccCheckIPAMPoolCIDRDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIPAMPoolCIDRConfig_provisionedIPv4(cidr_range),
+				Config: testAccIPAMPoolCIDRConfig_provisionedIPv4(cidrBlock),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPAMCIDRExists(resourceName, &cidr),
-					resource.TestCheckResourceAttr(resourceName, "cidr", cidr_range),
+					testAccCheckIPAMPoolCIDRExists(ctx, resourceName, &cidr),
+					resource.TestCheckResourceAttr(resourceName, "cidr", cidrBlock),
 					resource.TestCheckResourceAttrPair(resourceName, "ipam_pool_id", "aws_vpc_ipam_pool.test", "id"),
 				),
 			},
@@ -41,50 +43,116 @@ func TestAccIPAMPoolCIDR_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckIPAMCIDRExists(n string, cidr *ec2.IpamPoolCidr) resource.TestCheckFunc {
+func TestAccIPAMPoolCIDR_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var cidr ec2.IpamPoolCidr
+	resourceName := "aws_vpc_ipam_pool_cidr.test"
+	cidrBlock := "10.0.0.0/24"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIPAMPoolCIDRDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIPAMPoolCIDRConfig_provisionedIPv4(cidrBlock),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIPAMPoolCIDRExists(ctx, resourceName, &cidr),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceIPAMPoolCIDR(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccIPAMPoolCIDR_Disappears_ipam(t *testing.T) {
+	ctx := acctest.Context(t)
+	var cidr ec2.IpamPoolCidr
+	resourceName := "aws_vpc_ipam_pool_cidr.test"
+	ipamResourceName := "aws_vpc_ipam.test"
+	cidrBlock := "10.0.0.0/24"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIPAMPoolCIDRDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIPAMPoolCIDRConfig_provisionedIPv4(cidrBlock),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIPAMPoolCIDRExists(ctx, resourceName, &cidr),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceIPAM(), ipamResourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func testAccCheckIPAMPoolCIDRExists(ctx context.Context, n string, v *ec2.IpamPoolCidr) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		id := rs.Primary.ID
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
-		found_cidr, _, err := tfec2.FindIPAMPoolCIDR(conn, id)
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No IPAM Pool CIDR ID is set")
+		}
+
+		cidrBlock, poolID, err := tfec2.IPAMPoolCIDRParseResourceID(rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
-		*cidr = *found_cidr
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+
+		output, err := tfec2.FindIPAMPoolCIDRByTwoPartKey(ctx, conn, cidrBlock, poolID)
+
+		if err != nil {
+			return err
+		}
+
+		*v = *output
 
 		return nil
 	}
 }
 
-func testAccCheckIPAMProvisionedPoolCIDRDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+func testAccCheckIPAMPoolCIDRDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_vpc_ipam_pool_cidr" {
-			continue
-		}
-
-		id := rs.Primary.ID
-
-		_, pool_id, err := tfec2.DecodeIPAMPoolCIDRID(id)
-		if err != nil {
-			return fmt.Errorf("error decoding ID (%s): %w", id, err)
-		}
-
-		if _, err = tfec2.WaitIPAMPoolDeleted(conn, pool_id, tfec2.IPAMPoolDeleteTimeout); err != nil {
-			if tfresource.NotFound(err) {
-				return nil
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_vpc_ipam_pool_cidr" {
+				continue
 			}
-			return fmt.Errorf("error waiting for IPAM Pool (%s) to be deleted: %w", id, err)
-		}
-	}
 
-	return nil
+			cidrBlock, poolID, err := tfec2.IPAMPoolCIDRParseResourceID(rs.Primary.ID)
+
+			if err != nil {
+				return err
+			}
+
+			_, err = tfec2.FindIPAMPoolCIDRByTwoPartKey(ctx, conn, cidrBlock, poolID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("IPAM Pool CIDR still exists: %s", rs.Primary.ID)
+		}
+
+		return nil
+	}
 }
 
 const testAccIPAMPoolCIDRConfig_base = `
@@ -92,9 +160,12 @@ data "aws_region" "current" {}
 
 resource "aws_vpc_ipam" "test" {
   description = "test"
+
   operating_regions {
     region_name = data.aws_region.current.name
   }
+
+  cascade = true
 }
 `
 
@@ -107,10 +178,10 @@ resource "aws_vpc_ipam_pool" "test" {
 `
 
 func testAccIPAMPoolCIDRConfig_provisionedIPv4(cidr string) string {
-	return testAccIPAMPoolCIDRConfig_base + testAccIPAMPoolCIDRConfig_privatePool + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccIPAMPoolCIDRConfig_base, testAccIPAMPoolCIDRConfig_privatePool, fmt.Sprintf(`
 resource "aws_vpc_ipam_pool_cidr" "test" {
   ipam_pool_id = aws_vpc_ipam_pool.test.id
   cidr         = %[1]q
 }
-`, cidr)
+`, cidr))
 }

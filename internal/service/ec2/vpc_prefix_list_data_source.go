@@ -1,18 +1,21 @@
 package ec2
 
 import (
+	"context"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func DataSourcePrefixList() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourcePrefixListRead,
+		ReadWithoutTimeout: dataSourcePrefixListRead,
 
 		Timeouts: &schema.ResourceTimeout{
 			Read: schema.DefaultTimeout(20 * time.Minute),
@@ -38,8 +41,9 @@ func DataSourcePrefixList() *schema.Resource {
 	}
 }
 
-func dataSourcePrefixListRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func dataSourcePrefixListRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	input := &ec2.DescribePrefixListsInput{}
 
@@ -57,15 +61,15 @@ func dataSourcePrefixListRead(d *schema.ResourceData, meta interface{}) error {
 		d.Get("filter").(*schema.Set),
 	)...)
 
-	pl, err := FindPrefixList(conn, input)
+	pl, err := FindPrefixList(ctx, conn, input)
 
 	if err != nil {
-		return tfresource.SingularDataSourceFindError("EC2 Prefix List", err)
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Prefix List", err))
 	}
 
 	d.SetId(aws.StringValue(pl.PrefixListId))
 	d.Set("cidr_blocks", aws.StringValueSlice(pl.Cidrs))
 	d.Set("name", pl.PrefixListName)
 
-	return nil
+	return diags
 }

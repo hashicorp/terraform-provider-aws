@@ -19,6 +19,7 @@ import (
 )
 
 func TestAccTranscribeVocabularyFilter_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -31,16 +32,16 @@ func TestAccTranscribeVocabularyFilter_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(names.TranscribeEndpointID, t)
-			testAccVocabularyFiltersPreCheck(t)
+			testAccVocabularyFiltersPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TranscribeEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVocabularyFilterDestroy,
+		CheckDestroy:             testAccCheckVocabularyFilterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVocabularyFilterConfig_basicFile(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVocabularyFilterExists(resourceName, &vocabularyFilter),
+					testAccCheckVocabularyFilterExists(ctx, resourceName, &vocabularyFilter),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "download_uri"),
 					resource.TestCheckResourceAttr(resourceName, "language_code", "en-US"),
@@ -57,6 +58,7 @@ func TestAccTranscribeVocabularyFilter_basic(t *testing.T) {
 }
 
 func TestAccTranscribeVocabularyFilter_basicWords(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -69,16 +71,16 @@ func TestAccTranscribeVocabularyFilter_basicWords(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(names.TranscribeEndpointID, t)
-			testAccVocabularyFiltersPreCheck(t)
+			testAccVocabularyFiltersPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TranscribeEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVocabularyFilterDestroy,
+		CheckDestroy:             testAccCheckVocabularyFilterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVocabularyFilterConfig_basicWords(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVocabularyFilterExists(resourceName, &vocabularyFilter),
+					testAccCheckVocabularyFilterExists(ctx, resourceName, &vocabularyFilter),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "download_uri"),
 					resource.TestCheckResourceAttr(resourceName, "language_code", "en-US"),
@@ -89,6 +91,7 @@ func TestAccTranscribeVocabularyFilter_basicWords(t *testing.T) {
 }
 
 func TestAccTranscribeVocabularyFilter_update(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -101,16 +104,16 @@ func TestAccTranscribeVocabularyFilter_update(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(names.TranscribeEndpointID, t)
-			testAccVocabularyFiltersPreCheck(t)
+			testAccVocabularyFiltersPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TranscribeEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVocabularyFilterDestroy,
+		CheckDestroy:             testAccCheckVocabularyFilterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVocabularyFilterConfig_basicFile(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVocabularyFilterExists(resourceName, &vocabularyFilter),
+					testAccCheckVocabularyFilterExists(ctx, resourceName, &vocabularyFilter),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "download_uri"),
 					resource.TestCheckResourceAttr(resourceName, "vocabulary_filter_file_uri", "s3://"+rName+"/transcribe/test1.txt"),
@@ -119,7 +122,7 @@ func TestAccTranscribeVocabularyFilter_update(t *testing.T) {
 			{
 				Config: testAccVocabularyFilterConfig_basicWords(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVocabularyFilterExists(resourceName, &vocabularyFilter),
+					testAccCheckVocabularyFilterExists(ctx, resourceName, &vocabularyFilter),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "download_uri"),
 					resource.TestCheckResourceAttr(resourceName, "words.#", "3"),
@@ -130,6 +133,7 @@ func TestAccTranscribeVocabularyFilter_update(t *testing.T) {
 }
 
 func TestAccTranscribeVocabularyFilter_updateTags(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -142,16 +146,16 @@ func TestAccTranscribeVocabularyFilter_updateTags(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(names.TranscribeEndpointID, t)
-			testAccVocabularyFiltersPreCheck(t)
+			testAccVocabularyFiltersPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TranscribeEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVocabularyFilterDestroy,
+		CheckDestroy:             testAccCheckVocabularyFilterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVocabularyFilterConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVocabularyFilterExists(resourceName, &vocabularyFilter),
+					testAccCheckVocabularyFilterExists(ctx, resourceName, &vocabularyFilter),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -159,7 +163,7 @@ func TestAccTranscribeVocabularyFilter_updateTags(t *testing.T) {
 			{
 				Config: testAccVocabularyFilterConfig_tags2(rName, "key1", "value1", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVocabularyFilterExists(resourceName, &vocabularyFilter),
+					testAccCheckVocabularyFilterExists(ctx, resourceName, &vocabularyFilter),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -168,7 +172,7 @@ func TestAccTranscribeVocabularyFilter_updateTags(t *testing.T) {
 			{
 				Config: testAccVocabularyFilterConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVocabularyFilterExists(resourceName, &vocabularyFilter),
+					testAccCheckVocabularyFilterExists(ctx, resourceName, &vocabularyFilter),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -178,6 +182,7 @@ func TestAccTranscribeVocabularyFilter_updateTags(t *testing.T) {
 }
 
 func TestAccTranscribeVocabularyFilter_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -190,17 +195,17 @@ func TestAccTranscribeVocabularyFilter_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(names.TranscribeEndpointID, t)
-			testAccVocabularyFiltersPreCheck(t)
+			testAccVocabularyFiltersPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TranscribeEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVocabularyFilterDestroy,
+		CheckDestroy:             testAccCheckVocabularyFilterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVocabularyFilterConfig_basicFile(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVocabularyFilterExists(resourceName, &vocabularyFilter),
-					acctest.CheckResourceDisappears(acctest.Provider, tftranscribe.ResourceVocabularyFilter(), resourceName),
+					testAccCheckVocabularyFilterExists(ctx, resourceName, &vocabularyFilter),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tftranscribe.ResourceVocabularyFilter(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -208,32 +213,33 @@ func TestAccTranscribeVocabularyFilter_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckVocabularyFilterDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeConn
-	ctx := context.Background()
+func testAccCheckVocabularyFilterDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeClient()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_transcribe_vocabulary_filter" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_transcribe_vocabulary_filter" {
+				continue
+			}
+
+			_, err := tftranscribe.FindVocabularyFilterByName(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return create.Error(names.Transcribe, create.ErrActionCheckingDestroyed, tftranscribe.ResNameVocabularyFilter, rs.Primary.ID, errors.New("not destroyed"))
 		}
 
-		_, err := tftranscribe.FindVocabularyFilterByName(ctx, conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return create.Error(names.Transcribe, create.ErrActionCheckingDestroyed, tftranscribe.ResNameVocabularyFilter, rs.Primary.ID, errors.New("not destroyed"))
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckVocabularyFilterExists(name string, vocabularyFilter *transcribe.GetVocabularyFilterOutput) resource.TestCheckFunc {
+func testAccCheckVocabularyFilterExists(ctx context.Context, name string, vocabularyFilter *transcribe.GetVocabularyFilterOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -244,8 +250,8 @@ func testAccCheckVocabularyFilterExists(name string, vocabularyFilter *transcrib
 			return create.Error(names.Transcribe, create.ErrActionCheckingExistence, tftranscribe.ResNameVocabularyFilter, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeConn
-		ctx := context.Background()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeClient()
+
 		resp, err := tftranscribe.FindVocabularyFilterByName(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
@@ -258,9 +264,8 @@ func testAccCheckVocabularyFilterExists(name string, vocabularyFilter *transcrib
 	}
 }
 
-func testAccVocabularyFiltersPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeConn
-	ctx := context.Background()
+func testAccVocabularyFiltersPreCheck(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeClient()
 
 	input := &transcribe.ListVocabularyFiltersInput{}
 	_, err := conn.ListVocabularyFilters(ctx, input)

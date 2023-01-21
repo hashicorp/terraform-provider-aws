@@ -1,6 +1,7 @@
 package waf
 
 import (
+	"context"
 	"fmt"
 	"log"
 
@@ -8,19 +9,21 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func ResourceXSSMatchSet() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceXSSMatchSetCreate,
-		Read:   resourceXSSMatchSetRead,
-		Update: resourceXSSMatchSetUpdate,
-		Delete: resourceXSSMatchSetDelete,
+		CreateWithoutTimeout: resourceXSSMatchSetCreate,
+		ReadWithoutTimeout:   resourceXSSMatchSetRead,
+		UpdateWithoutTimeout: resourceXSSMatchSetUpdate,
+		DeleteWithoutTimeout: resourceXSSMatchSetDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -68,57 +71,59 @@ func ResourceXSSMatchSet() *schema.Resource {
 	}
 }
 
-func resourceXSSMatchSetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFConn
+func resourceXSSMatchSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).WAFConn()
 
 	log.Printf("[INFO] Creating XssMatchSet: %s", d.Get("name").(string))
 
 	wr := NewRetryer(conn)
-	out, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
+	out, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		params := &waf.CreateXssMatchSetInput{
 			ChangeToken: token,
 			Name:        aws.String(d.Get("name").(string)),
 		}
 
-		return conn.CreateXssMatchSet(params)
+		return conn.CreateXssMatchSetWithContext(ctx, params)
 	})
 	if err != nil {
-		return fmt.Errorf("Error creating WAF XSS Match Set: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating WAF XSS Match Set: %s", err)
 	}
 	resp := out.(*waf.CreateXssMatchSetOutput)
 
 	d.SetId(aws.StringValue(resp.XssMatchSet.XssMatchSetId))
 
 	if v, ok := d.GetOk("xss_match_tuples"); ok && v.(*schema.Set).Len() > 0 {
-		err := updateXSSMatchSetResource(d.Id(), nil, v.(*schema.Set).List(), conn)
+		err := updateXSSMatchSetResource(ctx, d.Id(), nil, v.(*schema.Set).List(), conn)
 		if err != nil {
-			return fmt.Errorf("Error setting WAF XSS Match Set tuples: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting WAF XSS Match Set tuples: %s", err)
 		}
 	}
-	return resourceXSSMatchSetRead(d, meta)
+	return append(diags, resourceXSSMatchSetRead(ctx, d, meta)...)
 }
 
-func resourceXSSMatchSetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFConn
+func resourceXSSMatchSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).WAFConn()
 	log.Printf("[INFO] Reading WAF XSS Match Set: %s", d.Get("name").(string))
 	params := &waf.GetXssMatchSetInput{
 		XssMatchSetId: aws.String(d.Id()),
 	}
 
-	resp, err := conn.GetXssMatchSet(params)
+	resp, err := conn.GetXssMatchSetWithContext(ctx, params)
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, waf.ErrCodeNonexistentItemException) {
 			log.Printf("[WARN] WAF XSS Match Set (%s) not found, removing from state", d.Id())
 			d.SetId("")
-			return nil
+			return diags
 		}
 
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading WAF XSS Match Set (%s): %s", d.Get("name").(string), err)
 	}
 
 	d.Set("name", resp.XssMatchSet.Name)
 	if err := d.Set("xss_match_tuples", flattenXSSMatchTuples(resp.XssMatchSet.XssMatchTuples)); err != nil {
-		return fmt.Errorf("error setting xss_match_tuples: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting xss_match_tuples: %s", err)
 	}
 
 	arn := arn.ARN{
@@ -129,55 +134,57 @@ func resourceXSSMatchSetRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("arn", arn.String())
 
-	return nil
+	return diags
 }
 
-func resourceXSSMatchSetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFConn
+func resourceXSSMatchSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).WAFConn()
 
 	if d.HasChange("xss_match_tuples") {
 		o, n := d.GetChange("xss_match_tuples")
 		oldT, newT := o.(*schema.Set).List(), n.(*schema.Set).List()
 
-		err := updateXSSMatchSetResource(d.Id(), oldT, newT, conn)
+		err := updateXSSMatchSetResource(ctx, d.Id(), oldT, newT, conn)
 		if err != nil {
-			return fmt.Errorf("Error updating WAF XSS Match Set: %w", err)
+			return sdkdiag.AppendErrorf(diags, "updating WAF XSS Match Set: %s", err)
 		}
 	}
 
-	return resourceXSSMatchSetRead(d, meta)
+	return append(diags, resourceXSSMatchSetRead(ctx, d, meta)...)
 }
 
-func resourceXSSMatchSetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFConn
+func resourceXSSMatchSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).WAFConn()
 
 	oldTuples := d.Get("xss_match_tuples").(*schema.Set).List()
 	if len(oldTuples) > 0 {
-		err := updateXSSMatchSetResource(d.Id(), oldTuples, nil, conn)
+		err := updateXSSMatchSetResource(ctx, d.Id(), oldTuples, nil, conn)
 		if err != nil {
-			return fmt.Errorf("Error removing WAF XSS Match Set tuples: %w", err)
+			return sdkdiag.AppendErrorf(diags, "removing WAF XSS Match Set tuples: %s", err)
 		}
 	}
 
 	wr := NewRetryer(conn)
-	_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
+	_, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		req := &waf.DeleteXssMatchSetInput{
 			ChangeToken:   token,
 			XssMatchSetId: aws.String(d.Id()),
 		}
 
-		return conn.DeleteXssMatchSet(req)
+		return conn.DeleteXssMatchSetWithContext(ctx, req)
 	})
 	if err != nil {
-		return fmt.Errorf("Error deleting WAF XSS Match Set: %w", err)
+		return sdkdiag.AppendErrorf(diags, "deleting WAF XSS Match Set: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func updateXSSMatchSetResource(id string, oldT, newT []interface{}, conn *waf.WAF) error {
+func updateXSSMatchSetResource(ctx context.Context, id string, oldT, newT []interface{}, conn *waf.WAF) error {
 	wr := NewRetryer(conn)
-	_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
+	_, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		req := &waf.UpdateXssMatchSetInput{
 			ChangeToken:   token,
 			XssMatchSetId: aws.String(id),
@@ -185,7 +192,7 @@ func updateXSSMatchSetResource(id string, oldT, newT []interface{}, conn *waf.WA
 		}
 
 		log.Printf("[INFO] Updating WAF XSS Match Set tuples: %s", req)
-		return conn.UpdateXssMatchSet(req)
+		return conn.UpdateXssMatchSetWithContext(ctx, req)
 	})
 	if err != nil {
 		return fmt.Errorf("Error updating WAF XSS Match Set: %w", err)

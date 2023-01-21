@@ -1,6 +1,7 @@
 package ec2_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -15,6 +16,7 @@ import (
 )
 
 func TestAccVPCInternetGatewayAttachment_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v ec2.InternetGatewayAttachment
 	resourceName := "aws_internet_gateway_attachment.test"
 	igwResourceName := "aws_internet_gateway.test"
@@ -25,12 +27,12 @@ func TestAccVPCInternetGatewayAttachment_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInternetGatewayAttachmentDestroy,
+		CheckDestroy:             testAccCheckInternetGatewayAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCInternetGatewayAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInternetGatewayAttachmentExists(resourceName, &v),
+					testAccCheckInternetGatewayAttachmentExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "internet_gateway_id", igwResourceName, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", vpcResourceName, "id"),
 				),
@@ -45,6 +47,7 @@ func TestAccVPCInternetGatewayAttachment_basic(t *testing.T) {
 }
 
 func TestAccVPCInternetGatewayAttachment_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v ec2.InternetGatewayAttachment
 	resourceName := "aws_internet_gateway_attachment.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -53,13 +56,13 @@ func TestAccVPCInternetGatewayAttachment_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInternetGatewayAttachmentDestroy,
+		CheckDestroy:             testAccCheckInternetGatewayAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCInternetGatewayAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInternetGatewayAttachmentExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceInternetGatewayAttachment(), resourceName),
+					testAccCheckInternetGatewayAttachmentExists(ctx, resourceName, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceInternetGatewayAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -67,37 +70,39 @@ func TestAccVPCInternetGatewayAttachment_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckInternetGatewayAttachmentDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+func testAccCheckInternetGatewayAttachmentDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_internet_gateway_attachment" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_internet_gateway_attachment" {
+				continue
+			}
+
+			igwID, vpcID, err := tfec2.InternetGatewayAttachmentParseResourceID(rs.Primary.ID)
+
+			if err != nil {
+				return err
+			}
+
+			_, err = tfec2.FindInternetGatewayAttachment(ctx, conn, igwID, vpcID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("EC2 Internet Gateway Attachment %s still exists", rs.Primary.ID)
 		}
 
-		igwID, vpcID, err := tfec2.InternetGatewayAttachmentParseResourceID(rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		_, err = tfec2.FindInternetGatewayAttachment(conn, igwID, vpcID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("EC2 Internet Gateway Attachment %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckInternetGatewayAttachmentExists(n string, v *ec2.InternetGatewayAttachment) resource.TestCheckFunc {
+func testAccCheckInternetGatewayAttachmentExists(ctx context.Context, n string, v *ec2.InternetGatewayAttachment) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -108,7 +113,7 @@ func testAccCheckInternetGatewayAttachmentExists(n string, v *ec2.InternetGatewa
 			return fmt.Errorf("No EC2 Internet Gateway Attachment ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
 		igwID, vpcID, err := tfec2.InternetGatewayAttachmentParseResourceID(rs.Primary.ID)
 
@@ -116,7 +121,7 @@ func testAccCheckInternetGatewayAttachmentExists(n string, v *ec2.InternetGatewa
 			return err
 		}
 
-		output, err := tfec2.FindInternetGatewayAttachment(conn, igwID, vpcID)
+		output, err := tfec2.FindInternetGatewayAttachment(ctx, conn, igwID, vpcID)
 
 		if err != nil {
 			return err

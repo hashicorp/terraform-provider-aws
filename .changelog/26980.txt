@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_eks_cluster: Add `service_ipv6_cidr` attribute to `kubernetes_network_config` block
+```
+
+```release-note:enhancement
+datasource/aws_eks_cluster: Add `service_ipv6_cidr` attribute to `kubernetes_network_config` block
+```

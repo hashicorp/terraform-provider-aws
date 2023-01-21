@@ -1,18 +1,20 @@
 package workspaces
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/service/workspaces"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceDirectory() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceDirectoryRead,
+		ReadWithoutTimeout: dataSourceDirectoryRead,
 
 		Schema: map[string]*schema.Schema{
 			"alias": {
@@ -163,18 +165,19 @@ func DataSourceDirectory() *schema.Resource {
 	}
 }
 
-func dataSourceDirectoryRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WorkSpacesConn
+func dataSourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).WorkSpacesConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	directoryID := d.Get("directory_id").(string)
 
-	rawOutput, state, err := StatusDirectoryState(conn, directoryID)()
+	rawOutput, state, err := StatusDirectoryState(ctx, conn, directoryID)()
 	if err != nil {
-		return fmt.Errorf("error getting WorkSpaces Directory (%s): %w", directoryID, err)
+		return sdkdiag.AppendErrorf(diags, "getting WorkSpaces Directory (%s): %s", directoryID, err)
 	}
 	if state == workspaces.WorkspaceDirectoryStateDeregistered {
-		return fmt.Errorf("WorkSpaces directory %s was not found", directoryID)
+		return sdkdiag.AppendErrorf(diags, "WorkSpaces directory %s was not found", directoryID)
 	}
 
 	d.SetId(directoryID)
@@ -189,36 +192,36 @@ func dataSourceDirectoryRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("alias", directory.Alias)
 
 	if err := d.Set("subnet_ids", flex.FlattenStringSet(directory.SubnetIds)); err != nil {
-		return fmt.Errorf("error setting subnet_ids: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting subnet_ids: %s", err)
 	}
 
 	if err := d.Set("self_service_permissions", FlattenSelfServicePermissions(directory.SelfservicePermissions)); err != nil {
-		return fmt.Errorf("error setting self_service_permissions: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting self_service_permissions: %s", err)
 	}
 
 	if err := d.Set("workspace_access_properties", FlattenWorkspaceAccessProperties(directory.WorkspaceAccessProperties)); err != nil {
-		return fmt.Errorf("error setting workspace_access_properties: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting workspace_access_properties: %s", err)
 	}
 
 	if err := d.Set("workspace_creation_properties", FlattenWorkspaceCreationProperties(directory.WorkspaceCreationProperties)); err != nil {
-		return fmt.Errorf("error setting workspace_creation_properties: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting workspace_creation_properties: %s", err)
 	}
 
 	if err := d.Set("ip_group_ids", flex.FlattenStringSet(directory.IpGroupIds)); err != nil {
-		return fmt.Errorf("error setting ip_group_ids: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting ip_group_ids: %s", err)
 	}
 
 	if err := d.Set("dns_ip_addresses", flex.FlattenStringSet(directory.DnsIpAddresses)); err != nil {
-		return fmt.Errorf("error setting dns_ip_addresses: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting dns_ip_addresses: %s", err)
 	}
 
-	tags, err := ListTags(conn, d.Id())
+	tags, err := ListTags(ctx, conn, d.Id())
 	if err != nil {
-		return fmt.Errorf("error listing tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "listing tags: %s", err)
 	}
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

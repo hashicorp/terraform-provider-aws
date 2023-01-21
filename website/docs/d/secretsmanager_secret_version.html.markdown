@@ -43,14 +43,14 @@ output "example" {
 
 ## Argument Reference
 
-* `secret_id` - (Required) Specifies the secret containing the version that you want to retrieve. You can specify either the Amazon Resource Name (ARN) or the friendly name of the secret.
+* `secret_id` - (Required) Specifies the secret containing the version that you want to retrieve. You can specify either the ARN or the friendly name of the secret.
 * `version_id` - (Optional) Specifies the unique identifier of the version of the secret that you want to retrieve. Overrides `version_stage`.
 * `version_stage` - (Optional) Specifies the secret version that you want to retrieve by the staging label attached to the version. Defaults to `AWSCURRENT`.
 
 ## Attributes Reference
 
-* `arn` - The ARN of the secret.
-* `id` - The unique identifier of this version of the secret.
-* `secret_string` - The decrypted part of the protected secret information that was originally provided as a string.
-* `secret_binary` - The decrypted part of the protected secret information that was originally provided as a binary.
-* `version_id` - The unique identifier of this version of the secret.
+* `arn` - ARN of the secret.
+* `id` - Unique identifier of this version of the secret.
+* `secret_string` - Decrypted part of the protected secret information that was originally provided as a string.
+* `secret_binary` - Decrypted part of the protected secret information that was originally provided as a binary.
+* `version_id` - Unique identifier of this version of the secret.

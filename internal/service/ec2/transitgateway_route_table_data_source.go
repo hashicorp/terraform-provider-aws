@@ -1,21 +1,24 @@
 package ec2
 
 import (
+	"context"
 	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func DataSourceTransitGatewayRouteTable() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceTransitGatewayRouteTableRead,
+		ReadWithoutTimeout: dataSourceTransitGatewayRouteTableRead,
 
 		Timeouts: &schema.ResourceTimeout{
 			Read: schema.DefaultTimeout(20 * time.Minute),
@@ -49,8 +52,9 @@ func DataSourceTransitGatewayRouteTable() *schema.Resource {
 	}
 }
 
-func dataSourceTransitGatewayRouteTableRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func dataSourceTransitGatewayRouteTableRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeTransitGatewayRouteTablesInput{}
@@ -68,10 +72,10 @@ func dataSourceTransitGatewayRouteTableRead(d *schema.ResourceData, meta interfa
 		input.TransitGatewayRouteTableIds = aws.StringSlice([]string{v.(string)})
 	}
 
-	transitGatewayRouteTable, err := FindTransitGatewayRouteTable(conn, input)
+	transitGatewayRouteTable, err := FindTransitGatewayRouteTable(ctx, conn, input)
 
 	if err != nil {
-		return tfresource.SingularDataSourceFindError("EC2 Transit Gateway Route Table", err)
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Transit Gateway Route Table", err))
 	}
 
 	d.SetId(aws.StringValue(transitGatewayRouteTable.TransitGatewayRouteTableId))
@@ -88,8 +92,8 @@ func dataSourceTransitGatewayRouteTableRead(d *schema.ResourceData, meta interfa
 	d.Set("transit_gateway_id", transitGatewayRouteTable.TransitGatewayId)
 
 	if err := d.Set("tags", KeyValueTags(transitGatewayRouteTable.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

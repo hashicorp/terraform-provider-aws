@@ -1,28 +1,30 @@
 package apigateway
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"strconv"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceRestAPIPolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceRestAPIPolicyPut,
-		Read:   resourceRestAPIPolicyRead,
-		Update: resourceRestAPIPolicyPut,
-		Delete: resourceRestAPIPolicyDelete,
+		CreateWithoutTimeout: resourceRestAPIPolicyPut,
+		ReadWithoutTimeout:   resourceRestAPIPolicyRead,
+		UpdateWithoutTimeout: resourceRestAPIPolicyPut,
+		DeleteWithoutTimeout: resourceRestAPIPolicyDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -33,10 +35,11 @@ func ResourceRestAPIPolicy() *schema.Resource {
 			},
 
 			"policy": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				Type:                  schema.TypeString,
+				Required:              true,
+				ValidateFunc:          validation.StringIsJSON,
+				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+				DiffSuppressOnRefresh: true,
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
@@ -46,8 +49,9 @@ func ResourceRestAPIPolicy() *schema.Resource {
 	}
 }
 
-func resourceRestAPIPolicyPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+func resourceRestAPIPolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 
 	restApiId := d.Get("rest_api_id").(string)
 	log.Printf("[DEBUG] Setting API Gateway REST API Policy: %s", restApiId)
@@ -57,7 +61,7 @@ func resourceRestAPIPolicyPut(d *schema.ResourceData, meta interface{}) error {
 	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
 
 	if err != nil {
-		return fmt.Errorf("policy (%s) is invalid JSON: %w", policy, err)
+		return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", policy, err)
 	}
 
 	operations = append(operations, &apigateway.PatchOperation{
@@ -66,64 +70,66 @@ func resourceRestAPIPolicyPut(d *schema.ResourceData, meta interface{}) error {
 		Value: aws.String(policy),
 	})
 
-	res, err := conn.UpdateRestApi(&apigateway.UpdateRestApiInput{
+	res, err := conn.UpdateRestApiWithContext(ctx, &apigateway.UpdateRestApiInput{
 		RestApiId:       aws.String(restApiId),
 		PatchOperations: operations,
 	})
 
 	if err != nil {
-		return fmt.Errorf("error setting API Gateway REST API Policy %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting API Gateway REST API Policy %s", err)
 	}
 
 	log.Printf("[DEBUG] API Gateway REST API Policy Set: %s", restApiId)
 
 	d.SetId(aws.StringValue(res.Id))
 
-	return resourceRestAPIPolicyRead(d, meta)
+	return append(diags, resourceRestAPIPolicyRead(ctx, d, meta)...)
 }
 
-func resourceRestAPIPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+func resourceRestAPIPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 
 	log.Printf("[DEBUG] Reading API Gateway REST API Policy %s", d.Id())
 
-	api, err := conn.GetRestApi(&apigateway.GetRestApiInput{
+	api, err := conn.GetRestApiWithContext(ctx, &apigateway.GetRestApiInput{
 		RestApiId: aws.String(d.Id()),
 	})
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
 		log.Printf("[WARN] API Gateway REST API Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 	if err != nil {
-		return fmt.Errorf("error reading API Gateway REST API Policy (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading API Gateway REST API Policy (%s): %s", d.Id(), err)
 	}
 
 	normalizedPolicy, err := structure.NormalizeJsonString(`"` + aws.StringValue(api.Policy) + `"`)
 	if err != nil {
-		return fmt.Errorf("error normalizing API Gateway REST API policy JSON: %w", err)
+		return sdkdiag.AppendErrorf(diags, "normalizing API Gateway REST API policy JSON: %s", err)
 	}
 
 	policy, err := strconv.Unquote(normalizedPolicy)
 	if err != nil {
-		return fmt.Errorf("error unescaping API Gateway REST API policy: %w", err)
+		return sdkdiag.AppendErrorf(diags, "unescaping API Gateway REST API policy: %s", err)
 	}
 
 	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), policy)
 
 	if err != nil {
-		return fmt.Errorf("while setting policy (%s), encountered: %w", policyToSet, err)
+		return sdkdiag.AppendErrorf(diags, "while setting policy (%s), encountered: %s", policyToSet, err)
 	}
 
 	d.Set("policy", policyToSet)
 
 	d.Set("rest_api_id", api.Id)
 
-	return nil
+	return diags
 }
 
-func resourceRestAPIPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+func resourceRestAPIPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 
 	restApiId := d.Get("rest_api_id").(string)
 	log.Printf("[DEBUG] Deleting API Gateway REST API Policy: %s", restApiId)
@@ -136,16 +142,16 @@ func resourceRestAPIPolicyDelete(d *schema.ResourceData, meta interface{}) error
 		Value: aws.String(""),
 	})
 
-	_, err := conn.UpdateRestApi(&apigateway.UpdateRestApiInput{
+	_, err := conn.UpdateRestApiWithContext(ctx, &apigateway.UpdateRestApiInput{
 		RestApiId:       aws.String(restApiId),
 		PatchOperations: operations,
 	})
 
 	if err != nil {
-		return fmt.Errorf("error deleting API Gateway REST API policy: %w", err)
+		return sdkdiag.AppendErrorf(diags, "deleting API Gateway REST API policy: %s", err)
 	}
 
 	log.Printf("[DEBUG] API Gateway REST API Policy Deleted: %s", restApiId)
 
-	return nil
+	return diags
 }

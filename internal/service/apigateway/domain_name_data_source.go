@@ -1,14 +1,17 @@
 package apigateway
 
 import (
+	"context"
 	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/apigateway"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
@@ -18,7 +21,7 @@ const cloudFrontRoute53ZoneID = "Z2FDTNDATAQYW2"
 
 func DataSourceDomainName() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceDomainNameRead,
+		ReadWithoutTimeout: dataSourceDomainNameRead,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -86,8 +89,9 @@ func DataSourceDomainName() *schema.Resource {
 	}
 }
 
-func dataSourceDomainNameRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+func dataSourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &apigateway.GetDomainNameInput{}
@@ -96,10 +100,10 @@ func dataSourceDomainNameRead(d *schema.ResourceData, meta interface{}) error {
 		input.DomainName = aws.String(v.(string))
 	}
 
-	domainName, err := conn.GetDomainName(input)
+	domainName, err := conn.GetDomainNameWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error getting API Gateway Domain Name: %w", err)
+		return sdkdiag.AppendErrorf(diags, "getting API Gateway Domain Name: %s", err)
 	}
 
 	d.SetId(aws.StringValue(domainName.DomainName))
@@ -123,7 +127,7 @@ func dataSourceDomainNameRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("domain_name", domainName.DomainName)
 
 	if err := d.Set("endpoint_configuration", flattenEndpointConfiguration(domainName.EndpointConfiguration)); err != nil {
-		return fmt.Errorf("error setting endpoint_configuration: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting endpoint_configuration: %s", err)
 	}
 
 	d.Set("regional_certificate_arn", domainName.RegionalCertificateArn)
@@ -133,8 +137,8 @@ func dataSourceDomainNameRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("security_policy", domainName.SecurityPolicy)
 
 	if err := d.Set("tags", KeyValueTags(domainName.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

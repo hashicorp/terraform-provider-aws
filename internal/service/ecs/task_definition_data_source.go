@@ -1,18 +1,20 @@
 package ecs
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecs"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func DataSourceTaskDefinition() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceTaskDefinitionRead,
+		ReadWithoutTimeout: dataSourceTaskDefinitionRead,
 
 		Schema: map[string]*schema.Schema{
 			"task_definition": {
@@ -48,21 +50,22 @@ func DataSourceTaskDefinition() *schema.Resource {
 	}
 }
 
-func dataSourceTaskDefinitionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECSConn
+func dataSourceTaskDefinitionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ECSConn()
 
 	params := &ecs.DescribeTaskDefinitionInput{
 		TaskDefinition: aws.String(d.Get("task_definition").(string)),
 	}
 	log.Printf("[DEBUG] Reading ECS Task Definition: %s", params)
-	desc, err := conn.DescribeTaskDefinition(params)
+	desc, err := conn.DescribeTaskDefinitionWithContext(ctx, params)
 
 	if err != nil {
-		return fmt.Errorf("Failed getting task definition %q: %w", d.Get("task_definition").(string), err)
+		return sdkdiag.AppendErrorf(diags, "getting task definition %q: %s", d.Get("task_definition").(string), err)
 	}
 
 	if desc == nil || desc.TaskDefinition == nil {
-		return fmt.Errorf("error reading ECS Task Definition: empty response")
+		return sdkdiag.AppendErrorf(diags, "reading ECS Task Definition: empty response")
 	}
 
 	taskDefinition := desc.TaskDefinition
@@ -76,8 +79,8 @@ func dataSourceTaskDefinitionRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("task_role_arn", taskDefinition.TaskRoleArn)
 
 	if d.Id() == "" {
-		return fmt.Errorf("task definition %q not found", d.Get("task_definition").(string))
+		return sdkdiag.AppendErrorf(diags, "task definition %q not found", d.Get("task_definition").(string))
 	}
 
-	return nil
+	return diags
 }

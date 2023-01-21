@@ -9,16 +9,32 @@ import (
 	"github.com/aws/aws-sdk-go/service/transfer"
 	"github.com/aws/aws-sdk-go/service/transfer/transferiface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
+
+// GetTag fetches an individual transfer service tag for a resource.
+// Returns whether the key value and any errors. A NotFoundError is used to signal that no value was found.
+// This function will optimise the handling over ListTags, if possible.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func GetTag(ctx context.Context, conn transferiface.TransferAPI, identifier string, key string) (*string, error) {
+	listTags, err := ListTags(ctx, conn, identifier)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if !listTags.KeyExists(key) {
+		return nil, tfresource.NewEmptyResultError(nil)
+	}
+
+	return listTags.KeyValue(key), nil
+}
 
 // ListTags lists transfer service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn transferiface.TransferAPI, identifier string) (tftags.KeyValueTags, error) {
-	return ListTagsWithContext(context.Background(), conn, identifier)
-}
-
-func ListTagsWithContext(ctx context.Context, conn transferiface.TransferAPI, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(ctx context.Context, conn transferiface.TransferAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &transfer.ListTagsForResourceInput{
 		Arn: aws.String(identifier),
 	}
@@ -64,10 +80,7 @@ func KeyValueTags(tags []*transfer.Tag) tftags.KeyValueTags {
 // UpdateTags updates transfer service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn transferiface.TransferAPI, identifier string, oldTags interface{}, newTags interface{}) error {
-	return UpdateTagsWithContext(context.Background(), conn, identifier, oldTags, newTags)
-}
-func UpdateTagsWithContext(ctx context.Context, conn transferiface.TransferAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(ctx context.Context, conn transferiface.TransferAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 

@@ -17,11 +17,8 @@ import (
 // This function will optimise the handling over ListTags, if possible.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func GetTag(conn route53resolveriface.Route53ResolverAPI, identifier string, key string) (*string, error) {
-	return GetTagWithContext(context.Background(), conn, identifier, key)
-}
-func GetTagWithContext(ctx context.Context, conn route53resolveriface.Route53ResolverAPI, identifier string, key string) (*string, error) {
-	listTags, err := ListTagsWithContext(ctx, conn, identifier)
+func GetTag(ctx context.Context, conn route53resolveriface.Route53ResolverAPI, identifier string, key string) (*string, error) {
+	listTags, err := ListTags(ctx, conn, identifier)
 
 	if err != nil {
 		return nil, err
@@ -37,11 +34,7 @@ func GetTagWithContext(ctx context.Context, conn route53resolveriface.Route53Res
 // ListTags lists route53resolver service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn route53resolveriface.Route53ResolverAPI, identifier string) (tftags.KeyValueTags, error) {
-	return ListTagsWithContext(context.Background(), conn, identifier)
-}
-
-func ListTagsWithContext(ctx context.Context, conn route53resolveriface.Route53ResolverAPI, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(ctx context.Context, conn route53resolveriface.Route53ResolverAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &route53resolver.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
@@ -87,10 +80,7 @@ func KeyValueTags(tags []*route53resolver.Tag) tftags.KeyValueTags {
 // UpdateTags updates route53resolver service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn route53resolveriface.Route53ResolverAPI, identifier string, oldTags interface{}, newTags interface{}) error {
-	return UpdateTagsWithContext(context.Background(), conn, identifier, oldTags, newTags)
-}
-func UpdateTagsWithContext(ctx context.Context, conn route53resolveriface.Route53ResolverAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(ctx context.Context, conn route53resolveriface.Route53ResolverAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 

@@ -17,6 +17,7 @@ import (
 )
 
 func TestAccDSRadiusSettings_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	key := "DIRECTORY_SERVICE_RADIUS_SERVER"
 	radiusServer := os.Getenv(key)
 	if radiusServer == "" {
@@ -35,12 +36,12 @@ func TestAccDSRadiusSettings_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, directoryservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRadiusSettingsDestroy,
+		CheckDestroy:             testAccCheckRadiusSettingsDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRadiusSettingsConfig_basic(rName, domainName, radiusServer),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRadiusSettingsExists(resourceName, &v),
+					testAccCheckRadiusSettingsExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "authentication_protocol", "PAP"),
 					resource.TestCheckResourceAttr(resourceName, "display_label", "test"),
 					resource.TestCheckResourceAttr(resourceName, "radius_port", "1812"),
@@ -64,6 +65,7 @@ func TestAccDSRadiusSettings_basic(t *testing.T) {
 }
 
 func TestAccDSRadiusSettings_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	key := "DIRECTORY_SERVICE_RADIUS_SERVER"
 	radiusServer := os.Getenv(key)
 	if radiusServer == "" {
@@ -82,13 +84,13 @@ func TestAccDSRadiusSettings_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, directoryservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRadiusSettingsDestroy,
+		CheckDestroy:             testAccCheckRadiusSettingsDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRadiusSettingsConfig_basic(rName, domainName, radiusServer),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRadiusSettingsExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfds.ResourceRadiusSettings(), resourceName),
+					testAccCheckRadiusSettingsExists(ctx, resourceName, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfds.ResourceRadiusSettings(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -96,31 +98,33 @@ func TestAccDSRadiusSettings_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckRadiusSettingsDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn
+func testAccCheckRadiusSettingsDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_directory_service_radius_settings" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_directory_service_radius_settings" {
+				continue
+			}
+
+			_, err := tfds.FindRadiusSettings(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Directory Service Directory %s RADIUS settings still exists", rs.Primary.ID)
 		}
 
-		_, err := tfds.FindRadiusSettings(context.Background(), conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("Directory Service Directory %s RADIUS settings still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckRadiusSettingsExists(n string, v *directoryservice.RadiusSettings) resource.TestCheckFunc {
+func testAccCheckRadiusSettingsExists(ctx context.Context, n string, v *directoryservice.RadiusSettings) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -131,9 +135,9 @@ func testAccCheckRadiusSettingsExists(n string, v *directoryservice.RadiusSettin
 			return fmt.Errorf("No Directory Service RADIUS Settings ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn()
 
-		output, err := tfds.FindRadiusSettings(context.Background(), conn, rs.Primary.ID)
+		output, err := tfds.FindRadiusSettings(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

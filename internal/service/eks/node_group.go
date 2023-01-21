@@ -23,12 +23,12 @@ import (
 
 func ResourceNodeGroup() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceNodeGroupCreate,
-		ReadContext:   resourceNodeGroupRead,
-		UpdateContext: resourceNodeGroupUpdate,
-		DeleteContext: resourceNodeGroupDelete,
+		CreateWithoutTimeout: resourceNodeGroupCreate,
+		ReadWithoutTimeout:   resourceNodeGroupRead,
+		UpdateWithoutTimeout: resourceNodeGroupUpdate,
+		DeleteWithoutTimeout: resourceNodeGroupDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -285,7 +285,7 @@ func ResourceNodeGroup() *schema.Resource {
 }
 
 func resourceNodeGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EKSConn
+	conn := meta.(*conns.AWSClient).EKSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -353,7 +353,7 @@ func resourceNodeGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	_, err := conn.CreateNodegroup(input)
+	_, err := conn.CreateNodegroupWithContext(ctx, input)
 
 	if err != nil {
 		return diag.Errorf("error creating EKS Node Group (%s): %s", id, err)
@@ -371,7 +371,7 @@ func resourceNodeGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EKSConn
+	conn := meta.(*conns.AWSClient).EKSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -381,7 +381,7 @@ func resourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 		return diag.FromErr(err)
 	}
 
-	nodeGroup, err := FindNodegroupByClusterNameAndNodegroupName(conn, clusterName, nodeGroupName)
+	nodeGroup, err := FindNodegroupByClusterNameAndNodegroupName(ctx, conn, clusterName, nodeGroupName)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EKS Node Group (%s) not found, removing from state", d.Id())
@@ -467,7 +467,7 @@ func resourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EKSConn
+	conn := meta.(*conns.AWSClient).EKSConn()
 
 	clusterName, nodeGroupName, err := NodeGroupParseResourceID(d.Id())
 
@@ -512,7 +512,7 @@ func resourceNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 			input.Version = aws.String(v.(string))
 		}
 
-		output, err := conn.UpdateNodegroupVersion(input)
+		output, err := conn.UpdateNodegroupVersionWithContext(ctx, input)
 
 		if err != nil {
 			return diag.Errorf("error updating EKS Node Group (%s) version: %s", d.Id(), err)
@@ -551,7 +551,7 @@ func resourceNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 			}
 		}
 
-		output, err := conn.UpdateNodegroupConfig(input)
+		output, err := conn.UpdateNodegroupConfigWithContext(ctx, input)
 
 		if err != nil {
 			return diag.Errorf("error updating EKS Node Group (%s) config: %s", d.Id(), err)
@@ -568,7 +568,7 @@ func resourceNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.Errorf("error updating tags: %s", err)
 		}
 	}
@@ -577,7 +577,7 @@ func resourceNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceNodeGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EKSConn
+	conn := meta.(*conns.AWSClient).EKSConn()
 
 	clusterName, nodeGroupName, err := NodeGroupParseResourceID(d.Id())
 
@@ -586,7 +586,7 @@ func resourceNodeGroupDelete(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	log.Printf("[DEBUG] Deleting EKS Node Group: %s", d.Id())
-	_, err = conn.DeleteNodegroup(&eks.DeleteNodegroupInput{
+	_, err = conn.DeleteNodegroupWithContext(ctx, &eks.DeleteNodegroupInput{
 		ClusterName:   aws.String(clusterName),
 		NodegroupName: aws.String(nodeGroupName),
 	})

@@ -30,7 +30,7 @@ func ResourceTransitGatewayConnectPeer() *schema.Resource {
 		DeleteWithoutTimeout: resourceTransitGatewayConnectPeerDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -50,7 +50,7 @@ func ResourceTransitGatewayConnectPeer() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
-				ValidateFunc: valid4ByteASN,
+				ValidateFunc: verify.Valid4ByteASN,
 			},
 			"inside_cidr_blocks": {
 				Type:     schema.TypeSet,
@@ -98,7 +98,7 @@ func ResourceTransitGatewayConnectPeer() *schema.Resource {
 }
 
 func resourceTransitGatewayConnectPeerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -134,7 +134,7 @@ func resourceTransitGatewayConnectPeerCreate(ctx context.Context, d *schema.Reso
 
 	d.SetId(aws.StringValue(output.TransitGatewayConnectPeer.TransitGatewayConnectPeerId))
 
-	if _, err := WaitTransitGatewayConnectPeerCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := WaitTransitGatewayConnectPeerCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return diag.Errorf("waiting for EC2 Transit Gateway Connect Peer (%s) create: %s", d.Id(), err)
 	}
 
@@ -142,11 +142,11 @@ func resourceTransitGatewayConnectPeerCreate(ctx context.Context, d *schema.Reso
 }
 
 func resourceTransitGatewayConnectPeerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	transitGatewayConnectPeer, err := FindTransitGatewayConnectPeerByID(conn, d.Id())
+	transitGatewayConnectPeer, err := FindTransitGatewayConnectPeerByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Transit Gateway Connect Peer %s not found, removing from state", d.Id())
@@ -187,12 +187,12 @@ func resourceTransitGatewayConnectPeerRead(ctx context.Context, d *schema.Resour
 }
 
 func resourceTransitGatewayConnectPeerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
 			return diag.Errorf("updating EC2 Transit Gateway Connect Peer (%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -201,7 +201,7 @@ func resourceTransitGatewayConnectPeerUpdate(ctx context.Context, d *schema.Reso
 }
 
 func resourceTransitGatewayConnectPeerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	log.Printf("[DEBUG] Deleting EC2 Transit Gateway Connect Peer: %s", d.Id())
 	_, err := conn.DeleteTransitGatewayConnectPeerWithContext(ctx, &ec2.DeleteTransitGatewayConnectPeerInput{
@@ -216,7 +216,7 @@ func resourceTransitGatewayConnectPeerDelete(ctx context.Context, d *schema.Reso
 		return diag.Errorf("deleting EC2 Transit Gateway Connect Peer: %s", err)
 	}
 
-	if _, err := WaitTransitGatewayConnectPeerDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err := WaitTransitGatewayConnectPeerDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return diag.Errorf("waiting for EC2 Transit Gateway Connect Peer (%s) delete: %s", d.Id(), err)
 	}
 

@@ -2,6 +2,7 @@ package redshift
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"log"
 	"regexp"
@@ -11,22 +12,24 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceParameterGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceParameterGroupCreate,
-		Read:   resourceParameterGroupRead,
-		Update: resourceParameterGroupUpdate,
-		Delete: resourceParameterGroupDelete,
+		CreateWithoutTimeout: resourceParameterGroupCreate,
+		ReadWithoutTimeout:   resourceParameterGroupRead,
+		UpdateWithoutTimeout: resourceParameterGroupUpdate,
+		DeleteWithoutTimeout: resourceParameterGroupDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -87,8 +90,9 @@ func ResourceParameterGroup() *schema.Resource {
 	}
 }
 
-func resourceParameterGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -100,9 +104,9 @@ func resourceParameterGroupCreate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	log.Printf("[DEBUG] Create Redshift Parameter Group: %#v", createOpts)
-	_, err := conn.CreateClusterParameterGroup(&createOpts)
+	_, err := conn.CreateClusterParameterGroupWithContext(ctx, &createOpts)
 	if err != nil {
-		return fmt.Errorf("Error creating Redshift Parameter Group: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Redshift Parameter Group: %s", err)
 	}
 
 	d.SetId(aws.StringValue(createOpts.ParameterGroupName))
@@ -115,16 +119,17 @@ func resourceParameterGroupCreate(d *schema.ResourceData, meta interface{}) erro
 			Parameters:         parameters,
 		}
 
-		if _, err := conn.ModifyClusterParameterGroup(&modifyOpts); err != nil {
-			return fmt.Errorf("adding Redshift Parameter Group (%s) parameters: %s", d.Id(), err)
+		if _, err := conn.ModifyClusterParameterGroupWithContext(ctx, &modifyOpts); err != nil {
+			return sdkdiag.AppendErrorf(diags, "adding Redshift Parameter Group (%s) parameters: %s", d.Id(), err)
 		}
 	}
 
-	return resourceParameterGroupRead(d, meta)
+	return append(diags, resourceParameterGroupRead(ctx, d, meta)...)
 }
 
-func resourceParameterGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -132,15 +137,15 @@ func resourceParameterGroupRead(d *schema.ResourceData, meta interface{}) error 
 		ParameterGroupName: aws.String(d.Id()),
 	}
 
-	describeResp, err := conn.DescribeClusterParameterGroups(&describeOpts)
+	describeResp, err := conn.DescribeClusterParameterGroupsWithContext(ctx, &describeOpts)
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading Redshift Parameter Group (%s): %s", d.Id(), err)
 	}
 
 	if len(describeResp.ParameterGroups) != 1 ||
 		aws.StringValue(describeResp.ParameterGroups[0].ParameterGroupName) != d.Id() {
 		d.SetId("")
-		return fmt.Errorf("Unable to find Parameter Group: %#v", describeResp.ParameterGroups)
+		return sdkdiag.AppendErrorf(diags, "Unable to find Parameter Group: %#v", describeResp.ParameterGroups)
 	}
 
 	arn := arn.ARN{
@@ -160,11 +165,11 @@ func resourceParameterGroupRead(d *schema.ResourceData, meta interface{}) error 
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
 	describeParametersOpts := redshift.DescribeClusterParametersInput{
@@ -172,17 +177,18 @@ func resourceParameterGroupRead(d *schema.ResourceData, meta interface{}) error 
 		Source:             aws.String("user"),
 	}
 
-	describeParametersResp, err := conn.DescribeClusterParameters(&describeParametersOpts)
+	describeParametersResp, err := conn.DescribeClusterParametersWithContext(ctx, &describeParametersOpts)
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading Redshift Parameter Group (%s): %s", d.Id(), err)
 	}
 
 	d.Set("parameter", FlattenParameters(describeParametersResp.Parameters))
-	return nil
+	return diags
 }
 
-func resourceParameterGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 
 	if d.HasChange("parameter") {
 		o, n := d.GetChange("parameter")
@@ -206,9 +212,9 @@ func resourceParameterGroupUpdate(d *schema.ResourceData, meta interface{}) erro
 			}
 
 			log.Printf("[DEBUG] Modify Redshift Parameter Group: %s", modifyOpts)
-			_, err := conn.ModifyClusterParameterGroup(&modifyOpts)
+			_, err := conn.ModifyClusterParameterGroupWithContext(ctx, &modifyOpts)
 			if err != nil {
-				return fmt.Errorf("Error modifying Redshift Parameter Group: %s", err)
+				return sdkdiag.AppendErrorf(diags, "modifying Redshift Parameter Group: %s", err)
 			}
 		}
 	}
@@ -216,24 +222,25 @@ func resourceParameterGroupUpdate(d *schema.ResourceData, meta interface{}) erro
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("updating Redshift Parameter Group (%s) tags: %s", d.Get("arn").(string), err)
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Redshift Parameter Group (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
 
-	return resourceParameterGroupRead(d, meta)
+	return append(diags, resourceParameterGroupRead(ctx, d, meta)...)
 }
 
-func resourceParameterGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+func resourceParameterGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 
-	_, err := conn.DeleteClusterParameterGroup(&redshift.DeleteClusterParameterGroupInput{
+	_, err := conn.DeleteClusterParameterGroupWithContext(ctx, &redshift.DeleteClusterParameterGroupInput{
 		ParameterGroupName: aws.String(d.Id()),
 	})
 	if err != nil && tfawserr.ErrCodeEquals(err, "RedshiftParameterGroupNotFoundFault") {
-		return nil
+		return diags
 	}
-	return err
+	return sdkdiag.AppendErrorf(diags, "deleting Redshift Parameter Group (%s): %s", d.Id(), err)
 }
 
 func resourceParameterHash(v interface{}) int {

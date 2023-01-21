@@ -1,23 +1,24 @@
 package ssoadmin
 
 import (
-	"errors"
-	"fmt"
+	"context"
 	"regexp"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func DataSourcePermissionSet() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourcePermissionSetRead,
+		ReadWithoutTimeout: dataSourcePermissionSetRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -70,8 +71,9 @@ func DataSourcePermissionSet() *schema.Resource {
 	}
 }
 
-func dataSourcePermissionSetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSOAdminConn
+func dataSourcePermissionSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SSOAdminConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	instanceArn := d.Get("instance_arn").(string)
@@ -86,13 +88,13 @@ func dataSourcePermissionSetRead(d *schema.ResourceData, meta interface{}) error
 			PermissionSetArn: aws.String(arn),
 		}
 
-		output, err := conn.DescribePermissionSet(input)
+		output, err := conn.DescribePermissionSetWithContext(ctx, input)
 		if err != nil {
-			return fmt.Errorf("error reading SSO Admin Permission Set (%s): %w", arn, err)
+			return sdkdiag.AppendErrorf(diags, "reading SSO Admin Permission Set (%s): %s", arn, err)
 		}
 
 		if output == nil {
-			return fmt.Errorf("error reading SSO Admin Permission Set (%s): empty output", arn)
+			return sdkdiag.AppendErrorf(diags, "reading SSO Admin Permission Set (%s): empty output", arn)
 		}
 
 		permissionSet = output.PermissionSet
@@ -104,7 +106,7 @@ func dataSourcePermissionSetRead(d *schema.ResourceData, meta interface{}) error
 			InstanceArn: aws.String(instanceArn),
 		}
 
-		err := conn.ListPermissionSetsPages(input, func(page *ssoadmin.ListPermissionSetsOutput, lastPage bool) bool {
+		err := conn.ListPermissionSetsPagesWithContext(ctx, input, func(page *ssoadmin.ListPermissionSetsOutput, lastPage bool) bool {
 			if page == nil {
 				return !lastPage
 			}
@@ -114,7 +116,7 @@ func dataSourcePermissionSetRead(d *schema.ResourceData, meta interface{}) error
 					continue
 				}
 
-				output, describeErr := conn.DescribePermissionSet(&ssoadmin.DescribePermissionSetInput{
+				output, describeErr := conn.DescribePermissionSetWithContext(ctx, &ssoadmin.DescribePermissionSetInput{
 					InstanceArn:      aws.String(instanceArn),
 					PermissionSetArn: permissionSetArn,
 				})
@@ -137,16 +139,16 @@ func dataSourcePermissionSetRead(d *schema.ResourceData, meta interface{}) error
 		})
 
 		if err != nil {
-			return fmt.Errorf("error listing SSO Permission Sets: %w", err)
+			return sdkdiag.AppendErrorf(diags, "listing SSO Permission Sets: %s", err)
 		}
 
 		if describeErr != nil {
-			return fmt.Errorf("error reading SSO Permission Set (%s): %w", name, describeErr)
+			return sdkdiag.AppendErrorf(diags, "reading SSO Permission Set (%s): %s", name, describeErr)
 		}
 	}
 
 	if permissionSet == nil {
-		return errors.New("error reading SSO Permission Set: not found")
+		return sdkdiag.AppendErrorf(diags, "reading SSO Permission Set: not found")
 	}
 
 	arn := aws.StringValue(permissionSet.PermissionSetArn)
@@ -160,14 +162,14 @@ func dataSourcePermissionSetRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("session_duration", permissionSet.SessionDuration)
 	d.Set("relay_state", permissionSet.RelayState)
 
-	tags, err := ListTags(conn, arn, instanceArn)
+	tags, err := ListTags(ctx, conn, arn, instanceArn)
 	if err != nil {
-		return fmt.Errorf("error listing tags for SSO Permission Set (%s): %w", arn, err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for SSO Permission Set (%s): %s", arn, err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

@@ -7,16 +7,16 @@ import (
 	"bufio"
 	"bytes"
 	_ "embed"
-	"encoding/csv"
+	"errors"
 	"fmt"
 	"io"
-	"log"
+	"io/fs"
 	"os"
 	"regexp"
 	"sort"
 	"strings"
-	"text/template"
 
+	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -26,12 +26,13 @@ var header string
 //go:embed configs.tmpl
 var configs string
 
+//go:embed cae.tmpl
+var tmplCAE string
+
+//go:embed service.tmpl
+var tmpl string
+
 const (
-	filename            = `../../../.ci/.semgrep-service-name.yml`
-	filenameCAE         = `../../../.ci/.semgrep-caps-aws-ec2.yml`
-	filenameConfigs     = `../../../.ci/.semgrep-configs.yml`
-	namesDataFile       = "../../../names/names_data.csv"
-	capsDataFile        = "../../../names/caps.csv"
 	maxBadCaps          = 21
 	semgrepConfigChunks = 4
 )
@@ -53,36 +54,57 @@ type CAEData struct {
 }
 
 func main() {
-	fmt.Printf("Generating %s\n", strings.TrimPrefix(filenameCAE, "../../../"))
+	const (
+		filename        = `../../../.ci/.semgrep-service-name.yml`
+		filenameCAE     = `../../../.ci/.semgrep-caps-aws-ec2.yml`
+		filenameConfigs = `../../../.ci/.semgrep-configs.yml`
+		namesDataFile   = "../../../names/names_data.csv"
+		capsDataFile    = "../../../names/caps.csv"
+	)
+	g := common.NewGenerator()
 
-	badCaps := readBadCaps()
+	g.Infof("Generating %s", strings.TrimPrefix(filenameCAE, "../../../"))
+
+	badCaps, err := readBadCaps(capsDataFile)
+
+	if err != nil {
+		g.Fatalf("error reading %s: %s", capsDataFile, err)
+	}
 
 	cd := CAEData{}
 	cd.BadCaps = badCaps
 
-	writeCAE(tmplCAE, "caps-aws-ec2", cd)
+	d := g.NewUnformattedFileDestination(filenameCAE)
 
-	fmt.Printf("Generating %s\n", strings.TrimPrefix(filenameConfigs, "../../../"))
+	if err := d.WriteTemplate("caps-aws-ec2", tmplCAE, cd); err != nil {
+		g.Fatalf("generating file (%s): %s", filenameCAE, err)
+	}
 
-	writeConfigs()
+	if err := d.Write(); err != nil {
+		g.Fatalf("generating file (%s): %s", filenameCAE, err)
+	}
 
-	fmt.Printf("Generating %s\n", strings.TrimPrefix(filename, "../../../"))
+	g.Infof("Generating %s", strings.TrimPrefix(filenameConfigs, "../../../"))
+
+	d = g.NewUnformattedFileDestination(filenameConfigs)
+
+	if err := d.WriteBytes([]byte(configs)); err != nil {
+		g.Fatalf("generating file (%s): %s", filenameConfigs, err)
+	}
+
+	if err := d.Write(); err != nil {
+		g.Fatalf("generating file (%s): %s", filenameConfigs, err)
+	}
+
+	g.Infof("Generating %s", strings.TrimPrefix(filename, "../../../"))
+
+	data, err := common.ReadAllCSVData(namesDataFile)
+
+	if err != nil {
+		g.Fatalf("error reading %s: %s", namesDataFile, err)
+	}
 
 	td := TemplateData{}
-
-	f, err := os.Open(namesDataFile)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	defer f.Close()
-
-	csvReader := csv.NewReader(f)
-
-	data, err := csvReader.ReadAll()
-	if err != nil {
-		log.Fatal(err)
-	}
 
 	for i, l := range data {
 		if i < 1 { // no header
@@ -109,7 +131,7 @@ func main() {
 			rp = l[names.ColSplitPackageRealPackage]
 		}
 
-		if _, err := os.Stat(fmt.Sprintf("../../service/%s", rp)); err != nil || os.IsNotExist(err) {
+		if _, err := os.Stat(fmt.Sprintf("../../service/%s", rp)); err != nil || errors.Is(err, fs.ErrNotExist) {
 			continue
 		}
 
@@ -155,30 +177,32 @@ func main() {
 		return td.Services[i].LowerAlias < td.Services[j].LowerAlias
 	})
 
-	writeTemplate(tmpl, "servicesemgrep", td)
+	d = g.NewUnformattedFileDestination(filename)
 
-	breakUpBigFile()
+	if err := d.WriteTemplate("servicesemgrep", tmpl, td); err != nil {
+		g.Fatalf("generating file (%s): %s", filename, err)
+	}
 
-	fmt.Printf("  Removing %s\n", strings.TrimPrefix(filename, "../../../"))
+	if err := d.Write(); err != nil {
+		g.Fatalf("generating file (%s): %s", filename, err)
+	}
+
+	if err := breakUpBigFile(g, filename, header); err != nil {
+		g.Fatalf("error: %s", err)
+	}
+
+	g.Infof("  Removing %s", strings.TrimPrefix(filename, "../../../"))
+
 	err = os.Remove(filename)
 	if err != nil {
-		log.Fatal(err)
+		g.Fatalf("error: %s", err)
 	}
 }
 
-func readBadCaps() []string {
-	cf, err := os.Open(capsDataFile)
+func readBadCaps(capsDataFile string) ([]string, error) {
+	caps, err := common.ReadAllCSVData(capsDataFile)
 	if err != nil {
-		log.Fatal(err)
-	}
-
-	defer cf.Close()
-
-	csvReader := csv.NewReader(cf)
-
-	caps, err := csvReader.ReadAll()
-	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
 	var capsList []string
@@ -223,97 +247,24 @@ func readBadCaps() []string {
 		strChunks = append(strChunks, strings.Join(v, "|"))
 	}
 
-	return strChunks
+	return strChunks, nil
 }
 
-func writeCAE(body string, templateName string, cd CAEData) {
-	// If the file doesn't exist, create it, or append to the file
-	f, err := os.OpenFile(filenameCAE, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
-	if err != nil {
-		log.Fatalf("error opening file (%s): %s", filename, err)
-	}
-
-	tplate, err := template.New(templateName).Parse(body)
-	if err != nil {
-		log.Fatalf("error parsing template: %s", err)
-	}
-
-	var buffer bytes.Buffer
-	err = tplate.Execute(&buffer, cd)
-	if err != nil {
-		log.Fatalf("error executing template: %s", err)
-	}
-
-	if _, err := f.Write(buffer.Bytes()); err != nil {
-		f.Close()
-		log.Fatalf("error writing to file (%s): %s", filename, err)
-	}
-
-	if err := f.Close(); err != nil {
-		log.Fatalf("error closing file (%s): %s", filename, err)
-	}
-}
-
-func writeConfigs() {
-	// If the file doesn't exist, create it, or append to the file
-	f, err := os.OpenFile(filenameConfigs, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
-	if err != nil {
-		log.Fatalf("error opening file (%s): %s", filename, err)
-	}
-
-	if _, err := f.Write([]byte(configs)); err != nil {
-		f.Close()
-		log.Fatalf("error writing to file (%s): %s", filename, err)
-	}
-
-	if err := f.Close(); err != nil {
-		log.Fatalf("error closing file (%s): %s", filename, err)
-	}
-}
-
-func writeTemplate(body string, templateName string, td TemplateData) {
-	// If the file doesn't exist, create it, or append to the file
-	f, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
-	if err != nil {
-		log.Fatalf("error opening file (%s): %s", filename, err)
-	}
-
-	tplate, err := template.New(templateName).Parse(body)
-	if err != nil {
-		log.Fatalf("error parsing template: %s", err)
-	}
-
-	var buffer bytes.Buffer
-	err = tplate.Execute(&buffer, td)
-	if err != nil {
-		log.Fatalf("error executing template: %s", err)
-	}
-
-	if _, err := f.Write(buffer.Bytes()); err != nil {
-		f.Close()
-		log.Fatalf("error writing to file (%s): %s", filename, err)
-	}
-
-	if err := f.Close(); err != nil {
-		log.Fatalf("error closing file (%s): %s", filename, err)
-	}
-}
-
-func breakUpBigFile() {
+func breakUpBigFile(g *common.Generator, filename, header string) error {
 	f, err := os.Open(filename)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 	defer f.Close()
 
 	lines, err := lineCounter(f)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	_, err = f.Seek(0, 0)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	scanner := bufio.NewScanner(f)
@@ -344,19 +295,19 @@ func breakUpBigFile() {
 			}
 
 			cfile = fmt.Sprintf("%s%d.yml", strings.TrimSuffix(filename, ".yml"), chunk)
-			fmt.Printf("  Splitting into %s\n", strings.TrimPrefix(cfile, "../../../"))
+			g.Infof("  Splitting into %s", strings.TrimPrefix(cfile, "../../../"))
 			chunk++
 
 			var err error
 			piece, err = os.OpenFile(cfile, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
 			if err != nil {
-				log.Fatalf("error opening file (%s): %s", cfile, err)
+				return fmt.Errorf("opening file (%s): %s", cfile, err)
 			}
 
 			w = bufio.NewWriter(piece)
 			_, err = w.WriteString(header)
 			if err != nil {
-				log.Fatalf("error writing header to file (%s): %s", cfile, err)
+				return fmt.Errorf("writing header to file (%s): %s", cfile, err)
 			}
 			w.Flush()
 		}
@@ -364,7 +315,7 @@ func breakUpBigFile() {
 		if w != nil {
 			_, err = w.WriteString(fmt.Sprintf("%s\n", scanner.Text()))
 			if err != nil {
-				log.Fatalf("error writing to file (%s): %s", cfile, err)
+				return fmt.Errorf("writing to file (%s): %s", cfile, err)
 			}
 		}
 
@@ -374,6 +325,8 @@ func breakUpBigFile() {
 	if w != nil {
 		w.Flush()
 	}
+
+	return nil
 }
 
 func lineCounter(r io.Reader) (int, error) {
@@ -394,222 +347,3 @@ func lineCounter(r io.Reader) (int, error) {
 		}
 	}
 }
-
-var tmplCAE = `# Generated by internal/generate/servicesemgrep/main.go; DO NOT EDIT.
-rules:
-  - id: aws-in-func-name
-    languages:
-      - go
-    message: Do not use "AWS" in func name inside AWS Provider
-    paths:
-      include:
-        - internal
-    patterns:
-      - pattern: func $NAME( ... ) { ... }
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)AWS"
-    severity: WARNING
-  - id: aws-in-const-name
-    languages:
-      - go
-    message: Do not use "AWS" in const name inside AWS Provider
-    paths:
-      include:
-        - internal
-    patterns:
-      - pattern: const $NAME = ...
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)AWS"
-    severity: WARNING
-  - id: aws-in-var-name
-    languages:
-      - go
-    message: Do not use "AWS" in var name inside AWS Provider
-    paths:
-      include:
-        - internal
-    patterns:
-      - pattern: var $NAME = ...
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)AWS"
-    severity: WARNING
-{{- range $i, $s := .BadCaps }}
-  - id: caps{{- $i }}-in-func-name
-    languages:
-      - go
-    message: Use correct caps in func name (i.e., HTTPS or https, not Https) (see list at https://github.com/hashicorp/terraform-provider-aws/tree/main/names/caps.md)
-    paths:
-      include:
-        - internal
-    patterns:
-      - pattern: func $NAME( ... ) { ... }
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "({{ $s }})"
-    severity: WARNING
-  - id: caps{{- $i }}-in-const-name
-    languages:
-      - go
-    message: Use correct caps in const name (i.e., HTTPS or https, not Https) (see list at https://github.com/hashicorp/terraform-provider-aws/tree/main/names/caps.md)
-    paths:
-      include:
-        - internal
-    patterns:
-      - pattern: const $NAME = ...
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "({{ $s }})"
-    severity: WARNING
-  - id: caps{{- $i }}-in-var-name
-    languages:
-      - go
-    message: Use correct caps in var name (i.e., HTTPS or https, not Https) (see list at https://github.com/hashicorp/terraform-provider-aws/tree/main/names/caps.md)
-    paths:
-      include:
-        - internal
-    patterns:
-      - pattern: var $NAME = ...
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "({{ $s }})"
-    severity: WARNING
-{{- end }}
-  - id: ec2-in-func-name
-    languages:
-      - go
-    message: Do not use "EC2" in func name inside ec2 package
-    paths:
-      include:
-        - internal/service/ec2
-    patterns:
-      - pattern: func $NAME( ... ) { ... }
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)EC2"
-            - pattern-not-regex: ^TestAcc.*
-    severity: WARNING
-  - id: ec2-in-const-name
-    languages:
-      - go
-    message: Do not use "EC2" in const name inside ec2 package
-    paths:
-      include:
-        - internal/service/ec2
-    patterns:
-      - pattern: const $NAME = ...
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)EC2"
-    severity: WARNING
-  - id: ec2-in-var-name
-    languages:
-      - go
-    message: Do not use "EC2" in var name inside ec2 package
-    paths:
-      include:
-        - internal/service/ec2
-    patterns:
-      - pattern: var $NAME = ...
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)EC2"
-    severity: WARNING
-`
-
-var tmpl = `{{- range .Services }}
-{{- if not .FilePrefix }}
-  - id: {{ .LowerAlias }}-in-func-name
-    languages:
-      - go
-    message: Do not use "{{ .ServiceAlias }}" in func name inside {{ .ProviderPackage }} package
-    paths:
-      include:
-        - internal/service/{{ .ProviderPackage }}
-    patterns:
-      - pattern: func $NAME( ... ) { ... }
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i){{ .ServiceAlias }}"
-            {{- if eq .ServiceAlias "Deploy" }}
-            - pattern-not-regex: Deployment(Group|Config|Style)
-            {{- end }}
-            {{- if eq .ServiceAlias "CE" }}
-            - pattern-not-regex: ource
-            {{- end }}
-            {{- if eq .ServiceAlias "Connect" }}
-            - pattern-not-regex: .*uickConnect.*
-            {{- end }}
-            {{- if eq .ServiceAlias "CloudTrail" }}
-            - pattern-not-regex: ^testAccCloudTrailConfig_.*
-            {{- end }}
-            - pattern-not-regex: ^TestAcc.*
-    severity: WARNING
-{{- end }}
-{{- if .MainAlias }}
-  - id: {{ .LowerAlias }}-in-test-name
-    languages:
-      - go
-    message: Include "{{ .ServiceAlias }}" in test name
-    paths:
-      include:
-        - internal/service/{{ .ProviderPackage }}/{{ .FilePrefix }}*_test.go
-    patterns:
-      - pattern: func $NAME( ... ) { ... }
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-not-regex: "^TestAcc{{ .ServiceAlias }}"
-            - pattern-regex: ^TestAcc.*
-    severity: WARNING
-{{- end }}
-{{- if not .FilePrefix }}
-  - id: {{ .LowerAlias }}-in-const-name
-    languages:
-      - go
-    message: Do not use "{{ .ServiceAlias }}" in const name inside {{ .ProviderPackage }} package
-    paths:
-      include:
-        - internal/service/{{ .ProviderPackage }}
-    patterns:
-      - pattern: const $NAME = ...
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i){{ .ServiceAlias }}"
-            {{- if eq .ServiceAlias "Connect" }}
-            - pattern-not-regex: .*uickConnect.*
-            {{- end }}
-    severity: WARNING
-  - id: {{ .LowerAlias }}-in-var-name
-    languages:
-      - go
-    message: Do not use "{{ .ServiceAlias }}" in var name inside {{ .ProviderPackage }} package
-    paths:
-      include:
-        - internal/service/{{ .ProviderPackage }}
-    patterns:
-      - pattern: var $NAME = ...
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i){{ .ServiceAlias }}"
-            {{- if eq .ServiceAlias "Connect" }}
-            - pattern-not-regex: .*uickConnect.*
-            {{- end }}
-    severity: WARNING
-{{- end }}
-{{- end }}
-`

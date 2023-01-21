@@ -1,6 +1,7 @@
 package storagegateway
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -8,18 +9,20 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceUploadBuffer() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceUploadBufferCreate,
-		Read:   resourceUploadBufferRead,
-		Delete: schema.Noop,
+		CreateWithoutTimeout: resourceUploadBufferCreate,
+		ReadWithoutTimeout:   resourceUploadBufferRead,
+		DeleteWithoutTimeout: schema.NoopContext,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -47,8 +50,9 @@ func ResourceUploadBuffer() *schema.Resource {
 	}
 }
 
-func resourceUploadBufferCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).StorageGatewayConn
+func resourceUploadBufferCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).StorageGatewayConn()
 
 	input := &storagegateway.AddUploadBufferInput{}
 
@@ -65,85 +69,86 @@ func resourceUploadBufferCreate(d *schema.ResourceData, meta interface{}) error 
 		input.GatewayARN = aws.String(v.(string))
 	}
 
-	output, err := conn.AddUploadBuffer(input)
+	output, err := conn.AddUploadBufferWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error adding Storage Gateway upload buffer: %w", err)
+		return sdkdiag.AppendErrorf(diags, "adding Storage Gateway upload buffer: %s", err)
 	}
 
 	if output == nil {
-		return fmt.Errorf("error adding Storage Gateway upload buffer: empty response")
+		return sdkdiag.AppendErrorf(diags, "adding Storage Gateway upload buffer: empty response")
 	}
 
 	if v, ok := d.GetOk("disk_id"); ok {
 		d.SetId(fmt.Sprintf("%s:%s", aws.StringValue(output.GatewayARN), v.(string)))
 
-		return resourceUploadBufferRead(d, meta)
+		return append(diags, resourceUploadBufferRead(ctx, d, meta)...)
 	}
 
-	disk, err := FindLocalDiskByDiskPath(conn, aws.StringValue(output.GatewayARN), aws.StringValue(input.DiskIds[0]))
+	disk, err := FindLocalDiskByDiskPath(ctx, conn, aws.StringValue(output.GatewayARN), aws.StringValue(input.DiskIds[0]))
 
 	if err != nil {
-		return fmt.Errorf("error listing Storage Gateway Local Disks after creating Upload Buffer: %w", err)
+		return sdkdiag.AppendErrorf(diags, "listing Storage Gateway Local Disks after creating Upload Buffer: %s", err)
 	}
 
 	if disk == nil {
-		return fmt.Errorf("error listing Storage Gateway Local Disks after creating Upload Buffer: disk not found")
+		return sdkdiag.AppendErrorf(diags, "listing Storage Gateway Local Disks after creating Upload Buffer: disk not found")
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", aws.StringValue(output.GatewayARN), aws.StringValue(disk.DiskId)))
 
-	return resourceUploadBufferRead(d, meta)
+	return append(diags, resourceUploadBufferRead(ctx, d, meta)...)
 }
 
-func resourceUploadBufferRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).StorageGatewayConn
+func resourceUploadBufferRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).StorageGatewayConn()
 
 	gatewayARN, diskID, err := DecodeUploadBufferID(d.Id())
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading Storage Gateway Upload Buffer (%s): %s", d.Id(), err)
 	}
 
-	foundDiskID, err := FindUploadBufferDisk(conn, gatewayARN, diskID)
+	foundDiskID, err := FindUploadBufferDisk(ctx, conn, gatewayARN, diskID)
 
 	if !d.IsNewResource() && IsErrGatewayNotFound(err) {
 		log.Printf("[WARN] Storage Gateway Upload Buffer (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Storage Gateway Upload Buffer (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Storage Gateway Upload Buffer (%s): %s", d.Id(), err)
 	}
 
 	if foundDiskID == nil {
 		if d.IsNewResource() {
-			return fmt.Errorf("error reading Storage Gateway Upload Buffer (%s): not found", d.Id())
+			return sdkdiag.AppendErrorf(diags, "reading Storage Gateway Upload Buffer (%s): not found", d.Id())
 		}
 
 		log.Printf("[WARN] Storage Gateway Upload Buffer (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	d.Set("disk_id", foundDiskID)
 	d.Set("gateway_arn", gatewayARN)
 
 	if _, ok := d.GetOk("disk_path"); !ok {
-		disk, err := FindLocalDiskByDiskID(conn, gatewayARN, aws.StringValue(foundDiskID))
+		disk, err := FindLocalDiskByDiskID(ctx, conn, gatewayARN, aws.StringValue(foundDiskID))
 
 		if err != nil {
-			return fmt.Errorf("error listing Storage Gateway Local Disks: %w", err)
+			return sdkdiag.AppendErrorf(diags, "listing Storage Gateway Local Disks: %s", err)
 		}
 
 		if disk == nil {
-			return fmt.Errorf("error listing Storage Gateway Local Disks: disk not found")
+			return sdkdiag.AppendErrorf(diags, "listing Storage Gateway Local Disks: disk not found")
 		}
 
 		d.Set("disk_path", disk.DiskPath)
 	}
 
-	return nil
+	return diags
 }
 
 func DecodeUploadBufferID(id string) (string, string, error) {

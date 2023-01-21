@@ -1,25 +1,26 @@
 package pinpoint
 
 import (
-	"errors"
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/pinpoint"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func ResourceAPNSChannel() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAPNSChannelUpsert,
-		Read:   resourceAPNSChannelRead,
-		Update: resourceAPNSChannelUpsert,
-		Delete: resourceAPNSChannelDelete,
+		CreateWithoutTimeout: resourceAPNSChannelUpsert,
+		ReadWithoutTimeout:   resourceAPNSChannelRead,
+		UpdateWithoutTimeout: resourceAPNSChannelUpsert,
+		DeleteWithoutTimeout: resourceAPNSChannelDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -71,7 +72,8 @@ func ResourceAPNSChannel() *schema.Resource {
 	}
 }
 
-func resourceAPNSChannelUpsert(d *schema.ResourceData, meta interface{}) error {
+func resourceAPNSChannelUpsert(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	certificate, certificateOk := d.GetOk("certificate")
 	privateKey, privateKeyOk := d.GetOk("private_key")
 
@@ -81,10 +83,10 @@ func resourceAPNSChannelUpsert(d *schema.ResourceData, meta interface{}) error {
 	tokenKeyId, tokenKeyIdOk := d.GetOk("token_key_id")
 
 	if !(certificateOk && privateKeyOk) && !(bundleIdOk && teamIdOk && tokenKeyOk && tokenKeyIdOk) {
-		return errors.New("At least one set of credentials is required; either [certificate, private_key] or [bundle_id, team_id, token_key, token_key_id]")
+		return sdkdiag.AppendErrorf(diags, "At least one set of credentials is required; either [certificate, private_key] or [bundle_id, team_id, token_key, token_key_id]")
 	}
 
-	conn := meta.(*conns.AWSClient).PinpointConn
+	conn := meta.(*conns.AWSClient).PinpointConn()
 
 	applicationId := d.Get("application_id").(string)
 
@@ -106,32 +108,33 @@ func resourceAPNSChannelUpsert(d *schema.ResourceData, meta interface{}) error {
 		APNSChannelRequest: params,
 	}
 
-	_, err := conn.UpdateApnsChannel(&req)
+	_, err := conn.UpdateApnsChannelWithContext(ctx, &req)
 	if err != nil {
-		return fmt.Errorf("error updating Pinpoint APNs Channel for Application %s: %s", applicationId, err)
+		return sdkdiag.AppendErrorf(diags, "updating Pinpoint APNs Channel for Application %s: %s", applicationId, err)
 	}
 
 	d.SetId(applicationId)
 
-	return resourceAPNSChannelRead(d, meta)
+	return append(diags, resourceAPNSChannelRead(ctx, d, meta)...)
 }
 
-func resourceAPNSChannelRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).PinpointConn
+func resourceAPNSChannelRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).PinpointConn()
 
 	log.Printf("[INFO] Reading Pinpoint APNs Channel for Application %s", d.Id())
 
-	output, err := conn.GetApnsChannel(&pinpoint.GetApnsChannelInput{
+	output, err := conn.GetApnsChannelWithContext(ctx, &pinpoint.GetApnsChannelInput{
 		ApplicationId: aws.String(d.Id()),
 	})
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, pinpoint.ErrCodeNotFoundException) {
-			log.Printf("[WARN] Pinpoint APNs Channel for application %s not found, error code (404)", d.Id())
+			log.Printf("[WARN] Pinpoint APNs Channel for application %s not found, removing from state", d.Id())
 			d.SetId("")
-			return nil
+			return diags
 		}
 
-		return fmt.Errorf("error getting Pinpoint APNs Channel for application %s: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "getting Pinpoint APNs Channel for application %s: %s", d.Id(), err)
 	}
 
 	d.Set("application_id", output.APNSChannelResponse.ApplicationId)
@@ -139,23 +142,24 @@ func resourceAPNSChannelRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("enabled", output.APNSChannelResponse.Enabled)
 	// Sensitive params are not returned
 
-	return nil
+	return diags
 }
 
-func resourceAPNSChannelDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).PinpointConn
+func resourceAPNSChannelDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).PinpointConn()
 
 	log.Printf("[DEBUG] Deleting Pinpoint APNs Channel: %s", d.Id())
-	_, err := conn.DeleteApnsChannel(&pinpoint.DeleteApnsChannelInput{
+	_, err := conn.DeleteApnsChannelWithContext(ctx, &pinpoint.DeleteApnsChannelInput{
 		ApplicationId: aws.String(d.Id()),
 	})
 
 	if tfawserr.ErrCodeEquals(err, pinpoint.ErrCodeNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Pinpoint APNs Channel for Application %s: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Pinpoint APNs Channel for Application %s: %s", d.Id(), err)
 	}
-	return nil
+	return diags
 }

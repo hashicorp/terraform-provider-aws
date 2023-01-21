@@ -87,7 +87,7 @@ resource "aws_iam_user" "user" {
 
 resource "aws_iam_group_membership" "team" {
   name  = "%s"
-  users = aws_iam_user.user.*.name
+  users = aws_iam_user.user[*].name
   group = aws_iam_group.group.name
 }
 

@@ -16,7 +16,7 @@ import (
 func testStepNewConfig(ctx context.Context, t testing.T, c TestCase, wd *plugintest.WorkingDir, step TestStep, providers *providerFactories) error {
 	t.Helper()
 
-	err := wd.SetConfig(ctx, step.Config)
+	err := wd.SetConfig(ctx, step.mergedConfig(ctx, c))
 	if err != nil {
 		return fmt.Errorf("Error setting config: %w", err)
 	}

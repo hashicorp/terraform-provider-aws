@@ -1,19 +1,21 @@
 package imagebuilder
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func DataSourceImage() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceImageRead,
+		ReadWithoutTimeout: dataSourceImageRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -122,8 +124,9 @@ func DataSourceImage() *schema.Resource {
 	}
 }
 
-func dataSourceImageRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ImageBuilderConn
+func dataSourceImageRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ImageBuilderConn()
 
 	input := &imagebuilder.GetImageInput{}
 
@@ -131,14 +134,14 @@ func dataSourceImageRead(d *schema.ResourceData, meta interface{}) error {
 		input.ImageBuildVersionArn = aws.String(v.(string))
 	}
 
-	output, err := conn.GetImage(input)
+	output, err := conn.GetImageWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error getting Image Builder Image: %w", err)
+		return sdkdiag.AppendErrorf(diags, "getting Image Builder Image: %s", err)
 	}
 
 	if output == nil || output.Image == nil {
-		return fmt.Errorf("error getting Image Builder Image: empty response")
+		return sdkdiag.AppendErrorf(diags, "getting Image Builder Image: empty response")
 	}
 
 	image := output.Image
@@ -192,5 +195,5 @@ func dataSourceImageRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("tags", KeyValueTags(image.Tags).IgnoreAWS().IgnoreConfig(meta.(*conns.AWSClient).IgnoreTagsConfig).Map())
 	d.Set("version", image.Version)
 
-	return nil
+	return diags
 }

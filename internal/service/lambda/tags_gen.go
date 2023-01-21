@@ -11,27 +11,6 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
-// ListTags lists lambda service tags.
-// The identifier is typically the Amazon Resource Name (ARN), although
-// it may also be a different identifier depending on the service.
-func ListTags(conn lambdaiface.LambdaAPI, identifier string) (tftags.KeyValueTags, error) {
-	return ListTagsWithContext(context.Background(), conn, identifier)
-}
-
-func ListTagsWithContext(ctx context.Context, conn lambdaiface.LambdaAPI, identifier string) (tftags.KeyValueTags, error) {
-	input := &lambda.ListTagsInput{
-		Resource: aws.String(identifier),
-	}
-
-	output, err := conn.ListTagsWithContext(ctx, input)
-
-	if err != nil {
-		return tftags.New(nil), err
-	}
-
-	return KeyValueTags(output.Tags), nil
-}
-
 // map[string]*string handling
 
 // Tags returns lambda service tags.
@@ -47,10 +26,7 @@ func KeyValueTags(tags map[string]*string) tftags.KeyValueTags {
 // UpdateTags updates lambda service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn lambdaiface.LambdaAPI, identifier string, oldTags interface{}, newTags interface{}) error {
-	return UpdateTagsWithContext(context.Background(), conn, identifier, oldTags, newTags)
-}
-func UpdateTagsWithContext(ctx context.Context, conn lambdaiface.LambdaAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(ctx context.Context, conn lambdaiface.LambdaAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 

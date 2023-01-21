@@ -1,19 +1,21 @@
 package appmesh
 
 import (
-	"fmt"
+	"context"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appmesh"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceMesh() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceMeshRead,
+		ReadWithoutTimeout: dataSourceMeshRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -73,8 +75,9 @@ func DataSourceMesh() *schema.Resource {
 	}
 }
 
-func dataSourceMeshRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppMeshConn
+func dataSourceMeshRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppMeshConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	meshName := d.Get("name").(string)
@@ -86,12 +89,12 @@ func dataSourceMeshRead(d *schema.ResourceData, meta interface{}) error {
 		req.MeshOwner = aws.String(v.(string))
 	}
 
-	resp, err := conn.DescribeMesh(req)
+	resp, err := conn.DescribeMeshWithContext(ctx, req)
 	if err != nil {
-		return fmt.Errorf("error reading App Mesh service mesh: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading App Mesh service mesh: %s", err)
 	}
 	if aws.StringValue(resp.Mesh.Status.Status) == appmesh.MeshStatusCodeDeleted {
-		return fmt.Errorf("App Mesh Mesh (%s) has status: 'DELETED'", meshName)
+		return sdkdiag.AppendErrorf(diags, "App Mesh Mesh (%s) has status: 'DELETED'", meshName)
 	}
 
 	arn := aws.StringValue(resp.Mesh.Metadata.Arn)
@@ -104,18 +107,18 @@ func dataSourceMeshRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("resource_owner", resp.Mesh.Metadata.ResourceOwner)
 	err = d.Set("spec", flattenMeshSpec(resp.Mesh.Spec))
 	if err != nil {
-		return fmt.Errorf("error setting spec: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting spec: %s", err)
 	}
 
-	tags, err := ListTags(conn, arn)
+	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for App Mesh service mesh (%s): %s", arn, err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for App Mesh service mesh (%s): %s", arn, err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

@@ -1,6 +1,7 @@
 package sagemaker
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"regexp"
@@ -10,21 +11,24 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceUserProfile() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceUserProfileCreate,
-		Read:   resourceUserProfileRead,
-		Update: resourceUserProfileUpdate,
-		Delete: resourceUserProfileDelete,
+		CreateWithoutTimeout: resourceUserProfileCreate,
+		ReadWithoutTimeout:   resourceUserProfileRead,
+		UpdateWithoutTimeout: resourceUserProfileUpdate,
+		DeleteWithoutTimeout: resourceUserProfileDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -62,74 +66,27 @@ func ResourceUserProfile() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"security_groups": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							MaxItems: 5,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"execution_role": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"sharing_settings": {
+						"canvas_app_settings": {
 							Type:     schema.TypeList,
 							Optional: true,
-							ForceNew: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"notebook_output_option": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										Default:      sagemaker.NotebookOutputOptionDisabled,
-										ValidateFunc: validation.StringInSlice(sagemaker.NotebookOutputOption_Values(), false),
-									},
-									"s3_kms_key_id": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									"s3_output_path": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-								},
-							},
-						},
-						"tensor_board_app_settings": {
-							Type:     schema.TypeList,
-							Optional: true,
-							ForceNew: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"default_resource_spec": {
+									"time_series_forecasting_settings": {
 										Type:     schema.TypeList,
-										Required: true,
+										Optional: true,
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"instance_type": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: validation.StringInSlice(sagemaker.AppInstanceType_Values(), false),
-												},
-												"lifecycle_config_arn": {
+												"amazon_forecast_role_arn": {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
 												},
-												"sagemaker_image_arn": {
+												"status": {
 													Type:         schema.TypeString,
 													Optional:     true,
-													ValidateFunc: verify.ValidARN,
-												},
-												"sagemaker_image_version_arn": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: verify.ValidARN,
+													ValidateFunc: validation.StringInSlice(sagemaker.FeatureStatus_Values(), false),
 												},
 											},
 										},
@@ -137,13 +94,31 @@ func ResourceUserProfile() *schema.Resource {
 								},
 							},
 						},
+						"execution_role": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: verify.ValidARN,
+						},
 						"jupyter_server_app_settings": {
 							Type:     schema.TypeList,
 							Optional: true,
-							ForceNew: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"code_repository": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										MaxItems: 10,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"repository_url": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringLenBetween(1, 1024),
+												},
+											},
+										},
+									},
 									"default_resource_spec": {
 										Type:     schema.TypeList,
 										Required: true,
@@ -187,7 +162,6 @@ func ResourceUserProfile() *schema.Resource {
 						"kernel_gateway_app_settings": {
 							Type:     schema.TypeList,
 							Optional: true,
-							ForceNew: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -252,6 +226,133 @@ func ResourceUserProfile() *schema.Resource {
 								},
 							},
 						},
+						"r_session_app_settings": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"default_resource_spec": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"instance_type": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validation.StringInSlice(sagemaker.AppInstanceType_Values(), false),
+												},
+												"lifecycle_config_arn": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidARN,
+												},
+												"sagemaker_image_arn": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidARN,
+												},
+												"sagemaker_image_version_arn": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidARN,
+												},
+											},
+										},
+									},
+									"custom_image": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 30,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"app_image_config_name": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+												"image_name": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+												"image_version_number": {
+													Type:     schema.TypeInt,
+													Optional: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"security_groups": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							MaxItems: 5,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"sharing_settings": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"notebook_output_option": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										Default:      sagemaker.NotebookOutputOptionDisabled,
+										ValidateFunc: validation.StringInSlice(sagemaker.NotebookOutputOption_Values(), false),
+									},
+									"s3_kms_key_id": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: verify.ValidARN,
+									},
+									"s3_output_path": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+								},
+							},
+						},
+						"tensor_board_app_settings": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"default_resource_spec": {
+										Type:     schema.TypeList,
+										Required: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"instance_type": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validation.StringInSlice(sagemaker.AppInstanceType_Values(), false),
+												},
+												"lifecycle_config_arn": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidARN,
+												},
+												"sagemaker_image_arn": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidARN,
+												},
+												"sagemaker_image_version_arn": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidARN,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -267,8 +368,9 @@ func ResourceUserProfile() *schema.Resource {
 	}
 }
 
-func resourceUserProfileCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+func resourceUserProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -294,80 +396,82 @@ func resourceUserProfileCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] SageMaker User Profile create config: %#v", *input)
-	output, err := conn.CreateUserProfile(input)
+	output, err := conn.CreateUserProfileWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("creating SageMaker User Profile: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker User Profile: %s", err)
 	}
 
 	userProfileArn := aws.StringValue(output.UserProfileArn)
 	domainID, userProfileName, err := decodeUserProfileName(userProfileArn)
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker User Profile: %s", err)
 	}
 
 	d.SetId(userProfileArn)
 
-	if _, err := WaitUserProfileInService(conn, domainID, userProfileName); err != nil {
-		return fmt.Errorf("waiting for SageMaker User Profile (%s) to create: %w", d.Id(), err)
+	if _, err := WaitUserProfileInService(ctx, conn, domainID, userProfileName); err != nil {
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker User Profile (%s): waiting for completion: %s", d.Id(), err)
 	}
 
-	return resourceUserProfileRead(d, meta)
+	return append(diags, resourceUserProfileRead(ctx, d, meta)...)
 }
 
-func resourceUserProfileRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+func resourceUserProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	domainID, userProfileName, err := decodeUserProfileName(d.Id())
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker User Profile (%s): %s", d.Id(), err)
 	}
 
-	UserProfile, err := FindUserProfileByName(conn, domainID, userProfileName)
+	userProfile, err := FindUserProfileByName(ctx, conn, domainID, userProfileName)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
+		if !d.IsNewResource() && tfresource.NotFound(err) {
 			d.SetId("")
-			log.Printf("[WARN] Unable to find SageMaker User Profile (%s), removing from state", d.Id())
-			return nil
+			log.Printf("[WARN] Unable to find SageMaker User Profile (%s); removing from state", d.Id())
+			return diags
 		}
-		return fmt.Errorf("reading SageMaker User Profile (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker User Profile (%s): %s", d.Id(), err)
 	}
 
-	arn := aws.StringValue(UserProfile.UserProfileArn)
-	d.Set("user_profile_name", UserProfile.UserProfileName)
-	d.Set("domain_id", UserProfile.DomainId)
-	d.Set("single_sign_on_user_identifier", UserProfile.SingleSignOnUserIdentifier)
-	d.Set("single_sign_on_user_value", UserProfile.SingleSignOnUserValue)
+	arn := aws.StringValue(userProfile.UserProfileArn)
+	d.Set("user_profile_name", userProfile.UserProfileName)
+	d.Set("domain_id", userProfile.DomainId)
+	d.Set("single_sign_on_user_identifier", userProfile.SingleSignOnUserIdentifier)
+	d.Set("single_sign_on_user_value", userProfile.SingleSignOnUserValue)
 	d.Set("arn", arn)
-	d.Set("home_efs_file_system_uid", UserProfile.HomeEfsFileSystemUid)
+	d.Set("home_efs_file_system_uid", userProfile.HomeEfsFileSystemUid)
 
-	if err := d.Set("user_settings", flattenDomainDefaultUserSettings(UserProfile.UserSettings)); err != nil {
-		return fmt.Errorf("setting user_settings for SageMaker User Profile (%s): %w", d.Id(), err)
+	if err := d.Set("user_settings", flattenDomainDefaultUserSettings(userProfile.UserSettings)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting user_settings for SageMaker User Profile (%s): %s", d.Id(), err)
 	}
 
-	tags, err := ListTags(conn, arn)
+	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("listing tags for SageMaker User Profile (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for SageMaker User Profile (%s): %s", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceUserProfileUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+func resourceUserProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	if d.HasChange("user_settings") {
 		domainID := d.Get("domain_id").(string)
@@ -380,29 +484,30 @@ func resourceUserProfileUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		log.Printf("[DEBUG] SageMaker User Profile update config: %#v", *input)
-		_, err := conn.UpdateUserProfile(input)
+		_, err := conn.UpdateUserProfileWithContext(ctx, input)
 		if err != nil {
-			return fmt.Errorf("updating SageMaker User Profile: %w", err)
+			return sdkdiag.AppendErrorf(diags, "updating SageMaker User Profile: %s", err)
 		}
 
-		if _, err := WaitUserProfileInService(conn, domainID, userProfileName); err != nil {
-			return fmt.Errorf("waiting for SageMaker User Profile (%s) to update: %w", d.Id(), err)
+		if _, err := WaitUserProfileInService(ctx, conn, domainID, userProfileName); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for SageMaker User Profile (%s) to update: %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("updating SageMaker UserProfile (%s) tags: %w", d.Id(), err)
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating SageMaker UserProfile (%s) tags: %s", d.Id(), err)
 		}
 	}
 
-	return resourceUserProfileRead(d, meta)
+	return append(diags, resourceUserProfileRead(ctx, d, meta)...)
 }
 
-func resourceUserProfileDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+func resourceUserProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	userProfileName := d.Get("user_profile_name").(string)
 	domainID := d.Get("domain_id").(string)
@@ -412,19 +517,19 @@ func resourceUserProfileDelete(d *schema.ResourceData, meta interface{}) error {
 		DomainId:        aws.String(domainID),
 	}
 
-	if _, err := conn.DeleteUserProfile(input); err != nil {
+	if _, err := conn.DeleteUserProfileWithContext(ctx, input); err != nil {
 		if !tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
-			return fmt.Errorf("deleting SageMaker User Profile (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "deleting SageMaker User Profile (%s): %s", d.Id(), err)
 		}
 	}
 
-	if _, err := WaitUserProfileDeleted(conn, domainID, userProfileName); err != nil {
+	if _, err := WaitUserProfileDeleted(ctx, conn, domainID, userProfileName); err != nil {
 		if !tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
-			return fmt.Errorf("waiting for SageMaker User Profile (%s) to delete: %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for SageMaker User Profile (%s) to delete: %s", d.Id(), err)
 		}
 	}
 
-	return nil
+	return diags
 }
 
 func decodeUserProfileName(id string) (string, string, error) {

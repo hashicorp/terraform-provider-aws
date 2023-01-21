@@ -31,7 +31,7 @@ func DataSourceTransitGatewayVPCAttachments() *schema.Resource {
 }
 
 func dataSourceTransitGatewayVPCAttachmentsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	input := &ec2.DescribeTransitGatewayVpcAttachmentsInput{}
 
@@ -43,7 +43,7 @@ func dataSourceTransitGatewayVPCAttachmentsRead(ctx context.Context, d *schema.R
 		input.Filters = nil
 	}
 
-	output, err := FindTransitGatewayVPCAttachments(conn, input)
+	output, err := FindTransitGatewayVPCAttachments(ctx, conn, input)
 
 	if err != nil {
 		return diag.Errorf("reading EC2 Transit Gateway VPC Attachments: %s", err)

@@ -1,17 +1,19 @@
 package outposts
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/outposts"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func DataSourceOutposts() *schema.Resource { // nosemgrep:ci.outposts-in-func-name
 	return &schema.Resource{
-		Read: dataSourceOutpostsRead,
+		ReadWithoutTimeout: dataSourceOutpostsRead,
 
 		Schema: map[string]*schema.Schema{
 			"arns": {
@@ -48,14 +50,15 @@ func DataSourceOutposts() *schema.Resource { // nosemgrep:ci.outposts-in-func-na
 	}
 }
 
-func dataSourceOutpostsRead(d *schema.ResourceData, meta interface{}) error { // nosemgrep:ci.outposts-in-func-name
-	conn := meta.(*conns.AWSClient).OutpostsConn
+func dataSourceOutpostsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics { // nosemgrep:ci.outposts-in-func-name
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).OutpostsConn()
 
 	input := &outposts.ListOutpostsInput{}
 
 	var arns, ids []string
 
-	err := conn.ListOutpostsPages(input, func(page *outposts.ListOutpostsOutput, lastPage bool) bool {
+	err := conn.ListOutpostsPagesWithContext(ctx, input, func(page *outposts.ListOutpostsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -89,18 +92,18 @@ func dataSourceOutpostsRead(d *schema.ResourceData, meta interface{}) error { //
 	})
 
 	if err != nil {
-		return fmt.Errorf("error listing Outposts Outposts: %w", err)
+		return sdkdiag.AppendErrorf(diags, "listing Outposts Outposts: %s", err)
 	}
 
 	if err := d.Set("arns", arns); err != nil {
-		return fmt.Errorf("error setting arns: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting arns: %s", err)
 	}
 
 	if err := d.Set("ids", ids); err != nil {
-		return fmt.Errorf("error setting ids: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting ids: %s", err)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
 
-	return nil
+	return diags
 }

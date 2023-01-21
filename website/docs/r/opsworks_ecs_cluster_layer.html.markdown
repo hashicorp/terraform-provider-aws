@@ -23,7 +23,7 @@ resource "aws_opsworks_ecs_cluster_layer" "example" {
 
 The following arguments are supported:
 
-* `stack_id` - (Required) The id of the stack the layer will belong to.
+* `stack_id` - (Required) ID of the stack the layer will belong to.
 * `ecs_cluster_arn` - (Required) The ECS Cluster ARN of the layer.
 * `name` - (Optional) A human-readable name for the layer.
 * `auto_assign_elastic_ips` - (Optional) Whether to automatically assign an elastic IP address to the layer's instances.

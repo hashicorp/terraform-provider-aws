@@ -52,7 +52,7 @@ The following arguments are optional:
 * `certificate_arn` - (Optional, Default: empty string) ARN for the certificate.
 * `database_name` - (Optional) Name of the endpoint database.
 * `elasticsearch_settings` - (Optional) Configuration block for OpenSearch settings. See below.
-* `extra_connection_attributes` - (Optional) Additional attributes associated with the connection. For available attributes see [Using Extra Connection Attributes with AWS Database Migration Service](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.PostgreSQL.html#CHAP_Source.PostgreSQL.ConnectionAttrib).
+* `extra_connection_attributes` - (Optional) Additional attributes associated with the connection. For available attributes see [Using Extra Connection Attributes with AWS Database Migration Service](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.html).
 * `kafka_settings` - (Optional) Configuration block for Kafka settings. See below.
 * `kinesis_settings` - (Optional) Configuration block for Kinesis settings. See below.
 * `mongodb_settings` - (Optional) Configuration block for MongoDB settings. See below.
@@ -125,6 +125,18 @@ The following arguments are optional:
 * `extract_doc_id` - (Optional) Document ID. Use this setting when `nesting_level` is set to `none`. Default is `false`.
 * `nesting_level` - (Optional) Specifies either document or table mode. Default is `none`. Valid values are `one` (table mode) and `none` (document mode).
 
+### redis_settings
+
+-> Additional information can be found in the [Using Redis as a target for AWS Database Migration Service](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.Redis.html).
+
+* `auth_password` - (Optional) The password provided with the auth-role and auth-token options of the AuthType setting for a Redis target endpoint.
+* `auth_type` - (Required) The type of authentication to perform when connecting to a Redis target. Options include `none`, `auth-token`, and `auth-role`. The `auth-token` option requires an `auth_password` value to be provided. The `auth-role` option requires `auth_user_name` and `auth_password` values to be provided.
+* `auth_user_name` - (Optional) The username provided with the `auth-role` option of the AuthType setting for a Redis target endpoint.
+* `server_name` - (Required) Fully qualified domain name of the endpoint.
+* `port` - (Required) Transmission Control Protocol (TCP) port for the endpoint.
+* `ssl_ca_certificate_arn` - (Optional) The Amazon Resource Name (ARN) for the certificate authority (CA) that DMS uses to connect to your Redis target endpoint.
+* `ssl_security_protocol`- (Optional) The plaintext option doesn't provide Transport Layer Security (TLS) encryption for traffic between endpoint and database. Options include `plaintext`, `ssl-encryption`. The default is `ssl-encryption`.
+
 ### redshift_settings
 
 -> Additional information can be found in the [Using Amazon Redshift as a Target for AWS Database Migration Service documentation](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.Redshift.html).
@@ -146,7 +158,7 @@ The following arguments are optional:
 * `cdc_inserts_and_updates` - (Optional) Whether to write insert and update operations to .csv or .parquet output files. Default is `false`.
 * `cdc_inserts_only` - (Optional) Whether to write insert operations to .csv or .parquet output files. Default is `false`.
 * `cdc_max_batch_interval` - (Optional) Maximum length of the interval, defined in seconds, after which to output a file to Amazon S3. Default is `60`.
-* `cdc_min_file_size` - (Optional) Minimum file size, defined in megabytes, to reach for a file output. Default is `32`.
+* `cdc_min_file_size` - (Optional) Minimum file size condition as defined in kilobytes to output a file to Amazon S3. Default is `32000`. **NOTE:** Previously, this setting was measured in megabytes but now represents kilobytes. Update configurations accordingly.
 * `cdc_path` - (Optional) Folder path of CDC files. For an S3 source, this setting is required if a task captures change data; otherwise, it's optional. If `cdc_path` is set, AWS DMS reads CDC files from this path and replicates the data changes to the target endpoint. Supported in AWS DMS versions 3.4.2 and later.
 * `compression_type` - (Optional) Set to compress target files. Default is `NONE`. Valid values are `GZIP` and `NONE`.
 * `csv_delimiter` - (Optional) Delimiter used to separate columns in the source files. Default is `,`.
@@ -163,7 +175,8 @@ The following arguments are optional:
 * `encoding_type` - (Optional) Type of encoding to use. Value values are `rle_dictionary`, `plain`, and `plain_dictionary`. Default is `rle_dictionary`.
 * `encryption_mode` - (Optional) Server-side encryption mode that you want to encrypt your .csv or .parquet object files copied to S3. Valid values are `SSE_S3` and `SSE_KMS`. Default is `SSE_S3`.
 * `external_table_definition` - (Optional) JSON document that describes how AWS DMS should interpret the data.
-* `ignore_headers_row` - (Optional) When this value is set to `1`, DMS ignores the first row header in a .csv file. Default is `0`.
+* `ignore_header_rows` - (Optional) When this value is set to `1`, DMS ignores the first row header in a .csv file. Default is `0`.
+* `ignore_headers_row` - (Optional) Deprecated. This setting has no effect. Will be removed in a future version.
 * `include_op_for_full_load` - (Optional) Whether to enable a full load to write INSERT operations to the .csv output files only to indicate how the rows were added to the source database. Default is `false`.
 * `max_file_size` - (Optional) Maximum size (in KB) of any .csv file to be created while migrating to an S3 target during full load. Valid values are from `1` to `1048576`. Default is `1048576` (1 GB).
 * `parquet_timestamp_in_millisecond` - (Optional) - Specifies the precision of any TIMESTAMP column values written to an S3 object file in .parquet format. Default is `false`.
@@ -175,6 +188,9 @@ The following arguments are optional:
 * `service_access_role_arn` - (Optional) ARN of the IAM Role with permissions to read from or write to the S3 Bucket.
 * `timestamp_column_name` - (Optional) Column to add with timestamp information to the endpoint data for an Amazon S3 target.
 * `use_csv_no_sup_value` - (Optional) Whether to use `csv_no_sup_value` for columns not included in the supplemental log.
+* `use_task_start_time_for_full_load_timestamp` - (Optional) When set to true, uses the task start time as the timestamp column value instead of the time data is written to target.
+  For full load, when set to true, each row of the timestamp column contains the task start time. For CDC loads, each row of the timestamp column contains the transaction commit time.
+  When set to false, the full load timestamp in the timestamp column increments with the time data arrives at the target. Default is `false`.
 
 ## Attributes Reference
 
@@ -182,6 +198,13 @@ In addition to all arguments above, the following attributes are exported:
 
 * `endpoint_arn` - ARN for the endpoint.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `create` - (Default `5m`)
+- `delete` - (Default `10m`)
 
 ## Import
 

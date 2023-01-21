@@ -1,21 +1,23 @@
 package efs
 
 import (
-	"errors"
+	"context"
 	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/efs"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceFileSystem() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceFileSystemRead,
+		ReadWithoutTimeout: dataSourceFileSystemRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -90,8 +92,9 @@ func DataSourceFileSystem() *schema.Resource {
 	}
 }
 
-func dataSourceFileSystemRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EFSConn
+func dataSourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EFSConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	tagsToMatch := tftags.New(d.Get("tags").(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
@@ -107,23 +110,21 @@ func dataSourceFileSystemRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Reading EFS File System: %s", describeEfsOpts)
-	describeResp, err := conn.DescribeFileSystems(describeEfsOpts)
+	describeResp, err := conn.DescribeFileSystemsWithContext(ctx, describeEfsOpts)
 	if err != nil {
-		return fmt.Errorf("error reading EFS FileSystem: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading EFS FileSystem: %s", err)
 	}
 
 	if describeResp == nil || len(describeResp.FileSystems) == 0 {
-		return errors.New("error reading EFS FileSystem: empty output")
+		return sdkdiag.AppendErrorf(diags, "reading EFS FileSystem: empty output")
 	}
 
 	results := describeResp.FileSystems
 
 	if len(tagsToMatch) > 0 {
-
 		var fileSystems []*efs.FileSystemDescription
 
 		for _, fileSystem := range describeResp.FileSystems {
-
 			tags := KeyValueTags(fileSystem.Tags)
 
 			if !tags.ContainsAll(tagsToMatch) {
@@ -137,7 +138,7 @@ func dataSourceFileSystemRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if count := len(results); count != 1 {
-		return fmt.Errorf("Search returned %d results, please revise so only one is returned", count)
+		return sdkdiag.AppendErrorf(diags, "Search returned %d results, please revise so only one is returned", count)
 	}
 
 	fs := results[0]
@@ -158,22 +159,22 @@ func dataSourceFileSystemRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err := d.Set("tags", KeyValueTags(fs.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	res, err := conn.DescribeLifecycleConfiguration(&efs.DescribeLifecycleConfigurationInput{
+	res, err := conn.DescribeLifecycleConfigurationWithContext(ctx, &efs.DescribeLifecycleConfigurationInput{
 		FileSystemId: fs.FileSystemId,
 	})
 	if err != nil {
-		return fmt.Errorf("Error describing lifecycle configuration for EFS file system (%s): %w",
+		return sdkdiag.AppendErrorf(diags, "describing lifecycle configuration for EFS file system (%s): %s",
 			aws.StringValue(fs.FileSystemId), err)
 	}
 
 	if err := d.Set("lifecycle_policy", flattenFileSystemLifecyclePolicies(res.LifecyclePolicies)); err != nil {
-		return fmt.Errorf("error setting lifecycle_policy: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting lifecycle_policy: %s", err)
 	}
 
 	d.Set("dns_name", meta.(*conns.AWSClient).RegionalHostname(fmt.Sprintf("%s.efs", aws.StringValue(fs.FileSystemId))))
 
-	return nil
+	return diags
 }

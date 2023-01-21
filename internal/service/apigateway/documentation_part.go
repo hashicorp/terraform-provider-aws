@@ -1,6 +1,7 @@
 package apigateway
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -8,19 +9,21 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func ResourceDocumentationPart() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceDocumentationPartCreate,
-		Read:   resourceDocumentationPartRead,
-		Update: resourceDocumentationPartUpdate,
-		Delete: resourceDocumentationPartDelete,
+		CreateWithoutTimeout: resourceDocumentationPartCreate,
+		ReadWithoutTimeout:   resourceDocumentationPartRead,
+		UpdateWithoutTimeout: resourceDocumentationPartUpdate,
+		DeleteWithoutTimeout: resourceDocumentationPartDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -72,34 +75,36 @@ func ResourceDocumentationPart() *schema.Resource {
 	}
 }
 
-func resourceDocumentationPartCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+func resourceDocumentationPartCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 
 	apiId := d.Get("rest_api_id").(string)
-	out, err := conn.CreateDocumentationPart(&apigateway.CreateDocumentationPartInput{
+	out, err := conn.CreateDocumentationPartWithContext(ctx, &apigateway.CreateDocumentationPartInput{
 		Location:   expandDocumentationPartLocation(d.Get("location").([]interface{})),
 		Properties: aws.String(d.Get("properties").(string)),
 		RestApiId:  aws.String(apiId),
 	})
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "creating API Gateway Documentation Part: %s", err)
 	}
-	d.SetId(apiId + "/" + *out.Id)
+	d.SetId(apiId + "/" + aws.StringValue(out.Id))
 
-	return nil
+	return diags
 }
 
-func resourceDocumentationPartRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+func resourceDocumentationPartRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 
 	log.Printf("[INFO] Reading API Gateway Documentation Part %s", d.Id())
 
 	apiId, id, err := DecodeDocumentationPartID(d.Id())
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading API Gateway Documentation Part (%s): %s", d.Id(), err)
 	}
 
-	docPart, err := conn.GetDocumentationPart(&apigateway.GetDocumentationPartInput{
+	docPart, err := conn.GetDocumentationPartWithContext(ctx, &apigateway.GetDocumentationPartInput{
 		DocumentationPartId: aws.String(id),
 		RestApiId:           aws.String(apiId),
 	})
@@ -107,24 +112,25 @@ func resourceDocumentationPartRead(d *schema.ResourceData, meta interface{}) err
 		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
 			log.Printf("[WARN] API Gateway Documentation Part (%s) not found, removing from state", d.Id())
 			d.SetId("")
-			return nil
+			return diags
 		}
-		return fmt.Errorf("error reading API Gateway Documentation Part (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading API Gateway Documentation Part (%s): %s", d.Id(), err)
 	}
 
 	d.Set("rest_api_id", apiId)
 	d.Set("location", flattenDocumentationPartLocation(docPart.Location))
 	d.Set("properties", docPart.Properties)
 
-	return nil
+	return diags
 }
 
-func resourceDocumentationPartUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+func resourceDocumentationPartUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 
 	apiId, id, err := DecodeDocumentationPartID(d.Id())
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "updating API Gateway Documentation Part (%s): %s", d.Id(), err)
 	}
 
 	input := apigateway.UpdateDocumentationPartInput{
@@ -144,31 +150,30 @@ func resourceDocumentationPartUpdate(d *schema.ResourceData, meta interface{}) e
 
 	input.PatchOperations = operations
 
-	log.Printf("[INFO] Updating API Gateway Documentation Part: %s", input)
-
-	out, err := conn.UpdateDocumentationPart(&input)
-	if err != nil {
-		return err
+	if _, err := conn.UpdateDocumentationPartWithContext(ctx, &input); err != nil {
+		return sdkdiag.AppendErrorf(diags, "updating API Gateway Documentation Part (%s): %s", d.Id(), err)
 	}
 
-	log.Printf("[DEBUG] API Gateway Documentation Part updated: %s", out)
-
-	return resourceDocumentationPartRead(d, meta)
+	return append(diags, resourceDocumentationPartRead(ctx, d, meta)...)
 }
 
-func resourceDocumentationPartDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+func resourceDocumentationPartDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 
 	apiId, id, err := DecodeDocumentationPartID(d.Id())
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "deleting API Gateway Documentation Part (%s): %s", d.Id(), err)
 	}
 
-	_, err = conn.DeleteDocumentationPart(&apigateway.DeleteDocumentationPartInput{
+	_, err = conn.DeleteDocumentationPartWithContext(ctx, &apigateway.DeleteDocumentationPartInput{
 		DocumentationPartId: aws.String(id),
 		RestApiId:           aws.String(apiId),
 	})
-	return err
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting API Gateway Documentation Part (%s): %s", d.Id(), err)
+	}
+	return diags
 }
 
 func expandDocumentationPartLocation(l []interface{}) *apigateway.DocumentationPartLocation {

@@ -1,16 +1,18 @@
 package amplify
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/amplify"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -19,12 +21,12 @@ import (
 
 func ResourceBranch() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceBranchCreate,
-		Read:   resourceBranchRead,
-		Update: resourceBranchUpdate,
-		Delete: resourceBranchDelete,
+		CreateWithoutTimeout: resourceBranchCreate,
+		ReadWithoutTimeout:   resourceBranchRead,
+		UpdateWithoutTimeout: resourceBranchUpdate,
+		DeleteWithoutTimeout: resourceBranchDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -182,8 +184,9 @@ func ResourceBranch() *schema.Resource {
 	}
 }
 
-func resourceBranchCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AmplifyConn
+func resourceBranchCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AmplifyConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -254,38 +257,39 @@ func resourceBranchCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Creating Amplify Branch: %s", input)
-	_, err := conn.CreateBranch(input)
+	_, err := conn.CreateBranchWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating Amplify Branch (%s): %w", id, err)
+		return sdkdiag.AppendErrorf(diags, "creating Amplify Branch (%s): %s", id, err)
 	}
 
 	d.SetId(id)
 
-	return resourceBranchRead(d, meta)
+	return append(diags, resourceBranchRead(ctx, d, meta)...)
 }
 
-func resourceBranchRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AmplifyConn
+func resourceBranchRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AmplifyConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	appID, branchName, err := BranchParseResourceID(d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error parsing Amplify Branch ID: %w", err)
+		return sdkdiag.AppendErrorf(diags, "parsing Amplify Branch ID: %s", err)
 	}
 
-	branch, err := FindBranchByAppIDAndBranchName(conn, appID, branchName)
+	branch, err := FindBranchByAppIDAndBranchName(ctx, conn, appID, branchName)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Amplify Branch (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Amplify Branch (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Amplify Branch (%s): %s", d.Id(), err)
 	}
 
 	d.Set("app_id", appID)
@@ -313,24 +317,25 @@ func resourceBranchRead(d *schema.ResourceData, meta interface{}) error {
 	tags := KeyValueTags(branch.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceBranchUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AmplifyConn
+func resourceBranchUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AmplifyConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		appID, branchName, err := BranchParseResourceID(d.Id())
 
 		if err != nil {
-			return fmt.Errorf("error parsing Amplify Branch ID: %w", err)
+			return sdkdiag.AppendErrorf(diags, "parsing Amplify Branch ID: %s", err)
 		}
 
 		input := &amplify.UpdateBranchInput{
@@ -398,45 +403,46 @@ func resourceBranchUpdate(d *schema.ResourceData, meta interface{}) error {
 			input.Ttl = aws.String(d.Get("ttl").(string))
 		}
 
-		_, err = conn.UpdateBranch(input)
+		_, err = conn.UpdateBranchWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error updating Amplify Branch (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Amplify Branch (%s): %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %w", err)
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
 		}
 	}
 
-	return resourceBranchRead(d, meta)
+	return append(diags, resourceBranchRead(ctx, d, meta)...)
 }
 
-func resourceBranchDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AmplifyConn
+func resourceBranchDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AmplifyConn()
 
 	appID, branchName, err := BranchParseResourceID(d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error parsing Amplify Branch ID: %w", err)
+		return sdkdiag.AppendErrorf(diags, "parsing Amplify Branch ID: %s", err)
 	}
 
 	log.Printf("[DEBUG] Deleting Amplify Branch: %s", d.Id())
-	_, err = conn.DeleteBranch(&amplify.DeleteBranchInput{
+	_, err = conn.DeleteBranchWithContext(ctx, &amplify.DeleteBranchInput{
 		AppId:      aws.String(appID),
 		BranchName: aws.String(branchName),
 	})
 
 	if tfawserr.ErrCodeEquals(err, amplify.ErrCodeNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Amplify Branch (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Amplify Branch (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
