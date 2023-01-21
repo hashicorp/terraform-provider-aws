@@ -605,7 +605,7 @@ func TestAccEvidentlyLaunch_disappears(t *testing.T) {
 				Config: testAccLaunchConfig_basic(rName, rName2, rName3, startTime),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchExists(ctx, resourceName, &launch),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcloudwatchevidently.ResourceLaunch(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudwatchevidently.ResourceLaunch(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
