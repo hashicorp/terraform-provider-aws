@@ -10,7 +10,7 @@ func ExpandRegions(regions []interface{}) map[string]types.RegionMapInputValue {
 		return nil
 	}
 
-	ret := make(map[string]types.RegionMapInputValue)
+	regionMap := make(map[string]types.RegionMapInputValue)
 	for _, region := range regions {
 		regionData := region.(map[string]interface{})
 
@@ -20,29 +20,29 @@ func ExpandRegions(regions []interface{}) map[string]types.RegionMapInputValue {
 			input.SseKmsKeyId = aws.String(kmsKey)
 		}
 
-		ret[regionData["name"].(string)] = input
+		regionMap[regionData["name"].(string)] = input
 	}
 
-	return ret
+	return regionMap
 }
 
-func FlattenRegions(regions map[string]types.RegionInfo) []interface{} {
+func FlattenRegions(regions map[string]types.RegionInfo) []map[string]interface{} {
 	if len(regions) == 0 {
 		return nil
 	}
 
-	ret := make([]interface{}, 0)
-	for name, v := range regions {
+	tfRegionData := make([]map[string]interface{}, 0)
+	for name, regionData := range regions {
 		region := make(map[string]interface{})
 
 		region["name"] = name
-		region["status"] = v.Status
-		region["status_update_time"] = aws.ToTime(v.StatusUpdateDateTime).String()
-		region["kms_key_arn"] = aws.ToString(v.SseKmsKeyId)
-		region["status_message"] = aws.ToString(v.StatusMessage)
+		region["status"] = regionData.Status
+		region["status_update_time"] = aws.ToTime(regionData.StatusUpdateDateTime).String()
+		region["kms_key_arn"] = aws.ToString(regionData.SseKmsKeyId)
+		region["status_message"] = aws.ToString(regionData.StatusMessage)
 
-		ret = append(ret, region)
+		tfRegionData = append(tfRegionData, region)
 	}
 
-	return ret
+	return tfRegionData
 }

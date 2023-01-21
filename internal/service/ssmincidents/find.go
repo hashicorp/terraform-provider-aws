@@ -11,14 +11,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindReplicationSetByID(ctx context.Context, conn *ssmincidents.Client, arn string) (*types.ReplicationSet, error) {
+func FindReplicationSetByID(context context.Context, client *ssmincidents.Client, arn string) (*types.ReplicationSet, error) {
 	in := &ssmincidents.GetReplicationSetInput{
 		Arn: aws.String(arn),
 	}
-	out, err := conn.GetReplicationSet(ctx, in)
+	out, err := client.GetReplicationSet(context, in)
 	if err != nil {
-		var nfe *types.ResourceNotFoundException
-		if errors.As(err, &nfe) {
+		var notFoundError *types.ResourceNotFoundException
+		if errors.As(err, &notFoundError) {
 			return nil, &resource.NotFoundError{
 				LastError:   err,
 				LastRequest: in,

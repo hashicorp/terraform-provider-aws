@@ -14,12 +14,12 @@ import (
 )
 
 // lists all tags for a particular resource
-func listResourceTags(ctx context.Context, conn *ssmincidents.Client, arn string) (tftags.KeyValueTags, error) {
+func listResourceTags(context context.Context, client *ssmincidents.Client, arn string) (tftags.KeyValueTags, error) {
 	input := &ssmincidents.ListTagsForResourceInput{
 		ResourceArn: aws.String(arn),
 	}
 
-	output, err := conn.ListTagsForResource(ctx, input)
+	output, err := client.ListTagsForResource(context, input)
 
 	if err != nil {
 		return tftags.New(nil), err
@@ -29,48 +29,48 @@ func listResourceTags(ctx context.Context, conn *ssmincidents.Client, arn string
 }
 
 // gets all tags via get request and sets them in Resource Data ssmincidents resource
-func SetResourceDataTags(ctx context.Context, d *schema.ResourceData, meta interface{}, conn *ssmincidents.Client, resourceName string) diag.Diagnostics {
-	tags, err := listResourceTags(ctx, conn, d.Id())
+func SetResourceDataTags(context context.Context, resourceData *schema.ResourceData, meta interface{}, client *ssmincidents.Client, resourceName string) diag.Diagnostics {
+	tags, err := listResourceTags(context, client, resourceData.Id())
 	if err != nil {
-		return create.DiagError(names.SSMIncidents, create.ErrActionReading, resourceName, d.Id(), err)
+		return create.DiagError(names.SSMIncidents, create.ErrActionReading, resourceName, resourceData.Id(), err)
 	}
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return create.DiagError(names.SSMIncidents, create.ErrActionSetting, resourceName, d.Id(), err)
+	if err := resourceData.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return create.DiagError(names.SSMIncidents, create.ErrActionSetting, resourceName, resourceData.Id(), err)
 	}
 
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return create.DiagError(names.SSMIncidents, create.ErrActionSetting, resourceName, d.Id(), err)
+	if err := resourceData.Set("tags_all", tags.Map()); err != nil {
+		return create.DiagError(names.SSMIncidents, create.ErrActionSetting, resourceName, resourceData.Id(), err)
 	}
 
 	return nil
 }
 
 // makes api calls to update Resource Data Tags
-func UpdateResourceTags(ctx context.Context, conn *ssmincidents.Client, d *schema.ResourceData) error {
-	o, n := d.GetChange("tags_all")
+func UpdateResourceTags(context context.Context, client *ssmincidents.Client, resourceData *schema.ResourceData) error {
+	old, new := resourceData.GetChange("tags_all")
 
-	oldTags := tftags.New(o)
-	newTags := tftags.New(n)
+	oldTags := tftags.New(old)
+	newTags := tftags.New(new)
 
-	allNewTagsMap := ConvertInterfaceMapToStringMap(n.(map[string]interface{}))
+	allNewTagsMap := ConvertInterfaceMapToStringMap(new.(map[string]interface{}))
 
-	if err := updateResourceTag(ctx, conn, d.Id(), oldTags.Removed(newTags), oldTags.Updated(newTags)); err != nil {
+	if err := updateResourceTag(context, client, resourceData.Id(), oldTags.Removed(newTags), oldTags.Updated(newTags)); err != nil {
 		return err
 	}
 
 	// provider level tags cannot have "" as value
-	// resource level tags can have "" as value but this change is not recorded by d.GetChange("tags_all")
+	// resource level tags can have "" as value but this change is not recorded by resourceData.GetChange("tags_all")
 	// so we have to look specifically for any tags updated with "" as the value
 
-	o, n = d.GetChange("tags")
+	old, new = resourceData.GetChange("tags")
 
-	oldTags = tftags.New(o)
-	newTags = tftags.New(n)
+	oldTags = tftags.New(old)
+	newTags = tftags.New(new)
 
 	toUpdate := make(map[string]string)
 
@@ -84,23 +84,23 @@ func UpdateResourceTags(ctx context.Context, conn *ssmincidents.Client, d *schem
 	// since we are adding an extra tag to tags_all not initially detected by terraform
 	// we must set tags_all to what is properly expected in create/update function so that
 	// terraform plan is consistent to what we receive with terraform refresh/the update function
-	d.Set("tags_all", allNewTagsMap)
+	resourceData.Set("tags_all", allNewTagsMap)
 
 	empty := tftags.KeyValueTags{}
-	if err := updateResourceTag(ctx, conn, d.Id(), empty, tftags.New(toUpdate)); err != nil {
+	if err := updateResourceTag(context, client, resourceData.Id(), empty, tftags.New(toUpdate)); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func updateResourceTag(ctx context.Context, conn *ssmincidents.Client, arn string, removedTags, addedTags tftags.KeyValueTags) error {
+func updateResourceTag(context context.Context, client *ssmincidents.Client, arn string, removedTags, addedTags tftags.KeyValueTags) error {
 	if len(removedTags) > 0 {
 		input := &ssmincidents.UntagResourceInput{
 			ResourceArn: aws.String(arn),
 			TagKeys:     removedTags.Keys(),
 		}
-		if _, err := conn.UntagResource(ctx, input); err != nil {
+		if _, err := client.UntagResource(context, input); err != nil {
 			return err
 		}
 	}
@@ -111,7 +111,7 @@ func updateResourceTag(ctx context.Context, conn *ssmincidents.Client, arn strin
 			Tags:        addedTags.IgnoreAWS().Map(),
 		}
 
-		if _, err := conn.TagResource(ctx, input); err != nil {
+		if _, err := client.TagResource(context, input); err != nil {
 			return err
 		}
 	}

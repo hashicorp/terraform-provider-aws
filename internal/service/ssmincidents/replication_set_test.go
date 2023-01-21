@@ -22,12 +22,12 @@ import (
 func TestAccSSMIncidentsReplicationSet_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"Tests": {
-			// "basic": testAccReplicationSet_basic,
-			// "updateDefaultKey": testAccReplicationSet_updateRegionsWithoutCMK,
-			"updateCMK": testAccReplicationSet_updateRegionsWithCMK,
-			// "updateTags": testAccReplicationSet_updateTags,
-			// "updateEmptyTags":  testAccReplicationSet_updateEmptyTags,
-			// "disappears":       testAccReplicationSet_disappears,
+			"basic":            testAccReplicationSet_basic,
+			"updateDefaultKey": testAccReplicationSet_updateRegionsWithoutCMK,
+			"updateCMK":        testAccReplicationSet_updateRegionsWithCMK,
+			"updateTags":       testAccReplicationSet_updateTags,
+			"updateEmptyTags":  testAccReplicationSet_updateEmptyTags,
+			"disappears":       testAccReplicationSet_disappears,
 		},
 	}
 

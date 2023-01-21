@@ -9,10 +9,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ssmincidents"
 )
 
-func ConvertInterfaceMapToStringMap(in map[string]interface{}) map[string]string {
+func ConvertInterfaceMapToStringMap(interfaceMap map[string]interface{}) map[string]string {
 	result := map[string]string{}
 
-	for k, v := range in {
+	for k, v := range interfaceMap {
 		result[k] = v.(string)
 	}
 	return result
