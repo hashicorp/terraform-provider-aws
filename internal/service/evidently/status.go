@@ -39,7 +39,7 @@ func statusLaunch(ctx context.Context, conn *cloudwatchevidently.CloudWatchEvide
 			return nil, "", err
 		}
 
-		output, err := FindLaunchWithProjectNameorARN(context.Background(), conn, launchName, projectNameOrARN)
+		output, err := FindLaunchWithProjectNameorARN(ctx, conn, launchName, projectNameOrARN)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
