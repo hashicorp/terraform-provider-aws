@@ -564,6 +564,14 @@ func ResourceDistribution() *schema.Resource {
 										Elem: &schema.Schema{
 											Type:         schema.TypeString,
 											ValidateFunc: validation.StringInSlice(cloudfront.SslProtocol_Values(), false),
+											DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+												// ignore diffs where the user hasn't specified any protocols but the
+												// API has set defaults
+												_, n := d.GetChange("origin_ssl_protocols")
+												newProtocols := n.(*schema.Set).List()
+												return len(newProtocols) == 0
+											},
+											DiffSuppressOnRefresh: true,
 										},
 									},
 								},
