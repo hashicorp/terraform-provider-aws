@@ -186,7 +186,8 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
 }
 ```
 
-CloudFront distribution using managed cache policy (CachingDisabled):
+CloudFront distribution using managed policies (ex: CachingDisabled):
+https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/using-managed-cache-policies.html
 
 ```terraform
 locals {
@@ -207,7 +208,7 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
   comment             = "Some comment"
   default_root_object = "index.html"
 
-  # https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/using-managed-cache-policies.html#:~:text=Compression%20support.-,CachingDisabled,-View%20this%20policy
+  # AWS Managed Caching Polify (CachingDisabled)
   default_cache_behavior {
     # Using the CachingDisabled managed policy ID:
     cache_policy_id = "4135ea2d-6df8-44a3-9df3-4b5a84be39a"
@@ -239,7 +240,7 @@ The CloudFront distribution argument layout is a complex structure composed of s
 * `aliases` (Optional) - Extra CNAMEs (alternate domain names), if any, for this distribution.
 * `comment` (Optional) - Any comments you want to include about the distribution.
 * `custom_error_response` (Optional) - One or more [custom error response](#custom-error-response-arguments) elements (multiples allowed).
-* `default_cache_behavior` (Required) - The [default cache behavior](#default-cache-behavior-arguments) for this distribution (maximum one).
+* `default_cache_behavior` (Required) - [Default cache behavior](#default-cache-behavior-arguments) for this distribution (maximum one). Requires either `cache_policy_id` (preferred) or `forwarded_values` (deprecated) be set.
 * `default_root_object` (Optional) - Object that you want CloudFront to return (for example, index.html) when an end user requests the root URL.
 * `enabled` (Required) - Whether the distribution is enabled to accept end user requests for content.
 * `is_ipv6_enabled` (Optional) - Whether the IPv6 is enabled for the distribution.
