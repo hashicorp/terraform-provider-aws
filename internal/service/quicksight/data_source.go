@@ -82,8 +82,8 @@ func ResourceDataSource() *schema.Resource {
 							ConflictsWith: []string{"credentials.0.copy_source_arn", "credentials.0.secret_arn"},
 						},
 						"secret_arn": {
-							Type: schema.TypeString,
-							Optional: true,
+							Type:          schema.TypeString,
+							Optional:      true,
 							ValidateFunc:  verify.ValidARN,
 							ConflictsWith: []string{"credentials.0.credential_pair", "credentials.0.copy_source_arn"},
 						},
@@ -570,7 +570,7 @@ func ResourceDataSource() *schema.Resource {
 					},
 				},
 			},
-			"tags": tftags.TagsSchema(),
+			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 			"type": {
 				Type:         schema.TypeString,
