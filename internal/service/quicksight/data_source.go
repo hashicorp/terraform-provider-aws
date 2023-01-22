@@ -34,7 +34,6 @@ func ResourceDataSource() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"aws_account_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -42,7 +41,6 @@ func ResourceDataSource() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidAccountID,
 			},
-
 			"credentials": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -53,7 +51,7 @@ func ResourceDataSource() *schema.Resource {
 							Type:          schema.TypeString,
 							Optional:      true,
 							ValidateFunc:  verify.ValidARN,
-							ConflictsWith: []string{"credentials.0.credential_pair"},
+							ConflictsWith: []string{"credentials.0.credential_pair", "credentials.0.secret_arn"},
 						},
 						"credential_pair": {
 							Type:     schema.TypeList,
@@ -81,18 +79,22 @@ func ResourceDataSource() *schema.Resource {
 									},
 								},
 							},
-							ConflictsWith: []string{"credentials.0.copy_source_arn"},
+							ConflictsWith: []string{"credentials.0.copy_source_arn", "credentials.0.secret_arn"},
+						},
+						"secret_arn": {
+							Type: schema.TypeString,
+							Optional: true,
+							ValidateFunc:  verify.ValidARN,
+							ConflictsWith: []string{"credentials.0.credential_pair", "credentials.0.copy_source_arn"},
 						},
 					},
 				},
 			},
-
 			"data_source_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -101,7 +103,6 @@ func ResourceDataSource() *schema.Resource {
 					validation.StringLenBetween(1, 128),
 				),
 			},
-
 			"parameters": {
 				Type:     schema.TypeList,
 				Required: true,
@@ -534,7 +535,6 @@ func ResourceDataSource() *schema.Resource {
 					},
 				},
 			},
-
 			"permission": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -557,7 +557,6 @@ func ResourceDataSource() *schema.Resource {
 					},
 				},
 			},
-
 			"ssl_properties": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -571,18 +570,14 @@ func ResourceDataSource() *schema.Resource {
 					},
 				},
 			},
-
 			"tags": tftags.TagsSchema(),
-
 			"tags_all": tftags.TagsSchemaComputed(),
-
 			"type": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(quicksight.DataSourceType_Values(), false),
 			},
-
 			"vpc_connection_properties": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -871,6 +866,10 @@ func expandDataSourceCredentials(tfList []interface{}) *quicksight.DataSourceCre
 
 	if v, ok := tfMap["credential_pair"].([]interface{}); ok && len(v) > 0 {
 		credentials.CredentialPair = expandDataSourceCredentialPair(v)
+	}
+
+	if v, ok := tfMap["secret_arn"].(string); ok && v != "" {
+		credentials.SecretArn = aws.String(v)
 	}
 
 	return credentials
