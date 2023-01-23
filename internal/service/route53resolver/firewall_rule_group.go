@@ -24,7 +24,7 @@ func ResourceFirewallRuleGroup() *schema.Resource {
 		DeleteWithoutTimeout: resourceFirewallRuleGroupDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -103,7 +103,7 @@ func resourceFirewallRuleGroupRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("owner_id", ruleGroup.OwnerId)
 	d.Set("share_status", ruleGroup.ShareStatus)
 
-	tags, err := ListTagsWithContext(ctx, conn, arn)
+	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
 		return diag.Errorf("listing tags for Route53 Resolver Firewall Rule Group (%s): %s", arn, err)
@@ -129,7 +129,7 @@ func resourceFirewallRuleGroupUpdate(ctx context.Context, d *schema.ResourceData
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTagsWithContext(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.Errorf("updating Route53 Resolver Firewall Rule Group (%s) tags: %s", d.Id(), err)
 		}
 	}

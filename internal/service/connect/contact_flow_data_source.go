@@ -80,7 +80,7 @@ func dataSourceContactFlowRead(ctx context.Context, d *schema.ResourceData, meta
 		input.ContactFlowId = contactFlowSummary.Id
 	}
 
-	resp, err := conn.DescribeContactFlow(input)
+	resp, err := conn.DescribeContactFlowWithContext(ctx, input)
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error getting Connect Contact Flow: %w", err))

@@ -11,10 +11,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -22,13 +24,13 @@ import (
 
 func ResourceEndpoint() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceEndpointCreate,
-		Read:   resourceEndpointRead,
-		Update: resourceEndpointUpdate,
-		Delete: resourceEndpointDelete,
+		CreateWithoutTimeout: resourceEndpointCreate,
+		ReadWithoutTimeout:   resourceEndpointRead,
+		UpdateWithoutTimeout: resourceEndpointUpdate,
+		DeleteWithoutTimeout: resourceEndpointDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -682,7 +684,8 @@ func ResourceEndpoint() *schema.Resource {
 	}
 }
 
-func resourceEndpointCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
@@ -900,65 +903,67 @@ func resourceEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 		expandTopLevelConnectionInfo(d, input)
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(d.Timeout(schema.TimeoutCreate),
+	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, d.Timeout(schema.TimeoutCreate),
 		func() (interface{}, error) {
-			return conn.CreateEndpoint(input)
+			return conn.CreateEndpointWithContext(ctx, input)
 		},
 		dms.ErrCodeAccessDeniedFault)
 
 	if err != nil {
-		return fmt.Errorf("creating DMS Endpoint (%s): %w", endpointID, err)
+		return sdkdiag.AppendErrorf(diags, "creating DMS Endpoint (%s): %s", endpointID, err)
 	}
 
 	d.SetId(endpointID)
 
-	return resourceEndpointRead(d, meta)
+	return append(diags, resourceEndpointRead(ctx, d, meta)...)
 }
 
-func resourceEndpointRead(d *schema.ResourceData, meta interface{}) error {
+func resourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	endpoint, err := FindEndpointByID(conn, d.Id())
+	endpoint, err := FindEndpointByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DMS Endpoint (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading DMS Endpoint (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading DMS Endpoint (%s): %s", d.Id(), err)
 	}
 
 	err = resourceEndpointSetState(d, endpoint)
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading DMS Endpoint (%s): %s", d.Id(), err)
 	}
 
-	tags, err := ListTags(conn, d.Get("endpoint_arn").(string))
+	tags, err := ListTags(ctx, conn, d.Get("endpoint_arn").(string))
 
 	if err != nil {
-		return fmt.Errorf("listing tags for DMS Endpoint (%s): %w", d.Get("endpoint_arn").(string), err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for DMS Endpoint (%s): %s", d.Get("endpoint_arn").(string), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
@@ -1265,10 +1270,10 @@ func resourceEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 
-		_, err := conn.ModifyEndpoint(input)
+		_, err := conn.ModifyEndpointWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("updating DMS Endpoint (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating DMS Endpoint (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -1276,35 +1281,36 @@ func resourceEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 		arn := d.Get("endpoint_arn").(string)
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, arn, o, n); err != nil {
-			return fmt.Errorf("updating DMS Endpoint (%s) tags: %w", arn, err)
+		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating DMS Endpoint (%s) tags: %s", arn, err)
 		}
 	}
 
-	return resourceEndpointRead(d, meta)
+	return append(diags, resourceEndpointRead(ctx, d, meta)...)
 }
 
-func resourceEndpointDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceEndpointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSConn()
 
 	log.Printf("[DEBUG] Deleting DMS Endpoint: (%s)", d.Id())
-	_, err := conn.DeleteEndpoint(&dms.DeleteEndpointInput{
+	_, err := conn.DeleteEndpointWithContext(ctx, &dms.DeleteEndpointInput{
 		EndpointArn: aws.String(d.Get("endpoint_arn").(string)),
 	})
 
 	if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("deleting DMS Endpoint (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting DMS Endpoint (%s): %s", d.Id(), err)
 	}
 
-	if err = waitEndpointDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("waiting for DMS Endpoint (%s) delete: %w", d.Id(), err)
+	if err = waitEndpointDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for DMS Endpoint (%s) delete: %s", d.Id(), err)
 	}
 
-	return err
+	return diags
 }
 
 func resourceEndpointCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {

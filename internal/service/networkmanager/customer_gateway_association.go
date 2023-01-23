@@ -25,7 +25,7 @@ func ResourceCustomerGatewayAssociation() *schema.Resource {
 		DeleteWithoutTimeout: resourceCustomerGatewayAssociationDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{

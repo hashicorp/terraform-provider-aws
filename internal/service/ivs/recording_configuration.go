@@ -196,7 +196,7 @@ func resourceRecordingConfigurationRead(ctx context.Context, d *schema.ResourceD
 		return create.DiagError(names.IVS, create.ErrActionSetting, ResNameRecordingConfiguration, d.Id(), err)
 	}
 
-	tags, err := ListTagsWithContext(ctx, conn, d.Id())
+	tags, err := ListTags(ctx, conn, d.Id())
 	if err != nil {
 		return create.DiagError(names.IVS, create.ErrActionReading, ResNameRecordingConfiguration, d.Id(), err)
 	}

@@ -219,7 +219,7 @@ func (r *resourceSecurityGroupRule) Update(ctx context.Context, request resource
 	}
 
 	if !new.TagsAll.Equal(old.TagsAll) {
-		if err := UpdateTagsWithContext(ctx, conn, new.ID.ValueString(), old.TagsAll, new.TagsAll); err != nil {
+		if err := UpdateTags(ctx, conn, new.ID.ValueString(), old.TagsAll, new.TagsAll); err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("updating VPC Security Group Rule (%s) tags", new.ID.ValueString()), err.Error())
 
 			return
@@ -317,7 +317,7 @@ func (r *resourceSecurityGroupRule) create(ctx context.Context, request resource
 	tags := defaultTagsConfig.MergeTags(tftags.New(data.Tags))
 
 	if len(tags) > 0 {
-		if err := UpdateTagsWithContext(ctx, conn, data.ID.ValueString(), nil, tags); err != nil {
+		if err := UpdateTags(ctx, conn, data.ID.ValueString(), nil, tags); err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("adding VPC Security Group Rule (%s) tags", data.ID.ValueString()), err.Error())
 
 			return

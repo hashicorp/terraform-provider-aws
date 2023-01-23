@@ -78,15 +78,15 @@ func waitClusterOperationCompleted(ctx context.Context, conn *kafka.Kafka, arn s
 	return nil, err
 }
 
-func waitConfigurationDeleted(conn *kafka.Kafka, arn string) (*kafka.DescribeConfigurationOutput, error) {
+func waitConfigurationDeleted(ctx context.Context, conn *kafka.Kafka, arn string) (*kafka.DescribeConfigurationOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{kafka.ConfigurationStateDeleting},
 		Target:  []string{},
-		Refresh: statusConfigurationState(conn, arn),
+		Refresh: statusConfigurationState(ctx, conn, arn),
 		Timeout: configurationDeletedTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*kafka.DescribeConfigurationOutput); ok {
 		return output, err

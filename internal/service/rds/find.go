@@ -11,14 +11,14 @@ import (
 )
 
 // FindDBProxyTarget returns matching FindDBProxyTarget.
-func FindDBProxyTarget(conn *rds.RDS, dbProxyName, targetGroupName, targetType, rdsResourceId string) (*rds.DBProxyTarget, error) {
+func FindDBProxyTarget(ctx context.Context, conn *rds.RDS, dbProxyName, targetGroupName, targetType, rdsResourceId string) (*rds.DBProxyTarget, error) {
 	input := &rds.DescribeDBProxyTargetsInput{
 		DBProxyName:     aws.String(dbProxyName),
 		TargetGroupName: aws.String(targetGroupName),
 	}
 	var dbProxyTarget *rds.DBProxyTarget
 
-	err := conn.DescribeDBProxyTargetsPages(input, func(page *rds.DescribeDBProxyTargetsOutput, lastPage bool) bool {
+	err := conn.DescribeDBProxyTargetsPagesWithContext(ctx, input, func(page *rds.DescribeDBProxyTargetsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -37,7 +37,7 @@ func FindDBProxyTarget(conn *rds.RDS, dbProxyName, targetGroupName, targetType, 
 }
 
 // FindDBProxyEndpoint returns matching FindDBProxyEndpoint.
-func FindDBProxyEndpoint(conn *rds.RDS, id string) (*rds.DBProxyEndpoint, error) {
+func FindDBProxyEndpoint(ctx context.Context, conn *rds.RDS, id string) (*rds.DBProxyEndpoint, error) {
 	dbProxyName, dbProxyEndpointName, err := ProxyEndpointParseID(id)
 	if err != nil {
 		return nil, err
@@ -49,7 +49,7 @@ func FindDBProxyEndpoint(conn *rds.RDS, id string) (*rds.DBProxyEndpoint, error)
 	}
 	var dbProxyEndpoint *rds.DBProxyEndpoint
 
-	err = conn.DescribeDBProxyEndpointsPages(input, func(page *rds.DescribeDBProxyEndpointsOutput, lastPage bool) bool {
+	err = conn.DescribeDBProxyEndpointsPagesWithContext(ctx, input, func(page *rds.DescribeDBProxyEndpointsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -68,8 +68,7 @@ func FindDBProxyEndpoint(conn *rds.RDS, id string) (*rds.DBProxyEndpoint, error)
 	return dbProxyEndpoint, err
 }
 
-func FindDBClusterRoleByDBClusterIDAndRoleARN(conn *rds.RDS, dbClusterID, roleARN string) (*rds.DBClusterRole, error) {
-	ctx := context.TODO()
+func FindDBClusterRoleByDBClusterIDAndRoleARN(ctx context.Context, conn *rds.RDS, dbClusterID, roleARN string) (*rds.DBClusterRole, error) {
 	dbCluster, err := FindDBClusterByID(ctx, conn, dbClusterID)
 
 	if err != nil {
@@ -127,12 +126,12 @@ func FindDBClusterWithActivityStream(ctx context.Context, conn *rds.RDS, dbClust
 	return dbCluster, nil
 }
 
-func FindDBClusterSnapshotByID(conn *rds.RDS, id string) (*rds.DBClusterSnapshot, error) {
+func FindDBClusterSnapshotByID(ctx context.Context, conn *rds.RDS, id string) (*rds.DBClusterSnapshot, error) {
 	input := &rds.DescribeDBClusterSnapshotsInput{
 		DBClusterSnapshotIdentifier: aws.String(id),
 	}
 
-	output, err := conn.DescribeDBClusterSnapshots(input)
+	output, err := conn.DescribeDBClusterSnapshotsWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBClusterSnapshotNotFoundFault) {
 		return nil, &resource.NotFoundError{
@@ -157,12 +156,12 @@ func FindDBClusterSnapshotByID(conn *rds.RDS, id string) (*rds.DBClusterSnapshot
 	return dbClusterSnapshot, nil
 }
 
-func FindDBProxyByName(conn *rds.RDS, name string) (*rds.DBProxy, error) {
+func FindDBProxyByName(ctx context.Context, conn *rds.RDS, name string) (*rds.DBProxy, error) {
 	input := &rds.DescribeDBProxiesInput{
 		DBProxyName: aws.String(name),
 	}
 
-	output, err := conn.DescribeDBProxies(input)
+	output, err := conn.DescribeDBProxiesWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyNotFoundFault) {
 		return nil, &resource.NotFoundError{
@@ -187,12 +186,12 @@ func FindDBProxyByName(conn *rds.RDS, name string) (*rds.DBProxy, error) {
 	return dbProxy, nil
 }
 
-func FindDBSnapshotByID(conn *rds.RDS, id string) (*rds.DBSnapshot, error) {
+func FindDBSnapshotByID(ctx context.Context, conn *rds.RDS, id string) (*rds.DBSnapshot, error) {
 	input := &rds.DescribeDBSnapshotsInput{
 		DBSnapshotIdentifier: aws.String(id),
 	}
 
-	output, err := conn.DescribeDBSnapshots(input)
+	output, err := conn.DescribeDBSnapshotsWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBSnapshotNotFoundFault) {
 		return nil, &resource.NotFoundError{
@@ -217,12 +216,12 @@ func FindDBSnapshotByID(conn *rds.RDS, id string) (*rds.DBSnapshot, error) {
 	return dbSnapshot, nil
 }
 
-func FindDBSubnetGroupByName(conn *rds.RDS, name string) (*rds.DBSubnetGroup, error) {
+func FindDBSubnetGroupByName(ctx context.Context, conn *rds.RDS, name string) (*rds.DBSubnetGroup, error) {
 	input := &rds.DescribeDBSubnetGroupsInput{
 		DBSubnetGroupName: aws.String(name),
 	}
 
-	output, err := conn.DescribeDBSubnetGroups(input)
+	output, err := conn.DescribeDBSubnetGroupsWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBSubnetGroupNotFoundFault) {
 		return nil, &resource.NotFoundError{
@@ -247,12 +246,12 @@ func FindDBSubnetGroupByName(conn *rds.RDS, name string) (*rds.DBSubnetGroup, er
 	return dbSubnetGroup, nil
 }
 
-func FindEventSubscriptionByID(conn *rds.RDS, id string) (*rds.EventSubscription, error) {
+func FindEventSubscriptionByID(ctx context.Context, conn *rds.RDS, id string) (*rds.EventSubscription, error) {
 	input := &rds.DescribeEventSubscriptionsInput{
 		SubscriptionName: aws.String(id),
 	}
 
-	output, err := conn.DescribeEventSubscriptions(input)
+	output, err := conn.DescribeEventSubscriptionsWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, rds.ErrCodeSubscriptionNotFoundFault) {
 		return nil, &resource.NotFoundError{
@@ -268,12 +267,12 @@ func FindEventSubscriptionByID(conn *rds.RDS, id string) (*rds.EventSubscription
 	return output.EventSubscriptionsList[0], nil
 }
 
-func FindDBInstanceAutomatedBackupByARN(conn *rds.RDS, arn string) (*rds.DBInstanceAutomatedBackup, error) {
+func FindDBInstanceAutomatedBackupByARN(ctx context.Context, conn *rds.RDS, arn string) (*rds.DBInstanceAutomatedBackup, error) {
 	input := &rds.DescribeDBInstanceAutomatedBackupsInput{
 		DBInstanceAutomatedBackupsArn: aws.String(arn),
 	}
 
-	output, err := findDBInstanceAutomatedBackup(conn, input)
+	output, err := findDBInstanceAutomatedBackup(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -297,8 +296,8 @@ func FindDBInstanceAutomatedBackupByARN(conn *rds.RDS, arn string) (*rds.DBInsta
 	return output, nil
 }
 
-func findDBInstanceAutomatedBackup(conn *rds.RDS, input *rds.DescribeDBInstanceAutomatedBackupsInput) (*rds.DBInstanceAutomatedBackup, error) {
-	output, err := findDBInstanceAutomatedBackups(conn, input)
+func findDBInstanceAutomatedBackup(ctx context.Context, conn *rds.RDS, input *rds.DescribeDBInstanceAutomatedBackupsInput) (*rds.DBInstanceAutomatedBackup, error) {
+	output, err := findDBInstanceAutomatedBackups(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -315,10 +314,10 @@ func findDBInstanceAutomatedBackup(conn *rds.RDS, input *rds.DescribeDBInstanceA
 	return output[0], nil
 }
 
-func findDBInstanceAutomatedBackups(conn *rds.RDS, input *rds.DescribeDBInstanceAutomatedBackupsInput) ([]*rds.DBInstanceAutomatedBackup, error) {
+func findDBInstanceAutomatedBackups(ctx context.Context, conn *rds.RDS, input *rds.DescribeDBInstanceAutomatedBackupsInput) ([]*rds.DBInstanceAutomatedBackup, error) {
 	var output []*rds.DBInstanceAutomatedBackup
 
-	err := conn.DescribeDBInstanceAutomatedBackupsPages(input, func(page *rds.DescribeDBInstanceAutomatedBackupsOutput, lastPage bool) bool {
+	err := conn.DescribeDBInstanceAutomatedBackupsPagesWithContext(ctx, input, func(page *rds.DescribeDBInstanceAutomatedBackupsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}

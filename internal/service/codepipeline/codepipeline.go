@@ -39,7 +39,7 @@ func ResourcePipeline() *schema.Resource {
 		DeleteWithoutTimeout: resourcePipelineDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -281,7 +281,7 @@ func resourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("name", pipeline.Name)
 	d.Set("role_arn", pipeline.RoleArn)
 
-	tags, err := ListTagsWithContext(ctx, conn, arn)
+	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
 		return diag.Errorf("listing tags for CodePipeline (%s): %s", arn, err)
@@ -324,7 +324,7 @@ func resourcePipelineUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		o, n := d.GetChange("tags_all")
 		arn := d.Get("arn").(string)
 
-		if err := UpdateTagsWithContext(ctx, conn, arn, o, n); err != nil {
+		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
 			return diag.Errorf("updating CodePipeline (%s) tags: %s", arn, err)
 		}
 	}

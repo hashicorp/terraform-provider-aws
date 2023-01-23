@@ -10,6 +10,7 @@ rules:
       - metavariable-regex:
           metavariable: "$FUNCNAME"
           regex: "^TestAcc[^_]+_([a-zA-Z]+[dD]isappears|[^_]+_disappears)$"
+      - focus-metavariable: $FUNCNAME
     severity: WARNING
 
   - id: aws-sdk-go-multiple-service-imports
@@ -224,7 +225,9 @@ rules:
     message: Nil value check before `d.Set()` is extraneous
     paths:
       include:
-        - aws/
+        - internal/
+      exclude:
+        - internal/service/apigateway/integration.go
     patterns:
       - pattern-either:
           - pattern: |
@@ -869,16 +872,6 @@ rules:
       - pattern: "[]string{..., string($X), ...}"
     severity: WARNING
 
-  - id: avoid-context-TODO-in-tests
-    languages: [go]
-    message: Prefer using context.Background() instead of context.TODO()
-    paths:
-      include:
-        - "internal/**/*_test.go"
-    patterns:
-      - pattern: context.TODO
-    severity: ERROR
-
   - id: avoid-context-CRUD-handlers
     languages: [go]
     message: Prefer using WithoutTimeout CRUD handlers instead of Context variants
@@ -887,4 +880,21 @@ rules:
         - internal/service
     patterns:
       - pattern-regex: "(Create|Read|Update|Delete)Context:"
+    severity: ERROR
+
+  - id: bare-error-returns
+    languages: [go]
+    message: API errors should be wrapped with the CRUD info
+    paths:
+      include:
+        - internal/service
+    patterns:
+      - pattern: return $ERR
+      - pattern-inside: |
+          func $FUNC($D *schema.ResourceData, ...) error {
+            ...
+          }
+      - metavariable-regex:
+          metavariable: $ERR
+          regex: "[Ee]rr(?!ors\\.)"
     severity: ERROR

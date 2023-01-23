@@ -96,7 +96,7 @@ func (h *queueAttributeHandler) Delete(ctx context.Context, d *schema.ResourceDa
 	attributes := map[string]string{
 		h.AttributeName: "",
 	}
-	_, err := conn.SetQueueAttributes(&sqs.SetQueueAttributesInput{
+	_, err := conn.SetQueueAttributesWithContext(ctx, &sqs.SetQueueAttributesInput{
 		Attributes: aws.StringMap(attributes),
 		QueueUrl:   aws.String(d.Id()),
 	})

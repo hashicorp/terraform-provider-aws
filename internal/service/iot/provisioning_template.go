@@ -36,7 +36,7 @@ func ResourceProvisioningTemplate() *schema.Resource {
 		DeleteWithoutTimeout: resourceProvisioningTemplateDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -187,7 +187,7 @@ func resourceProvisioningTemplateRead(ctx context.Context, d *schema.ResourceDat
 	d.Set("provisioning_role_arn", output.ProvisioningRoleArn)
 	d.Set("template_body", output.TemplateBody)
 
-	tags, err := ListTags(conn, d.Get("arn").(string))
+	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
 
 	if err != nil {
 		return diag.Errorf("error listing tags for IoT Provisioning Template (%s): %s", d.Id(), err)
@@ -248,7 +248,7 @@ func resourceProvisioningTemplateUpdate(ctx context.Context, d *schema.ResourceD
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.Errorf("error updating tags: %s", err)
 		}
 	}

@@ -14,11 +14,7 @@ import (
 // ListTags lists appmesh service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn appmeshiface.AppMeshAPI, identifier string) (tftags.KeyValueTags, error) {
-	return ListTagsWithContext(context.Background(), conn, identifier)
-}
-
-func ListTagsWithContext(ctx context.Context, conn appmeshiface.AppMeshAPI, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(ctx context.Context, conn appmeshiface.AppMeshAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &appmesh.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
@@ -64,10 +60,7 @@ func KeyValueTags(tags []*appmesh.TagRef) tftags.KeyValueTags {
 // UpdateTags updates appmesh service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn appmeshiface.AppMeshAPI, identifier string, oldTags interface{}, newTags interface{}) error {
-	return UpdateTagsWithContext(context.Background(), conn, identifier, oldTags, newTags)
-}
-func UpdateTagsWithContext(ctx context.Context, conn appmeshiface.AppMeshAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(ctx context.Context, conn appmeshiface.AppMeshAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 

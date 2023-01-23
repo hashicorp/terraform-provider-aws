@@ -68,7 +68,7 @@ func main() {
 	badCaps, err := readBadCaps(capsDataFile)
 
 	if err != nil {
-		g.Fatalf("error reading %s: %s", capsDataFile, err.Error())
+		g.Fatalf("error reading %s: %s", capsDataFile, err)
 	}
 
 	cd := CAEData{}
@@ -77,15 +77,23 @@ func main() {
 	d := g.NewUnformattedFileDestination(filenameCAE)
 
 	if err := d.WriteTemplate("caps-aws-ec2", tmplCAE, cd); err != nil {
-		g.Fatalf("error: %s", err.Error())
+		g.Fatalf("generating file (%s): %s", filenameCAE, err)
+	}
+
+	if err := d.Write(); err != nil {
+		g.Fatalf("generating file (%s): %s", filenameCAE, err)
 	}
 
 	g.Infof("Generating %s", strings.TrimPrefix(filenameConfigs, "../../../"))
 
 	d = g.NewUnformattedFileDestination(filenameConfigs)
 
-	if err := d.Write([]byte(configs)); err != nil {
-		g.Fatalf("error: %s", err.Error())
+	if err := d.WriteBytes([]byte(configs)); err != nil {
+		g.Fatalf("generating file (%s): %s", filenameConfigs, err)
+	}
+
+	if err := d.Write(); err != nil {
+		g.Fatalf("generating file (%s): %s", filenameConfigs, err)
 	}
 
 	g.Infof("Generating %s", strings.TrimPrefix(filename, "../../../"))
@@ -93,7 +101,7 @@ func main() {
 	data, err := common.ReadAllCSVData(namesDataFile)
 
 	if err != nil {
-		g.Fatalf("error reading %s: %s", namesDataFile, err.Error())
+		g.Fatalf("error reading %s: %s", namesDataFile, err)
 	}
 
 	td := TemplateData{}
@@ -172,18 +180,22 @@ func main() {
 	d = g.NewUnformattedFileDestination(filename)
 
 	if err := d.WriteTemplate("servicesemgrep", tmpl, td); err != nil {
-		g.Fatalf("error: %s", err.Error())
+		g.Fatalf("generating file (%s): %s", filename, err)
+	}
+
+	if err := d.Write(); err != nil {
+		g.Fatalf("generating file (%s): %s", filename, err)
 	}
 
 	if err := breakUpBigFile(g, filename, header); err != nil {
-		g.Fatalf("error: %s", err.Error())
+		g.Fatalf("error: %s", err)
 	}
 
 	g.Infof("  Removing %s", strings.TrimPrefix(filename, "../../../"))
 
 	err = os.Remove(filename)
 	if err != nil {
-		g.Fatalf("error: %s", err.Error())
+		g.Fatalf("error: %s", err)
 	}
 }
 
