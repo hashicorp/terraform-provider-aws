@@ -9,15 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ssmincidents"
 )
 
-func ConvertInterfaceMapToStringMap(interfaceMap map[string]interface{}) map[string]string {
-	result := map[string]string{}
-
-	for k, v := range interfaceMap {
-		result[k] = v.(string)
-	}
-	return result
-}
-
 func GetReplicationSetARN(context context.Context, client *ssmincidents.Client) (string, error) {
 	replicationSets, err := client.ListReplicationSets(context, &ssmincidents.ListReplicationSetsInput{})
 

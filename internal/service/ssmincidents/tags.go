@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -57,7 +58,7 @@ func UpdateResourceTags(context context.Context, client *ssmincidents.Client, d 
 	oldTags := tftags.New(old)
 	newTags := tftags.New(new)
 
-	allNewTagsMap := ConvertInterfaceMapToStringMap(new.(map[string]interface{}))
+	allNewTagsMap := flex.ExpandStringValueMap(new.(map[string]interface{}))
 
 	if err := updateResourceTag(context, client, d.Id(), oldTags.Removed(newTags), oldTags.Updated(newTags)); err != nil {
 		return err
