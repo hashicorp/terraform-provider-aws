@@ -232,7 +232,7 @@ func SkipSweepError(err error) bool {
 	return false
 }
 
-func DeleteResource(ctx context.Context, resource *schema.Resource, d *schema.ResourceData, meta interface{}) error {
+func DeleteResource(ctx context.Context, resource *schema.Resource, d *schema.ResourceData, meta any) error {
 	if resource.DeleteContext != nil || resource.DeleteWithoutTimeout != nil {
 		var diags diag.Diagnostics
 
@@ -246,6 +246,22 @@ func DeleteResource(ctx context.Context, resource *schema.Resource, d *schema.Re
 	}
 
 	return resource.Delete(d, meta)
+}
+
+func ReadResource(ctx context.Context, resource *schema.Resource, d *schema.ResourceData, meta any) error {
+	if resource.ReadContext != nil || resource.ReadWithoutTimeout != nil {
+		var diags diag.Diagnostics
+
+		if resource.ReadContext != nil {
+			diags = resource.ReadContext(ctx, d, meta)
+		} else {
+			diags = resource.ReadWithoutTimeout(ctx, d, meta)
+		}
+
+		return sdkdiag.DiagnosticsError(diags)
+	}
+
+	return resource.Read(d, meta)
 }
 
 func Partition(region string) string {

@@ -69,7 +69,7 @@ func TestAccDMSEventSubscription_disappears(t *testing.T) {
 				Config: testAccEventSubscriptionConfig_enabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(ctx, resourceName, &eventSubscription),
-					testAccCheckEventSubscriptionDisappears(resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdms.ResourceEventSubscription(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -231,23 +231,6 @@ func testAccCheckEventSubscriptionDestroy(ctx context.Context) resource.TestChec
 		}
 
 		return nil
-	}
-}
-
-func testAccCheckEventSubscriptionDisappears(resourceName string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
-		}
-
-		resource := tfdms.ResourceEventSubscription()
-
-		return resource.Delete(resource.Data(rs.Primary), acctest.Provider.Meta())
 	}
 }
 
