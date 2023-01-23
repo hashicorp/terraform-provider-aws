@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
-// See http://docs.aws.amazon.com/general/latest/gr/rande.html#elb_region
+// See https://docs.aws.amazon.com/general/latest/gr/rande.html#elb_region
 // See https://docs.amazonaws.cn/en_us/general/latest/gr/rande.html#elb_region
 
 var HostedZoneIdPerRegionMap = map[string]string{

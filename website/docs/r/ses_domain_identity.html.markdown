@@ -54,7 +54,7 @@ In addition to all arguments above, the following attributes are exported:
   for how this might be achieved when the domain is hosted in Route 53 and
   managed by Terraform.  Find out more about verifying domains in Amazon
   SES in the [AWS SES
-  docs](http://docs.aws.amazon.com/ses/latest/DeveloperGuide/verify-domains.html).
+  docs](https://docs.aws.amazon.com/ses/latest/DeveloperGuide/verify-domains.html).
 
 ## Import
 

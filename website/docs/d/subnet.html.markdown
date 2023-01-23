@@ -71,7 +71,7 @@ This block allows for complex filters. You can use one or more `filter` blocks.
 
 The following arguments are required:
 
-* `name` - (Required) Name of the field to filter by, as defined by [the underlying AWS API](http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeSubnets.html).
+* `name` - (Required) Name of the field to filter by, as defined by [the underlying AWS API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeSubnets.html).
 * `values` - (Required) Set of values that are accepted for the given field. A subnet will be selected if any one of the given values matches.
 
 ## Attributes Reference

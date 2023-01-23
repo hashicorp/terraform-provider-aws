@@ -49,7 +49,7 @@ Parameter blocks support the following:
 * `value` - (Required) The value of the Redshift parameter.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-You can read more about the parameters that Redshift supports in the [documentation](http://docs.aws.amazon.com/redshift/latest/mgmt/working-with-parameter-groups.html)
+You can read more about the parameters that Redshift supports in the [documentation](https://docs.aws.amazon.com/redshift/latest/mgmt/working-with-parameter-groups.html)
 
 ## Attributes Reference
 

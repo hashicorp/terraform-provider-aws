@@ -78,7 +78,7 @@ resource "aws_elastictranscoder_preset" "bar" {
 
 ## Argument Reference
 
-See ["Create Preset"](http://docs.aws.amazon.com/elastictranscoder/latest/developerguide/create-preset.html) in the AWS docs for reference.
+See ["Create Preset"](https://docs.aws.amazon.com/elastictranscoder/latest/developerguide/create-preset.html) in the AWS docs for reference.
 
 The following arguments are supported:
 

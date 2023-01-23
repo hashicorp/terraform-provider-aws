@@ -218,8 +218,8 @@ In addition to all arguments above, the following attributes are exported:
 * `state_transition_reason` - The reason the event source mapping is in its current state.
 * `uuid` - The UUID of the created event source mapping.
 
-[1]: http://docs.aws.amazon.com/lambda/latest/dg/welcome.html
-[2]: http://docs.aws.amazon.com/lambda/latest/dg/API_CreateEventSourceMapping.html
+[1]: https://docs.aws.amazon.com/lambda/latest/dg/welcome.html
+[2]: https://docs.aws.amazon.com/lambda/latest/dg/API_CreateEventSourceMapping.html
 
 ## Import
 

@@ -47,7 +47,7 @@ func validNestedExactlyOneOf(m map[string]interface{}, valid []string) error {
 func validAmazonSideASN(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 
-	// http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_CreateVpnGateway.html
+	// https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_CreateVpnGateway.html
 	asn, err := strconv.ParseInt(value, 10, 64)
 	if err != nil {
 		errors = append(errors, fmt.Errorf("%q (%q) must be a 64-bit integer", k, v))

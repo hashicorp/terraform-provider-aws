@@ -2345,7 +2345,7 @@ resource "aws_elasticsearch_domain" "test" {
 
   elasticsearch_version = %[2]q
 
-  # Encrypt at rest requires m4/c4/r4/i2 instances. See http://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/aes-supported-instance-types.html
+  # Encrypt at rest requires m4/c4/r4/i2 instances. See https://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/aes-supported-instance-types.html
   cluster_config {
     instance_type = "m4.large.elasticsearch"
   }
@@ -2374,7 +2374,7 @@ resource "aws_elasticsearch_domain" "test" {
 
   elasticsearch_version = %[2]q
 
-  # Encrypt at rest requires m4/c4/r4/i2 instances. See http://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/aes-supported-instance-types.html
+  # Encrypt at rest requires m4/c4/r4/i2 instances. See https://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/aes-supported-instance-types.html
   cluster_config {
     instance_type = "m4.large.elasticsearch"
   }

@@ -45,7 +45,7 @@ resource "aws_elb" "elb" {
 * `path` is set to the path of the IAM Server Certificate
 * `expiration_date` is set to the expiration date of the IAM Server Certificate
 * `upload_date` is the date when the server certificate was uploaded
-* `certificate_body` is the public key certificate (PEM-encoded). This is useful when [configuring back-end instance authentication](http://docs.aws.amazon.com/elasticloadbalancing/latest/classic/elb-create-https-ssl-load-balancer.html) policy for load balancer
+* `certificate_body` is the public key certificate (PEM-encoded). This is useful when [configuring back-end instance authentication](https://docs.aws.amazon.com/elasticloadbalancing/latest/classic/elb-create-https-ssl-load-balancer.html) policy for load balancer
 * `certificate_chain` is the public key certificate chain (PEM-encoded) if exists, empty otherwise
 
 ## Import

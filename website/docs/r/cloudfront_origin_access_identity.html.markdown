@@ -93,8 +93,8 @@ resource "aws_s3_bucket_policy" "example" {
 }
 ```
 
-[1]: http://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/Introduction.html
-[2]: http://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-restricting-access-to-s3.html
+[1]: https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/Introduction.html
+[2]: https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-restricting-access-to-s3.html
 [3]: /docs/providers/aws/r/cloudfront_distribution.html
 [4]: /docs/providers/aws/r/s3_bucket.html
 

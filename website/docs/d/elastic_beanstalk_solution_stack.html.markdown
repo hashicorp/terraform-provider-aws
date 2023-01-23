@@ -37,4 +37,4 @@ a single solution stack, or use `most_recent` to choose the most recent one.
 
 * `name` - Name of the solution stack.
 
-[beanstalk-platforms]: http://docs.aws.amazon.com/elasticbeanstalk/latest/dg/concepts.platforms.html "AWS Elastic Beanstalk Supported Platforms documentation"
+[beanstalk-platforms]: https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/concepts.platforms.html "AWS Elastic Beanstalk Supported Platforms documentation"

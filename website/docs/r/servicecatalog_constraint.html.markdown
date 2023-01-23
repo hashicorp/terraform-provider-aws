@@ -75,7 +75,7 @@ The `type` you specify determines what must be included in the `parameters` JSON
 { "Version" : "String", "Properties" : { "AccountList" : [ "String" ], "RegionList" : [ "String" ], "AdminRole" : "String", "ExecutionRole" : "String" }}
 ```
 
-* `TEMPLATE`: Specify the Rules property. For more information, see [Template Constraint Rules](http://docs.aws.amazon.com/servicecatalog/latest/adminguide/reference-template_constraint_rules.html).
+* `TEMPLATE`: Specify the Rules property. For more information, see [Template Constraint Rules](https://docs.aws.amazon.com/servicecatalog/latest/adminguide/reference-template_constraint_rules.html).
 
 ## Attributes Reference
 

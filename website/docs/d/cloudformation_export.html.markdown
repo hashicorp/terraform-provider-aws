@@ -9,7 +9,7 @@ description: |-
 # Data Source: aws_cloudformation_export
 
 The CloudFormation Export data source allows access to stack
-exports specified in the [Output](http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/outputs-section-structure.html) section of the Cloudformation Template using the optional Export Property.
+exports specified in the [Output](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/outputs-section-structure.html) section of the Cloudformation Template using the optional Export Property.
 
  -> Note: If you are trying to use a value from a Cloudformation Stack in the same Terraform run please use normal interpolation or Cloudformation Outputs.
 
@@ -29,11 +29,11 @@ resource "aws_instance" "web" {
 
 ## Argument Reference
 
-* `name` - (Required) Name of the export as it appears in the console or from [list-exports](http://docs.aws.amazon.com/cli/latest/reference/cloudformation/list-exports.html)
+* `name` - (Required) Name of the export as it appears in the console or from [list-exports](https://docs.aws.amazon.com/cli/latest/reference/cloudformation/list-exports.html)
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `value` - Value from Cloudformation export identified by the export name found from [list-exports](http://docs.aws.amazon.com/cli/latest/reference/cloudformation/list-exports.html)
+* `value` - Value from Cloudformation export identified by the export name found from [list-exports](https://docs.aws.amazon.com/cli/latest/reference/cloudformation/list-exports.html)
 * `exporting_stack_id` - ARN of stack that contains the exported output name and value.

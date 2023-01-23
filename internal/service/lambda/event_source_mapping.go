@@ -441,7 +441,7 @@ func resourceEventSourceMappingCreate(ctx context.Context, d *schema.ResourceDat
 	log.Printf("[DEBUG] Creating Lambda Event Source Mapping: %s", input)
 
 	// IAM profiles and roles can take some time to propagate in AWS:
-	//  http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html#launch-instance-with-role-console
+	//  https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html#launch-instance-with-role-console
 	// Error creating Lambda function: InvalidParameterValueException: The
 	// function defined for the task cannot be assumed by Lambda.
 	//

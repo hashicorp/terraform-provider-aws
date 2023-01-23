@@ -27,7 +27,7 @@ In addition to all arguments above, the following attributes are exported:
   See below for an example of how this might be achieved
   when the domain is hosted in Route 53 and managed by Terraform.
   Find out more about verifying domains in Amazon SES
-  in the [AWS SES docs](http://docs.aws.amazon.com/ses/latest/DeveloperGuide/easy-dkim-dns-records.html).
+  in the [AWS SES docs](https://docs.aws.amazon.com/ses/latest/DeveloperGuide/easy-dkim-dns-records.html).
 
 ## Example Usage
 

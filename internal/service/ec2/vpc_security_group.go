@@ -1547,7 +1547,7 @@ func ProtocolForValue(v string) string {
 // a map of protocol names and their codes, defined at
 // https://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml,
 // documented to be supported by AWS Security Groups
-// http://docs.aws.amazon.com/fr_fr/AWSEC2/latest/APIReference/API_IpPermission.html
+// https://docs.aws.amazon.com/fr_fr/AWSEC2/latest/APIReference/API_IpPermission.html
 // Similar to protocolIntegers() used by Network ACLs, but explicitly only
 // supports "tcp", "udp", "icmp", "icmpv6", and "all"
 var securityGroupProtocolIntegers = map[string]int{

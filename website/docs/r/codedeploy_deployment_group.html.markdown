@@ -365,4 +365,4 @@ CodeDeploy Deployment Groups can be imported by their `app_name`, a colon, and `
 $ terraform import aws_codedeploy_deployment_group.example my-application:my-deployment-group
 ```
 
-[1]: http://docs.aws.amazon.com/codedeploy/latest/userguide/monitoring-sns-event-notifications-create-trigger.html
+[1]: https://docs.aws.amazon.com/codedeploy/latest/userguide/monitoring-sns-event-notifications-create-trigger.html

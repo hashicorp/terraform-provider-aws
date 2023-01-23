@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
-// See http://docs.aws.amazon.com/general/latest/gr/rande.html#elasticbeanstalk_region
+// See https://docs.aws.amazon.com/general/latest/gr/rande.html#elasticbeanstalk_region
 
 var HostedZoneIDs = map[string]string{
 	endpoints.AfSouth1RegionID:     "Z1EI3BVKMKK4AM",

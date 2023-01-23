@@ -151,13 +151,13 @@ Alias records support the following:
 
 Failover routing policiessupport the following:
 
-* `type` - (Required) `PRIMARY` or `SECONDARY`. A `PRIMARY` record will be served if its healthcheck is passing, otherwise the `SECONDARY` will be served. See http://docs.aws.amazon.com/Route53/latest/DeveloperGuide/dns-failover-configuring-options.html#dns-failover-failover-rrsets
+* `type` - (Required) `PRIMARY` or `SECONDARY`. A `PRIMARY` record will be served if its healthcheck is passing, otherwise the `SECONDARY` will be served. See https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/dns-failover-configuring-options.html#dns-failover-failover-rrsets
 
 ### Geolocation Routing Policy
 
 Geolocation routing policies support the following:
 
-* `continent` - A two-letter continent code. See http://docs.aws.amazon.com/Route53/latest/APIReference/API_GetGeoLocation.html for code details. Either `continent` or `country` must be specified.
+* `continent` - A two-letter continent code. See https://docs.aws.amazon.com/Route53/latest/APIReference/API_GetGeoLocation.html for code details. Either `continent` or `country` must be specified.
 * `country` - A two-character country code or `*` to indicate a default resource record set.
 * `subdivision` - (Optional) A subdivision code for a country.
 
@@ -165,13 +165,13 @@ Geolocation routing policies support the following:
 
 Latency routing policies support the following:
 
-* `region` - (Required) An AWS region from which to measure latency. See http://docs.aws.amazon.com/Route53/latest/DeveloperGuide/routing-policy.html#routing-policy-latency
+* `region` - (Required) An AWS region from which to measure latency. See https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/routing-policy.html#routing-policy-latency
 
 ### Weighted Routing Policy
 
 Weighted routing policies support the following:
 
-* `weight` - (Required) A numeric value indicating the relative weight of the record. See http://docs.aws.amazon.com/Route53/latest/DeveloperGuide/routing-policy.html#routing-policy-weighted.
+* `weight` - (Required) A numeric value indicating the relative weight of the record. See https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/routing-policy.html#routing-policy-weighted.
 
 ## Attributes Reference
 

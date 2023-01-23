@@ -7,9 +7,9 @@
 
 ## Quick Start
 
-If you wish to work on the provider, you'll first need [Go](http://www.golang.org) installed on your machine (please check the [requirements](#requirements) before proceeding).
+If you wish to work on the provider, you'll first need [Go](https://www.golang.org) installed on your machine (please check the [requirements](#requirements) before proceeding).
 
-*Note:* This project uses [Go Modules](https://blog.golang.org/using-go-modules) making it safe to work with it outside of your existing [GOPATH](http://golang.org/doc/code.html#GOPATH). The instructions that follow assume a directory in your home directory outside of the standard GOPATH (i.e `$HOME/development/hashicorp/`).
+*Note:* This project uses [Go Modules](https://blog.golang.org/using-go-modules) making it safe to work with it outside of your existing [GOPATH](https://golang.org/doc/code.html#GOPATH). The instructions that follow assume a directory in your home directory outside of the standard GOPATH (i.e `$HOME/development/hashicorp/`).
 
 Clone repository to: `$HOME/development/hashicorp/`
 

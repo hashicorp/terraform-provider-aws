@@ -16,7 +16,7 @@ func validateRuleName(v interface{}, k string) (ws []string, errors []error) {
 			"%q cannot be longer than 64 characters: %q", k, value))
 	}
 
-	// http://docs.aws.amazon.com/eventbridge/latest/APIReference/API_PutRule.html
+	// https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_PutRule.html
 	pattern := `^[\.\-_A-Za-z0-9]+$`
 	if !regexp.MustCompile(pattern).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
@@ -34,7 +34,7 @@ func validateTargetID(v interface{}, k string) (ws []string, errors []error) {
 			"%q cannot be longer than 64 characters: %q", k, value))
 	}
 
-	// http://docs.aws.amazon.com/eventbridge/latest/APIReference/API_Target.html
+	// https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_Target.html
 	pattern := `^[\.\-_A-Za-z0-9]+$`
 	if !regexp.MustCompile(pattern).MatchString(value) {
 		errors = append(errors, fmt.Errorf(

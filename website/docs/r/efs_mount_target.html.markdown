@@ -43,14 +43,14 @@ be for the same VPC as subnet specified) in effect for the mount target.
 ## Attributes Reference
 
 ~> **Note:** The `dns_name` and `mount_target_dns_name` attributes are only useful if the mount target is in a VPC that has
-support for DNS hostnames enabled. See [Using DNS with Your VPC](http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/vpc-dns.html)
+support for DNS hostnames enabled. See [Using DNS with Your VPC](https://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/vpc-dns.html)
 and [VPC resource](/docs/providers/aws/r/vpc.html#enable_dns_hostnames) in Terraform for more information.
 
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the mount target.
 * `dns_name` - The DNS name for the EFS file system.
-* `mount_target_dns_name` - The DNS name for the given subnet/AZ per [documented convention](http://docs.aws.amazon.com/efs/latest/ug/mounting-fs-mount-cmd-dns-name.html).
+* `mount_target_dns_name` - The DNS name for the given subnet/AZ per [documented convention](https://docs.aws.amazon.com/efs/latest/ug/mounting-fs-mount-cmd-dns-name.html).
 * `file_system_arn` - Amazon Resource Name of the file system.
 * `network_interface_id` - The ID of the network interface that Amazon EFS created when it created the mount target.
 * `availability_zone_name` - The name of the Availability Zone (AZ) that the mount target resides in.

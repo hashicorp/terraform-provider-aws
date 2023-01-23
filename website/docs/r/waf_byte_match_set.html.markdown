@@ -48,7 +48,7 @@ The following arguments are supported:
 * `positional_constraint` - (Required) Within the portion of a web request that you want to search
   (for example, in the query string, if any), specify where you want to search.
   e.g., `CONTAINS`, `CONTAINS_WORD` or `EXACTLY`.
-  See [docs](http://docs.aws.amazon.com/waf/latest/APIReference/API_ByteMatchTuple.html#WAF-Type-ByteMatchTuple-PositionalConstraint)
+  See [docs](https://docs.aws.amazon.com/waf/latest/APIReference/API_ByteMatchTuple.html#WAF-Type-ByteMatchTuple-PositionalConstraint)
   for all supported values.
 * `target_string` - (Optional) The value that you want to search for within the field specified by `field_to_match`, e.g., `badrefer1`.
   See [docs](https://docs.aws.amazon.com/waf/latest/APIReference/API_waf_ByteMatchTuple.html)
@@ -56,7 +56,7 @@ The following arguments are supported:
 * `text_transformation` - (Required) Text transformations used to eliminate unusual formatting that attackers use in web requests in an effort to bypass AWS WAF.
   If you specify a transformation, AWS WAF performs the transformation on `target_string` before inspecting a request for a match.
   e.g., `CMD_LINE`, `HTML_ENTITY_DECODE` or `NONE`.
-  See [docs](http://docs.aws.amazon.com/waf/latest/APIReference/API_ByteMatchTuple.html#WAF-Type-ByteMatchTuple-TextTransformation)
+  See [docs](https://docs.aws.amazon.com/waf/latest/APIReference/API_ByteMatchTuple.html#WAF-Type-ByteMatchTuple-TextTransformation)
   for all supported values.
 
 ### `field_to_match`
@@ -67,7 +67,7 @@ The following arguments are supported:
   If `type` is any other value, omit this field.
 * `type` - (Required) The part of the web request that you want AWS WAF to search for a specified string.
   e.g., `HEADER`, `METHOD` or `BODY`.
-  See [docs](http://docs.aws.amazon.com/waf/latest/APIReference/API_FieldToMatch.html)
+  See [docs](https://docs.aws.amazon.com/waf/latest/APIReference/API_FieldToMatch.html)
   for all supported values.
 
 ## Remarks

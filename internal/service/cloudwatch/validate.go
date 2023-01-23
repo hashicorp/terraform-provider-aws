@@ -12,7 +12,7 @@ func validDashboardName(v interface{}, k string) (ws []string, errors []error) {
 			"%q cannot be longer than 255 characters: %q", k, value))
 	}
 
-	// http://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_PutDashboard.html
+	// https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_PutDashboard.html
 	pattern := `^[\-_A-Za-z0-9]+$`
 	if !regexp.MustCompile(pattern).MatchString(value) {
 		errors = append(errors, fmt.Errorf(

@@ -100,7 +100,7 @@ The following arguments are supported:
 
 ### health_check
 
-~> **Note:** The Health Check parameters you can set vary by the `protocol` of the Target Group. Many parameters cannot be set to custom values for `network` load balancers at this time. See http://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_CreateTargetGroup.html for a complete reference. Keep in mind, that health checks produce actual requests to the backend. The underlying function is invoked when `target_type` is set to `lambda`.
+~> **Note:** The Health Check parameters you can set vary by the `protocol` of the Target Group. Many parameters cannot be set to custom values for `network` load balancers at this time. See https://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_CreateTargetGroup.html for a complete reference. Keep in mind, that health checks produce actual requests to the backend. The underlying function is invoked when `target_type` is set to `lambda`.
 
 * `enabled` - (Optional) Whether health checks are enabled. Defaults to `true`.
 * `healthy_threshold` - (Optional)  Number of consecutive health check successes required before considering a target healthy. The range is 2-10. Defaults to 3.

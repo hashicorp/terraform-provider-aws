@@ -862,7 +862,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		},
 		func(err error) (bool, error) {
 			// IAM instance profiles can take ~10 seconds to propagate in AWS:
-			// http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html#launch-instance-with-role-console
+			// https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html#launch-instance-with-role-console
 			if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "Invalid IAM Instance Profile") {
 				return true, err
 			}
@@ -2246,7 +2246,7 @@ func readBlockDeviceMappingsFromConfig(ctx context.Context, d *schema.ResourceDa
 						// Condition: This parameter is required for requests to create io1 or io2
 						// volumes and optional for gp3; it is not used in requests to create gp2, st1, sc1, or
 						// standard volumes.
-						// See: http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_EbsBlockDevice.html
+						// See: https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_EbsBlockDevice.html
 						ebs.Iops = aws.Int64(int64(iops))
 					} else {
 						// Enforce IOPs usage with a valid volume type
@@ -2690,7 +2690,7 @@ func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta interfa
 	if v := d.Get("security_groups"); v != nil {
 		// Security group names.
 		// For a nondefault VPC, you must use security group IDs instead.
-		// See http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_RunInstances.html
+		// See https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_RunInstances.html
 		sgs := v.(*schema.Set).List()
 		if len(sgs) > 0 && hasSubnet {
 			log.Print("[WARN] Deprecated. Attempting to use 'security_groups' within a VPC instance. Use 'vpc_security_group_ids' instead.")

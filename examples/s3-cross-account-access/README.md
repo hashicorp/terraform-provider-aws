@@ -3,7 +3,7 @@
 This example describes how to create an S3 bucket in one AWS account and give access to that bucket to another user from another AWS account using bucket policy.
 It demonstrates capabilities of provider aliases.
 
-See [more in the S3 documentation](http://docs.aws.amazon.com/AmazonS3/latest/dev/example-walkthroughs-managing-access-example2.html).
+See [more in the S3 documentation](https://docs.aws.amazon.com/AmazonS3/latest/dev/example-walkthroughs-managing-access-example2.html).
 
 ## How to run
 

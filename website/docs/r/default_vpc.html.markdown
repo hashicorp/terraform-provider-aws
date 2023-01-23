@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_default_vpc
 
-Provides a resource to manage the [default AWS VPC](http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/default-vpc.html)
+Provides a resource to manage the [default AWS VPC](https://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/default-vpc.html)
 in the current AWS Region.
 
 If you created your AWS account after 2013-12-04 you have a default VPC in each AWS Region.

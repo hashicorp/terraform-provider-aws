@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-// http://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_CreateGlobalTable.html
+// https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_CreateGlobalTable.html
 func validGlobalTableName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if (len(value) > 255) || (len(value) < 3) {

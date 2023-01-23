@@ -41,7 +41,7 @@ interpolation.
 * `max_size` - Maximum size of the group.
 * `min_size` - Minimum size of the group.
 * `name` - Name of the Auto Scaling Group.
-* `placement_group` - Name of the placement group into which to launch your instances, if any. For more information, see Placement Groups (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/placement-groups.html) in the Amazon Elastic Compute Cloud User Guide.
+* `placement_group` - Name of the placement group into which to launch your instances, if any. For more information, see Placement Groups (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/placement-groups.html) in the Amazon Elastic Compute Cloud User Guide.
 * `service_linked_role_arn` - ARN of the service-linked role that the Auto Scaling group uses to call other AWS services on your behalf.
 * `status` - Current state of the group when DeleteAutoScalingGroup is in progress.
 * `target_group_arns` - ARNs of the target groups for your load balancer.

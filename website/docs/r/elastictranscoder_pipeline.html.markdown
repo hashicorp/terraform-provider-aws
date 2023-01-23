@@ -32,7 +32,7 @@ resource "aws_elastictranscoder_pipeline" "bar" {
 
 ## Argument Reference
 
-See ["Create Pipeline"](http://docs.aws.amazon.com/elastictranscoder/latest/developerguide/create-pipeline.html) in the AWS docs for reference.
+See ["Create Pipeline"](https://docs.aws.amazon.com/elastictranscoder/latest/developerguide/create-pipeline.html) in the AWS docs for reference.
 
 The following arguments are supported:
 

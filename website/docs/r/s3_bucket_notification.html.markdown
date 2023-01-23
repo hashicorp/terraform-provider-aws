@@ -311,7 +311,7 @@ The following arguments are optional:
 
 ### `lambda_function`
 
-* `events` - (Required) [Event](http://docs.aws.amazon.com/AmazonS3/latest/dev/NotificationHowTo.html#notification-how-to-event-types-and-destinations) for which to send notifications.
+* `events` - (Required) [Event](https://docs.aws.amazon.com/AmazonS3/latest/dev/NotificationHowTo.html#notification-how-to-event-types-and-destinations) for which to send notifications.
 * `filter_prefix` - (Optional) Object key name prefix.
 * `filter_suffix` - (Optional) Object key name suffix.
 * `id` - (Optional) Unique identifier for each of the notification configurations.
@@ -319,7 +319,7 @@ The following arguments are optional:
 
 ### `queue`
 
-* `events` - (Required) Specifies [event](http://docs.aws.amazon.com/AmazonS3/latest/dev/NotificationHowTo.html#notification-how-to-event-types-and-destinations) for which to send notifications.
+* `events` - (Required) Specifies [event](https://docs.aws.amazon.com/AmazonS3/latest/dev/NotificationHowTo.html#notification-how-to-event-types-and-destinations) for which to send notifications.
 * `filter_prefix` - (Optional) Object key name prefix.
 * `filter_suffix` - (Optional) Object key name suffix.
 * `id` - (Optional) Unique identifier for each of the notification configurations.
@@ -327,7 +327,7 @@ The following arguments are optional:
 
 ### `topic`
 
-* `events` - (Required) [Event](http://docs.aws.amazon.com/AmazonS3/latest/dev/NotificationHowTo.html#notification-how-to-event-types-and-destinations) for which to send notifications.
+* `events` - (Required) [Event](https://docs.aws.amazon.com/AmazonS3/latest/dev/NotificationHowTo.html#notification-how-to-event-types-and-destinations) for which to send notifications.
 * `filter_prefix` - (Optional) Object key name prefix.
 * `filter_suffix` - (Optional) Object key name suffix.
 * `id` - (Optional) Unique identifier for each of the notification configurations.

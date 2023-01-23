@@ -36,7 +36,7 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - The Amazon Resource Name of this project
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
-[aws-get-project]: http://docs.aws.amazon.com/devicefarm/latest/APIReference/API_GetProject.html
+[aws-get-project]: https://docs.aws.amazon.com/devicefarm/latest/APIReference/API_GetProject.html
 
 ## Import
 

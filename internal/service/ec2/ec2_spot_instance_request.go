@@ -203,7 +203,7 @@ func resourceSpotInstanceRequestCreate(ctx context.Context, d *schema.ResourceDa
 	err = resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
 		resp, err = conn.RequestSpotInstancesWithContext(ctx, spotOpts)
 		// IAM instance profiles can take ~10 seconds to propagate in AWS:
-		// http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html#launch-instance-with-role-console
+		// https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html#launch-instance-with-role-console
 		if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "Invalid IAM Instance Profile") {
 			log.Printf("[DEBUG] Invalid IAM Instance Profile referenced, retrying...")
 			return resource.RetryableError(err)
@@ -235,7 +235,7 @@ func resourceSpotInstanceRequestCreate(ctx context.Context, d *schema.ResourceDa
 
 	if d.Get("wait_for_fulfillment").(bool) {
 		spotStateConf := &resource.StateChangeConf{
-			// http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/spot-bid-status.html
+			// https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/spot-bid-status.html
 			Pending:    []string{"start", "pending-evaluation", "pending-fulfillment"},
 			Target:     []string{"fulfilled"},
 			Refresh:    SpotInstanceStateRefreshFunc(ctx, conn, sir),

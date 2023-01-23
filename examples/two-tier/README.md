@@ -8,7 +8,7 @@ To simplify the example, this intentionally ignores deploying and
 getting your application onto the servers. However, you could do so either via
 [provisioners](https://www.terraform.io/docs/provisioners/) and a configuration
 management tool, or by pre-baking configured AMIs with
-[Packer](http://www.packer.io).
+[Packer](https://www.packer.io).
 
 This example will also create a new EC2 Key Pair in the specified AWS Region.
 The key name and path to the public key must be specified via the

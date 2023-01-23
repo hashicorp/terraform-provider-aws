@@ -151,7 +151,7 @@ func resourceExternalKeyCreate(ctx context.Context, d *schema.ResourceData, meta
 	// The KMS service's awareness of principals is limited by "eventual consistency".
 	// KMS will report this error until it can validate the policy itself.
 	// They acknowledge this here:
-	// http://docs.aws.amazon.com/kms/latest/APIReference/API_CreateKey.html
+	// https://docs.aws.amazon.com/kms/latest/APIReference/API_CreateKey.html
 	outputRaw, err := WaitIAMPropagation(ctx, func() (interface{}, error) {
 		return conn.CreateKeyWithContext(ctx, input)
 	})

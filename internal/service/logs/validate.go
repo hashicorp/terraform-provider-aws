@@ -9,7 +9,7 @@ import (
 
 func validResourcePolicyDocument(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
-	// http://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_PutResourcePolicy.html
+	// https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_PutResourcePolicy.html
 	if len(value) > 5120 || (len(value) == 0) {
 		errors = append(errors, fmt.Errorf("CloudWatch log resource policy document must be between 1 and 5120 characters."))
 	}
@@ -27,7 +27,7 @@ func validLogGroupName(v interface{}, k string) (ws []string, errors []error) {
 			"%q cannot be longer than 512 characters: %q", k, value))
 	}
 
-	// http://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_CreateLogGroup.html
+	// https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_CreateLogGroup.html
 	pattern := `^[\.\-_/#A-Za-z0-9]+$`
 	if !regexp.MustCompile(pattern).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
@@ -47,7 +47,7 @@ func validLogGroupNamePrefix(v interface{}, k string) (ws []string, errors []err
 			"%q cannot be longer than 483 characters: %q", k, value))
 	}
 
-	// http://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_CreateLogGroup.html
+	// https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_CreateLogGroup.html
 	pattern := `^[\.\-_/#A-Za-z0-9]+$`
 	if !regexp.MustCompile(pattern).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
@@ -67,7 +67,7 @@ func validLogMetricFilterName(v interface{}, k string) (ws []string, errors []er
 			"%q cannot be longer than 512 characters: %q", k, value))
 	}
 
-	// http://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_PutMetricFilter.html
+	// https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_PutMetricFilter.html
 	pattern := `^[^:*]+$`
 	if !regexp.MustCompile(pattern).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
@@ -86,7 +86,7 @@ func validLogMetricFilterTransformationName(v interface{}, k string) (ws []strin
 			"%q cannot be longer than 255 characters: %q", k, value))
 	}
 
-	// http://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_MetricTransformation.html
+	// https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_MetricTransformation.html
 	pattern := `^[^:*$]*$`
 	if !regexp.MustCompile(pattern).MatchString(value) {
 		errors = append(errors, fmt.Errorf(

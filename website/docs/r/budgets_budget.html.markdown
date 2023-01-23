@@ -141,7 +141,7 @@ resource "aws_budgets_budget" "ri_utilization" {
 ## Argument Reference
 
 For more detailed documentation about each argument, refer to the [AWS official
-documentation](http://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/data-type-budget.html).
+documentation](https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/data-type-budget.html).
 
 The following arguments are supported:
 
@@ -154,7 +154,7 @@ The following arguments are supported:
 * `cost_filters` - (Optional, **Deprecated**) Map of [CostFilters](#cost-filters) key/value pairs to apply to the budget.
 * `cost_types` - (Optional) Object containing [CostTypes](#cost-types) The types of cost included in a budget, such as tax and subscriptions.
 * `limit_amount` - (Required) The amount of cost or usage being measured for a budget.
-* `limit_unit` - (Required) The unit of measurement used for the budget forecast, actual spend, or budget threshold, such as dollars or GB. See [Spend](http://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/data-type-spend.html) documentation.
+* `limit_unit` - (Required) The unit of measurement used for the budget forecast, actual spend, or budget threshold, such as dollars or GB. See [Spend](https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/data-type-spend.html) documentation.
 * `time_period_end` - (Optional) The end of the time period covered by the budget. There are no restrictions on the end date. Format: `2017-01-01_12:00`.
 * `time_period_start` - (Optional) The start of the time period covered by the budget. If you don't specify a start date, AWS defaults to the start of your chosen time period. The start date must come before the end date. Format: `2017-01-01_12:00`.
 * `time_unit` - (Required) The length of time until a budget resets the actual and forecasted spend. Valid values: `MONTHLY`, `QUARTERLY`, `ANNUALLY`, and `DAILY`.
@@ -218,7 +218,7 @@ Valid name for `cost_filter` parameter vary depending on the `budget_type` value
     * `UsageType:<service name>`
     * `TagKeyValue`
 
-Refer to [AWS CostFilter documentation](http://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/data-type-filter.html) for further detail.
+Refer to [AWS CostFilter documentation](https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/data-type-filter.html) for further detail.
 
 ### Cost Filters
 
@@ -243,7 +243,7 @@ Valid keys for `planned_limit` parameter.
 
 * `start_time` - (Required) The start time of the budget limit. Format: `2017-01-01_12:00`. See [PlannedBudgetLimits](https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_budgets_Budget.html#awscostmanagement-Type-budgets_Budget-PlannedBudgetLimits) documentation.
 * `amount` - (Required) The amount of cost or usage being measured for a budget.
-* `unit` - (Required) The unit of measurement used for the budget forecast, actual spend, or budget threshold, such as dollars or GB. See [Spend](http://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/data-type-spend.html) documentation.
+* `unit` - (Required) The unit of measurement used for the budget forecast, actual spend, or budget threshold, such as dollars or GB. See [Spend](https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/data-type-spend.html) documentation.
 
 ## Import
 

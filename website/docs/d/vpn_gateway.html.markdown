@@ -50,7 +50,7 @@ More complex filters can be expressed using one or more `filter` sub-blocks,
 which take the following arguments:
 
 * `name` - (Required) Name of the field to filter by, as defined by
-  [the underlying AWS API](http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeVpnGateways.html).
+  [the underlying AWS API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeVpnGateways.html).
 
 * `values` - (Required) Set of values that are accepted for the given field.
   A VPN Gateway will be selected if any one of the given values matches.

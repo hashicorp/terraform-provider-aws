@@ -157,7 +157,7 @@ func dataSourceStreamRead(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-// See http://docs.aws.amazon.com/kinesis/latest/dev/kinesis-using-sdk-java-resharding-merge.html
+// See https://docs.aws.amazon.com/kinesis/latest/dev/kinesis-using-sdk-java-resharding-merge.html
 func filterShards(shards []*kinesis.Shard, open bool) []*kinesis.Shard {
 	var output []*kinesis.Shard
 

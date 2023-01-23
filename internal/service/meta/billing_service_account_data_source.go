@@ -58,7 +58,7 @@ func (d *dataSourceBillingServiceAccount) Read(ctx context.Context, request data
 		return
 	}
 
-	// See http://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/billing-getting-started.html#step-2
+	// See https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/billing-getting-started.html#step-2
 	const billingAccountID = "386209384616"
 
 	arn := arn.ARN{

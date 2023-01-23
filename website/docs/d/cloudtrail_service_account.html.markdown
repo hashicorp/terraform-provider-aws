@@ -8,7 +8,7 @@ description: |-
 
 # Data Source: aws_cloudtrail_service_account
 
-Use this data source to get the Account ID of the [AWS CloudTrail Service Account](http://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-supported-regions.html)
+Use this data source to get the Account ID of the [AWS CloudTrail Service Account](https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-supported-regions.html)
 in a given region for the purpose of allowing CloudTrail to store trail data in S3.
 
 ## Example Usage

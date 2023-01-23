@@ -145,7 +145,7 @@ The following arguments are supported:
 
 ### parameters
 
-* `transform_type` - (Required) The type of machine learning transform. For information about the types of machine learning transforms, see [Creating Machine Learning Transforms](http://docs.aws.amazon.com/glue/latest/dg/add-job-machine-learning-transform.html).
+* `transform_type` - (Required) The type of machine learning transform. For information about the types of machine learning transforms, see [Creating Machine Learning Transforms](https://docs.aws.amazon.com/glue/latest/dg/add-job-machine-learning-transform.html).
 * `find_matches_parameters` - (Required) The parameters for the find matches algorithm. see [Find Matches Parameters](#find_matches_parameters).
 
 #### find_matches_parameters

@@ -109,4 +109,4 @@ DAX Clusters can be imported using the `cluster_name`, e.g.,
 $ terraform import aws_dax_cluster.my_cluster my_cluster
 ```
 
-[1]: http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DAX.concepts.cluster.html#DAX.concepts.nodes
+[1]: https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DAX.concepts.cluster.html#DAX.concepts.nodes

@@ -153,7 +153,7 @@ func resourceKeyCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	// AWS requires any principal in the policy to exist before the key is created.
 	// The KMS service's awareness of principals is limited by "eventual consistency".
 	// They acknowledge this here:
-	// http://docs.aws.amazon.com/kms/latest/APIReference/API_CreateKey.html
+	// https://docs.aws.amazon.com/kms/latest/APIReference/API_CreateKey.html
 	log.Printf("[DEBUG] Creating KMS Key: %s", input)
 
 	outputRaw, err := WaitIAMPropagation(ctx, func() (interface{}, error) {

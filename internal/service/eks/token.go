@@ -217,7 +217,7 @@ func NewVerifier(clusterID string) Verifier {
 	}
 }
 
-// verify a sts host, doc: http://docs.amazonaws.cn/en_us/general/latest/gr/rande.html#sts_region
+// verify a sts host, doc: https://docs.amazonaws.cn/en_us/general/latest/gr/rande.html#sts_region
 func (v tokenVerifier) verifyHost(host string) error {
 	if match, _ := regexp.MatchString(hostRegexp, host); !match {
 		return FormatError{fmt.Sprintf("unexpected hostname %q in pre-signed URL", host)}

@@ -31,7 +31,7 @@ resource "aws_redshift_cluster" "example" {
 ## Argument Reference
 
 For more detailed documentation about each argument, refer to
-the [AWS official documentation](http://docs.aws.amazon.com/cli/latest/reference/redshift/index.html#cli-aws-redshift).
+the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/reference/redshift/index.html#cli-aws-redshift).
 
 The following arguments are supported:
 
@@ -87,7 +87,7 @@ The following arguments are supported:
 
 * `enable` - (Required) Enables logging information such as queries and connection attempts, for the specified Amazon Redshift cluster.
 * `bucket_name` - (Optional, required when `enable` is `true` and `log_destination_type` is `s3`) The name of an existing S3 bucket where the log files are to be stored. Must be in the same region as the cluster and the cluster must have read bucket and put object permissions.
-For more information on the permissions required for the bucket, please read the AWS [documentation](http://docs.aws.amazon.com/redshift/latest/mgmt/db-auditing.html#db-auditing-enable-logging)
+For more information on the permissions required for the bucket, please read the AWS [documentation](https://docs.aws.amazon.com/redshift/latest/mgmt/db-auditing.html#db-auditing-enable-logging)
 * `s3_key_prefix` - (Optional) The prefix applied to the log file names.
 * `log_destination_type` - (Optional) The log destination type. An enum with possible values of `s3` and `cloudwatch`.
 * `log_exports` - (Optional) The collection of exported log types. Log types include the connection log, user log and user activity log. Required when `log_destination_type` is `cloudwatch`. Valid log types are `connectionlog`, `userlog`, and `useractivitylog`.

@@ -765,7 +765,7 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	log.Printf("[DEBUG] S3 bucket create: %s, using region: %s", bucket, awsRegion)
 
 	// Special case us-east-1 region and do not set the LocationConstraint.
-	// See "Request Elements: http://docs.aws.amazon.com/AmazonS3/latest/API/RESTBucketPUT.html
+	// See "Request Elements: https://docs.aws.amazon.com/AmazonS3/latest/API/RESTBucketPUT.html
 	if awsRegion != endpoints.UsEast1RegionID {
 		req.CreateBucketConfiguration = &s3.CreateBucketConfiguration{
 			LocationConstraint: aws.String(awsRegion),
@@ -1579,7 +1579,7 @@ func isOldRegion(region string) bool {
 
 func normalizeRegion(region string) string {
 	// Default to us-east-1 if the bucket doesn't have a region:
-	// http://docs.aws.amazon.com/AmazonS3/latest/API/RESTBucketGETlocation.html
+	// https://docs.aws.amazon.com/AmazonS3/latest/API/RESTBucketGETlocation.html
 	if region == "" {
 		region = endpoints.UsEast1RegionID
 	}

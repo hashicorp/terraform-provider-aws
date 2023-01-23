@@ -49,8 +49,8 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - The Amazon Resource Name (ARN) identifying your Lambda function alias.
 * `invoke_arn` - The ARN to be used for invoking Lambda Function from API Gateway - to be used in [`aws_api_gateway_integration`](/docs/providers/aws/r/api_gateway_integration.html)'s `uri`
 
-[1]: http://docs.aws.amazon.com/lambda/latest/dg/welcome.html
-[2]: http://docs.aws.amazon.com/lambda/latest/dg/API_CreateAlias.html
+[1]: https://docs.aws.amazon.com/lambda/latest/dg/welcome.html
+[2]: https://docs.aws.amazon.com/lambda/latest/dg/API_CreateAlias.html
 [3]: https://docs.aws.amazon.com/lambda/latest/dg/API_AliasRoutingConfiguration.html
 
 ## Import

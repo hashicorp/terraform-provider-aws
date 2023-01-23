@@ -259,7 +259,7 @@ func resourceRecordUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	// AWS dynamically determines if a record should be created or updated.
 	// Amazon Route 53 can update an existing resource record set only when all
 	// of the following values match: Name, Type and SetIdentifier
-	// See http://docs.aws.amazon.com/Route53/latest/APIReference/API_ChangeResourceRecordSets.html
+	// See https://docs.aws.amazon.com/Route53/latest/APIReference/API_ChangeResourceRecordSets.html
 	diags diag.Diagnostics
 
 	if !d.HasChange("type") && !d.HasChange("set_identifier") {

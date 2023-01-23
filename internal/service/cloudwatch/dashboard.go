@@ -32,7 +32,7 @@ func ResourceDashboard() *schema.Resource {
 		// Note that we specify both the `dashboard_body` and
 		// the `dashboard_name` as being required, even though
 		// according to the REST API documentation both are
-		// optional: http://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_PutDashboard.html#API_PutDashboard_RequestParameters
+		// optional: https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_PutDashboard.html#API_PutDashboard_RequestParameters
 		Schema: map[string]*schema.Schema{
 			"dashboard_arn": {
 				Type:     schema.TypeString,

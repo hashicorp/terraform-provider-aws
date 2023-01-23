@@ -73,7 +73,7 @@ func ValidARN(v interface{}, k string) (ws []string, errors []error) {
 func ValidAccountID(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 
-	// http://docs.aws.amazon.com/lambda/latest/dg/API_AddPermission.html
+	// https://docs.aws.amazon.com/lambda/latest/dg/API_AddPermission.html
 	pattern := `^\d{12}$`
 	if !regexp.MustCompile(pattern).MatchString(value) {
 		errors = append(errors, fmt.Errorf(

@@ -8,7 +8,7 @@ import (
 )
 
 func validFunctionName() schema.SchemaValidateFunc {
-	// http://docs.aws.amazon.com/lambda/latest/dg/API_AddPermission.html
+	// https://docs.aws.amazon.com/lambda/latest/dg/API_AddPermission.html
 	pattern := `^(arn:[\w-]+:lambda:)?([a-z]{2}-(?:[a-z]+-){1,2}\d{1}:)?(\d{12}:)?(function:)?([a-zA-Z0-9-_]+)(:(\$LATEST|[a-zA-Z0-9-_]+))?$`
 
 	return validation.All(
@@ -31,7 +31,7 @@ func validPermissionEventSourceToken() schema.SchemaValidateFunc {
 }
 
 func validQualifier() schema.SchemaValidateFunc {
-	// http://docs.aws.amazon.com/lambda/latest/dg/API_AddPermission.html
+	// https://docs.aws.amazon.com/lambda/latest/dg/API_AddPermission.html
 	return validation.All(
 		validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9$_-]+$`), "must contain alphanumeric, dollar signs, underscores or dashes only"),
 		validation.StringLenBetween(1, 128),
@@ -39,7 +39,7 @@ func validQualifier() schema.SchemaValidateFunc {
 }
 
 func validPolicyStatementID() schema.SchemaValidateFunc {
-	// http://docs.aws.amazon.com/lambda/latest/dg/API_AddPermission.html
+	// https://docs.aws.amazon.com/lambda/latest/dg/API_AddPermission.html
 	return validation.All(
 		validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9_-]+$`), "must contain alphanumeric, underscores or dashes only"),
 		validation.StringLenBetween(1, 100),

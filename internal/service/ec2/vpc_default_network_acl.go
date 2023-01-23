@@ -15,7 +15,7 @@ import (
 // ACL Network ACLs all contain explicit deny-all rules that cannot be
 // destroyed or changed by users. This rules are numbered very high to be a
 // catch-all.
-// See http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_ACLs.html#default-network-acl
+// See https://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_ACLs.html#default-network-acl
 const (
 	defaultACLRuleNumberIPv4 = 32767
 	defaultACLRuleNumberIPv6 = 32768

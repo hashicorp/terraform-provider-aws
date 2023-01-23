@@ -74,8 +74,8 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - The ARN of the SNS platform application
 * `arn` - The ARN of the SNS platform application
 
-[1]: http://docs.aws.amazon.com/sns/latest/dg/mobile-push-send-register.html
-[2]: http://docs.aws.amazon.com/sns/latest/api/API_CreatePlatformApplication.html
+[1]: https://docs.aws.amazon.com/sns/latest/dg/mobile-push-send-register.html
+[2]: https://docs.aws.amazon.com/sns/latest/api/API_CreatePlatformApplication.html
 
 ## Import
 

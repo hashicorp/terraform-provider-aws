@@ -67,4 +67,4 @@ several valid keys, for a full reference, check out
 
 - `read` - (Default `20m`)
 
-[1]: http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-instances.html
+[1]: https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-instances.html

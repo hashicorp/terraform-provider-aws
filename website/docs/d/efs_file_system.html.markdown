@@ -44,7 +44,7 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - Amazon Resource Name of the file system.
 * `availability_zone_name` - The Availability Zone name in which the file system's One Zone storage classes exist.
 * `availability_zone_id` - The identifier of the Availability Zone in which the file system's One Zone storage classes exist.
-* `dns_name` - DNS name for the filesystem per [documented convention](http://docs.aws.amazon.com/efs/latest/ug/mounting-fs-mount-cmd-dns-name.html).
+* `dns_name` - DNS name for the filesystem per [documented convention](https://docs.aws.amazon.com/efs/latest/ug/mounting-fs-mount-cmd-dns-name.html).
 * `encrypted` - Whether EFS is encrypted.
 * `kms_key_id` - ARN for the KMS encryption key.
 * `lifecycle_policy` - File system [lifecycle policy](https://docs.aws.amazon.com/efs/latest/ug/API_LifecyclePolicy.html) object.

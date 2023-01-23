@@ -8,7 +8,7 @@ description: |-
 
 # Data Source: aws_cloudfront_log_delivery_canonical_user_id
 
-The CloudFront Log Delivery Canonical User ID data source allows access to the [canonical user ID](http://docs.aws.amazon.com/general/latest/gr/acct-identifiers.html) of the AWS `awslogsdelivery` account for CloudFront bucket logging.
+The CloudFront Log Delivery Canonical User ID data source allows access to the [canonical user ID](https://docs.aws.amazon.com/general/latest/gr/acct-identifiers.html) of the AWS `awslogsdelivery` account for CloudFront bucket logging.
 See the [Amazon CloudFront Developer Guide](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/AccessLogs.html) for more information.
 
 ## Example Usage

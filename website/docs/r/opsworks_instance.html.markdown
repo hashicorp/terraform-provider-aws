@@ -65,14 +65,14 @@ The following arguments are optional:
 
 Each of the `*_block_device` attributes controls a portion of the AWS
 Instance's "Block Device Mapping". It's a good idea to familiarize yourself with [AWS's Block Device
-Mapping docs](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/block-device-mapping-concepts.html)
+Mapping docs](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/block-device-mapping-concepts.html)
 to understand the implications of using these attributes.
 
 ### `ebs_block_device`
 
 * `delete_on_termination` - (Optional) Whether the volume should be destroyed on instance termination. Default is `true`.
 * `device_name` - (Required) Name of the device to mount.
-* `iops` - (Optional) Amount of provisioned [IOPS](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-io-characteristics.html). This must be set with a `volume_type` of `io1`.
+* `iops` - (Optional) Amount of provisioned [IOPS](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-io-characteristics.html). This must be set with a `volume_type` of `io1`.
 * `snapshot_id` - (Optional) Snapshot ID to mount.
 * `volume_size` - (Optional) Size of the volume in gigabytes.
 * `volume_type` - (Optional) Type of volume. Valid values are `standard`, `gp2`, or `io1`. Default is `standard`.
@@ -82,18 +82,18 @@ Modifying any `ebs_block_device` currently requires resource replacement.
 ### `ephemeral_block_device`
 
 * `device_name` - Name of the block device to mount on the instance.
-* `virtual_name` - The [Instance Store Device Name](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/InstanceStorage.html#InstanceStoreDeviceNames) (e.g., `ephemeral0`).
+* `virtual_name` - The [Instance Store Device Name](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/InstanceStorage.html#InstanceStoreDeviceNames) (e.g., `ephemeral0`).
 
 Each AWS Instance type has a different set of Instance Store block devices
 available for attachment. AWS [publishes a
-list](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/InstanceStorage.html#StorageOnInstanceTypes)
+list](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/InstanceStorage.html#StorageOnInstanceTypes)
 of which ephemeral devices are available on each type. The devices are always
 identified by the `virtual_name` in the format `ephemeral{0..N}`.
 
 ### `root_block_device`
 
 * `delete_on_termination` - (Optional) Whether the volume should be destroyed on instance termination. Default is `true`.
-* `iops` - (Optional) Amount of provisioned [IOPS](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-io-characteristics.html). This must be set with a `volume_type` of `io1`.
+* `iops` - (Optional) Amount of provisioned [IOPS](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-io-characteristics.html). This must be set with a `volume_type` of `io1`.
 * `volume_size` - (Optional) Size of the volume in gigabytes.
 * `volume_type` - (Optional) Type of volume. Valid values are `standard`, `gp2`, or `io1`. Default is `standard`.
 

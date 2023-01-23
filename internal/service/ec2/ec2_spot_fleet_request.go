@@ -831,7 +831,7 @@ func ResourceSpotFleetRequest() *schema.Resource {
 
 func resourceSpotFleetRequestCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var
-	// http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_RequestSpotFleet.html
+	// https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_RequestSpotFleet.html
 	diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EC2Conn()
@@ -840,7 +840,7 @@ func resourceSpotFleetRequestCreate(ctx context.Context, d *schema.ResourceData,
 
 	_, launchSpecificationOk := d.GetOk("launch_specification")
 
-	// http://docs.aws.amazon.com/sdk-for-go/api/service/ec2.html#type-SpotFleetRequestConfigData
+	// https://docs.aws.amazon.com/sdk-for-go/api/service/ec2.html#type-SpotFleetRequestConfigData
 	spotFleetConfig := &ec2.SpotFleetRequestConfigData{
 		ClientToken:                      aws.String(resource.UniqueId()),
 		IamFleetRole:                     aws.String(d.Get("iam_fleet_role").(string)),
@@ -950,7 +950,7 @@ func resourceSpotFleetRequestCreate(ctx context.Context, d *schema.ResourceData,
 		spotFleetConfig.SetTargetCapacityUnitType(v.(string))
 	}
 
-	// http://docs.aws.amazon.com/sdk-for-go/api/service/ec2.html#type-RequestSpotFleetInput
+	// https://docs.aws.amazon.com/sdk-for-go/api/service/ec2.html#type-RequestSpotFleetInput
 	input := &ec2.RequestSpotFleetInput{
 		SpotFleetRequestConfig: spotFleetConfig,
 	}
@@ -984,7 +984,7 @@ func resourceSpotFleetRequestCreate(ctx context.Context, d *schema.ResourceData,
 
 func resourceSpotFleetRequestRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var
-	// http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeSpotFleetRequests.html
+	// https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeSpotFleetRequests.html
 	diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EC2Conn()
@@ -1083,7 +1083,7 @@ func resourceSpotFleetRequestRead(ctx context.Context, d *schema.ResourceData, m
 
 func resourceSpotFleetRequestUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var
-	// http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_ModifySpotFleetRequest.html
+	// https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_ModifySpotFleetRequest.html
 	diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EC2Conn()
@@ -1927,7 +1927,7 @@ func launchSpecToMap(l *ec2.SpotFleetLaunchSpecification, rootDevName *string) m
 
 	if l.TagSpecifications != nil {
 		for _, tagSpecs := range l.TagSpecifications {
-			// only "instance" tags are currently supported: http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_SpotFleetTagSpecification.html
+			// only "instance" tags are currently supported: https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_SpotFleetTagSpecification.html
 			if aws.StringValue(tagSpecs.ResourceType) == ec2.ResourceTypeInstance {
 				m["tags"] = KeyValueTags(tagSpecs.Tags).IgnoreAWS().Map()
 			}

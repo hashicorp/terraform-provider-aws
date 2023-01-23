@@ -5569,7 +5569,7 @@ resource "aws_instance" "test" {
   ami = data.aws_ami.amzn-ami-minimal-hvm-instance-store.id
 
   # Only certain instance types support ephemeral root instance stores.
-  # http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/InstanceStorage.html
+  # https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/InstanceStorage.html
   # tflint-ignore: aws_instance_previous_type
   instance_type = "m3.medium"
 
