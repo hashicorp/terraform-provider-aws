@@ -365,7 +365,7 @@ func resourceExternalKeyDelete(ctx context.Context, d *schema.ResourceData, meta
 
 func importExternalKeyMaterial(ctx context.Context, conn *kms.KMS, keyID, keyMaterialBase64, validTo string) error {
 	// Wait for propagation since KMS is eventually consistent.
-	outputRaw, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, PropagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, PropagationTimeout, func() (interface{}, error) {
 		return conn.GetParametersForImportWithContext(ctx, &kms.GetParametersForImportInput{
 			KeyId:             aws.String(keyID),
 			WrappingAlgorithm: aws.String(kms.AlgorithmSpecRsaesOaepSha256),
@@ -416,7 +416,7 @@ func importExternalKeyMaterial(ctx context.Context, conn *kms.KMS, keyID, keyMat
 	}
 
 	// Wait for propagation since KMS is eventually consistent.
-	_, err = tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, PropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, PropagationTimeout, func() (interface{}, error) {
 		return conn.ImportKeyMaterialWithContext(ctx, input)
 	}, kms.ErrCodeNotFoundException)
 

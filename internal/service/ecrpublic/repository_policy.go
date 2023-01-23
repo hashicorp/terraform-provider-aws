@@ -75,7 +75,7 @@ func resourceRepositoryPolicyPut(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	log.Printf("[DEBUG] Setting ECR Public Repository Policy: %s", input)
-	outputRaw, err := tfresource.RetryWhenContext(ctx, policyPutTimeout,
+	outputRaw, err := tfresource.RetryWhen(ctx, policyPutTimeout,
 		func() (interface{}, error) {
 			return conn.SetRepositoryPolicyWithContext(ctx, input)
 		},

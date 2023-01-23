@@ -213,7 +213,7 @@ func (r *resourceAssessment) Create(ctx context.Context, req resource.CreateRequ
 	//   ResourceNotFoundException: The operation tried to access a nonexistent resource. The resource
 	//   might not be specified correctly, or its status might not be active. Check and try again.
 	var out *auditmanager.CreateAssessmentOutput
-	err := tfresource.RetryContext(ctx, iamPropagationTimeout, func() *sdkv2resource.RetryError {
+	err := tfresource.Retry(ctx, iamPropagationTimeout, func() *sdkv2resource.RetryError {
 		var err error
 		out, err = conn.CreateAssessment(ctx, &in)
 		if err != nil {

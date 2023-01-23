@@ -568,7 +568,7 @@ func testAccCheckKeyExists(ctx context.Context, name string, key *kms.KeyMetadat
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn()
 
-		outputRaw, err := tfresource.RetryWhenNotFoundContext(ctx, tfkms.PropagationTimeout, func() (interface{}, error) {
+		outputRaw, err := tfresource.RetryWhenNotFound(ctx, tfkms.PropagationTimeout, func() (interface{}, error) {
 			return tfkms.FindKeyByID(ctx, conn, rs.Primary.ID)
 		})
 

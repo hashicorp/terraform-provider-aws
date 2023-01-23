@@ -62,7 +62,7 @@ func resourceAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta 
 			LoadBalancerNames:    aws.StringSlice([]string{lbName}),
 		}
 
-		_, err := tfresource.RetryWhenAWSErrMessageContainsContext(ctx, d.Timeout(schema.TimeoutCreate),
+		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, d.Timeout(schema.TimeoutCreate),
 			func() (interface{}, error) {
 				return conn.AttachLoadBalancersWithContext(ctx, input)
 			},
@@ -85,7 +85,7 @@ func resourceAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta 
 			TargetGroupARNs:      aws.StringSlice([]string{targetGroupARN}),
 		}
 
-		_, err := tfresource.RetryWhenAWSErrMessageContainsContext(ctx, d.Timeout(schema.TimeoutCreate),
+		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, d.Timeout(schema.TimeoutCreate),
 			func() (interface{}, error) {
 				return conn.AttachLoadBalancerTargetGroupsWithContext(ctx, input)
 			},
@@ -147,7 +147,7 @@ func resourceAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta 
 			LoadBalancerNames:    aws.StringSlice([]string{lbName}),
 		}
 
-		_, err := tfresource.RetryWhenAWSErrMessageContainsContext(ctx, d.Timeout(schema.TimeoutCreate),
+		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, d.Timeout(schema.TimeoutCreate),
 			func() (interface{}, error) {
 				return conn.DetachLoadBalancersWithContext(ctx, input)
 			},
@@ -169,7 +169,7 @@ func resourceAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta 
 			TargetGroupARNs:      aws.StringSlice([]string{targetGroupARN}),
 		}
 
-		_, err := tfresource.RetryWhenAWSErrMessageContainsContext(ctx, d.Timeout(schema.TimeoutCreate),
+		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, d.Timeout(schema.TimeoutCreate),
 			func() (interface{}, error) {
 				return conn.DetachLoadBalancerTargetGroupsWithContext(ctx, input)
 			},

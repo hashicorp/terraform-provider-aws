@@ -53,13 +53,6 @@ rules:
       - pattern-either:
           - pattern: $X.WaitForState()
           - pattern: resource.Retry()
-          - pattern: tfresource.RetryWhen(...)
-          - pattern: tfresource.RetryWhenAWSErrCodeEquals(...)
-          - pattern: tfresource.RetryWhenAWSErrMessageContains(...)
-          - pattern: tfresource.RetryUntilNotFound(...)
-          - pattern: tfresource.RetryWhenNotFound(...)
-          - pattern: tfresource.RetryWhenNewResourceNotFound(...)
-          - pattern: tfresource.WaitUntil(...)
     severity: WARNING
   - id: context-todo
     languages: [go]

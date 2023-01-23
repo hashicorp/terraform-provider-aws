@@ -304,7 +304,7 @@ func createAccount(ctx context.Context, conn *organizations.Organizations, name,
 		}
 
 		log.Printf("[DEBUG] Creating AWS Organizations Account with GovCloud Account: %s", input)
-		outputRaw, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, 4*time.Minute,
+		outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 4*time.Minute,
 			func() (interface{}, error) {
 				return conn.CreateGovCloudAccountWithContext(ctx, input)
 			},
@@ -336,7 +336,7 @@ func createAccount(ctx context.Context, conn *organizations.Organizations, name,
 	}
 
 	log.Printf("[DEBUG] Creating AWS Organizations Account: %s", input)
-	outputRaw, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, 4*time.Minute,
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 4*time.Minute,
 		func() (interface{}, error) {
 			return conn.CreateAccountWithContext(ctx, input)
 		},

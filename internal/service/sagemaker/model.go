@@ -286,7 +286,7 @@ func resourceModelCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	log.Printf("[DEBUG] SageMaker model create config: %#v", *createOpts)
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, 2*time.Minute, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
 		return conn.CreateModelWithContext(ctx, createOpts)
 	}, "ValidationException")
 

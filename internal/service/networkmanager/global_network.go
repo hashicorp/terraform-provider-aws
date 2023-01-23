@@ -166,7 +166,7 @@ func resourceGlobalNetworkDelete(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	log.Printf("[DEBUG] Deleting Network Manager Global Network: %s", d.Id())
-	_, err := tfresource.RetryWhenContext(ctx, globalNetworkValidationExceptionTimeout,
+	_, err := tfresource.RetryWhen(ctx, globalNetworkValidationExceptionTimeout,
 		func() (interface{}, error) {
 			return conn.DeleteGlobalNetworkWithContext(ctx, &networkmanager.DeleteGlobalNetworkInput{
 				GlobalNetworkId: aws.String(d.Id()),

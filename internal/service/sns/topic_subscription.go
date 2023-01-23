@@ -202,7 +202,7 @@ func resourceTopicSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 func resourceTopicSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SNSConn()
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFoundContext(ctx, subscriptionCreateTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, subscriptionCreateTimeout, func() (interface{}, error) {
 		return FindSubscriptionAttributesByARN(ctx, conn, d.Id())
 	}, d.IsNewResource())
 

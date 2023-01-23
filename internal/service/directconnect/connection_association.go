@@ -95,7 +95,7 @@ func deleteConnectionLAGAssociation(ctx context.Context, conn *directconnect.Dir
 		LagId:        aws.String(lagID),
 	}
 
-	_, err := tfresource.RetryWhenContext(ctx, connectionDisassociatedTimeout,
+	_, err := tfresource.RetryWhen(ctx, connectionDisassociatedTimeout,
 		func() (interface{}, error) {
 			return conn.DisassociateConnectionFromLagWithContext(ctx, input)
 		},

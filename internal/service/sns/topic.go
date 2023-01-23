@@ -470,7 +470,7 @@ func putTopicAttribute(ctx context.Context, conn *sns.SNS, arn string, name, val
 		TopicArn:       aws.String(arn),
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, topicPutAttributeTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, topicPutAttributeTimeout, func() (interface{}, error) {
 		return conn.SetTopicAttributesWithContext(ctx, input)
 	}, sns.ErrCodeInvalidParameterException)
 
