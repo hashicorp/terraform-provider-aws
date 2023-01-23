@@ -1,7 +1,9 @@
 package rekognition
 
 import (
-	"fmt"
+	"context"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rekognition"
@@ -12,7 +14,7 @@ import (
 
 func DataSourceCollection() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceCollectionRead,
+		ReadWithoutTimeout: dataSourceCollectionRead,
 
 		Schema: map[string]*schema.Schema{
 			"collection_id": {
@@ -36,7 +38,8 @@ func DataSourceCollection() *schema.Resource {
 	}
 }
 
-func dataSourceCollectionRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceCollectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	d.SetId(d.Get("collection_id").(string))
 	conn := meta.(*conns.AWSClient).RekognitionConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -47,10 +50,10 @@ func dataSourceCollectionRead(d *schema.ResourceData, meta interface{}) error {
 
 	output, err := conn.DescribeCollection(input)
 	if err != nil {
-		return fmt.Errorf("error getting Rekognition Collection (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "error getting Rekognition Collection (%s): %w", d.Id(), err)
 	}
 	if output == nil {
-		return fmt.Errorf("error getting Rekognition Collection (%s): empty response", d.Id())
+		return sdkdiag.AppendErrorf(diags, "error getting Rekognition Collection (%s): empty response", d.Id())
 	}
 	d.Set("collection_id", d.Id())
 	d.Set("collection_arn", output.CollectionARN)
@@ -58,11 +61,11 @@ func dataSourceCollectionRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("face_model_version", output.FaceModelVersion)
 	tags, err := ListTags(conn, d.Get("collection_arn").(string))
 	if err != nil {
-		return fmt.Errorf("error listing tags for Rekognition Collection (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "error listing tags for Rekognition Collection (%s): %w", d.Id(), err)
 	}
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "error setting tags: %w", err)
 	}
 
-	return nil
+	return diags
 }
