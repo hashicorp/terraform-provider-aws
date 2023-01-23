@@ -8,6 +8,7 @@ FEATURES:
 BUG FIXES:
 
 * resource/aws_api_gateway_integration: Prevent drift of `connection_type` attribute when `aws_api_gateway_deployment` `triggers` are used ([#29016](https://github.com/hashicorp/terraform-provider-aws/issues/29016))
+* resource/aws_vpc_ipam_pool_cidr_allocation: Added support for eventual consistency on read operations after create. ([#29022](https://github.com/hashicorp/terraform-provider-aws/issues/29022))
 
 ## 4.51.0 (January 19, 2023)
 
