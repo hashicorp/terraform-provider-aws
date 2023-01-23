@@ -1333,6 +1333,27 @@ func StatusIPAMPoolCIDRState(ctx context.Context, conn *ec2.EC2, cidrBlock, pool
 	}
 }
 
+const (
+	// naming mapes to the SDK constants that exist for IPAM
+	IpamPoolCIDRAllocationCreateComplete = "create-complete" // nosemgrep:ci.caps2-in-const-name, ci.caps2-in-var-name, ci.caps5-in-const-name, ci.caps5-in-var-name
+)
+
+func StatusIPAMPoolCIDRAllocationState(ctx context.Context, conn *ec2.EC2, allocationID, poolID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindIPAMPoolAllocationByTwoPartKey(ctx, conn, allocationID, poolID)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, IpamPoolCIDRAllocationCreateComplete, nil
+	}
+}
+
 func StatusIPAMScopeState(ctx context.Context, conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindIPAMScopeByID(ctx, conn, id)
