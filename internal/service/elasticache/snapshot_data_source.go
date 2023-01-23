@@ -103,7 +103,7 @@ func DataSourceSnapshot() *schema.Resource {
 }
 
 func dataSourceSnapshotRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn
+	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 
 	snapshotName, snapshotNameOk := d.GetOk("snapshot_name")
 	replicationGroupId, replicationGroupIdOk := d.GetOk("replication_group_id")

@@ -127,7 +127,7 @@ func TestAccElastiCacheSnapshot_disappears(t *testing.T) {
 }
 
 func testAccCheckSnapshotDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_elasticache_snapshot" {
@@ -158,7 +158,7 @@ func testAccCheckSnapshotExists(name string, snapshot *elasticache.Snapshot) res
 			return create.Error(names.ElastiCache, create.ErrActionCheckingExistence, tfelasticache.ResNameSnapshot, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn()
 		resp, err := conn.DescribeSnapshots(&elasticache.DescribeSnapshotsInput{
 			SnapshotName: aws.String(rs.Primary.ID),
 		})
