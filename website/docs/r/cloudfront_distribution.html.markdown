@@ -304,7 +304,6 @@ of several sub-resources - these resources are laid out below.
     whether the object has been updated. Defaults to 0 seconds.
 
 * `origin_request_policy_id` (Optional) - The unique identifier of the origin request policy
-    that is attached to the behavior. Either [`cache_policy_id` and optional `origin_request_policy_id`] or
     `forwarded_values` must be set.
 
 * `path_pattern` (Required) - The pattern (for example, `images/*.jpg`) that
