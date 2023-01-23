@@ -2,13 +2,13 @@ package rekognition
 
 import (
 	"context"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rekognition"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
@@ -50,7 +50,7 @@ func dataSourceCollectionRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	output, err := conn.DescribeCollection(input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "error getting Rekognition Collection (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "error getting Rekognition Collection (%s): %s", d.Id(), err)
 	}
 	if output == nil {
 		return sdkdiag.AppendErrorf(diags, "error getting Rekognition Collection (%s): empty response", d.Id())
@@ -61,10 +61,10 @@ func dataSourceCollectionRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("face_model_version", output.FaceModelVersion)
 	tags, err := ListTags(conn, d.Get("collection_arn").(string))
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "error listing tags for Rekognition Collection (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "error listing tags for Rekognition Collection (%s): %s", d.Id(), err)
 	}
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "error setting tags: %s", err)
 	}
 
 	return diags

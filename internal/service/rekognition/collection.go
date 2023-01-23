@@ -2,15 +2,15 @@ package rekognition
 
 import (
 	"context"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rekognition"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -115,28 +115,27 @@ func resourceCollectionRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "error setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "error setting tags_all: %s", err)
 	}
 
 	return diags
 }
 
 func resourceCollectionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RekognitionConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 		if err := UpdateTagsWithContext(ctx, conn, d.Get("collection_arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "error updating tags: %s", err)
+			return diag.Errorf("error updating tags: %s", err)
 		}
 	}
 
-	return append(diags, resourceCollectionRead(ctx, d, meta)...)
+	return resourceCollectionRead(ctx, d, meta)
 }
 
 func resourceCollectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
