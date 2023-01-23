@@ -247,31 +247,27 @@ func resourceReplicationSetDelete(context context.Context, resourceData *schema.
 	return nil
 }
 
-//TODO: refactor regionListToMap, updateRegionsInput
-
-// converts a list of regions to a map with the region name as the key and the rest
-// of the region data as the values so that it is easier to loop through and process
-func regionListToMap(list []interface{}) map[string]map[string]interface{} {
-	ret := make(map[string]map[string]interface{})
+// converts a list of regions to a map which maps region name to kms key arn
+func regionListToRegionMap(list []interface{}) map[string]string {
+	regionMap := make(map[string]string)
 	for _, val := range list {
-		curr := val.(map[string]interface{})
-		regionName := curr["name"].(string)
-		delete(curr, "name")
-		ret[regionName] = curr
+		regionData := val.(map[string]interface{})
+		regionName := regionData["name"].(string)
+		regionMap[regionName] = regionData["kms_key_arn"].(string)
 	}
 
-	return ret
+	return regionMap
 }
 
 // updates UpdateReplicationSetInput to include any required actions
 // invalid updates return errors from AWS Api
-func updateRegionsInput(d *schema.ResourceData, in *ssmincidents.UpdateReplicationSetInput) error {
-	o, n := d.GetChange("region")
-	oldRegions := regionListToMap(o.(*schema.Set).List())
-	newRegions := regionListToMap(n.(*schema.Set).List())
+func updateRegionsInput(resourceData *schema.ResourceData, input *ssmincidents.UpdateReplicationSetInput) error {
+	old, new := resourceData.GetChange("region")
+	oldRegions := regionListToRegionMap(old.(*schema.Set).List())
+	newRegions := regionListToRegionMap(new.(*schema.Set).List())
 
-	for region, oldVal := range oldRegions {
-		if newVal, ok := newRegions[region]; !ok {
+	for region, oldcmk := range oldRegions {
+		if newcmk, ok := newRegions[region]; !ok {
 			// this region has been destroyed
 
 			action := &types.UpdateReplicationSetActionMemberDeleteRegionAction{
@@ -280,21 +276,17 @@ func updateRegionsInput(d *schema.ResourceData, in *ssmincidents.UpdateReplicati
 				},
 			}
 
-			in.Actions = append(in.Actions, action)
+			input.Actions = append(input.Actions, action)
 		} else {
-			oldcmk := oldVal["kms_key_arn"].(string)
-			newcmk := newVal["kms_key_arn"].(string)
-
 			if oldcmk != newcmk {
 				return fmt.Errorf("error: Incident Manager does not support updating Customer Managed Keys. To do this, remove the region, and then re-create it with the new key")
 			}
 		}
 	}
 
-	for region, newVal := range newRegions {
+	for region, newcmk := range newRegions {
 		if _, ok := oldRegions[region]; !ok {
 			// this region is newly created
-			newcmk := newVal["kms_key_arn"].(string)
 
 			action := &types.UpdateReplicationSetActionMemberAddRegionAction{
 				Value: types.AddRegionAction{
@@ -306,7 +298,7 @@ func updateRegionsInput(d *schema.ResourceData, in *ssmincidents.UpdateReplicati
 				action.Value.SseKmsKeyId = aws.String(newcmk)
 			}
 
-			in.Actions = append(in.Actions, action)
+			input.Actions = append(input.Actions, action)
 		}
 	}
 

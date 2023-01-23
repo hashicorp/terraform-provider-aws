@@ -275,8 +275,14 @@ func testAccReplicationSet_updateTags(t *testing.T) {
 	rVal2 := sdkacctest.RandString(26)
 	rKey3 := sdkacctest.RandString(26)
 	rVal3 := sdkacctest.RandString(26)
-	rProviderKey := sdkacctest.RandString(26)
-	rProviderVal := sdkacctest.RandString(26)
+
+	rProviderKey1 := sdkacctest.RandString(26)
+	rProviderVal1Ini := sdkacctest.RandString(26)
+	rProviderVal1Upd := sdkacctest.RandString(26)
+	rProviderKey2 := sdkacctest.RandString(26)
+	rProviderVal2 := sdkacctest.RandString(26)
+	rProviderKey3 := sdkacctest.RandString(26)
+	rProviderVal3 := sdkacctest.RandString(26)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -289,7 +295,7 @@ func testAccReplicationSet_updateTags(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1(rProviderKey, rProviderVal),
+					acctest.ConfigDefaultTags_Tags1(rProviderKey1, rProviderVal1Ini),
 					testAccReplicationSetConfig_tags(map[string]string{
 						rKey1: rVal1Ini,
 					}),
@@ -299,7 +305,7 @@ func testAccReplicationSet_updateTags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags."+rKey1, rVal1Ini),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all."+rProviderKey, rProviderVal),
+					resource.TestCheckResourceAttr(resourceName, "tags_all."+rProviderKey1, rProviderVal1Ini),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "ssm-incidents", regexp.MustCompile(`replication-set\/+.`)),
 				),
 			},
@@ -309,13 +315,18 @@ func testAccReplicationSet_updateTags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccReplicationSetConfig_tags(map[string]string{
-					rKey1: rVal1Updated,
-				}),
+				Config: acctest.ConfigCompose(
+					acctest.ConfigDefaultTags_Tags1(rProviderKey1, rProviderVal1Upd),
+					testAccReplicationSetConfig_tags(map[string]string{
+						rKey1: rVal1Updated,
+					}),
+				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationSetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags."+rKey1, rVal1Updated),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all."+rProviderKey1, rProviderVal1Upd),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "ssm-incidents", regexp.MustCompile(`replication-set\/+.`)),
 				),
 			},
@@ -325,15 +336,22 @@ func testAccReplicationSet_updateTags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccReplicationSetConfig_tags(map[string]string{
-					rKey2: rVal2,
-					rKey3: rVal3,
-				}),
+				Config: acctest.ConfigCompose(
+					acctest.ConfigDefaultTags_Tags2(rProviderKey2, rProviderVal2, rProviderKey3, rProviderVal3),
+					testAccReplicationSetConfig_tags(map[string]string{
+						rKey2: rVal2,
+						rKey3: rVal3,
+					}),
+				),
+
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationSetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags."+rKey2, rVal2),
-					resource.TestCheckResourceAttr(resourceName, "tags."+rKey2, rVal2),
+					resource.TestCheckResourceAttr(resourceName, "tags."+rKey3, rVal3),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "4"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all."+rProviderKey2, rProviderVal2),
+					resource.TestCheckResourceAttr(resourceName, "tags_all."+rProviderKey3, rProviderVal3),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "ssm-incidents", regexp.MustCompile(`replication-set\/+.`)),
 				),
 			},
@@ -444,18 +462,18 @@ func testAccReplicationSet_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckReplicationSetDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SSMIncidentsClient()
-	ctx := context.Background()
+func testAccCheckReplicationSetDestroy(tfState *terraform.State) error {
+	client := acctest.Provider.Meta().(*conns.AWSClient).SSMIncidentsClient()
+	context := context.Background()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_ssmincidents_replication_set" {
+	for _, resource := range tfState.RootModule().Resources {
+		if resource.Type != "aws_ssmincidents_replication_set" {
 			continue
 		}
 
-		log.Printf("Checking Deletion of replication set resource: %s with ID: %s \n", rs.Type, rs.Primary.ID)
+		log.Printf("Checking Deletion of replication set resource: %s with ID: %s \n", resource.Type, resource.Primary.ID)
 
-		_, err := tfssmincidents.FindReplicationSetByID(ctx, conn, rs.Primary.ID)
+		_, err := tfssmincidents.FindReplicationSetByID(context, client, resource.Primary.ID)
 
 		if tfresource.NotFound(err) {
 			log.Printf("Replication Resource correctly returns NotFound Error... \n")
@@ -465,34 +483,34 @@ func testAccCheckReplicationSetDestroy(s *terraform.State) error {
 		log.Printf("Replication Set Resource has incorrect Error\n")
 
 		if err != nil {
-			return create.Error(names.SSMIncidents, create.ErrActionCheckingDestroyed, tfssmincidents.ResNameReplicationSet, rs.Primary.ID,
+			return create.Error(names.SSMIncidents, create.ErrActionCheckingDestroyed, tfssmincidents.ResNameReplicationSet, resource.Primary.ID,
 				errors.New("expected resource not found error, received an unexpected error"))
 		}
 
-		return create.Error(names.SSMIncidents, create.ErrActionCheckingDestroyed, tfssmincidents.ResNameReplicationSet, rs.Primary.ID, errors.New("not destroyed"))
+		return create.Error(names.SSMIncidents, create.ErrActionCheckingDestroyed, tfssmincidents.ResNameReplicationSet, resource.Primary.ID, errors.New("not destroyed"))
 	}
 
 	return nil
 }
 
 func testAccCheckReplicationSetExists(name string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+	return func(tfState *terraform.State) error {
+		resource, ok := tfState.RootModule().Resources[name]
 		if !ok {
 			return create.Error(names.SSMIncidents, create.ErrActionCheckingExistence, tfssmincidents.ResNameReplicationSet, name, errors.New("not found"))
 		}
 
-		if rs.Primary.ID == "" {
+		if resource.Primary.ID == "" {
 			return create.Error(names.SSMIncidents, create.ErrActionCheckingExistence, tfssmincidents.ResNameReplicationSet, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMIncidentsClient()
-		ctx := context.Background()
+		client := acctest.Provider.Meta().(*conns.AWSClient).SSMIncidentsClient()
+		context := context.Background()
 
-		_, err := tfssmincidents.FindReplicationSetByID(ctx, conn, rs.Primary.ID)
+		_, err := tfssmincidents.FindReplicationSetByID(context, client, resource.Primary.ID)
 
 		if err != nil {
-			return create.Error(names.SSMIncidents, create.ErrActionCheckingExistence, tfssmincidents.ResNameReplicationSet, rs.Primary.ID, err)
+			return create.Error(names.SSMIncidents, create.ErrActionCheckingExistence, tfssmincidents.ResNameReplicationSet, resource.Primary.ID, err)
 		}
 
 		return nil
@@ -536,13 +554,13 @@ func generateReplicationSetTagsConfig(tags map[string]string) string {
 
 	for key, value := range tags {
 		tagsSections = append(tagsSections, fmt.Sprintf(`
-			%[1]s = %[2]q
-		`, key, value))
+			%[1]q = %[2]q`, key, value),
+		)
 	}
 
 	return acctest.ConfigCompose(`
-	tags = {
-	`, acctest.ConfigCompose(tagsSections...), `
+	tags = {`,
+		acctest.ConfigCompose(tagsSections...), `
 	}
 	`)
 }
