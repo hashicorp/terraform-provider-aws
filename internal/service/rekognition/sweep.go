@@ -23,14 +23,15 @@ func init() {
 }
 
 func sweepCollections(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).RekognitionConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	conn := client.(*conns.AWSClient).RekognitionConn()
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	err = conn.ListCollectionsPages(&rekognition.ListCollectionsInput{}, func(resp *rekognition.ListCollectionsOutput, lastPage bool) bool {
@@ -55,7 +56,7 @@ func sweepCollections(region string) error {
 		// in case work can be done, don't jump out yet
 	}
 
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Rekognition Collections for %s: %w", region, err))
 	}
 
