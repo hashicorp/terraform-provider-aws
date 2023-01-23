@@ -286,7 +286,6 @@ of several sub-resources - these resources are laid out below.
 * `field_level_encryption_id` (Optional) - Field level encryption configuration ID
 
 * `forwarded_values` (Optional **Deprecated** use `cache_policy_id` or `origin_request_policy_id ` instead) - The [forwarded values configuration](#forwarded-values-arguments) that specifies how CloudFront
-    origin request policy instead of this field.
 
 * `lambda_function_association` (Optional) - A [config block](#lambda-function-association) that triggers a lambda
     function with specific actions (maximum 4).
