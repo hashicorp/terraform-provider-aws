@@ -51,7 +51,7 @@ func ResourceCollection() *schema.Resource {
 }
 
 func resourceCollectionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RekognitionConn
+	conn := meta.(*conns.AWSClient).RekognitionConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -75,7 +75,7 @@ func resourceCollectionCreate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceCollectionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RekognitionConn
+	conn := meta.(*conns.AWSClient).RekognitionConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -122,7 +122,7 @@ func resourceCollectionRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceCollectionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RekognitionConn
+	conn := meta.(*conns.AWSClient).RekognitionConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
@@ -135,7 +135,7 @@ func resourceCollectionUpdate(d *schema.ResourceData, meta interface{}) error {
 }
 
 func resourceCollectionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RekognitionConn
+	conn := meta.(*conns.AWSClient).RekognitionConn()
 
 	input := rekognition.DeleteCollectionInput{
 		CollectionId: aws.String(d.Id()),
