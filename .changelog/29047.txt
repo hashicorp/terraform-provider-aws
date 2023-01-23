@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_cognito_user_pool: Support removing custom_email_sender and custom_sms_sender triggers from lambda_config
+```

@@ -1170,6 +1170,12 @@ func TestAccCognitoIDPUserPool_WithLambda_email(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_email_sender.0.lambda_version", "V1_0"),
 				),
 			},
+			{
+				Config: testAccUserPoolConfig_lambdaEmailSenderUpdatedRemove(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "lambda_config.#", "0"),
+				),
+			},
 		},
 	})
 }
@@ -1209,6 +1215,12 @@ func TestAccCognitoIDPUserPool_WithLambda_sms(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_sms_sender.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.custom_sms_sender.0.lambda_arn", lambdaUpdatedResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_sms_sender.0.lambda_version", "V1_0"),
+				),
+			},
+			{
+				Config: testAccUserPoolConfig_lambdaSMSSenderUpdatedRemove(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "lambda_config.#", "0"),
 				),
 			},
 		},
@@ -2261,6 +2273,18 @@ resource "aws_cognito_user_pool" "test" {
 `, name))
 }
 
+func testAccUserPoolConfig_lambdaEmailSenderUpdatedRemove(name string) string {
+	return acctest.ConfigCompose(testAccUserPoolLambdaConfig_base(name), fmt.Sprintf(`
+resource "aws_cognito_user_pool" "test" {
+  name = %[1]q
+
+  lambda_config {
+    kms_key_id = aws_kms_key.test.arn
+  }
+}
+`, name))
+}
+
 func testAccUserPoolConfig_lambdaSMSSender(name string) string {
 	return acctest.ConfigCompose(testAccUserPoolLambdaConfig_base(name), fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
@@ -2298,6 +2322,18 @@ resource "aws_cognito_user_pool" "test" {
       lambda_arn     = aws_lambda_function.second.arn
       lambda_version = "V1_0"
     }
+  }
+}
+`, name))
+}
+
+func testAccUserPoolConfig_lambdaSMSSenderUpdatedRemove(name string) string {
+	return acctest.ConfigCompose(testAccUserPoolLambdaConfig_base(name), fmt.Sprintf(`
+resource "aws_cognito_user_pool" "test" {
+  name = %[1]q
+
+  lambda_config {
+    kms_key_id = aws_kms_key.test.arn
   }
 }
 `, name))
