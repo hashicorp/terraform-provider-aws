@@ -38,7 +38,7 @@ func DataSourceCollection() *schema.Resource {
 
 func dataSourceCollectionRead(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(d.Get("collection_id").(string))
-	conn := meta.(*conns.AWSClient).RekognitionConn
+	conn := meta.(*conns.AWSClient).RekognitionConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &rekognition.DescribeCollectionInput{
