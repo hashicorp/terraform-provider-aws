@@ -137,6 +137,43 @@ func TestAccEC2Fleet_tags(t *testing.T) {
 	})
 }
 
+func TestAccEC2Fleet_type_instant(t *testing.T) {
+	var fleet1 ec2.FleetData
+	resourceName := "aws_ec2_fleet.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckFleet(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFleetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFleetConfig_type_instant(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFleetExists(resourceName, &fleet1),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`fleet/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "context", ""),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.launch_template_specification.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "launch_template_config.0.launch_template_specification.0.launch_template_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "launch_template_config.0.launch_template_specification.0.version"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "terminate_instances", "false"),
+					resource.TestCheckResourceAttr(resourceName, "terminate_instances_with_expiration", "false"),
+					resource.TestCheckResourceAttr(resourceName, "type", "instant"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"terminate_instances"},
+			},
+		},
+	})
+}
+
 func TestAccEC2Fleet_excessCapacityTerminationPolicy(t *testing.T) {
 	var fleet1, fleet2 ec2.FleetData
 	resourceName := "aws_ec2_fleet.test"
@@ -2612,6 +2649,13 @@ func TestAccEC2Fleet_type(t *testing.T) {
 			// 		resource.TestCheckResourceAttr(resourceName, "type", "request"),
 			// 	),
 			// },
+			{
+				Config: testAccFleetConfig_type(rName, "instant"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFleetExists(resourceName, &fleet1),
+					resource.TestCheckResourceAttr(resourceName, "type", "instant"),
+				),
+			},
 		},
 	})
 }
@@ -2798,6 +2842,25 @@ resource "aws_ec2_fleet" "test" {
     default_target_capacity_type = "spot"
     total_target_capacity        = 0
   }
+}
+`)
+}
+
+func testAccFleetConfig_type_instant(rName string) string {
+	return acctest.ConfigCompose(testAccFleetConfig_BaseLaunchTemplate(rName), `
+resource "aws_ec2_fleet" "test" {
+  launch_template_config {
+    launch_template_specification {
+      launch_template_id = aws_launch_template.test.id
+      version            = aws_launch_template.test.latest_version
+    }
+  }
+
+  target_capacity_specification {
+    default_target_capacity_type = "spot"
+    total_target_capacity        = 0
+  }
+  type = "instant" 
 }
 `)
 }
