@@ -18,8 +18,8 @@ func ConvertInterfaceMapToStringMap(interfaceMap map[string]interface{}) map[str
 	return result
 }
 
-func GetReplicationSetARN(ctx context.Context, conn *ssmincidents.Client) (string, error) {
-	replicationSets, err := conn.ListReplicationSets(ctx, &ssmincidents.ListReplicationSetsInput{})
+func GetReplicationSetARN(context context.Context, client *ssmincidents.Client) (string, error) {
+	replicationSets, err := client.ListReplicationSets(context, &ssmincidents.ListReplicationSetsInput{})
 
 	if err != nil {
 		return "", err
@@ -31,4 +31,24 @@ func GetReplicationSetARN(ctx context.Context, conn *ssmincidents.Client) (strin
 
 	// currently only one replication set is supported
 	return replicationSets.ReplicationSetArns[0], nil
+}
+
+func MapListToMap[T, U any](list []T, keyFunction func(T) string, valueFunction func(T) U) map[string]U {
+	output := make(map[string]U)
+
+	for _, itr := range list {
+		output[keyFunction(itr)] = valueFunction(itr)
+	}
+
+	return output
+}
+
+func MapMaptoList[T, U any](m map[string]T, f func(string, T) U) []U {
+	output := make([]U, 0)
+
+	for k, v := range m {
+		output = append(output, f(k, v))
+	}
+
+	return output
 }
