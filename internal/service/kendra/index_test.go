@@ -18,14 +18,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccPreCheck(t *testing.T) {
+func testAccPreCheck(ctx context.Context, t *testing.T) {
 	acctest.PreCheckPartitionHasService(names.KendraEndpointID, t)
 
-	conn := acctest.Provider.Meta().(*conns.AWSClient).KendraConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).KendraClient()
 
 	input := &kendra.ListIndicesInput{}
 
-	_, err := conn.ListIndices(context.Background(), input)
+	_, err := conn.ListIndices(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
@@ -37,6 +37,7 @@ func testAccPreCheck(t *testing.T) {
 }
 
 func TestAccKendraIndex_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var index kendra.DescribeIndexOutput
 
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
@@ -46,15 +47,15 @@ func TestAccKendraIndex_basic(t *testing.T) {
 	resourceName := "aws_kendra_index.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIndexDestroy,
+		CheckDestroy:             testAccCheckIndexDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIndexConfig_basic(rName, rName2, rName3, description),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIndexExists(resourceName, &index),
+					testAccCheckIndexExists(ctx, resourceName, &index),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "capacity_units.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "capacity_units.0.query_capacity_units", "0"),
@@ -89,6 +90,7 @@ func TestAccKendraIndex_basic(t *testing.T) {
 }
 
 func TestAccKendraIndex_serverSideEncryption(t *testing.T) {
+	ctx := acctest.Context(t)
 	var index kendra.DescribeIndexOutput
 
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
@@ -97,15 +99,15 @@ func TestAccKendraIndex_serverSideEncryption(t *testing.T) {
 	resourceName := "aws_kendra_index.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIndexDestroy,
+		CheckDestroy:             testAccCheckIndexDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIndexConfig_serverSideEncryption(rName, rName2, rName3),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIndexExists(resourceName, &index),
+					testAccCheckIndexExists(ctx, resourceName, &index),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "server_side_encryption_configuration.0.kms_key_id", "data.aws_kms_key.this", "arn"),
 				),
@@ -120,6 +122,7 @@ func TestAccKendraIndex_serverSideEncryption(t *testing.T) {
 }
 
 func TestAccKendraIndex_updateCapacityUnits(t *testing.T) {
+	ctx := acctest.Context(t)
 	var index kendra.DescribeIndexOutput
 
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
@@ -132,15 +135,15 @@ func TestAccKendraIndex_updateCapacityUnits(t *testing.T) {
 	resourceName := "aws_kendra_index.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIndexDestroy,
+		CheckDestroy:             testAccCheckIndexDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIndexConfig_capacityUnits(rName, rName2, rName3, originalQueryCapacityUnits, originalStorageCapacityUnits),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIndexExists(resourceName, &index),
+					testAccCheckIndexExists(ctx, resourceName, &index),
 					resource.TestCheckResourceAttr(resourceName, "capacity_units.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "capacity_units.0.query_capacity_units", strconv.Itoa(originalQueryCapacityUnits)),
 					resource.TestCheckResourceAttr(resourceName, "capacity_units.0.storage_capacity_units", strconv.Itoa(originalStorageCapacityUnits)),
@@ -154,7 +157,7 @@ func TestAccKendraIndex_updateCapacityUnits(t *testing.T) {
 			{
 				Config: testAccIndexConfig_capacityUnits(rName, rName2, rName3, updatedQueryCapacityUnits, updatedStorageCapacityUnits),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIndexExists(resourceName, &index),
+					testAccCheckIndexExists(ctx, resourceName, &index),
 					resource.TestCheckResourceAttr(resourceName, "capacity_units.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "capacity_units.0.query_capacity_units", strconv.Itoa(updatedQueryCapacityUnits)),
 					resource.TestCheckResourceAttr(resourceName, "capacity_units.0.storage_capacity_units", strconv.Itoa(updatedStorageCapacityUnits)),
@@ -163,7 +166,9 @@ func TestAccKendraIndex_updateCapacityUnits(t *testing.T) {
 		},
 	})
 }
+
 func TestAccKendraIndex_updateDescription(t *testing.T) {
+	ctx := acctest.Context(t)
 	var index kendra.DescribeIndexOutput
 
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
@@ -174,15 +179,15 @@ func TestAccKendraIndex_updateDescription(t *testing.T) {
 	resourceName := "aws_kendra_index.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIndexDestroy,
+		CheckDestroy:             testAccCheckIndexDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIndexConfig_basic(rName, rName2, rName3, originalDescription),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIndexExists(resourceName, &index),
+					testAccCheckIndexExists(ctx, resourceName, &index),
 					resource.TestCheckResourceAttr(resourceName, "description", originalDescription),
 				),
 			},
@@ -194,7 +199,7 @@ func TestAccKendraIndex_updateDescription(t *testing.T) {
 			{
 				Config: testAccIndexConfig_basic(rName, rName2, rName3, updatedDescription),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIndexExists(resourceName, &index),
+					testAccCheckIndexExists(ctx, resourceName, &index),
 					resource.TestCheckResourceAttr(resourceName, "description", updatedDescription),
 				),
 			},
@@ -203,6 +208,7 @@ func TestAccKendraIndex_updateDescription(t *testing.T) {
 }
 
 func TestAccKendraIndex_updateName(t *testing.T) {
+	ctx := acctest.Context(t)
 	var index kendra.DescribeIndexOutput
 
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
@@ -213,15 +219,15 @@ func TestAccKendraIndex_updateName(t *testing.T) {
 	resourceName := "aws_kendra_index.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIndexDestroy,
+		CheckDestroy:             testAccCheckIndexDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIndexConfig_basic(rName, rName2, rName3, description),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIndexExists(resourceName, &index),
+					testAccCheckIndexExists(ctx, resourceName, &index),
 					resource.TestCheckResourceAttr(resourceName, "name", rName3),
 				),
 			},
@@ -233,7 +239,7 @@ func TestAccKendraIndex_updateName(t *testing.T) {
 			{
 				Config: testAccIndexConfig_basic(rName, rName2, rName4, description),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIndexExists(resourceName, &index),
+					testAccCheckIndexExists(ctx, resourceName, &index),
 					resource.TestCheckResourceAttr(resourceName, "name", rName4),
 				),
 			},
@@ -242,6 +248,7 @@ func TestAccKendraIndex_updateName(t *testing.T) {
 }
 
 func TestAccKendraIndex_updateUserTokenJSON(t *testing.T) {
+	ctx := acctest.Context(t)
 	var index kendra.DescribeIndexOutput
 
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
@@ -254,15 +261,15 @@ func TestAccKendraIndex_updateUserTokenJSON(t *testing.T) {
 	resourceName := "aws_kendra_index.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIndexDestroy,
+		CheckDestroy:             testAccCheckIndexDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIndexConfig_userTokenJSON(rName, rName2, rName3, originalGroupAttributeField, originalUserNameAttributeField),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIndexExists(resourceName, &index),
+					testAccCheckIndexExists(ctx, resourceName, &index),
 					resource.TestCheckResourceAttr(resourceName, "user_token_configurations.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "user_token_configurations.0.json_token_type_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "user_token_configurations.0.json_token_type_configuration.0.group_attribute_field", originalGroupAttributeField),
@@ -277,7 +284,7 @@ func TestAccKendraIndex_updateUserTokenJSON(t *testing.T) {
 			{
 				Config: testAccIndexConfig_userTokenJSON(rName, rName2, rName3, updatedGroupAttributeField, originalUserNameAttributeField),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIndexExists(resourceName, &index),
+					testAccCheckIndexExists(ctx, resourceName, &index),
 					resource.TestCheckResourceAttr(resourceName, "user_token_configurations.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "user_token_configurations.0.json_token_type_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "user_token_configurations.0.json_token_type_configuration.0.group_attribute_field", updatedGroupAttributeField),
@@ -287,7 +294,7 @@ func TestAccKendraIndex_updateUserTokenJSON(t *testing.T) {
 			{
 				Config: testAccIndexConfig_userTokenJSON(rName, rName2, rName3, updatedGroupAttributeField, updatedUserNameAttributeField),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIndexExists(resourceName, &index),
+					testAccCheckIndexExists(ctx, resourceName, &index),
 					resource.TestCheckResourceAttr(resourceName, "user_token_configurations.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "user_token_configurations.0.json_token_type_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "user_token_configurations.0.json_token_type_configuration.0.group_attribute_field", updatedGroupAttributeField),
@@ -299,6 +306,7 @@ func TestAccKendraIndex_updateUserTokenJSON(t *testing.T) {
 }
 
 func TestAccKendraIndex_updateTags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var index kendra.DescribeIndexOutput
 
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
@@ -308,15 +316,15 @@ func TestAccKendraIndex_updateTags(t *testing.T) {
 	resourceName := "aws_kendra_index.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIndexDestroy,
+		CheckDestroy:             testAccCheckIndexDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIndexConfig_basic(rName, rName2, rName3, description),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIndexExists(resourceName, &index),
+					testAccCheckIndexExists(ctx, resourceName, &index),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Value1"),
 				),
@@ -329,7 +337,7 @@ func TestAccKendraIndex_updateTags(t *testing.T) {
 			{
 				Config: testAccIndexConfig_tags(rName, rName2, rName3, description),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIndexExists(resourceName, &index),
+					testAccCheckIndexExists(ctx, resourceName, &index),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Value1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2a"),
@@ -338,7 +346,7 @@ func TestAccKendraIndex_updateTags(t *testing.T) {
 			{
 				Config: testAccIndexConfig_tagsUpdated(rName, rName2, rName3, description),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIndexExists(resourceName, &index),
+					testAccCheckIndexExists(ctx, resourceName, &index),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Value1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2b"),
@@ -350,6 +358,7 @@ func TestAccKendraIndex_updateTags(t *testing.T) {
 }
 
 func TestAccKendraIndex_updateRoleARN(t *testing.T) {
+	ctx := acctest.Context(t)
 	var index kendra.DescribeIndexOutput
 
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
@@ -359,15 +368,15 @@ func TestAccKendraIndex_updateRoleARN(t *testing.T) {
 	resourceName := "aws_kendra_index.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIndexDestroy,
+		CheckDestroy:             testAccCheckIndexDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIndexConfig_basic(rName, rName2, rName3, description),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIndexExists(resourceName, &index),
+					testAccCheckIndexExists(ctx, resourceName, &index),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.access_cw", "arn"),
 				),
 			},
@@ -379,7 +388,7 @@ func TestAccKendraIndex_updateRoleARN(t *testing.T) {
 			{
 				Config: testAccIndexConfig_secretsManagerRole(rName, rName2, rName3, description),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIndexExists(resourceName, &index),
+					testAccCheckIndexExists(ctx, resourceName, &index),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.access_sm", "arn"),
 				),
 			},
@@ -388,6 +397,7 @@ func TestAccKendraIndex_updateRoleARN(t *testing.T) {
 }
 
 func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
+	ctx := acctest.Context(t)
 	var index kendra.DescribeIndexOutput
 
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
@@ -401,15 +411,15 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 	stringValImportance := 1
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIndexDestroy,
+		CheckDestroy:             testAccCheckIndexDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIndexConfig_documentMetadataConfigurationUpdatesBase(rName, rName2, rName3),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIndexExists(resourceName, &index),
+					testAccCheckIndexExists(ctx, resourceName, &index),
 					resource.TestCheckResourceAttr(resourceName, "document_metadata_configuration_updates.#", "13"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						"name":                   "_authors",
@@ -579,7 +589,7 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 			{
 				Config: testAccIndexConfig_documentMetadataConfigurationUpdatesAddNewMetadata(rName, rName2, rName3, authorsFacetable, longValDisplayable, stringListValSearchable, dateValSortable, stringValImportance),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIndexExists(resourceName, &index),
+					testAccCheckIndexExists(ctx, resourceName, &index),
 					resource.TestCheckResourceAttr(resourceName, "document_metadata_configuration_updates.#", "17"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						"name":                   "_authors",
@@ -795,6 +805,7 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 }
 
 func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *testing.T) {
+	ctx := acctest.Context(t)
 	var index kendra.DescribeIndexOutput
 
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
@@ -814,15 +825,15 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 	updatedStringValImportance := 2
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIndexDestroy,
+		CheckDestroy:             testAccCheckIndexDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIndexConfig_documentMetadataConfigurationUpdatesAddNewMetadata(rName, rName2, rName3, originalAuthorsFacetable, originalLongValDisplayable, originalStringListValSearchable, originalDateValSortable, originalStringValImportance),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIndexExists(resourceName, &index),
+					testAccCheckIndexExists(ctx, resourceName, &index),
 					resource.TestCheckResourceAttr(resourceName, "document_metadata_configuration_updates.#", "17"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						"name":                   "_authors",
@@ -1041,7 +1052,7 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 			{
 				Config: testAccIndexConfig_documentMetadataConfigurationUpdatesAddNewMetadata(rName, rName2, rName3, updatedAuthorsFacetable, updatedLongValDisplayable, updatedStringListValSearchable, updatedDateValSortable, updatedStringValImportance),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIndexExists(resourceName, &index),
+					testAccCheckIndexExists(ctx, resourceName, &index),
 					resource.TestCheckResourceAttr(resourceName, "document_metadata_configuration_updates.#", "17"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						"name":                   "_authors",
@@ -1257,6 +1268,7 @@ func TestAccKendraIndex_inplaceUpdateDocumentMetadataConfigurationUpdates(t *tes
 }
 
 func TestAccKendraIndex_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var index kendra.DescribeIndexOutput
 
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
@@ -1266,16 +1278,16 @@ func TestAccKendraIndex_disappears(t *testing.T) {
 	resourceName := "aws_kendra_index.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIndexDestroy,
+		CheckDestroy:             testAccCheckIndexDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIndexConfig_basic(rName, rName2, rName3, description),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIndexExists(resourceName, &index),
-					acctest.CheckResourceDisappears(acctest.Provider, tfkendra.ResourceIndex(), resourceName),
+					testAccCheckIndexExists(ctx, resourceName, &index),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfkendra.ResourceIndex(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -1283,31 +1295,33 @@ func TestAccKendraIndex_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckIndexDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).KendraConn
+func testAccCheckIndexDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KendraClient()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_kendra_index" {
-			continue
-		}
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_kendra_index" {
+				continue
+			}
 
-		input := &kendra.DescribeIndexInput{
-			Id: aws.String(rs.Primary.ID),
-		}
+			input := &kendra.DescribeIndexInput{
+				Id: aws.String(rs.Primary.ID),
+			}
 
-		resp, err := conn.DescribeIndex(context.Background(), input)
+			resp, err := conn.DescribeIndex(ctx, input)
 
-		if err == nil {
-			if aws.ToString(resp.Id) == rs.Primary.ID {
-				return fmt.Errorf("Index '%s' was not deleted properly", rs.Primary.ID)
+			if err == nil {
+				if aws.ToString(resp.Id) == rs.Primary.ID {
+					return fmt.Errorf("Index '%s' was not deleted properly", rs.Primary.ID)
+				}
 			}
 		}
-	}
 
-	return nil
+		return nil
+	}
 }
 
-func testAccCheckIndexExists(name string, index *kendra.DescribeIndexOutput) resource.TestCheckFunc {
+func testAccCheckIndexExists(ctx context.Context, name string, index *kendra.DescribeIndexOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 
@@ -1315,11 +1329,11 @@ func testAccCheckIndexExists(name string, index *kendra.DescribeIndexOutput) res
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KendraConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KendraClient()
 		input := &kendra.DescribeIndexInput{
 			Id: aws.String(rs.Primary.ID),
 		}
-		resp, err := conn.DescribeIndex(context.Background(), input)
+		resp, err := conn.DescribeIndex(ctx, input)
 
 		if err != nil {
 			return err

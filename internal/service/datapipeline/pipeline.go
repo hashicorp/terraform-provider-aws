@@ -1,6 +1,7 @@
 package datapipeline
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"time"
@@ -8,21 +9,23 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/datapipeline"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourcePipeline() *schema.Resource {
 	return &schema.Resource{
-		Create: resourcePipelineCreate,
-		Read:   resourcePipelineRead,
-		Update: resourcePipelineUpdate,
-		Delete: resourcePipelineDelete,
+		CreateWithoutTimeout: resourcePipelineCreate,
+		ReadWithoutTimeout:   resourcePipelineRead,
+		UpdateWithoutTimeout: resourcePipelineUpdate,
+		DeleteWithoutTimeout: resourcePipelineDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -46,8 +49,9 @@ func ResourcePipeline() *schema.Resource {
 	}
 }
 
-func resourcePipelineCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataPipelineConn
+func resourcePipelineCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DataPipelineConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -63,30 +67,31 @@ func resourcePipelineCreate(d *schema.ResourceData, meta interface{}) error {
 		input.Description = aws.String(v.(string))
 	}
 
-	resp, err := conn.CreatePipeline(&input)
+	resp, err := conn.CreatePipelineWithContext(ctx, &input)
 
 	if err != nil {
-		return fmt.Errorf("Error creating datapipeline: %s", err)
+		return sdkdiag.AppendErrorf(diags, "Error creating datapipeline: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resp.PipelineId))
 
-	return resourcePipelineRead(d, meta)
+	return append(diags, resourcePipelineRead(ctx, d, meta)...)
 }
 
-func resourcePipelineRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataPipelineConn
+func resourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DataPipelineConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	v, err := PipelineRetrieve(d.Id(), conn)
+	v, err := PipelineRetrieve(ctx, d.Id(), conn)
 	if tfawserr.ErrCodeEquals(err, datapipeline.ErrCodePipelineNotFoundException) || tfawserr.ErrCodeEquals(err, datapipeline.ErrCodePipelineDeletedException) || v == nil {
 		log.Printf("[WARN] DataPipeline (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 	if err != nil {
-		return fmt.Errorf("Error describing DataPipeline (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "Error describing DataPipeline (%s): %s", d.Id(), err)
 	}
 
 	d.Set("name", v.Name)
@@ -95,54 +100,59 @@ func resourcePipelineRead(d *schema.ResourceData, meta interface{}) error {
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourcePipelineUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataPipelineConn
+func resourcePipelineUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DataPipelineConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating Datapipeline Pipeline (%s) tags: %s", d.Id(), err)
+		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Datapipeline Pipeline (%s) tags: %s", d.Id(), err)
 		}
 	}
 
-	return resourcePipelineRead(d, meta)
+	return append(diags, resourcePipelineRead(ctx, d, meta)...)
 }
 
-func resourcePipelineDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataPipelineConn
+func resourcePipelineDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DataPipelineConn()
 
 	opts := datapipeline.DeletePipelineInput{
 		PipelineId: aws.String(d.Id()),
 	}
 
-	_, err := conn.DeletePipeline(&opts)
+	_, err := conn.DeletePipelineWithContext(ctx, &opts)
 	if tfawserr.ErrCodeEquals(err, datapipeline.ErrCodePipelineNotFoundException) || tfawserr.ErrCodeEquals(err, datapipeline.ErrCodePipelineDeletedException) {
-		return nil
+		return diags
 	}
 	if err != nil {
-		return fmt.Errorf("Error deleting Data Pipeline %s: %s", d.Id(), err.Error())
+		return sdkdiag.AppendErrorf(diags, "deleting Data Pipeline %s: %s", d.Id(), err)
 	}
 
-	return WaitForDeletion(conn, d.Id())
+	if err := WaitForDeletion(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting Data Pipeline %s: %s", d.Id(), err)
+	}
+	return nil
 }
 
-func PipelineRetrieve(id string, conn *datapipeline.DataPipeline) (*datapipeline.PipelineDescription, error) {
+func PipelineRetrieve(ctx context.Context, id string, conn *datapipeline.DataPipeline) (*datapipeline.PipelineDescription, error) {
 	opts := datapipeline.DescribePipelinesInput{
 		PipelineIds: []*string{aws.String(id)},
 	}
 
-	resp, err := conn.DescribePipelines(&opts)
+	resp, err := conn.DescribePipelinesWithContext(ctx, &opts)
 	if err != nil {
 		return nil, err
 	}
@@ -163,12 +173,12 @@ func PipelineRetrieve(id string, conn *datapipeline.DataPipeline) (*datapipeline
 	return pipeline, nil
 }
 
-func WaitForDeletion(conn *datapipeline.DataPipeline, pipelineID string) error {
+func WaitForDeletion(ctx context.Context, conn *datapipeline.DataPipeline, pipelineID string) error {
 	params := &datapipeline.DescribePipelinesInput{
 		PipelineIds: []*string{aws.String(pipelineID)},
 	}
-	return resource.Retry(10*time.Minute, func() *resource.RetryError {
-		_, err := conn.DescribePipelines(params)
+	return resource.RetryContext(ctx, 10*time.Minute, func() *resource.RetryError {
+		_, err := conn.DescribePipelinesWithContext(ctx, params)
 		if tfawserr.ErrCodeEquals(err, datapipeline.ErrCodePipelineNotFoundException) || tfawserr.ErrCodeEquals(err, datapipeline.ErrCodePipelineDeletedException) {
 			return nil
 		}

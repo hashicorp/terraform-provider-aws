@@ -13,6 +13,7 @@ import (
 )
 
 func TestAccElasticsearchDomainPolicy_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var domain elasticsearch.ElasticsearchDomainStatus
 	ri := sdkacctest.RandInt()
 	policy := `{
@@ -49,12 +50,12 @@ func TestAccElasticsearchDomainPolicy_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainDestroy,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainPolicyConfig_basic(ri, policy),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists("aws_elasticsearch_domain.example", &domain),
+					testAccCheckDomainExists(ctx, "aws_elasticsearch_domain.example", &domain),
 					resource.TestCheckResourceAttr("aws_elasticsearch_domain.example", "elasticsearch_version", "2.3"),
 					func(s *terraform.State) error {
 						awsClient := acctest.Provider.Meta().(*conns.AWSClient)

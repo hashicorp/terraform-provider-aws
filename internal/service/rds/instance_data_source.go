@@ -1,19 +1,22 @@
 package rds
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func DataSourceInstance() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceInstanceRead,
+		ReadWithoutTimeout: dataSourceInstanceRead,
 
 		Schema: map[string]*schema.Schema{
 			"address": {
@@ -165,6 +168,10 @@ func DataSourceInstance() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
+			"storage_throughput": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 			"storage_type": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -183,14 +190,15 @@ func DataSourceInstance() *schema.Resource {
 	}
 }
 
-func dataSourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RDSConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	v, err := FindDBInstanceByID(conn, d.Get("db_instance_identifier").(string))
+	v, err := findDBInstanceByIDSDKv1(ctx, conn, d.Get("db_instance_identifier").(string))
 
 	if err != nil {
-		return tfresource.SingularDataSourceFindError("RDS DB Instance", err)
+		return diag.FromErr(tfresource.SingularDataSourceFindError("RDS DB Instance", err))
 	}
 
 	d.SetId(aws.StringValue(v.DBInstanceIdentifier))
@@ -241,6 +249,7 @@ func dataSourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("replicate_source_db", v.ReadReplicaSourceDBInstanceIdentifier)
 	d.Set("resource_id", v.DbiResourceId)
 	d.Set("storage_encrypted", v.StorageEncrypted)
+	d.Set("storage_throughput", v.StorageThroughput)
 	d.Set("storage_type", v.StorageType)
 	d.Set("timezone", v.Timezone)
 	var vpcSecurityGroupIDs []string
@@ -256,7 +265,6 @@ func dataSourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("endpoint", fmt.Sprintf("%s:%d", aws.StringValue(dbEndpoint.Address), aws.Int64Value(dbEndpoint.Port)))
 		d.Set("hosted_zone_id", dbEndpoint.HostedZoneId)
 		d.Set("port", dbEndpoint.Port)
-
 	} else {
 		d.Set("address", nil)
 		d.Set("endpoint", nil)
@@ -264,15 +272,15 @@ func dataSourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("port", nil)
 	}
 
-	tags, err := ListTags(conn, d.Get("db_instance_arn").(string))
+	tags, err := ListTags(ctx, conn, d.Get("db_instance_arn").(string))
 
 	if err != nil {
-		return fmt.Errorf("listing tags for RDS DB Instance (%s): %w", d.Get("db_instance_arn").(string), err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for RDS DB Instance (%s): %s", d.Get("db_instance_arn").(string), err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

@@ -22,10 +22,10 @@ import (
 
 func ResourceVocabulary() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceVocabularyCreate,
-		ReadContext:   resourceVocabularyRead,
-		UpdateContext: resourceVocabularyUpdate,
-		DeleteContext: resourceVocabularyDelete,
+		CreateWithoutTimeout: resourceVocabularyCreate,
+		ReadWithoutTimeout:   resourceVocabularyRead,
+		UpdateWithoutTimeout: resourceVocabularyUpdate,
+		DeleteWithoutTimeout: resourceVocabularyDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -93,7 +93,7 @@ func ResourceVocabulary() *schema.Resource {
 }
 
 func resourceVocabularyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -136,7 +136,7 @@ func resourceVocabularyCreate(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceVocabularyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -192,11 +192,11 @@ func resourceVocabularyRead(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceVocabularyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.FromErr(fmt.Errorf("error updating tags: %w", err))
 		}
 	}
@@ -205,7 +205,7 @@ func resourceVocabularyUpdate(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceVocabularyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 
 	instanceID, vocabularyID, err := VocabularyParseID(d.Id())
 

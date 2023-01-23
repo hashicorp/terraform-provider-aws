@@ -1,16 +1,18 @@
 package rds
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -19,12 +21,12 @@ import (
 
 func ResourceProxy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceProxyCreate,
-		Read:   resourceProxyRead,
-		Update: resourceProxyUpdate,
-		Delete: resourceProxyDelete,
+		CreateWithoutTimeout: resourceProxyCreate,
+		ReadWithoutTimeout:   resourceProxyRead,
+		UpdateWithoutTimeout: resourceProxyUpdate,
+		DeleteWithoutTimeout: resourceProxyDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -124,8 +126,9 @@ func ResourceProxy() *schema.Resource {
 	}
 }
 
-func resourceProxyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+func resourceProxyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RDSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -155,36 +158,37 @@ func resourceProxyCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Creating RDS DB Proxy: %s", input)
-	output, err := conn.CreateDBProxy(&input)
+	output, err := conn.CreateDBProxyWithContext(ctx, &input)
 
 	if err != nil {
-		return fmt.Errorf("creating RDS DB Proxy: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating RDS DB Proxy: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.DBProxy.DBProxyName))
 
-	if _, err := waitDBProxyCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("waiting for RDS DB Proxy (%s) create: %w", d.Id(), err)
+	if _, err := waitDBProxyCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for RDS DB Proxy (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceProxyRead(d, meta)
+	return append(diags, resourceProxyRead(ctx, d, meta)...)
 }
 
-func resourceProxyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+func resourceProxyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RDSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	dbProxy, err := FindDBProxyByName(conn, d.Id())
+	dbProxy, err := FindDBProxyByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] RDS DB Proxy %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading RDS DB Proxy (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading RDS DB Proxy (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", dbProxy.DBProxyArn)
@@ -199,28 +203,29 @@ func resourceProxyRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("vpc_security_group_ids", flex.FlattenStringSet(dbProxy.VpcSecurityGroupIds))
 	d.Set("endpoint", dbProxy.Endpoint)
 
-	tags, err := ListTags(conn, d.Get("arn").(string))
+	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
 
 	if err != nil {
-		return fmt.Errorf("listing tags for RDS DB Proxy (%s): %w", d.Get("arn").(string), err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for RDS DB Proxy (%s): %s", d.Get("arn").(string), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceProxyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+func resourceProxyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		oName, nName := d.GetChange("name")
@@ -242,53 +247,54 @@ func resourceProxyUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		log.Printf("[DEBUG] Updating RDS DB Proxy: %s", input)
-		_, err := conn.ModifyDBProxy(input)
+		_, err := conn.ModifyDBProxyWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("updating RDS DB Proxy (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating RDS DB Proxy (%s): %s", d.Id(), err)
 		}
 
 		// DB Proxy Name is used as an ID as the API doesn't provide a way to read/
 		// update/delete DB proxies using the ARN
 		d.SetId(nName.(string))
 
-		if _, err := waitDBProxyUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return fmt.Errorf("waiting for RDS DB Proxy (%s) update: %w", d.Id(), err)
+		if _, err := waitDBProxyUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for RDS DB Proxy (%s) update: %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("updating RDS DB Proxy (%s) tags: %w", d.Get("arn").(string), err)
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating RDS DB Proxy (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
 
-	return resourceProxyRead(d, meta)
+	return append(diags, resourceProxyRead(ctx, d, meta)...)
 }
 
-func resourceProxyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+func resourceProxyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RDSConn()
 
-	log.Printf("[DEBUG] Creating RDS DB Proxy: %s", d.Id())
-	_, err := conn.DeleteDBProxy(&rds.DeleteDBProxyInput{
+	log.Printf("[DEBUG] Deleting RDS DB Proxy: %s", d.Id())
+	_, err := conn.DeleteDBProxyWithContext(ctx, &rds.DeleteDBProxyInput{
 		DBProxyName: aws.String(d.Id()),
 	})
 
-	if err != nil {
-		return fmt.Errorf("deleting RDS DB Proxy (%s): %w", d.Id(), err)
-	}
-
 	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyNotFoundFault) {
-		return nil
+		return diags
 	}
 
-	if _, err := waitDBProxyDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("waiting for RDS DB Proxy (%s) delete: %w", d.Id(), err)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting RDS DB Proxy (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	if _, err := waitDBProxyDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for RDS DB Proxy (%s) delete: %s", d.Id(), err)
+	}
+
+	return diags
 }
 
 func expandProxyAuth(l []interface{}) []*rds.UserAuthConfig {

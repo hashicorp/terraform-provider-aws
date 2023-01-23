@@ -1,28 +1,30 @@
 package redshift
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourceEndpointAccess() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceEndpointAccessCreate,
-		Read:   resourceEndpointAccessRead,
-		Update: resourceEndpointAccessUpdate,
-		Delete: resourceEndpointAccessDelete,
+		CreateWithoutTimeout: resourceEndpointAccessCreate,
+		ReadWithoutTimeout:   resourceEndpointAccessRead,
+		UpdateWithoutTimeout: resourceEndpointAccessUpdate,
+		DeleteWithoutTimeout: resourceEndpointAccessDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -109,8 +111,9 @@ func ResourceEndpointAccess() *schema.Resource {
 	}
 }
 
-func resourceEndpointAccessCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+func resourceEndpointAccessCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 
 	createOpts := redshift.CreateEndpointAccessInput{
 		EndpointName:    aws.String(d.Get("endpoint_name").(string)),
@@ -129,34 +132,35 @@ func resourceEndpointAccessCreate(d *schema.ResourceData, meta interface{}) erro
 		createOpts.ResourceOwner = aws.String(v.(string))
 	}
 
-	_, err := conn.CreateEndpointAccess(&createOpts)
+	_, err := conn.CreateEndpointAccessWithContext(ctx, &createOpts)
 	if err != nil {
-		return fmt.Errorf("creating Redshift endpoint access: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating Redshift endpoint access: %s", err)
 	}
 
 	d.SetId(aws.StringValue(createOpts.EndpointName))
 	log.Printf("[INFO] Redshift endpoint access ID: %s", d.Id())
 
-	if _, err := waitEndpointAccessActive(conn, d.Id()); err != nil {
-		return fmt.Errorf("waiting for Redshift Endpoint Access (%s) to be active: %w", d.Id(), err)
+	if _, err := waitEndpointAccessActive(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Redshift Endpoint Access (%s) to be active: %s", d.Id(), err)
 	}
 
-	return resourceEndpointAccessRead(d, meta)
+	return append(diags, resourceEndpointAccessRead(ctx, d, meta)...)
 }
 
-func resourceEndpointAccessRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+func resourceEndpointAccessRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 
-	endpoint, err := FindEndpointAccessByName(conn, d.Id())
+	endpoint, err := FindEndpointAccessByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Redshift endpoint access (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading Redshift endpoint access (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Redshift endpoint access (%s): %s", d.Id(), err)
 	}
 
 	d.Set("endpoint_name", endpoint.EndpointName)
@@ -168,14 +172,15 @@ func resourceEndpointAccessRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("address", endpoint.Address)
 
 	if err := d.Set("vpc_endpoint", flattenVPCEndpoint(endpoint.VpcEndpoint)); err != nil {
-		return fmt.Errorf("setting vpc_endpoint: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting vpc_endpoint: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceEndpointAccessUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+func resourceEndpointAccessUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 
 	if d.HasChanges("vpc_security_group_ids") {
 		_, n := d.GetChange("vpc_security_group_ids")
@@ -189,42 +194,43 @@ func resourceEndpointAccessUpdate(d *schema.ResourceData, meta interface{}) erro
 			sIds = append(sIds, aws.String(s.(string)))
 		}
 
-		_, err := conn.ModifyEndpointAccess(&redshift.ModifyEndpointAccessInput{
+		_, err := conn.ModifyEndpointAccessWithContext(ctx, &redshift.ModifyEndpointAccessInput{
 			EndpointName:        aws.String(d.Id()),
 			VpcSecurityGroupIds: sIds,
 		})
 
 		if err != nil {
-			return fmt.Errorf("updating Redshift endpoint access (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Redshift endpoint access (%s): %s", d.Id(), err)
 		}
 
-		if _, err := waitEndpointAccessActive(conn, d.Id()); err != nil {
-			return fmt.Errorf("waiting for Redshift Endpoint Access (%s) to be active: %w", d.Id(), err)
+		if _, err := waitEndpointAccessActive(ctx, conn, d.Id()); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for Redshift Endpoint Access (%s) to be active: %s", d.Id(), err)
 		}
 	}
 
-	return resourceEndpointAccessRead(d, meta)
+	return append(diags, resourceEndpointAccessRead(ctx, d, meta)...)
 }
 
-func resourceEndpointAccessDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+func resourceEndpointAccessDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 
-	_, err := conn.DeleteEndpointAccess(&redshift.DeleteEndpointAccessInput{
+	_, err := conn.DeleteEndpointAccessWithContext(ctx, &redshift.DeleteEndpointAccessInput{
 		EndpointName: aws.String(d.Id()),
 	})
 
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, redshift.ErrCodeEndpointNotFoundFault) {
-			return nil
+			return diags
 		}
-		return err
+		return sdkdiag.AppendErrorf(diags, "deleting Redshift Endpoint Access (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitEndpointAccessDeleted(conn, d.Id()); err != nil {
-		return fmt.Errorf("waiting for Redshift Endpoint Access (%s) to be deleted: %w", d.Id(), err)
+	if _, err := waitEndpointAccessDeleted(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting Redshift Endpoint Access (%s): waiting for completion: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func vpcSgsIdsToSlice(vpsSgsIds []*redshift.VpcSecurityGroupMembership) []string {

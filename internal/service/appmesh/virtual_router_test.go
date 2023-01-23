@@ -1,6 +1,7 @@
 package appmesh_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -12,9 +13,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfappmesh "github.com/hashicorp/terraform-provider-aws/internal/service/appmesh"
 )
 
 func testAccVirtualRouter_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var vr appmesh.VirtualRouterData
 	resourceName := "aws_appmesh_virtual_router.test"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -24,12 +27,12 @@ func testAccVirtualRouter_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, appmesh.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVirtualRouterDestroy,
+		CheckDestroy:             testAccCheckVirtualRouterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVirtualRouterConfig_basic(meshName, vrName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVirtualRouterExists(resourceName, &vr),
+					testAccCheckVirtualRouterExists(ctx, resourceName, &vr),
 					resource.TestCheckResourceAttr(resourceName, "name", vrName),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
@@ -47,7 +50,7 @@ func testAccVirtualRouter_basic(t *testing.T) {
 			{
 				Config: testAccVirtualRouterConfig_updated(meshName, vrName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVirtualRouterExists(resourceName, &vr),
+					testAccCheckVirtualRouterExists(ctx, resourceName, &vr),
 					resource.TestCheckResourceAttr(resourceName, "name", vrName),
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
@@ -68,7 +71,8 @@ func testAccVirtualRouter_basic(t *testing.T) {
 	})
 }
 
-func testAccVirtualRouter_tags(t *testing.T) {
+func testAccVirtualRouter_multiListener(t *testing.T) {
+	ctx := acctest.Context(t)
 	var vr appmesh.VirtualRouterData
 	resourceName := "aws_appmesh_virtual_router.test"
 	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -78,13 +82,76 @@ func testAccVirtualRouter_tags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, appmesh.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVirtualRouterDestroy,
+		CheckDestroy:             testAccCheckVirtualRouterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVirtualRouterConfig_multiListener(meshName, vrName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVirtualRouterExists(ctx, resourceName, &vr),
+					resource.TestCheckResourceAttr(resourceName, "name", vrName),
+					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
+					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
+					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.port", "8080"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.protocol", "http"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.port_mapping.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.port_mapping.0.port", "8081"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.port_mapping.0.protocol", "http2"),
+					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
+					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
+					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualRouter/%s", meshName, vrName)),
+				),
+			},
+			{
+				Config: testAccVirtualRouterConfig_multiListenerUpdated(meshName, vrName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVirtualRouterExists(ctx, resourceName, &vr),
+					resource.TestCheckResourceAttr(resourceName, "name", vrName),
+					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
+					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
+					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.port", "8081"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.protocol", "http"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.port_mapping.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.port_mapping.0.port", "8082"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.1.port_mapping.0.protocol", "http2"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.2.port_mapping.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.2.port_mapping.0.port", "8080"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.2.port_mapping.0.protocol", "grpc"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateId:     fmt.Sprintf("%s/%s", meshName, vrName),
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccVirtualRouter_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	var vr appmesh.VirtualRouterData
+	resourceName := "aws_appmesh_virtual_router.test"
+	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	vrName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, appmesh.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVirtualRouterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVirtualRouterConfig_tags(meshName, vrName, "foo", "bar", "good", "bad"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVirtualRouterExists(
-						resourceName, &vr),
+					testAccCheckVirtualRouterExists(ctx, resourceName, &vr),
 					resource.TestCheckResourceAttr(
 						resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(
@@ -96,8 +163,7 @@ func testAccVirtualRouter_tags(t *testing.T) {
 			{
 				Config: testAccVirtualRouterConfig_tags(meshName, vrName, "foo2", "bar", "good", "bad2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVirtualRouterExists(
-						resourceName, &vr),
+					testAccCheckVirtualRouterExists(ctx, resourceName, &vr),
 					resource.TestCheckResourceAttr(
 						resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(
@@ -109,8 +175,7 @@ func testAccVirtualRouter_tags(t *testing.T) {
 			{
 				Config: testAccVirtualRouterConfig_basic(meshName, vrName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVirtualRouterExists(
-						resourceName, &vr),
+					testAccCheckVirtualRouterExists(ctx, resourceName, &vr),
 					resource.TestCheckResourceAttr(
 						resourceName, "tags.%", "0"),
 				),
@@ -125,33 +190,59 @@ func testAccVirtualRouter_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckVirtualRouterDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AppMeshConn
+func testAccVirtualRouter_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var vr appmesh.VirtualRouterData
+	resourceName := "aws_appmesh_virtual_router.test"
+	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	vrName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_appmesh_virtual_router" {
-			continue
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, appmesh.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVirtualRouterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVirtualRouterConfig_basic(meshName, vrName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVirtualRouterExists(ctx, resourceName, &vr),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappmesh.ResourceVirtualRouter(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+func testAccCheckVirtualRouterDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppMeshConn()
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_appmesh_virtual_router" {
+				continue
+			}
+
+			_, err := conn.DescribeVirtualRouterWithContext(ctx, &appmesh.DescribeVirtualRouterInput{
+				MeshName:          aws.String(rs.Primary.Attributes["mesh_name"]),
+				VirtualRouterName: aws.String(rs.Primary.Attributes["name"]),
+			})
+			if tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
+				continue
+			}
+			if err != nil {
+				return err
+			}
+			return fmt.Errorf("still exist.")
 		}
 
-		_, err := conn.DescribeVirtualRouter(&appmesh.DescribeVirtualRouterInput{
-			MeshName:          aws.String(rs.Primary.Attributes["mesh_name"]),
-			VirtualRouterName: aws.String(rs.Primary.Attributes["name"]),
-		})
-		if tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
-			continue
-		}
-		if err != nil {
-			return err
-		}
-		return fmt.Errorf("still exist.")
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckVirtualRouterExists(name string, v *appmesh.VirtualRouterData) resource.TestCheckFunc {
+func testAccCheckVirtualRouterExists(ctx context.Context, name string, v *appmesh.VirtualRouterData) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppMeshConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppMeshConn()
 
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -161,7 +252,7 @@ func testAccCheckVirtualRouterExists(name string, v *appmesh.VirtualRouterData) 
 			return fmt.Errorf("No ID is set")
 		}
 
-		resp, err := conn.DescribeVirtualRouter(&appmesh.DescribeVirtualRouterInput{
+		resp, err := conn.DescribeVirtualRouterWithContext(ctx, &appmesh.DescribeVirtualRouterInput{
 			MeshName:          aws.String(rs.Primary.Attributes["mesh_name"]),
 			VirtualRouterName: aws.String(rs.Primary.Attributes["name"]),
 		})
@@ -212,6 +303,68 @@ resource "aws_appmesh_virtual_router" "test" {
       port_mapping {
         port     = 8081
         protocol = "http"
+      }
+    }
+  }
+}
+`, meshName, vrName)
+}
+
+func testAccVirtualRouterConfig_multiListener(meshName, vrName string) string {
+	return fmt.Sprintf(`
+resource "aws_appmesh_mesh" "test" {
+  name = %[1]q
+}
+
+resource "aws_appmesh_virtual_router" "test" {
+  name      = %[2]q
+  mesh_name = aws_appmesh_mesh.test.id
+
+  spec {
+    listener {
+      port_mapping {
+        port     = 8080
+        protocol = "http"
+      }
+    }
+    listener {
+      port_mapping {
+        port     = 8081
+        protocol = "http2"
+      }
+    }
+  }
+}
+`, meshName, vrName)
+}
+
+func testAccVirtualRouterConfig_multiListenerUpdated(meshName, vrName string) string {
+	return fmt.Sprintf(`
+resource "aws_appmesh_mesh" "test" {
+  name = %[1]q
+}
+
+resource "aws_appmesh_virtual_router" "test" {
+  name      = %[2]q
+  mesh_name = aws_appmesh_mesh.test.id
+
+  spec {
+    listener {
+      port_mapping {
+        port     = 8081
+        protocol = "http"
+      }
+    }
+    listener {
+      port_mapping {
+        port     = 8082
+        protocol = "http2"
+      }
+    }
+    listener {
+      port_mapping {
+        port     = 8080
+        protocol = "grpc"
       }
     }
   }

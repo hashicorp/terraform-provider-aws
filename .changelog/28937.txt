@@ -1,0 +1,7 @@
+```release-note:bug
+data-source/aws_identitystore_group: Restore use of `ListGroups` API when `filter` is specified
+```
+
+```release-note:bug
+data-source/aws_identitystore_user: Restore use of `ListUsers` API when `filter` is specified
+```

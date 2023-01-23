@@ -150,7 +150,7 @@ func setEngineVersionMemcached(d *schema.ResourceData, version *string) {
 func setEngineVersionRedis(d *schema.ResourceData, version *string) error {
 	engineVersion, err := gversion.NewVersion(aws.StringValue(version))
 	if err != nil {
-		return fmt.Errorf("error reading engine version: %w", err)
+		return fmt.Errorf("reading engine version: %w", err)
 	}
 	if engineVersion.Segments()[0] < 6 {
 		d.Set("engine_version", engineVersion.String())

@@ -1,6 +1,7 @@
 package iam
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -8,19 +9,21 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourceUserPolicyAttachment() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceUserPolicyAttachmentCreate,
-		Read:   resourceUserPolicyAttachmentRead,
-		Delete: resourceUserPolicyAttachmentDelete,
+		CreateWithoutTimeout: resourceUserPolicyAttachmentCreate,
+		ReadWithoutTimeout:   resourceUserPolicyAttachmentRead,
+		DeleteWithoutTimeout: resourceUserPolicyAttachmentDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceUserPolicyAttachmentImport,
+			StateContext: resourceUserPolicyAttachmentImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -38,25 +41,27 @@ func ResourceUserPolicyAttachment() *schema.Resource {
 	}
 }
 
-func resourceUserPolicyAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+func resourceUserPolicyAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	user := d.Get("user").(string)
 	arn := d.Get("policy_arn").(string)
 
-	err := attachPolicyToUser(conn, user, arn)
+	err := attachPolicyToUser(ctx, conn, user, arn)
 	if err != nil {
-		return fmt.Errorf("Error attaching policy %s to IAM User %s: %v", arn, user, err)
+		return sdkdiag.AppendErrorf(diags, "attaching policy %s to IAM User %s: %v", arn, user, err)
 	}
 
 	//lintignore:R016 // Allow legacy unstable ID usage in managed resource
 	d.SetId(resource.PrefixedUniqueId(fmt.Sprintf("%s-", user)))
 
-	return resourceUserPolicyAttachmentRead(d, meta)
+	return append(diags, resourceUserPolicyAttachmentRead(ctx, d, meta)...)
 }
 
-func resourceUserPolicyAttachmentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+func resourceUserPolicyAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IAMConn()
 	user := d.Get("user").(string)
 	arn := d.Get("policy_arn").(string)
 	// Human friendly ID for error messages since d.Id() is non-descriptive
@@ -64,10 +69,10 @@ func resourceUserPolicyAttachmentRead(d *schema.ResourceData, meta interface{}) 
 
 	var attachedPolicy *iam.AttachedPolicy
 
-	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
+	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
 		var err error
 
-		attachedPolicy, err = FindUserAttachedPolicy(conn, user, arn)
+		attachedPolicy, err = FindUserAttachedPolicy(ctx, conn, user, arn)
 
 		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 			return resource.RetryableError(err)
@@ -87,45 +92,46 @@ func resourceUserPolicyAttachmentRead(d *schema.ResourceData, meta interface{}) 
 	})
 
 	if tfresource.TimedOut(err) {
-		attachedPolicy, err = FindUserAttachedPolicy(conn, user, arn)
+		attachedPolicy, err = FindUserAttachedPolicy(ctx, conn, user, arn)
 	}
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 		log.Printf("[WARN] IAM User Managed Policy Attachment (%s) not found, removing from state", id)
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading IAM User Managed Policy Attachment (%s): %w", id, err)
+		return sdkdiag.AppendErrorf(diags, "reading IAM User Managed Policy Attachment (%s): %s", id, err)
 	}
 
 	if attachedPolicy == nil {
 		if d.IsNewResource() {
-			return fmt.Errorf("error reading IAM User Managed Policy Attachment (%s): not found after creation", id)
+			return sdkdiag.AppendErrorf(diags, "reading IAM User Managed Policy Attachment (%s): not found after creation", id)
 		}
 
 		log.Printf("[WARN] IAM User Managed Policy Attachment (%s) not found, removing from state", id)
 		d.SetId("")
-		return nil
+		return diags
 	}
 
-	return nil
+	return diags
 }
 
-func resourceUserPolicyAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+func resourceUserPolicyAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IAMConn()
 	user := d.Get("user").(string)
 	arn := d.Get("policy_arn").(string)
 
-	err := DetachPolicyFromUser(conn, user, arn)
+	err := DetachPolicyFromUser(ctx, conn, user, arn)
 	if err != nil {
-		return fmt.Errorf("Error removing policy %s from IAM User %s: %v", arn, user, err)
+		return sdkdiag.AppendErrorf(diags, "removing policy %s from IAM User %s: %v", arn, user, err)
 	}
-	return nil
+	return diags
 }
 
-func resourceUserPolicyAttachmentImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceUserPolicyAttachmentImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	idParts := strings.SplitN(d.Id(), "/", 2)
 	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
 		return nil, fmt.Errorf("unexpected format of ID (%q), expected <user-name>/<policy_arn>", d.Id())
@@ -141,16 +147,16 @@ func resourceUserPolicyAttachmentImport(d *schema.ResourceData, meta interface{}
 	return []*schema.ResourceData{d}, nil
 }
 
-func attachPolicyToUser(conn *iam.IAM, user string, arn string) error {
-	_, err := conn.AttachUserPolicy(&iam.AttachUserPolicyInput{
+func attachPolicyToUser(ctx context.Context, conn *iam.IAM, user string, arn string) error {
+	_, err := conn.AttachUserPolicyWithContext(ctx, &iam.AttachUserPolicyInput{
 		UserName:  aws.String(user),
 		PolicyArn: aws.String(arn),
 	})
 	return err
 }
 
-func DetachPolicyFromUser(conn *iam.IAM, user string, arn string) error {
-	_, err := conn.DetachUserPolicy(&iam.DetachUserPolicyInput{
+func DetachPolicyFromUser(ctx context.Context, conn *iam.IAM, user string, arn string) error {
+	_, err := conn.DetachUserPolicyWithContext(ctx, &iam.DetachUserPolicyInput{
 		UserName:  aws.String(user),
 		PolicyArn: aws.String(arn),
 	})

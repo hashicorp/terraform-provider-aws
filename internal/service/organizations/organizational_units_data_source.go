@@ -1,17 +1,19 @@
 package organizations
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/organizations"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func DataSourceOrganizationalUnits() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceOrganizationalUnitsRead,
+		ReadWithoutTimeout: dataSourceOrganizationalUnitsRead,
 
 		Schema: map[string]*schema.Schema{
 			"parent_id": {
@@ -42,8 +44,9 @@ func DataSourceOrganizationalUnits() *schema.Resource {
 	}
 }
 
-func dataSourceOrganizationalUnitsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OrganizationsConn
+func dataSourceOrganizationalUnitsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).OrganizationsConn()
 
 	parent_id := d.Get("parent_id").(string)
 
@@ -53,7 +56,7 @@ func dataSourceOrganizationalUnitsRead(d *schema.ResourceData, meta interface{})
 
 	var children []*organizations.OrganizationalUnit
 
-	err := conn.ListOrganizationalUnitsForParentPages(params,
+	err := conn.ListOrganizationalUnitsForParentPagesWithContext(ctx, params,
 		func(page *organizations.ListOrganizationalUnitsForParentOutput, lastPage bool) bool {
 			children = append(children, page.OrganizationalUnits...)
 
@@ -61,16 +64,16 @@ func dataSourceOrganizationalUnitsRead(d *schema.ResourceData, meta interface{})
 		})
 
 	if err != nil {
-		return fmt.Errorf("error listing Organizations Organization Units for parent (%s): %w", parent_id, err)
+		return sdkdiag.AppendErrorf(diags, "listing Organizations Organization Units for parent (%s): %s", parent_id, err)
 	}
 
 	d.SetId(parent_id)
 
 	if err := d.Set("children", FlattenOrganizationalUnits(children)); err != nil {
-		return fmt.Errorf("error setting children: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting children: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
 func FlattenOrganizationalUnits(ous []*organizations.OrganizationalUnit) []map[string]interface{} {

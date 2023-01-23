@@ -24,7 +24,6 @@ The following arguments are supported:
 
 * `domain_name` – (Required) Name of the domain.
 
-
 ## Attributes Reference
 
 The following attributes are exported:

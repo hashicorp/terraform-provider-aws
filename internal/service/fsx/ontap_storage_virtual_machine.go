@@ -1,7 +1,7 @@
 package fsx
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"strings"
 	"time"
@@ -9,10 +9,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/fsx"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -21,12 +23,12 @@ import (
 
 func ResourceOntapStorageVirtualMachine() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceOntapStorageVirtualMachineCreate,
-		Read:   resourceOntapStorageVirtualMachineRead,
-		Update: resourceOntapStorageVirtualMachineUpdate,
-		Delete: resourceOntapStorageVirtualMachineDelete,
+		CreateWithoutTimeout: resourceOntapStorageVirtualMachineCreate,
+		ReadWithoutTimeout:   resourceOntapStorageVirtualMachineRead,
+		UpdateWithoutTimeout: resourceOntapStorageVirtualMachineUpdate,
+		DeleteWithoutTimeout: resourceOntapStorageVirtualMachineDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -229,8 +231,9 @@ func ResourceOntapStorageVirtualMachine() *schema.Resource {
 	}
 }
 
-func resourceOntapStorageVirtualMachineCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FSxConn
+func resourceOntapStorageVirtualMachineCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).FSxConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -255,38 +258,37 @@ func resourceOntapStorageVirtualMachineCreate(d *schema.ResourceData, meta inter
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	log.Printf("[DEBUG] Creating FSx ONTAP Storage Virtual Machine: %s", input)
-	result, err := conn.CreateStorageVirtualMachine(input)
+	result, err := conn.CreateStorageVirtualMachineWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating FSx Storage Virtual System: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating FSx Storage Virtual System: %s", err)
 	}
 
 	d.SetId(aws.StringValue(result.StorageVirtualMachine.StorageVirtualMachineId))
 
-	if _, err := waitStorageVirtualMachineCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("error waiting for FSx Storage Virtual Machine (%s) create: %w", d.Id(), err)
+	if _, err := waitStorageVirtualMachineCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for FSx Storage Virtual Machine (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceOntapStorageVirtualMachineRead(d, meta)
-
+	return append(diags, resourceOntapStorageVirtualMachineRead(ctx, d, meta)...)
 }
 
-func resourceOntapStorageVirtualMachineRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FSxConn
+func resourceOntapStorageVirtualMachineRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).FSxConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	storageVirtualMachine, err := FindStorageVirtualMachineByID(conn, d.Id())
+	storageVirtualMachine, err := FindStorageVirtualMachineByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] FSx ONTAP Storage Virtual Machine (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading FSx ONTAP Storage Virtual Machine (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading FSx ONTAP Storage Virtual Machine (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", storageVirtualMachine.ResourceARN)
@@ -299,42 +301,43 @@ func resourceOntapStorageVirtualMachineRead(d *schema.ResourceData, meta interfa
 	d.Set("uuid", storageVirtualMachine.UUID)
 
 	if err := d.Set("active_directory_configuration", flattenOntapSvmActiveDirectoryConfiguration(d, storageVirtualMachine.ActiveDirectoryConfiguration)); err != nil {
-		return fmt.Errorf("error setting svm_active_directory: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting svm_active_directory: %s", err)
 	}
 
 	if err := d.Set("endpoints", flattenOntapStorageVirtualMachineEndpoints(storageVirtualMachine.Endpoints)); err != nil {
-		return fmt.Errorf("error setting endpoints: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting endpoints: %s", err)
 	}
 
 	//SVM tags do not get returned with describe call so need to make a separate list tags call
-	tags, tagserr := ListTags(conn, *storageVirtualMachine.ResourceARN)
+	tags, tagserr := ListTags(ctx, conn, *storageVirtualMachine.ResourceARN)
 
 	if tagserr != nil {
-		return fmt.Errorf("error reading Tags for FSx ONTAP Storage Virtual Machine (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Tags for FSx ONTAP Storage Virtual Machine (%s): %s", d.Id(), err)
 	} else {
 		tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 	}
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceOntapStorageVirtualMachineUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FSxConn
+func resourceOntapStorageVirtualMachineUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).FSxConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating FSx ONTAP Storage Virtual Machine (%s) tags: %w", d.Get("arn").(string), err)
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating FSx ONTAP Storage Virtual Machine (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
 
@@ -352,41 +355,42 @@ func resourceOntapStorageVirtualMachineUpdate(d *schema.ResourceData, meta inter
 			input.SvmAdminPassword = aws.String(d.Get("svm_admin_password").(string))
 		}
 
-		_, err := conn.UpdateStorageVirtualMachine(input)
+		_, err := conn.UpdateStorageVirtualMachineWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error updating FSx ONTAP Storage Virtual Machine (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating FSx ONTAP Storage Virtual Machine (%s): %s", d.Id(), err)
 		}
 
-		if _, err := waitStorageVirtualMachineUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return fmt.Errorf("error waiting for FSx ONTAP Storage Virtual Machine (%s) update: %w", d.Id(), err)
+		if _, err := waitStorageVirtualMachineUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for FSx ONTAP Storage Virtual Machine (%s) update: %s", d.Id(), err)
 		}
 	}
 
-	return resourceOntapStorageVirtualMachineRead(d, meta)
+	return append(diags, resourceOntapStorageVirtualMachineRead(ctx, d, meta)...)
 }
 
-func resourceOntapStorageVirtualMachineDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FSxConn
+func resourceOntapStorageVirtualMachineDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).FSxConn()
 
 	log.Printf("[DEBUG] Deleting FSx ONTAP Storage Virtual Machine: %s", d.Id())
-	_, err := conn.DeleteStorageVirtualMachine(&fsx.DeleteStorageVirtualMachineInput{
+	_, err := conn.DeleteStorageVirtualMachineWithContext(ctx, &fsx.DeleteStorageVirtualMachineInput{
 		StorageVirtualMachineId: aws.String(d.Id()),
 	})
 
 	if tfawserr.ErrCodeEquals(err, fsx.ErrCodeStorageVirtualMachineNotFound) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting FSx ONTAP Storage Virtual Machine (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting FSx ONTAP Storage Virtual Machine (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitStorageVirtualMachineDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("error waiting for FSx ONTAP Storage Virtual Machine (%s) delete: %w", d.Id(), err)
+	if _, err := waitStorageVirtualMachineDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for FSx ONTAP Storage Virtual Machine (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandOntapSvmActiveDirectoryConfigurationCreate(cfg []interface{}) *fsx.CreateSvmActiveDirectoryConfiguration {

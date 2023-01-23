@@ -112,6 +112,8 @@ resource "aws_spot_fleet_request" "foo" {
 -> In this example, we use a [`dynamic` block](https://www.terraform.io/language/expressions/dynamic-blocks) to define zero or more `launch_specification` blocks, producing one for each element in the list of subnet ids.
 
 ```terraform
+variable "subnets" {}
+
 resource "aws_spot_fleet_request" "example" {
   iam_fleet_role                      = "arn:aws:iam::12345678:role/spot-fleet"
   target_capacity                     = 3
@@ -123,7 +125,6 @@ resource "aws_spot_fleet_request" "example" {
 
 
   dynamic "launch_specification" {
-
     for_each = [for s in var.subnets : {
       subnet_id = s[1]
     }]
@@ -202,7 +203,7 @@ terminateInstancesWithExpiration.
   spot-fleet request. Can be specified multiple times to define different bids
 across different markets and instance types. Conflicts with `launch_template_config`. At least one of `launch_specification` or `launch_template_config` is required.
 
-    **Note:** This takes in similar but not
+    **Note**: This takes in similar but not
     identical inputs as [`aws_instance`](instance.html).  There are limitations on
     what you can specify. See the list of officially supported inputs in the
     [reference documentation](http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_SpotFleetLaunchSpecification.html). Any normal [`aws_instance`](instance.html) parameter that corresponds to those inputs may be used and it have
@@ -219,7 +220,7 @@ across different markets and instance types. Conflicts with `launch_template_con
   important to your application workload, such as vCPUs, memory, or I/O.
 * `target_capacity_unit_type` - (Optional) The unit for the target capacity. This can only be done with `instance_requirements` defined
 * `allocation_strategy` - Indicates how to allocate the target capacity across
-  the Spot pools specified by the Spot fleet request. The default is
+  the Spot pools specified by the Spot fleet request. Valid values: `lowestPrice`, `diversified`, `capacityOptimized`, `capacityOptimizedPrioritized`, and `priceCapacityOptimized`. The default is
   `lowestPrice`.
 * `instance_pools_to_use_count` - (Optional; Default: 1)
   The number of Spot pools across which to allocate your target Spot capacity.
@@ -272,7 +273,6 @@ The `launch_template_config` block supports the following:
 ### capacity_rebalance
 
 * `replacement_strategy` - (Optional) The replacement strategy to use. Only available for spot fleets with `fleet_type` set to `maintain`. Valid values: `launch`.
-
 
 ### Overrides
 
@@ -333,7 +333,7 @@ This configuration block supports the following:
 * `burstable_performance` - (Optional) Indicate whether burstable performance instance types should be `included`, `excluded`, or `required`. Default is `excluded`.
 * `cpu_manufacturers` (Optional) List of CPU manufacturer names. Default is any manufacturer.
 
-    ~> **NOTE**: Don't confuse the CPU hardware manufacturer with the CPU hardware architecture. Instances will be launched with a compatible CPU architecture based on the Amazon Machine Image (AMI) that you specify in your launch template.
+    ~> **NOTE:** Don't confuse the CPU hardware manufacturer with the CPU hardware architecture. Instances will be launched with a compatible CPU architecture based on the Amazon Machine Image (AMI) that you specify in your launch template.
 
     ```
     Valid names:
@@ -393,7 +393,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `10m`)
 * `delete` - (Default `15m`)

@@ -1,12 +1,14 @@
 package ec2
 
 import (
+	"context"
 	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -15,7 +17,7 @@ import (
 
 func DataSourceSecurityGroup() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceSecurityGroupRead,
+		ReadWithoutTimeout: dataSourceSecurityGroupRead,
 
 		Timeouts: &schema.ResourceTimeout{
 			Read: schema.DefaultTimeout(20 * time.Minute),
@@ -51,8 +53,8 @@ func DataSourceSecurityGroup() *schema.Resource {
 	}
 }
 
-func dataSourceSecurityGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func dataSourceSecurityGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeSecurityGroupsInput{
@@ -81,10 +83,10 @@ func dataSourceSecurityGroupRead(d *schema.ResourceData, meta interface{}) error
 		input.Filters = nil
 	}
 
-	sg, err := FindSecurityGroup(conn, input)
+	sg, err := FindSecurityGroup(ctx, conn, input)
 
 	if err != nil {
-		return tfresource.SingularDataSourceFindError("EC2 Security Group", err)
+		return diag.FromErr(tfresource.SingularDataSourceFindError("EC2 Security Group", err))
 	}
 
 	d.SetId(aws.StringValue(sg.GroupId))
@@ -102,7 +104,7 @@ func dataSourceSecurityGroupRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("vpc_id", sg.VpcId)
 
 	if err := d.Set("tags", KeyValueTags(sg.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
+		return diag.Errorf("setting tags: %s", err)
 	}
 
 	return nil

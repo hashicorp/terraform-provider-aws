@@ -1,19 +1,22 @@
 package ec2
 
 import (
+	"context"
 	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func DataSourceAvailabilityZone() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAvailabilityZoneRead,
+		ReadWithoutTimeout: dataSourceAvailabilityZoneRead,
 
 		Timeouts: &schema.ResourceTimeout{
 			Read: schema.DefaultTimeout(20 * time.Minute),
@@ -76,8 +79,9 @@ func DataSourceAvailabilityZone() *schema.Resource {
 	}
 }
 
-func dataSourceAvailabilityZoneRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func dataSourceAvailabilityZoneRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	input := &ec2.DescribeAvailabilityZonesInput{}
 
@@ -108,10 +112,10 @@ func dataSourceAvailabilityZoneRead(d *schema.ResourceData, meta interface{}) er
 		input.Filters = nil
 	}
 
-	az, err := FindAvailabilityZone(conn, input)
+	az, err := FindAvailabilityZone(ctx, conn, input)
 
 	if err != nil {
-		return tfresource.SingularDataSourceFindError("EC2 Availability Zone", err)
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Availability Zone", err))
 	}
 
 	// As a convenience when working with AZs generically, we expose
@@ -135,5 +139,5 @@ func dataSourceAvailabilityZoneRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("zone_id", az.ZoneId)
 	d.Set("zone_type", az.ZoneType)
 
-	return nil
+	return diags
 }

@@ -1,18 +1,20 @@
 package servicecatalog
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func DataSourcePortfolioConstraints() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourcePortfolioConstraintsRead,
+		ReadWithoutTimeout: dataSourcePortfolioConstraintsRead,
 
 		Timeouts: &schema.ResourceTimeout{
 			Read: schema.DefaultTimeout(PortfolioConstraintsReadyTimeout),
@@ -69,17 +71,18 @@ func DataSourcePortfolioConstraints() *schema.Resource {
 	}
 }
 
-func dataSourcePortfolioConstraintsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn
+func dataSourcePortfolioConstraintsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 
-	output, err := WaitPortfolioConstraintsReady(conn, d.Get("accept_language").(string), d.Get("portfolio_id").(string), d.Get("product_id").(string), d.Timeout(schema.TimeoutRead))
+	output, err := WaitPortfolioConstraintsReady(ctx, conn, d.Get("accept_language").(string), d.Get("portfolio_id").(string), d.Get("product_id").(string), d.Timeout(schema.TimeoutRead))
 
 	if err != nil {
-		return fmt.Errorf("error describing Service Catalog Portfolio Constraints: %w", err)
+		return sdkdiag.AppendErrorf(diags, "describing Service Catalog Portfolio Constraints: %s", err)
 	}
 
 	if len(output) == 0 {
-		return fmt.Errorf("error getting Service Catalog Portfolio Constraints: no results, change your input")
+		return sdkdiag.AppendErrorf(diags, "getting Service Catalog Portfolio Constraints: no results, change your input")
 	}
 
 	acceptLanguage := d.Get("accept_language").(string)
@@ -93,12 +96,12 @@ func dataSourcePortfolioConstraintsRead(d *schema.ResourceData, meta interface{}
 	d.Set("product_id", d.Get("product_id").(string))
 
 	if err := d.Set("details", flattenConstraintDetails(output)); err != nil {
-		return fmt.Errorf("error setting details: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting details: %s", err)
 	}
 
 	d.SetId(PortfolioConstraintsID(d.Get("accept_language").(string), d.Get("portfolio_id").(string), d.Get("product_id").(string)))
 
-	return nil
+	return diags
 }
 
 func flattenConstraintDetail(apiObject *servicecatalog.ConstraintDetail) map[string]interface{} {

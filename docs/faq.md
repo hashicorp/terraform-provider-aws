@@ -6,14 +6,15 @@
 
 The HashiCorp Terraform AWS provider team is :
 
+* Marc Cosentino, Product Manager - GitHub [@marcosentino](https://github.com/marcosentino)
 * Simon Davis, Engineering Manager - GitHub [@breathingdust](https://github.com/breathingdust)
 * Justin Retzolk, Technical Community Manager - GitHub [@justinretzolk](https://github.com/justinretzolk)
+* Adrian Johnson, Engineer - GitHub [@johnsonaj](https://github.com/johnsonaj)
 * Dirk Avery, Engineer - GitHub [@YakDriver](https://github.com/yakdriver)
 * Graham Davison, Engineer - GitHub [@gdavison](https://github.com/gdavison)
+* Jared Baker, Engineer - GitHub [@jar-b](https://github.com/jar-b)
 * Kerim Satirli, Developer Advocate - GitHub [@ksatirli](https://github.com/ksatirli)
 * Kit Ewbank, Engineer - GitHub [@ewbankkit](https://github.com/ewbankkit)
-* Zoe Helding, Engineer - GitHub [@zhelding](https://github.com/zhelding)
-* Adrian Johnson, Engineer - GitHub [@johnsonaj](https://github.com/johnsonaj)
 
 ## Why isn’t my PR merged yet?
 

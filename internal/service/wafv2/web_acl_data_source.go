@@ -1,18 +1,20 @@
 package wafv2
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/wafv2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func DataSourceWebACL() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceWebACLRead,
+		ReadWithoutTimeout: dataSourceWebACLRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -28,19 +30,17 @@ func DataSourceWebACL() *schema.Resource {
 				Required: true,
 			},
 			"scope": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					wafv2.ScopeCloudfront,
-					wafv2.ScopeRegional,
-				}, false),
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice(wafv2.Scope_Values(), false),
 			},
 		},
 	}
 }
 
-func dataSourceWebACLRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFV2Conn
+func dataSourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).WAFV2Conn()
 	name := d.Get("name").(string)
 
 	var foundWebACL *wafv2.WebACLSummary
@@ -50,13 +50,13 @@ func dataSourceWebACLRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	for {
-		resp, err := conn.ListWebACLs(input)
+		resp, err := conn.ListWebACLsWithContext(ctx, input)
 		if err != nil {
-			return fmt.Errorf("Error reading WAFv2 WebACLs: %w", err)
+			return sdkdiag.AppendErrorf(diags, "reading WAFv2 WebACLs: %s", err)
 		}
 
 		if resp == nil || resp.WebACLs == nil {
-			return fmt.Errorf("Error reading WAFv2 WebACLs")
+			return sdkdiag.AppendErrorf(diags, "reading WAFv2 WebACLs")
 		}
 
 		for _, webACL := range resp.WebACLs {
@@ -73,12 +73,12 @@ func dataSourceWebACLRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if foundWebACL == nil {
-		return fmt.Errorf("WAFv2 WebACL not found for name: %s", name)
+		return sdkdiag.AppendErrorf(diags, "WAFv2 WebACL not found for name: %s", name)
 	}
 
 	d.SetId(aws.StringValue(foundWebACL.Id))
 	d.Set("arn", foundWebACL.ARN)
 	d.Set("description", foundWebACL.Description)
 
-	return nil
+	return diags
 }

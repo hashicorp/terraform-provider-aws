@@ -1,6 +1,7 @@
 package appmesh
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -9,10 +10,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appmesh"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -20,12 +23,12 @@ import (
 
 func ResourceVirtualService() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceVirtualServiceCreate,
-		Read:   resourceVirtualServiceRead,
-		Update: resourceVirtualServiceUpdate,
-		Delete: resourceVirtualServiceDelete,
+		CreateWithoutTimeout: resourceVirtualServiceCreate,
+		ReadWithoutTimeout:   resourceVirtualServiceRead,
+		UpdateWithoutTimeout: resourceVirtualServiceUpdate,
+		DeleteWithoutTimeout: resourceVirtualServiceDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceVirtualServiceImport,
+			StateContext: resourceVirtualServiceImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -134,8 +137,9 @@ func ResourceVirtualService() *schema.Resource {
 	}
 }
 
-func resourceVirtualServiceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppMeshConn
+func resourceVirtualServiceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppMeshConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -150,18 +154,19 @@ func resourceVirtualServiceCreate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	log.Printf("[DEBUG] Creating App Mesh virtual service: %#v", req)
-	resp, err := conn.CreateVirtualService(req)
+	resp, err := conn.CreateVirtualServiceWithContext(ctx, req)
 	if err != nil {
-		return fmt.Errorf("error creating App Mesh virtual service: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating App Mesh virtual service: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resp.VirtualService.Metadata.Uid))
 
-	return resourceVirtualServiceRead(d, meta)
+	return append(diags, resourceVirtualServiceRead(ctx, d, meta)...)
 }
 
-func resourceVirtualServiceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppMeshConn
+func resourceVirtualServiceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppMeshConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -175,10 +180,10 @@ func resourceVirtualServiceRead(d *schema.ResourceData, meta interface{}) error 
 
 	var resp *appmesh.DescribeVirtualServiceOutput
 
-	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
+	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
 		var err error
 
-		resp, err = conn.DescribeVirtualService(req)
+		resp, err = conn.DescribeVirtualServiceWithContext(ctx, req)
 
 		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
 			return resource.RetryableError(err)
@@ -192,31 +197,31 @@ func resourceVirtualServiceRead(d *schema.ResourceData, meta interface{}) error 
 	})
 
 	if tfresource.TimedOut(err) {
-		resp, err = conn.DescribeVirtualService(req)
+		resp, err = conn.DescribeVirtualServiceWithContext(ctx, req)
 	}
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
 		log.Printf("[WARN] App Mesh Virtual Service (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading App Mesh Virtual Service: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading App Mesh Virtual Service: %s", err)
 	}
 
 	if resp == nil || resp.VirtualService == nil {
-		return fmt.Errorf("error reading App Mesh Virtual Service: empty response")
+		return sdkdiag.AppendErrorf(diags, "reading App Mesh Virtual Service: empty response")
 	}
 
 	if aws.StringValue(resp.VirtualService.Status.Status) == appmesh.VirtualServiceStatusCodeDeleted {
 		if d.IsNewResource() {
-			return fmt.Errorf("error reading App Mesh Virtual Service: %s after creation", aws.StringValue(resp.VirtualService.Status.Status))
+			return sdkdiag.AppendErrorf(diags, "reading App Mesh Virtual Service: %s after creation", aws.StringValue(resp.VirtualService.Status.Status))
 		}
 
 		log.Printf("[WARN] App Mesh Virtual Service (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	arn := aws.StringValue(resp.VirtualService.Metadata.Arn)
@@ -229,31 +234,32 @@ func resourceVirtualServiceRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("resource_owner", resp.VirtualService.Metadata.ResourceOwner)
 	err = d.Set("spec", flattenVirtualServiceSpec(resp.VirtualService.Spec))
 	if err != nil {
-		return fmt.Errorf("error setting spec: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting spec: %s", err)
 	}
 
-	tags, err := ListTags(conn, arn)
+	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for App Mesh virtual service (%s): %s", arn, err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for App Mesh virtual service (%s): %s", arn, err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceVirtualServiceUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppMeshConn
+func resourceVirtualServiceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppMeshConn()
 
 	if d.HasChange("spec") {
 		_, v := d.GetChange("spec")
@@ -267,9 +273,9 @@ func resourceVirtualServiceUpdate(d *schema.ResourceData, meta interface{}) erro
 		}
 
 		log.Printf("[DEBUG] Updating App Mesh virtual service: %#v", req)
-		_, err := conn.UpdateVirtualService(req)
+		_, err := conn.UpdateVirtualServiceWithContext(ctx, req)
 		if err != nil {
-			return fmt.Errorf("error updating App Mesh virtual service: %s", err)
+			return sdkdiag.AppendErrorf(diags, "updating App Mesh virtual service: %s", err)
 		}
 	}
 
@@ -277,33 +283,34 @@ func resourceVirtualServiceUpdate(d *schema.ResourceData, meta interface{}) erro
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, arn, o, n); err != nil {
-			return fmt.Errorf("error updating App Mesh virtual service (%s) tags: %s", arn, err)
+		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating App Mesh virtual service (%s) tags: %s", arn, err)
 		}
 	}
 
-	return resourceVirtualServiceRead(d, meta)
+	return append(diags, resourceVirtualServiceRead(ctx, d, meta)...)
 }
 
-func resourceVirtualServiceDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppMeshConn
+func resourceVirtualServiceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppMeshConn()
 
-	log.Printf("[DEBUG] Deleting App Mesh virtual service: %s", d.Id())
-	_, err := conn.DeleteVirtualService(&appmesh.DeleteVirtualServiceInput{
+	log.Printf("[DEBUG] Deleting App Mesh Virtual Service: %s", d.Id())
+	_, err := conn.DeleteVirtualServiceWithContext(ctx, &appmesh.DeleteVirtualServiceInput{
 		MeshName:           aws.String(d.Get("mesh_name").(string)),
 		VirtualServiceName: aws.String(d.Get("name").(string)),
 	})
 	if tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
-		return nil
+		return diags
 	}
 	if err != nil {
-		return fmt.Errorf("error deleting App Mesh virtual service: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting App Mesh virtual service: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceVirtualServiceImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceVirtualServiceImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), "/")
 	if len(parts) != 2 {
 		return []*schema.ResourceData{}, fmt.Errorf("wrong format of import ID (%s), use: 'mesh-name/virtual-service-name'", d.Id())
@@ -313,9 +320,9 @@ func resourceVirtualServiceImport(d *schema.ResourceData, meta interface{}) ([]*
 	name := parts[1]
 	log.Printf("[DEBUG] Importing App Mesh virtual service %s from mesh %s", name, mesh)
 
-	conn := meta.(*conns.AWSClient).AppMeshConn
+	conn := meta.(*conns.AWSClient).AppMeshConn()
 
-	resp, err := conn.DescribeVirtualService(&appmesh.DescribeVirtualServiceInput{
+	resp, err := conn.DescribeVirtualServiceWithContext(ctx, &appmesh.DescribeVirtualServiceInput{
 		MeshName:           aws.String(mesh),
 		VirtualServiceName: aws.String(name),
 	})

@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccVPCNetworkInterfaceAttachment_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf ec2.NetworkInterface
 	resourceName := "aws_network_interface_attachment.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -19,18 +20,23 @@ func TestAccVPCNetworkInterfaceAttachment_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckENIDestroy,
+		CheckDestroy:             testAccCheckENIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCNetworkInterfaceAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckENIExists("aws_network_interface.test", &conf),
+					testAccCheckENIExists(ctx, "aws_network_interface.test", &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "attachment_id"),
 					resource.TestCheckResourceAttr(resourceName, "device_index", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "network_interface_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "status"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})

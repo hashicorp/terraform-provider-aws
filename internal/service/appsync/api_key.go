@@ -1,6 +1,7 @@
 package appsync
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -9,20 +10,21 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appsync"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func ResourceAPIKey() *schema.Resource {
-
 	return &schema.Resource{
-		Create: resourceAPIKeyCreate,
-		Read:   resourceAPIKeyRead,
-		Update: resourceAPIKeyUpdate,
-		Delete: resourceAPIKeyDelete,
+		CreateWithoutTimeout: resourceAPIKeyCreate,
+		ReadWithoutTimeout:   resourceAPIKeyRead,
+		UpdateWithoutTimeout: resourceAPIKeyUpdate,
+		DeleteWithoutTimeout: resourceAPIKeyDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -56,8 +58,9 @@ func ResourceAPIKey() *schema.Resource {
 	}
 }
 
-func resourceAPIKeyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppSyncConn
+func resourceAPIKeyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppSyncConn()
 
 	apiID := d.Get("api_id").(string)
 
@@ -69,46 +72,48 @@ func resourceAPIKeyCreate(d *schema.ResourceData, meta interface{}) error {
 		t, _ := time.Parse(time.RFC3339, v.(string))
 		params.Expires = aws.Int64(t.Unix())
 	}
-	resp, err := conn.CreateApiKey(params)
+	resp, err := conn.CreateApiKeyWithContext(ctx, params)
 	if err != nil {
-		return fmt.Errorf("error creating Appsync API Key: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Appsync API Key: %s", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", apiID, aws.StringValue(resp.ApiKey.Id)))
-	return resourceAPIKeyRead(d, meta)
+	return append(diags, resourceAPIKeyRead(ctx, d, meta)...)
 }
 
-func resourceAPIKeyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppSyncConn
+func resourceAPIKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppSyncConn()
 
 	apiID, keyID, err := DecodeAPIKeyID(d.Id())
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading Appsync API Key (%s): %s", d.Id(), err)
 	}
 
-	key, err := GetAPIKey(apiID, keyID, conn)
+	key, err := GetAPIKey(ctx, apiID, keyID, conn)
 	if err != nil {
-		return fmt.Errorf("error getting Appsync API Key %q: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Appsync API Key (%s): %s", d.Id(), err)
 	}
 	if key == nil && !d.IsNewResource() {
 		log.Printf("[WARN] AppSync API Key (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	d.Set("api_id", apiID)
 	d.Set("key", key.Id)
 	d.Set("description", key.Description)
 	d.Set("expires", time.Unix(aws.Int64Value(key.Expires), 0).UTC().Format(time.RFC3339))
-	return nil
+	return diags
 }
 
-func resourceAPIKeyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppSyncConn
+func resourceAPIKeyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppSyncConn()
 
 	apiID, keyID, err := DecodeAPIKeyID(d.Id())
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "updating Appsync API Key (%s): %s", d.Id(), err)
 	}
 
 	params := &appsync.UpdateApiKeyInput{
@@ -123,36 +128,36 @@ func resourceAPIKeyUpdate(d *schema.ResourceData, meta interface{}) error {
 		params.Expires = aws.Int64(t.Unix())
 	}
 
-	_, err = conn.UpdateApiKey(params)
+	_, err = conn.UpdateApiKeyWithContext(ctx, params)
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "updating Appsync API Key (%s): %s", d.Id(), err)
 	}
 
-	return resourceAPIKeyRead(d, meta)
-
+	return append(diags, resourceAPIKeyRead(ctx, d, meta)...)
 }
 
-func resourceAPIKeyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppSyncConn
+func resourceAPIKeyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppSyncConn()
 
 	apiID, keyID, err := DecodeAPIKeyID(d.Id())
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "deleting Appsync API Key (%s): %s", d.Id(), err)
 	}
 
 	input := &appsync.DeleteApiKeyInput{
 		ApiId: aws.String(apiID),
 		Id:    aws.String(keyID),
 	}
-	_, err = conn.DeleteApiKey(input)
+	_, err = conn.DeleteApiKeyWithContext(ctx, input)
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, appsync.ErrCodeNotFoundException) {
-			return nil
+			return diags
 		}
-		return err
+		return sdkdiag.AppendErrorf(diags, "deleting Appsync API Key (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func DecodeAPIKeyID(id string) (string, string, error) {
@@ -163,12 +168,12 @@ func DecodeAPIKeyID(id string) (string, string, error) {
 	return parts[0], parts[1], nil
 }
 
-func GetAPIKey(apiID, keyID string, conn *appsync.AppSync) (*appsync.ApiKey, error) {
+func GetAPIKey(ctx context.Context, apiID, keyID string, conn *appsync.AppSync) (*appsync.ApiKey, error) {
 	input := &appsync.ListApiKeysInput{
 		ApiId: aws.String(apiID),
 	}
 	for {
-		resp, err := conn.ListApiKeys(input)
+		resp, err := conn.ListApiKeysWithContext(ctx, input)
 		if err != nil {
 			return nil, err
 		}

@@ -271,6 +271,9 @@ service/connectcontactlens:
 service/connectparticipant:
   - 'internal/service/connectparticipant/**/*'
   - 'website/**/connectparticipant_*'
+service/controltower:
+  - 'internal/service/controltower/**/*'
+  - 'website/**/controltower_*'
 service/cur:
   - 'internal/service/cur/**/*'
   - 'website/**/cur_*'
@@ -404,7 +407,7 @@ service/elb:
   - 'website/**/proxy_protocol_policy*'
 service/elbv2:
   - 'internal/service/elbv2/**/*'
-  - 'website/**/lb\.*'
+  - 'website/**/lbs?\.*'
   - 'website/**/lb_listener*'
   - 'website/**/lb_target_group*'
   - 'website/**/lb_hosted*'
@@ -552,6 +555,9 @@ service/ipam:
 service/ivs:
   - 'internal/service/ivs/**/*'
   - 'website/**/ivs_*'
+service/ivschat:
+  - 'internal/service/ivschat/**/*'
+  - 'website/**/ivschat_*'
 service/kafka:
   - 'internal/service/kafka/**/*'
   - 'website/**/msk_*'
@@ -730,6 +736,9 @@ service/nimble:
 service/opensearch:
   - 'internal/service/opensearch/**/*'
   - 'website/**/opensearch_*'
+service/opensearchserverless:
+  - 'internal/service/opensearchserverless/**/*'
+  - 'website/**/opensearchserverless_*'
 service/opsworks:
   - 'internal/service/opsworks/**/*'
   - 'website/**/opsworks_*'
@@ -766,6 +775,9 @@ service/pinpointemail:
 service/pinpointsmsvoice:
   - 'internal/service/pinpointsmsvoice/**/*'
   - 'website/**/pinpointsmsvoice_*'
+service/pipes:
+  - 'internal/service/pipes/**/*'
+  - 'website/**/pipes_*'
 service/polly:
   - 'internal/service/polly/**/*'
   - 'website/**/polly_*'
@@ -812,6 +824,9 @@ service/rekognition:
 service/resiliencehub:
   - 'internal/service/resiliencehub/**/*'
   - 'website/**/resiliencehub_*'
+service/resourceexplorer2:
+  - 'internal/service/resourceexplorer2/**/*'
+  - 'website/**/resourceexplorer2_*'
 service/resourcegroups:
   - 'internal/service/resourcegroups/**/*'
   - 'website/**/resourcegroups_*'
@@ -884,6 +899,9 @@ service/sagemakerruntime:
 service/savingsplans:
   - 'internal/service/savingsplans/**/*'
   - 'website/**/savingsplans_*'
+service/scheduler:
+  - 'internal/service/scheduler/**/*'
+  - 'website/**/scheduler_*'
 service/schemas:
   - 'internal/service/schemas/**/*'
   - 'website/**/schemas_*'
@@ -1026,6 +1044,7 @@ service/vpc:
   - 'website/**/vpc_dhcp_*'
   - 'website/**/vpc_endpoint*'
   - 'website/**/vpc_ipv*'
+  - 'website/**/vpc_network_performance*'
   - 'website/**/vpc_peering_*'
   - 'website/**/vpc\.*'
   - 'website/**/vpcs\.*'

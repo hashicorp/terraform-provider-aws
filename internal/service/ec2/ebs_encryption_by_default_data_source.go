@@ -1,17 +1,19 @@
 package ec2
 
 import (
-	"fmt"
+	"context"
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func DataSourceEBSEncryptionByDefault() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceEBSEncryptionByDefaultRead,
+		ReadWithoutTimeout: dataSourceEBSEncryptionByDefaultRead,
 
 		Timeouts: &schema.ResourceTimeout{
 			Read: schema.DefaultTimeout(20 * time.Minute),
@@ -25,16 +27,17 @@ func DataSourceEBSEncryptionByDefault() *schema.Resource {
 		},
 	}
 }
-func dataSourceEBSEncryptionByDefaultRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func dataSourceEBSEncryptionByDefaultRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
-	res, err := conn.GetEbsEncryptionByDefault(&ec2.GetEbsEncryptionByDefaultInput{})
+	res, err := conn.GetEbsEncryptionByDefaultWithContext(ctx, &ec2.GetEbsEncryptionByDefaultInput{})
 	if err != nil {
-		return fmt.Errorf("Error reading default EBS encryption toggle: %w", err)
+		return sdkdiag.AppendErrorf(diags, "Error reading default EBS encryption toggle: %s", err)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
 	d.Set("enabled", res.EbsEncryptionByDefault)
 
-	return nil
+	return diags
 }

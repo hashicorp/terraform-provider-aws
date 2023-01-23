@@ -35,7 +35,7 @@ func DataSourceConnections() *schema.Resource {
 }
 
 func dataSourceConnectionsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn
+	conn := meta.(*conns.AWSClient).NetworkManagerConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 	tagsToMatch := tftags.New(d.Get("tags").(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 

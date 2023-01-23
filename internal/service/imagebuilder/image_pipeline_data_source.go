@@ -1,19 +1,21 @@
 package imagebuilder
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func DataSourceImagePipeline() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceImagePipelineRead,
+		ReadWithoutTimeout: dataSourceImagePipelineRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -110,8 +112,9 @@ func DataSourceImagePipeline() *schema.Resource {
 	}
 }
 
-func dataSourceImagePipelineRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ImageBuilderConn
+func dataSourceImagePipelineRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ImageBuilderConn()
 
 	input := &imagebuilder.GetImagePipelineInput{}
 
@@ -119,14 +122,14 @@ func dataSourceImagePipelineRead(d *schema.ResourceData, meta interface{}) error
 		input.ImagePipelineArn = aws.String(v.(string))
 	}
 
-	output, err := conn.GetImagePipeline(input)
+	output, err := conn.GetImagePipelineWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error getting Image Builder Image Pipeline: %w", err)
+		return sdkdiag.AppendErrorf(diags, "getting Image Builder Image Pipeline: %s", err)
 	}
 
 	if output == nil || output.ImagePipeline == nil {
-		return fmt.Errorf("error getting Image Builder Image Pipeline: empty response")
+		return sdkdiag.AppendErrorf(diags, "getting Image Builder Image Pipeline: empty response")
 	}
 
 	imagePipeline := output.ImagePipeline
@@ -162,5 +165,5 @@ func dataSourceImagePipelineRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("status", imagePipeline.Status)
 	d.Set("tags", KeyValueTags(imagePipeline.Tags).IgnoreAWS().IgnoreConfig(meta.(*conns.AWSClient).IgnoreTagsConfig).Map())
 
-	return nil
+	return diags
 }

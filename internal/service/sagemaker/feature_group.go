@@ -1,17 +1,19 @@
 package sagemaker
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -19,12 +21,12 @@ import (
 
 func ResourceFeatureGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceFeatureGroupCreate,
-		Read:   resourceFeatureGroupRead,
-		Update: resourceFeatureGroupUpdate,
-		Delete: resourceFeatureGroupDelete,
+		CreateWithoutTimeout: resourceFeatureGroupCreate,
+		ReadWithoutTimeout:   resourceFeatureGroupRead,
+		UpdateWithoutTimeout: resourceFeatureGroupUpdate,
+		DeleteWithoutTimeout: resourceFeatureGroupDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -196,8 +198,9 @@ func ResourceFeatureGroup() *schema.Resource {
 	}
 }
 
-func resourceFeatureGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+func resourceFeatureGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -228,8 +231,8 @@ func resourceFeatureGroupCreate(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	log.Printf("[DEBUG] SageMaker Feature Group create config: %#v", *input)
-	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
-		_, err := conn.CreateFeatureGroup(input)
+	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+		_, err := conn.CreateFeatureGroupWithContext(ctx, input)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, "ValidationException", "The execution role ARN is invalid.") {
 				return resource.RetryableError(err)
@@ -243,37 +246,38 @@ func resourceFeatureGroupCreate(d *schema.ResourceData, meta interface{}) error 
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		_, err = conn.CreateFeatureGroup(input)
+		_, err = conn.CreateFeatureGroupWithContext(ctx, input)
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error creating SageMaker Feature Group: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker Feature Group: %s", err)
 	}
 
 	d.SetId(name)
 
-	if _, err := WaitFeatureGroupCreated(conn, d.Id()); err != nil {
-		return fmt.Errorf("waiting for SageMaker Feature Group (%s) to create: %w", d.Id(), err)
+	if _, err := WaitFeatureGroupCreated(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Feature Group (%s) to create: %s", d.Id(), err)
 	}
 
-	return resourceFeatureGroupRead(d, meta)
+	return append(diags, resourceFeatureGroupRead(ctx, d, meta)...)
 }
 
-func resourceFeatureGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+func resourceFeatureGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	output, err := FindFeatureGroupByName(conn, d.Id())
+	output, err := FindFeatureGroupByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SageMaker Feature Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading SageMaker Feature Group (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker Feature Group (%s): %s", d.Id(), err)
 	}
 
 	arn := aws.StringValue(output.FeatureGroupArn)
@@ -285,72 +289,74 @@ func resourceFeatureGroupRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", arn)
 
 	if err := d.Set("feature_definition", flattenFeatureGroupFeatureDefinition(output.FeatureDefinitions)); err != nil {
-		return fmt.Errorf("setting feature_definition for SageMaker Feature Group (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting feature_definition for SageMaker Feature Group (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("online_store_config", flattenFeatureGroupOnlineStoreConfig(output.OnlineStoreConfig)); err != nil {
-		return fmt.Errorf("setting online_store_config for SageMaker Feature Group (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting online_store_config for SageMaker Feature Group (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("offline_store_config", flattenFeatureGroupOfflineStoreConfig(output.OfflineStoreConfig)); err != nil {
-		return fmt.Errorf("setting offline_store_config for SageMaker Feature Group (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting offline_store_config for SageMaker Feature Group (%s): %s", d.Id(), err)
 	}
 
-	tags, err := ListTags(conn, arn)
+	tags, err := ListTags(ctx, conn, arn)
 	if err != nil {
-		return fmt.Errorf("listing tags for SageMaker Feature Group (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for SageMaker Feature Group (%s): %s", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceFeatureGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+func resourceFeatureGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("updating SageMaker Feature Group (%s) tags: %w", d.Id(), err)
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating SageMaker Feature Group (%s) tags: %s", d.Id(), err)
 		}
 	}
 
-	return resourceFeatureGroupRead(d, meta)
+	return append(diags, resourceFeatureGroupRead(ctx, d, meta)...)
 }
 
-func resourceFeatureGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+func resourceFeatureGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	input := &sagemaker.DeleteFeatureGroupInput{
 		FeatureGroupName: aws.String(d.Id()),
 	}
 
-	if _, err := conn.DeleteFeatureGroup(input); err != nil {
+	if _, err := conn.DeleteFeatureGroupWithContext(ctx, input); err != nil {
 		if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
-			return nil
+			return diags
 		}
-		return fmt.Errorf("deleting SageMaker Feature Group (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting SageMaker Feature Group (%s): %s", d.Id(), err)
 	}
 
-	if _, err := WaitFeatureGroupDeleted(conn, d.Id()); err != nil {
+	if _, err := WaitFeatureGroupDeleted(ctx, conn, d.Id()); err != nil {
 		if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
-			return nil
+			return diags
 		}
-		return fmt.Errorf("waiting for SageMaker Feature Group (%s) to delete: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Feature Group (%s) to delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandFeatureGroupFeatureDefinition(l []interface{}) []*sagemaker.FeatureDefinition {

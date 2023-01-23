@@ -18,6 +18,7 @@ import (
 )
 
 func TestAccAppFlowFlow_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var flowOutput appflow.FlowDefinition
 	rSourceName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rDestinationName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -29,12 +30,12 @@ func TestAccAppFlowFlow_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, appflow.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFlowDestroy,
+		CheckDestroy:             testAccCheckFlowDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFlowConfig_basic(rSourceName, rDestinationName, rFlowName, scheduleStartTime),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckFlowExists(resourceName, &flowOutput),
+					testAccCheckFlowExists(ctx, resourceName, &flowOutput),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "appflow", regexp.MustCompile(`flow/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rFlowName),
 					resource.TestCheckResourceAttrSet(resourceName, "destination_flow_config.#"),
@@ -67,6 +68,7 @@ func TestAccAppFlowFlow_basic(t *testing.T) {
 }
 
 func TestAccAppFlowFlow_update(t *testing.T) {
+	ctx := acctest.Context(t)
 	var flowOutput appflow.FlowDefinition
 	rSourceName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rDestinationName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -79,18 +81,18 @@ func TestAccAppFlowFlow_update(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, appflow.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFlowDestroy,
+		CheckDestroy:             testAccCheckFlowDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFlowConfig_basic(rSourceName, rDestinationName, rFlowName, scheduleStartTime),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFlowExists(resourceName, &flowOutput),
+					testAccCheckFlowExists(ctx, resourceName, &flowOutput),
 				),
 			},
 			{
 				Config: testAccFlowConfig_update(rSourceName, rDestinationName, rFlowName, description),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFlowExists(resourceName, &flowOutput),
+					testAccCheckFlowExists(ctx, resourceName, &flowOutput),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
 					resource.TestCheckResourceAttr(resourceName, "trigger_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "trigger_config.0.trigger_type", "Scheduled"),
@@ -105,6 +107,7 @@ func TestAccAppFlowFlow_update(t *testing.T) {
 }
 
 func TestAccAppFlowFlow_TaskProperties(t *testing.T) {
+	ctx := acctest.Context(t)
 	var flowOutput appflow.FlowDefinition
 	rSourceName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rDestinationName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -115,12 +118,12 @@ func TestAccAppFlowFlow_TaskProperties(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, appflow.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFlowDestroy,
+		CheckDestroy:             testAccCheckFlowDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFlowConfig_taskProperties(rSourceName, rDestinationName, rFlowName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFlowExists(resourceName, &flowOutput),
+					testAccCheckFlowExists(ctx, resourceName, &flowOutput),
 					resource.TestCheckResourceAttr(resourceName, "task.0.task_properties.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "task.0.task_properties.SOURCE_DATA_TYPE", "CSV"),
 					resource.TestCheckResourceAttr(resourceName, "task.0.task_properties.DESTINATION_DATA_TYPE", "CSV"),
@@ -131,6 +134,7 @@ func TestAccAppFlowFlow_TaskProperties(t *testing.T) {
 }
 
 func TestAccAppFlowFlow_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var flowOutput appflow.FlowDefinition
 	rSourceName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rDestinationName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -141,12 +145,12 @@ func TestAccAppFlowFlow_tags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, appflow.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFlowDestroy,
+		CheckDestroy:             testAccCheckFlowDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFlowConfig_tags1(rSourceName, rDestinationName, rFlowName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFlowExists(resourceName, &flowOutput),
+					testAccCheckFlowExists(ctx, resourceName, &flowOutput),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -159,7 +163,7 @@ func TestAccAppFlowFlow_tags(t *testing.T) {
 			{
 				Config: testAccFlowConfig_tags2(rSourceName, rDestinationName, rFlowName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFlowExists(resourceName, &flowOutput),
+					testAccCheckFlowExists(ctx, resourceName, &flowOutput),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -168,7 +172,7 @@ func TestAccAppFlowFlow_tags(t *testing.T) {
 			{
 				Config: testAccFlowConfig_tags1(rSourceName, rDestinationName, rFlowName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFlowExists(resourceName, &flowOutput),
+					testAccCheckFlowExists(ctx, resourceName, &flowOutput),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -178,6 +182,7 @@ func TestAccAppFlowFlow_tags(t *testing.T) {
 }
 
 func TestAccAppFlowFlow_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var flowOutput appflow.FlowDefinition
 	rSourceName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rDestinationName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -189,13 +194,13 @@ func TestAccAppFlowFlow_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, appflow.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFlowDestroy,
+		CheckDestroy:             testAccCheckFlowDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFlowConfig_basic(rSourceName, rDestinationName, rFlowName, scheduleStartTime),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFlowExists(resourceName, &flowOutput),
-					acctest.CheckResourceDisappears(acctest.Provider, tfappflow.ResourceFlow(), resourceName),
+					testAccCheckFlowExists(ctx, resourceName, &flowOutput),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappflow.ResourceFlow(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -560,15 +565,15 @@ resource "aws_appflow_flow" "test" {
 	)
 }
 
-func testAccCheckFlowExists(resourceName string, flow *appflow.FlowDefinition) resource.TestCheckFunc {
+func testAccCheckFlowExists(ctx context.Context, resourceName string, flow *appflow.FlowDefinition) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
 			return fmt.Errorf("not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppFlowConn
-		resp, err := tfappflow.FindFlowByARN(context.Background(), conn, rs.Primary.ID)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppFlowConn()
+		resp, err := tfappflow.FindFlowByARN(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -584,26 +589,28 @@ func testAccCheckFlowExists(resourceName string, flow *appflow.FlowDefinition) r
 	}
 }
 
-func testAccCheckFlowDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AppFlowConn
+func testAccCheckFlowDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppFlowConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_appflow_flow" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_appflow_flow" {
+				continue
+			}
+
+			_, err := tfappflow.FindFlowByARN(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Expected AppFlow Flow to be destroyed, %s found", rs.Primary.ID)
 		}
 
-		_, err := tfappflow.FindFlowByARN(context.Background(), conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("Expected AppFlow Flow to be destroyed, %s found", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }

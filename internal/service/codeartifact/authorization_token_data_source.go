@@ -1,21 +1,24 @@
 package codeartifact
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codeartifact"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func DataSourceAuthorizationToken() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAuthorizationTokenRead,
+		ReadWithoutTimeout: dataSourceAuthorizationTokenRead,
 
 		Schema: map[string]*schema.Schema{
 			"domain": {
@@ -48,8 +51,9 @@ func DataSourceAuthorizationToken() *schema.Resource {
 	}
 }
 
-func dataSourceAuthorizationTokenRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeArtifactConn
+func dataSourceAuthorizationTokenRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CodeArtifactConn()
 	domain := d.Get("domain").(string)
 	domainOwner := meta.(*conns.AWSClient).AccountID
 	params := &codeartifact.GetAuthorizationTokenInput{
@@ -66,9 +70,9 @@ func dataSourceAuthorizationTokenRead(d *schema.ResourceData, meta interface{}) 
 	}
 
 	log.Printf("[DEBUG] Getting CodeArtifact authorization token")
-	out, err := conn.GetAuthorizationToken(params)
+	out, err := conn.GetAuthorizationTokenWithContext(ctx, params)
 	if err != nil {
-		return fmt.Errorf("error getting CodeArtifact authorization token: %w", err)
+		return sdkdiag.AppendErrorf(diags, "getting CodeArtifact authorization token: %s", err)
 	}
 	log.Printf("[DEBUG] CodeArtifact authorization token: %#v", out)
 
@@ -77,5 +81,5 @@ func dataSourceAuthorizationTokenRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("expiration", aws.TimeValue(out.Expiration).Format(time.RFC3339))
 	d.Set("domain_owner", domainOwner)
 
-	return nil
+	return diags
 }

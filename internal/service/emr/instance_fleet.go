@@ -1,6 +1,7 @@
 package emr
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -9,20 +10,22 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/emr"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func ResourceInstanceFleet() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceInstanceFleetCreate,
-		Read:   resourceInstanceFleetRead,
-		Update: resourceInstanceFleetUpdate,
-		Delete: resourceInstanceFleetDelete,
+		CreateWithoutTimeout: resourceInstanceFleetCreate,
+		ReadWithoutTimeout:   resourceInstanceFleetRead,
+		UpdateWithoutTimeout: resourceInstanceFleetUpdate,
+		DeleteWithoutTimeout: resourceInstanceFleetDelete,
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "/")
 				if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
 					return nil, fmt.Errorf("Unexpected format of ID (%q), expected cluster-id/fleet-id", d.Id())
@@ -211,8 +214,9 @@ func ResourceInstanceFleet() *schema.Resource {
 	}
 }
 
-func resourceInstanceFleetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EMRConn
+func resourceInstanceFleetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EMRConn()
 
 	addInstanceFleetInput := &emr.AddInstanceFleetInput{
 		ClusterId: aws.String(d.Get("cluster_id").(string)),
@@ -228,52 +232,53 @@ func resourceInstanceFleetCreate(d *schema.ResourceData, meta interface{}) error
 	addInstanceFleetInput.InstanceFleet = readInstanceFleetConfig(taskFleet, emr.InstanceFleetTypeTask)
 
 	log.Printf("[DEBUG] Creating EMR instance fleet params: %s", addInstanceFleetInput)
-	resp, err := conn.AddInstanceFleet(addInstanceFleetInput)
+	resp, err := conn.AddInstanceFleetWithContext(ctx, addInstanceFleetInput)
 	if err != nil {
-		return fmt.Errorf("error adding EMR Instance Fleet: %w", err)
+		return sdkdiag.AppendErrorf(diags, "adding EMR Instance Fleet: %s", err)
 	}
 
 	log.Printf("[DEBUG] Created EMR instance fleet finished: %#v", resp)
 	if resp == nil {
-		return fmt.Errorf("error creating instance fleet: no instance fleet returned")
+		return sdkdiag.AppendErrorf(diags, "creating instance fleet: no instance fleet returned")
 	}
 	d.SetId(aws.StringValue(resp.InstanceFleetId))
 
-	return nil
+	return diags
 }
 
-func resourceInstanceFleetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EMRConn
-	instanceFleets, err := FetchAllInstanceFleets(conn, d.Get("cluster_id").(string))
+func resourceInstanceFleetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EMRConn()
+	instanceFleets, err := FetchAllInstanceFleets(ctx, conn, d.Get("cluster_id").(string))
 
 	if err != nil {
-		return fmt.Errorf("error listing EMR Instance Fleets for Cluster (%s): %w", d.Get("cluster_id").(string), err)
+		return sdkdiag.AppendErrorf(diags, "listing EMR Instance Fleets for Cluster (%s): %s", d.Get("cluster_id").(string), err)
 	}
 
 	fleet := FindInstanceFleetByID(instanceFleets, d.Id())
 	if fleet == nil {
 		if d.IsNewResource() {
-			return fmt.Errorf("error finding EMR Instance Fleet (%s): not found after creation", d.Id())
+			return sdkdiag.AppendErrorf(diags, "finding EMR Instance Fleet (%s): not found after creation", d.Id())
 		}
 
 		log.Printf("[DEBUG] EMR Instance Fleet (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err := d.Set("instance_type_configs", flatteninstanceTypeConfigs(fleet.InstanceTypeSpecifications)); err != nil {
-		return fmt.Errorf("error setting instance_type_configs: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting instance_type_configs: %s", err)
 	}
 
 	if err := d.Set("launch_specifications", flattenLaunchSpecifications(fleet.LaunchSpecifications)); err != nil {
-		return fmt.Errorf("error setting launch_specifications: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting launch_specifications: %s", err)
 	}
 	d.Set("name", fleet.Name)
 	d.Set("provisioned_on_demand_capacity", fleet.ProvisionedOnDemandCapacity)
 	d.Set("provisioned_spot_capacity", fleet.ProvisionedSpotCapacity)
 	d.Set("target_on_demand_capacity", fleet.TargetOnDemandCapacity)
 	d.Set("target_spot_capacity", fleet.TargetSpotCapacity)
-	return nil
+	return diags
 }
 
 func FindInstanceFleetByID(instanceFleets []*emr.InstanceFleet, fleetId string) *emr.InstanceFleet {
@@ -285,8 +290,9 @@ func FindInstanceFleetByID(instanceFleets []*emr.InstanceFleet, fleetId string) 
 	return nil
 }
 
-func resourceInstanceFleetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EMRConn
+func resourceInstanceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EMRConn()
 
 	log.Printf("[DEBUG] Modify EMR task fleet")
 
@@ -301,32 +307,31 @@ func resourceInstanceFleetUpdate(d *schema.ResourceData, meta interface{}) error
 		InstanceFleet: modifyConfig,
 	}
 
-	_, err := conn.ModifyInstanceFleet(modifyInstanceFleetInput)
+	_, err := conn.ModifyInstanceFleetWithContext(ctx, modifyInstanceFleetInput)
 	if err != nil {
-		return fmt.Errorf("error modifying EMR Instance Fleet (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "modifying EMR Instance Fleet (%s): %s", d.Id(), err)
 	}
 
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{emr.InstanceFleetStateProvisioning, emr.InstanceFleetStateBootstrapping, emr.InstanceFleetStateResizing},
 		Target:     []string{emr.InstanceFleetStateRunning},
-		Refresh:    instanceFleetStateRefresh(conn, d.Get("cluster_id").(string), d.Id()),
+		Refresh:    instanceFleetStateRefresh(ctx, conn, d.Get("cluster_id").(string), d.Id()),
 		Timeout:    75 * time.Minute,
 		Delay:      10 * time.Second,
 		MinTimeout: 30 * time.Second,
 	}
 
-	_, err = stateConf.WaitForState()
+	_, err = stateConf.WaitForStateContext(ctx)
 	if err != nil {
-		return fmt.Errorf("error waiting for instance (%s) to terminate: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for instance (%s) to terminate: %s", d.Id(), err)
 	}
 
-	return resourceInstanceFleetRead(d, meta)
+	return append(diags, resourceInstanceFleetRead(ctx, d, meta)...)
 }
 
-func instanceFleetStateRefresh(conn *emr.EMR, clusterID, ifID string) resource.StateRefreshFunc {
+func instanceFleetStateRefresh(ctx context.Context, conn *emr.EMR, clusterID, ifID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-
-		instanceFleets, err := FetchAllInstanceFleets(conn, clusterID)
+		instanceFleets, err := FetchAllInstanceFleets(ctx, conn, clusterID)
 		if err != nil {
 			return nil, "Not Found", err
 		}
@@ -345,9 +350,10 @@ func instanceFleetStateRefresh(conn *emr.EMR, clusterID, ifID string) resource.S
 	}
 }
 
-func resourceInstanceFleetDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceInstanceFleetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	log.Printf("[WARN] AWS EMR Instance Fleet does not support DELETE; resizing cluster to zero before removing from state")
-	conn := meta.(*conns.AWSClient).EMRConn
+	conn := meta.(*conns.AWSClient).EMRConn()
 
 	clusterId := d.Get("cluster_id").(string)
 
@@ -360,15 +366,15 @@ func resourceInstanceFleetDelete(d *schema.ResourceData, meta interface{}) error
 		},
 	}
 
-	_, err := conn.ModifyInstanceFleet(modifyInstanceFleetInput)
+	_, err := conn.ModifyInstanceFleetWithContext(ctx, modifyInstanceFleetInput)
 
 	if tfawserr.ErrMessageContains(err, emr.ErrCodeInvalidRequestException, "instance fleet may only be modified when the cluster is running or waiting") {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting/modifying EMR Instance Fleet (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting/modifying EMR Instance Fleet (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

@@ -1,6 +1,7 @@
 package ec2
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"time"
@@ -8,28 +9,42 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceIPAM() *schema.Resource {
 	return &schema.Resource{
-		Create:        resourceIPAMCreate,
-		Read:          resourceIPAMRead,
-		Update:        resourceIPAMUpdate,
-		Delete:        resourceIPAMDelete,
-		CustomizeDiff: customdiff.Sequence(verify.SetTagsDiff),
+		CreateWithoutTimeout: resourceIPAMCreate,
+		ReadWithoutTimeout:   resourceIPAMRead,
+		UpdateWithoutTimeout: resourceIPAMUpdate,
+		DeleteWithoutTimeout: resourceIPAMDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(3 * time.Minute),
+			Update: schema.DefaultTimeout(3 * time.Minute),
+			Delete: schema.DefaultTimeout(3 * time.Minute),
+		},
+
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"cascade": {
+				Type:     schema.TypeBool,
+				Optional: true,
 			},
 			"description": {
 				Type:     schema.TypeString,
@@ -60,75 +75,78 @@ func ResourceIPAM() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"cascade": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 		},
+
+		CustomizeDiff: customdiff.Sequence(
+			verify.SetTagsDiff,
+			func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+				if diff.Id() == "" { // Create.
+					currentRegion := meta.(*conns.AWSClient).Region
+
+					for _, v := range diff.Get("operating_regions").(*schema.Set).List() {
+						if v.(map[string]interface{})["region_name"].(string) == currentRegion {
+							return nil
+						}
+					}
+
+					return fmt.Errorf("`operating_regions` must include %s", currentRegion)
+				}
+
+				return nil
+			},
+		),
 	}
 }
 
-const (
-	invalidIPAMIDNotFound = "InvalidIpamId.NotFound"
-	ipamCreateTimeout     = 3 * time.Minute
-	ipamCreateDelay       = 5 * time.Second
-	IPAMDeleteTimeout     = 3 * time.Minute
-	ipamDeleteDelay       = 5 * time.Second
-)
-
-func resourceIPAMCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
-	current_region := meta.(*conns.AWSClient).Region
+func resourceIPAMCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &ec2.CreateIpamInput{
 		ClientToken:       aws.String(resource.UniqueId()),
-		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, "ipam"),
+		OperatingRegions:  expandIPAMOperatingRegions(d.Get("operating_regions").(*schema.Set).List()),
+		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeIpam),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
 
-	operatingRegions := d.Get("operating_regions").(*schema.Set).List()
-	if !expandIPAMOperatingRegionsContainsCurrentRegion(operatingRegions, current_region) {
-		return fmt.Errorf("Must include (%s) as a operating_region", current_region)
-	}
-	input.OperatingRegions = expandIPAMOperatingRegions(operatingRegions)
+	output, err := conn.CreateIpamWithContext(ctx, input)
 
-	log.Printf("[DEBUG] Creating IPAM: %s", input)
-	output, err := conn.CreateIpam(input)
 	if err != nil {
-		return fmt.Errorf("Error creating ipam: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating IPAM: %s", err)
 	}
+
 	d.SetId(aws.StringValue(output.Ipam.IpamId))
-	log.Printf("[INFO] IPAM ID: %s", d.Id())
 
-	if _, err = WaitIPAMAvailable(conn, d.Id(), ipamCreateTimeout); err != nil {
-		return fmt.Errorf("error waiting for IPAM (%s) to be Available: %w", d.Id(), err)
+	if _, err := WaitIPAMCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for IPAM (%s) created: %s", d.Id(), err)
 	}
 
-	return resourceIPAMRead(d, meta)
+	return append(diags, resourceIPAMRead(ctx, d, meta)...)
 }
 
-func resourceIPAMRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceIPAMRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	ipam, err := findIPAMById(conn, d.Id())
+	ipam, err := FindIPAMByID(ctx, conn, d.Id())
 
-	if err != nil && !tfawserr.ErrCodeEquals(err, invalidIPAMIDNotFound) {
-		return err
-	}
-
-	if !d.IsNewResource() && ipam == nil {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] IPAM (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading IPAM (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", ipam.IpamArn)
@@ -142,26 +160,19 @@ func resourceIPAMRead(d *schema.ResourceData, meta interface{}) error {
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceIPAMUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating IPAM (%s) tags: %w", d.Id(), err)
-		}
-	}
+func resourceIPAMUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &ec2.ModifyIpamInput{
@@ -195,18 +206,31 @@ func resourceIPAMUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 
-		_, err := conn.ModifyIpam(input)
+		_, err := conn.ModifyIpamWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error modifying IPAM (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating IPAM (%s): %s", d.Id(), err)
+		}
+
+		if _, err := WaitIPAMUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for IPAM (%s) update: %s", d.Id(), err)
 		}
 	}
 
-	return nil
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+
+		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating IPAM (%s) tags: %s", d.Id(), err)
+		}
+	}
+
+	return diags
 }
 
-func resourceIPAMDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceIPAMDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	input := &ec2.DeleteIpamInput{
 		IpamId: aws.String(d.Id()),
@@ -217,91 +241,21 @@ func resourceIPAMDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Deleting IPAM: %s", d.Id())
-	_, err := conn.DeleteIpam(input)
-	if err != nil {
-		return fmt.Errorf("error deleting IPAM: (%s): %w", d.Id(), err)
+	_, err := conn.DeleteIpamWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidIPAMIdNotFound) {
+		return diags
 	}
-
-	if _, err = WaiterIPAMDeleted(conn, d.Id(), IPAMDeleteTimeout); err != nil {
-		if tfawserr.ErrCodeEquals(err, invalidIPAMIDNotFound) {
-			return nil
-		}
-		return fmt.Errorf("error waiting for IPAM (%s) to be deleted: %w", d.Id(), err)
-	}
-
-	return nil
-}
-
-func findIPAMById(conn *ec2.EC2, id string) (*ec2.Ipam, error) {
-	input := &ec2.DescribeIpamsInput{
-		IpamIds: aws.StringSlice([]string{id}),
-	}
-
-	output, err := conn.DescribeIpams(input)
 
 	if err != nil {
-		return nil, err
+		return sdkdiag.AppendErrorf(diags, "deleting IPAM: (%s): %s", d.Id(), err)
 	}
 
-	if output == nil || len(output.Ipams) == 0 || output.Ipams[0] == nil {
-		return nil, nil
+	if _, err := WaitIPAMDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for IPAM (%s) delete: %s", d.Id(), err)
 	}
 
-	return output.Ipams[0], nil
-}
-
-func WaitIPAMAvailable(conn *ec2.EC2, ipamId string, timeout time.Duration) (*ec2.Ipam, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{ec2.IpamStateCreateInProgress},
-		Target:  []string{ec2.IpamStateCreateComplete},
-		Refresh: statusIPAMStatus(conn, ipamId),
-		Timeout: timeout,
-		Delay:   ipamCreateDelay,
-	}
-
-	outputRaw, err := stateConf.WaitForState()
-
-	if output, ok := outputRaw.(*ec2.Ipam); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func WaiterIPAMDeleted(conn *ec2.EC2, ipamId string, timeout time.Duration) (*ec2.Ipam, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{ec2.IpamStateCreateComplete, ec2.IpamStateModifyComplete, ec2.IpamStateDeleteInProgress},
-		Target:  []string{invalidIPAMIDNotFound},
-		Refresh: statusIPAMStatus(conn, ipamId),
-		Timeout: timeout,
-		Delay:   ipamDeleteDelay,
-	}
-
-	outputRaw, err := stateConf.WaitForState()
-
-	if output, ok := outputRaw.(*ec2.Ipam); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func statusIPAMStatus(conn *ec2.EC2, ipamId string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-
-		output, err := findIPAMById(conn, ipamId)
-
-		if tfawserr.ErrCodeEquals(err, invalidIPAMIDNotFound) {
-			return output, invalidIPAMIDNotFound, nil
-		}
-
-		// there was an unhandled error in the Finder
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, aws.StringValue(output.State), nil
-	}
+	return diags
 }
 
 func expandIPAMOperatingRegions(operatingRegions []interface{}) []*ec2.AddIpamOperatingRegion {
@@ -365,14 +319,4 @@ func expandIPAMOperatingRegionsUpdateDeleteRegion(operatingRegion map[string]int
 		RegionName: aws.String(operatingRegion["region_name"].(string)),
 	}
 	return regionUpdate
-}
-
-func expandIPAMOperatingRegionsContainsCurrentRegion(operatingRegions []interface{}, current_region string) bool {
-	for _, regionRaw := range operatingRegions {
-		region := regionRaw.(map[string]interface{})
-		if region["region_name"].(string) == current_region {
-			return true
-		}
-	}
-	return false
 }

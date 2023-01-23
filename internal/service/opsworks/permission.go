@@ -1,25 +1,28 @@
 package opsworks
 
 import (
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/opsworks"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourcePermission() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceSetPermission,
-		Update: resourceSetPermission,
-		Delete: resourcePermissionDelete,
-		Read:   resourcePermissionRead,
+		CreateWithoutTimeout: resourceSetPermission,
+		UpdateWithoutTimeout: resourceSetPermission,
+		DeleteWithoutTimeout: resourcePermissionDelete,
+		ReadWithoutTimeout:   resourcePermissionRead,
 
 		Schema: map[string]*schema.Schema{
 			"allow_ssh": {
@@ -57,12 +60,14 @@ func ResourcePermission() *schema.Resource {
 	}
 }
 
-func resourcePermissionDelete(d *schema.ResourceData, meta interface{}) error {
-	return nil
+func resourcePermissionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	return diags
 }
 
-func resourcePermissionRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*conns.AWSClient).OpsWorksConn
+func resourcePermissionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	client := meta.(*conns.AWSClient).OpsWorksConn()
 
 	req := &opsworks.DescribePermissionsInput{
 		IamUserArn: aws.String(d.Get("user_arn").(string)),
@@ -71,16 +76,16 @@ func resourcePermissionRead(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Reading OpsWorks prermissions for: %s on stack: %s", d.Get("user_arn"), d.Get("stack_id"))
 
-	resp, err := client.DescribePermissions(req)
+	resp, err := client.DescribePermissionsWithContext(ctx, req)
 	if err != nil {
 		if awserr, ok := err.(awserr.Error); ok {
 			if awserr.Code() == "ResourceNotFoundException" {
 				log.Printf("[INFO] Permission not found")
 				d.SetId("")
-				return nil
+				return diags
 			}
 		}
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading OpsWorks Permissions (%s): %s", d.Id(), err)
 	}
 
 	found := false
@@ -97,7 +102,6 @@ func resourcePermissionRead(d *schema.ResourceData, meta interface{}) error {
 			d.Set("stack_id", permission.StackId)
 			d.Set("level", permission.Level)
 		}
-
 	}
 
 	if !found {
@@ -105,11 +109,12 @@ func resourcePermissionRead(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[INFO] The correct permission could not be found for: %s on stack: %s", d.Get("user_arn"), d.Get("stack_id"))
 	}
 
-	return nil
+	return diags
 }
 
-func resourceSetPermission(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*conns.AWSClient).OpsWorksConn
+func resourceSetPermission(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	client := meta.(*conns.AWSClient).OpsWorksConn()
 
 	req := &opsworks.SetPermissionInput{
 		AllowSudo:  aws.Bool(d.Get("allow_sudo").(bool)),
@@ -122,10 +127,9 @@ func resourceSetPermission(d *schema.ResourceData, meta interface{}) error {
 		req.Level = aws.String(d.Get("level").(string))
 	}
 
-	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
-		_, err := client.SetPermission(req)
+	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+		_, err := client.SetPermissionWithContext(ctx, req)
 		if err != nil {
-
 			if tfawserr.ErrMessageContains(err, opsworks.ErrCodeResourceNotFoundException, "Unable to find user with ARN") {
 				return resource.RetryableError(err)
 			}
@@ -135,12 +139,12 @@ func resourceSetPermission(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if tfresource.TimedOut(err) {
-		_, err = client.SetPermission(req)
+		_, err = client.SetPermissionWithContext(ctx, req)
 	}
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "setting OpsWorks Permissions (%s): %s", d.Id(), err)
 	}
 
-	return resourcePermissionRead(d, meta)
+	return append(diags, resourcePermissionRead(ctx, d, meta)...)
 }

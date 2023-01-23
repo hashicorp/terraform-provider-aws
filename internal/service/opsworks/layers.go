@@ -1,6 +1,7 @@
 package opsworks
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strconv"
@@ -8,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/opsworks"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -50,7 +52,7 @@ type opsworksLayerType struct {
 	CustomShortName  bool
 }
 
-func (lt *opsworksLayerType) SchemaResource() *schema.Resource {
+func (lt *opsworksLayerType) resourceSchema() *schema.Resource {
 	resourceSchema := map[string]*schema.Schema{
 		"arn": {
 			Type:     schema.TypeString,
@@ -281,6 +283,112 @@ func (lt *opsworksLayerType) SchemaResource() *schema.Resource {
 			Optional: true,
 			Default:  true,
 		},
+		"load_based_auto_scaling": {
+			Type:     schema.TypeList,
+			Optional: true,
+			Computed: true,
+			MaxItems: 1,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"downscaling": {
+						Type:     schema.TypeList,
+						Optional: true,
+						Computed: true,
+						MaxItems: 1,
+						Elem: &schema.Resource{
+							Schema: map[string]*schema.Schema{
+								"alarms": {
+									Type:     schema.TypeList,
+									Optional: true,
+									Elem:     &schema.Schema{Type: schema.TypeString},
+									MaxItems: 5,
+								},
+								"cpu_threshold": {
+									Type:     schema.TypeFloat,
+									Optional: true,
+									Default:  30.0,
+								},
+								"ignore_metrics_time": {
+									Type:         schema.TypeInt,
+									Optional:     true,
+									Default:      10,
+									ValidateFunc: validation.IntBetween(1, 100),
+								},
+								"instance_count": {
+									Type:     schema.TypeInt,
+									Optional: true,
+									Default:  1,
+								},
+								"load_threshold": {
+									Type:     schema.TypeFloat,
+									Optional: true,
+								},
+								"memory_threshold": {
+									Type:     schema.TypeFloat,
+									Optional: true,
+								},
+								"thresholds_wait_time": {
+									Type:         schema.TypeInt,
+									Optional:     true,
+									Default:      10,
+									ValidateFunc: validation.IntBetween(1, 100),
+								},
+							},
+						},
+					},
+					"enable": {
+						Type:     schema.TypeBool,
+						Optional: true,
+					},
+					"upscaling": {
+						Type:     schema.TypeList,
+						Optional: true,
+						Computed: true,
+						MaxItems: 1,
+						Elem: &schema.Resource{
+							Schema: map[string]*schema.Schema{
+								"alarms": {
+									Type:     schema.TypeList,
+									Optional: true,
+									Elem:     &schema.Schema{Type: schema.TypeString},
+									MaxItems: 5,
+								},
+								"cpu_threshold": {
+									Type:     schema.TypeFloat,
+									Optional: true,
+									Default:  80.0,
+								},
+								"ignore_metrics_time": {
+									Type:         schema.TypeInt,
+									Optional:     true,
+									Default:      5,
+									ValidateFunc: validation.IntBetween(1, 100),
+								},
+								"instance_count": {
+									Type:     schema.TypeInt,
+									Optional: true,
+									Default:  1,
+								},
+								"load_threshold": {
+									Type:     schema.TypeFloat,
+									Optional: true,
+								},
+								"memory_threshold": {
+									Type:     schema.TypeFloat,
+									Optional: true,
+								},
+								"thresholds_wait_time": {
+									Type:         schema.TypeInt,
+									Optional:     true,
+									Default:      5,
+									ValidateFunc: validation.IntBetween(1, 100),
+								},
+							},
+						},
+					},
+				},
+			},
+		},
 		"system_packages": {
 			Type:     schema.TypeSet,
 			Optional: true,
@@ -332,17 +440,17 @@ func (lt *opsworksLayerType) SchemaResource() *schema.Resource {
 	}
 
 	return &schema.Resource{
-		Create: func(d *schema.ResourceData, meta interface{}) error {
-			return lt.Create(d, meta)
+		CreateWithoutTimeout: func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+			return lt.Create(ctx, d, meta)
 		},
-		Read: func(d *schema.ResourceData, meta interface{}) error {
-			return lt.Read(d, meta)
+		ReadWithoutTimeout: func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+			return lt.Read(ctx, d, meta)
 		},
-		Update: func(d *schema.ResourceData, meta interface{}) error {
-			return lt.Update(d, meta)
+		UpdateWithoutTimeout: func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+			return lt.Update(ctx, d, meta)
 		},
-		Delete: func(d *schema.ResourceData, meta interface{}) error {
-			return lt.Delete(d, meta)
+		DeleteWithoutTimeout: func(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+			return lt.Delete(ctx, d, meta)
 		},
 
 		Importer: &schema.ResourceImporter{
@@ -355,15 +463,15 @@ func (lt *opsworksLayerType) SchemaResource() *schema.Resource {
 	}
 }
 
-func (lt *opsworksLayerType) Create(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OpsWorksConn
+func (lt *opsworksLayerType) Create(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).OpsWorksConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	attributes, err := lt.Attributes.resourceDataToAPIAttributes(d)
 
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	name := d.Get("name").(string)
@@ -441,59 +549,70 @@ func (lt *opsworksLayerType) Create(d *schema.ResourceData, meta interface{}) er
 
 	if v, ok := d.GetOk("ecs_cluster_arn"); ok {
 		arn := v.(string)
-		_, err := conn.RegisterEcsCluster(&opsworks.RegisterEcsClusterInput{
+		_, err := conn.RegisterEcsClusterWithContext(ctx, &opsworks.RegisterEcsClusterInput{
 			EcsClusterArn: aws.String(arn),
 			StackId:       input.StackId,
 		})
 
 		if err != nil {
-			return fmt.Errorf("registering OpsWorks Layer (%s) ECS Cluster (%s): %w", name, arn, err)
+			return diag.Errorf("registering OpsWorks Layer (%s) ECS Cluster (%s): %s", name, arn, err)
 		}
 	}
 
 	log.Printf("[DEBUG] Creating OpsWorks Layer: %s", input)
-	output, err := conn.CreateLayer(input)
+	output, err := conn.CreateLayerWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("creating OpsWorks Layer (%s): %w", name, err)
+		return diag.Errorf("creating OpsWorks Layer (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.LayerId))
 
 	if v, ok := d.GetOk("elastic_load_balancer"); ok {
 		v := v.(string)
-		_, err := conn.AttachElasticLoadBalancer(&opsworks.AttachElasticLoadBalancerInput{
+		_, err := conn.AttachElasticLoadBalancerWithContext(ctx, &opsworks.AttachElasticLoadBalancerInput{
 			ElasticLoadBalancerName: aws.String(v),
-			LayerId:                 output.LayerId,
+			LayerId:                 aws.String(d.Id()),
 		})
 
 		if err != nil {
-			return fmt.Errorf("attaching OpsWorks Layer (%s) load balancer (%s): %w", d.Id(), v, err)
+			return diag.Errorf("attaching OpsWorks Layer (%s) load balancer (%s): %s", d.Id(), v, err)
+		}
+	}
+
+	if v, ok := d.GetOk("load_based_auto_scaling"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input := expandSetLoadBasedAutoScalingInput(v.([]interface{})[0].(map[string]interface{}))
+		input.LayerId = aws.String(d.Id())
+
+		_, err := conn.SetLoadBasedAutoScalingWithContext(ctx, input)
+
+		if err != nil {
+			return diag.Errorf("setting OpsWorks Layer (%s) load-based auto scaling configuration: %s", d.Id(), err)
 		}
 	}
 
 	if len(tags) > 0 {
-		layer, err := FindLayerByID(conn, d.Id())
+		layer, err := FindLayerByID(ctx, conn, d.Id())
 
 		if err != nil {
-			return fmt.Errorf("reading OpsWorks Layer (%s): %w", d.Id(), err)
+			return diag.Errorf("reading OpsWorks Layer (%s): %s", d.Id(), err)
 		}
 
 		arn := aws.StringValue(layer.Arn)
-		if err := UpdateTags(conn, arn, nil, tags); err != nil {
-			return fmt.Errorf("adding OpsWorks Layer (%s) tags: %w", arn, err)
+		if err := UpdateTags(ctx, conn, arn, nil, tags); err != nil {
+			return diag.Errorf("adding OpsWorks Layer (%s) tags: %s", arn, err)
 		}
 	}
 
-	return lt.Read(d, meta)
+	return lt.Read(ctx, d, meta)
 }
 
-func (lt *opsworksLayerType) Read(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OpsWorksConn
+func (lt *opsworksLayerType) Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).OpsWorksConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	layer, err := FindLayerByID(conn, d.Id())
+	layer, err := FindLayerByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] OpsWorks Layer %s not found, removing from state", d.Id())
@@ -502,7 +621,7 @@ func (lt *opsworksLayerType) Read(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading OpsWorks Layer (%s): %w", d.Id(), err)
+		return diag.Errorf("reading OpsWorks Layer (%s): %s", d.Id(), err)
 	}
 
 	arn := aws.StringValue(layer.Arn)
@@ -512,7 +631,7 @@ func (lt *opsworksLayerType) Read(d *schema.ResourceData, meta interface{}) erro
 	d.Set("auto_healing", layer.EnableAutoHealing)
 	if layer.CloudWatchLogsConfiguration != nil {
 		if err := d.Set("cloudwatch_configuration", []interface{}{flattenCloudWatchLogsConfiguration(layer.CloudWatchLogsConfiguration)}); err != nil {
-			return fmt.Errorf("setting cloudwatch_configuration: %w", err)
+			return diag.Errorf("setting cloudwatch_configuration: %s", err)
 		}
 	} else {
 		d.Set("cloudwatch_configuration", nil)
@@ -536,7 +655,7 @@ func (lt *opsworksLayerType) Read(d *schema.ResourceData, meta interface{}) erro
 	} else {
 		policy, err := structure.NormalizeJsonString(aws.StringValue(layer.CustomJson))
 		if err != nil {
-			return fmt.Errorf("policy contains an invalid JSON: %w", err)
+			return diag.Errorf("policy contains an invalid JSON: %s", err)
 		}
 		d.Set("custom_json", policy)
 	}
@@ -549,7 +668,7 @@ func (lt *opsworksLayerType) Read(d *schema.ResourceData, meta interface{}) erro
 		d.Set("instance_shutdown_timeout", layer.LifecycleEventConfiguration.Shutdown.ExecutionTimeout)
 	}
 	if err := d.Set("ebs_volume", flattenVolumeConfigurations(layer.VolumeConfigurations)); err != nil {
-		return fmt.Errorf("setting ebs_volume: %w", err)
+		return diag.Errorf("setting ebs_volume: %s", err)
 	}
 	d.Set("install_updates_on_boot", layer.InstallUpdatesOnBoot)
 	d.Set("name", layer.Name)
@@ -561,43 +680,55 @@ func (lt *opsworksLayerType) Read(d *schema.ResourceData, meta interface{}) erro
 	d.Set("use_ebs_optimized_instances", layer.UseEbsOptimizedInstances)
 
 	if err := lt.Attributes.apiAttributesToResourceData(aws.StringValueMap(layer.Attributes), d); err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
-	loadBalancer, err := findElasticLoadBalancerByLayerID(conn, d.Id())
+	loadBalancer, err := findElasticLoadBalancerByLayerID(ctx, conn, d.Id())
 
 	if err == nil {
 		d.Set("elastic_load_balancer", loadBalancer.ElasticLoadBalancerName)
 	} else if tfresource.NotFound(err) {
 		d.Set("elastic_load_balancer", nil)
 	} else {
-		return fmt.Errorf("reading OpsWorks Layer (%s) load balancers: %w", d.Id(), err)
+		return diag.Errorf("reading OpsWorks Layer (%s) load balancers: %s", d.Id(), err)
 	}
 
-	tags, err := ListTags(conn, arn)
+	loadBasedAutoScalingConfiguration, err := findLoadBasedAutoScalingConfigurationByLayerID(ctx, conn, d.Id())
+
+	if err == nil {
+		if err := d.Set("load_based_auto_scaling", []interface{}{flattenLoadBasedAutoScalingConfiguration(loadBasedAutoScalingConfiguration)}); err != nil {
+			return diag.Errorf("setting load_based_auto_scaling: %s", err)
+		}
+	} else if tfresource.NotFound(err) {
+		d.Set("load_based_auto_scaling", nil)
+	} else {
+		return diag.Errorf("reading OpsWorks Layer (%s) load-based auto scaling configurations: %s", d.Id(), err)
+	}
+
+	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("listing tags for OpsWorks Layer (%s): %w", arn, err)
+		return diag.Errorf("listing tags for OpsWorks Layer (%s): %s", arn, err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
+		return diag.Errorf("setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("setting tags_all: %w", err)
+		return diag.Errorf("setting tags_all: %s", err)
 	}
 
 	return nil
 }
 
-func (lt *opsworksLayerType) Update(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OpsWorksConn
+func (lt *opsworksLayerType) Update(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).OpsWorksConn()
 
-	if d.HasChangesExcept("elastic_load_balancer", "tags", "tags_all") {
+	if d.HasChangesExcept("elastic_load_balancer", "load_based_auto_scaling", "tags", "tags_all") {
 		input := &opsworks.UpdateLayerInput{
 			LayerId: aws.String(d.Id()),
 		}
@@ -606,7 +737,7 @@ func (lt *opsworksLayerType) Update(d *schema.ResourceData, meta interface{}) er
 			attributes, err := lt.Attributes.resourceDataToAPIAttributes(d)
 
 			if err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 
 			input.Attributes = aws.StringMap(attributes)
@@ -704,10 +835,10 @@ func (lt *opsworksLayerType) Update(d *schema.ResourceData, meta interface{}) er
 		}
 
 		log.Printf("[DEBUG] Updating OpsWorks Layer: %s", input)
-		_, err := conn.UpdateLayer(input)
+		_, err := conn.UpdateLayerWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("updating OpsWorks Layer (%s): %w", d.Id(), err)
+			return diag.Errorf("updating OpsWorks Layer (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -715,25 +846,36 @@ func (lt *opsworksLayerType) Update(d *schema.ResourceData, meta interface{}) er
 		o, n := d.GetChange("elastic_load_balancer")
 
 		if v := o.(string); v != "" {
-			_, err := conn.DetachElasticLoadBalancer(&opsworks.DetachElasticLoadBalancerInput{
+			_, err := conn.DetachElasticLoadBalancerWithContext(ctx, &opsworks.DetachElasticLoadBalancerInput{
 				ElasticLoadBalancerName: aws.String(v),
 				LayerId:                 aws.String(d.Id()),
 			})
 
 			if err != nil {
-				return fmt.Errorf("detaching OpsWorks Layer (%s) load balancer (%s): %w", d.Id(), v, err)
+				return diag.Errorf("detaching OpsWorks Layer (%s) load balancer (%s): %s", d.Id(), v, err)
 			}
 		}
 
 		if v := n.(string); v != "" {
-			_, err := conn.AttachElasticLoadBalancer(&opsworks.AttachElasticLoadBalancerInput{
+			_, err := conn.AttachElasticLoadBalancerWithContext(ctx, &opsworks.AttachElasticLoadBalancerInput{
 				ElasticLoadBalancerName: aws.String(v),
 				LayerId:                 aws.String(d.Id()),
 			})
 
 			if err != nil {
-				return fmt.Errorf("attaching OpsWorks Layer (%s) load balancer (%s): %w", d.Id(), v, err)
+				return diag.Errorf("attaching OpsWorks Layer (%s) load balancer (%s): %s", d.Id(), v, err)
 			}
+		}
+	}
+
+	if d.HasChange("load_based_auto_scaling") {
+		input := expandSetLoadBasedAutoScalingInput(d.Get("load_based_auto_scaling").([]interface{})[0].(map[string]interface{}))
+		input.LayerId = aws.String(d.Id())
+
+		_, err := conn.SetLoadBasedAutoScalingWithContext(ctx, input)
+
+		if err != nil {
+			return diag.Errorf("setting OpsWorks Layer (%s) load-based auto scaling configuration: %s", d.Id(), err)
 		}
 	}
 
@@ -741,19 +883,19 @@ func (lt *opsworksLayerType) Update(d *schema.ResourceData, meta interface{}) er
 		o, n := d.GetChange("tags_all")
 
 		arn := d.Get("arn").(string)
-		if err := UpdateTags(conn, arn, o, n); err != nil {
-			return fmt.Errorf("updating OpsWorks Layer (%s) tags: %w", arn, err)
+		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
+			return diag.Errorf("updating OpsWorks Layer (%s) tags: %s", arn, err)
 		}
 	}
 
-	return lt.Read(d, meta)
+	return lt.Read(ctx, d, meta)
 }
 
-func (lt *opsworksLayerType) Delete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OpsWorksConn
+func (lt *opsworksLayerType) Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).OpsWorksConn()
 
 	log.Printf("[DEBUG] Deleting OpsWorks Layer: %s", d.Id())
-	_, err := conn.DeleteLayer(&opsworks.DeleteLayerInput{
+	_, err := conn.DeleteLayerWithContext(ctx, &opsworks.DeleteLayerInput{
 		LayerId: aws.String(d.Id()),
 	})
 
@@ -762,29 +904,29 @@ func (lt *opsworksLayerType) Delete(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if err != nil {
-		return fmt.Errorf("deleting OpsWorks Layer (%s): %w", d.Id(), err)
+		return diag.Errorf("deleting OpsWorks Layer (%s): %s", d.Id(), err)
 	}
 
 	if v, ok := d.GetOk("ecs_cluster_arn"); ok {
 		arn := v.(string)
-		_, err := conn.DeregisterEcsCluster(&opsworks.DeregisterEcsClusterInput{
+		_, err := conn.DeregisterEcsClusterWithContext(ctx, &opsworks.DeregisterEcsClusterInput{
 			EcsClusterArn: aws.String(arn),
 		})
 
 		if err != nil {
-			return fmt.Errorf("deregistering OpsWorks Layer (%s) ECS Cluster (%s): %w", d.Id(), arn, err)
+			return diag.Errorf("deregistering OpsWorks Layer (%s) ECS Cluster (%s): %s", d.Id(), arn, err)
 		}
 	}
 
 	return nil
 }
 
-func FindLayerByID(conn *opsworks.OpsWorks, id string) (*opsworks.Layer, error) {
+func FindLayerByID(ctx context.Context, conn *opsworks.OpsWorks, id string) (*opsworks.Layer, error) {
 	input := &opsworks.DescribeLayersInput{
 		LayerIds: aws.StringSlice([]string{id}),
 	}
 
-	output, err := conn.DescribeLayers(input)
+	output, err := conn.DescribeLayersWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, opsworks.ErrCodeResourceNotFoundException) {
 		return nil, &resource.NotFoundError{
@@ -808,12 +950,12 @@ func FindLayerByID(conn *opsworks.OpsWorks, id string) (*opsworks.Layer, error) 
 	return output.Layers[0], nil
 }
 
-func findElasticLoadBalancerByLayerID(conn *opsworks.OpsWorks, id string) (*opsworks.ElasticLoadBalancer, error) {
+func findElasticLoadBalancerByLayerID(ctx context.Context, conn *opsworks.OpsWorks, id string) (*opsworks.ElasticLoadBalancer, error) {
 	input := &opsworks.DescribeElasticLoadBalancersInput{
 		LayerIds: aws.StringSlice([]string{id}),
 	}
 
-	output, err := conn.DescribeElasticLoadBalancers(input)
+	output, err := conn.DescribeElasticLoadBalancersWithContext(ctx, input)
 
 	if err != nil {
 		return nil, err
@@ -828,6 +970,28 @@ func findElasticLoadBalancerByLayerID(conn *opsworks.OpsWorks, id string) (*opsw
 	}
 
 	return output.ElasticLoadBalancers[0], nil
+}
+
+func findLoadBasedAutoScalingConfigurationByLayerID(ctx context.Context, conn *opsworks.OpsWorks, id string) (*opsworks.LoadBasedAutoScalingConfiguration, error) {
+	input := &opsworks.DescribeLoadBasedAutoScalingInput{
+		LayerIds: aws.StringSlice([]string{id}),
+	}
+
+	output, err := conn.DescribeLoadBasedAutoScalingWithContext(ctx, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.LoadBasedAutoScalingConfigurations) == 0 || output.LoadBasedAutoScalingConfigurations[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.LoadBasedAutoScalingConfigurations); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output.LoadBasedAutoScalingConfigurations[0], nil
 }
 
 func (m opsworksLayerTypeAttributeMap) apiAttributesToResourceData(apiAttributes map[string]string, d *schema.ResourceData) error {
@@ -1190,4 +1354,124 @@ func flattenVolumeConfigurations(apiObjects []*opsworks.VolumeConfiguration) []i
 	}
 
 	return tfList
+}
+
+func expandSetLoadBasedAutoScalingInput(tfMap map[string]interface{}) *opsworks.SetLoadBasedAutoScalingInput {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &opsworks.SetLoadBasedAutoScalingInput{}
+
+	if v, ok := tfMap["downscaling"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.DownScaling = expandAutoScalingThresholds(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["enable"].(bool); ok {
+		apiObject.Enable = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["upscaling"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.UpScaling = expandAutoScalingThresholds(v[0].(map[string]interface{}))
+	}
+
+	return apiObject
+}
+
+func expandAutoScalingThresholds(tfMap map[string]interface{}) *opsworks.AutoScalingThresholds {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &opsworks.AutoScalingThresholds{}
+
+	if v, ok := tfMap["alarms"].([]interface{}); ok && len(v) > 0 {
+		apiObject.Alarms = flex.ExpandStringList(v)
+	}
+
+	if v, ok := tfMap["cpu_threshold"].(float64); ok && v != 0.0 {
+		apiObject.CpuThreshold = aws.Float64(v)
+	}
+
+	if v, ok := tfMap["ignore_metrics_time"].(int); ok && v != 0 {
+		apiObject.IgnoreMetricsTime = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["instance_count"].(int); ok && v != 0 {
+		apiObject.InstanceCount = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["load_threshold"].(float64); ok && v != 0.0 {
+		apiObject.LoadThreshold = aws.Float64(v)
+	}
+
+	if v, ok := tfMap["memory_threshold"].(float64); ok && v != 0.0 {
+		apiObject.MemoryThreshold = aws.Float64(v)
+	}
+
+	if v, ok := tfMap["thresholds_wait_time"].(int); ok && v != 0 {
+		apiObject.ThresholdsWaitTime = aws.Int64(int64(v))
+	}
+
+	return apiObject
+}
+
+func flattenLoadBasedAutoScalingConfiguration(apiObject *opsworks.LoadBasedAutoScalingConfiguration) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.DownScaling; v != nil {
+		tfMap["downscaling"] = []interface{}{flattenAutoScalingThresholds(v)}
+	}
+
+	if v := apiObject.Enable; v != nil {
+		tfMap["enable"] = aws.BoolValue(v)
+	}
+
+	if v := apiObject.UpScaling; v != nil {
+		tfMap["upscaling"] = []interface{}{flattenAutoScalingThresholds(v)}
+	}
+
+	return tfMap
+}
+
+func flattenAutoScalingThresholds(apiObject *opsworks.AutoScalingThresholds) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Alarms; v != nil {
+		tfMap["alarms"] = aws.StringValueSlice(v)
+	}
+
+	if v := apiObject.CpuThreshold; v != nil {
+		tfMap["cpu_threshold"] = aws.Float64Value(v)
+	}
+
+	if v := apiObject.IgnoreMetricsTime; v != nil {
+		tfMap["ignore_metrics_time"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.InstanceCount; v != nil {
+		tfMap["instance_count"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.LoadThreshold; v != nil {
+		tfMap["load_threshold"] = aws.Float64Value(v)
+	}
+
+	if v := apiObject.MemoryThreshold; v != nil {
+		tfMap["memory_threshold"] = aws.Float64Value(v)
+	}
+
+	if v := apiObject.ThresholdsWaitTime; v != nil {
+		tfMap["thresholds_wait_time"] = aws.Int64Value(v)
+	}
+
+	return tfMap
 }

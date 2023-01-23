@@ -84,7 +84,7 @@ func ResourceTransitGatewayPeering() *schema.Resource {
 }
 
 func resourceTransitGatewayPeeringCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn
+	conn := meta.(*conns.AWSClient).NetworkManagerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -116,7 +116,7 @@ func resourceTransitGatewayPeeringCreate(ctx context.Context, d *schema.Resource
 }
 
 func resourceTransitGatewayPeeringRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn
+	conn := meta.(*conns.AWSClient).NetworkManagerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -164,12 +164,12 @@ func resourceTransitGatewayPeeringRead(ctx context.Context, d *schema.ResourceDa
 }
 
 func resourceTransitGatewayPeeringUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn
+	conn := meta.(*conns.AWSClient).NetworkManagerConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTagsWithContext(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.Errorf("updating Network Manager Transit Gateway Peering (%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -178,7 +178,7 @@ func resourceTransitGatewayPeeringUpdate(ctx context.Context, d *schema.Resource
 }
 
 func resourceTransitGatewayPeeringDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn
+	conn := meta.(*conns.AWSClient).NetworkManagerConn()
 
 	log.Printf("[DEBUG] Deleting Network Manager Transit Gateway Peering: %s", d.Id())
 	_, err := conn.DeletePeeringWithContext(ctx, &networkmanager.DeletePeeringInput{
@@ -241,7 +241,7 @@ func StatusTransitGatewayPeeringState(ctx context.Context, conn *networkmanager.
 	}
 }
 
-func waitTransitGatewayPeeringCreated(ctx context.Context, conn *networkmanager.NetworkManager, id string, timeout time.Duration) (*networkmanager.TransitGatewayPeering, error) { //nolint:unparam
+func waitTransitGatewayPeeringCreated(ctx context.Context, conn *networkmanager.NetworkManager, id string, timeout time.Duration) (*networkmanager.TransitGatewayPeering, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{networkmanager.PeeringStateCreating},
 		Target:  []string{networkmanager.PeeringStateAvailable},
@@ -258,7 +258,7 @@ func waitTransitGatewayPeeringCreated(ctx context.Context, conn *networkmanager.
 	return nil, err
 }
 
-func waitTransitGatewayPeeringDeleted(ctx context.Context, conn *networkmanager.NetworkManager, id string, timeout time.Duration) (*networkmanager.TransitGatewayPeering, error) { //nolint:unparam
+func waitTransitGatewayPeeringDeleted(ctx context.Context, conn *networkmanager.NetworkManager, id string, timeout time.Duration) (*networkmanager.TransitGatewayPeering, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{networkmanager.PeeringStateDeleting},
 		Target:  []string{},

@@ -17,21 +17,19 @@ import (
 )
 
 func TestAccNetworkManagerCustomerGatewayAssociation_serial(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]func(t *testing.T){
 		"basic":                      testAccCustomerGatewayAssociation_basic,
 		"disappears":                 testAccCustomerGatewayAssociation_disappears,
 		"disappears_CustomerGateway": testAccCustomerGatewayAssociation_Disappears_customerGateway,
 	}
 
-	for name, tc := range testCases {
-		tc := tc
-		t.Run(name, func(t *testing.T) {
-			tc(t)
-		})
-	}
+	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
 func testAccCustomerGatewayAssociation_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_networkmanager_customer_gateway_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -39,12 +37,12 @@ func testAccCustomerGatewayAssociation_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCustomerGatewayAssociationDestroy,
+		CheckDestroy:             testAccCheckCustomerGatewayAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomerGatewayAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCustomerGatewayAssociationExists(resourceName),
+					testAccCheckCustomerGatewayAssociationExists(ctx, resourceName),
 				),
 			},
 			{
@@ -57,6 +55,7 @@ func testAccCustomerGatewayAssociation_basic(t *testing.T) {
 }
 
 func testAccCustomerGatewayAssociation_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_networkmanager_customer_gateway_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -64,13 +63,13 @@ func testAccCustomerGatewayAssociation_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCustomerGatewayAssociationDestroy,
+		CheckDestroy:             testAccCheckCustomerGatewayAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomerGatewayAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCustomerGatewayAssociationExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfnetworkmanager.ResourceCustomerGatewayAssociation(), resourceName),
+					testAccCheckCustomerGatewayAssociationExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfnetworkmanager.ResourceCustomerGatewayAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -79,6 +78,7 @@ func testAccCustomerGatewayAssociation_disappears(t *testing.T) {
 }
 
 func testAccCustomerGatewayAssociation_Disappears_customerGateway(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_networkmanager_customer_gateway_association.test"
 	vpnConnectionResourceName := "aws_vpn_connection.test"
 	customerGatewayResourceName := "aws_customer_gateway.test"
@@ -88,14 +88,14 @@ func testAccCustomerGatewayAssociation_Disappears_customerGateway(t *testing.T) 
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCustomerGatewayAssociationDestroy,
+		CheckDestroy:             testAccCheckCustomerGatewayAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomerGatewayAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCustomerGatewayAssociationExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceVPNConnection(), vpnConnectionResourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceCustomerGateway(), customerGatewayResourceName),
+					testAccCheckCustomerGatewayAssociationExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPNConnection(), vpnConnectionResourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceCustomerGateway(), customerGatewayResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -103,37 +103,39 @@ func testAccCustomerGatewayAssociation_Disappears_customerGateway(t *testing.T) 
 	})
 }
 
-func testAccCheckCustomerGatewayAssociationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn
+func testAccCheckCustomerGatewayAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_networkmanager_customer_gateway_association" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_networkmanager_customer_gateway_association" {
+				continue
+			}
+
+			globalNetworkID, customerGatewayARN, err := tfnetworkmanager.CustomerGatewayAssociationParseResourceID(rs.Primary.ID)
+
+			if err != nil {
+				return err
+			}
+
+			_, err = tfnetworkmanager.FindCustomerGatewayAssociationByTwoPartKey(ctx, conn, globalNetworkID, customerGatewayARN)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Network Manager Customer Gateway Association %s still exists", rs.Primary.ID)
 		}
 
-		globalNetworkID, customerGatewayARN, err := tfnetworkmanager.CustomerGatewayAssociationParseResourceID(rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		_, err = tfnetworkmanager.FindCustomerGatewayAssociationByTwoPartKey(context.Background(), conn, globalNetworkID, customerGatewayARN)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("Network Manager Customer Gateway Association %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckCustomerGatewayAssociationExists(n string) resource.TestCheckFunc {
+func testAccCheckCustomerGatewayAssociationExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -144,7 +146,7 @@ func testAccCheckCustomerGatewayAssociationExists(n string) resource.TestCheckFu
 			return fmt.Errorf("No Network Manager Customer Gateway Association ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn()
 
 		globalNetworkID, customerGatewayARN, err := tfnetworkmanager.CustomerGatewayAssociationParseResourceID(rs.Primary.ID)
 
@@ -152,7 +154,7 @@ func testAccCheckCustomerGatewayAssociationExists(n string) resource.TestCheckFu
 			return err
 		}
 
-		_, err = tfnetworkmanager.FindCustomerGatewayAssociationByTwoPartKey(context.Background(), conn, globalNetworkID, customerGatewayARN)
+		_, err = tfnetworkmanager.FindCustomerGatewayAssociationByTwoPartKey(ctx, conn, globalNetworkID, customerGatewayARN)
 
 		return err
 	}

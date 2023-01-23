@@ -1,25 +1,27 @@
 package ecr
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceReplicationConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceReplicationConfigurationPut,
-		Read:   resourceReplicationConfigurationRead,
-		Update: resourceReplicationConfigurationPut,
-		Delete: resourceReplicationConfigurationDelete,
+		CreateWithoutTimeout: resourceReplicationConfigurationPut,
+		ReadWithoutTimeout:   resourceReplicationConfigurationRead,
+		UpdateWithoutTimeout: resourceReplicationConfigurationPut,
+		DeleteWithoutTimeout: resourceReplicationConfigurationDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -87,43 +89,46 @@ func ResourceReplicationConfiguration() *schema.Resource {
 	}
 }
 
-func resourceReplicationConfigurationPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECRConn
+func resourceReplicationConfigurationPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ECRConn()
 
 	input := ecr.PutReplicationConfigurationInput{
 		ReplicationConfiguration: expandReplicationConfigurationReplicationConfiguration(d.Get("replication_configuration").([]interface{})),
 	}
 
-	_, err := conn.PutReplicationConfiguration(&input)
+	_, err := conn.PutReplicationConfigurationWithContext(ctx, &input)
 	if err != nil {
-		return fmt.Errorf("error creating ECR Replication Configuration: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating ECR Replication Configuration: %s", err)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).AccountID)
 
-	return resourceReplicationConfigurationRead(d, meta)
+	return append(diags, resourceReplicationConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceReplicationConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECRConn
+func resourceReplicationConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ECRConn()
 
 	log.Printf("[DEBUG] Reading ECR Replication Configuration %s", d.Id())
-	out, err := conn.DescribeRegistry(&ecr.DescribeRegistryInput{})
+	out, err := conn.DescribeRegistryWithContext(ctx, &ecr.DescribeRegistryInput{})
 	if err != nil {
-		return fmt.Errorf("error reading ECR Replication Configuration: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading ECR Replication Configuration: %s", err)
 	}
 
 	d.Set("registry_id", out.RegistryId)
 
 	if err := d.Set("replication_configuration", flattenReplicationConfigurationReplicationConfiguration(out.ReplicationConfiguration)); err != nil {
-		return fmt.Errorf("error setting replication_configuration for ECR Replication Configuration: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting replication_configuration for ECR Replication Configuration: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceReplicationConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECRConn
+func resourceReplicationConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ECRConn()
 
 	input := ecr.PutReplicationConfigurationInput{
 		ReplicationConfiguration: &ecr.ReplicationConfiguration{
@@ -131,12 +136,12 @@ func resourceReplicationConfigurationDelete(d *schema.ResourceData, meta interfa
 		},
 	}
 
-	_, err := conn.PutReplicationConfiguration(&input)
+	_, err := conn.PutReplicationConfigurationWithContext(ctx, &input)
 	if err != nil {
-		return fmt.Errorf("error deleting ECR Replication Configuration: %w", err)
+		return sdkdiag.AppendErrorf(diags, "deleting ECR Replication Configuration: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandReplicationConfigurationReplicationConfiguration(data []interface{}) *ecr.ReplicationConfiguration {
@@ -180,7 +185,6 @@ func expandReplicationConfigurationReplicationConfigurationRules(data []interfac
 		}
 
 		rules = append(rules, config)
-
 	}
 	return rules
 }

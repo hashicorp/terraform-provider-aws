@@ -18,10 +18,10 @@ import (
 
 func ResourceProfile() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceProfileCreate,
-		ReadContext:   resourceProfileRead,
-		UpdateContext: resourceProfileUpdate,
-		DeleteContext: resourceProfileDelete,
+		CreateWithoutTimeout: resourceProfileCreate,
+		ReadWithoutTimeout:   resourceProfileRead,
+		UpdateWithoutTimeout: resourceProfileUpdate,
+		DeleteWithoutTimeout: resourceProfileDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -74,7 +74,7 @@ func ResourceProfile() *schema.Resource {
 }
 
 func resourceProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RolesAnywhereConn
+	conn := meta.(*conns.AWSClient).RolesAnywhereClient()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 	name := d.Get("name").(string)
@@ -118,7 +118,7 @@ func resourceProfileCreate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RolesAnywhereConn
+	conn := meta.(*conns.AWSClient).RolesAnywhereClient()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -163,7 +163,7 @@ func resourceProfileRead(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RolesAnywhereConn
+	conn := meta.(*conns.AWSClient).RolesAnywhereClient()
 
 	if d.HasChangesExcept("enabled", "tags_all") {
 		input := &rolesanywhere.UpdateProfileInput{
@@ -187,7 +187,7 @@ func resourceProfileUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		if d.HasChange("session_policy") {
-			input.Name = aws.String(d.Get("session_policy").(string))
+			input.SessionPolicy = aws.String(d.Get("session_policy").(string))
 		}
 
 		log.Printf("[DEBUG] Updating RolesAnywhere Profile (%s): %#v", d.Id(), input)
@@ -199,7 +199,7 @@ func resourceProfileUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 	if d.HasChange("enabled") {
 		_, n := d.GetChange("enabled")
-		if n == "true" {
+		if n == true {
 			err := enableProfile(ctx, d.Id(), meta)
 			if err != nil {
 				diag.Errorf("enabling RolesAnywhere Profile (%s): %s", d.Id(), err)
@@ -223,7 +223,7 @@ func resourceProfileUpdate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RolesAnywhereConn
+	conn := meta.(*conns.AWSClient).RolesAnywhereClient()
 
 	log.Printf("[DEBUG] Deleting RolesAnywhere Profile (%s)", d.Id())
 	_, err := conn.DeleteProfile(ctx, &rolesanywhere.DeleteProfileInput{
@@ -243,7 +243,7 @@ func resourceProfileDelete(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func disableProfile(ctx context.Context, profileId string, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RolesAnywhereConn
+	conn := meta.(*conns.AWSClient).RolesAnywhereClient()
 
 	input := &rolesanywhere.DisableProfileInput{
 		ProfileId: aws.String(profileId),
@@ -254,7 +254,7 @@ func disableProfile(ctx context.Context, profileId string, meta interface{}) err
 }
 
 func enableProfile(ctx context.Context, profileId string, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RolesAnywhereConn
+	conn := meta.(*conns.AWSClient).RolesAnywhereClient()
 
 	input := &rolesanywhere.EnableProfileInput{
 		ProfileId: aws.String(profileId),

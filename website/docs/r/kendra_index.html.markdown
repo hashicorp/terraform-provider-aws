@@ -642,7 +642,7 @@ A `jwt_token_type_configuration` block supports the following arguments:
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `40m`)
 * `delete` - (Default `40m`)

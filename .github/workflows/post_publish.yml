@@ -27,23 +27,24 @@ jobs:
         id: release-tag
         run: |
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            echo ::set-output name=tag::${{ github.event.inputs.release-tag }}
+            echo "tag=${{ github.event.inputs.release-tag }}" >> "$GITHUB_OUTPUT"
           else
             value=`cat release-tag.data`
-            echo ::set-output name=tag::$value
+            echo "tag=$value" >> "$GITHUB_OUTPUT"
           fi
-  tidy-asana:
+  tidy-jira:
     needs: [on-success-or-workflow-dispatch]
     runs-on: ubuntu-latest
     steps:
-      - name: Tidy Asana
-        uses: breathingdust/github-asana-tidy@v1
+      - name: Tidy Jira
+        uses: breathingdust/github-jira-tidy@main
         with:
-          asana_pat: ${{ secrets.asana_pat }}
-          asana_target_section_gid: '1141945723817371'
-          asana_workspace_gid: '90955849329269'
-          asana_project_gid: '632425409545160'
-          asana_github_url_field_gid: '1134594824474912'
+          jira_host: 'hashicorp.atlassian.net'
+          jira_username: 'sdavis@hashicorp.com'
+          jira_password: ${{ secrets.jira_password }}
+          jira_jql_filter: ${{ secrets.jira_jql_filter }}
+          jira_closed_id: '371'
+          jira_github_url_field_id: 'cf[10089]'
           github_release_name: ${{ needs.on-success-or-workflow-dispatch.outputs.release-tag }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   archive-release-cards:

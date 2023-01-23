@@ -40,7 +40,6 @@
 1. In some cases, we might decide that a PR should be closed without merging.
    We'll make sure to provide clear reasoning when this happens.
 
-
 ### Go Coding Style
 
 All Go code is automatically checked for compliance with various linters, such as `gofmt`. These tools can be installed using the `GNUMakefile` in this repository.
@@ -138,7 +137,7 @@ This Contribution Guide also includes separate sections on topics such as [Error
   }
 
   if err != nil {
-    return fmt.Errorf("error creating KMS External Key: %s", err)
+    return fmt.Errorf("creating KMS External Key: %s", err)
   }
   ```
 

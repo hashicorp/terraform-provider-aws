@@ -13,9 +13,9 @@ on:
       - .go-version
       - .ci/.markdownlinkcheck.json
       - .ci/.tflint.hcl
+      - .ci/tools/go.mod
       - .markdownlint.yml
       - website/docs/**
-      - tools/go.mod
 
 jobs:
   markdown-link-check-a-h-markdown:
@@ -33,6 +33,7 @@ jobs:
           file-extension: ".markdown"
           base-branch: "main"
           check-modified-files-only: "no"
+
   markdown-link-check-i-z-markdown:
     runs-on: ubuntu-latest
     steps:
@@ -48,6 +49,7 @@ jobs:
           file-extension: ".markdown"
           base-branch: "main"
           check-modified-files-only: "no"
+
   markdown-link-check-md:
     runs-on: ubuntu-latest
     steps:
@@ -62,6 +64,7 @@ jobs:
           file-extension: ".md"
           base-branch: "main"
           check-modified-files-only: "yes"
+
   markdown-lint:
     runs-on: ubuntu-latest
     steps:
@@ -69,6 +72,7 @@ jobs:
       - uses: avto-dev/markdown-lint@v1
         with:
           args: "website/docs"
+
   misspell:
     runs-on: ubuntu-latest
     steps:
@@ -84,6 +88,7 @@ jobs:
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
       - run: cd .ci/tools && go install github.com/client9/misspell/cmd/misspell
       - run: misspell -error -source text website/
+
   terrafmt:
     runs-on: ubuntu-latest
     steps:
@@ -99,10 +104,13 @@ jobs:
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
       - run: cd .ci/tools && go install github.com/katbyte/terrafmt
       - run: terrafmt diff ./website --check --pattern '*.markdown'
-  validate-terraform:
+
+  tflint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
       - uses: actions/setup-go@v3
         with:
           go-version-file: .go-version
@@ -112,8 +120,8 @@ jobs:
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
-      - run: cd .ci/tools && go install github.com/katbyte/terrafmt
 
+      - run: cd .ci/tools && go install github.com/katbyte/terrafmt
       - run: cd .ci/tools && go install github.com/terraform-linters/tflint
 
       - uses: actions/cache@v3
@@ -122,7 +130,7 @@ jobs:
           path: ~/.tflint.d/plugins
           key: ${{ runner.os }}-tflint-${{ hashFiles('.ci/.tflint.hcl') }}
 
-      - run: tflint -c .ci/.tflint.hcl --init
+      - run: tflint --config .ci/.tflint.hcl --init
 
       - run: |
           exit_code=0
@@ -133,6 +141,10 @@ jobs:
           # being carried over from test cases.
           shared_rules=(
               "--enable-rule=terraform_comment_syntax"
+              "--disable-rule=aws_appsync_function_invalid_request_mapping_template"
+              "--disable-rule=aws_appsync_function_invalid_response_mapping_template"
+              "--disable-rule=aws_appsync_resolver_invalid_request_template"
+              "--disable-rule=aws_appsync_resolver_invalid_response_template"
               "--disable-rule=aws_cloudwatch_event_target_invalid_arn"
               "--disable-rule=aws_db_instance_default_parameter_group"
               "--disable-rule=aws_elasticache_cluster_default_parameter_group"
@@ -141,18 +153,17 @@ jobs:
               "--disable-rule=aws_iam_saml_provider_invalid_saml_metadata_document"
               "--disable-rule=aws_iam_server_certificate_invalid_certificate_body"
               "--disable-rule=aws_iam_server_certificate_invalid_private_key"
+              "--disable-rule=aws_iot_certificate_invalid_csr"
               "--disable-rule=aws_lb_invalid_load_balancer_type"
               "--disable-rule=aws_lb_target_group_invalid_protocol"
+              "--disable-rule=aws_networkfirewall_rule_group_invalid_rules"
+              "--disable-rule=aws_s3_object_copy_invalid_source"
+              "--disable-rule=aws_servicecatalog_portfolio_share_invalid_type"
               "--disable-rule=aws_transfer_ssh_key_invalid_body"
               "--disable-rule=aws_worklink_website_certificate_authority_association_invalid_certificate"
-              "--disable-rule=aws_iot_certificate_invalid_csr"
-              "--disable-rule=aws_networkfirewall_rule_group_invalid_rules"
-              "--disable-rule=aws_appsync_function_invalid_request_mapping_template"
-              "--disable-rule=aws_appsync_function_invalid_response_mapping_template"
-              "--disable-rule=aws_appsync_resolver_invalid_request_template"
-              "--disable-rule=aws_appsync_resolver_invalid_response_template"
-              "--disable-rule=aws_servicecatalog_portfolio_share_invalid_type"
-              "--disable-rule=aws_s3_object_copy_invalid_source"
+              "--disable-rule=terraform_required_providers"
+              "--disable-rule=terraform_unused_declarations"
+              "--disable-rule=terraform_typed_variables"
           )
           while read -r filename; do
             rules=("${shared_rules[@]}")
@@ -160,30 +171,28 @@ jobs:
                 # ./website/docs/guides/version-2-upgrade.html.md should still include pre-0.12 syntax,
                 # since v1.0 does not support Terraform 0.12.
                 rules+=(
-                "--disable-rule=terraform_deprecated_interpolation"
                 "--disable-rule=terraform_deprecated_index"
+                "--disable-rule=terraform_deprecated_interpolation"
                 )
             elif [[ "$filename" == "./website/docs/guides/version-3-upgrade.html.md" ]]; then
                 # ./website/docs/guides/version-3-upgrade.html.md has one example showing migration from
                 # pre-0.12 syntax to 0.12 syntax. We can't customize rules per block, and adding a
                 # tflint-ignore directive to documentation is not ideal.
                 rules+=(
-                "--disable-rule=terraform_deprecated_interpolation"
                 "--enable-rule=terraform_deprecated_index"
+                "--disable-rule=terraform_deprecated_interpolation"
                 )
             else
                 rules+=(
-                "--enable-rule=terraform_deprecated_interpolation"
                 "--enable-rule=terraform_deprecated_index"
+                "--enable-rule=terraform_deprecated_interpolation"
                 )
             fi
 
             # We need to capture the output and error code here. We don't want to exit on the first error
             set +e
-            ./.ci/scripts/validate-terraform-file.sh -c .ci/.tflint.hcl "$filename" "${rules[@]}"
-            lint_exitcode=$?
+            ./.ci/scripts/validate-terraform-file.sh "$filename" "${rules[@]}" || exit_code=1
             set -e
-            if [ $lint_exitcode -ne 0 ]; then exit_code=1; fi
           done < <(find ./website/docs -type f \( -name '*.md' -o -name '*.markdown' \) | sort -u)
 
           exit $exit_code

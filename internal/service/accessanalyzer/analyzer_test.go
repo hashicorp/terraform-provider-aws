@@ -1,6 +1,7 @@
 package accessanalyzer_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -15,21 +16,22 @@ import (
 )
 
 func testAccAnalyzer_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var analyzer accessanalyzer.AnalyzerSummary
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_accessanalyzer_analyzer.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, accessanalyzer.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAnalyzerDestroy,
+		CheckDestroy:             testAccCheckAnalyzerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAnalyzerConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAnalyzerExists(resourceName, &analyzer),
+					testAccCheckAnalyzerExists(ctx, resourceName, &analyzer),
 					resource.TestCheckResourceAttr(resourceName, "analyzer_name", rName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "access-analyzer", fmt.Sprintf("analyzer/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -46,22 +48,23 @@ func testAccAnalyzer_basic(t *testing.T) {
 }
 
 func testAccAnalyzer_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var analyzer accessanalyzer.AnalyzerSummary
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_accessanalyzer_analyzer.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, accessanalyzer.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAnalyzerDestroy,
+		CheckDestroy:             testAccCheckAnalyzerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAnalyzerConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAnalyzerExists(resourceName, &analyzer),
-					testAccCheckAnalyzerDisappears(&analyzer),
+					testAccCheckAnalyzerExists(ctx, resourceName, &analyzer),
+					testAccCheckAnalyzerDisappears(ctx, &analyzer),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -70,21 +73,22 @@ func testAccAnalyzer_disappears(t *testing.T) {
 }
 
 func testAccAnalyzer_Tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var analyzer accessanalyzer.AnalyzerSummary
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_accessanalyzer_analyzer.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, accessanalyzer.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAnalyzerDestroy,
+		CheckDestroy:             testAccCheckAnalyzerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAnalyzerConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAnalyzerExists(resourceName, &analyzer),
+					testAccCheckAnalyzerExists(ctx, resourceName, &analyzer),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -97,7 +101,7 @@ func testAccAnalyzer_Tags(t *testing.T) {
 			{
 				Config: testAccAnalyzerConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAnalyzerExists(resourceName, &analyzer),
+					testAccCheckAnalyzerExists(ctx, resourceName, &analyzer),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -106,7 +110,7 @@ func testAccAnalyzer_Tags(t *testing.T) {
 			{
 				Config: testAccAnalyzerConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAnalyzerExists(resourceName, &analyzer),
+					testAccCheckAnalyzerExists(ctx, resourceName, &analyzer),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -116,6 +120,7 @@ func testAccAnalyzer_Tags(t *testing.T) {
 }
 
 func testAccAnalyzer_Type_Organization(t *testing.T) {
+	ctx := acctest.Context(t)
 	var analyzer accessanalyzer.AnalyzerSummary
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -124,17 +129,17 @@ func testAccAnalyzer_Type_Organization(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheck(t)
-			acctest.PreCheckOrganizationsAccount(t)
+			testAccPreCheck(ctx, t)
+			acctest.PreCheckOrganizationsAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, accessanalyzer.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAnalyzerDestroy,
+		CheckDestroy:             testAccCheckAnalyzerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAnalyzerConfig_typeOrganization(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAnalyzerExists(resourceName, &analyzer),
+					testAccCheckAnalyzerExists(ctx, resourceName, &analyzer),
 					resource.TestCheckResourceAttr(resourceName, "type", accessanalyzer.TypeOrganization),
 				),
 			},
@@ -147,52 +152,53 @@ func testAccAnalyzer_Type_Organization(t *testing.T) {
 	})
 }
 
-func testAccCheckAnalyzerDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AccessAnalyzerConn
+func testAccCheckAnalyzerDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AccessAnalyzerConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_accessanalyzer_analyzer" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_accessanalyzer_analyzer" {
+				continue
+			}
+
+			input := &accessanalyzer.GetAnalyzerInput{
+				AnalyzerName: aws.String(rs.Primary.ID),
+			}
+
+			output, err := conn.GetAnalyzerWithContext(ctx, input)
+
+			if tfawserr.ErrCodeEquals(err, accessanalyzer.ErrCodeResourceNotFoundException) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			if output != nil {
+				return fmt.Errorf("Access Analyzer Analyzer (%s) still exists", rs.Primary.ID)
+			}
 		}
 
-		input := &accessanalyzer.GetAnalyzerInput{
-			AnalyzerName: aws.String(rs.Primary.ID),
-		}
-
-		output, err := conn.GetAnalyzer(input)
-
-		if tfawserr.ErrCodeEquals(err, accessanalyzer.ErrCodeResourceNotFoundException) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		if output != nil {
-			return fmt.Errorf("Access Analyzer Analyzer (%s) still exists", rs.Primary.ID)
-		}
+		return nil
 	}
-
-	return nil
-
 }
 
-func testAccCheckAnalyzerDisappears(analyzer *accessanalyzer.AnalyzerSummary) resource.TestCheckFunc {
+func testAccCheckAnalyzerDisappears(ctx context.Context, analyzer *accessanalyzer.AnalyzerSummary) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AccessAnalyzerConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AccessAnalyzerConn()
 
 		input := &accessanalyzer.DeleteAnalyzerInput{
 			AnalyzerName: analyzer.Name,
 		}
 
-		_, err := conn.DeleteAnalyzer(input)
+		_, err := conn.DeleteAnalyzerWithContext(ctx, input)
 
 		return err
 	}
 }
 
-func testAccCheckAnalyzerExists(resourceName string, analyzer *accessanalyzer.AnalyzerSummary) resource.TestCheckFunc {
+func testAccCheckAnalyzerExists(ctx context.Context, resourceName string, analyzer *accessanalyzer.AnalyzerSummary) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -203,13 +209,13 @@ func testAccCheckAnalyzerExists(resourceName string, analyzer *accessanalyzer.An
 			return fmt.Errorf("resource (%s) ID not set", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AccessAnalyzerConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AccessAnalyzerConn()
 
 		input := &accessanalyzer.GetAnalyzerInput{
 			AnalyzerName: aws.String(rs.Primary.ID),
 		}
 
-		output, err := conn.GetAnalyzer(input)
+		output, err := conn.GetAnalyzerWithContext(ctx, input)
 
 		if err != nil {
 			return err

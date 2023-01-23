@@ -1,6 +1,7 @@
 package iot_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -14,11 +15,12 @@ import (
 )
 
 func TestAccIoTCertificate_csr(t *testing.T) {
+	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCertificateDestroy_basic,
+		CheckDestroy:             testAccCheckCertificateDestroy_basic(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificateConfig_csr,
@@ -36,11 +38,12 @@ func TestAccIoTCertificate_csr(t *testing.T) {
 }
 
 func TestAccIoTCertificate_Keys_certificate(t *testing.T) {
+	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCertificateDestroy_basic,
+		CheckDestroy:             testAccCheckCertificateDestroy_basic(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificateConfig_keys,
@@ -58,14 +61,15 @@ func TestAccIoTCertificate_Keys_certificate(t *testing.T) {
 }
 
 func TestAccIoTCertificate_Keys_existingCertificate(t *testing.T) {
-	key := acctest.TLSRSAPrivateKeyPEM(2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "testcert")
+	ctx := acctest.Context(t)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "testcert")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCertificateDestroy_basic,
+		CheckDestroy:             testAccCheckCertificateDestroy_basic(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificateConfig_existingCertificate(acctest.TLSPEMEscapeNewlines(certificate)),
@@ -82,38 +86,39 @@ func TestAccIoTCertificate_Keys_existingCertificate(t *testing.T) {
 	})
 }
 
-func testAccCheckCertificateDestroy_basic(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn
+func testAccCheckCertificateDestroy_basic(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_iot_certificate" {
-			continue
-		}
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_iot_certificate" {
+				continue
+			}
 
-		// Try to find the Cert
-		DescribeCertOpts := &iot.DescribeCertificateInput{
-			CertificateId: aws.String(rs.Primary.ID),
-		}
+			// Try to find the Cert
+			DescribeCertOpts := &iot.DescribeCertificateInput{
+				CertificateId: aws.String(rs.Primary.ID),
+			}
 
-		resp, err := conn.DescribeCertificate(DescribeCertOpts)
+			resp, err := conn.DescribeCertificateWithContext(ctx, DescribeCertOpts)
 
-		if err == nil {
-			if resp.CertificateDescription != nil {
-				return fmt.Errorf("Device Certificate still exists")
+			if err == nil {
+				if resp.CertificateDescription != nil {
+					return fmt.Errorf("Device Certificate still exists")
+				}
+			}
+
+			// Verify the error is what we want
+			if err != nil {
+				iotErr, ok := err.(awserr.Error)
+				if !ok || iotErr.Code() != "ResourceNotFoundException" {
+					return err
+				}
 			}
 		}
 
-		// Verify the error is what we want
-		if err != nil {
-			iotErr, ok := err.(awserr.Error)
-			if !ok || iotErr.Code() != "ResourceNotFoundException" {
-				return err
-			}
-		}
-
+		return nil
 	}
-
-	return nil
 }
 
 var testAccCertificateConfig_csr = `

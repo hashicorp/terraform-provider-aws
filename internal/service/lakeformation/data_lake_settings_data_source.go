@@ -1,21 +1,24 @@
 package lakeformation
 
 import (
+	"context"
 	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lakeformation"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
 func DataSourceDataLakeSettings() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceDataLakeSettingsRead,
+		ReadWithoutTimeout: dataSourceDataLakeSettingsRead,
 
 		Schema: map[string]*schema.Schema{
 			"admins": {
@@ -70,8 +73,9 @@ func DataSourceDataLakeSettings() *schema.Resource {
 	}
 }
 
-func dataSourceDataLakeSettingsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LakeFormationConn
+func dataSourceDataLakeSettingsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).LakeFormationConn()
 
 	input := &lakeformation.GetDataLakeSettingsInput{}
 
@@ -80,20 +84,20 @@ func dataSourceDataLakeSettingsRead(d *schema.ResourceData, meta interface{}) er
 	}
 	d.SetId(fmt.Sprintf("%d", create.StringHashcode(input.String())))
 
-	output, err := conn.GetDataLakeSettings(input)
+	output, err := conn.GetDataLakeSettingsWithContext(ctx, input)
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, lakeformation.ErrCodeEntityNotFoundException) {
 		log.Printf("[WARN] Lake Formation data lake settings (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Lake Formation data lake settings (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Lake Formation data lake settings (%s): %s", d.Id(), err)
 	}
 
 	if output == nil || output.DataLakeSettings == nil {
-		return fmt.Errorf("error reading Lake Formation data lake settings (%s): empty response", d.Id())
+		return sdkdiag.AppendErrorf(diags, "reading Lake Formation data lake settings (%s): empty response", d.Id())
 	}
 
 	settings := output.DataLakeSettings
@@ -103,5 +107,5 @@ func dataSourceDataLakeSettingsRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("admins", flattenDataLakeSettingsAdmins(settings.DataLakeAdmins))
 	d.Set("trusted_resource_owners", flex.FlattenStringList(settings.TrustedResourceOwners))
 
-	return nil
+	return diags
 }

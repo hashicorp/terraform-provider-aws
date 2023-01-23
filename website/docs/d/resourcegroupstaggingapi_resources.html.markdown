@@ -37,7 +37,6 @@ data "aws_resourcegroupstaggingapi_resources" "test" {
 }
 ```
 
-
 ## Argument Reference
 
 The following arguments are supported:

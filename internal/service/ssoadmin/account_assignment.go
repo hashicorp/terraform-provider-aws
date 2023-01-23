@@ -1,6 +1,7 @@
 package ssoadmin
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"regexp"
@@ -9,20 +10,22 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceAccountAssignment() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAccountAssignmentCreate,
-		Read:   resourceAccountAssignmentRead,
-		Delete: resourceAccountAssignmentDelete,
+		CreateWithoutTimeout: resourceAccountAssignmentCreate,
+		ReadWithoutTimeout:   resourceAccountAssignmentRead,
+		DeleteWithoutTimeout: resourceAccountAssignmentDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -74,8 +77,9 @@ func ResourceAccountAssignment() *schema.Resource {
 	}
 }
 
-func resourceAccountAssignmentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSOAdminConn
+func resourceAccountAssignmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SSOAdminConn()
 
 	instanceArn := d.Get("instance_arn").(string)
 	permissionSetArn := d.Get("permission_set_arn").(string)
@@ -86,13 +90,13 @@ func resourceAccountAssignmentCreate(d *schema.ResourceData, meta interface{}) e
 
 	// We need to check if the assignment exists before creating it
 	// since the AWS SSO API doesn't prevent us from creating duplicates
-	accountAssignment, err := FindAccountAssignment(conn, principalID, principalType, targetID, permissionSetArn, instanceArn)
+	accountAssignment, err := FindAccountAssignment(ctx, conn, principalID, principalType, targetID, permissionSetArn, instanceArn)
 	if err != nil {
-		return fmt.Errorf("error listing SSO Account Assignments for AccountId (%s) PermissionSet (%s): %w", targetID, permissionSetArn, err)
+		return sdkdiag.AppendErrorf(diags, "listing SSO Account Assignments for AccountId (%s) PermissionSet (%s): %s", targetID, permissionSetArn, err)
 	}
 
 	if accountAssignment != nil {
-		return fmt.Errorf("error creating SSO Account Assignment for %s (%s): already exists", principalType, principalID)
+		return sdkdiag.AppendErrorf(diags, "creating SSO Account Assignment for %s (%s): already exists", principalType, principalID)
 	}
 
 	input := &ssoadmin.CreateAccountAssignmentInput{
@@ -104,34 +108,34 @@ func resourceAccountAssignmentCreate(d *schema.ResourceData, meta interface{}) e
 		TargetType:       aws.String(targetType),
 	}
 
-	output, err := conn.CreateAccountAssignment(input)
+	output, err := conn.CreateAccountAssignmentWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("error creating SSO Account Assignment for %s (%s): %w", principalType, principalID, err)
+		return sdkdiag.AppendErrorf(diags, "creating SSO Account Assignment for %s (%s): %s", principalType, principalID, err)
 	}
 
 	if output == nil || output.AccountAssignmentCreationStatus == nil {
-		return fmt.Errorf("error creating SSO Account Assignment for %s (%s): empty output", principalType, principalID)
-
+		return sdkdiag.AppendErrorf(diags, "creating SSO Account Assignment for %s (%s): empty output", principalType, principalID)
 	}
 
 	status := output.AccountAssignmentCreationStatus
 
-	_, err = waitAccountAssignmentCreated(conn, instanceArn, aws.StringValue(status.RequestId))
+	_, err = waitAccountAssignmentCreated(ctx, conn, instanceArn, aws.StringValue(status.RequestId))
 	if err != nil {
-		return fmt.Errorf("error waiting for SSO Account Assignment for %s (%s) to be created: %w", principalType, principalID, err)
+		return sdkdiag.AppendErrorf(diags, "waiting for SSO Account Assignment for %s (%s) to be created: %s", principalType, principalID, err)
 	}
 
 	d.SetId(fmt.Sprintf("%s,%s,%s,%s,%s,%s", principalID, principalType, targetID, targetType, permissionSetArn, instanceArn))
 
-	return resourceAccountAssignmentRead(d, meta)
+	return append(diags, resourceAccountAssignmentRead(ctx, d, meta)...)
 }
 
-func resourceAccountAssignmentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSOAdminConn
+func resourceAccountAssignmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SSOAdminConn()
 
 	idParts, err := ParseAccountAssignmentID(d.Id())
 	if err != nil {
-		return fmt.Errorf("error parsing SSO Account Assignment ID: %w", err)
+		return sdkdiag.AppendErrorf(diags, "parsing SSO Account Assignment ID: %s", err)
 	}
 
 	principalID := idParts[0]
@@ -141,26 +145,26 @@ func resourceAccountAssignmentRead(d *schema.ResourceData, meta interface{}) err
 	permissionSetArn := idParts[4]
 	instanceArn := idParts[5]
 
-	accountAssignment, err := FindAccountAssignment(conn, principalID, principalType, targetID, permissionSetArn, instanceArn)
+	accountAssignment, err := FindAccountAssignment(ctx, conn, principalID, principalType, targetID, permissionSetArn, instanceArn)
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ssoadmin.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] SSO Account Assignment for Principal (%s) not found, removing from state", principalID)
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading SSO Account Assignment for Principal (%s): %w", principalID, err)
+		return sdkdiag.AppendErrorf(diags, "reading SSO Account Assignment for Principal (%s): %s", principalID, err)
 	}
 
 	if accountAssignment == nil {
 		if d.IsNewResource() {
-			return fmt.Errorf("error reading SSO Account Assignment for Principal (%s): not found", principalID)
+			return sdkdiag.AppendErrorf(diags, "reading SSO Account Assignment for Principal (%s): not found", principalID)
 		}
 
 		log.Printf("[WARN] SSO Account Assignment for Principal (%s) not found, removing from state", principalID)
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	d.Set("instance_arn", instanceArn)
@@ -170,15 +174,16 @@ func resourceAccountAssignmentRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("target_id", accountAssignment.AccountId)
 	d.Set("target_type", targetType)
 
-	return nil
+	return diags
 }
 
-func resourceAccountAssignmentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSOAdminConn
+func resourceAccountAssignmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SSOAdminConn()
 
 	idParts, err := ParseAccountAssignmentID(d.Id())
 	if err != nil {
-		return fmt.Errorf("error parsing SSO Account Assignment ID: %w", err)
+		return sdkdiag.AppendErrorf(diags, "parsing SSO Account Assignment ID: %s", err)
 	}
 
 	principalID := idParts[0]
@@ -197,26 +202,26 @@ func resourceAccountAssignmentDelete(d *schema.ResourceData, meta interface{}) e
 		PrincipalType:    aws.String(principalType),
 	}
 
-	output, err := conn.DeleteAccountAssignment(input)
+	output, err := conn.DeleteAccountAssignmentWithContext(ctx, input)
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, ssoadmin.ErrCodeResourceNotFoundException) {
-			return nil
+			return diags
 		}
-		return fmt.Errorf("error deleting SSO Account Assignment for Principal (%s): %w", principalID, err)
+		return sdkdiag.AppendErrorf(diags, "deleting SSO Account Assignment for Principal (%s): %s", principalID, err)
 	}
 
 	if output == nil || output.AccountAssignmentDeletionStatus == nil {
-		return fmt.Errorf("error deleting SSO Account Assignment for Principal (%s): empty output", principalID)
+		return sdkdiag.AppendErrorf(diags, "deleting SSO Account Assignment for Principal (%s): empty output", principalID)
 	}
 
 	status := output.AccountAssignmentDeletionStatus
 
-	_, err = waitAccountAssignmentDeleted(conn, instanceArn, aws.StringValue(status.RequestId))
+	_, err = waitAccountAssignmentDeleted(ctx, conn, instanceArn, aws.StringValue(status.RequestId))
 	if err != nil {
-		return fmt.Errorf("error waiting for SSO Account Assignment for Principal (%s) to be deleted: %w", principalID, err)
+		return sdkdiag.AppendErrorf(diags, "waiting for SSO Account Assignment for Principal (%s) to be deleted: %s", principalID, err)
 	}
 
-	return nil
+	return diags
 }
 
 func ParseAccountAssignmentID(id string) ([]string, error) {

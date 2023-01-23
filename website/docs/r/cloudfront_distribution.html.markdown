@@ -44,12 +44,9 @@ locals {
 
 resource "aws_cloudfront_distribution" "s3_distribution" {
   origin {
-    domain_name = aws_s3_bucket.b.bucket_regional_domain_name
-    origin_id   = local.s3_origin_id
-
-    s3_origin_config {
-      origin_access_identity = "origin-access-identity/cloudfront/ABCDEFG1234567"
-    }
+    domain_name              = aws_s3_bucket.b.bucket_regional_domain_name
+    origin_access_control_id = aws_cloudfront_origin_access_control.default.id
+    origin_id                = local.s3_origin_id
   }
 
   enabled             = true
@@ -252,7 +249,7 @@ of several sub-resources - these resources are laid out below.
     one).
 
 * `web_acl_id` (Optional) - A unique identifier that specifies the AWS WAF web ACL,
-    if any, to associate with this distribution.  
+    if any, to associate with this distribution.
     To specify a web ACL created using the latest version of AWS WAF (WAFv2), use the ACL ARN,
     for example `aws_wafv2_web_acl.example.arn`. To specify a web
     ACL created using AWS WAF Classic, use the ACL ID, for example `aws_waf_web_acl.example.id`.
@@ -315,7 +312,7 @@ of several sub-resources - these resources are laid out below.
 
 * `realtime_log_config_arn` (Optional) - The ARN of the [real-time log configuration](cloudfront_realtime_log_config.html)
     that is attached to this cache behavior.
-  
+
 * `response_headers_policy_id` (Optional) - The identifier for a response headers policy.
 
 * `smooth_streaming` (Optional) - Indicates whether you want to distribute
@@ -464,7 +461,7 @@ argument should not be specified.
 
 * `custom_origin_config` - The [CloudFront custom
     origin](#custom-origin-config-arguments) configuration information. If an S3
-    origin is required, use `s3_origin_config` instead.
+    origin is required, use `origin_access_control_id` or `s3_origin_config` instead.
 
 * `domain_name` (Required) - The DNS domain name of either the S3 bucket, or
     web site of your custom origin.
@@ -473,7 +470,7 @@ argument should not be specified.
     `value` parameters that specify header data that will be sent to the origin
     (multiples allowed).
 
-* `origin_access_control_id` (Optional) - The unique identifier of an origin access control for this origin.
+* `origin_access_control_id` (Optional) - The unique identifier of a [CloudFront origin access control][8] for this origin.
 
 * `origin_id` (Required) - A unique identifier for the origin.
 
@@ -513,8 +510,7 @@ argument should not be specified.
 
 ##### S3 Origin Config Arguments
 
-* `origin_access_identity` (Optional) - The [CloudFront origin access
-  identity][5] to associate with the origin.
+* `origin_access_identity` (Required) - The [CloudFront origin access identity][5] to associate with the origin.
 
 #### Origin Group Arguments
 
@@ -539,9 +535,9 @@ The `restrictions` sub-resource takes another single sub-resource named
 
 The arguments of `geo_restriction` are:
 
-* `locations` (Optional) - The [ISO 3166-1-alpha-2 codes][4] for which you
+* `locations` (Required) - The [ISO 3166-1-alpha-2 codes][4] for which you
     want CloudFront either to distribute your content (`whitelist`) or not
-    distribute your content (`blacklist`).
+    distribute your content (`blacklist`). If the type is specified as `none` an empty array can be used.
 
 * `restriction_type` (Required) - The method that you want to use to restrict
     distribution of your content by country: `none`, `whitelist`, or
@@ -631,6 +627,7 @@ In addition to all arguments above, the following attributes are exported:
 [5]: /docs/providers/aws/r/cloudfront_origin_access_identity.html
 [6]: https://aws.amazon.com/certificate-manager/
 [7]: http://docs.aws.amazon.com/Route53/latest/APIReference/CreateAliasRRSAPI.html
+[8]: /docs/providers/aws/r/cloudfront_origin_access_control.html
 
 ## Import
 

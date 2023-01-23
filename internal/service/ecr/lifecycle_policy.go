@@ -2,8 +2,8 @@ package ecr
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
-	"fmt"
 	"log"
 	"sort"
 	"strings"
@@ -12,22 +12,24 @@ import (
 	"github.com/aws/aws-sdk-go/private/protocol/json/jsonutil"
 	"github.com/aws/aws-sdk-go/service/ecr"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourceLifecyclePolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceLifecyclePolicyCreate,
-		Read:   resourceLifecyclePolicyRead,
-		Delete: resourceLifecyclePolicyDelete,
+		CreateWithoutTimeout: resourceLifecyclePolicyCreate,
+		ReadWithoutTimeout:   resourceLifecyclePolicyRead,
+		DeleteWithoutTimeout: resourceLifecyclePolicyDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -59,13 +61,14 @@ func ResourceLifecyclePolicy() *schema.Resource {
 	}
 }
 
-func resourceLifecyclePolicyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECRConn
+func resourceLifecyclePolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ECRConn()
 
 	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
 
 	if err != nil {
-		return fmt.Errorf("policy (%s) is invalid JSON: %w", policy, err)
+		return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", policy, err)
 	}
 
 	input := &ecr.PutLifecyclePolicyInput{
@@ -73,17 +76,18 @@ func resourceLifecyclePolicyCreate(d *schema.ResourceData, meta interface{}) err
 		LifecyclePolicyText: aws.String(policy),
 	}
 
-	resp, err := conn.PutLifecyclePolicy(input)
+	resp, err := conn.PutLifecyclePolicyWithContext(ctx, input)
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "creating ECR Lifecycle Policy (%s): %s", d.Get("repository").(string), err)
 	}
 	d.SetId(aws.StringValue(resp.RepositoryName))
 	d.Set("registry_id", resp.RegistryId)
-	return resourceLifecyclePolicyRead(d, meta)
+	return append(diags, resourceLifecyclePolicyRead(ctx, d, meta)...)
 }
 
-func resourceLifecyclePolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECRConn
+func resourceLifecyclePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ECRConn()
 
 	input := &ecr.GetLifecyclePolicyInput{
 		RepositoryName: aws.String(d.Id()),
@@ -91,10 +95,10 @@ func resourceLifecyclePolicyRead(d *schema.ResourceData, meta interface{}) error
 
 	var resp *ecr.GetLifecyclePolicyOutput
 
-	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
+	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
 		var err error
 
-		resp, err = conn.GetLifecyclePolicy(input)
+		resp, err = conn.GetLifecyclePolicyWithContext(ctx, input)
 
 		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, ecr.ErrCodeLifecyclePolicyNotFoundException) {
 			return resource.RetryableError(err)
@@ -112,27 +116,27 @@ func resourceLifecyclePolicyRead(d *schema.ResourceData, meta interface{}) error
 	})
 
 	if tfresource.TimedOut(err) {
-		resp, err = conn.GetLifecyclePolicy(input)
+		resp, err = conn.GetLifecyclePolicyWithContext(ctx, input)
 	}
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ecr.ErrCodeLifecyclePolicyNotFoundException) {
 		log.Printf("[WARN] ECR Lifecycle Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ecr.ErrCodeRepositoryNotFoundException) {
 		log.Printf("[WARN] ECR Lifecycle Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading ECR Lifecycle Policy (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading ECR Lifecycle Policy (%s): %s", d.Id(), err)
 	}
 
 	if resp == nil {
-		return fmt.Errorf("error reading ECR Lifecycle Policy (%s): empty response", d.Id())
+		return sdkdiag.AppendErrorf(diags, "reading ECR Lifecycle Policy (%s): empty response", d.Id())
 	}
 
 	d.Set("repository", resp.RepositoryName)
@@ -141,41 +145,42 @@ func resourceLifecyclePolicyRead(d *schema.ResourceData, meta interface{}) error
 	equivalent, err := equivalentLifecyclePolicyJSON(d.Get("policy").(string), aws.StringValue(resp.LifecyclePolicyText))
 
 	if err != nil {
-		return fmt.Errorf("while comparing policy (state: %s) (from AWS: %s), encountered: %w", d.Get("policy").(string), aws.StringValue(resp.LifecyclePolicyText), err)
+		return sdkdiag.AppendErrorf(diags, "while comparing policy (state: %s) (from AWS: %s), encountered: %s", d.Get("policy").(string), aws.StringValue(resp.LifecyclePolicyText), err)
 	}
 
 	if !equivalent {
 		policyToSet, err := structure.NormalizeJsonString(aws.StringValue(resp.LifecyclePolicyText))
 
 		if err != nil {
-			return fmt.Errorf("policy (%s) is invalid JSON: %w", policyToSet, err)
+			return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", policyToSet, err)
 		}
 
 		d.Set("policy", policyToSet)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceLifecyclePolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECRConn
+func resourceLifecyclePolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ECRConn()
 
 	input := &ecr.DeleteLifecyclePolicyInput{
 		RepositoryName: aws.String(d.Id()),
 	}
 
-	_, err := conn.DeleteLifecyclePolicy(input)
+	_, err := conn.DeleteLifecyclePolicyWithContext(ctx, input)
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, ecr.ErrCodeRepositoryNotFoundException) {
-			return nil
+			return diags
 		}
 		if tfawserr.ErrCodeEquals(err, ecr.ErrCodeLifecyclePolicyNotFoundException) {
-			return nil
+			return diags
 		}
-		return err
+		return sdkdiag.AppendErrorf(diags, "deleting ECR Lifecycle Policy (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 type lifecyclePolicyRuleSelection struct {

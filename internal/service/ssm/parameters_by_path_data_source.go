@@ -1,17 +1,19 @@
 package ssm
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func DataSourceParametersByPath() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceParametersReadByPath,
+		ReadWithoutTimeout: dataSourceParametersReadByPath,
 
 		Schema: map[string]*schema.Schema{
 			"arns": {
@@ -53,8 +55,9 @@ func DataSourceParametersByPath() *schema.Resource {
 	}
 }
 
-func dataSourceParametersReadByPath(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+func dataSourceParametersReadByPath(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SSMConn()
 
 	path := d.Get("path").(string)
 	input := &ssm.GetParametersByPathInput{
@@ -68,7 +71,7 @@ func dataSourceParametersReadByPath(d *schema.ResourceData, meta interface{}) er
 	types := make([]string, 0)
 	values := make([]string, 0)
 
-	err := conn.GetParametersByPathPages(input, func(page *ssm.GetParametersByPathOutput, lastPage bool) bool {
+	err := conn.GetParametersByPathPagesWithContext(ctx, input, func(page *ssm.GetParametersByPathOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -84,7 +87,7 @@ func dataSourceParametersReadByPath(d *schema.ResourceData, meta interface{}) er
 	})
 
 	if err != nil {
-		return fmt.Errorf("error getting SSM parameters by path (%s): %w", path, err)
+		return sdkdiag.AppendErrorf(diags, "getting SSM parameters by path (%s): %s", path, err)
 	}
 
 	d.SetId(path)
@@ -93,5 +96,5 @@ func dataSourceParametersReadByPath(d *schema.ResourceData, meta interface{}) er
 	d.Set("types", types)
 	d.Set("values", values)
 
-	return nil
+	return diags
 }

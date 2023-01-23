@@ -1,121 +1,163 @@
 package meta
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/slices"
 )
 
-func DataSourceService() *schema.Resource {
-	return &schema.Resource{
-		Read: dataSourceServiceRead,
+func init() {
+	_sp.registerFrameworkDataSourceFactory(newDataSourceService)
+}
 
-		Schema: map[string]*schema.Schema{
-			"dns_name": {
-				Type:         schema.TypeString,
-				Computed:     true,
-				Optional:     true,
-				ExactlyOneOf: []string{"dns_name", "reverse_dns_name", "service_id"},
-			},
-			"partition": {
-				Type:     schema.TypeString,
+// newDataSourceService instantiates a new DataSource for the aws_service data source.
+func newDataSourceService(context.Context) (datasource.DataSourceWithConfigure, error) {
+	d := &dataSourceService{}
+	d.SetMigratedFromPluginSDK(true)
+
+	return d, nil
+}
+
+type dataSourceService struct {
+	framework.DataSourceWithConfigure
+}
+
+// Metadata should return the full name of the data source, such as
+// examplecloud_thing.
+func (d *dataSourceService) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
+	response.TypeName = "aws_service"
+}
+
+// Schema returns the schema for this data source.
+func (d *dataSourceService) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"dns_name": schema.StringAttribute{
+				Optional: true,
 				Computed: true,
 			},
-			"region": {
-				Type:          schema.TypeString,
-				Computed:      true,
-				Optional:      true,
-				ConflictsWith: []string{"dns_name", "reverse_dns_name"},
+			"id": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
 			},
-			"reverse_dns_name": {
-				Type:         schema.TypeString,
-				Computed:     true,
-				Optional:     true,
-				ExactlyOneOf: []string{"dns_name", "reverse_dns_name", "service_id"},
+			"partition": schema.StringAttribute{
+				Computed: true,
 			},
-			"reverse_dns_prefix": {
-				Type:          schema.TypeString,
-				Computed:      true,
-				Optional:      true,
-				ConflictsWith: []string{"dns_name", "reverse_dns_name"},
+			"region": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
 			},
-			"service_id": {
-				Type:         schema.TypeString,
-				Computed:     true,
-				Optional:     true,
-				ExactlyOneOf: []string{"dns_name", "reverse_dns_name", "service_id"},
+			"reverse_dns_name": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
 			},
-			"supported": {
-				Type:     schema.TypeBool,
+			"reverse_dns_prefix": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+			},
+			"service_id": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+			},
+			"supported": schema.BoolAttribute{
 				Computed: true,
 			},
 		},
 	}
 }
 
-func dataSourceServiceRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*conns.AWSClient)
+// Read is called when the provider must read data source values in order to update state.
+// Config values should be read from the ReadRequest and new state values set on the ReadResponse.
+func (d *dataSourceService) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
+	var data dataSourceServiceData
 
-	if v, ok := d.GetOk("reverse_dns_name"); ok {
-		serviceParts := strings.Split(v.(string), ".")
-		if len(serviceParts) < 4 {
-			return fmt.Errorf("reverse service DNS names must have at least 4 parts (%s has %d)", v.(string), len(serviceParts))
+	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
+
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	if !data.ReverseDNSName.IsNull() {
+		v := data.ReverseDNSName.ValueString()
+		serviceParts := strings.Split(v, ".")
+		n := len(serviceParts)
+
+		if n < 4 {
+			response.Diagnostics.AddError("reverse service DNS names must have at least 4 parts", fmt.Sprintf("%s has %d", v, n))
+
+			return
 		}
 
-		d.Set("service_id", serviceParts[len(serviceParts)-1])
-		d.Set("region", serviceParts[len(serviceParts)-2])
-		d.Set("reverse_dns_prefix", strings.Join(serviceParts[0:len(serviceParts)-2], "."))
+		data.Region = types.StringValue(serviceParts[n-2])
+		data.ReverseDNSPrefix = types.StringValue(strings.Join(serviceParts[0:n-2], "."))
+		data.ServiceID = types.StringValue(serviceParts[n-1])
 	}
 
-	if v, ok := d.GetOk("dns_name"); ok {
-		serviceParts := InvertStringSlice(strings.Split(v.(string), "."))
-		if len(serviceParts) < 4 {
-			return fmt.Errorf("service DNS names must have at least 4 parts (%s has %d)", v.(string), len(serviceParts))
+	if !data.DNSName.IsNull() {
+		v := data.DNSName.ValueString()
+		serviceParts := slices.Reverse(strings.Split(v, "."))
+		n := len(serviceParts)
+
+		if n < 4 {
+			response.Diagnostics.AddError("service DNS names must have at least 4 parts", fmt.Sprintf("%s has %d", v, n))
+
+			return
 		}
 
-		d.Set("service_id", serviceParts[len(serviceParts)-1])
-		d.Set("region", serviceParts[len(serviceParts)-2])
-		d.Set("reverse_dns_prefix", strings.Join(serviceParts[0:len(serviceParts)-2], "."))
+		data.Region = types.StringValue(serviceParts[n-2])
+		data.ReverseDNSPrefix = types.StringValue(strings.Join(serviceParts[0:n-2], "."))
+		data.ServiceID = types.StringValue(serviceParts[n-1])
 	}
 
-	if _, ok := d.GetOk("region"); !ok {
-		d.Set("region", client.Region)
+	if data.Region.IsNull() {
+		data.Region = types.StringValue(d.Meta().Region)
 	}
 
-	if _, ok := d.GetOk("service_id"); !ok {
-		return fmt.Errorf("service ID not provided directly or through a DNS name")
+	if data.ServiceID.IsNull() {
+		response.Diagnostics.AddError("service ID not provided directly or through a DNS name", "")
+
+		return
 	}
 
-	if _, ok := d.GetOk("reverse_dns_prefix"); !ok {
-		dnsParts := strings.Split(meta.(*conns.AWSClient).DNSSuffix, ".")
-		d.Set("reverse_dns_prefix", strings.Join(InvertStringSlice(dnsParts), "."))
+	if data.ReverseDNSPrefix.IsNull() {
+		dnsParts := strings.Split(d.Meta().DNSSuffix, ".")
+		data.ReverseDNSPrefix = types.StringValue(strings.Join(slices.Reverse(dnsParts), "."))
 	}
 
-	reverseDNS := fmt.Sprintf("%s.%s.%s", d.Get("reverse_dns_prefix").(string), d.Get("region").(string), d.Get("service_id").(string))
-	d.Set("reverse_dns_name", reverseDNS)
-	d.Set("dns_name", strings.ToLower(strings.Join(InvertStringSlice(strings.Split(reverseDNS, ".")), ".")))
+	reverseDNSName := fmt.Sprintf("%s.%s.%s", data.ReverseDNSPrefix.ValueString(), data.Region.ValueString(), data.ServiceID.ValueString())
+	data.ReverseDNSName = types.StringValue(reverseDNSName)
+	data.DNSName = types.StringValue(strings.ToLower(strings.Join(slices.Reverse(strings.Split(reverseDNSName, ".")), ".")))
 
-	d.Set("supported", true)
-	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), d.Get("region").(string)); ok {
-		d.Set("partition", partition.ID())
-		if _, ok := partition.Services()[d.Get("service_id").(string)]; !ok {
-			d.Set("supported", false)
+	data.Supported = types.BoolValue(true)
+	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), data.Region.ValueString()); ok {
+		data.Partition = types.StringValue(partition.ID())
+
+		if _, ok := partition.Services()[data.ServiceID.ValueString()]; !ok {
+			data.Supported = types.BoolValue(false)
 		}
+	} else {
+		data.Partition = types.StringNull()
 	}
 
-	d.SetId(reverseDNS)
+	data.ID = types.StringValue(reverseDNSName)
 
-	return nil
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-// invertStringSlice returns inverted string slice without sorting slice like sort.Reverse()
-func InvertStringSlice(slice []string) []string {
-	inverse := make([]string, 0)
-	for i := 0; i < len(slice); i++ {
-		inverse = append(inverse, slice[len(slice)-i-1])
-	}
-	return inverse
+type dataSourceServiceData struct {
+	DNSName          types.String `tfsdk:"dns_name"`
+	ID               types.String `tfsdk:"id"`
+	Partition        types.String `tfsdk:"partition"`
+	Region           types.String `tfsdk:"region"`
+	ReverseDNSName   types.String `tfsdk:"reverse_dns_name"`
+	ReverseDNSPrefix types.String `tfsdk:"reverse_dns_prefix"`
+	ServiceID        types.String `tfsdk:"service_id"`
+	Supported        types.Bool   `tfsdk:"supported"`
 }

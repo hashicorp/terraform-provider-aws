@@ -1,14 +1,16 @@
 package securityhub
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/securityhub"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
@@ -20,10 +22,10 @@ const (
 
 func ResourceFindingAggregator() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceFindingAggregatorCreate,
-		Read:   resourceFindingAggregatorRead,
-		Update: resourceFindingAggregatorUpdate,
-		Delete: resourceFindingAggregatorDelete,
+		CreateWithoutTimeout: resourceFindingAggregatorCreate,
+		ReadWithoutTimeout:   resourceFindingAggregatorRead,
+		UpdateWithoutTimeout: resourceFindingAggregatorUpdate,
+		DeleteWithoutTimeout: resourceFindingAggregatorDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -50,8 +52,9 @@ func ResourceFindingAggregator() *schema.Resource {
 	}
 }
 
-func resourceFindingAggregatorCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecurityHubConn
+func resourceFindingAggregatorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SecurityHubConn()
 
 	linkingMode := d.Get("linking_mode").(string)
 
@@ -65,34 +68,35 @@ func resourceFindingAggregatorCreate(d *schema.ResourceData, meta interface{}) e
 
 	log.Printf("[DEBUG] Creating Security Hub finding aggregator")
 
-	resp, err := conn.CreateFindingAggregator(req)
+	resp, err := conn.CreateFindingAggregatorWithContext(ctx, req)
 
 	if err != nil {
-		return fmt.Errorf("Error creating finding aggregator for Security Hub: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating finding aggregator for Security Hub: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resp.FindingAggregatorArn))
 
-	return resourceFindingAggregatorRead(d, meta)
+	return append(diags, resourceFindingAggregatorRead(ctx, d, meta)...)
 }
 
-func resourceFindingAggregatorRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecurityHubConn
+func resourceFindingAggregatorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SecurityHubConn()
 
 	aggregatorArn := d.Id()
 
 	log.Printf("[DEBUG] Reading Security Hub finding aggregator to find %s", aggregatorArn)
 
-	aggregator, err := FindingAggregatorCheckExists(conn, aggregatorArn)
+	aggregator, err := FindingAggregatorCheckExists(ctx, conn, aggregatorArn)
 
 	if err != nil {
-		return fmt.Errorf("Error reading Security Hub finding aggregator to find %s: %s", aggregatorArn, err)
+		return sdkdiag.AppendErrorf(diags, "reading Security Hub finding aggregator to find %s: %s", aggregatorArn, err)
 	}
 
 	if aggregator == nil {
 		log.Printf("[WARN] Security Hub finding aggregator (%s) not found, removing from state", aggregatorArn)
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	d.Set("linking_mode", aggregator.RegionLinkingMode)
@@ -101,22 +105,22 @@ func resourceFindingAggregatorRead(d *schema.ResourceData, meta interface{}) err
 		d.Set("specified_regions", flex.FlattenStringList(aggregator.Regions))
 	}
 
-	return nil
+	return diags
 }
 
-func FindingAggregatorCheckExists(conn *securityhub.SecurityHub, findingAggregatorArn string) (*securityhub.GetFindingAggregatorOutput, error) {
+func FindingAggregatorCheckExists(ctx context.Context, conn *securityhub.SecurityHub, findingAggregatorArn string) (*securityhub.GetFindingAggregatorOutput, error) {
 	input := &securityhub.ListFindingAggregatorsInput{}
 
 	var found *securityhub.GetFindingAggregatorOutput
 	var err error = nil
 
-	err = conn.ListFindingAggregatorsPages(input, func(page *securityhub.ListFindingAggregatorsOutput, lastPage bool) bool {
+	err = conn.ListFindingAggregatorsPagesWithContext(ctx, input, func(page *securityhub.ListFindingAggregatorsOutput, lastPage bool) bool {
 		for _, aggregator := range page.FindingAggregators {
 			if aws.StringValue(aggregator.FindingAggregatorArn) == findingAggregatorArn {
 				getInput := &securityhub.GetFindingAggregatorInput{
 					FindingAggregatorArn: &findingAggregatorArn,
 				}
-				found, err = conn.GetFindingAggregator(getInput)
+				found, err = conn.GetFindingAggregatorWithContext(ctx, getInput)
 				return false
 			}
 		}
@@ -130,8 +134,9 @@ func FindingAggregatorCheckExists(conn *securityhub.SecurityHub, findingAggregat
 	return found, nil
 }
 
-func resourceFindingAggregatorUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecurityHubConn
+func resourceFindingAggregatorUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SecurityHubConn()
 
 	aggregatorArn := d.Id()
 
@@ -146,31 +151,32 @@ func resourceFindingAggregatorUpdate(d *schema.ResourceData, meta interface{}) e
 		req.Regions = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	resp, err := conn.UpdateFindingAggregator(req)
+	resp, err := conn.UpdateFindingAggregatorWithContext(ctx, req)
 
 	if err != nil {
-		return fmt.Errorf("Error updating Security Hub finding aggregator (%s): %w", aggregatorArn, err)
+		return sdkdiag.AppendErrorf(diags, "updating Security Hub finding aggregator (%s): %s", aggregatorArn, err)
 	}
 
 	d.SetId(aws.StringValue(resp.FindingAggregatorArn))
 
-	return resourceFindingAggregatorRead(d, meta)
+	return append(diags, resourceFindingAggregatorRead(ctx, d, meta)...)
 }
 
-func resourceFindingAggregatorDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecurityHubConn
+func resourceFindingAggregatorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SecurityHubConn()
 
 	aggregatorArn := d.Id()
 
 	log.Printf("[DEBUG] Disabling Security Hub finding aggregator %s", aggregatorArn)
 
-	_, err := conn.DeleteFindingAggregator(&securityhub.DeleteFindingAggregatorInput{
+	_, err := conn.DeleteFindingAggregatorWithContext(ctx, &securityhub.DeleteFindingAggregatorInput{
 		FindingAggregatorArn: &aggregatorArn,
 	})
 
 	if err != nil {
-		return fmt.Errorf("Error disabling Security Hub finding aggregator %s: %s", aggregatorArn, err)
+		return sdkdiag.AppendErrorf(diags, "disabling Security Hub finding aggregator %s: %s", aggregatorArn, err)
 	}
 
-	return nil
+	return diags
 }

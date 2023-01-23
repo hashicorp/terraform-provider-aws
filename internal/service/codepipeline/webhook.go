@@ -1,16 +1,19 @@
 package codepipeline
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codepipeline"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -19,12 +22,12 @@ import (
 
 func ResourceWebhook() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceWebhookCreate,
-		Read:   resourceWebhookRead,
-		Update: resourceWebhookUpdate,
-		Delete: resourceWebhookDelete,
+		CreateWithoutTimeout: resourceWebhookCreate,
+		ReadWithoutTimeout:   resourceWebhookRead,
+		UpdateWithoutTimeout: resourceWebhookUpdate,
+		DeleteWithoutTimeout: resourceWebhookDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -114,8 +117,9 @@ func ResourceWebhook() *schema.Resource {
 	}
 }
 
-func resourceWebhookCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodePipelineConn
+func resourceWebhookCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CodePipelineConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 	authType := d.Get("authentication").(string)
@@ -137,39 +141,40 @@ func resourceWebhookCreate(d *schema.ResourceData, meta interface{}) error {
 		Tags: Tags(tags.IgnoreAWS()),
 	}
 
-	webhook, err := conn.PutWebhook(request)
+	webhook, err := conn.PutWebhookWithContext(ctx, request)
 	if err != nil {
-		return fmt.Errorf("Error creating webhook: %w", err)
+		return sdkdiag.AppendErrorf(diags, "Error creating webhook: %s", err)
 	}
 
 	d.SetId(aws.StringValue(webhook.Webhook.Arn))
 
-	return resourceWebhookRead(d, meta)
+	return append(diags, resourceWebhookRead(ctx, d, meta)...)
 }
 
-func resourceWebhookRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodePipelineConn
+func resourceWebhookRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CodePipelineConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	arn := d.Id()
-	webhook, err := GetWebhook(conn, arn)
+	webhook, err := GetWebhook(ctx, conn, arn)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		create.LogNotFoundRemoveState(names.CodePipeline, create.ErrActionReading, ResNameWebhook, d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.Error(names.CodePipeline, create.ErrActionReading, ResNameWebhook, d.Id(), err)
+		return create.DiagError(names.CodePipeline, create.ErrActionReading, ResNameWebhook, d.Id(), err)
 	}
 
 	webhookDef := webhook.Definition
 
 	name := aws.StringValue(webhookDef.Name)
 	if name == "" {
-		return fmt.Errorf("Webhook not found: %s", arn)
+		return sdkdiag.AppendErrorf(diags, "Webhook not found: %s", arn)
 	}
 
 	d.Set("name", name)
@@ -180,29 +185,30 @@ func resourceWebhookRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", webhook.Arn)
 
 	if err := d.Set("authentication_configuration", flattenWebhookAuthenticationConfiguration(webhookDef.AuthenticationConfiguration)); err != nil {
-		return fmt.Errorf("error setting authentication_configuration: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting authentication_configuration: %s", err)
 	}
 
 	if err := d.Set("filter", flattenWebhookFilters(webhookDef.Filters)); err != nil {
-		return fmt.Errorf("error setting filter: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting filter: %s", err)
 	}
 
 	tags := KeyValueTags(webhook.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceWebhookUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodePipelineConn
+func resourceWebhookUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CodePipelineConn()
 
 	if d.HasChangesExcept("tags_all", "tags", "register_with_third_party") {
 		authType := d.Get("authentication").(string)
@@ -223,40 +229,41 @@ func resourceWebhookUpdate(d *schema.ResourceData, meta interface{}) error {
 			},
 		}
 
-		_, err := conn.PutWebhook(request)
+		_, err := conn.PutWebhookWithContext(ctx, request)
 		if err != nil {
-			return fmt.Errorf("Error updating webhook: %w", err)
+			return sdkdiag.AppendErrorf(diags, "Error updating webhook: %s", err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating CodePipeline Webhook (%s) tags: %w", d.Id(), err)
+		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating CodePipeline Webhook (%s) tags: %s", d.Id(), err)
 		}
 	}
 
-	return resourceWebhookRead(d, meta)
+	return append(diags, resourceWebhookRead(ctx, d, meta)...)
 }
 
-func resourceWebhookDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodePipelineConn
+func resourceWebhookDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CodePipelineConn()
 	name := d.Get("name").(string)
 
 	input := codepipeline.DeleteWebhookInput{
 		Name: &name,
 	}
-	_, err := conn.DeleteWebhook(&input)
+	_, err := conn.DeleteWebhookWithContext(ctx, &input)
 
 	if err != nil {
-		return fmt.Errorf("Could not delete webhook: %w", err)
+		return sdkdiag.AppendErrorf(diags, "Could not delete webhook: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func GetWebhook(conn *codepipeline.CodePipeline, arn string) (*codepipeline.ListWebhookItem, error) {
+func GetWebhook(ctx context.Context, conn *codepipeline.CodePipeline, arn string) (*codepipeline.ListWebhookItem, error) {
 	var nextToken string
 
 	for {
@@ -267,7 +274,7 @@ func GetWebhook(conn *codepipeline.CodePipeline, arn string) (*codepipeline.List
 			input.NextToken = aws.String(nextToken)
 		}
 
-		out, err := conn.ListWebhooks(input)
+		out, err := conn.ListWebhooksWithContext(ctx, input)
 		if err != nil {
 			return nil, err
 		}

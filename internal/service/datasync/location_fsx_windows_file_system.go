@@ -1,6 +1,7 @@
 package datasync
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -9,9 +10,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/datasync"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -19,12 +22,12 @@ import (
 
 func ResourceLocationFSxWindowsFileSystem() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceLocationFSxWindowsFileSystemCreate,
-		Read:   resourceLocationFSxWindowsFileSystemRead,
-		Update: resourceLocationFSxWindowsFileSystemUpdate,
-		Delete: resourceLocationFSxWindowsFileSystemDelete,
+		CreateWithoutTimeout: resourceLocationFSxWindowsFileSystemCreate,
+		ReadWithoutTimeout:   resourceLocationFSxWindowsFileSystemRead,
+		UpdateWithoutTimeout: resourceLocationFSxWindowsFileSystemUpdate,
+		DeleteWithoutTimeout: resourceLocationFSxWindowsFileSystemDelete,
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "#")
 				if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
 					return nil, fmt.Errorf("Unexpected format of ID (%q), expected DataSyncLocationArn#FsxArn", d.Id())
@@ -104,8 +107,9 @@ func ResourceLocationFSxWindowsFileSystem() *schema.Resource {
 	}
 }
 
-func resourceLocationFSxWindowsFileSystemCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataSyncConn
+func resourceLocationFSxWindowsFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DataSyncConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 	fsxArn := d.Get("fsx_filesystem_arn").(string)
@@ -126,19 +130,19 @@ func resourceLocationFSxWindowsFileSystemCreate(d *schema.ResourceData, meta int
 		input.Domain = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating DataSync Location Fsx Windows File System: %#v", input)
-	output, err := conn.CreateLocationFsxWindows(input)
+	output, err := conn.CreateLocationFsxWindowsWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("error creating DataSync Location Fsx Windows File System: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating DataSync Location Fsx Windows File System: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.LocationArn))
 
-	return resourceLocationFSxWindowsFileSystemRead(d, meta)
+	return append(diags, resourceLocationFSxWindowsFileSystemRead(ctx, d, meta)...)
 }
 
-func resourceLocationFSxWindowsFileSystemRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataSyncConn
+func resourceLocationFSxWindowsFileSystemRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DataSyncConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -147,22 +151,22 @@ func resourceLocationFSxWindowsFileSystemRead(d *schema.ResourceData, meta inter
 	}
 
 	log.Printf("[DEBUG] Reading DataSync Location Fsx Windows: %#v", input)
-	output, err := conn.DescribeLocationFsxWindows(input)
+	output, err := conn.DescribeLocationFsxWindowsWithContext(ctx, input)
 
 	if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "not found") {
 		log.Printf("[WARN] DataSync Location Fsx Windows %q not found - removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading DataSync Location Fsx Windows (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading DataSync Location Fsx Windows (%s): %s", d.Id(), err)
 	}
 
 	subdirectory, err := SubdirectoryFromLocationURI(aws.StringValue(output.LocationUri))
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading DataSync Location Fsx Windows (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", output.LocationArn)
@@ -172,64 +176,66 @@ func resourceLocationFSxWindowsFileSystemRead(d *schema.ResourceData, meta inter
 	d.Set("domain", output.Domain)
 
 	if err := d.Set("security_group_arns", flex.FlattenStringSet(output.SecurityGroupArns)); err != nil {
-		return fmt.Errorf("error setting security_group_arns: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting security_group_arns: %s", err)
 	}
 
 	if err := d.Set("creation_time", output.CreationTime.Format(time.RFC3339)); err != nil {
-		return fmt.Errorf("error setting creation_time: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting creation_time: %s", err)
 	}
 
-	tags, err := ListTags(conn, d.Id())
+	tags, err := ListTags(ctx, conn, d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for DataSync Location Fsx Windows (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for DataSync Location Fsx Windows (%s): %s", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceLocationFSxWindowsFileSystemUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataSyncConn
+func resourceLocationFSxWindowsFileSystemUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DataSyncConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating DataSync Location Fsx Windows File System (%s) tags: %w", d.Id(), err)
+		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating DataSync Location Fsx Windows File System (%s) tags: %s", d.Id(), err)
 		}
 	}
 
-	return resourceLocationFSxWindowsFileSystemRead(d, meta)
+	return append(diags, resourceLocationFSxWindowsFileSystemRead(ctx, d, meta)...)
 }
 
-func resourceLocationFSxWindowsFileSystemDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataSyncConn
+func resourceLocationFSxWindowsFileSystemDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DataSyncConn()
 
 	input := &datasync.DeleteLocationInput{
 		LocationArn: aws.String(d.Id()),
 	}
 
 	log.Printf("[DEBUG] Deleting DataSync Location Fsx Windows File System: %#v", input)
-	_, err := conn.DeleteLocation(input)
+	_, err := conn.DeleteLocationWithContext(ctx, input)
 
 	if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "not found") {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting DataSync Location Fsx Windows (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting DataSync Location Fsx Windows (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

@@ -1,18 +1,20 @@
 package secretsmanager
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/namevaluesfilters"
 )
 
 func DataSourceSecrets() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceSecretsRead,
+		ReadWithoutTimeout: dataSourceSecretsRead,
 		Schema: map[string]*schema.Schema{
 			"arns": {
 				Type:     schema.TypeSet,
@@ -29,8 +31,9 @@ func DataSourceSecrets() *schema.Resource {
 	}
 }
 
-func dataSourceSecretsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecretsManagerConn
+func dataSourceSecretsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SecretsManagerConn()
 
 	input := &secretsmanager.ListSecretsInput{}
 
@@ -40,7 +43,7 @@ func dataSourceSecretsRead(d *schema.ResourceData, meta interface{}) error {
 
 	var results []*secretsmanager.SecretListEntry
 
-	err := conn.ListSecretsPages(input, func(page *secretsmanager.ListSecretsOutput, lastPage bool) bool {
+	err := conn.ListSecretsPagesWithContext(ctx, input, func(page *secretsmanager.ListSecretsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -57,7 +60,7 @@ func dataSourceSecretsRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if err != nil {
-		return fmt.Errorf("listing Secrets Manager Secrets: %w", err)
+		return sdkdiag.AppendErrorf(diags, "listing Secrets Manager Secrets: %s", err)
 	}
 
 	var arns, names []string
@@ -71,5 +74,5 @@ func dataSourceSecretsRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arns", arns)
 	d.Set("names", names)
 
-	return nil
+	return diags
 }

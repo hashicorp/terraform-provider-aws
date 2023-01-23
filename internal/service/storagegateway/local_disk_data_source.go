@@ -1,20 +1,21 @@
 package storagegateway
 
 import (
-	"errors"
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func DataSourceLocalDisk() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceLocalDiskRead,
+		ReadWithoutTimeout: dataSourceLocalDiskRead,
 
 		Schema: map[string]*schema.Schema{
 			"disk_id": {
@@ -40,21 +41,22 @@ func DataSourceLocalDisk() *schema.Resource {
 	}
 }
 
-func dataSourceLocalDiskRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).StorageGatewayConn
+func dataSourceLocalDiskRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).StorageGatewayConn()
 
 	input := &storagegateway.ListLocalDisksInput{
 		GatewayARN: aws.String(d.Get("gateway_arn").(string)),
 	}
 
 	log.Printf("[DEBUG] Reading Storage Gateway Local Disk: %s", input)
-	output, err := conn.ListLocalDisks(input)
+	output, err := conn.ListLocalDisksWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("error reading Storage Gateway Local Disk: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading Storage Gateway Local Disk: %s", err)
 	}
 
 	if output == nil || len(output.Disks) == 0 {
-		return errors.New("no results found for query, try adjusting your search criteria")
+		return sdkdiag.AppendErrorf(diags, "no results found for query, try adjusting your search criteria")
 	}
 
 	var matchingDisks []*storagegateway.Disk
@@ -71,11 +73,11 @@ func dataSourceLocalDiskRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if len(matchingDisks) == 0 {
-		return errors.New("no results found for query, try adjusting your search criteria")
+		return sdkdiag.AppendErrorf(diags, "no results found for query, try adjusting your search criteria")
 	}
 
 	if len(matchingDisks) > 1 {
-		return errors.New("multiple results found for query, try adjusting your search criteria")
+		return sdkdiag.AppendErrorf(diags, "multiple results found for query, try adjusting your search criteria")
 	}
 
 	disk := matchingDisks[0]
@@ -85,5 +87,5 @@ func dataSourceLocalDiskRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("disk_node", disk.DiskNode)
 	d.Set("disk_path", disk.DiskPath)
 
-	return nil
+	return diags
 }

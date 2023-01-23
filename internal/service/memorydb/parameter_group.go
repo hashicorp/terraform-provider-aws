@@ -23,10 +23,10 @@ import (
 
 func ResourceParameterGroup() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceParameterGroupCreate,
-		ReadContext:   resourceParameterGroupRead,
-		UpdateContext: resourceParameterGroupUpdate,
-		DeleteContext: resourceParameterGroupDelete,
+		CreateWithoutTimeout: resourceParameterGroupCreate,
+		ReadWithoutTimeout:   resourceParameterGroupRead,
+		UpdateWithoutTimeout: resourceParameterGroupUpdate,
+		DeleteWithoutTimeout: resourceParameterGroupDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -90,7 +90,7 @@ func ResourceParameterGroup() *schema.Resource {
 }
 
 func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MemoryDBConn
+	conn := meta.(*conns.AWSClient).MemoryDBConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -119,7 +119,7 @@ func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MemoryDBConn
+	conn := meta.(*conns.AWSClient).MemoryDBConn()
 
 	if d.HasChange("parameter") {
 		o, n := d.GetChange("parameter")
@@ -169,7 +169,7 @@ func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, m
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.Errorf("error updating MemoryDB Parameter Group (%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -178,7 +178,7 @@ func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MemoryDBConn
+	conn := meta.(*conns.AWSClient).MemoryDBConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -211,7 +211,7 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 		return diag.Errorf("failed to set parameter: %s", err)
 	}
 
-	tags, err := ListTags(conn, d.Get("arn").(string))
+	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
 
 	if err != nil {
 		return diag.Errorf("error listing tags for MemoryDB Parameter Group (%s): %s", d.Id(), err)
@@ -232,7 +232,7 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceParameterGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MemoryDBConn
+	conn := meta.(*conns.AWSClient).MemoryDBConn()
 
 	log.Printf("[DEBUG] Deleting MemoryDB Parameter Group: (%s)", d.Id())
 	_, err := conn.DeleteParameterGroupWithContext(ctx, &memorydb.DeleteParameterGroupInput{
@@ -262,7 +262,7 @@ func resetParameterGroupParameters(ctx context.Context, conn *memorydb.MemoryDB,
 		ParameterNames:     parameterNames,
 	}
 
-	return resource.Retry(30*time.Second, func() *resource.RetryError {
+	return resource.RetryContext(ctx, 30*time.Second, func() *resource.RetryError {
 		_, err := conn.ResetParameterGroupWithContext(ctx, &input)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, memorydb.ErrCodeInvalidParameterGroupStateFault, " has pending changes") {

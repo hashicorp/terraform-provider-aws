@@ -1,7 +1,7 @@
 package schemas
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"regexp"
 	"time"
@@ -9,9 +9,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/schemas"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -19,12 +21,12 @@ import (
 
 func ResourceSchema() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceSchemaCreate,
-		Read:   resourceSchemaRead,
-		Update: resourceSchemaUpdate,
-		Delete: resourceSchemaDelete,
+		CreateWithoutTimeout: resourceSchemaCreate,
+		ReadWithoutTimeout:   resourceSchemaRead,
+		UpdateWithoutTimeout: resourceSchemaUpdate,
+		DeleteWithoutTimeout: resourceSchemaDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -90,8 +92,9 @@ func ResourceSchema() *schema.Resource {
 	}
 }
 
-func resourceSchemaCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SchemasConn
+func resourceSchemaCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SchemasConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -115,38 +118,39 @@ func resourceSchemaCreate(d *schema.ResourceData, meta interface{}) error {
 	id := SchemaCreateResourceID(name, registryName)
 
 	log.Printf("[DEBUG] Creating EventBridge Schemas Schema: %s", input)
-	_, err := conn.CreateSchema(input)
+	_, err := conn.CreateSchemaWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating EventBridge Schemas Schema (%s): %w", id, err)
+		return sdkdiag.AppendErrorf(diags, "creating EventBridge Schemas Schema (%s): %s", id, err)
 	}
 
 	d.SetId(id)
 
-	return resourceSchemaRead(d, meta)
+	return append(diags, resourceSchemaRead(ctx, d, meta)...)
 }
 
-func resourceSchemaRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SchemasConn
+func resourceSchemaRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SchemasConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name, registryName, err := SchemaParseResourceID(d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error parsing EventBridge Schemas Schema ID: %w", err)
+		return sdkdiag.AppendErrorf(diags, "parsing EventBridge Schemas Schema ID: %s", err)
 	}
 
-	output, err := FindSchemaByNameAndRegistryName(conn, name, registryName)
+	output, err := FindSchemaByNameAndRegistryName(ctx, conn, name, registryName)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EventBridge Schemas Schema (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading EventBridge Schemas Schema (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading EventBridge Schemas Schema (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", output.SchemaArn)
@@ -167,33 +171,34 @@ func resourceSchemaRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("version_created_date", nil)
 	}
 
-	tags, err := ListTags(conn, d.Get("arn").(string))
+	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for EventBridge Schemas Schema (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for EventBridge Schemas Schema (%s): %s", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceSchemaUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SchemasConn
+func resourceSchemaUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SchemasConn()
 
 	if d.HasChanges("content", "description", "type") {
 		name, registryName, err := SchemaParseResourceID(d.Id())
 
 		if err != nil {
-			return fmt.Errorf("error parsing EventBridge Schemas Schema ID: %w", err)
+			return sdkdiag.AppendErrorf(diags, "parsing EventBridge Schemas Schema ID: %s", err)
 		}
 
 		input := &schemas.UpdateSchemaInput{
@@ -211,45 +216,46 @@ func resourceSchemaUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		log.Printf("[DEBUG] Updating EventBridge Schemas Schema: %s", input)
-		_, err = conn.UpdateSchema(input)
+		_, err = conn.UpdateSchemaWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error updating EventBridge Schemas Schema (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating EventBridge Schemas Schema (%s): %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %w", err)
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
 		}
 	}
 
-	return resourceSchemaRead(d, meta)
+	return append(diags, resourceSchemaRead(ctx, d, meta)...)
 }
 
-func resourceSchemaDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SchemasConn
+func resourceSchemaDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SchemasConn()
 
 	name, registryName, err := SchemaParseResourceID(d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error parsing EventBridge Schemas Schema ID: %w", err)
+		return sdkdiag.AppendErrorf(diags, "parsing EventBridge Schemas Schema ID: %s", err)
 	}
 
 	log.Printf("[INFO] Deleting EventBridge Schemas Schema (%s)", d.Id())
-	_, err = conn.DeleteSchema(&schemas.DeleteSchemaInput{
+	_, err = conn.DeleteSchemaWithContext(ctx, &schemas.DeleteSchemaInput{
 		RegistryName: aws.String(registryName),
 		SchemaName:   aws.String(name),
 	})
 
 	if tfawserr.ErrCodeEquals(err, schemas.ErrCodeNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting EventBridge Schemas Schema (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting EventBridge Schemas Schema (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

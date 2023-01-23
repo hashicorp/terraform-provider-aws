@@ -161,6 +161,7 @@ resource "aws_lambda_event_source_mapping" "example" {
 * `maximum_retry_attempts`: - (Optional) The maximum number of times to retry when the function returns an error. Only available for stream sources (DynamoDB and Kinesis). Minimum and default of -1 (forever), maximum of 10000.
 * `parallelization_factor`: - (Optional) The number of batches to process from each shard concurrently. Only available for stream sources (DynamoDB and Kinesis). Minimum and default of 1, maximum of 10.
 * `queues` - (Optional) The name of the Amazon MQ broker destination queue to consume. Only available for MQ sources. A single queue name must be specified.
+* `scaling_config` - (Optional) Scaling configuration of the event source. Only available for SQS queues. Detailed below.
 * `self_managed_event_source`: - (Optional) For Self Managed Kafka sources, the location of the self managed cluster. If set, configuration must also include `source_access_configuration`. Detailed below.
 * `self_managed_kafka_event_source_config` - (Optional) Additional configuration block for Self Managed Kafka sources. Incompatible with "event_source_arn" and "amazon_managed_kafka_event_source_config". Detailed below.
 * `source_access_configuration`: (Optional) For Self Managed Kafka sources, the access configuration for the source. If set, configuration must also include `self_managed_event_source`. Detailed below.
@@ -189,6 +190,10 @@ resource "aws_lambda_event_source_mapping" "example" {
 
 * `pattern` - (Optional) A filter pattern up to 4096 characters. See [Filter Rule Syntax](https://docs.aws.amazon.com/lambda/latest/dg/invocation-eventfiltering.html#filtering-syntax).
 
+### scaling_config Configuration Block
+
+* `maximum_concurrency` - (Optional) Limits the number of concurrent instances that the Amazon SQS event source can invoke. Must be between `2` and `1000`. See [Configuring maximum concurrency for Amazon SQS event sources](https://docs.aws.amazon.com/lambda/latest/dg/with-sqs.html#events-sqs-max-concurrency).
+
 ### self_managed_event_source Configuration Block
 
 * `endpoints` - (Required) A map of endpoints for the self managed source.  For Kafka self-managed sources, the key should be `KAFKA_BOOTSTRAP_SERVERS` and the value should be a string with a comma separated list of broker endpoints.
@@ -213,10 +218,8 @@ In addition to all arguments above, the following attributes are exported:
 * `state_transition_reason` - The reason the event source mapping is in its current state.
 * `uuid` - The UUID of the created event source mapping.
 
-
 [1]: http://docs.aws.amazon.com/lambda/latest/dg/welcome.html
 [2]: http://docs.aws.amazon.com/lambda/latest/dg/API_CreateEventSourceMapping.html
-
 
 ## Import
 

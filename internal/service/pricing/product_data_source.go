@@ -1,20 +1,23 @@
 package pricing
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/pricing"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func DataSourceProduct() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceProductRead,
+		ReadWithoutTimeout: dataSourceProductRead,
 		Schema: map[string]*schema.Schema{
 			"service_code": {
 				Type:     schema.TypeString,
@@ -45,8 +48,9 @@ func DataSourceProduct() *schema.Resource {
 	}
 }
 
-func dataSourceProductRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).PricingConn
+func dataSourceProductRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).PricingConn()
 
 	params := &pricing.GetProductsInput{
 		ServiceCode: aws.String(d.Get("service_code").(string)),
@@ -64,29 +68,29 @@ func dataSourceProductRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Reading pricing of products: %s", params)
-	resp, err := conn.GetProducts(params)
+	resp, err := conn.GetProductsWithContext(ctx, params)
 	if err != nil {
-		return fmt.Errorf("Error reading pricing of products: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading pricing of products: %s", err)
 	}
 
 	numberOfElements := len(resp.PriceList)
 	if numberOfElements == 0 {
-		return fmt.Errorf("Pricing product query did not return any elements")
+		return sdkdiag.AppendErrorf(diags, "Pricing product query did not return any elements")
 	} else if numberOfElements > 1 {
 		priceListBytes, err := json.Marshal(resp.PriceList)
 		priceListString := string(priceListBytes)
 		if err != nil {
 			priceListString = err.Error()
 		}
-		return fmt.Errorf("Pricing product query not precise enough. Returned more than one element: %s", priceListString)
+		return sdkdiag.AppendErrorf(diags, "Pricing product query not precise enough. Returned more than one element: %s", priceListString)
 	}
 
 	pricingResult, err := json.Marshal(resp.PriceList[0])
 	if err != nil {
-		return fmt.Errorf("Invalid JSON value returned by AWS: %w", err)
+		return sdkdiag.AppendErrorf(diags, "Invalid JSON value returned by AWS: %s", err)
 	}
 
 	d.SetId(fmt.Sprintf("%d", create.StringHashcode(params.String())))
 	d.Set("result", string(pricingResult))
-	return nil
+	return diags
 }

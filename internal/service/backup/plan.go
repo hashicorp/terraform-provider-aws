@@ -2,6 +2,7 @@ package backup
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"log"
 	"regexp"
@@ -10,11 +11,13 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/backup"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -23,12 +26,12 @@ import (
 
 func ResourcePlan() *schema.Resource {
 	return &schema.Resource{
-		Create: resourcePlanCreate,
-		Read:   resourcePlanRead,
-		Update: resourcePlanUpdate,
-		Delete: resourcePlanDelete,
+		CreateWithoutTimeout: resourcePlanCreate,
+		ReadWithoutTimeout:   resourcePlanRead,
+		UpdateWithoutTimeout: resourcePlanUpdate,
+		DeleteWithoutTimeout: resourcePlanDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -165,8 +168,9 @@ func ResourcePlan() *schema.Resource {
 	}
 }
 
-func resourcePlanCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BackupConn
+func resourcePlanCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).BackupConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -180,31 +184,32 @@ func resourcePlanCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Creating Backup Plan: %#v", input)
-	resp, err := conn.CreateBackupPlan(input)
+	resp, err := conn.CreateBackupPlanWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("error creating Backup Plan: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating Backup Plan: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resp.BackupPlanId))
 
-	return resourcePlanRead(d, meta)
+	return append(diags, resourcePlanRead(ctx, d, meta)...)
 }
 
-func resourcePlanRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BackupConn
+func resourcePlanRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).BackupConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	resp, err := conn.GetBackupPlan(&backup.GetBackupPlanInput{
+	resp, err := conn.GetBackupPlanWithContext(ctx, &backup.GetBackupPlanInput{
 		BackupPlanId: aws.String(d.Id()),
 	})
 	if tfawserr.ErrCodeEquals(err, backup.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Backup Plan (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 	if err != nil {
-		return fmt.Errorf("error reading Backup Plan (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Backup Plan (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", resp.BackupPlanArn)
@@ -212,35 +217,36 @@ func resourcePlanRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("version", resp.VersionId)
 
 	if err := d.Set("rule", flattenPlanRules(resp.BackupPlan.Rules)); err != nil {
-		return fmt.Errorf("error setting rule: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
 	}
 
 	// AdvancedBackupSettings being read direct from resp and not from under
 	// resp.BackupPlan is deliberate - the latter always contains null
 	if err := d.Set("advanced_backup_setting", flattenPlanAdvancedSettings(resp.AdvancedBackupSettings)); err != nil {
-		return fmt.Errorf("error setting advanced_backup_setting: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting advanced_backup_setting: %s", err)
 	}
 
-	tags, err := ListTags(conn, d.Get("arn").(string))
+	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
 	if err != nil {
-		return fmt.Errorf("error listing tags for Backup Plan (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for Backup Plan (%s): %s", d.Id(), err)
 	}
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourcePlanUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BackupConn
+func resourcePlanUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).BackupConn()
 
 	if d.HasChanges("rule", "advanced_backup_setting") {
 		input := &backup.UpdateBackupPlanInput{
@@ -253,32 +259,33 @@ func resourcePlanUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		log.Printf("[DEBUG] Updating Backup Plan: %#v", input)
-		_, err := conn.UpdateBackupPlan(input)
+		_, err := conn.UpdateBackupPlanWithContext(ctx, input)
 		if err != nil {
-			return fmt.Errorf("error updating Backup Plan (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Backup Plan (%s): %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags for Backup Plan (%s): %w", d.Id(), err)
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating tags for Backup Plan (%s): %s", d.Id(), err)
 		}
 	}
 
-	return resourcePlanRead(d, meta)
+	return append(diags, resourcePlanRead(ctx, d, meta)...)
 }
 
-func resourcePlanDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BackupConn
+func resourcePlanDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).BackupConn()
 
 	input := &backup.DeleteBackupPlanInput{
 		BackupPlanId: aws.String(d.Id()),
 	}
 
 	log.Printf("[DEBUG] Deleting Backup Plan: %s", d.Id())
-	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteBackupPlan(input)
+	err := resource.RetryContext(ctx, 2*time.Minute, func() *resource.RetryError {
+		_, err := conn.DeleteBackupPlanWithContext(ctx, input)
 
 		if tfawserr.ErrMessageContains(err, backup.ErrCodeInvalidRequestException, "Related backup plan selections must be deleted prior to backup") {
 			return resource.RetryableError(err)
@@ -295,14 +302,14 @@ func resourcePlanDelete(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteBackupPlan(input)
+		_, err = conn.DeleteBackupPlanWithContext(ctx, input)
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Backup Plan (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Backup Plan (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandPlanRules(vRules *schema.Set) []*backup.RuleInput {

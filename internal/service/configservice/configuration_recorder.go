@@ -1,29 +1,31 @@
 package configservice
 
 import (
+	"context"
 	"errors"
-	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/configservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func ResourceConfigurationRecorder() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceConfigurationRecorderPut,
-		Read:   resourceConfigurationRecorderRead,
-		Update: resourceConfigurationRecorderPut,
-		Delete: resourceConfigurationRecorderDelete,
+		CreateWithoutTimeout: resourceConfigurationRecorderPut,
+		ReadWithoutTimeout:   resourceConfigurationRecorderRead,
+		UpdateWithoutTimeout: resourceConfigurationRecorderPut,
+		DeleteWithoutTimeout: resourceConfigurationRecorderDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -68,8 +70,9 @@ func ResourceConfigurationRecorder() *schema.Resource {
 	}
 }
 
-func resourceConfigurationRecorderPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigServiceConn
+func resourceConfigurationRecorderPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ConfigServiceConn()
 
 	name := d.Get("name").(string)
 	recorder := configservice.ConfigurationRecorder{
@@ -84,46 +87,47 @@ func resourceConfigurationRecorderPut(d *schema.ResourceData, meta interface{}) 
 	input := configservice.PutConfigurationRecorderInput{
 		ConfigurationRecorder: &recorder,
 	}
-	_, err := conn.PutConfigurationRecorder(&input)
+	_, err := conn.PutConfigurationRecorderWithContext(ctx, &input)
 	if err != nil {
-		return fmt.Errorf("Creating Configuration Recorder failed: %s", err)
+		return sdkdiag.AppendErrorf(diags, "Creating Configuration Recorder failed: %s", err)
 	}
 
 	d.SetId(name)
 
-	return resourceConfigurationRecorderRead(d, meta)
+	return append(diags, resourceConfigurationRecorderRead(ctx, d, meta)...)
 }
 
-func resourceConfigurationRecorderRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigServiceConn
+func resourceConfigurationRecorderRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ConfigServiceConn()
 
 	input := configservice.DescribeConfigurationRecordersInput{
 		ConfigurationRecorderNames: []*string{aws.String(d.Id())},
 	}
-	out, err := conn.DescribeConfigurationRecorders(&input)
+	out, err := conn.DescribeConfigurationRecordersWithContext(ctx, &input)
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchConfigurationRecorderException) {
 		create.LogNotFoundRemoveState(names.ConfigService, create.ErrActionReading, ResNameConfigurationRecorder, d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.Error(names.ConfigService, create.ErrActionReading, ResNameConfigurationRecorder, d.Id(), err)
+		return create.DiagError(names.ConfigService, create.ErrActionReading, ResNameConfigurationRecorder, d.Id(), err)
 	}
 
 	numberOfRecorders := len(out.ConfigurationRecorders)
 	if !d.IsNewResource() && numberOfRecorders < 1 {
 		create.LogNotFoundRemoveState(names.ConfigService, create.ErrActionReading, ResNameConfigurationRecorder, d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if d.IsNewResource() && numberOfRecorders < 1 {
-		return create.Error(names.ConfigService, create.ErrActionReading, ResNameConfigurationRecorder, d.Id(), errors.New("none found"))
+		return create.DiagError(names.ConfigService, create.ErrActionReading, ResNameConfigurationRecorder, d.Id(), errors.New("none found"))
 	}
 
 	if numberOfRecorders > 1 {
-		return fmt.Errorf("Expected exactly 1 Configuration Recorder, received %d: %#v",
+		return sdkdiag.AppendErrorf(diags, "Expected exactly 1 Configuration Recorder, received %d: %#v",
 			numberOfRecorders, out.ConfigurationRecorders)
 	}
 
@@ -136,23 +140,24 @@ func resourceConfigurationRecorderRead(d *schema.ResourceData, meta interface{})
 		flattened := flattenRecordingGroup(recorder.RecordingGroup)
 		err = d.Set("recording_group", flattened)
 		if err != nil {
-			return fmt.Errorf("Failed to set recording_group: %s", err)
+			return sdkdiag.AppendErrorf(diags, "Failed to set recording_group: %s", err)
 		}
 	}
 
-	return nil
+	return diags
 }
 
-func resourceConfigurationRecorderDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigServiceConn
+func resourceConfigurationRecorderDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ConfigServiceConn()
 	input := configservice.DeleteConfigurationRecorderInput{
 		ConfigurationRecorderName: aws.String(d.Id()),
 	}
-	_, err := conn.DeleteConfigurationRecorder(&input)
+	_, err := conn.DeleteConfigurationRecorderWithContext(ctx, &input)
 	if err != nil {
 		if !tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchConfigurationRecorderException) {
-			return fmt.Errorf("Deleting Configuration Recorder failed: %s", err)
+			return sdkdiag.AppendErrorf(diags, "Deleting Configuration Recorder failed: %s", err)
 		}
 	}
-	return nil
+	return diags
 }

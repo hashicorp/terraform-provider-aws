@@ -1,6 +1,7 @@
 package apigateway_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -16,6 +17,7 @@ import (
 )
 
 func TestAccAPIGatewayRequestValidator_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf apigateway.UpdateRequestValidatorOutput
 	rName := fmt.Sprintf("tf-test-acc-%s", sdkacctest.RandString(8))
 	resourceName := "aws_api_gateway_request_validator.test"
@@ -24,12 +26,12 @@ func TestAccAPIGatewayRequestValidator_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRequestValidatorDestroy,
+		CheckDestroy:             testAccCheckRequestValidatorDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRequestValidatorConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRequestValidatorExists(resourceName, &conf),
+					testAccCheckRequestValidatorExists(ctx, resourceName, &conf),
 					testAccCheckRequestValidatorName(&conf, "tf-acc-test-request-validator"),
 					resource.TestCheckResourceAttr(resourceName, "name", "tf-acc-test-request-validator"),
 					testAccCheckRequestValidatorValidateRequestBody(&conf, false),
@@ -41,7 +43,7 @@ func TestAccAPIGatewayRequestValidator_basic(t *testing.T) {
 			{
 				Config: testAccRequestValidatorConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRequestValidatorExists(resourceName, &conf),
+					testAccCheckRequestValidatorExists(ctx, resourceName, &conf),
 					testAccCheckRequestValidatorName(&conf, "tf-acc-test-request-validator_modified"),
 					resource.TestCheckResourceAttr(resourceName, "name", "tf-acc-test-request-validator_modified"),
 					testAccCheckRequestValidatorValidateRequestBody(&conf, true),
@@ -61,6 +63,7 @@ func TestAccAPIGatewayRequestValidator_basic(t *testing.T) {
 }
 
 func TestAccAPIGatewayRequestValidator_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf apigateway.UpdateRequestValidatorOutput
 	rName := fmt.Sprintf("tf-test-acc-%s", sdkacctest.RandString(8))
 	resourceName := "aws_api_gateway_request_validator.test"
@@ -69,13 +72,13 @@ func TestAccAPIGatewayRequestValidator_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRequestValidatorDestroy,
+		CheckDestroy:             testAccCheckRequestValidatorDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRequestValidatorConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRequestValidatorExists(resourceName, &conf),
-					acctest.CheckResourceDisappears(acctest.Provider, tfapigateway.ResourceRequestValidator(), resourceName),
+					testAccCheckRequestValidatorExists(ctx, resourceName, &conf),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigateway.ResourceRequestValidator(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -119,7 +122,7 @@ func testAccCheckRequestValidatorValidateRequestParameters(conf *apigateway.Upda
 	}
 }
 
-func testAccCheckRequestValidatorExists(n string, res *apigateway.UpdateRequestValidatorOutput) resource.TestCheckFunc {
+func testAccCheckRequestValidatorExists(ctx context.Context, n string, res *apigateway.UpdateRequestValidatorOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -130,13 +133,13 @@ func testAccCheckRequestValidatorExists(n string, res *apigateway.UpdateRequestV
 			return fmt.Errorf("No API Request Validator ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
 
 		req := &apigateway.GetRequestValidatorInput{
 			RequestValidatorId: aws.String(rs.Primary.ID),
 			RestApiId:          aws.String(rs.Primary.Attributes["rest_api_id"]),
 		}
-		describe, err := conn.GetRequestValidator(req)
+		describe, err := conn.GetRequestValidatorWithContext(ctx, req)
 		if err != nil {
 			return err
 		}
@@ -147,36 +150,38 @@ func testAccCheckRequestValidatorExists(n string, res *apigateway.UpdateRequestV
 	}
 }
 
-func testAccCheckRequestValidatorDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
+func testAccCheckRequestValidatorDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_api_gateway_request_validator" {
-			continue
-		}
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_api_gateway_request_validator" {
+				continue
+			}
 
-		req := &apigateway.GetRequestValidatorInput{
-			RequestValidatorId: aws.String(rs.Primary.ID),
-			RestApiId:          aws.String(rs.Primary.Attributes["rest_api_id"]),
-		}
-		_, err := conn.GetRequestValidator(req)
+			req := &apigateway.GetRequestValidatorInput{
+				RequestValidatorId: aws.String(rs.Primary.ID),
+				RestApiId:          aws.String(rs.Primary.Attributes["rest_api_id"]),
+			}
+			_, err := conn.GetRequestValidatorWithContext(ctx, req)
 
-		if err == nil {
-			return fmt.Errorf("API Request Validator still exists")
-		}
+			if err == nil {
+				return fmt.Errorf("API Request Validator still exists")
+			}
 
-		aws2err, ok := err.(awserr.Error)
-		if !ok {
-			return err
-		}
-		if aws2err.Code() != apigateway.ErrCodeNotFoundException {
-			return err
+			aws2err, ok := err.(awserr.Error)
+			if !ok {
+				return err
+			}
+			if aws2err.Code() != apigateway.ErrCodeNotFoundException {
+				return err
+			}
+
+			return nil
 		}
 
 		return nil
 	}
-
-	return nil
 }
 
 func testAccRequestValidatorImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {

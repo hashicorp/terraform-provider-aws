@@ -1,24 +1,27 @@
 package ec2
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceIPAMPreviewNextCIDR() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceIPAMPreviewNextCIDRCreate,
-		Read:   resourceIPAMPreviewNextCIDRRead,
-		Delete: schema.Noop,
+		CreateWithoutTimeout: resourceIPAMPreviewNextCIDRCreate,
+		ReadWithoutTimeout:   resourceIPAMPreviewNextCIDRRead,
+		DeleteWithoutTimeout: schema.NoopContext,
 		Schema: map[string]*schema.Schema{
 			"cidr": {
 				Type:     schema.TypeString,
@@ -59,8 +62,9 @@ func ResourceIPAMPreviewNextCIDR() *schema.Resource {
 	}
 }
 
-func resourceIPAMPreviewNextCIDRCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceIPAMPreviewNextCIDRCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	poolId := d.Get("ipam_pool_id").(string)
 
 	input := &ec2.AllocateIpamPoolCidrInput{
@@ -77,14 +81,14 @@ func resourceIPAMPreviewNextCIDRCreate(d *schema.ResourceData, meta interface{})
 		input.NetmaskLength = aws.Int64(int64(v.(int)))
 	}
 
-	output, err := conn.AllocateIpamPoolCidr(input)
+	output, err := conn.AllocateIpamPoolCidrWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("Error allocating cidr from IPAM pool (%s): %w", d.Get("ipam_pool_id").(string), err)
+		return sdkdiag.AppendErrorf(diags, "Error allocating cidr from IPAM pool (%s): %s", d.Get("ipam_pool_id").(string), err)
 	}
 
 	if output == nil || output.IpamPoolAllocation == nil {
-		return fmt.Errorf("error allocating from ipam pool (%s): empty response", poolId)
+		return sdkdiag.AppendErrorf(diags, "allocating from ipam pool (%s): empty response", poolId)
 	}
 
 	cidr := output.IpamPoolAllocation.Cidr
@@ -92,20 +96,21 @@ func resourceIPAMPreviewNextCIDRCreate(d *schema.ResourceData, meta interface{})
 	d.Set("cidr", cidr)
 	d.SetId(encodeIPAMPreviewNextCIDRID(aws.StringValue(cidr), poolId))
 
-	return resourceIPAMPreviewNextCIDRRead(d, meta)
+	return append(diags, resourceIPAMPreviewNextCIDRRead(ctx, d, meta)...)
 }
 
-func resourceIPAMPreviewNextCIDRRead(d *schema.ResourceData, meta interface{}) error {
+func resourceIPAMPreviewNextCIDRRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	cidr, poolId, err := decodeIPAMPreviewNextCIDRID(d.Id())
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading EC2 IPAM Preview Next CIDR: %s", err)
 	}
 
 	d.Set("cidr", cidr)
 	d.Set("ipam_pool_id", poolId)
 
-	return nil
+	return diags
 }
 
 func encodeIPAMPreviewNextCIDRID(cidr, poolId string) string {

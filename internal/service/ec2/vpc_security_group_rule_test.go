@@ -17,6 +17,8 @@ import (
 )
 
 func TestSecurityGroupRuleCreateID(t *testing.T) {
+	t.Parallel()
+
 	simple := &ec2.IpPermission{
 		IpProtocol: aws.String("tcp"),
 		FromPort:   aws.Int64(80),
@@ -110,6 +112,7 @@ func TestSecurityGroupRuleCreateID(t *testing.T) {
 }
 
 func TestAccVPCSecurityGroupRule_Ingress_vpc(t *testing.T) {
+	ctx := acctest.Context(t)
 	var group ec2.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_security_group_rule.test"
@@ -119,12 +122,12 @@ func TestAccVPCSecurityGroupRule_Ingress_vpc(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSecurityGroupDestroy,
+		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSecurityGroupRuleConfig_ingress(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSecurityGroupExists(sgResourceName, &group),
+					testAccCheckSecurityGroupExists(ctx, sgResourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.0", "10.0.0.0/8"),
 					resource.TestCheckNoResourceAttr(resourceName, "description"),
@@ -133,6 +136,7 @@ func TestAccVPCSecurityGroupRule_Ingress_vpc(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "protocol", "tcp"),
 					resource.TestCheckResourceAttr(resourceName, "prefix_list_ids.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "security_group_id", sgResourceName, "id"),
+					resource.TestCheckResourceAttrSet(resourceName, "security_group_rule_id"),
 					resource.TestCheckResourceAttr(resourceName, "self", "false"),
 					resource.TestCheckNoResourceAttr(resourceName, "source_security_group_id"),
 					resource.TestCheckResourceAttr(resourceName, "to_port", "8000"),
@@ -150,6 +154,7 @@ func TestAccVPCSecurityGroupRule_Ingress_vpc(t *testing.T) {
 }
 
 func TestAccVPCSecurityGroupRule_IngressSourceWithAccount_id(t *testing.T) {
+	ctx := acctest.Context(t)
 	var group ec2.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_security_group_rule.test"
@@ -159,12 +164,12 @@ func TestAccVPCSecurityGroupRule_IngressSourceWithAccount_id(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSecurityGroupDestroy,
+		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSecurityGroupRuleConfig_ingressSourceAccountID(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSecurityGroupExists(sgResourceName, &group),
+					testAccCheckSecurityGroupExists(ctx, sgResourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "description", "some description"),
 					resource.TestCheckResourceAttr(resourceName, "from_port", "0"),
@@ -172,6 +177,7 @@ func TestAccVPCSecurityGroupRule_IngressSourceWithAccount_id(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "protocol", "-1"),
 					resource.TestCheckResourceAttr(resourceName, "prefix_list_ids.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "security_group_id", sgResourceName, "id"),
+					resource.TestCheckResourceAttrSet(resourceName, "security_group_rule_id"),
 					resource.TestCheckResourceAttr(resourceName, "self", "false"),
 					resource.TestMatchResourceAttr(resourceName, "source_security_group_id", regexp.MustCompile("^[0-9]{12}/sg-[0-9a-z]{17}$")),
 					resource.TestCheckResourceAttr(resourceName, "to_port", "0"),
@@ -183,6 +189,7 @@ func TestAccVPCSecurityGroupRule_IngressSourceWithAccount_id(t *testing.T) {
 }
 
 func TestAccVPCSecurityGroupRule_Ingress_protocol(t *testing.T) {
+	ctx := acctest.Context(t)
 	var group ec2.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_security_group_rule.test"
@@ -192,12 +199,12 @@ func TestAccVPCSecurityGroupRule_Ingress_protocol(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSecurityGroupDestroy,
+		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSecurityGroupRuleConfig_ingressProtocol(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSecurityGroupExists(sgResourceName, &group),
+					testAccCheckSecurityGroupExists(ctx, sgResourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.0", "10.0.0.0/8"),
 					resource.TestCheckNoResourceAttr(resourceName, "description"),
@@ -206,6 +213,7 @@ func TestAccVPCSecurityGroupRule_Ingress_protocol(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "protocol", "tcp"),
 					resource.TestCheckResourceAttr(resourceName, "prefix_list_ids.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "security_group_id", sgResourceName, "id"),
+					resource.TestCheckResourceAttrSet(resourceName, "security_group_rule_id"),
 					resource.TestCheckResourceAttr(resourceName, "self", "false"),
 					resource.TestCheckNoResourceAttr(resourceName, "source_security_group_id"),
 					resource.TestCheckResourceAttr(resourceName, "to_port", "8000"),
@@ -223,6 +231,7 @@ func TestAccVPCSecurityGroupRule_Ingress_protocol(t *testing.T) {
 }
 
 func TestAccVPCSecurityGroupRule_Ingress_icmpv6(t *testing.T) {
+	ctx := acctest.Context(t)
 	var group ec2.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_security_group_rule.test"
@@ -232,12 +241,12 @@ func TestAccVPCSecurityGroupRule_Ingress_icmpv6(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSecurityGroupDestroy,
+		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSecurityGroupRuleConfig_ingressIcmpv6(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSecurityGroupExists(sgResourceName, &group),
+					testAccCheckSecurityGroupExists(ctx, sgResourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "0"),
 					resource.TestCheckNoResourceAttr(resourceName, "description"),
 					resource.TestCheckResourceAttr(resourceName, "from_port", "-1"),
@@ -246,6 +255,7 @@ func TestAccVPCSecurityGroupRule_Ingress_icmpv6(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "protocol", "icmpv6"),
 					resource.TestCheckResourceAttr(resourceName, "prefix_list_ids.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "security_group_id", sgResourceName, "id"),
+					resource.TestCheckResourceAttrSet(resourceName, "security_group_rule_id"),
 					resource.TestCheckResourceAttr(resourceName, "self", "false"),
 					resource.TestCheckNoResourceAttr(resourceName, "source_security_group_id"),
 					resource.TestCheckResourceAttr(resourceName, "to_port", "-1"),
@@ -263,6 +273,7 @@ func TestAccVPCSecurityGroupRule_Ingress_icmpv6(t *testing.T) {
 }
 
 func TestAccVPCSecurityGroupRule_Ingress_ipv6(t *testing.T) {
+	ctx := acctest.Context(t)
 	var group ec2.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_security_group_rule.test"
@@ -272,12 +283,12 @@ func TestAccVPCSecurityGroupRule_Ingress_ipv6(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSecurityGroupDestroy,
+		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSecurityGroupRuleConfig_ingressIPv6(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSecurityGroupExists(sgResourceName, &group),
+					testAccCheckSecurityGroupExists(ctx, sgResourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "0"),
 					resource.TestCheckNoResourceAttr(resourceName, "description"),
 					resource.TestCheckResourceAttr(resourceName, "from_port", "80"),
@@ -286,6 +297,7 @@ func TestAccVPCSecurityGroupRule_Ingress_ipv6(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "protocol", "tcp"),
 					resource.TestCheckResourceAttr(resourceName, "prefix_list_ids.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "security_group_id", sgResourceName, "id"),
+					resource.TestCheckResourceAttrSet(resourceName, "security_group_rule_id"),
 					resource.TestCheckResourceAttr(resourceName, "self", "false"),
 					resource.TestCheckNoResourceAttr(resourceName, "source_security_group_id"),
 					resource.TestCheckResourceAttr(resourceName, "to_port", "8000"),
@@ -303,6 +315,7 @@ func TestAccVPCSecurityGroupRule_Ingress_ipv6(t *testing.T) {
 }
 
 func TestAccVPCSecurityGroupRule_egress(t *testing.T) {
+	ctx := acctest.Context(t)
 	var group ec2.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_security_group_rule.test"
@@ -312,12 +325,12 @@ func TestAccVPCSecurityGroupRule_egress(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSecurityGroupDestroy,
+		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSecurityGroupRuleConfig_egress(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSecurityGroupExists(sgResourceName, &group),
+					testAccCheckSecurityGroupExists(ctx, sgResourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.0", "10.0.0.0/8"),
 					resource.TestCheckNoResourceAttr(resourceName, "description"),
@@ -326,6 +339,7 @@ func TestAccVPCSecurityGroupRule_egress(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "protocol", "tcp"),
 					resource.TestCheckResourceAttr(resourceName, "prefix_list_ids.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "security_group_id", sgResourceName, "id"),
+					resource.TestCheckResourceAttrSet(resourceName, "security_group_rule_id"),
 					resource.TestCheckResourceAttr(resourceName, "self", "false"),
 					resource.TestCheckNoResourceAttr(resourceName, "source_security_group_id"),
 					resource.TestCheckResourceAttr(resourceName, "to_port", "8000"),
@@ -343,6 +357,7 @@ func TestAccVPCSecurityGroupRule_egress(t *testing.T) {
 }
 
 func TestAccVPCSecurityGroupRule_selfReference(t *testing.T) {
+	ctx := acctest.Context(t)
 	var group ec2.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_security_group_rule.test"
@@ -352,12 +367,12 @@ func TestAccVPCSecurityGroupRule_selfReference(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSecurityGroupDestroy,
+		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSecurityGroupRuleConfig_selfReference(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSecurityGroupExists(sgResourceName, &group),
+					testAccCheckSecurityGroupExists(ctx, sgResourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "0"),
 					resource.TestCheckNoResourceAttr(resourceName, "description"),
 					resource.TestCheckResourceAttr(resourceName, "from_port", "0"),
@@ -365,6 +380,7 @@ func TestAccVPCSecurityGroupRule_selfReference(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "protocol", "-1"),
 					resource.TestCheckResourceAttr(resourceName, "prefix_list_ids.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "security_group_id", sgResourceName, "id"),
+					resource.TestCheckResourceAttrSet(resourceName, "security_group_rule_id"),
 					resource.TestCheckResourceAttr(resourceName, "self", "true"),
 					resource.TestCheckNoResourceAttr(resourceName, "source_security_group_id"),
 					resource.TestCheckResourceAttr(resourceName, "to_port", "0"),
@@ -382,13 +398,14 @@ func TestAccVPCSecurityGroupRule_selfReference(t *testing.T) {
 }
 
 func TestAccVPCSecurityGroupRule_expectInvalidTypeError(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSecurityGroupDestroy,
+		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccVPCSecurityGroupRuleConfig_expectInvalidType(rName),
@@ -399,13 +416,14 @@ func TestAccVPCSecurityGroupRule_expectInvalidTypeError(t *testing.T) {
 }
 
 func TestAccVPCSecurityGroupRule_expectInvalidCIDR(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSecurityGroupDestroy,
+		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccVPCSecurityGroupRuleConfig_invalidIPv4CIDR(rName),
@@ -421,6 +439,7 @@ func TestAccVPCSecurityGroupRule_expectInvalidCIDR(t *testing.T) {
 
 // testing partial match implementation
 func TestAccVPCSecurityGroupRule_PartialMatching_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resource1Name := "aws_security_group_rule.test1"
 	resource2Name := "aws_security_group_rule.test2"
@@ -430,7 +449,7 @@ func TestAccVPCSecurityGroupRule_PartialMatching_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSecurityGroupDestroy,
+		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSecurityGroupRuleConfig_partialMatching(rName),
@@ -470,6 +489,7 @@ func TestAccVPCSecurityGroupRule_PartialMatching_basic(t *testing.T) {
 }
 
 func TestAccVPCSecurityGroupRule_PartialMatching_source(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resource1Name := "aws_security_group_rule.test1"
 	resource2Name := "aws_security_group_rule.test2"
@@ -478,7 +498,7 @@ func TestAccVPCSecurityGroupRule_PartialMatching_source(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSecurityGroupDestroy,
+		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSecurityGroupRuleConfig_partialMatchingSource(rName),
@@ -509,6 +529,7 @@ func TestAccVPCSecurityGroupRule_PartialMatching_source(t *testing.T) {
 }
 
 func TestAccVPCSecurityGroupRule_issue5310(t *testing.T) {
+	ctx := acctest.Context(t)
 	var group ec2.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_security_group_rule.test"
@@ -518,12 +539,12 @@ func TestAccVPCSecurityGroupRule_issue5310(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSecurityGroupDestroy,
+		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSecurityGroupRuleConfig_issue5310(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSecurityGroupExists(sgResourceName, &group),
+					testAccCheckSecurityGroupExists(ctx, sgResourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "0"),
 					resource.TestCheckNoResourceAttr(resourceName, "description"),
 					resource.TestCheckResourceAttr(resourceName, "from_port", "0"),
@@ -548,6 +569,7 @@ func TestAccVPCSecurityGroupRule_issue5310(t *testing.T) {
 }
 
 func TestAccVPCSecurityGroupRule_race(t *testing.T) {
+	ctx := acctest.Context(t)
 	var group ec2.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sgResourceName := "aws_security_group.test"
@@ -557,13 +579,13 @@ func TestAccVPCSecurityGroupRule_race(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSecurityGroupDestroy,
+		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSecurityGroupRuleConfig_race(rName, n),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecurityGroupExists(sgResourceName, &group),
-					testAccCheckSecurityGroupRuleCount(&group, n, n),
+					testAccCheckSecurityGroupExists(ctx, sgResourceName, &group),
+					testAccCheckSecurityGroupRuleCount(ctx, &group, n, n),
 				),
 			},
 		},
@@ -571,6 +593,7 @@ func TestAccVPCSecurityGroupRule_race(t *testing.T) {
 }
 
 func TestAccVPCSecurityGroupRule_selfSource(t *testing.T) {
+	ctx := acctest.Context(t)
 	var group ec2.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_security_group_rule.test"
@@ -580,12 +603,12 @@ func TestAccVPCSecurityGroupRule_selfSource(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSecurityGroupDestroy,
+		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSecurityGroupRuleConfig_selfInSource(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSecurityGroupExists(sgResourceName, &group),
+					testAccCheckSecurityGroupExists(ctx, sgResourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "0"),
 					resource.TestCheckNoResourceAttr(resourceName, "description"),
 					resource.TestCheckResourceAttr(resourceName, "from_port", "0"),
@@ -593,6 +616,7 @@ func TestAccVPCSecurityGroupRule_selfSource(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "protocol", "-1"),
 					resource.TestCheckResourceAttr(resourceName, "prefix_list_ids.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "security_group_id", sgResourceName, "id"),
+					resource.TestCheckResourceAttrSet(resourceName, "security_group_rule_id"),
 					resource.TestCheckResourceAttr(resourceName, "self", "false"),
 					resource.TestCheckResourceAttrPair(resourceName, "source_security_group_id", sgResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "to_port", "0"),
@@ -610,6 +634,7 @@ func TestAccVPCSecurityGroupRule_selfSource(t *testing.T) {
 }
 
 func TestAccVPCSecurityGroupRule_prefixListEgress(t *testing.T) {
+	ctx := acctest.Context(t)
 	var group ec2.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_security_group_rule.test"
@@ -620,12 +645,12 @@ func TestAccVPCSecurityGroupRule_prefixListEgress(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSecurityGroupDestroy,
+		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSecurityGroupRuleConfig_prefixListEgress(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSecurityGroupExists(sgResourceName, &group),
+					testAccCheckSecurityGroupExists(ctx, sgResourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "0"),
 					resource.TestCheckNoResourceAttr(resourceName, "description"),
 					resource.TestCheckResourceAttr(resourceName, "from_port", "0"),
@@ -634,6 +659,7 @@ func TestAccVPCSecurityGroupRule_prefixListEgress(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "prefix_list_ids.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "prefix_list_ids.0", vpceResourceName, "prefix_list_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "security_group_id", sgResourceName, "id"),
+					resource.TestCheckResourceAttrSet(resourceName, "security_group_rule_id"),
 					resource.TestCheckResourceAttr(resourceName, "self", "false"),
 					resource.TestCheckNoResourceAttr(resourceName, "source_security_group_id"),
 					resource.TestCheckResourceAttr(resourceName, "to_port", "0"),
@@ -652,13 +678,14 @@ func TestAccVPCSecurityGroupRule_prefixListEgress(t *testing.T) {
 
 // https://github.com/hashicorp/terraform-provider-aws/issues/26191.
 func TestAccVPCSecurityGroupRule_prefixListEmptyString(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSecurityGroupDestroy,
+		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccVPCSecurityGroupRuleConfig_prefixListEmptyString(rName),
@@ -669,6 +696,7 @@ func TestAccVPCSecurityGroupRule_prefixListEmptyString(t *testing.T) {
 }
 
 func TestAccVPCSecurityGroupRule_ingressDescription(t *testing.T) {
+	ctx := acctest.Context(t)
 	var group ec2.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_security_group_rule.test"
@@ -678,12 +706,12 @@ func TestAccVPCSecurityGroupRule_ingressDescription(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSecurityGroupDestroy,
+		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSecurityGroupRuleConfig_ingressDescription(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSecurityGroupExists(sgResourceName, &group),
+					testAccCheckSecurityGroupExists(ctx, sgResourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.0", "10.0.0.0/8"),
 					resource.TestCheckResourceAttr(resourceName, "description", "TF acceptance test ingress rule"),
@@ -692,6 +720,7 @@ func TestAccVPCSecurityGroupRule_ingressDescription(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "protocol", "tcp"),
 					resource.TestCheckResourceAttr(resourceName, "prefix_list_ids.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "security_group_id", sgResourceName, "id"),
+					resource.TestCheckResourceAttrSet(resourceName, "security_group_rule_id"),
 					resource.TestCheckResourceAttr(resourceName, "self", "false"),
 					resource.TestCheckNoResourceAttr(resourceName, "source_security_group_id"),
 					resource.TestCheckResourceAttr(resourceName, "to_port", "8000"),
@@ -709,6 +738,7 @@ func TestAccVPCSecurityGroupRule_ingressDescription(t *testing.T) {
 }
 
 func TestAccVPCSecurityGroupRule_egressDescription(t *testing.T) {
+	ctx := acctest.Context(t)
 	var group ec2.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_security_group_rule.test"
@@ -718,12 +748,12 @@ func TestAccVPCSecurityGroupRule_egressDescription(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSecurityGroupDestroy,
+		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSecurityGroupRuleConfig_egressDescription(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSecurityGroupExists(sgResourceName, &group),
+					testAccCheckSecurityGroupExists(ctx, sgResourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.0", "10.0.0.0/8"),
 					resource.TestCheckResourceAttr(resourceName, "description", "TF acceptance test egress rule"),
@@ -732,6 +762,7 @@ func TestAccVPCSecurityGroupRule_egressDescription(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "protocol", "tcp"),
 					resource.TestCheckResourceAttr(resourceName, "prefix_list_ids.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "security_group_id", sgResourceName, "id"),
+					resource.TestCheckResourceAttrSet(resourceName, "security_group_rule_id"),
 					resource.TestCheckResourceAttr(resourceName, "self", "false"),
 					resource.TestCheckNoResourceAttr(resourceName, "source_security_group_id"),
 					resource.TestCheckResourceAttr(resourceName, "to_port", "8000"),
@@ -749,6 +780,7 @@ func TestAccVPCSecurityGroupRule_egressDescription(t *testing.T) {
 }
 
 func TestAccVPCSecurityGroupRule_IngressDescription_updates(t *testing.T) {
+	ctx := acctest.Context(t)
 	var group ec2.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_security_group_rule.test"
@@ -758,12 +790,12 @@ func TestAccVPCSecurityGroupRule_IngressDescription_updates(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSecurityGroupDestroy,
+		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSecurityGroupRuleConfig_ingressDescription(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSecurityGroupExists(sgResourceName, &group),
+					testAccCheckSecurityGroupExists(ctx, sgResourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.0", "10.0.0.0/8"),
 					resource.TestCheckResourceAttr(resourceName, "description", "TF acceptance test ingress rule"),
@@ -781,7 +813,7 @@ func TestAccVPCSecurityGroupRule_IngressDescription_updates(t *testing.T) {
 			{
 				Config: testAccVPCSecurityGroupRuleConfig_ingressUpdateDescription(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSecurityGroupExists(sgResourceName, &group),
+					testAccCheckSecurityGroupExists(ctx, sgResourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.0", "10.0.0.0/8"),
 					resource.TestCheckResourceAttr(resourceName, "description", "TF acceptance test ingress rule updated"),
@@ -807,6 +839,7 @@ func TestAccVPCSecurityGroupRule_IngressDescription_updates(t *testing.T) {
 }
 
 func TestAccVPCSecurityGroupRule_EgressDescription_updates(t *testing.T) {
+	ctx := acctest.Context(t)
 	var group ec2.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_security_group_rule.test"
@@ -816,12 +849,12 @@ func TestAccVPCSecurityGroupRule_EgressDescription_updates(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSecurityGroupDestroy,
+		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSecurityGroupRuleConfig_egressDescription(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSecurityGroupExists(sgResourceName, &group),
+					testAccCheckSecurityGroupExists(ctx, sgResourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.0", "10.0.0.0/8"),
 					resource.TestCheckResourceAttr(resourceName, "description", "TF acceptance test egress rule"),
@@ -839,7 +872,7 @@ func TestAccVPCSecurityGroupRule_EgressDescription_updates(t *testing.T) {
 			{
 				Config: testAccVPCSecurityGroupRuleConfig_egressUpdateDescription(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSecurityGroupExists(sgResourceName, &group),
+					testAccCheckSecurityGroupExists(ctx, sgResourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.0", "10.0.0.0/8"),
 					resource.TestCheckResourceAttr(resourceName, "description", "TF acceptance test egress rule updated"),
@@ -865,6 +898,7 @@ func TestAccVPCSecurityGroupRule_EgressDescription_updates(t *testing.T) {
 }
 
 func TestAccVPCSecurityGroupRule_Description_allPorts(t *testing.T) {
+	ctx := acctest.Context(t)
 	var group ec2.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_security_group_rule.test"
@@ -874,12 +908,12 @@ func TestAccVPCSecurityGroupRule_Description_allPorts(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSecurityGroupDestroy,
+		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSecurityGroupRuleConfig_descriptionAllPorts(rName, "description1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSecurityGroupExists(sgResourceName, &group),
+					testAccCheckSecurityGroupExists(ctx, sgResourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.0", "0.0.0.0/0"),
 					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
@@ -903,7 +937,7 @@ func TestAccVPCSecurityGroupRule_Description_allPorts(t *testing.T) {
 			{
 				Config: testAccVPCSecurityGroupRuleConfig_descriptionAllPorts(rName, "description2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSecurityGroupExists(sgResourceName, &group),
+					testAccCheckSecurityGroupExists(ctx, sgResourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.0", "0.0.0.0/0"),
 					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
@@ -923,6 +957,7 @@ func TestAccVPCSecurityGroupRule_Description_allPorts(t *testing.T) {
 }
 
 func TestAccVPCSecurityGroupRule_DescriptionAllPorts_nonZeroPorts(t *testing.T) {
+	ctx := acctest.Context(t)
 	var group ec2.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_security_group_rule.test"
@@ -932,12 +967,12 @@ func TestAccVPCSecurityGroupRule_DescriptionAllPorts_nonZeroPorts(t *testing.T) 
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSecurityGroupDestroy,
+		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSecurityGroupRuleConfig_descriptionAllPortsNonZeroPorts(rName, "description1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSecurityGroupExists(sgResourceName, &group),
+					testAccCheckSecurityGroupExists(ctx, sgResourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.0", "0.0.0.0/0"),
 					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
@@ -961,7 +996,7 @@ func TestAccVPCSecurityGroupRule_DescriptionAllPorts_nonZeroPorts(t *testing.T) 
 			{
 				Config: testAccVPCSecurityGroupRuleConfig_descriptionAllPortsNonZeroPorts(rName, "description2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSecurityGroupExists(sgResourceName, &group),
+					testAccCheckSecurityGroupExists(ctx, sgResourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.0", "0.0.0.0/0"),
 					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
@@ -982,6 +1017,7 @@ func TestAccVPCSecurityGroupRule_DescriptionAllPorts_nonZeroPorts(t *testing.T) 
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/6416
 func TestAccVPCSecurityGroupRule_MultipleRuleSearching_allProtocolCrash(t *testing.T) {
+	ctx := acctest.Context(t)
 	var group ec2.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resource1Name := "aws_security_group_rule.test1"
@@ -992,12 +1028,12 @@ func TestAccVPCSecurityGroupRule_MultipleRuleSearching_allProtocolCrash(t *testi
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSecurityGroupDestroy,
+		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSecurityGroupRuleConfig_multipleSearchingAllProtocolCrash(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSecurityGroupExists(sgResourceName, &group),
+					testAccCheckSecurityGroupExists(ctx, sgResourceName, &group),
 					resource.TestCheckResourceAttr(resource1Name, "cidr_blocks.#", "1"),
 					resource.TestCheckResourceAttr(resource1Name, "cidr_blocks.0", "10.0.0.0/8"),
 					resource.TestCheckNoResourceAttr(resource1Name, "description"),
@@ -1041,6 +1077,7 @@ func TestAccVPCSecurityGroupRule_MultipleRuleSearching_allProtocolCrash(t *testi
 }
 
 func TestAccVPCSecurityGroupRule_multiDescription(t *testing.T) {
+	ctx := acctest.Context(t)
 	var group1, group2 ec2.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resource1Name := "aws_security_group_rule.test1"
@@ -1055,13 +1092,13 @@ func TestAccVPCSecurityGroupRule_multiDescription(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSecurityGroupDestroy,
+		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSecurityGroupRuleConfig_multiDescription(rName, "ingress"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSecurityGroupExists(sg1ResourceName, &group1),
-					testAccCheckSecurityGroupExists(sg2ResourceName, &group2),
+					testAccCheckSecurityGroupExists(ctx, sg1ResourceName, &group1),
+					testAccCheckSecurityGroupExists(ctx, sg2ResourceName, &group2),
 					resource.TestCheckResourceAttr(resource1Name, "cidr_blocks.#", "1"),
 					resource.TestCheckResourceAttr(resource1Name, "cidr_blocks.0", "0.0.0.0/0"),
 					resource.TestCheckResourceAttr(resource1Name, "description", "CIDR Description"),
@@ -1070,6 +1107,7 @@ func TestAccVPCSecurityGroupRule_multiDescription(t *testing.T) {
 					resource.TestCheckResourceAttr(resource1Name, "protocol", "tcp"),
 					resource.TestCheckResourceAttr(resource1Name, "prefix_list_ids.#", "0"),
 					resource.TestCheckResourceAttrPair(resource1Name, "security_group_id", sg1ResourceName, "id"),
+					resource.TestCheckResourceAttrSet(resource1Name, "security_group_rule_id"),
 					resource.TestCheckResourceAttr(resource1Name, "self", "false"),
 					resource.TestCheckNoResourceAttr(resource1Name, "source_security_group_id"),
 					resource.TestCheckResourceAttr(resource1Name, "to_port", "22"),
@@ -1082,6 +1120,7 @@ func TestAccVPCSecurityGroupRule_multiDescription(t *testing.T) {
 					resource.TestCheckResourceAttr(resource2Name, "protocol", "tcp"),
 					resource.TestCheckResourceAttr(resource2Name, "prefix_list_ids.#", "0"),
 					resource.TestCheckResourceAttrPair(resource2Name, "security_group_id", sg1ResourceName, "id"),
+					resource.TestCheckResourceAttrSet(resource2Name, "security_group_rule_id"),
 					resource.TestCheckResourceAttr(resource2Name, "self", "false"),
 					resource.TestCheckNoResourceAttr(resource2Name, "source_security_group_id"),
 					resource.TestCheckResourceAttr(resource2Name, "to_port", "22"),
@@ -1093,6 +1132,7 @@ func TestAccVPCSecurityGroupRule_multiDescription(t *testing.T) {
 					resource.TestCheckResourceAttr(resource3Name, "protocol", "tcp"),
 					resource.TestCheckResourceAttr(resource3Name, "prefix_list_ids.#", "0"),
 					resource.TestCheckResourceAttrPair(resource3Name, "security_group_id", sg1ResourceName, "id"),
+					resource.TestCheckResourceAttrSet(resource3Name, "security_group_rule_id"),
 					resource.TestCheckResourceAttr(resource3Name, "self", "false"),
 					resource.TestCheckResourceAttrPair(resource3Name, "source_security_group_id", sg2ResourceName, "id"),
 					resource.TestCheckResourceAttr(resource3Name, "to_port", "22"),
@@ -1120,8 +1160,8 @@ func TestAccVPCSecurityGroupRule_multiDescription(t *testing.T) {
 			{
 				Config: testAccVPCSecurityGroupRuleConfig_multiDescription(rName, "egress"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSecurityGroupExists(sg1ResourceName, &group1),
-					testAccCheckSecurityGroupExists(sg2ResourceName, &group2),
+					testAccCheckSecurityGroupExists(ctx, sg1ResourceName, &group1),
+					testAccCheckSecurityGroupExists(ctx, sg2ResourceName, &group2),
 					resource.TestCheckResourceAttr(resource1Name, "cidr_blocks.#", "1"),
 					resource.TestCheckResourceAttr(resource1Name, "cidr_blocks.0", "0.0.0.0/0"),
 					resource.TestCheckResourceAttr(resource1Name, "description", "CIDR Description"),
@@ -1130,6 +1170,7 @@ func TestAccVPCSecurityGroupRule_multiDescription(t *testing.T) {
 					resource.TestCheckResourceAttr(resource1Name, "protocol", "tcp"),
 					resource.TestCheckResourceAttr(resource1Name, "prefix_list_ids.#", "0"),
 					resource.TestCheckResourceAttrPair(resource1Name, "security_group_id", sg1ResourceName, "id"),
+					resource.TestCheckResourceAttrSet(resource1Name, "security_group_rule_id"),
 					resource.TestCheckResourceAttr(resource1Name, "self", "false"),
 					resource.TestCheckNoResourceAttr(resource1Name, "source_security_group_id"),
 					resource.TestCheckResourceAttr(resource1Name, "to_port", "22"),
@@ -1142,6 +1183,7 @@ func TestAccVPCSecurityGroupRule_multiDescription(t *testing.T) {
 					resource.TestCheckResourceAttr(resource2Name, "protocol", "tcp"),
 					resource.TestCheckResourceAttr(resource2Name, "prefix_list_ids.#", "0"),
 					resource.TestCheckResourceAttrPair(resource2Name, "security_group_id", sg1ResourceName, "id"),
+					resource.TestCheckResourceAttrSet(resource2Name, "security_group_rule_id"),
 					resource.TestCheckResourceAttr(resource2Name, "self", "false"),
 					resource.TestCheckNoResourceAttr(resource2Name, "source_security_group_id"),
 					resource.TestCheckResourceAttr(resource2Name, "to_port", "22"),
@@ -1153,6 +1195,7 @@ func TestAccVPCSecurityGroupRule_multiDescription(t *testing.T) {
 					resource.TestCheckResourceAttr(resource3Name, "protocol", "tcp"),
 					resource.TestCheckResourceAttr(resource3Name, "prefix_list_ids.#", "0"),
 					resource.TestCheckResourceAttrPair(resource3Name, "security_group_id", sg1ResourceName, "id"),
+					resource.TestCheckResourceAttrSet(resource3Name, "security_group_rule_id"),
 					resource.TestCheckResourceAttr(resource3Name, "self", "false"),
 					resource.TestCheckResourceAttrPair(resource3Name, "source_security_group_id", sg2ResourceName, "id"),
 					resource.TestCheckResourceAttr(resource3Name, "to_port", "22"),
@@ -1165,6 +1208,7 @@ func TestAccVPCSecurityGroupRule_multiDescription(t *testing.T) {
 					resource.TestCheckResourceAttr(resource4Name, "prefix_list_ids.#", "1"),
 					resource.TestCheckResourceAttrPair(resource4Name, "prefix_list_ids.0", vpceResourceName, "prefix_list_id"),
 					resource.TestCheckResourceAttrPair(resource4Name, "security_group_id", sg1ResourceName, "id"),
+					resource.TestCheckResourceAttrSet(resource4Name, "security_group_rule_id"),
 					resource.TestCheckResourceAttr(resource4Name, "self", "false"),
 					resource.TestCheckNoResourceAttr(resource4Name, "source_security_group_id"),
 					resource.TestCheckResourceAttr(resource4Name, "to_port", "22"),
@@ -1200,6 +1244,7 @@ func TestAccVPCSecurityGroupRule_multiDescription(t *testing.T) {
 }
 
 func TestAccVPCSecurityGroupRule_Ingress_multipleIPv6(t *testing.T) {
+	ctx := acctest.Context(t)
 	var group ec2.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_security_group_rule.test"
@@ -1209,12 +1254,12 @@ func TestAccVPCSecurityGroupRule_Ingress_multipleIPv6(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSecurityGroupDestroy,
+		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSecurityGroupRuleConfig_ingressMultipleIPv6(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSecurityGroupExists(sgResourceName, &group),
+					testAccCheckSecurityGroupExists(ctx, sgResourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "0"),
 					resource.TestCheckNoResourceAttr(resourceName, "description"),
 					resource.TestCheckResourceAttr(resourceName, "from_port", "80"),
@@ -1224,6 +1269,7 @@ func TestAccVPCSecurityGroupRule_Ingress_multipleIPv6(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "protocol", "tcp"),
 					resource.TestCheckResourceAttr(resourceName, "prefix_list_ids.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "security_group_id", sgResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_rule_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "self", "false"),
 					resource.TestCheckNoResourceAttr(resourceName, "source_security_group_id"),
 					resource.TestCheckResourceAttr(resourceName, "to_port", "8000"),
@@ -1241,21 +1287,22 @@ func TestAccVPCSecurityGroupRule_Ingress_multipleIPv6(t *testing.T) {
 }
 
 func TestAccVPCSecurityGroupRule_Ingress_multiplePrefixLists(t *testing.T) {
+	ctx := acctest.Context(t)
 	var group ec2.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_security_group_rule.test"
 	sgResourceName := "aws_security_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckManagedPrefixList(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckManagedPrefixList(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSecurityGroupDestroy,
+		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSecurityGroupRuleConfig_ingressMultiplePrefixLists(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSecurityGroupExists(sgResourceName, &group),
+					testAccCheckSecurityGroupExists(ctx, sgResourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "0"),
 					resource.TestCheckNoResourceAttr(resourceName, "description"),
 					resource.TestCheckResourceAttr(resourceName, "from_port", "80"),
@@ -1263,6 +1310,7 @@ func TestAccVPCSecurityGroupRule_Ingress_multiplePrefixLists(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "protocol", "tcp"),
 					resource.TestCheckResourceAttr(resourceName, "prefix_list_ids.#", "2"),
 					resource.TestCheckResourceAttrPair(resourceName, "security_group_id", sgResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_rule_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "self", "false"),
 					resource.TestCheckNoResourceAttr(resourceName, "source_security_group_id"),
 					resource.TestCheckResourceAttr(resourceName, "to_port", "8000"),
@@ -1280,6 +1328,7 @@ func TestAccVPCSecurityGroupRule_Ingress_multiplePrefixLists(t *testing.T) {
 }
 
 func TestAccVPCSecurityGroupRule_Ingress_peeredVPC(t *testing.T) {
+	ctx := acctest.Context(t)
 	var group ec2.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_security_group_rule.test"
@@ -1289,12 +1338,12 @@ func TestAccVPCSecurityGroupRule_Ingress_peeredVPC(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAlternateAccount(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
-		CheckDestroy:             testAccCheckSecurityGroupDestroy,
+		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSecurityGroupRuleConfig_ingressPeeredVPC(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSecurityGroupExists(sgResourceName, &group),
+					testAccCheckSecurityGroupExists(ctx, sgResourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "0"),
 					resource.TestCheckNoResourceAttr(resourceName, "description"),
 					resource.TestCheckResourceAttr(resourceName, "from_port", "80"),
@@ -1302,6 +1351,7 @@ func TestAccVPCSecurityGroupRule_Ingress_peeredVPC(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "protocol", "tcp"),
 					resource.TestCheckResourceAttr(resourceName, "prefix_list_ids.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "security_group_id", sgResourceName, "id"),
+					resource.TestCheckResourceAttrSet(resourceName, "security_group_rule_id"),
 					resource.TestCheckResourceAttr(resourceName, "self", "false"),
 					resource.TestCheckResourceAttrSet(resourceName, "source_security_group_id"),
 					resource.TestCheckResourceAttr(resourceName, "to_port", "8000"),
@@ -1319,6 +1369,7 @@ func TestAccVPCSecurityGroupRule_Ingress_peeredVPC(t *testing.T) {
 }
 
 func TestAccVPCSecurityGroupRule_Ingress_ipv4AndIPv6(t *testing.T) {
+	ctx := acctest.Context(t)
 	var group ec2.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_security_group_rule.test"
@@ -1328,12 +1379,12 @@ func TestAccVPCSecurityGroupRule_Ingress_ipv4AndIPv6(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSecurityGroupDestroy,
+		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSecurityGroupRuleConfig_ingressIPv4AndIPv6(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSecurityGroupExists(sgResourceName, &group),
+					testAccCheckSecurityGroupExists(ctx, sgResourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.0", "10.2.0.0/16"),
 					resource.TestCheckNoResourceAttr(resourceName, "description"),
@@ -1343,6 +1394,7 @@ func TestAccVPCSecurityGroupRule_Ingress_ipv4AndIPv6(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "protocol", "tcp"),
 					resource.TestCheckResourceAttr(resourceName, "prefix_list_ids.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "security_group_id", sgResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_rule_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "self", "false"),
 					resource.TestCheckNoResourceAttr(resourceName, "source_security_group_id"),
 					resource.TestCheckResourceAttr(resourceName, "to_port", "8000"),
@@ -1360,21 +1412,22 @@ func TestAccVPCSecurityGroupRule_Ingress_ipv4AndIPv6(t *testing.T) {
 }
 
 func TestAccVPCSecurityGroupRule_Ingress_prefixListAndSelf(t *testing.T) {
+	ctx := acctest.Context(t)
 	var group ec2.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_security_group_rule.test"
 	sgResourceName := "aws_security_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckManagedPrefixList(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckManagedPrefixList(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSecurityGroupDestroy,
+		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSecurityGroupRuleConfig_prefixListAndSelf(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSecurityGroupExists(sgResourceName, &group),
+					testAccCheckSecurityGroupExists(ctx, sgResourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "0"),
 					resource.TestCheckNoResourceAttr(resourceName, "description"),
 					resource.TestCheckResourceAttr(resourceName, "from_port", "80"),
@@ -1382,6 +1435,7 @@ func TestAccVPCSecurityGroupRule_Ingress_prefixListAndSelf(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "protocol", "tcp"),
 					resource.TestCheckResourceAttr(resourceName, "prefix_list_ids.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "security_group_id", sgResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_rule_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "self", "true"),
 					resource.TestCheckNoResourceAttr(resourceName, "source_security_group_id"),
 					resource.TestCheckResourceAttr(resourceName, "to_port", "8000"),
@@ -1399,6 +1453,7 @@ func TestAccVPCSecurityGroupRule_Ingress_prefixListAndSelf(t *testing.T) {
 }
 
 func TestAccVPCSecurityGroupRule_Ingress_prefixListAndSource(t *testing.T) {
+	ctx := acctest.Context(t)
 	var group ec2.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_security_group_rule.test"
@@ -1406,15 +1461,15 @@ func TestAccVPCSecurityGroupRule_Ingress_prefixListAndSource(t *testing.T) {
 	sg2ResourceName := "aws_security_group.test.1"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckManagedPrefixList(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckManagedPrefixList(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSecurityGroupDestroy,
+		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSecurityGroupRuleConfig_prefixListAndSource(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSecurityGroupExists(sg1ResourceName, &group),
+					testAccCheckSecurityGroupExists(ctx, sg1ResourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "0"),
 					resource.TestCheckNoResourceAttr(resourceName, "description"),
 					resource.TestCheckResourceAttr(resourceName, "from_port", "80"),
@@ -1422,6 +1477,7 @@ func TestAccVPCSecurityGroupRule_Ingress_prefixListAndSource(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "protocol", "tcp"),
 					resource.TestCheckResourceAttr(resourceName, "prefix_list_ids.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "security_group_id", sg1ResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_rule_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "self", "false"),
 					resource.TestCheckResourceAttrPair(resourceName, "source_security_group_id", sg2ResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "to_port", "8000"),
@@ -1439,6 +1495,7 @@ func TestAccVPCSecurityGroupRule_Ingress_prefixListAndSource(t *testing.T) {
 }
 
 func TestAccVPCSecurityGroupRule_protocolChange(t *testing.T) {
+	ctx := acctest.Context(t)
 	var group ec2.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_security_group_rule.test"
@@ -1446,15 +1503,15 @@ func TestAccVPCSecurityGroupRule_protocolChange(t *testing.T) {
 	sgName := "aws_security_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckManagedPrefixList(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckManagedPrefixList(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSecurityGroupDestroy,
+		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCSecurityGroupRuleConfig_protocolChange(rName, "tcp"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSecurityGroupExists(sgName, &group),
+					testAccCheckSecurityGroupExists(ctx, sgName, &group),
 					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "tcp"),
 					resource.TestCheckResourceAttr(resourceName, "type", "ingress"),
@@ -1466,7 +1523,7 @@ func TestAccVPCSecurityGroupRule_protocolChange(t *testing.T) {
 			{
 				Config: testAccVPCSecurityGroupRuleConfig_protocolChange(rName, "udp"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSecurityGroupExists(sgName, &group),
+					testAccCheckSecurityGroupExists(ctx, sgName, &group),
 					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "udp"),
 					resource.TestCheckResourceAttr(resourceName, "type", "ingress"),
@@ -1478,7 +1535,7 @@ func TestAccVPCSecurityGroupRule_protocolChange(t *testing.T) {
 			{
 				Config: testAccVPCSecurityGroupRuleConfig_protocolChange(rName, "tcp"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSecurityGroupExists(sgName, &group),
+					testAccCheckSecurityGroupExists(ctx, sgName, &group),
 					resource.TestCheckResourceAttr(resourceName, "cidr_blocks.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "tcp"),
 					resource.TestCheckResourceAttr(resourceName, "type", "ingress"),

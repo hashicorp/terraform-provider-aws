@@ -1,6 +1,7 @@
 package apigateway
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -8,18 +9,20 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func ResourceIntegrationResponse() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceIntegrationResponseCreate,
-		Read:   resourceIntegrationResponseRead,
-		Update: resourceIntegrationResponseCreate,
-		Delete: resourceIntegrationResponseDelete,
+		CreateWithoutTimeout: resourceIntegrationResponseCreate,
+		ReadWithoutTimeout:   resourceIntegrationResponseRead,
+		UpdateWithoutTimeout: resourceIntegrationResponseCreate,
+		DeleteWithoutTimeout: resourceIntegrationResponseDelete,
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "/")
 				if len(idParts) != 4 || idParts[0] == "" || idParts[1] == "" || idParts[2] == "" || idParts[3] == "" {
 					return nil, fmt.Errorf("Unexpected format of ID (%q), expected REST-API-ID/RESOURCE-ID/HTTP-METHOD/STATUS-CODE", d.Id())
@@ -88,8 +91,9 @@ func ResourceIntegrationResponse() *schema.Resource {
 	}
 }
 
-func resourceIntegrationResponseCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+func resourceIntegrationResponseCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 
 	templates := make(map[string]string)
 	for k, v := range d.Get("response_templates").(map[string]interface{}) {
@@ -121,22 +125,23 @@ func resourceIntegrationResponseCreate(d *schema.ResourceData, meta interface{})
 		input.SelectionPattern = aws.String(v.(string))
 	}
 
-	_, err := conn.PutIntegrationResponse(&input)
+	_, err := conn.PutIntegrationResponseWithContext(ctx, &input)
 	if err != nil {
-		return fmt.Errorf("Error creating API Gateway Integration Response: %s", err)
+		return sdkdiag.AppendErrorf(diags, "Error creating API Gateway Integration Response: %s", err)
 	}
 
 	d.SetId(fmt.Sprintf("agir-%s-%s-%s-%s", d.Get("rest_api_id").(string), d.Get("resource_id").(string), d.Get("http_method").(string), d.Get("status_code").(string)))
 	log.Printf("[DEBUG] API Gateway Integration Response ID: %s", d.Id())
 
-	return resourceIntegrationResponseRead(d, meta)
+	return append(diags, resourceIntegrationResponseRead(ctx, d, meta)...)
 }
 
-func resourceIntegrationResponseRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+func resourceIntegrationResponseRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 
 	log.Printf("[DEBUG] Reading API Gateway Integration Response %s", d.Id())
-	integrationResponse, err := conn.GetIntegrationResponse(&apigateway.GetIntegrationResponseInput{
+	integrationResponse, err := conn.GetIntegrationResponseWithContext(ctx, &apigateway.GetIntegrationResponseInput{
 		HttpMethod: aws.String(d.Get("http_method").(string)),
 		ResourceId: aws.String(d.Get("resource_id").(string)),
 		RestApiId:  aws.String(d.Get("rest_api_id").(string)),
@@ -146,9 +151,9 @@ func resourceIntegrationResponseRead(d *schema.ResourceData, meta interface{}) e
 		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
 			log.Printf("[WARN] API Gateway Integration Response (%s) not found, removing from state", d.Id())
 			d.SetId("")
-			return nil
+			return diags
 		}
-		return fmt.Errorf("error reading API Gateway Integration Response (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading API Gateway Integration Response (%s): %s", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Received API Gateway Integration Response: %s", integrationResponse)
@@ -156,7 +161,7 @@ func resourceIntegrationResponseRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("content_handling", integrationResponse.ContentHandling)
 
 	if err := d.Set("response_parameters", aws.StringValueMap(integrationResponse.ResponseParameters)); err != nil {
-		return fmt.Errorf("error setting response_parameters: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting response_parameters: %s", err)
 	}
 
 	// We need to explicitly convert key = nil values into key = "", which aws.StringValueMap() removes
@@ -165,19 +170,20 @@ func resourceIntegrationResponseRead(d *schema.ResourceData, meta interface{}) e
 		responseTemplateMap[key] = aws.StringValue(valuePointer)
 	}
 	if err := d.Set("response_templates", responseTemplateMap); err != nil {
-		return fmt.Errorf("error setting response_templates: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting response_templates: %s", err)
 	}
 
 	d.Set("selection_pattern", integrationResponse.SelectionPattern)
 
-	return nil
+	return diags
 }
 
-func resourceIntegrationResponseDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+func resourceIntegrationResponseDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 	log.Printf("[DEBUG] Deleting API Gateway Integration Response: %s", d.Id())
 
-	_, err := conn.DeleteIntegrationResponse(&apigateway.DeleteIntegrationResponseInput{
+	_, err := conn.DeleteIntegrationResponseWithContext(ctx, &apigateway.DeleteIntegrationResponseInput{
 		HttpMethod: aws.String(d.Get("http_method").(string)),
 		ResourceId: aws.String(d.Get("resource_id").(string)),
 		RestApiId:  aws.String(d.Get("rest_api_id").(string)),
@@ -185,12 +191,12 @@ func resourceIntegrationResponseDelete(d *schema.ResourceData, meta interface{})
 	})
 
 	if tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting API Gateway Integration Response (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting API Gateway Integration Response (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

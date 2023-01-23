@@ -1,6 +1,7 @@
 package chime_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -15,6 +16,7 @@ import (
 )
 
 func TestAccChimeVoiceConnectorLogging_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_chime_voice_connector_logging.test"
 
@@ -22,12 +24,12 @@ func TestAccChimeVoiceConnectorLogging_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, chime.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVoiceConnectorDestroy,
+		CheckDestroy:             testAccCheckVoiceConnectorDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVoiceConnectorLoggingConfig_basic(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVoiceConnectorLoggingExists(resourceName),
+					testAccCheckVoiceConnectorLoggingExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "enable_sip_logs", "true"),
 					resource.TestCheckResourceAttr(resourceName, "enable_media_metric_logs", "true"),
 				),
@@ -42,6 +44,7 @@ func TestAccChimeVoiceConnectorLogging_basic(t *testing.T) {
 }
 
 func TestAccChimeVoiceConnectorLogging_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_chime_voice_connector_logging.test"
 
@@ -49,13 +52,13 @@ func TestAccChimeVoiceConnectorLogging_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, chime.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVoiceConnectorDestroy,
+		CheckDestroy:             testAccCheckVoiceConnectorDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVoiceConnectorLoggingConfig_basic(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVoiceConnectorLoggingExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfchime.ResourceVoiceConnectorLogging(), resourceName),
+					testAccCheckVoiceConnectorLoggingExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfchime.ResourceVoiceConnectorLogging(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -64,6 +67,7 @@ func TestAccChimeVoiceConnectorLogging_disappears(t *testing.T) {
 }
 
 func TestAccChimeVoiceConnectorLogging_update(t *testing.T) {
+	ctx := acctest.Context(t)
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_chime_voice_connector_logging.test"
 
@@ -71,18 +75,18 @@ func TestAccChimeVoiceConnectorLogging_update(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, chime.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVoiceConnectorDestroy,
+		CheckDestroy:             testAccCheckVoiceConnectorDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVoiceConnectorLoggingConfig_basic(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVoiceConnectorLoggingExists(resourceName),
+					testAccCheckVoiceConnectorLoggingExists(ctx, resourceName),
 				),
 			},
 			{
 				Config: testAccVoiceConnectorLoggingConfig_updated(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckVoiceConnectorLoggingExists(resourceName),
+					testAccCheckVoiceConnectorLoggingExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "enable_sip_logs", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_media_metric_logs", "false"),
 				),
@@ -126,7 +130,7 @@ resource "aws_chime_voice_connector_logging" "test" {
 `, name)
 }
 
-func testAccCheckVoiceConnectorLoggingExists(name string) resource.TestCheckFunc {
+func testAccCheckVoiceConnectorLoggingExists(ctx context.Context, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -137,12 +141,12 @@ func testAccCheckVoiceConnectorLoggingExists(name string) resource.TestCheckFunc
 			return fmt.Errorf("no Chime Voice Connector logging ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeConn()
 		input := &chime.GetVoiceConnectorLoggingConfigurationInput{
 			VoiceConnectorId: aws.String(rs.Primary.ID),
 		}
 
-		resp, err := conn.GetVoiceConnectorLoggingConfiguration(input)
+		resp, err := conn.GetVoiceConnectorLoggingConfigurationWithContext(ctx, input)
 		if err != nil {
 			return err
 		}

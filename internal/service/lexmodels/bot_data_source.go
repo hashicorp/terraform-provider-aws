@@ -1,17 +1,20 @@
 package lexmodels
 
 import (
+	"context"
 	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws/arn"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func DataSourceBot() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceBotRead,
+		ReadWithoutTimeout: dataSourceBotRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -85,15 +88,16 @@ func DataSourceBot() *schema.Resource {
 	}
 }
 
-func dataSourceBotRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LexModelsConn
+func dataSourceBotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).LexModelsConn()
 
 	name := d.Get("name").(string)
 	version := d.Get("version").(string)
-	output, err := FindBotVersionByName(conn, name, version)
+	output, err := FindBotVersionByName(ctx, conn, name, version)
 
 	if err != nil {
-		return fmt.Errorf("error reading Lex Bot (%s/%s): %w", name, version, err)
+		return sdkdiag.AppendErrorf(diags, "reading Lex Bot (%s/%s): %s", name, version, err)
 	}
 
 	arn := arn.ARN{
@@ -122,5 +126,5 @@ func dataSourceBotRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(name)
 
-	return nil
+	return diags
 }

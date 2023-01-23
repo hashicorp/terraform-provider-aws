@@ -8,20 +8,13 @@ env:
   IN_MAINTAINER_LIST: ${{ contains(secrets.MAINTAINER_LIST, github.actor) }}
 
 jobs:
-  markIssuesForTriage:
+  AddLabelsForIssueTriage:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - name: Apply Issue needs-triage Label
-        if: github.event.action == 'opened' && env.IN_MAINTAINER_LIST == 'false'
-        uses: github/issue-labeler@v2.5
-        with:
-          repo-token: "${{ secrets.GITHUB_TOKEN }}"
-          configuration-path: .github/labeler-issue-needs-triage.yml
-          enable-versioned-regex: 0
       - name: Apply Issue Triage Labels
         uses: github/issue-labeler@v2.5
         with:
           repo-token: "${{ secrets.GITHUB_TOKEN }}"
           configuration-path: .github/labeler-issue-triage.yml
           enable-versioned-regex: 0
+          include-title: 1

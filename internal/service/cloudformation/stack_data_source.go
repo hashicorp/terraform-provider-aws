@@ -1,13 +1,15 @@
 package cloudformation
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -15,7 +17,7 @@ import (
 
 func DataSourceStack() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceStackRead,
+		ReadWithoutTimeout: dataSourceStackRead,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -69,8 +71,9 @@ func DataSourceStack() *schema.Resource {
 	}
 }
 
-func dataSourceStackRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFormationConn
+func dataSourceStackRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CloudFormationConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get("name").(string)
@@ -79,12 +82,12 @@ func dataSourceStackRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Reading CloudFormation Stack: %s", input)
-	out, err := conn.DescribeStacks(input)
+	out, err := conn.DescribeStacksWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("Failed describing CloudFormation stack (%s): %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "Failed describing CloudFormation stack (%s): %s", name, err)
 	}
 	if l := len(out.Stacks); l != 1 {
-		return fmt.Errorf("Expected 1 CloudFormation stack (%s), found %d", name, l)
+		return sdkdiag.AppendErrorf(diags, "Expected 1 CloudFormation stack (%s), found %d", name, l)
 	}
 	stack := out.Stacks[0]
 	d.SetId(aws.StringValue(stack.StackId))
@@ -100,7 +103,7 @@ func dataSourceStackRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("parameters", flattenAllParameters(stack.Parameters))
 	if err := d.Set("tags", KeyValueTags(stack.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 	d.Set("outputs", flattenOutputs(stack.Outputs))
 
@@ -111,16 +114,16 @@ func dataSourceStackRead(d *schema.ResourceData, meta interface{}) error {
 	tInput := cloudformation.GetTemplateInput{
 		StackName: aws.String(name),
 	}
-	tOut, err := conn.GetTemplate(&tInput)
+	tOut, err := conn.GetTemplateWithContext(ctx, &tInput)
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading CloudFormation Stack (%s): reading template: %s", name, err)
 	}
 
 	template, err := verify.NormalizeJSONOrYAMLString(*tOut.TemplateBody)
 	if err != nil {
-		return fmt.Errorf("template body contains an invalid JSON or YAML: %w", err)
+		return sdkdiag.AppendErrorf(diags, "template body contains an invalid JSON or YAML: %s", err)
 	}
 	d.Set("template_body", template)
 
-	return nil
+	return diags
 }

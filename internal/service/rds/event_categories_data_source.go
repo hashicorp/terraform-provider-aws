@@ -1,18 +1,20 @@
 package rds
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func DataSourceEventCategories() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceEventCategoriesRead,
+		ReadWithoutTimeout: dataSourceEventCategoriesRead,
 
 		Schema: map[string]*schema.Schema{
 			"event_categories": {
@@ -29,8 +31,9 @@ func DataSourceEventCategories() *schema.Resource {
 	}
 }
 
-func dataSourceEventCategoriesRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+func dataSourceEventCategoriesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	input := &rds.DescribeEventCategoriesInput{}
 
@@ -38,10 +41,10 @@ func dataSourceEventCategoriesRead(d *schema.ResourceData, meta interface{}) err
 		input.SourceType = aws.String(v.(string))
 	}
 
-	output, err := findEventCategoriesMaps(conn, input)
+	output, err := findEventCategoriesMaps(ctx, conn, input)
 
 	if err != nil {
-		return fmt.Errorf("error reading RDS Event Categories: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading RDS Event Categories: %s", err)
 	}
 
 	var eventCategories []string
@@ -53,14 +56,13 @@ func dataSourceEventCategoriesRead(d *schema.ResourceData, meta interface{}) err
 	d.SetId(meta.(*conns.AWSClient).Region)
 	d.Set("event_categories", eventCategories)
 
-	return nil
-
+	return diags
 }
 
-func findEventCategoriesMaps(conn *rds.RDS, input *rds.DescribeEventCategoriesInput) ([]*rds.EventCategoriesMap, error) {
+func findEventCategoriesMaps(ctx context.Context, conn *rds.RDS, input *rds.DescribeEventCategoriesInput) ([]*rds.EventCategoriesMap, error) {
 	var output []*rds.EventCategoriesMap
 
-	page, err := conn.DescribeEventCategories(input)
+	page, err := conn.DescribeEventCategoriesWithContext(ctx, input)
 
 	if err != nil {
 		return nil, err

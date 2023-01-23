@@ -1,18 +1,20 @@
 package iam
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func DataSourceUserSSHKey() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceUserSSHKeyRead,
+		ReadWithoutTimeout: dataSourceUserSSHKeyRead,
 		Schema: map[string]*schema.Schema{
 			"encoding": {
 				Type:     schema.TypeString,
@@ -46,8 +48,9 @@ func DataSourceUserSSHKey() *schema.Resource {
 	}
 }
 
-func dataSourceUserSSHKeyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+func dataSourceUserSSHKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	encoding := d.Get("encoding").(string)
 	sshPublicKeyId := d.Get("ssh_public_key_id").(string)
@@ -59,9 +62,9 @@ func dataSourceUserSSHKeyRead(d *schema.ResourceData, meta interface{}) error {
 		UserName:       aws.String(username),
 	}
 
-	response, err := conn.GetSSHPublicKey(request)
+	response, err := conn.GetSSHPublicKeyWithContext(ctx, request)
 	if err != nil {
-		return fmt.Errorf("error reading IAM User SSH Key: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading IAM User SSH Key: %s", err)
 	}
 
 	publicKey := response.SSHPublicKey
@@ -75,5 +78,5 @@ func dataSourceUserSSHKeyRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("public_key", publicKeyBody)
 	d.Set("status", publicKey.Status)
 
-	return nil
+	return diags
 }

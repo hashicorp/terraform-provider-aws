@@ -1,11 +1,9 @@
 package plugintest
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -76,6 +74,8 @@ func (wd *WorkingDir) GetHelper() *Helper {
 // Destroy to establish the configuration. Any previously-set configuration is
 // discarded and any saved plan is cleared.
 func (wd *WorkingDir) SetConfig(ctx context.Context, cfg string) error {
+	logging.HelperResourceTrace(ctx, "Setting Terraform configuration", map[string]any{logging.KeyTestTerraformConfiguration: cfg})
+
 	outFilename := filepath.Join(wd.baseDir, ConfigFileName)
 	rmFilename := filepath.Join(wd.baseDir, ConfigFileNameJSON)
 	bCfg := []byte(cfg)
@@ -85,7 +85,7 @@ func (wd *WorkingDir) SetConfig(ctx context.Context, cfg string) error {
 	if err := os.Remove(rmFilename); err != nil && !os.IsNotExist(err) {
 		return fmt.Errorf("unable to remove %q: %w", rmFilename, err)
 	}
-	err := ioutil.WriteFile(outFilename, bCfg, 0700)
+	err := os.WriteFile(outFilename, bCfg, 0700)
 	if err != nil {
 		return err
 	}
@@ -174,11 +174,29 @@ func (wd *WorkingDir) planFilename() string {
 func (wd *WorkingDir) CreatePlan(ctx context.Context) error {
 	logging.HelperResourceTrace(ctx, "Calling Terraform CLI plan command")
 
-	_, err := wd.tf.Plan(context.Background(), tfexec.Reattach(wd.reattachInfo), tfexec.Refresh(false), tfexec.Out(PlanFileName))
+	hasChanges, err := wd.tf.Plan(context.Background(), tfexec.Reattach(wd.reattachInfo), tfexec.Refresh(false), tfexec.Out(PlanFileName))
 
 	logging.HelperResourceTrace(ctx, "Called Terraform CLI plan command")
 
-	return err
+	if err != nil {
+		return err
+	}
+
+	if !hasChanges {
+		logging.HelperResourceTrace(ctx, "Created plan with no changes")
+
+		return nil
+	}
+
+	stdout, err := wd.SavedPlanRawStdout(ctx)
+
+	if err != nil {
+		return fmt.Errorf("error retrieving formatted plan output: %w", err)
+	}
+
+	logging.HelperResourceTrace(ctx, "Created plan with changes", map[string]any{logging.KeyTestTerraformPlan: stdout})
+
+	return nil
 }
 
 // CreateDestroyPlan runs "terraform plan -destroy" to create a saved plan
@@ -186,11 +204,29 @@ func (wd *WorkingDir) CreatePlan(ctx context.Context) error {
 func (wd *WorkingDir) CreateDestroyPlan(ctx context.Context) error {
 	logging.HelperResourceTrace(ctx, "Calling Terraform CLI plan -destroy command")
 
-	_, err := wd.tf.Plan(context.Background(), tfexec.Reattach(wd.reattachInfo), tfexec.Refresh(false), tfexec.Out(PlanFileName), tfexec.Destroy(true))
+	hasChanges, err := wd.tf.Plan(context.Background(), tfexec.Reattach(wd.reattachInfo), tfexec.Refresh(false), tfexec.Out(PlanFileName), tfexec.Destroy(true))
 
 	logging.HelperResourceTrace(ctx, "Called Terraform CLI plan -destroy command")
 
-	return err
+	if err != nil {
+		return err
+	}
+
+	if !hasChanges {
+		logging.HelperResourceTrace(ctx, "Created destroy plan with no changes")
+
+		return nil
+	}
+
+	stdout, err := wd.SavedPlanRawStdout(ctx)
+
+	if err != nil {
+		return fmt.Errorf("error retrieving formatted plan output: %w", err)
+	}
+
+	logging.HelperResourceTrace(ctx, "Created destroy plan with changes", map[string]any{logging.KeyTestTerraformPlan: stdout})
+
+	return nil
 }
 
 // Apply runs "terraform apply". If CreatePlan has previously completed
@@ -243,11 +279,11 @@ func (wd *WorkingDir) SavedPlan(ctx context.Context) (*tfjson.Plan, error) {
 		return nil, fmt.Errorf("there is no current saved plan")
 	}
 
-	logging.HelperResourceTrace(ctx, "Calling Terraform CLI apply command")
+	logging.HelperResourceTrace(ctx, "Calling Terraform CLI show command for JSON plan")
 
 	plan, err := wd.tf.ShowPlanFile(context.Background(), wd.planFilename(), tfexec.Reattach(wd.reattachInfo))
 
-	logging.HelperResourceTrace(ctx, "Calling Terraform CLI apply command")
+	logging.HelperResourceTrace(ctx, "Calling Terraform CLI show command for JSON plan")
 
 	return plan, err
 }
@@ -261,22 +297,17 @@ func (wd *WorkingDir) SavedPlanRawStdout(ctx context.Context) (string, error) {
 		return "", fmt.Errorf("there is no current saved plan")
 	}
 
-	var ret bytes.Buffer
+	logging.HelperResourceTrace(ctx, "Calling Terraform CLI show command for stdout plan")
 
-	wd.tf.SetStdout(&ret)
-	defer wd.tf.SetStdout(ioutil.Discard)
+	stdout, err := wd.tf.ShowPlanFileRaw(context.Background(), wd.planFilename(), tfexec.Reattach(wd.reattachInfo))
 
-	logging.HelperResourceTrace(ctx, "Calling Terraform CLI show command")
-
-	_, err := wd.tf.ShowPlanFileRaw(context.Background(), wd.planFilename(), tfexec.Reattach(wd.reattachInfo))
-
-	logging.HelperResourceTrace(ctx, "Called Terraform CLI show command")
+	logging.HelperResourceTrace(ctx, "Called Terraform CLI show command for stdout plan")
 
 	if err != nil {
 		return "", err
 	}
 
-	return ret.String(), nil
+	return stdout, nil
 }
 
 // State returns an object describing the current state.
@@ -284,11 +315,11 @@ func (wd *WorkingDir) SavedPlanRawStdout(ctx context.Context) (string, error) {
 
 // If the state cannot be read, State returns an error.
 func (wd *WorkingDir) State(ctx context.Context) (*tfjson.State, error) {
-	logging.HelperResourceTrace(ctx, "Calling Terraform CLI show command")
+	logging.HelperResourceTrace(ctx, "Calling Terraform CLI show command for JSON state")
 
 	state, err := wd.tf.Show(context.Background(), tfexec.Reattach(wd.reattachInfo))
 
-	logging.HelperResourceTrace(ctx, "Called Terraform CLI show command")
+	logging.HelperResourceTrace(ctx, "Called Terraform CLI show command for JSON state")
 
 	return state, err
 }

@@ -1,24 +1,27 @@
 package waf
 
 import (
+	"context"
 	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func ResourceSQLInjectionMatchSet() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceSQLInjectionMatchSetCreate,
-		Read:   resourceSQLInjectionMatchSetRead,
-		Update: resourceSQLInjectionMatchSetUpdate,
-		Delete: resourceSQLInjectionMatchSetDelete,
+		CreateWithoutTimeout: resourceSQLInjectionMatchSetCreate,
+		ReadWithoutTimeout:   resourceSQLInjectionMatchSetRead,
+		UpdateWithoutTimeout: resourceSQLInjectionMatchSetUpdate,
+		DeleteWithoutTimeout: resourceSQLInjectionMatchSetDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -60,104 +63,108 @@ func ResourceSQLInjectionMatchSet() *schema.Resource {
 	}
 }
 
-func resourceSQLInjectionMatchSetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFConn
+func resourceSQLInjectionMatchSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).WAFConn()
 
 	log.Printf("[INFO] Creating SqlInjectionMatchSet: %s", d.Get("name").(string))
 
 	wr := NewRetryer(conn)
-	out, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
+	out, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		params := &waf.CreateSqlInjectionMatchSetInput{
 			ChangeToken: token,
 			Name:        aws.String(d.Get("name").(string)),
 		}
 
-		return conn.CreateSqlInjectionMatchSet(params)
+		return conn.CreateSqlInjectionMatchSetWithContext(ctx, params)
 	})
 	if err != nil {
-		return fmt.Errorf("Error creating SqlInjectionMatchSet: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating SqlInjectionMatchSet: %s", err)
 	}
 	resp := out.(*waf.CreateSqlInjectionMatchSetOutput)
 	d.SetId(aws.StringValue(resp.SqlInjectionMatchSet.SqlInjectionMatchSetId))
 
-	return resourceSQLInjectionMatchSetUpdate(d, meta)
+	return append(diags, resourceSQLInjectionMatchSetUpdate(ctx, d, meta)...)
 }
 
-func resourceSQLInjectionMatchSetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFConn
+func resourceSQLInjectionMatchSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).WAFConn()
 	log.Printf("[INFO] Reading SqlInjectionMatchSet: %s", d.Get("name").(string))
 	params := &waf.GetSqlInjectionMatchSetInput{
 		SqlInjectionMatchSetId: aws.String(d.Id()),
 	}
 
-	resp, err := conn.GetSqlInjectionMatchSet(params)
+	resp, err := conn.GetSqlInjectionMatchSetWithContext(ctx, params)
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, waf.ErrCodeNonexistentItemException) {
 			log.Printf("[WARN] WAF IPSet (%s) not found, removing from state", d.Id())
 			d.SetId("")
-			return nil
+			return diags
 		}
 
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading WAF SQL Injection Match Set (%s): %s", d.Get("name").(string), err)
 	}
 
 	d.Set("name", resp.SqlInjectionMatchSet.Name)
 
 	if err := d.Set("sql_injection_match_tuples", flattenSQLInjectionMatchTuples(resp.SqlInjectionMatchSet.SqlInjectionMatchTuples)); err != nil {
-		return fmt.Errorf("error setting sql_injection_match_tuples: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting sql_injection_match_tuples: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceSQLInjectionMatchSetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFConn
+func resourceSQLInjectionMatchSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).WAFConn()
 
 	if d.HasChange("sql_injection_match_tuples") {
 		o, n := d.GetChange("sql_injection_match_tuples")
 		oldT, newT := o.(*schema.Set).List(), n.(*schema.Set).List()
 
-		err := updateSQLInjectionMatchSetResource(d.Id(), oldT, newT, conn)
+		err := updateSQLInjectionMatchSetResource(ctx, d.Id(), oldT, newT, conn)
 		if err != nil {
-			return fmt.Errorf("Error updating SqlInjectionMatchSet: %s", err)
+			return sdkdiag.AppendErrorf(diags, "updating SqlInjectionMatchSet: %s", err)
 		}
 	}
 
-	return resourceSQLInjectionMatchSetRead(d, meta)
+	return append(diags, resourceSQLInjectionMatchSetRead(ctx, d, meta)...)
 }
 
-func resourceSQLInjectionMatchSetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFConn
+func resourceSQLInjectionMatchSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).WAFConn()
 
 	oldTuples := d.Get("sql_injection_match_tuples").(*schema.Set).List()
 
 	if len(oldTuples) > 0 {
 		noTuples := []interface{}{}
-		err := updateSQLInjectionMatchSetResource(d.Id(), oldTuples, noTuples, conn)
+		err := updateSQLInjectionMatchSetResource(ctx, d.Id(), oldTuples, noTuples, conn)
 		if err != nil {
-			return fmt.Errorf("Error deleting SqlInjectionMatchSet: %s", err)
+			return sdkdiag.AppendErrorf(diags, "deleting SqlInjectionMatchSet: %s", err)
 		}
 	}
 
 	wr := NewRetryer(conn)
-	_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
+	_, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		req := &waf.DeleteSqlInjectionMatchSetInput{
 			ChangeToken:            token,
 			SqlInjectionMatchSetId: aws.String(d.Id()),
 		}
 
-		return conn.DeleteSqlInjectionMatchSet(req)
+		return conn.DeleteSqlInjectionMatchSetWithContext(ctx, req)
 	})
 	if err != nil {
-		return fmt.Errorf("Error deleting SqlInjectionMatchSet: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting SqlInjectionMatchSet: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func updateSQLInjectionMatchSetResource(id string, oldT, newT []interface{}, conn *waf.WAF) error {
+func updateSQLInjectionMatchSetResource(ctx context.Context, id string, oldT, newT []interface{}, conn *waf.WAF) error {
 	wr := NewRetryer(conn)
-	_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
+	_, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		req := &waf.UpdateSqlInjectionMatchSetInput{
 			ChangeToken:            token,
 			SqlInjectionMatchSetId: aws.String(id),
@@ -165,7 +172,7 @@ func updateSQLInjectionMatchSetResource(id string, oldT, newT []interface{}, con
 		}
 
 		log.Printf("[INFO] Updating SqlInjectionMatchSet: %s", req)
-		return conn.UpdateSqlInjectionMatchSet(req)
+		return conn.UpdateSqlInjectionMatchSetWithContext(ctx, req)
 	})
 	if err != nil {
 		return fmt.Errorf("Error updating SqlInjectionMatchSet: %s", err)

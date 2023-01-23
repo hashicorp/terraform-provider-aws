@@ -1,6 +1,7 @@
 package rds
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"regexp"
@@ -9,10 +10,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -23,12 +26,12 @@ const clusterSnapshotCreateTimeout = 2 * time.Minute
 
 func ResourceClusterSnapshot() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceClusterSnapshotCreate,
-		Read:   resourceClusterSnapshotRead,
-		Delete: resourceClusterSnapshotDelete,
-		Update: resourcedbClusterSnapshotUpdate,
+		CreateWithoutTimeout: resourceClusterSnapshotCreate,
+		ReadWithoutTimeout:   resourceClusterSnapshotRead,
+		DeleteWithoutTimeout: resourceClusterSnapshotDelete,
+		UpdateWithoutTimeout: resourcedbClusterSnapshotUpdate,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -115,8 +118,9 @@ func ResourceClusterSnapshot() *schema.Resource {
 	}
 }
 
-func resourceClusterSnapshotCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+func resourceClusterSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RDSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -126,8 +130,8 @@ func resourceClusterSnapshotCreate(d *schema.ResourceData, meta interface{}) err
 		Tags:                        Tags(tags.IgnoreAWS()),
 	}
 
-	err := resource.Retry(clusterSnapshotCreateTimeout, func() *resource.RetryError {
-		_, err := conn.CreateDBClusterSnapshot(params)
+	err := resource.RetryContext(ctx, clusterSnapshotCreateTimeout, func() *resource.RetryError {
+		_, err := conn.CreateDBClusterSnapshotWithContext(ctx, params)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, rds.ErrCodeInvalidDBClusterStateFault) {
 				return resource.RetryableError(err)
@@ -138,60 +142,61 @@ func resourceClusterSnapshotCreate(d *schema.ResourceData, meta interface{}) err
 	})
 
 	if tfresource.TimedOut(err) {
-		_, err = conn.CreateDBClusterSnapshot(params)
+		_, err = conn.CreateDBClusterSnapshotWithContext(ctx, params)
 	}
 	if err != nil {
-		return fmt.Errorf("error creating RDS DB Cluster Snapshot: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating RDS DB Cluster Snapshot: %s", err)
 	}
 	d.SetId(d.Get("db_cluster_snapshot_identifier").(string))
 
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"creating"},
 		Target:     []string{"available"},
-		Refresh:    resourceClusterSnapshotStateRefreshFunc(d.Id(), conn),
+		Refresh:    resourceClusterSnapshotStateRefreshFunc(ctx, d.Id(), conn),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
 		MinTimeout: 10 * time.Second,
 		Delay:      5 * time.Second,
 	}
 
 	// Wait, catching any errors
-	_, err = stateConf.WaitForState()
+	_, err = stateConf.WaitForStateContext(ctx)
 	if err != nil {
-		return fmt.Errorf("error waiting for RDS DB Cluster Snapshot %q to create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for RDS DB Cluster Snapshot %q to create: %s", d.Id(), err)
 	}
 
-	return resourceClusterSnapshotRead(d, meta)
+	return append(diags, resourceClusterSnapshotRead(ctx, d, meta)...)
 }
 
-func resourceClusterSnapshotRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+func resourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RDSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	params := &rds.DescribeDBClusterSnapshotsInput{
 		DBClusterSnapshotIdentifier: aws.String(d.Id()),
 	}
-	resp, err := conn.DescribeDBClusterSnapshots(params)
+	resp, err := conn.DescribeDBClusterSnapshotsWithContext(ctx, params)
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBClusterSnapshotNotFoundFault) {
 			log.Printf("[WARN] RDS DB Cluster Snapshot %q not found, removing from state", d.Id())
 			d.SetId("")
-			return nil
+			return diags
 		}
-		return fmt.Errorf("error reading RDS DB Cluster Snapshot %q: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading RDS DB Cluster Snapshot %q: %s", d.Id(), err)
 	}
 
 	if resp == nil || len(resp.DBClusterSnapshots) == 0 || resp.DBClusterSnapshots[0] == nil || aws.StringValue(resp.DBClusterSnapshots[0].DBClusterSnapshotIdentifier) != d.Id() {
 		log.Printf("[WARN] RDS DB Cluster Snapshot %q not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	snapshot := resp.DBClusterSnapshots[0]
 
 	d.Set("allocated_storage", snapshot.AllocatedStorage)
 	if err := d.Set("availability_zones", flex.FlattenStringList(snapshot.AvailabilityZones)); err != nil {
-		return fmt.Errorf("error setting availability_zones: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting availability_zones: %s", err)
 	}
 	d.Set("db_cluster_identifier", snapshot.DBClusterIdentifier)
 	d.Set("db_cluster_snapshot_arn", snapshot.DBClusterSnapshotArn)
@@ -207,58 +212,62 @@ func resourceClusterSnapshotRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("storage_encrypted", snapshot.StorageEncrypted)
 	d.Set("vpc_id", snapshot.VpcId)
 
-	tags, err := ListTags(conn, d.Get("db_cluster_snapshot_arn").(string))
+	tags, err := ListTags(ctx, conn, d.Get("db_cluster_snapshot_arn").(string))
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for RDS DB Cluster Snapshot (%s): %s", d.Get("db_cluster_snapshot_arn").(string), err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for RDS DB Cluster Snapshot (%s): %s", d.Get("db_cluster_snapshot_arn").(string), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourcedbClusterSnapshotUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+func resourcedbClusterSnapshotUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("db_cluster_snapshot_arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating RDS DB Cluster Snapshot (%s) tags: %s", d.Get("db_cluster_snapshot_arn").(string), err)
+		if err := UpdateTags(ctx, conn, d.Get("db_cluster_snapshot_arn").(string), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating RDS DB Cluster Snapshot (%s) tags: %s", d.Get("db_cluster_snapshot_arn").(string), err)
 		}
 	}
 
-	return nil
+	return diags
 }
 
-func resourceClusterSnapshotDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+func resourceClusterSnapshotDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RDSConn()
 
-	params := &rds.DeleteDBClusterSnapshotInput{
+	log.Printf("[DEBUG] Deleting RDS DB Cluster Snapshot: %s", d.Id())
+	_, err := conn.DeleteDBClusterSnapshotWithContext(ctx, &rds.DeleteDBClusterSnapshotInput{
 		DBClusterSnapshotIdentifier: aws.String(d.Id()),
-	}
-	_, err := conn.DeleteDBClusterSnapshot(params)
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBClusterSnapshotNotFoundFault) {
-			return nil
-		}
-		return fmt.Errorf("error deleting RDS DB Cluster Snapshot %q: %s", d.Id(), err)
+	})
+
+	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBClusterSnapshotNotFoundFault) {
+		return diags
 	}
 
-	return nil
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting RDS DB Cluster Snapshot (%s): %s", d.Id(), err)
+	}
+
+	return diags
 }
 
-func resourceClusterSnapshotStateRefreshFunc(dbClusterSnapshotIdentifier string, conn *rds.RDS) resource.StateRefreshFunc {
+func resourceClusterSnapshotStateRefreshFunc(ctx context.Context, dbClusterSnapshotIdentifier string, conn *rds.RDS) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		opts := &rds.DescribeDBClusterSnapshotsInput{
 			DBClusterSnapshotIdentifier: aws.String(dbClusterSnapshotIdentifier),
@@ -266,7 +275,7 @@ func resourceClusterSnapshotStateRefreshFunc(dbClusterSnapshotIdentifier string,
 
 		log.Printf("[DEBUG] DB Cluster Snapshot describe configuration: %#v", opts)
 
-		resp, err := conn.DescribeDBClusterSnapshots(opts)
+		resp, err := conn.DescribeDBClusterSnapshotsWithContext(ctx, opts)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBClusterSnapshotNotFoundFault) {
 				return nil, "", nil

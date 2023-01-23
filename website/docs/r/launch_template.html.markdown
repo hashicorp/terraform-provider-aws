@@ -264,7 +264,7 @@ The `iam_instance_profile` block supports the following:
 
 This configuration block supports the following:
 
-~> **NOTE**: Both `memory_mib.min` and `vcpu_count.min` must be specified.
+~> **NOTE:** Both `memory_mib.min` and `vcpu_count.min` must be specified.
 
 * `accelerator_count` - (Optional) Block describing the minimum and maximum number of accelerators (GPUs, FPGAs, or AWS Inferentia chips). Default is no minimum or maximum.
     * `min` - (Optional) Minimum.
@@ -311,7 +311,7 @@ This configuration block supports the following:
 * `burstable_performance` - (Optional) Indicate whether burstable performance instance types should be `included`, `excluded`, or `required`. Default is `excluded`.
 * `cpu_manufacturers` (Optional) List of CPU manufacturer names. Default is any manufacturer.
 
-    ~> **NOTE**: Don't confuse the CPU hardware manufacturer with the CPU hardware architecture. Instances will be launched with a compatible CPU architecture based on the Amazon Machine Image (AMI) that you specify in your launch template.
+    ~> **NOTE:** Don't confuse the CPU hardware manufacturer with the CPU hardware architecture. Instances will be launched with a compatible CPU architecture based on the Amazon Machine Image (AMI) that you specify in your launch template.
 
     ```
     Valid names:
@@ -472,7 +472,6 @@ Each `tag_specifications` block supports the following:
 
 * `resource_type` - The type of resource to tag.
 * `tags` - A map of tags to assign to the resource.
-
 
 ## Attributes Reference
 

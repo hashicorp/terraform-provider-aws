@@ -28,6 +28,7 @@ func TestAccMemoryDBClusterDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "auto_minor_version_upgrade", resourceName, "auto_minor_version_upgrade"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "cluster_endpoint.0.address", resourceName, "cluster_endpoint.0.address"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "cluster_endpoint.0.port", resourceName, "cluster_endpoint.0.port"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "data_tiering", resourceName, "data_tiering"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "engine_patch_version", resourceName, "engine_patch_version"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "engine_version", resourceName, "engine_version"),

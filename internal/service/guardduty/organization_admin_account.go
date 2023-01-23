@@ -1,24 +1,26 @@
 package guardduty
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/guardduty"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceOrganizationAdminAccount() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceOrganizationAdminAccountCreate,
-		Read:   resourceOrganizationAdminAccountRead,
-		Delete: resourceOrganizationAdminAccountDelete,
+		CreateWithoutTimeout: resourceOrganizationAdminAccountCreate,
+		ReadWithoutTimeout:   resourceOrganizationAdminAccountRead,
+		DeleteWithoutTimeout: resourceOrganizationAdminAccountDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -32,8 +34,9 @@ func ResourceOrganizationAdminAccount() *schema.Resource {
 	}
 }
 
-func resourceOrganizationAdminAccountCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GuardDutyConn
+func resourceOrganizationAdminAccountCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GuardDutyConn()
 
 	adminAccountID := d.Get("admin_account_id").(string)
 
@@ -41,66 +44,68 @@ func resourceOrganizationAdminAccountCreate(d *schema.ResourceData, meta interfa
 		AdminAccountId: aws.String(adminAccountID),
 	}
 
-	_, err := conn.EnableOrganizationAdminAccount(input)
+	_, err := conn.EnableOrganizationAdminAccountWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error enabling GuardDuty Organization Admin Account (%s): %w", adminAccountID, err)
+		return sdkdiag.AppendErrorf(diags, "enabling GuardDuty Organization Admin Account (%s): %s", adminAccountID, err)
 	}
 
 	d.SetId(adminAccountID)
 
-	if _, err := waitAdminAccountEnabled(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for GuardDuty Organization Admin Account (%s) to enable: %w", d.Id(), err)
+	if _, err := waitAdminAccountEnabled(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for GuardDuty Organization Admin Account (%s) to enable: %s", d.Id(), err)
 	}
 
-	return resourceOrganizationAdminAccountRead(d, meta)
+	return append(diags, resourceOrganizationAdminAccountRead(ctx, d, meta)...)
 }
 
-func resourceOrganizationAdminAccountRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GuardDutyConn
+func resourceOrganizationAdminAccountRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GuardDutyConn()
 
-	adminAccount, err := GetOrganizationAdminAccount(conn, d.Id())
+	adminAccount, err := GetOrganizationAdminAccount(ctx, conn, d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error reading GuardDuty Organization Admin Account (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading GuardDuty Organization Admin Account (%s): %s", d.Id(), err)
 	}
 
 	if adminAccount == nil {
 		log.Printf("[WARN] GuardDuty Organization Admin Account (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	d.Set("admin_account_id", adminAccount.AdminAccountId)
 
-	return nil
+	return diags
 }
 
-func resourceOrganizationAdminAccountDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GuardDutyConn
+func resourceOrganizationAdminAccountDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GuardDutyConn()
 
 	input := &guardduty.DisableOrganizationAdminAccountInput{
 		AdminAccountId: aws.String(d.Id()),
 	}
 
-	_, err := conn.DisableOrganizationAdminAccount(input)
+	_, err := conn.DisableOrganizationAdminAccountWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error disabling GuardDuty Organization Admin Account (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "disabling GuardDuty Organization Admin Account (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitAdminAccountNotFound(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for GuardDuty Organization Admin Account (%s) to disable: %w", d.Id(), err)
+	if _, err := waitAdminAccountNotFound(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for GuardDuty Organization Admin Account (%s) to disable: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func GetOrganizationAdminAccount(conn *guardduty.GuardDuty, adminAccountID string) (*guardduty.AdminAccount, error) {
+func GetOrganizationAdminAccount(ctx context.Context, conn *guardduty.GuardDuty, adminAccountID string) (*guardduty.AdminAccount, error) {
 	input := &guardduty.ListOrganizationAdminAccountsInput{}
 	var result *guardduty.AdminAccount
 
-	err := conn.ListOrganizationAdminAccountsPages(input, func(page *guardduty.ListOrganizationAdminAccountsOutput, lastPage bool) bool {
+	err := conn.ListOrganizationAdminAccountsPagesWithContext(ctx, input, func(page *guardduty.ListOrganizationAdminAccountsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}

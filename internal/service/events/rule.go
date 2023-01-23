@@ -1,6 +1,7 @@
 package events
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"time"
@@ -8,12 +9,14 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eventbridge"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -25,13 +28,13 @@ const (
 
 func ResourceRule() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceRuleCreate,
-		Read:   resourceRuleRead,
-		Update: resourceRuleUpdate,
-		Delete: resourceRuleDelete,
+		CreateWithoutTimeout: resourceRuleCreate,
+		ReadWithoutTimeout:   resourceRuleRead,
+		UpdateWithoutTimeout: resourceRuleUpdate,
+		DeleteWithoutTimeout: resourceRuleDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -101,8 +104,9 @@ func ResourceRule() *schema.Resource {
 	}
 }
 
-func resourceRuleCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EventsConn
+func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EventsConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -111,7 +115,7 @@ func resourceRuleCreate(d *schema.ResourceData, meta interface{}) error {
 	input, err := buildPutRuleInputStruct(d, name)
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "creating EventBridge Rule (%s): %s", name, err)
 	}
 
 	if len(tags) > 0 {
@@ -120,59 +124,60 @@ func resourceRuleCreate(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Creating EventBridge Rule: %s", input)
 
-	arn, err := retryPutRule(conn, input)
+	arn, err := retryPutRule(ctx, conn, input)
 
 	// Some partitions may not support tag-on-create
 	if input.Tags != nil && verify.ErrorISOUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] EventBridge Rule (%s) create failed (%s) with tags. Trying create without tags.", name, err)
 		input.Tags = nil
-		arn, err = retryPutRule(conn, input)
+		arn, err = retryPutRule(ctx, conn, input)
 	}
 
 	if err != nil {
-		return fmt.Errorf("error creating EventBridge Rule (%s): %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating EventBridge Rule (%s): %s", name, err)
 	}
 
 	d.SetId(RuleCreateResourceID(aws.StringValue(input.EventBusName), aws.StringValue(input.Name)))
 
 	// Post-create tagging supported in some partitions
 	if input.Tags == nil && len(tags) > 0 {
-		err := UpdateTags(conn, arn, nil, tags)
+		err := UpdateTags(ctx, conn, arn, nil, tags)
 
 		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.ErrorISOUnsupported(conn.PartitionID, err) {
 			log.Printf("[WARN] error adding tags after create for EventBridge Rule (%s): %s", d.Id(), err)
-			return resourceRuleRead(d, meta)
+			return append(diags, resourceRuleRead(ctx, d, meta)...)
 		}
 
 		if err != nil {
-			return fmt.Errorf("error creating EventBridge Rule (%s) tags: %w", name, err)
+			return sdkdiag.AppendErrorf(diags, "creating EventBridge Rule (%s) tags: %s", name, err)
 		}
 	}
 
-	return resourceRuleRead(d, meta)
+	return append(diags, resourceRuleRead(ctx, d, meta)...)
 }
 
-func resourceRuleRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EventsConn
+func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EventsConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	eventBusName, ruleName, err := RuleParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading EventBridge Rule (%s): %s", d.Id(), err)
 	}
 
-	output, err := FindRuleByEventBusAndRuleNames(conn, eventBusName, ruleName)
+	output, err := FindRuleByEventBusAndRuleNames(ctx, conn, eventBusName, ruleName)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EventBridge Rule (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading EventBridge Rule (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading EventBridge Rule (%s): %s", d.Id(), err)
 	}
 
 	arn := aws.StringValue(output.Arn)
@@ -181,7 +186,7 @@ func resourceRuleRead(d *schema.ResourceData, meta interface{}) error {
 	if output.EventPattern != nil {
 		pattern, err := structure.NormalizeJsonString(aws.StringValue(output.EventPattern))
 		if err != nil {
-			return fmt.Errorf("event pattern contains an invalid JSON: %w", err)
+			return sdkdiag.AppendErrorf(diags, "event pattern contains an invalid JSON: %s", err)
 		}
 		d.Set("event_pattern", pattern)
 	}
@@ -194,55 +199,56 @@ func resourceRuleRead(d *schema.ResourceData, meta interface{}) error {
 	enabled, err := RuleEnabledFromState(aws.StringValue(output.State))
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading EventBridge Rule (%s): %s", d.Id(), err)
 	}
 
 	d.Set("is_enabled", enabled)
 
-	tags, err := ListTags(conn, arn)
+	tags, err := ListTags(ctx, conn, arn)
 
 	// ISO partitions may not support tagging, giving error
 	if verify.ErrorISOUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] Unable to list tags for EventBridge Rule %s: %s", d.Id(), err)
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for EventBridge Rule (%s): %w", arn, err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for EventBridge Rule (%s): %s", arn, err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceRuleUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EventsConn
+func resourceRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EventsConn()
 
 	_, ruleName, err := RuleParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "updating EventBridge Rule (%s): %s", d.Id(), err)
 	}
 
 	input, err := buildPutRuleInputStruct(d, ruleName)
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "updating EventBridge Rule (%s): %s", d.Id(), err)
 	}
 
 	// IAM Roles take some time to propagate
-	err = resource.Retry(propagationTimeout, func() *resource.RetryError {
-		_, err := conn.PutRule(input)
+	err = resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+		_, err := conn.PutRuleWithContext(ctx, input)
 
 		if tfawserr.ErrMessageContains(err, "ValidationException", "cannot be assumed by principal") {
 			return resource.RetryableError(err)
@@ -256,39 +262,40 @@ func resourceRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if tfresource.TimedOut(err) {
-		_, err = conn.PutRule(input)
+		_, err = conn.PutRuleWithContext(ctx, input)
 	}
 
 	if err != nil {
-		return fmt.Errorf("error updating EventBridge Rule (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating EventBridge Rule (%s): %s", d.Id(), err)
 	}
 
 	arn := d.Get("arn").(string)
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		err := UpdateTags(conn, arn, o, n)
+		err := UpdateTags(ctx, conn, arn, o, n)
 
 		if verify.ErrorISOUnsupported(conn.PartitionID, err) {
 			log.Printf("[WARN] Unable to update tags for EventBridge Rule %s: %s", d.Id(), err)
-			return resourceRuleRead(d, meta)
+			return append(diags, resourceRuleRead(ctx, d, meta)...)
 		}
 
 		if err != nil {
-			return fmt.Errorf("error updating EventBridge Rule tags: %w", err)
+			return sdkdiag.AppendErrorf(diags, "updating EventBridge Rule tags: %s", err)
 		}
 	}
 
-	return resourceRuleRead(d, meta)
+	return append(diags, resourceRuleRead(ctx, d, meta)...)
 }
 
-func resourceRuleDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EventsConn
+func resourceRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EventsConn()
 
 	eventBusName, ruleName, err := RuleParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "deleting EventBridge Rule (%s): %s", d.Id(), err)
 	}
 
 	input := &eventbridge.DeleteRuleInput{
@@ -299,8 +306,8 @@ func resourceRuleDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Deleting EventBridge Rule: %s", d.Id())
-	err = resource.Retry(ruleDeleteRetryTimeout, func() *resource.RetryError {
-		_, err := conn.DeleteRule(input)
+	err = resource.RetryContext(ctx, ruleDeleteRetryTimeout, func() *resource.RetryError {
+		_, err := conn.DeleteRuleWithContext(ctx, input)
 
 		if tfawserr.ErrMessageContains(err, "ValidationException", "Rule can't be deleted since it has targets") {
 			return resource.RetryableError(err)
@@ -314,25 +321,25 @@ func resourceRuleDelete(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteRule(input)
+		_, err = conn.DeleteRuleWithContext(ctx, input)
 	}
 
 	if tfawserr.ErrCodeEquals(err, eventbridge.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting EventBridge Rule (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting EventBridge Rule (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func retryPutRule(conn *eventbridge.EventBridge, input *eventbridge.PutRuleInput) (string, error) {
+func retryPutRule(ctx context.Context, conn *eventbridge.EventBridge, input *eventbridge.PutRuleInput) (string, error) {
 	var output *eventbridge.PutRuleOutput
-	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
+	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
 		var err error
-		output, err = conn.PutRule(input)
+		output, err = conn.PutRuleWithContext(ctx, input)
 
 		if tfawserr.ErrMessageContains(err, "ValidationException", "cannot be assumed by principal") {
 			return resource.RetryableError(err)
@@ -346,7 +353,7 @@ func retryPutRule(conn *eventbridge.EventBridge, input *eventbridge.PutRuleInput
 	})
 
 	if tfresource.TimedOut(err) {
-		output, err = conn.PutRule(input)
+		output, err = conn.PutRuleWithContext(ctx, input)
 	}
 
 	if err != nil {

@@ -20,10 +20,10 @@ import (
 
 func ResourceSecurityProfile() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceSecurityProfileCreate,
-		ReadContext:   resourceSecurityProfileRead,
-		UpdateContext: resourceSecurityProfileUpdate,
-		DeleteContext: resourceSecurityProfileDelete,
+		CreateWithoutTimeout: resourceSecurityProfileCreate,
+		ReadWithoutTimeout:   resourceSecurityProfileRead,
+		UpdateWithoutTimeout: resourceSecurityProfileUpdate,
+		DeleteWithoutTimeout: resourceSecurityProfileDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -72,7 +72,7 @@ func ResourceSecurityProfile() *schema.Resource {
 }
 
 func resourceSecurityProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -113,7 +113,7 @@ func resourceSecurityProfileCreate(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceSecurityProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -175,7 +175,7 @@ func resourceSecurityProfileRead(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceSecurityProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 
 	instanceID, securityProfileID, err := SecurityProfileParseID(d.Id())
 
@@ -199,12 +199,12 @@ func resourceSecurityProfileUpdate(ctx context.Context, d *schema.ResourceData, 
 	_, err = conn.UpdateSecurityProfileWithContext(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("[ERROR] Error updating SecurityProfile (%s): %w", d.Id(), err))
+		return diag.FromErr(fmt.Errorf("updating SecurityProfile (%s): %w", d.Id(), err))
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.FromErr(fmt.Errorf("error updating tags: %w", err))
 		}
 	}
@@ -213,7 +213,7 @@ func resourceSecurityProfileUpdate(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceSecurityProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 
 	instanceID, securityProfileID, err := SecurityProfileParseID(d.Id())
 

@@ -1,6 +1,7 @@
 package transfer
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -8,18 +9,19 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/transfer"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func ResourceSSHKey() *schema.Resource {
-
 	return &schema.Resource{
-		Create: resourceSSHKeyCreate,
-		Read:   resourceSSHKeyRead,
-		Delete: resourceSSHKeyDelete,
+		CreateWithoutTimeout: resourceSSHKeyCreate,
+		ReadWithoutTimeout:   resourceSSHKeyRead,
+		DeleteWithoutTimeout: resourceSSHKeyDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"body": {
@@ -50,8 +52,9 @@ func ResourceSSHKey() *schema.Resource {
 	}
 }
 
-func resourceSSHKeyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).TransferConn
+func resourceSSHKeyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).TransferConn()
 	userName := d.Get("user_name").(string)
 	serverID := d.Get("server_id").(string)
 
@@ -63,21 +66,22 @@ func resourceSSHKeyCreate(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Create Transfer SSH Public Key Option: %#v", createOpts)
 
-	resp, err := conn.ImportSshPublicKey(createOpts)
+	resp, err := conn.ImportSshPublicKeyWithContext(ctx, createOpts)
 	if err != nil {
-		return fmt.Errorf("Error importing ssh public key: %s", err)
+		return sdkdiag.AppendErrorf(diags, "importing ssh public key: %s", err)
 	}
 
-	d.SetId(fmt.Sprintf("%s/%s/%s", serverID, userName, *resp.SshPublicKeyId))
+	d.SetId(fmt.Sprintf("%s/%s/%s", serverID, userName, aws.StringValue(resp.SshPublicKeyId)))
 
-	return nil
+	return diags
 }
 
-func resourceSSHKeyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).TransferConn
+func resourceSSHKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).TransferConn()
 	serverID, userName, sshKeyID, err := DecodeSSHKeyID(d.Id())
 	if err != nil {
-		return fmt.Errorf("error parsing Transfer SSH Public Key ID: %s", err)
+		return sdkdiag.AppendErrorf(diags, "parsing Transfer SSH Public Key ID: %s", err)
 	}
 
 	descOpts := &transfer.DescribeUserInput{
@@ -85,16 +89,14 @@ func resourceSSHKeyRead(d *schema.ResourceData, meta interface{}) error {
 		ServerId: aws.String(serverID),
 	}
 
-	log.Printf("[DEBUG] Describe Transfer User Option: %#v", descOpts)
-
-	resp, err := conn.DescribeUser(descOpts)
+	resp, err := conn.DescribeUserWithContext(ctx, descOpts)
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, transfer.ErrCodeResourceNotFoundException) {
 			log.Printf("[WARN] Transfer User (%s) for Server (%s) not found, removing ssh public key (%s) from state", userName, serverID, sshKeyID)
 			d.SetId("")
-			return nil
+			return diags
 		}
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading Transfer SSH Key (%s): %s", d.Id(), err)
 	}
 
 	var body string
@@ -113,14 +115,15 @@ func resourceSSHKeyRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("user_name", resp.User.UserName)
 	d.Set("body", body)
 
-	return nil
+	return diags
 }
 
-func resourceSSHKeyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).TransferConn
+func resourceSSHKeyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).TransferConn()
 	serverID, userName, sshKeyID, err := DecodeSSHKeyID(d.Id())
 	if err != nil {
-		return fmt.Errorf("error parsing Transfer SSH Public Key ID: %s", err)
+		return sdkdiag.AppendErrorf(diags, "parsing Transfer SSH Public Key ID: %s", err)
 	}
 
 	delOpts := &transfer.DeleteSshPublicKeyInput{
@@ -129,17 +132,15 @@ func resourceSSHKeyDelete(d *schema.ResourceData, meta interface{}) error {
 		SshPublicKeyId: aws.String(sshKeyID),
 	}
 
-	log.Printf("[DEBUG] Delete Transfer SSH Public Key Option: %#v", delOpts)
-
-	_, err = conn.DeleteSshPublicKey(delOpts)
+	_, err = conn.DeleteSshPublicKeyWithContext(ctx, delOpts)
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, transfer.ErrCodeResourceNotFoundException) {
-			return nil
+			return diags
 		}
-		return fmt.Errorf("error deleting Transfer User Ssh Key (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Transfer User SSH Key (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func DecodeSSHKeyID(id string) (string, string, string, error) {

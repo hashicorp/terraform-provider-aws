@@ -1,13 +1,15 @@
 package elbv2
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/elbv2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -20,6 +22,7 @@ var HostedZoneIdPerRegionALBMap = map[string]string{
 	endpoints.ApNortheast2RegionID: "ZWKZPGTI48KDX",
 	endpoints.ApNortheast3RegionID: "Z5LXEXXYW11ES",
 	endpoints.ApSouth1RegionID:     "ZP97RAFLXTNZK",
+	endpoints.ApSouth2RegionID:     "Z0173938T07WNTVAEPZN",
 	endpoints.ApSoutheast1RegionID: "Z1LMS91P8CMLE5",
 	endpoints.ApSoutheast2RegionID: "Z1GM3OXH4ZPM65",
 	endpoints.ApSoutheast3RegionID: "Z08888821HLRG5A9ZRTER",
@@ -27,8 +30,10 @@ var HostedZoneIdPerRegionALBMap = map[string]string{
 	endpoints.CnNorth1RegionID:     "Z1GDH35T77C1KE",
 	endpoints.CnNorthwest1RegionID: "ZM7IZAIOVVDZF",
 	endpoints.EuCentral1RegionID:   "Z215JYRZR1TBD5",
+	endpoints.EuCentral2RegionID:   "Z06391101F2ZOEP8P5EB3",
 	endpoints.EuNorth1RegionID:     "Z23TAZ6LKFMNIO",
 	endpoints.EuSouth1RegionID:     "Z3ULH7SSC9OV64",
+	endpoints.EuSouth2RegionID:     "Z0956581394HF5D5LXGAP",
 	endpoints.EuWest1RegionID:      "Z32O12XQLNTSW2",
 	endpoints.EuWest2RegionID:      "ZHURV8PSTC4K8",
 	endpoints.EuWest3RegionID:      "Z3Q77PNBQS71R4",
@@ -52,6 +57,7 @@ var HostedZoneIdPerRegionNLBMap = map[string]string{
 	endpoints.ApNortheast2RegionID: "ZIBE1TIR4HY56",
 	endpoints.ApNortheast3RegionID: "Z1GWIQ4HH19I5X",
 	endpoints.ApSouth1RegionID:     "ZVDDRBQ08TROA",
+	endpoints.ApSouth2RegionID:     "Z0711778386UTO08407HT",
 	endpoints.ApSoutheast1RegionID: "ZKVM4W9LS7TM",
 	endpoints.ApSoutheast2RegionID: "ZCT6FZBF4DROD",
 	endpoints.ApSoutheast3RegionID: "Z01971771FYVNCOVWJU1G",
@@ -59,8 +65,10 @@ var HostedZoneIdPerRegionNLBMap = map[string]string{
 	endpoints.CnNorth1RegionID:     "Z3QFB96KMJ7ED6",
 	endpoints.CnNorthwest1RegionID: "ZQEIKTCZ8352D",
 	endpoints.EuCentral1RegionID:   "Z3F0SRJ5LGBH90",
+	endpoints.EuCentral2RegionID:   "Z02239872DOALSIDCX66S",
 	endpoints.EuNorth1RegionID:     "Z1UDT6IFJ4EJM",
 	endpoints.EuSouth1RegionID:     "Z23146JA1KNAFP",
+	endpoints.EuSouth2RegionID:     "Z1011216NVTVYADP1SSV",
 	endpoints.EuWest1RegionID:      "Z2IFOLAFXWLO4F",
 	endpoints.EuWest2RegionID:      "ZD4D7Y8KGAS4G",
 	endpoints.EuWest3RegionID:      "Z1CMS0P5QUZ6D5",
@@ -77,7 +85,7 @@ var HostedZoneIdPerRegionNLBMap = map[string]string{
 
 func DataSourceHostedZoneID() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceHostedZoneIDRead,
+		ReadWithoutTimeout: dataSourceHostedZoneIDRead,
 
 		Schema: map[string]*schema.Schema{
 			"region": {
@@ -95,7 +103,8 @@ func DataSourceHostedZoneID() *schema.Resource {
 	}
 }
 
-func dataSourceHostedZoneIDRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceHostedZoneIDRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	region := meta.(*conns.AWSClient).Region
 	if v, ok := d.GetOk("region"); ok {
 		region = v.(string)
@@ -110,15 +119,15 @@ func dataSourceHostedZoneIDRead(d *schema.ResourceData, meta interface{}) error 
 		if zoneId, ok := HostedZoneIdPerRegionALBMap[region]; ok {
 			d.SetId(zoneId)
 		} else {
-			return fmt.Errorf("unsupported AWS Region: %s", region)
+			return sdkdiag.AppendErrorf(diags, "unsupported AWS Region: %s", region)
 		}
 	} else if lbType == elbv2.LoadBalancerTypeEnumNetwork {
 		if zoneId, ok := HostedZoneIdPerRegionNLBMap[region]; ok {
 			d.SetId(zoneId)
 		} else {
-			return fmt.Errorf("unsupported AWS Region: %s", region)
+			return sdkdiag.AppendErrorf(diags, "unsupported AWS Region: %s", region)
 		}
 	}
 
-	return nil
+	return diags
 }

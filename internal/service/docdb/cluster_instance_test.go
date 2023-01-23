@@ -1,6 +1,7 @@
 package docdb_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"strings"
@@ -18,6 +19,7 @@ import (
 )
 
 func TestAccDocDBClusterInstance_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v docdb.DBInstance
 	resourceName := "aws_docdb_cluster_instance.cluster_instances"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -26,12 +28,12 @@ func TestAccDocDBClusterInstance_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, docdb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterInstanceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterInstanceExists(resourceName, &v),
+					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
 					testAccCheckClusterInstanceAttributes(&v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexp.MustCompile(`db:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
@@ -47,7 +49,7 @@ func TestAccDocDBClusterInstance_basic(t *testing.T) {
 			{
 				Config: testAccClusterInstanceConfig_modified(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterInstanceExists(resourceName, &v),
+					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
 					testAccCheckClusterInstanceAttributes(&v),
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
 				),
@@ -66,7 +68,46 @@ func TestAccDocDBClusterInstance_basic(t *testing.T) {
 	})
 }
 
+func TestAccDocDBClusterInstance_performanceInsights(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v docdb.DBInstance
+	resourceName := "aws_docdb_cluster_instance.test"
+	rNamePrefix := acctest.ResourcePrefix
+	rName := sdkacctest.RandomWithPrefix(rNamePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, docdb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterInstanceConfig_performanceInsights(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
+					testAccCheckClusterInstanceAttributes(&v),
+					resource.TestCheckResourceAttrSet(resourceName, "enable_performance_insights"),
+					resource.TestCheckResourceAttrSet(resourceName, "performance_insights_kms_key_id"),
+				),
+			},
+
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"identifier_prefix",
+					"enable_performance_insights",
+					"performance_insights_kms_key_id",
+				},
+			},
+		},
+	})
+}
+
 func TestAccDocDBClusterInstance_az(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v docdb.DBInstance
 	resourceName := "aws_docdb_cluster_instance.cluster_instances"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -75,12 +116,12 @@ func TestAccDocDBClusterInstance_az(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, docdb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterInstanceConfig_az(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterInstanceExists(resourceName, &v),
+					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
 					testAccCheckClusterInstanceAttributes(&v),
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
 				),
@@ -100,6 +141,7 @@ func TestAccDocDBClusterInstance_az(t *testing.T) {
 }
 
 func TestAccDocDBClusterInstance_namePrefix(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v docdb.DBInstance
 	resourceName := "aws_docdb_cluster_instance.test"
 	rNamePrefix := acctest.ResourcePrefix
@@ -109,12 +151,12 @@ func TestAccDocDBClusterInstance_namePrefix(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, docdb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterInstanceConfig_namePrefix(rName, rNamePrefix),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterInstanceExists(resourceName, &v),
+					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
 					testAccCheckClusterInstanceAttributes(&v),
 					resource.TestCheckResourceAttr(resourceName, "db_subnet_group_name", rName),
 					resource.TestMatchResourceAttr(resourceName, "identifier", regexp.MustCompile(fmt.Sprintf("^%s", rNamePrefix))),
@@ -135,6 +177,7 @@ func TestAccDocDBClusterInstance_namePrefix(t *testing.T) {
 }
 
 func TestAccDocDBClusterInstance_generatedName(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v docdb.DBInstance
 	resourceName := "aws_docdb_cluster_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -143,12 +186,12 @@ func TestAccDocDBClusterInstance_generatedName(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, docdb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterInstanceConfig_generatedName(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterInstanceExists(resourceName, &v),
+					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
 					testAccCheckClusterInstanceAttributes(&v),
 					resource.TestMatchResourceAttr(resourceName, "identifier", regexp.MustCompile("^tf-")),
 				),
@@ -168,6 +211,7 @@ func TestAccDocDBClusterInstance_generatedName(t *testing.T) {
 }
 
 func TestAccDocDBClusterInstance_kmsKey(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v docdb.DBInstance
 	resourceName := "aws_docdb_cluster_instance.cluster_instances"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -176,12 +220,12 @@ func TestAccDocDBClusterInstance_kmsKey(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, docdb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterInstanceConfig_kmsKey(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterInstanceExists(resourceName, &v),
+					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", "aws_kms_key.foo", "arn"),
 				),
 			},
@@ -201,6 +245,7 @@ func TestAccDocDBClusterInstance_kmsKey(t *testing.T) {
 
 // https://github.com/hashicorp/terraform/issues/5350
 func TestAccDocDBClusterInstance_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v docdb.DBInstance
 	resourceName := "aws_docdb_cluster_instance.cluster_instances"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -209,13 +254,13 @@ func TestAccDocDBClusterInstance_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, docdb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterInstanceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterInstanceExists(resourceName, &v),
-					testAccClusterInstanceDisappears(&v),
+					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
+					testAccClusterInstanceDisappears(ctx, &v),
 				),
 				// A non-empty plan is what we want. A crash is what we don't want. :)
 				ExpectNonEmptyPlan: true,
@@ -226,7 +271,6 @@ func TestAccDocDBClusterInstance_disappears(t *testing.T) {
 
 func testAccCheckClusterInstanceAttributes(v *docdb.DBInstance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-
 		if *v.Engine != "docdb" {
 			return fmt.Errorf("bad engine, expected \"docdb\": %#v", *v.Engine)
 		}
@@ -239,20 +283,20 @@ func testAccCheckClusterInstanceAttributes(v *docdb.DBInstance) resource.TestChe
 	}
 }
 
-func testAccClusterInstanceDisappears(v *docdb.DBInstance) resource.TestCheckFunc {
+func testAccClusterInstanceDisappears(ctx context.Context, v *docdb.DBInstance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn()
 		opts := &docdb.DeleteDBInstanceInput{
 			DBInstanceIdentifier: v.DBInstanceIdentifier,
 		}
-		if _, err := conn.DeleteDBInstance(opts); err != nil {
+		if _, err := conn.DeleteDBInstanceWithContext(ctx, opts); err != nil {
 			return err
 		}
-		return resource.Retry(40*time.Minute, func() *resource.RetryError {
+		return resource.RetryContext(ctx, 40*time.Minute, func() *resource.RetryError {
 			opts := &docdb.DescribeDBInstancesInput{
 				DBInstanceIdentifier: v.DBInstanceIdentifier,
 			}
-			_, err := conn.DescribeDBInstances(opts)
+			_, err := conn.DescribeDBInstancesWithContext(ctx, opts)
 			if err != nil {
 				dbinstanceerr, ok := err.(awserr.Error)
 				if ok && dbinstanceerr.Code() == "DBInstanceNotFound" {
@@ -267,7 +311,7 @@ func testAccClusterInstanceDisappears(v *docdb.DBInstance) resource.TestCheckFun
 	}
 }
 
-func testAccCheckClusterInstanceExists(n string, v *docdb.DBInstance) resource.TestCheckFunc {
+func testAccCheckClusterInstanceExists(ctx context.Context, n string, v *docdb.DBInstance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -278,8 +322,8 @@ func testAccCheckClusterInstanceExists(n string, v *docdb.DBInstance) resource.T
 			return fmt.Errorf("No DB Instance ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn
-		resp, err := conn.DescribeDBInstances(&docdb.DescribeDBInstancesInput{
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn()
+		resp, err := conn.DescribeDBInstancesWithContext(ctx, &docdb.DescribeDBInstancesInput{
 			DBInstanceIdentifier: aws.String(rs.Primary.ID),
 		})
 
@@ -344,6 +388,53 @@ resource "aws_docdb_cluster_instance" "cluster_instances" {
   instance_class             = data.aws_docdb_orderable_db_instance.test.instance_class
   auto_minor_version_upgrade = false
   promotion_tier             = "3"
+}
+`, rName))
+}
+
+func testAccClusterInstanceConfig_performanceInsights(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description = "Terraform acc test %[1]s"
+
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Id": "kms-tf-1",
+  "Statement": [
+    {
+  	  "Sid": "Enable IAM User Permissions",
+	  "Effect": "Allow",
+	  "Principal": {
+	    "AWS": "*"
+	  },
+	  "Action": "kms:*",
+	  "Resource": "*"
+	}
+  ]
+}
+POLICY
+}
+resource "aws_docdb_cluster" "default" {
+  cluster_identifier  = %[1]q
+  availability_zones  = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
+  master_username     = "foo"
+  master_password     = "mustbeeightcharaters"
+  skip_final_snapshot = true
+}
+
+data "aws_docdb_orderable_db_instance" "test" {
+  engine                     = "docdb"
+  preferred_instance_classes = ["db.t3.medium", "db.r4.large", "db.r5.large", "db.r5.xlarge"]
+}
+
+resource "aws_docdb_cluster_instance" "test" {
+  identifier                      = %[1]q
+  cluster_identifier              = aws_docdb_cluster.default.id
+  instance_class                  = data.aws_docdb_orderable_db_instance.test.instance_class
+  promotion_tier                  = "3"
+  enable_performance_insights     = true
+  performance_insights_kms_key_id = aws_kms_key.test.arn
 }
 `, rName))
 }

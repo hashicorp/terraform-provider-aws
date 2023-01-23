@@ -2,7 +2,9 @@ package emr
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -14,27 +16,30 @@ import (
 	"github.com/aws/aws-sdk-go/private/protocol/json/jsonutil"
 	"github.com/aws/aws-sdk-go/service/emr"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"golang.org/x/exp/slices"
 )
 
 func ResourceCluster() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceClusterCreate,
-		Read:   resourceClusterRead,
-		Update: resourceClusterUpdate,
-		Delete: resourceClusterDelete,
+		CreateWithoutTimeout: resourceClusterCreate,
+		ReadWithoutTimeout:   resourceClusterRead,
+		UpdateWithoutTimeout: resourceClusterUpdate,
+		DeleteWithoutTimeout: resourceClusterDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -731,8 +736,9 @@ func instanceFleetConfigSchema() *schema.Resource {
 	}
 }
 
-func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EMRConn
+func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EMRConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -794,7 +800,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 			var autoScalingPolicy *emr.AutoScalingPolicy
 
 			if err := json.Unmarshal([]byte(v.(string)), &autoScalingPolicy); err != nil {
-				return fmt.Errorf("error parsing core_instance_group Auto Scaling Policy JSON: %w", err)
+				return sdkdiag.AppendErrorf(diags, "parsing core_instance_group Auto Scaling Policy JSON: %s", err)
 			}
 
 			instanceGroup.AutoScalingPolicy = autoScalingPolicy
@@ -883,7 +889,7 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	if v, ok := d.GetOk("additional_info"); ok {
 		info, err := structure.NormalizeJsonString(v)
 		if err != nil {
-			return fmt.Errorf("Additional Info contains an invalid JSON: %v", err)
+			return sdkdiag.AppendErrorf(diags, "Additional Info contains an invalid JSON: %v", err)
 		}
 		params.AdditionalInfo = aws.String(info)
 	}
@@ -940,11 +946,11 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	if v, ok := d.GetOk("configurations_json"); ok {
 		info, err := structure.NormalizeJsonString(v)
 		if err != nil {
-			return fmt.Errorf("configurations_json contains an invalid JSON: %v", err)
+			return sdkdiag.AppendErrorf(diags, "configurations_json contains an invalid JSON: %v", err)
 		}
 		params.Configurations, err = expandConfigurationJSON(info)
 		if err != nil {
-			return fmt.Errorf("Error reading EMR configurations_json: %w", err)
+			return sdkdiag.AppendErrorf(diags, "reading EMR configurations_json: %s", err)
 		}
 	}
 
@@ -957,12 +963,10 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 		params.AutoTerminationPolicy = expandAutoTerminationPolicy(v.([]interface{}))
 	}
 
-	log.Printf("[DEBUG] EMR Cluster create options: %s", params)
-
 	var resp *emr.RunJobFlowOutput
-	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
+	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
 		var err error
-		resp, err = conn.RunJobFlow(params)
+		resp, err = conn.RunJobFlowWithContext(ctx, params)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, "ValidationException", "Invalid InstanceProfile:") {
 				return resource.RetryableError(err)
@@ -975,10 +979,10 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		resp, err = conn.RunJobFlow(params)
+		resp, err = conn.RunJobFlowWithContext(ctx, params)
 	}
 	if err != nil {
-		return fmt.Errorf("error running EMR Job Flow: %w", err)
+		return sdkdiag.AppendErrorf(diags, "running EMR Job Flow: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resp.JobFlowId))
@@ -986,10 +990,10 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	d.Set("keep_job_flow_alive_when_no_steps", params.Instances.KeepJobFlowAliveWhenNoSteps)
 
 	log.Println("[INFO] Waiting for EMR Cluster to be available")
-	cluster, err := waitClusterCreated(conn, d.Id())
+	cluster, err := waitClusterCreated(ctx, conn, d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error waiting for EMR Cluster (%s) to create: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for EMR Cluster (%s) to create: %s", d.Id(), err)
 	}
 
 	// For multiple master nodes, EMR automatically enables
@@ -1002,71 +1006,70 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 			TerminationProtected: aws.Bool(terminationProtection),
 		}
 
-		if _, err := conn.SetTerminationProtection(input); err != nil {
-			return fmt.Errorf("error setting EMR Cluster (%s) termination protection to match configuration: %s", d.Id(), err)
+		if _, err := conn.SetTerminationProtectionWithContext(ctx, input); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting EMR Cluster (%s) termination protection to match configuration: %s", d.Id(), err)
 		}
 	}
 
-	return resourceClusterRead(d, meta)
+	return append(diags, resourceClusterRead(ctx, d, meta)...)
 }
 
-func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EMRConn
+func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EMRConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	cluster, err := FindClusterByID(conn, d.Id())
+	cluster, err := FindClusterByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EMR Cluster (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading EMR Cluster (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading EMR Cluster (%s): %s", d.Id(), err)
 	}
 
 	d.Set("cluster_state", cluster.Status.State)
 	d.Set("arn", cluster.ClusterArn)
 
-	instanceGroups, err := fetchAllInstanceGroups(conn, d.Id())
+	instanceGroups, err := fetchAllInstanceGroups(ctx, conn, d.Id())
 
 	if err == nil { // find instance group
-
 		coreGroup := coreInstanceGroup(instanceGroups)
 		masterGroup := findMasterGroup(instanceGroups)
 
 		flattenedCoreInstanceGroup, err := flattenCoreInstanceGroup(coreGroup)
 
 		if err != nil {
-			return fmt.Errorf("error flattening core_instance_group: %w", err)
+			return sdkdiag.AppendErrorf(diags, "flattening core_instance_group: %s", err)
 		}
 
 		if err := d.Set("core_instance_group", flattenedCoreInstanceGroup); err != nil {
-			return fmt.Errorf("error setting core_instance_group: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting core_instance_group: %s", err)
 		}
 
 		if err := d.Set("master_instance_group", flattenMasterInstanceGroup(masterGroup)); err != nil {
-			return fmt.Errorf("error setting master_instance_group: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting master_instance_group: %s", err)
 		}
 	}
 
-	instanceFleets, err := FetchAllInstanceFleets(conn, d.Id())
+	instanceFleets, err := FetchAllInstanceFleets(ctx, conn, d.Id())
 
 	if err == nil { // find instance fleets
-
 		coreFleet := findInstanceFleet(instanceFleets, emr.InstanceFleetTypeCore)
 		masterFleet := findInstanceFleet(instanceFleets, emr.InstanceFleetTypeMaster)
 
 		flattenedCoreInstanceFleet := flattenInstanceFleet(coreFleet)
 		if err := d.Set("core_instance_fleet", flattenedCoreInstanceFleet); err != nil {
-			return fmt.Errorf("error setting core_instance_fleet: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting core_instance_fleet: %s", err)
 		}
 
 		flattenedMasterInstanceFleet := flattenInstanceFleet(masterFleet)
 		if err := d.Set("master_instance_fleet", flattenedMasterInstanceFleet); err != nil {
-			return fmt.Errorf("error setting master_instance_fleet: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting master_instance_fleet: %s", err)
 		}
 	}
 
@@ -1074,11 +1077,11 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
 	d.Set("name", cluster.Name)
@@ -1096,41 +1099,39 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("termination_protection", cluster.TerminationProtected)
 	d.Set("step_concurrency_level", cluster.StepConcurrencyLevel)
 
-	if cluster.CustomAmiId != nil {
-		d.Set("custom_ami_id", cluster.CustomAmiId)
-	}
+	d.Set("custom_ami_id", cluster.CustomAmiId)
 
 	if err := d.Set("applications", flattenApplications(cluster.Applications)); err != nil {
-		return fmt.Errorf("error setting EMR Applications for cluster (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting EMR Applications for cluster (%s): %s", d.Id(), err)
 	}
 
 	if _, ok := d.GetOk("configurations_json"); ok {
 		configOut, err := flattenConfigurationJSON(cluster.Configurations)
 		if err != nil {
-			return fmt.Errorf("Error reading EMR cluster configurations: %w", err)
+			return sdkdiag.AppendErrorf(diags, "reading EMR cluster configurations: %s", err)
 		}
 		if err := d.Set("configurations_json", configOut); err != nil {
-			return fmt.Errorf("Error setting EMR configurations_json for cluster (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "setting EMR configurations_json for cluster (%s): %s", d.Id(), err)
 		}
 	}
 
 	if err := d.Set("ec2_attributes", flattenEC2InstanceAttributes(cluster.Ec2InstanceAttributes)); err != nil {
-		return fmt.Errorf("error setting EMR Ec2 Attributes: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting EMR Ec2 Attributes: %s", err)
 	}
 
 	if err := d.Set("kerberos_attributes", flattenKerberosAttributes(d, cluster.KerberosAttributes)); err != nil {
-		return fmt.Errorf("error setting kerberos_attributes: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting kerberos_attributes: %s", err)
 	}
 
-	respBootstraps, err := conn.ListBootstrapActions(&emr.ListBootstrapActionsInput{
+	respBootstraps, err := conn.ListBootstrapActionsWithContext(ctx, &emr.ListBootstrapActionsInput{
 		ClusterId: cluster.Id,
 	})
 	if err != nil {
-		return fmt.Errorf("error listing EMR Cluster (%s) bootstrap actions: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing EMR Cluster (%s) bootstrap actions: %s", d.Id(), err)
 	}
 
 	if err := d.Set("bootstrap_action", flattenBootstrapArguments(respBootstraps.BootstrapActions)); err != nil {
-		return fmt.Errorf("error setting Bootstrap Actions: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting Bootstrap Actions: %s", err)
 	}
 
 	var stepSummaries []*emr.StepSummary
@@ -1142,7 +1143,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 		input.StepStates = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	err = conn.ListStepsPages(input, func(page *emr.ListStepsOutput, lastPage bool) bool {
+	err = conn.ListStepsPagesWithContext(ctx, input, func(page *emr.ListStepsOutput, lastPage bool) bool {
 		// ListSteps returns steps in reverse order (newest first).
 		for _, step := range page.Steps {
 			stepSummaries = append([]*emr.StepSummary{step}, stepSummaries...)
@@ -1152,23 +1153,23 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if err != nil {
-		return fmt.Errorf("error listing EMR Cluster (%s) steps: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing EMR Cluster (%s) steps: %s", d.Id(), err)
 	}
 
 	if err := d.Set("step", flattenStepSummaries(stepSummaries)); err != nil {
-		return fmt.Errorf("error setting step: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting step: %s", err)
 	}
 
 	// AWS provides no other way to read back the additional_info
 	if v, ok := d.GetOk("additional_info"); ok {
 		info, err := structure.NormalizeJsonString(v)
 		if err != nil {
-			return fmt.Errorf("Additional Info contains an invalid JSON: %v", err)
+			return sdkdiag.AppendErrorf(diags, "Additional Info contains an invalid JSON: %v", err)
 		}
 		d.Set("additional_info", info)
 	}
 
-	atpOut, err := conn.GetAutoTerminationPolicy(&emr.GetAutoTerminationPolicyInput{
+	atpOut, err := conn.GetAutoTerminationPolicyWithContext(ctx, &emr.GetAutoTerminationPolicyInput{
 		ClusterId: aws.String(d.Id()),
 	})
 
@@ -1180,27 +1181,27 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading EMR Cluster (%s) auto-termination policy: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading EMR Cluster (%s) auto-termination policy: %s", d.Id(), err)
 	}
 
 	if err := d.Set("auto_termination_policy", flattenAutoTerminationPolicy(atpOut.AutoTerminationPolicy)); err != nil {
-		return fmt.Errorf("error setting auto_termination_policy: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting auto_termination_policy: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EMRConn
+func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EMRConn()
 
 	if d.HasChange("visible_to_all_users") {
-		_, errModify := conn.SetVisibleToAllUsers(&emr.SetVisibleToAllUsersInput{
+		_, err := conn.SetVisibleToAllUsersWithContext(ctx, &emr.SetVisibleToAllUsersInput{
 			JobFlowIds:        []*string{aws.String(d.Id())},
 			VisibleToAllUsers: aws.Bool(d.Get("visible_to_all_users").(bool)),
 		})
-		if errModify != nil {
-			log.Printf("[ERROR] %s", errModify)
-			return errModify
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating EMR Cluster (%s): setting visibility: %s", d.Id(), err)
 		}
 	}
 
@@ -1209,35 +1210,32 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		if len(n.([]interface{})) > 0 {
 			log.Printf("[DEBUG] Putting EMR cluster Auto Termination Policy")
 
-			_, errModify := conn.PutAutoTerminationPolicy(&emr.PutAutoTerminationPolicyInput{
+			_, err := conn.PutAutoTerminationPolicyWithContext(ctx, &emr.PutAutoTerminationPolicyInput{
 				AutoTerminationPolicy: expandAutoTerminationPolicy(n.([]interface{})),
 				ClusterId:             aws.String(d.Id()),
 			})
-			if errModify != nil {
-				log.Printf("[ERROR] %s", errModify)
-				return errModify
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating EMR Cluster (%s): setting auto termination policy: %s", d.Id(), err)
 			}
 		} else {
 			log.Printf("[DEBUG] Removing EMR cluster Auto Termination Policy")
 
-			_, errModify := conn.RemoveAutoTerminationPolicy(&emr.RemoveAutoTerminationPolicyInput{
+			_, err := conn.RemoveAutoTerminationPolicyWithContext(ctx, &emr.RemoveAutoTerminationPolicyInput{
 				ClusterId: aws.String(d.Id()),
 			})
-			if errModify != nil {
-				log.Printf("[ERROR] %s", errModify)
-				return errModify
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating EMR Cluster (%s): removing auto termination policy: %s", d.Id(), err)
 			}
 		}
 	}
 
 	if d.HasChange("termination_protection") {
-		_, errModify := conn.SetTerminationProtection(&emr.SetTerminationProtectionInput{
+		_, err := conn.SetTerminationProtectionWithContext(ctx, &emr.SetTerminationProtectionInput{
 			JobFlowIds:           []*string{aws.String(d.Id())},
 			TerminationProtected: aws.Bool(d.Get("termination_protection").(bool)),
 		})
-		if errModify != nil {
-			log.Printf("[ERROR] %s", errModify)
-			return errModify
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating EMR Cluster (%s): setting termination protection: %s", d.Id(), err)
 		}
 	}
 
@@ -1249,7 +1247,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 			var autoScalingPolicy *emr.AutoScalingPolicy
 
 			if err := json.Unmarshal([]byte(autoscalingPolicyStr), &autoScalingPolicy); err != nil {
-				return fmt.Errorf("error parsing core_instance_group Auto Scaling Policy JSON: %w", err)
+				return sdkdiag.AppendErrorf(diags, "parsing core_instance_group Auto Scaling Policy JSON: %s", err)
 			}
 
 			input := &emr.PutAutoScalingPolicyInput{
@@ -1258,8 +1256,8 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 				InstanceGroupId:   aws.String(instanceGroupID),
 			}
 
-			if _, err := conn.PutAutoScalingPolicy(input); err != nil {
-				return fmt.Errorf("error updating EMR Cluster (%s) Instance Group (%s) Auto Scaling Policy: %s", d.Id(), instanceGroupID, err)
+			if _, err := conn.PutAutoScalingPolicyWithContext(ctx, input); err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating EMR Cluster (%s): setting autoscaling policy: %s", d.Id(), err)
 			}
 		} else {
 			input := &emr.RemoveAutoScalingPolicyInput{
@@ -1267,21 +1265,21 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 				InstanceGroupId: aws.String(instanceGroupID),
 			}
 
-			if _, err := conn.RemoveAutoScalingPolicy(input); err != nil {
-				return fmt.Errorf("error removing EMR Cluster (%s) Instance Group (%s) Auto Scaling Policy: %s", d.Id(), instanceGroupID, err)
+			if _, err := conn.RemoveAutoScalingPolicyWithContext(ctx, input); err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating EMR Cluster (%s): removing autoscaling policy: %s", d.Id(), err)
 			}
 
 			// RemoveAutoScalingPolicy seems to have eventual consistency.
 			// Retry reading Instance Group configuration until the policy is removed.
-			err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-				autoscalingPolicy, err := getCoreInstanceGroupAutoScalingPolicy(conn, d.Id())
+			err := resource.RetryContext(ctx, 1*time.Minute, func() *resource.RetryError {
+				autoscalingPolicy, err := getCoreInstanceGroupAutoScalingPolicy(ctx, conn, d.Id())
 
 				if err != nil {
 					return resource.NonRetryableError(err)
 				}
 
 				if autoscalingPolicy != nil {
-					return resource.RetryableError(fmt.Errorf("EMR Cluster (%s) Instance Group (%s) Auto Scaling Policy still exists", d.Id(), instanceGroupID))
+					return resource.RetryableError(errors.New("still exists"))
 				}
 
 				return nil
@@ -1290,15 +1288,15 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 			if tfresource.TimedOut(err) {
 				var autoscalingPolicy *emr.AutoScalingPolicyDescription
 
-				autoscalingPolicy, err = getCoreInstanceGroupAutoScalingPolicy(conn, d.Id())
+				autoscalingPolicy, err = getCoreInstanceGroupAutoScalingPolicy(ctx, conn, d.Id())
 
 				if autoscalingPolicy != nil {
-					err = fmt.Errorf("EMR Cluster (%s) Instance Group (%s) Auto Scaling Policy still exists", d.Id(), instanceGroupID)
+					err = errors.New("still exists")
 				}
 			}
 
 			if err != nil {
-				return fmt.Errorf("error waiting for EMR Cluster (%s) Instance Group (%s) Auto Scaling Policy removal: %s", d.Id(), instanceGroupID, err)
+				return sdkdiag.AppendErrorf(diags, "updating EMR Cluster (%s): removing autoscaling policy: waiting for completion: %s", d.Id(), err)
 			}
 		}
 	}
@@ -1315,8 +1313,8 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 			},
 		}
 
-		if _, err := conn.ModifyInstanceGroups(input); err != nil {
-			return fmt.Errorf("error modifying EMR Cluster (%s) Instance Group (%s): %s", d.Id(), instanceGroupID, err)
+		if _, err := conn.ModifyInstanceGroupsWithContext(ctx, input); err != nil {
+			return sdkdiag.AppendErrorf(diags, "modifying EMR Cluster (%s) Instance Group (%s): %s", d.Id(), instanceGroupID, err)
 		}
 
 		stateConf := &resource.StateChangeConf{
@@ -1327,13 +1325,13 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 				emr.InstanceGroupStateResizing,
 			},
 			Target:  []string{emr.InstanceGroupStateRunning},
-			Refresh: instanceGroupStateRefresh(conn, d.Id(), instanceGroupID),
+			Refresh: instanceGroupStateRefresh(ctx, conn, d.Id(), instanceGroupID),
 			Timeout: 20 * time.Minute,
 			Delay:   10 * time.Second,
 		}
 
-		if _, err := stateConf.WaitForState(); err != nil {
-			return fmt.Errorf("error waiting for EMR Cluster (%s) Instance Group (%s) modification: %s", d.Id(), instanceGroupID, err)
+		if _, err := stateConf.WaitForStateContext(ctx); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for EMR Cluster (%s) Instance Group (%s) modification: %s", d.Id(), instanceGroupID, err)
 		}
 	}
 
@@ -1360,7 +1358,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 
 					err := json.Unmarshal([]byte(v.(string)), &autoScalingPolicy)
 					if err != nil {
-						return fmt.Errorf("error parsing EMR Auto Scaling Policy JSON for update: \n\n%s\n\n%s", v.(string), err)
+						return sdkdiag.AppendErrorf(diags, "parsing EMR Auto Scaling Policy JSON for update: \n\n%s\n\n%s", v.(string), err)
 					}
 
 					putAutoScalingPolicy := &emr.PutAutoScalingPolicyInput{
@@ -1369,62 +1367,61 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 						InstanceGroupId:   aws.String(oInstanceGroup["id"].(string)),
 					}
 
-					_, errModify := conn.PutAutoScalingPolicy(putAutoScalingPolicy)
+					_, errModify := conn.PutAutoScalingPolicyWithContext(ctx, putAutoScalingPolicy)
 					if errModify != nil {
-						return fmt.Errorf("error updating autoscaling policy for instance group %q: %s", oInstanceGroup["id"].(string), errModify)
+						return sdkdiag.AppendErrorf(diags, "updating autoscaling policy for instance group %q: %s", oInstanceGroup["id"].(string), errModify)
 					}
 
 					break
 				}
 			}
-
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating EMR Cluster (%s) tags: %s", d.Id(), err)
+		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating EMR Cluster (%s): setting tags: %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("step_concurrency_level") {
-		_, errModify := conn.ModifyCluster(&emr.ModifyClusterInput{
+		_, err := conn.ModifyClusterWithContext(ctx, &emr.ModifyClusterInput{
 			ClusterId:            aws.String(d.Id()),
 			StepConcurrencyLevel: aws.Int64(int64(d.Get("step_concurrency_level").(int))),
 		})
-		if errModify != nil {
-			log.Printf("[ERROR] %s", errModify)
-			return errModify
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating EMR Cluster (%s): updating step concurrency level: %s", d.Id(), err)
 		}
 	}
 
-	return resourceClusterRead(d, meta)
+	return append(diags, resourceClusterRead(ctx, d, meta)...)
 }
 
-func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EMRConn
+func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EMRConn()
 
-	log.Printf("[DEBUG] Deleting EMR Cluster: (%s)", d.Id())
-	_, err := conn.TerminateJobFlows(&emr.TerminateJobFlowsInput{
+	log.Printf("[DEBUG] Deleting EMR Cluster: %s", d.Id())
+	_, err := conn.TerminateJobFlowsWithContext(ctx, &emr.TerminateJobFlowsInput{
 		JobFlowIds: []*string{
 			aws.String(d.Id()),
 		},
 	})
 
 	if err != nil {
-		return fmt.Errorf("error terminating EMR Cluster (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "terminating EMR Cluster (%s): %s", d.Id(), err)
 	}
 
 	log.Println("[INFO] Waiting for EMR Cluster to be terminated")
-	_, err = waitClusterDeleted(conn, d.Id())
+	_, err = waitClusterDeleted(ctx, conn, d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error waiting for EMR Cluster (%s) to delete: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for EMR Cluster (%s) to delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandApplications(apps []interface{}) []*emr.Application {
@@ -1501,8 +1498,7 @@ func flattenAutoScalingPolicyDescription(policy *emr.AutoScalingPolicyDescriptio
 	for i, rule := range policy.Rules {
 		for j, dimension := range rule.Trigger.CloudWatchAlarmDefinition.Dimensions {
 			if aws.StringValue(dimension.Key) == "JobFlowId" {
-				tmpDimensions := append(policy.Rules[i].Trigger.CloudWatchAlarmDefinition.Dimensions[:j], policy.Rules[i].Trigger.CloudWatchAlarmDefinition.Dimensions[j+1:]...)
-				policy.Rules[i].Trigger.CloudWatchAlarmDefinition.Dimensions = tmpDimensions
+				policy.Rules[i].Trigger.CloudWatchAlarmDefinition.Dimensions = slices.Delete(policy.Rules[i].Trigger.CloudWatchAlarmDefinition.Dimensions, j, j+1)
 			}
 		}
 		if len(policy.Rules[i].Trigger.CloudWatchAlarmDefinition.Dimensions) == 0 {
@@ -1516,13 +1512,13 @@ func flattenAutoScalingPolicyDescription(policy *emr.AutoScalingPolicyDescriptio
 	}
 	autoscalingPolicyConstraintsBytes, err := json.Marshal(tmpAutoScalingPolicy.Constraints)
 	if err != nil {
-		return "", fmt.Errorf("error parsing EMR Cluster Instance Groups AutoScalingPolicy Constraints: %w", err)
+		return "", fmt.Errorf("parsing EMR Cluster Instance Groups AutoScalingPolicy Constraints: %w", err)
 	}
 	autoscalingPolicyConstraintsString := string(autoscalingPolicyConstraintsBytes)
 
 	autoscalingPolicyRulesBytes, err := json.Marshal(tmpAutoScalingPolicy.Rules)
 	if err != nil {
-		return "", fmt.Errorf("error parsing EMR Cluster Instance Groups AutoScalingPolicy Rules: %w", err)
+		return "", fmt.Errorf("parsing EMR Cluster Instance Groups AutoScalingPolicy Rules: %w", err)
 	}
 
 	var rules []map[string]interface{}
@@ -1934,8 +1930,8 @@ func resourceClusterEBSHashConfig(v interface{}) int {
 	return create.StringHashcode(buf.String())
 }
 
-func getCoreInstanceGroupAutoScalingPolicy(conn *emr.EMR, clusterID string) (*emr.AutoScalingPolicyDescription, error) {
-	instanceGroups, err := fetchAllInstanceGroups(conn, clusterID)
+func getCoreInstanceGroupAutoScalingPolicy(ctx context.Context, conn *emr.EMR, clusterID string) (*emr.AutoScalingPolicyDescription, error) {
+	instanceGroups, err := fetchAllInstanceGroups(ctx, conn, clusterID)
 
 	if err != nil {
 		return nil, err
@@ -1950,13 +1946,13 @@ func getCoreInstanceGroupAutoScalingPolicy(conn *emr.EMR, clusterID string) (*em
 	return coreGroup.AutoScalingPolicy, nil
 }
 
-func fetchAllInstanceGroups(conn *emr.EMR, clusterID string) ([]*emr.InstanceGroup, error) {
+func fetchAllInstanceGroups(ctx context.Context, conn *emr.EMR, clusterID string) ([]*emr.InstanceGroup, error) {
 	input := &emr.ListInstanceGroupsInput{
 		ClusterId: aws.String(clusterID),
 	}
 	var groups []*emr.InstanceGroup
 
-	err := conn.ListInstanceGroupsPages(input, func(page *emr.ListInstanceGroupsOutput, lastPage bool) bool {
+	err := conn.ListInstanceGroupsPagesWithContext(ctx, input, func(page *emr.ListInstanceGroupsOutput, lastPage bool) bool {
 		groups = append(groups, page.InstanceGroups...)
 
 		return !lastPage
@@ -1966,7 +1962,6 @@ func fetchAllInstanceGroups(conn *emr.EMR, clusterID string) ([]*emr.InstanceGro
 }
 
 func readInstanceFleetConfig(data map[string]interface{}, InstanceFleetType string) *emr.InstanceFleetConfig {
-
 	config := &emr.InstanceFleetConfig{
 		InstanceFleetType:      &InstanceFleetType,
 		Name:                   aws.String(data["name"].(string)),
@@ -1985,13 +1980,13 @@ func readInstanceFleetConfig(data map[string]interface{}, InstanceFleetType stri
 	return config
 }
 
-func FetchAllInstanceFleets(conn *emr.EMR, clusterID string) ([]*emr.InstanceFleet, error) {
+func FetchAllInstanceFleets(ctx context.Context, conn *emr.EMR, clusterID string) ([]*emr.InstanceFleet, error) {
 	input := &emr.ListInstanceFleetsInput{
 		ClusterId: aws.String(clusterID),
 	}
 	var fleets []*emr.InstanceFleet
 
-	err := conn.ListInstanceFleetsPages(input, func(page *emr.ListInstanceFleetsOutput, lastPage bool) bool {
+	err := conn.ListInstanceFleetsPagesWithContext(ctx, input, func(page *emr.ListInstanceFleetsOutput, lastPage bool) bool {
 		fleets = append(fleets, page.InstanceFleets...)
 
 		return !lastPage
@@ -2183,7 +2178,6 @@ func expandLaunchSpecification(launchSpecification map[string]interface{}) *emr.
 			spotProvisioning.BlockDurationMinutes = aws.Int64(int64(v.(int)))
 		}
 		if v, ok := configAttributes["allocation_strategy"]; ok {
-
 			spotProvisioning.AllocationStrategy = aws.String(v.(string))
 		}
 

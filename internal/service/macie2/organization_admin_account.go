@@ -35,7 +35,7 @@ func ResourceOrganizationAdminAccount() *schema.Resource {
 }
 
 func resourceOrganizationAdminAccountCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn
+	conn := meta.(*conns.AWSClient).Macie2Conn()
 	adminAccountID := d.Get("admin_account_id").(string)
 	input := &macie2.EnableOrganizationAdminAccountInput{
 		AdminAccountId: aws.String(adminAccountID),
@@ -71,11 +71,11 @@ func resourceOrganizationAdminAccountCreate(ctx context.Context, d *schema.Resou
 }
 
 func resourceOrganizationAdminAccountRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn
+	conn := meta.(*conns.AWSClient).Macie2Conn()
 
 	var err error
 
-	res, err := GetOrganizationAdminAccount(conn, d.Id())
+	res, err := GetOrganizationAdminAccount(ctx, conn, d.Id())
 
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) ||
@@ -99,7 +99,7 @@ func resourceOrganizationAdminAccountRead(ctx context.Context, d *schema.Resourc
 }
 
 func resourceOrganizationAdminAccountDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn
+	conn := meta.(*conns.AWSClient).Macie2Conn()
 
 	input := &macie2.DisableOrganizationAdminAccountInput{
 		AdminAccountId: aws.String(d.Id()),
@@ -116,10 +116,10 @@ func resourceOrganizationAdminAccountDelete(ctx context.Context, d *schema.Resou
 	return nil
 }
 
-func GetOrganizationAdminAccount(conn *macie2.Macie2, adminAccountID string) (*macie2.AdminAccount, error) {
+func GetOrganizationAdminAccount(ctx context.Context, conn *macie2.Macie2, adminAccountID string) (*macie2.AdminAccount, error) {
 	var res *macie2.AdminAccount
 
-	err := conn.ListOrganizationAdminAccountsPages(&macie2.ListOrganizationAdminAccountsInput{}, func(page *macie2.ListOrganizationAdminAccountsOutput, lastPage bool) bool {
+	err := conn.ListOrganizationAdminAccountsPagesWithContext(ctx, &macie2.ListOrganizationAdminAccountsInput{}, func(page *macie2.ListOrganizationAdminAccountsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}

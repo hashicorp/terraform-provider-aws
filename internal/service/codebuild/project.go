@@ -11,12 +11,14 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codebuild"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -25,12 +27,12 @@ import (
 
 func ResourceProject() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceProjectCreate,
-		Read:   resourceProjectRead,
-		Update: resourceProjectUpdate,
-		Delete: resourceProjectDelete,
+		CreateWithoutTimeout: resourceProjectCreate,
+		ReadWithoutTimeout:   resourceProjectRead,
+		UpdateWithoutTimeout: resourceProjectUpdate,
+		DeleteWithoutTimeout: resourceProjectDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -731,8 +733,9 @@ func ResourceProject() *schema.Resource {
 	}
 }
 
-func resourceProjectCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeBuildConn
+func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CodeBuildConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -747,11 +750,11 @@ func resourceProjectCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if aws.StringValue(projectSource.Type) == codebuild.SourceTypeNoSource {
 		if aws.StringValue(projectSource.Buildspec) == "" {
-			return fmt.Errorf("`buildspec` must be set when source's `type` is `NO_SOURCE`")
+			return sdkdiag.AppendErrorf(diags, "`buildspec` must be set when source's `type` is `NO_SOURCE`")
 		}
 
 		if aws.StringValue(projectSource.Location) != "" {
-			return fmt.Errorf("`location` must be empty when source's `type` is `NO_SOURCE`")
+			return sdkdiag.AppendErrorf(diags, "`location` must be empty when source's `type` is `NO_SOURCE`")
 		}
 	}
 
@@ -814,10 +817,10 @@ func resourceProjectCreate(d *schema.ResourceData, meta interface{}) error {
 
 	var resp *codebuild.CreateProjectOutput
 	// Handle IAM eventual consistency
-	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+	err := resource.RetryContext(ctx, 5*time.Minute, func() *resource.RetryError {
 		var err error
 
-		resp, err = conn.CreateProject(params)
+		resp, err = conn.CreateProjectWithContext(ctx, params)
 		if err != nil {
 			// InvalidInputException: CodeBuild is not authorized to perform
 			// InvalidInputException: Not authorized to perform DescribeSecurityGroups
@@ -832,16 +835,15 @@ func resourceProjectCreate(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if tfresource.TimedOut(err) {
-		resp, err = conn.CreateProject(params)
+		resp, err = conn.CreateProjectWithContext(ctx, params)
 	}
 	if err != nil {
-		return fmt.Errorf("Error creating CodeBuild project: %w", err)
+		return sdkdiag.AppendErrorf(diags, "Error creating CodeBuild project: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resp.Project.Arn))
 
 	if v, ok := d.GetOk("project_visibility"); ok && v.(string) != codebuild.ProjectVisibilityTypePrivate {
-
 		visInput := &codebuild.UpdateProjectVisibilityInput{
 			ProjectArn:        aws.String(d.Id()),
 			ProjectVisibility: aws.String(v.(string)),
@@ -851,12 +853,12 @@ func resourceProjectCreate(d *schema.ResourceData, meta interface{}) error {
 			visInput.ResourceAccessRole = aws.String(v.(string))
 		}
 
-		_, err = conn.UpdateProjectVisibility(visInput)
+		_, err = conn.UpdateProjectVisibilityWithContext(ctx, visInput)
 		if err != nil {
-			return fmt.Errorf("Error updating CodeBuild project (%s) visibility: %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "Error updating CodeBuild project (%s) visibility: %s", d.Id(), err)
 		}
 	}
-	return resourceProjectRead(d, meta)
+	return append(diags, resourceProjectRead(ctx, d, meta)...)
 }
 
 func expandProjectSecondarySourceVersions(ssv *schema.Set) []*codebuild.ProjectSourceVersion {
@@ -876,7 +878,6 @@ func expandProjectSecondarySourceVersions(ssv *schema.Set) []*codebuild.ProjectS
 }
 
 func expandProjectSourceVersion(data map[string]interface{}) codebuild.ProjectSourceVersion {
-
 	sourceVersion := codebuild.ProjectSourceVersion{
 		SourceIdentifier: aws.String(data["source_identifier"].(string)),
 		SourceVersion:    aws.String(data["source_version"].(string)),
@@ -1337,65 +1338,66 @@ func expandProjectSourceData(data map[string]interface{}) codebuild.ProjectSourc
 	return projectSource
 }
 
-func resourceProjectRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeBuildConn
+func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CodeBuildConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	project, err := FindProjectByARN(conn, d.Id())
+	project, err := FindProjectByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CodeBuild Project (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error Listing CodeBuild Projects: %w", err)
+		return sdkdiag.AppendErrorf(diags, "Listing CodeBuild Projects: %s", err)
 	}
 
 	if err := d.Set("artifacts", flattenProjectArtifacts(project.Artifacts)); err != nil {
-		return fmt.Errorf("error setting artifacts: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting artifacts: %s", err)
 	}
 
 	if err := d.Set("environment", flattenProjectEnvironment(project.Environment)); err != nil {
-		return fmt.Errorf("error setting environment: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting environment: %s", err)
 	}
 
 	if err := d.Set("file_system_locations", flattenProjectFileSystemLocations(project.FileSystemLocations)); err != nil {
-		return fmt.Errorf("error setting file_system_locations: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting file_system_locations: %s", err)
 	}
 
 	if err := d.Set("cache", flattenProjectCache(project.Cache)); err != nil {
-		return fmt.Errorf("error setting cache: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting cache: %s", err)
 	}
 
 	if err := d.Set("logs_config", flattenLogsConfig(project.LogsConfig)); err != nil {
-		return fmt.Errorf("error setting logs_config: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting logs_config: %s", err)
 	}
 
 	if err := d.Set("secondary_artifacts", flattenProjectSecondaryArtifacts(project.SecondaryArtifacts)); err != nil {
-		return fmt.Errorf("error setting secondary_artifacts: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting secondary_artifacts: %s", err)
 	}
 
 	if err := d.Set("secondary_sources", flattenProjectSecondarySources(project.SecondarySources)); err != nil {
-		return fmt.Errorf("error setting secondary_sources: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting secondary_sources: %s", err)
 	}
 
 	if err := d.Set("secondary_source_version", flattenProjectSecondarySourceVersions(project.SecondarySourceVersions)); err != nil {
-		return fmt.Errorf("error setting secondary_source_version: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting secondary_source_version: %s", err)
 	}
 
 	if err := d.Set("source", flattenProjectSource(project.Source)); err != nil {
-		return fmt.Errorf("error setting source: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting source: %s", err)
 	}
 
 	if err := d.Set("vpc_config", flattenVPCConfig(project.VpcConfig)); err != nil {
-		return fmt.Errorf("error setting vpc_config: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting vpc_config: %s", err)
 	}
 
 	if err := d.Set("build_batch_config", flattenBuildBatchConfig(project.BuildBatchConfig)); err != nil {
-		return fmt.Errorf("error setting build_batch_config: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting build_batch_config: %s", err)
 	}
 
 	d.Set("arn", project.Arn)
@@ -1422,23 +1424,23 @@ func resourceProjectRead(d *schema.ResourceData, meta interface{}) error {
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceProjectUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeBuildConn
+func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CodeBuildConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	if d.HasChanges("project_visibility", "resource_access_role") {
-
 		visInput := &codebuild.UpdateProjectVisibilityInput{
 			ProjectArn:        aws.String(d.Id()),
 			ProjectVisibility: aws.String(d.Get("project_visibility").(string)),
@@ -1448,14 +1450,13 @@ func resourceProjectUpdate(d *schema.ResourceData, meta interface{}) error {
 			visInput.ResourceAccessRole = aws.String(v.(string))
 		}
 
-		_, err := conn.UpdateProjectVisibility(visInput)
+		_, err := conn.UpdateProjectVisibilityWithContext(ctx, visInput)
 		if err != nil {
-			return fmt.Errorf("Error updating CodeBuild project (%s) visibility: %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "Error updating CodeBuild project (%s) visibility: %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChangesExcept("project_visibility", "resource_access_role") {
-
 		params := &codebuild.UpdateProjectInput{
 			Name: aws.String(d.Get("name").(string)),
 		}
@@ -1574,8 +1575,8 @@ func resourceProjectUpdate(d *schema.ResourceData, meta interface{}) error {
 		params.Tags = Tags(tags.IgnoreAWS())
 
 		// Handle IAM eventual consistency
-		err := resource.Retry(propagationTimeout, func() *resource.RetryError {
-			_, err := conn.UpdateProject(params)
+		err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+			_, err := conn.UpdateProjectWithContext(ctx, params)
 			if err != nil {
 				// InvalidInputException: CodeBuild is not authorized to perform
 				// InvalidInputException: Not authorized to perform DescribeSecurityGroups
@@ -1590,23 +1591,24 @@ func resourceProjectUpdate(d *schema.ResourceData, meta interface{}) error {
 		})
 
 		if tfresource.TimedOut(err) {
-			_, err = conn.UpdateProject(params)
+			_, err = conn.UpdateProjectWithContext(ctx, params)
 		}
 		if err != nil {
-			return fmt.Errorf("[ERROR] Error updating CodeBuild project (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating CodeBuild project (%s): %s", d.Id(), err)
 		}
 	}
 
-	return resourceProjectRead(d, meta)
+	return append(diags, resourceProjectRead(ctx, d, meta)...)
 }
 
-func resourceProjectDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeBuildConn
+func resourceProjectDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CodeBuildConn()
 
-	_, err := conn.DeleteProject(&codebuild.DeleteProjectInput{
+	_, err := conn.DeleteProjectWithContext(ctx, &codebuild.DeleteProjectInput{
 		Name: aws.String(d.Id()),
 	})
-	return err
+	return sdkdiag.AppendErrorf(diags, "deleting CodeBuild project (%s): %s", d.Id(), err)
 }
 
 func flattenProjectFileSystemLocations(apiObjects []*codebuild.ProjectFileSystemLocation) []interface{} {
@@ -1992,7 +1994,6 @@ func resourceProjectArtifactsHash(v interface{}) int {
 }
 
 func environmentVariablesToMap(environmentVariables []*codebuild.EnvironmentVariable) []interface{} {
-
 	envVariables := []interface{}{}
 	if len(environmentVariables) > 0 {
 		for _, env := range environmentVariables {
@@ -2010,7 +2011,6 @@ func environmentVariablesToMap(environmentVariables []*codebuild.EnvironmentVari
 }
 
 func sourceAuthToMap(sourceAuth *codebuild.SourceAuth) map[string]interface{} {
-
 	auth := map[string]interface{}{}
 	auth["type"] = aws.StringValue(sourceAuth.Type)
 

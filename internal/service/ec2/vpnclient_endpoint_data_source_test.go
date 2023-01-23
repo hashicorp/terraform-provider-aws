@@ -10,6 +10,7 @@ import (
 )
 
 func testAccClientVPNEndpointDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
 	datasource1Name := "data.aws_ec2_client_vpn_endpoint.by_id"
@@ -20,10 +21,10 @@ func testAccClientVPNEndpointDataSource_basic(t *testing.T) {
 		PreCheck:                 func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClientVPNEndpointDestroy,
+		CheckDestroy:             testAccCheckClientVPNEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClientVPNEndpointDataSourceConfig_basic(rName),
+				Config: testAccClientVPNEndpointDataSourceConfig_basic(t, rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasource1Name, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(datasource1Name, "authentication_options.#", resourceName, "authentication_options.#"),
@@ -90,8 +91,8 @@ func testAccClientVPNEndpointDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccClientVPNEndpointDataSourceConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccClientVPNEndpointConfig_basic(rName), `
+func testAccClientVPNEndpointDataSourceConfig_basic(t *testing.T, rName string) string {
+	return acctest.ConfigCompose(testAccClientVPNEndpointConfig_basic(t, rName), `
 data "aws_ec2_client_vpn_endpoint" "by_id" {
   client_vpn_endpoint_id = aws_ec2_client_vpn_endpoint.test.id
 }

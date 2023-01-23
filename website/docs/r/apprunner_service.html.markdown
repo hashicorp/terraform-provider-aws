@@ -176,16 +176,30 @@ The `authentication_configuration` block supports the following arguments:
 
 The `network_configuration` block supports the following arguments:
 
-* `egress_configuration` - (Optional) Network configuration settings for outbound message traffic.
+* `ingress_configuration` - (Optional) Network configuration settings for inbound network traffic. See [Ingress Configuration](#ingress-configuration) below for more details.
+* `egress_configuration` - (Optional) Network configuration settings for outbound message traffic. See [Egress Configuration](#egress-configuration) below for more details.
 * `egress_type` - (Optional) Type of egress configuration.Set to DEFAULT for access to resources hosted on public networks.Set to VPC to associate your service to a custom VPC specified by VpcConnectorArn.
 * `vpc_connector_arn` - ARN of the App Runner VPC connector that you want to associate with your App Runner service. Only valid when EgressType = VPC.
+
+### Ingress Configuration
+
+The `ingress_configuration` block supports the following argument:
+
+* `is_publicly_accessible` - (Required) Specifies whether your App Runner service is publicly accessible. To make the service publicly accessible set it to True. To make the service privately accessible, from only within an Amazon VPC set it to False.
+
+### Egress Configuration
+
+The `egress_configuration` block supports the following argument:
+
+* `egress_type` - The type of egress configuration. Valid values are: `DEFAULT` and `VPC`.
+* `vpc_connector_arn` - The Amazon Resource Name (ARN) of the App Runner VPC connector that you want to associate with your App Runner service. Only valid when `EgressType = VPC`.
 
 ### Observability Configuration
 
 The `observability_configuration` block supports the following arguments:
 
-* `observability_configuration_arn` - (Required) ARN of the observability configuration that is associated with the service.
 * `observability_enabled` - (Required) When `true`, an observability configuration resource is associated with the service.
+* `observability_configuration_arn` - (Optional) ARN of the observability configuration that is associated with the service. Specified only when `observability_enabled` is `true`.
 
 ### Code Repository
 
@@ -221,7 +235,8 @@ The `code_configuration_values` blocks supports the following arguments:
 
 * `build_command` - (Optional) Command App Runner runs to build your application.
 * `port` - (Optional) Port that your application listens to in the container. Defaults to `"8080"`.
-* `runtime` - (Required) Runtime environment type for building and running an App Runner service. Represents a programming language runtime. Valid values: `PYTHON_3`, `NODEJS_12`.
+* `runtime` - (Required) Runtime environment type for building and running an App Runner service. Represents a programming language runtime. Valid values: `PYTHON_3`, `NODEJS_12`, `NODEJS_14`, `NODEJS_16`, `CORRETTO_8`, `CORRETTO_11`, `GO_1`, `DOTNET_6`, `PHP_81`, `RUBY_31`.
+* `runtime_environment_secrets` - (Optional) Secrets and parameters available to your service as environment variables. A map of key/value pairs.
 * `runtime_environment_variables` - (Optional) Environment variables available to your running App Runner service. A map of key/value pairs. Keys with a prefix of `AWSAPPRUNNER` are reserved for system use and aren't valid.
 * `start_command` - (Optional) Command App Runner runs to start your application.
 
@@ -230,6 +245,7 @@ The `code_configuration_values` blocks supports the following arguments:
 The `image_configuration` block supports the following arguments:
 
 * `port` - (Optional) Port that your application listens to in the container. Defaults to `"8080"`.
+* `runtime_environment_secrets` - (Optional) Secrets and parameters available to your service as environment variables. A map of key/value pairs.
 * `runtime_environment_variables` - (Optional) Environment variables available to your running App Runner service. A map of key/value pairs. Keys with a prefix of `AWSAPPRUNNER` are reserved for system use and aren't valid.
 * `start_command` - (Optional) Command App Runner runs to start the application in the source image. If specified, this command overrides the Docker image’s default start command.
 

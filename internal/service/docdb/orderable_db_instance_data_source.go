@@ -1,18 +1,20 @@
 package docdb
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/docdb"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func DataSourceOrderableDBInstance() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceOrderableDBInstanceRead,
+		ReadWithoutTimeout: dataSourceOrderableDBInstanceRead,
 		Schema: map[string]*schema.Schema{
 			"availability_zones": {
 				Type:     schema.TypeList,
@@ -61,8 +63,9 @@ func DataSourceOrderableDBInstance() *schema.Resource {
 	}
 }
 
-func dataSourceOrderableDBInstanceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DocDBConn
+func dataSourceOrderableDBInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DocDBConn()
 
 	input := &docdb.DescribeOrderableDBInstanceOptionsInput{}
 
@@ -89,7 +92,7 @@ func dataSourceOrderableDBInstanceRead(d *schema.ResourceData, meta interface{})
 	log.Printf("[DEBUG] Reading DocDB Orderable DB Instance Classes: %v", input)
 	var instanceClassResults []*docdb.OrderableDBInstanceOption
 
-	err := conn.DescribeOrderableDBInstanceOptionsPages(input, func(resp *docdb.DescribeOrderableDBInstanceOptionsOutput, lastPage bool) bool {
+	err := conn.DescribeOrderableDBInstanceOptionsPagesWithContext(ctx, input, func(resp *docdb.DescribeOrderableDBInstanceOptionsOutput, lastPage bool) bool {
 		for _, instanceOption := range resp.OrderableDBInstanceOptions {
 			if instanceOption == nil {
 				continue
@@ -101,11 +104,11 @@ func dataSourceOrderableDBInstanceRead(d *schema.ResourceData, meta interface{})
 	})
 
 	if err != nil {
-		return fmt.Errorf("error reading DocDB orderable DB instance options: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading DocDB orderable DB instance options: %s", err)
 	}
 
 	if len(instanceClassResults) == 0 {
-		return fmt.Errorf("no DocDB Orderable DB Instance options found matching criteria; try different search")
+		return sdkdiag.AppendErrorf(diags, "no DocDB Orderable DB Instance options found matching criteria; try different search")
 	}
 
 	// preferred classes
@@ -132,7 +135,7 @@ func dataSourceOrderableDBInstanceRead(d *schema.ResourceData, meta interface{})
 	}
 
 	if found == nil && len(instanceClassResults) > 1 {
-		return fmt.Errorf("multiple DocDB DB Instance Classes (%v) match the criteria; try a different search", instanceClassResults)
+		return sdkdiag.AppendErrorf(diags, "multiple DocDB DB Instance Classes (%v) match the criteria; try a different search", instanceClassResults)
 	}
 
 	if found == nil && len(instanceClassResults) == 1 {
@@ -140,7 +143,7 @@ func dataSourceOrderableDBInstanceRead(d *schema.ResourceData, meta interface{})
 	}
 
 	if found == nil {
-		return fmt.Errorf("no DocDB DB Instance Classes match the criteria; try a different search")
+		return sdkdiag.AppendErrorf(diags, "no DocDB DB Instance Classes match the criteria; try a different search")
 	}
 
 	d.SetId(aws.StringValue(found.DBInstanceClass))
@@ -158,5 +161,5 @@ func dataSourceOrderableDBInstanceRead(d *schema.ResourceData, meta interface{})
 	d.Set("license_model", found.LicenseModel)
 	d.Set("vpc", found.Vpc)
 
-	return nil
+	return diags
 }

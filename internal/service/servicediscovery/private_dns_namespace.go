@@ -25,7 +25,7 @@ func ResourcePrivateDNSNamespace() *schema.Resource {
 		DeleteWithoutTimeout: resourcePrivateDNSNamespaceDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), ":")
 				if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
 					return nil, fmt.Errorf("Unexpected format of ID (%q), expected NAMESPACE_ID:VPC_ID", d.Id())
@@ -70,7 +70,7 @@ func ResourcePrivateDNSNamespace() *schema.Resource {
 }
 
 func resourcePrivateDNSNamespaceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn
+	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -114,7 +114,7 @@ func resourcePrivateDNSNamespaceCreate(ctx context.Context, d *schema.ResourceDa
 }
 
 func resourcePrivateDNSNamespaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn
+	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -140,7 +140,7 @@ func resourcePrivateDNSNamespaceRead(ctx context.Context, d *schema.ResourceData
 	}
 	d.Set("name", ns.Name)
 
-	tags, err := ListTagsWithContext(ctx, conn, arn)
+	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
 		return diag.Errorf("listing tags for Service Discovery Private DNS Namespace (%s): %s", arn, err)
@@ -161,12 +161,12 @@ func resourcePrivateDNSNamespaceRead(ctx context.Context, d *schema.ResourceData
 }
 
 func resourcePrivateDNSNamespaceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn
+	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTagsWithContext(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.Errorf("updating Service Discovery Private DNS Namespace (%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -175,7 +175,7 @@ func resourcePrivateDNSNamespaceUpdate(ctx context.Context, d *schema.ResourceDa
 }
 
 func resourcePrivateDNSNamespaceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn
+	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn()
 
 	log.Printf("[INFO] Deleting Service Discovery Private DNS Namespace: %s", d.Id())
 	output, err := conn.DeleteNamespaceWithContext(ctx, &servicediscovery.DeleteNamespaceInput{

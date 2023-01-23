@@ -1,6 +1,7 @@
 package appconfig
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"regexp"
@@ -10,21 +11,23 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/appconfig"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceEnvironment() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceEnvironmentCreate,
-		Read:   resourceEnvironmentRead,
-		Update: resourceEnvironmentUpdate,
-		Delete: resourceEnvironmentDelete,
+		CreateWithoutTimeout: resourceEnvironmentCreate,
+		ReadWithoutTimeout:   resourceEnvironmentRead,
+		UpdateWithoutTimeout: resourceEnvironmentUpdate,
+		DeleteWithoutTimeout: resourceEnvironmentDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -85,8 +88,9 @@ func ResourceEnvironment() *schema.Resource {
 	}
 }
 
-func resourceEnvironmentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppConfigConn
+func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppConfigConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -106,31 +110,32 @@ func resourceEnvironmentCreate(d *schema.ResourceData, meta interface{}) error {
 		input.Monitors = expandEnvironmentMonitors(v.(*schema.Set).List())
 	}
 
-	environment, err := conn.CreateEnvironment(input)
+	environment, err := conn.CreateEnvironmentWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating AppConfig Environment for Application (%s): %w", appId, err)
+		return sdkdiag.AppendErrorf(diags, "creating AppConfig Environment for Application (%s): %s", appId, err)
 	}
 
 	if environment == nil {
-		return fmt.Errorf("error creating AppConfig Environment for Application (%s): empty response", appId)
+		return sdkdiag.AppendErrorf(diags, "creating AppConfig Environment for Application (%s): empty response", appId)
 	}
 
 	d.Set("environment_id", environment.Id)
 	d.SetId(fmt.Sprintf("%s:%s", aws.StringValue(environment.Id), aws.StringValue(environment.ApplicationId)))
 
-	return resourceEnvironmentRead(d, meta)
+	return append(diags, resourceEnvironmentRead(ctx, d, meta)...)
 }
 
-func resourceEnvironmentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppConfigConn
+func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppConfigConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	envID, appID, err := EnvironmentParseID(d.Id())
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading AppConfig Environment (%s): %s", d.Id(), err)
 	}
 
 	input := &appconfig.GetEnvironmentInput{
@@ -138,20 +143,20 @@ func resourceEnvironmentRead(d *schema.ResourceData, meta interface{}) error {
 		EnvironmentId: aws.String(envID),
 	}
 
-	output, err := conn.GetEnvironment(input)
+	output, err := conn.GetEnvironmentWithContext(ctx, input)
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, appconfig.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Appconfig Environment (%s) for Application (%s) not found, removing from state", envID, appID)
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error getting AppConfig Environment (%s) for Application (%s): %w", envID, appID, err)
+		return sdkdiag.AppendErrorf(diags, "reading AppConfig Environment (%s) for Application (%s): %s", envID, appID, err)
 	}
 
 	if output == nil {
-		return fmt.Errorf("error getting AppConfig Environment (%s) for Application (%s): empty response", envID, appID)
+		return sdkdiag.AppendErrorf(diags, "reading AppConfig Environment (%s) for Application (%s): empty response", envID, appID)
 	}
 
 	d.Set("application_id", output.ApplicationId)
@@ -161,7 +166,7 @@ func resourceEnvironmentRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("state", output.State)
 
 	if err := d.Set("monitor", flattenEnvironmentMonitors(output.Monitors)); err != nil {
-		return fmt.Errorf("error setting monitor: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting monitor: %s", err)
 	}
 
 	arn := arn.ARN{
@@ -174,34 +179,35 @@ func resourceEnvironmentRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("arn", arn)
 
-	tags, err := ListTags(conn, arn)
+	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for AppConfig Environment (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for AppConfig Environment (%s): %s", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceEnvironmentUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppConfigConn
+func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppConfigConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		envID, appID, err := EnvironmentParseID(d.Id())
 
 		if err != nil {
-			return err
+			return sdkdiag.AppendErrorf(diags, "updating AppConfig Environment (%s): %s", d.Id(), err)
 		}
 
 		updateInput := &appconfig.UpdateEnvironmentInput{
@@ -221,30 +227,31 @@ func resourceEnvironmentUpdate(d *schema.ResourceData, meta interface{}) error {
 			updateInput.Monitors = expandEnvironmentMonitors(d.Get("monitor").(*schema.Set).List())
 		}
 
-		_, err = conn.UpdateEnvironment(updateInput)
+		_, err = conn.UpdateEnvironmentWithContext(ctx, updateInput)
 
 		if err != nil {
-			return fmt.Errorf("error updating AppConfig Environment (%s) for Application (%s): %w", envID, appID, err)
+			return sdkdiag.AppendErrorf(diags, "updating AppConfig Environment (%s) for Application (%s): %s", envID, appID, err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating AppConfig Environment (%s) tags: %w", d.Get("arn").(string), err)
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating AppConfig Environment (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
 
-	return resourceEnvironmentRead(d, meta)
+	return append(diags, resourceEnvironmentRead(ctx, d, meta)...)
 }
 
-func resourceEnvironmentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppConfigConn
+func resourceEnvironmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppConfigConn()
 
 	envID, appID, err := EnvironmentParseID(d.Id())
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "deleting AppConfig Environment (%s): %s", d.Id(), err)
 	}
 
 	input := &appconfig.DeleteEnvironmentInput{
@@ -252,17 +259,17 @@ func resourceEnvironmentDelete(d *schema.ResourceData, meta interface{}) error {
 		ApplicationId: aws.String(appID),
 	}
 
-	_, err = conn.DeleteEnvironment(input)
+	_, err = conn.DeleteEnvironmentWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, appconfig.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Appconfig Environment (%s) for Application (%s): %w", envID, appID, err)
+		return sdkdiag.AppendErrorf(diags, "deleting Appconfig Environment (%s) for Application (%s): %s", envID, appID, err)
 	}
 
-	return nil
+	return diags
 }
 
 func EnvironmentParseID(id string) (string, string, error) {

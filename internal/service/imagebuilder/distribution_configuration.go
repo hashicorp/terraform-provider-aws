@@ -1,17 +1,19 @@
 package imagebuilder
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -19,12 +21,12 @@ import (
 
 func ResourceDistributionConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceDistributionConfigurationCreate,
-		Read:   resourceDistributionConfigurationRead,
-		Update: resourceDistributionConfigurationUpdate,
-		Delete: resourceDistributionConfigurationDelete,
+		CreateWithoutTimeout: resourceDistributionConfigurationCreate,
+		ReadWithoutTimeout:   resourceDistributionConfigurationRead,
+		UpdateWithoutTimeout: resourceDistributionConfigurationUpdate,
+		DeleteWithoutTimeout: resourceDistributionConfigurationDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -284,8 +286,9 @@ func ResourceDistributionConfiguration() *schema.Resource {
 	}
 }
 
-func resourceDistributionConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ImageBuilderConn
+func resourceDistributionConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ImageBuilderConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -309,23 +312,24 @@ func resourceDistributionConfigurationCreate(d *schema.ResourceData, meta interf
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	output, err := conn.CreateDistributionConfiguration(input)
+	output, err := conn.CreateDistributionConfigurationWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating Image Builder Distribution Configuration: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating Image Builder Distribution Configuration: %s", err)
 	}
 
 	if output == nil {
-		return fmt.Errorf("error creating Image Builder Distribution Configuration: empty response")
+		return sdkdiag.AppendErrorf(diags, "creating Image Builder Distribution Configuration: empty response")
 	}
 
 	d.SetId(aws.StringValue(output.DistributionConfigurationArn))
 
-	return resourceDistributionConfigurationRead(d, meta)
+	return append(diags, resourceDistributionConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceDistributionConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ImageBuilderConn
+func resourceDistributionConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ImageBuilderConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -333,20 +337,20 @@ func resourceDistributionConfigurationRead(d *schema.ResourceData, meta interfac
 		DistributionConfigurationArn: aws.String(d.Id()),
 	}
 
-	output, err := conn.GetDistributionConfiguration(input)
+	output, err := conn.GetDistributionConfigurationWithContext(ctx, input)
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, imagebuilder.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Image Builder Distribution Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error getting Image Builder Distribution Configuration (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "getting Image Builder Distribution Configuration (%s): %s", d.Id(), err)
 	}
 
 	if output == nil || output.DistributionConfiguration == nil {
-		return fmt.Errorf("error getting Image Builder Distribution Configuration (%s): empty response", d.Id())
+		return sdkdiag.AppendErrorf(diags, "getting Image Builder Distribution Configuration (%s): empty response", d.Id())
 	}
 
 	distributionConfiguration := output.DistributionConfiguration
@@ -361,18 +365,19 @@ func resourceDistributionConfigurationRead(d *schema.ResourceData, meta interfac
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceDistributionConfigurationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ImageBuilderConn
+func resourceDistributionConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ImageBuilderConn()
 
 	if d.HasChanges("description", "distribution") {
 		input := &imagebuilder.UpdateDistributionConfigurationInput{
@@ -388,42 +393,43 @@ func resourceDistributionConfigurationUpdate(d *schema.ResourceData, meta interf
 		}
 
 		log.Printf("[DEBUG] UpdateDistributionConfiguration: %#v", input)
-		_, err := conn.UpdateDistributionConfiguration(input)
+		_, err := conn.UpdateDistributionConfigurationWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error updating Image Builder Distribution Configuration (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Image Builder Distribution Configuration (%s): %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating tags for Image Builder Distribution Configuration (%s): %w", d.Id(), err)
+		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating tags for Image Builder Distribution Configuration (%s): %s", d.Id(), err)
 		}
 	}
 
-	return resourceDistributionConfigurationRead(d, meta)
+	return append(diags, resourceDistributionConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceDistributionConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ImageBuilderConn
+func resourceDistributionConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ImageBuilderConn()
 
 	input := &imagebuilder.DeleteDistributionConfigurationInput{
 		DistributionConfigurationArn: aws.String(d.Id()),
 	}
 
-	_, err := conn.DeleteDistributionConfiguration(input)
+	_, err := conn.DeleteDistributionConfigurationWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, imagebuilder.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Image Builder Distribution Config (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Image Builder Distribution Config (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandAMIDistributionConfiguration(tfMap map[string]interface{}) *imagebuilder.AmiDistributionConfiguration {

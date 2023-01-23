@@ -20,10 +20,10 @@ import (
 
 func ResourceRouteCalculator() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceRouteCalculatorCreate,
-		ReadContext:   resourceRouteCalculatorRead,
-		UpdateContext: resourceRouteCalculatorUpdate,
-		DeleteContext: resourceRouteCalculatorDelete,
+		CreateWithoutTimeout: resourceRouteCalculatorCreate,
+		ReadWithoutTimeout:   resourceRouteCalculatorRead,
+		UpdateWithoutTimeout: resourceRouteCalculatorUpdate,
+		DeleteWithoutTimeout: resourceRouteCalculatorDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -73,7 +73,7 @@ func ResourceRouteCalculator() *schema.Resource {
 }
 
 func resourceRouteCalculatorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LocationConn
+	conn := meta.(*conns.AWSClient).LocationConn()
 
 	in := &locationservice.CreateRouteCalculatorInput{
 		CalculatorName: aws.String(d.Get("calculator_name").(string)),
@@ -106,7 +106,7 @@ func resourceRouteCalculatorCreate(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceRouteCalculatorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LocationConn
+	conn := meta.(*conns.AWSClient).LocationConn()
 
 	out, err := findRouteCalculatorByName(ctx, conn, d.Id())
 
@@ -127,7 +127,7 @@ func resourceRouteCalculatorRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("description", out.Description)
 	d.Set("update_time", aws.TimeValue(out.UpdateTime).Format(time.RFC3339))
 
-	tags, err := ListTagsWithContext(ctx, conn, d.Get("calculator_arn").(string))
+	tags, err := ListTags(ctx, conn, d.Get("calculator_arn").(string))
 	if err != nil {
 		return diag.Errorf("listing tags for Location Service Route Calculator (%s): %s", d.Id(), err)
 	}
@@ -148,7 +148,7 @@ func resourceRouteCalculatorRead(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceRouteCalculatorUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LocationConn
+	conn := meta.(*conns.AWSClient).LocationConn()
 
 	update := false
 
@@ -164,7 +164,7 @@ func resourceRouteCalculatorUpdate(ctx context.Context, d *schema.ResourceData, 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("calculator_arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("calculator_arn").(string), o, n); err != nil {
 			return diag.Errorf("updating tags for Location Service Route Calculator (%s): %s", d.Id(), err)
 		}
 	}
@@ -183,7 +183,7 @@ func resourceRouteCalculatorUpdate(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceRouteCalculatorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LocationConn
+	conn := meta.(*conns.AWSClient).LocationConn()
 
 	log.Printf("[INFO] Deleting Location Service Route Calculator %s", d.Id())
 

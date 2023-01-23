@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccDataPipelinePipelineDefinitionDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_datapipeline_pipeline_definition.test"
 	resourceName := "aws_datapipeline_pipeline_definition.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -18,7 +19,7 @@ func TestAccDataPipelinePipelineDefinitionDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPipelineDefinitionDestroy,
+		CheckDestroy:             testAccCheckPipelineDefinitionDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, datapipeline.EndpointsID),
 		Steps: []resource.TestStep{
 			{

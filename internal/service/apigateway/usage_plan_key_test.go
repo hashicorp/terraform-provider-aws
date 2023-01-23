@@ -1,6 +1,7 @@
 package apigateway_test
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"testing"
@@ -17,6 +18,7 @@ import (
 )
 
 func TestAccAPIGatewayUsagePlanKey_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf apigateway.UsagePlanKey
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	apiGatewayApiKeyResourceName := "aws_api_gateway_api_key.test"
@@ -27,12 +29,12 @@ func TestAccAPIGatewayUsagePlanKey_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUsagePlanKeyDestroy,
+		CheckDestroy:             testAccCheckUsagePlanKeyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUsagePlanKeyConfig_typeAPI(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUsagePlanKeyExists(resourceName, &conf),
+					testAccCheckUsagePlanKeyExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "key_id", apiGatewayApiKeyResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "key_type", "API_KEY"),
 					resource.TestCheckResourceAttrSet(resourceName, "name"),
@@ -51,6 +53,7 @@ func TestAccAPIGatewayUsagePlanKey_basic(t *testing.T) {
 }
 
 func TestAccAPIGatewayUsagePlanKey_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf apigateway.UsagePlanKey
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_usage_plan_key.test"
@@ -59,13 +62,13 @@ func TestAccAPIGatewayUsagePlanKey_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUsagePlanKeyDestroy,
+		CheckDestroy:             testAccCheckUsagePlanKeyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUsagePlanKeyConfig_typeAPI(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUsagePlanKeyExists(resourceName, &conf),
-					acctest.CheckResourceDisappears(acctest.Provider, tfapigateway.ResourceUsagePlanKey(), resourceName),
+					testAccCheckUsagePlanKeyExists(ctx, resourceName, &conf),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigateway.ResourceUsagePlanKey(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -74,6 +77,7 @@ func TestAccAPIGatewayUsagePlanKey_disappears(t *testing.T) {
 }
 
 func TestAccAPIGatewayUsagePlanKey_KeyID_concurrency(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf apigateway.UsagePlanKey
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -81,28 +85,28 @@ func TestAccAPIGatewayUsagePlanKey_KeyID_concurrency(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUsagePlanKeyDestroy,
+		CheckDestroy:             testAccCheckUsagePlanKeyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUsagePlanKeyConfig_idConcurrency(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUsagePlanKeyExists("aws_api_gateway_usage_plan_key.test.0", &conf),
-					testAccCheckUsagePlanKeyExists("aws_api_gateway_usage_plan_key.test.1", &conf),
-					testAccCheckUsagePlanKeyExists("aws_api_gateway_usage_plan_key.test.2", &conf),
-					testAccCheckUsagePlanKeyExists("aws_api_gateway_usage_plan_key.test.3", &conf),
-					testAccCheckUsagePlanKeyExists("aws_api_gateway_usage_plan_key.test.4", &conf),
-					testAccCheckUsagePlanKeyExists("aws_api_gateway_usage_plan_key.test.5", &conf),
-					testAccCheckUsagePlanKeyExists("aws_api_gateway_usage_plan_key.test.6", &conf),
-					testAccCheckUsagePlanKeyExists("aws_api_gateway_usage_plan_key.test.7", &conf),
-					testAccCheckUsagePlanKeyExists("aws_api_gateway_usage_plan_key.test.8", &conf),
-					testAccCheckUsagePlanKeyExists("aws_api_gateway_usage_plan_key.test.9", &conf),
+					testAccCheckUsagePlanKeyExists(ctx, "aws_api_gateway_usage_plan_key.test.0", &conf),
+					testAccCheckUsagePlanKeyExists(ctx, "aws_api_gateway_usage_plan_key.test.1", &conf),
+					testAccCheckUsagePlanKeyExists(ctx, "aws_api_gateway_usage_plan_key.test.2", &conf),
+					testAccCheckUsagePlanKeyExists(ctx, "aws_api_gateway_usage_plan_key.test.3", &conf),
+					testAccCheckUsagePlanKeyExists(ctx, "aws_api_gateway_usage_plan_key.test.4", &conf),
+					testAccCheckUsagePlanKeyExists(ctx, "aws_api_gateway_usage_plan_key.test.5", &conf),
+					testAccCheckUsagePlanKeyExists(ctx, "aws_api_gateway_usage_plan_key.test.6", &conf),
+					testAccCheckUsagePlanKeyExists(ctx, "aws_api_gateway_usage_plan_key.test.7", &conf),
+					testAccCheckUsagePlanKeyExists(ctx, "aws_api_gateway_usage_plan_key.test.8", &conf),
+					testAccCheckUsagePlanKeyExists(ctx, "aws_api_gateway_usage_plan_key.test.9", &conf),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckUsagePlanKeyExists(n string, res *apigateway.UsagePlanKey) resource.TestCheckFunc {
+func testAccCheckUsagePlanKeyExists(ctx context.Context, n string, res *apigateway.UsagePlanKey) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -113,13 +117,13 @@ func testAccCheckUsagePlanKeyExists(n string, res *apigateway.UsagePlanKey) reso
 			return fmt.Errorf("No API Gateway Usage Plan Key ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
 
 		req := &apigateway.GetUsagePlanKeyInput{
 			UsagePlanId: aws.String(rs.Primary.Attributes["usage_plan_id"]),
 			KeyId:       aws.String(rs.Primary.Attributes["key_id"]),
 		}
-		up, err := conn.GetUsagePlanKey(req)
+		up, err := conn.GetUsagePlanKeyWithContext(ctx, req)
 		if err != nil {
 			return err
 		}
@@ -136,38 +140,40 @@ func testAccCheckUsagePlanKeyExists(n string, res *apigateway.UsagePlanKey) reso
 	}
 }
 
-func testAccCheckUsagePlanKeyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
+func testAccCheckUsagePlanKeyDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_api_gateway_usage_plan_key" {
-			continue
-		}
-
-		req := &apigateway.GetUsagePlanKeyInput{
-			UsagePlanId: aws.String(rs.Primary.ID),
-			KeyId:       aws.String(rs.Primary.Attributes["key_id"]),
-		}
-		describe, err := conn.GetUsagePlanKey(req)
-
-		if err == nil {
-			if describe.Id != nil && *describe.Id == rs.Primary.ID {
-				return fmt.Errorf("API Gateway Usage Plan Key still exists")
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_api_gateway_usage_plan_key" {
+				continue
 			}
-		}
 
-		aws2err, ok := err.(awserr.Error)
-		if !ok {
-			return err
-		}
-		if aws2err.Code() != apigateway.ErrCodeNotFoundException {
-			return err
+			req := &apigateway.GetUsagePlanKeyInput{
+				UsagePlanId: aws.String(rs.Primary.ID),
+				KeyId:       aws.String(rs.Primary.Attributes["key_id"]),
+			}
+			describe, err := conn.GetUsagePlanKeyWithContext(ctx, req)
+
+			if err == nil {
+				if describe.Id != nil && *describe.Id == rs.Primary.ID {
+					return fmt.Errorf("API Gateway Usage Plan Key still exists")
+				}
+			}
+
+			aws2err, ok := err.(awserr.Error)
+			if !ok {
+				return err
+			}
+			if aws2err.Code() != apigateway.ErrCodeNotFoundException {
+				return err
+			}
+
+			return nil
 		}
 
 		return nil
 	}
-
-	return nil
 }
 
 func testAccCheckUsagePlanKeyImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {

@@ -1,16 +1,17 @@
 package quicksight
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/quicksight"
 )
 
-func FindGroupMembership(conn *quicksight.QuickSight, listInput *quicksight.ListGroupMembershipsInput, userName string) (bool, error) {
-
+func FindGroupMembership(ctx context.Context, conn *quicksight.QuickSight, listInput *quicksight.ListGroupMembershipsInput, userName string) (bool, error) {
 	found := false
 
 	for {
-		resp, err := conn.ListGroupMemberships(listInput)
+		resp, err := conn.ListGroupMembershipsWithContext(ctx, listInput)
 		if err != nil {
 			return false, err
 		}

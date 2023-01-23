@@ -1,6 +1,7 @@
 package mediastore_test
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"testing"
@@ -16,21 +17,22 @@ import (
 )
 
 func TestAccMediaStoreContainerPolicy_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_media_store_container_policy.test"
 
 	rName = strings.ReplaceAll(rName, "-", "_")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, mediastore.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckContainerPolicyDestroy,
+		CheckDestroy:             testAccCheckContainerPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccContainerPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContainerPolicyExists(resourceName),
+					testAccCheckContainerPolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "container_name"),
 					resource.TestCheckResourceAttrSet(resourceName, "policy"),
 				),
@@ -43,7 +45,7 @@ func TestAccMediaStoreContainerPolicy_basic(t *testing.T) {
 			{
 				Config: testAccContainerPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckContainerPolicyExists(resourceName),
+					testAccCheckContainerPolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "container_name"),
 					resource.TestCheckResourceAttrSet(resourceName, "policy"),
 				),
@@ -52,51 +54,53 @@ func TestAccMediaStoreContainerPolicy_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckContainerPolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).MediaStoreConn
+func testAccCheckContainerPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaStoreConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_media_store_container_policy" {
-			continue
-		}
-
-		input := &mediastore.GetContainerPolicyInput{
-			ContainerName: aws.String(rs.Primary.ID),
-		}
-
-		_, err := conn.GetContainerPolicy(input)
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, mediastore.ErrCodeContainerNotFoundException) {
-				return nil
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_media_store_container_policy" {
+				continue
 			}
-			if tfawserr.ErrCodeEquals(err, mediastore.ErrCodePolicyNotFoundException) {
-				return nil
-			}
-			if tfawserr.ErrMessageContains(err, mediastore.ErrCodeContainerInUseException, "Container must be ACTIVE in order to perform this operation") {
-				return nil
-			}
-			return err
-		}
 
-		return fmt.Errorf("Expected MediaStore Container Policy to be destroyed, %s found", rs.Primary.ID)
+			input := &mediastore.GetContainerPolicyInput{
+				ContainerName: aws.String(rs.Primary.ID),
+			}
+
+			_, err := conn.GetContainerPolicyWithContext(ctx, input)
+			if err != nil {
+				if tfawserr.ErrCodeEquals(err, mediastore.ErrCodeContainerNotFoundException) {
+					return nil
+				}
+				if tfawserr.ErrCodeEquals(err, mediastore.ErrCodePolicyNotFoundException) {
+					return nil
+				}
+				if tfawserr.ErrMessageContains(err, mediastore.ErrCodeContainerInUseException, "Container must be ACTIVE in order to perform this operation") {
+					return nil
+				}
+				return err
+			}
+
+			return fmt.Errorf("Expected MediaStore Container Policy to be destroyed, %s found", rs.Primary.ID)
+		}
+		return nil
 	}
-	return nil
 }
 
-func testAccCheckContainerPolicyExists(name string) resource.TestCheckFunc {
+func testAccCheckContainerPolicyExists(ctx context.Context, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaStoreConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaStoreConn()
 
 		input := &mediastore.GetContainerPolicyInput{
 			ContainerName: aws.String(rs.Primary.ID),
 		}
 
-		_, err := conn.GetContainerPolicy(input)
+		_, err := conn.GetContainerPolicyWithContext(ctx, input)
 
 		return err
 	}

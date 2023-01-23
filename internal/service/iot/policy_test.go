@@ -1,6 +1,7 @@
 package iot_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -16,6 +17,7 @@ import (
 )
 
 func TestAccIoTPolicy_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v iot.GetPolicyOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iot_policy.test"
@@ -24,12 +26,12 @@ func TestAccIoTPolicy_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPolicyDestroy_basic,
+		CheckDestroy:             testAccCheckPolicyDestroy_basic(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyConfig_initialState(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(resourceName, &v),
+					testAccCheckPolicyExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "iot", fmt.Sprintf("policy/%s", rName)),
 					resource.TestCheckResourceAttrSet(resourceName, "default_version_id"),
@@ -46,6 +48,7 @@ func TestAccIoTPolicy_basic(t *testing.T) {
 }
 
 func TestAccIoTPolicy_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v iot.GetPolicyOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iot_policy.test"
@@ -54,13 +57,13 @@ func TestAccIoTPolicy_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPolicyDestroy_basic,
+		CheckDestroy:             testAccCheckPolicyDestroy_basic(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyConfig_initialState(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfiot.ResourcePolicy(), resourceName),
+					testAccCheckPolicyExists(ctx, resourceName, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiot.ResourcePolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -68,40 +71,42 @@ func TestAccIoTPolicy_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckPolicyDestroy_basic(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn
+func testAccCheckPolicyDestroy_basic(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_iot_policy" {
-			continue
-		}
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_iot_policy" {
+				continue
+			}
 
-		// Try to find the Policy
-		GetPolicyOpts := &iot.GetPolicyInput{
-			PolicyName: aws.String(rs.Primary.Attributes["name"]),
-		}
+			// Try to find the Policy
+			GetPolicyOpts := &iot.GetPolicyInput{
+				PolicyName: aws.String(rs.Primary.Attributes["name"]),
+			}
 
-		resp, err := conn.GetPolicy(GetPolicyOpts)
+			resp, err := conn.GetPolicyWithContext(ctx, GetPolicyOpts)
 
-		if err == nil {
-			if resp.PolicyName != nil {
-				return fmt.Errorf("IoT Policy still exists")
+			if err == nil {
+				if resp.PolicyName != nil {
+					return fmt.Errorf("IoT Policy still exists")
+				}
+			}
+
+			// Verify the error is what we want
+			if err != nil {
+				iotErr, ok := err.(awserr.Error)
+				if !ok || iotErr.Code() != "ResourceNotFoundException" {
+					return err
+				}
 			}
 		}
 
-		// Verify the error is what we want
-		if err != nil {
-			iotErr, ok := err.(awserr.Error)
-			if !ok || iotErr.Code() != "ResourceNotFoundException" {
-				return err
-			}
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckPolicyExists(n string, v *iot.GetPolicyOutput) resource.TestCheckFunc {
+func testAccCheckPolicyExists(ctx context.Context, n string, v *iot.GetPolicyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -112,9 +117,9 @@ func testAccCheckPolicyExists(n string, v *iot.GetPolicyOutput) resource.TestChe
 			return fmt.Errorf("No IoT Policy ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn()
 
-		resp, err := conn.GetPolicy(&iot.GetPolicyInput{
+		resp, err := conn.GetPolicyWithContext(ctx, &iot.GetPolicyInput{
 			PolicyName: aws.String(rs.Primary.ID),
 		})
 		if err != nil {

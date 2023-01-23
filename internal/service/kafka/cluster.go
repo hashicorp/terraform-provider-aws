@@ -28,7 +28,7 @@ func ResourceCluster() *schema.Resource {
 		DeleteWithoutTimeout: resourceClusterDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -459,6 +459,12 @@ func ResourceCluster() *schema.Resource {
 					},
 				},
 			},
+			"storage_mode": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(kafka.StorageMode_Values(), true),
+			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 			"zookeeper_connect_string": {
@@ -474,7 +480,7 @@ func ResourceCluster() *schema.Resource {
 }
 
 func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KafkaConn
+	conn := meta.(*conns.AWSClient).KafkaConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -514,6 +520,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.OpenMonitoring = expandOpenMonitoringInfo(v.([]interface{})[0].(map[string]interface{}))
 	}
 
+	if v, ok := d.GetOk("storage_mode"); ok {
+		input.StorageMode = aws.String(v.(string))
+	}
+
 	output, err := conn.CreateClusterWithContext(ctx, input)
 
 	if err != nil {
@@ -532,7 +542,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KafkaConn
+	conn := meta.(*conns.AWSClient).KafkaConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -622,6 +632,8 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 		d.Set("open_monitoring", nil)
 	}
 
+	d.Set("storage_mode", cluster.StorageMode)
+
 	d.Set("zookeeper_connect_string", SortEndpointsString(aws.StringValue(cluster.ZookeeperConnectString)))
 	d.Set("zookeeper_connect_string_tls", SortEndpointsString(aws.StringValue(cluster.ZookeeperConnectStringTls)))
 
@@ -640,7 +652,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KafkaConn
+	conn := meta.(*conns.AWSClient).KafkaConn()
 
 	if d.HasChange("broker_node_group_info.0.instance_type") {
 		input := &kafka.UpdateBrokerTypeInput{
@@ -925,7 +937,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTagsWithContext(ctx, conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
 			return diag.Errorf("updating MSK Cluster (%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -934,7 +946,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KafkaConn
+	conn := meta.(*conns.AWSClient).KafkaConn()
 
 	log.Printf("[DEBUG] Deleting MSK Cluster: %s", d.Id())
 	_, err := conn.DeleteClusterWithContext(ctx, &kafka.DeleteClusterInput{
@@ -1742,7 +1754,7 @@ func flattenNodeExporter(apiObject *kafka.NodeExporter) map[string]interface{} {
 }
 
 func refreshClusterVersion(ctx context.Context, d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KafkaConn
+	conn := meta.(*conns.AWSClient).KafkaConn()
 
 	cluster, err := FindClusterByARN(ctx, conn, d.Id())
 

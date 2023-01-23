@@ -76,7 +76,7 @@ func ResourceTrafficPolicy() *schema.Resource {
 }
 
 func resourceTrafficPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53Conn
+	conn := meta.(*conns.AWSClient).Route53Conn()
 
 	name := d.Get("name").(string)
 	input := &route53.CreateTrafficPolicyInput{
@@ -103,7 +103,7 @@ func resourceTrafficPolicyCreate(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceTrafficPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53Conn
+	conn := meta.(*conns.AWSClient).Route53Conn()
 
 	trafficPolicy, err := FindTrafficPolicyByID(ctx, conn, d.Id())
 
@@ -127,7 +127,7 @@ func resourceTrafficPolicyRead(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceTrafficPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53Conn
+	conn := meta.(*conns.AWSClient).Route53Conn()
 
 	input := &route53.UpdateTrafficPolicyCommentInput{
 		Id:      aws.String(d.Id()),
@@ -149,14 +149,14 @@ func resourceTrafficPolicyUpdate(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceTrafficPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53Conn
+	conn := meta.(*conns.AWSClient).Route53Conn()
 
 	input := &route53.ListTrafficPolicyVersionsInput{
 		Id: aws.String(d.Id()),
 	}
 	var output []*route53.TrafficPolicy
 
-	err := listTrafficPolicyVersionsPagesWithContext(ctx, conn, input, func(page *route53.ListTrafficPolicyVersionsOutput, lastPage bool) bool {
+	err := listTrafficPolicyVersionsPages(ctx, conn, input, func(page *route53.ListTrafficPolicyVersionsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}

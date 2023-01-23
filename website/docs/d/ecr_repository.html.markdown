@@ -44,4 +44,3 @@ In addition to all arguments above, the following attributes are exported:
 ### Image Scanning Configuration
 
 * `scan_on_push` - Whether images are scanned after being pushed to the repository.
-

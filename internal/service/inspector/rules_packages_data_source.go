@@ -1,18 +1,20 @@
 package inspector
 
 import (
-	"fmt"
+	"context"
 	"sort"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/inspector"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func DataSourceRulesPackages() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceRulesPackagesRead,
+		ReadWithoutTimeout: dataSourceRulesPackagesRead,
 
 		Schema: map[string]*schema.Schema{
 			"arns": {
@@ -24,13 +26,14 @@ func DataSourceRulesPackages() *schema.Resource {
 	}
 }
 
-func dataSourceRulesPackagesRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).InspectorConn
+func dataSourceRulesPackagesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).InspectorConn()
 
-	output, err := findRulesPackageARNs(conn)
+	output, err := findRulesPackageARNs(ctx, conn)
 
 	if err != nil {
-		return fmt.Errorf("error reading Inspector Rules Packages: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading Inspector Rules Packages: %s", err)
 	}
 
 	arns := aws.StringValueSlice(output)
@@ -39,14 +42,14 @@ func dataSourceRulesPackagesRead(d *schema.ResourceData, meta interface{}) error
 	d.SetId(meta.(*conns.AWSClient).Region)
 	d.Set("arns", arns)
 
-	return nil
+	return diags
 }
 
-func findRulesPackageARNs(conn *inspector.Inspector) ([]*string, error) {
+func findRulesPackageARNs(ctx context.Context, conn *inspector.Inspector) ([]*string, error) {
 	input := &inspector.ListRulesPackagesInput{}
 	var output []*string
 
-	err := conn.ListRulesPackagesPages(input, func(page *inspector.ListRulesPackagesOutput, lastPage bool) bool {
+	err := conn.ListRulesPackagesPagesWithContext(ctx, input, func(page *inspector.ListRulesPackagesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}

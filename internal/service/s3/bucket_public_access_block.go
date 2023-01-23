@@ -1,27 +1,29 @@
 package s3
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourceBucketPublicAccessBlock() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceBucketPublicAccessBlockCreate,
-		Read:   resourceBucketPublicAccessBlockRead,
-		Update: resourceBucketPublicAccessBlockUpdate,
-		Delete: resourceBucketPublicAccessBlockDelete,
+		CreateWithoutTimeout: resourceBucketPublicAccessBlockCreate,
+		ReadWithoutTimeout:   resourceBucketPublicAccessBlockRead,
+		UpdateWithoutTimeout: resourceBucketPublicAccessBlockUpdate,
+		DeleteWithoutTimeout: resourceBucketPublicAccessBlockDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -58,8 +60,9 @@ func ResourceBucketPublicAccessBlock() *schema.Resource {
 	}
 }
 
-func resourceBucketPublicAccessBlockCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+func resourceBucketPublicAccessBlockCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).S3Conn()
 	bucket := d.Get("bucket").(string)
 
 	input := &s3.PutPublicAccessBlockInput{
@@ -73,8 +76,8 @@ func resourceBucketPublicAccessBlockCreate(d *schema.ResourceData, meta interfac
 	}
 
 	log.Printf("[DEBUG] S3 bucket: %s, public access block: %v", bucket, input.PublicAccessBlockConfiguration)
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-		_, err := conn.PutPublicAccessBlock(input)
+	err := resource.RetryContext(ctx, 1*time.Minute, func() *resource.RetryError {
+		_, err := conn.PutPublicAccessBlockWithContext(ctx, input)
 
 		if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
 			return resource.RetryableError(err)
@@ -87,18 +90,19 @@ func resourceBucketPublicAccessBlockCreate(d *schema.ResourceData, meta interfac
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		_, err = conn.PutPublicAccessBlock(input)
+		_, err = conn.PutPublicAccessBlockWithContext(ctx, input)
 	}
 	if err != nil {
-		return fmt.Errorf("error creating public access block policy for S3 bucket (%s): %s", bucket, err)
+		return sdkdiag.AppendErrorf(diags, "creating public access block policy for S3 bucket (%s): %s", bucket, err)
 	}
 
 	d.SetId(bucket)
-	return resourceBucketPublicAccessBlockRead(d, meta)
+	return append(diags, resourceBucketPublicAccessBlockRead(ctx, d, meta)...)
 }
 
-func resourceBucketPublicAccessBlockRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+func resourceBucketPublicAccessBlockRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	input := &s3.GetPublicAccessBlockInput{
 		Bucket: aws.String(d.Id()),
@@ -106,9 +110,9 @@ func resourceBucketPublicAccessBlockRead(d *schema.ResourceData, meta interface{
 
 	// Retry for eventual consistency on creation
 	var output *s3.GetPublicAccessBlockOutput
-	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
+	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
 		var err error
-		output, err = conn.GetPublicAccessBlock(input)
+		output, err = conn.GetPublicAccessBlockWithContext(ctx, input)
 
 		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
 			return resource.RetryableError(err)
@@ -126,27 +130,27 @@ func resourceBucketPublicAccessBlockRead(d *schema.ResourceData, meta interface{
 	})
 
 	if tfresource.TimedOut(err) {
-		output, err = conn.GetPublicAccessBlock(input)
+		output, err = conn.GetPublicAccessBlockWithContext(ctx, input)
 	}
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ErrCodeNoSuchPublicAccessBlockConfiguration) {
 		log.Printf("[WARN] S3 Bucket Public Access Block (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
 		log.Printf("[WARN] S3 Bucket (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading S3 bucket Public Access Block (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading S3 bucket Public Access Block (%s): %s", d.Id(), err)
 	}
 
 	if output == nil || output.PublicAccessBlockConfiguration == nil {
-		return fmt.Errorf("error reading S3 Bucket Public Access Block (%s): empty response", d.Id())
+		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket Public Access Block (%s): empty response", d.Id())
 	}
 
 	d.Set("bucket", d.Id())
@@ -155,11 +159,12 @@ func resourceBucketPublicAccessBlockRead(d *schema.ResourceData, meta interface{
 	d.Set("ignore_public_acls", output.PublicAccessBlockConfiguration.IgnorePublicAcls)
 	d.Set("restrict_public_buckets", output.PublicAccessBlockConfiguration.RestrictPublicBuckets)
 
-	return nil
+	return diags
 }
 
-func resourceBucketPublicAccessBlockUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+func resourceBucketPublicAccessBlockUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	input := &s3.PutPublicAccessBlockInput{
 		Bucket: aws.String(d.Id()),
@@ -172,9 +177,9 @@ func resourceBucketPublicAccessBlockUpdate(d *schema.ResourceData, meta interfac
 	}
 
 	log.Printf("[DEBUG] Updating S3 bucket Public Access Block: %s", input)
-	_, err := conn.PutPublicAccessBlock(input)
+	_, err := conn.PutPublicAccessBlockWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("error updating S3 Bucket Public Access Block (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating S3 Bucket Public Access Block (%s): %s", d.Id(), err)
 	}
 
 	// Workaround API eventual consistency issues. This type of logic should not normally be used.
@@ -187,30 +192,31 @@ func resourceBucketPublicAccessBlockUpdate(d *schema.ResourceData, meta interfac
 	d.Set("restrict_public_buckets", input.PublicAccessBlockConfiguration.RestrictPublicBuckets)
 
 	// Skip normal Read after Update due to eventual consistency issues
-	return nil
+	return diags
 }
 
-func resourceBucketPublicAccessBlockDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+func resourceBucketPublicAccessBlockDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	input := &s3.DeletePublicAccessBlockInput{
 		Bucket: aws.String(d.Id()),
 	}
 
 	log.Printf("[DEBUG] S3 bucket: %s, delete public access block", d.Id())
-	_, err := conn.DeletePublicAccessBlock(input)
+	_, err := conn.DeletePublicAccessBlockWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, ErrCodeNoSuchPublicAccessBlockConfiguration) {
-		return nil
+		return diags
 	}
 
 	if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting S3 Bucket Public Access Block (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting S3 Bucket Public Access Block (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

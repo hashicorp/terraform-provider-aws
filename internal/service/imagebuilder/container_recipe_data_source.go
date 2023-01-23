@@ -1,19 +1,21 @@
 package imagebuilder
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func DataSourceContainerRecipe() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceContainerRecipeRead,
+		ReadWithoutTimeout: dataSourceContainerRecipeRead,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:         schema.TypeString,
@@ -189,8 +191,9 @@ func DataSourceContainerRecipe() *schema.Resource {
 	}
 }
 
-func dataSourceContainerRecipeRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ImageBuilderConn
+func dataSourceContainerRecipeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ImageBuilderConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &imagebuilder.GetContainerRecipeInput{}
@@ -199,14 +202,14 @@ func dataSourceContainerRecipeRead(d *schema.ResourceData, meta interface{}) err
 		input.ContainerRecipeArn = aws.String(v.(string))
 	}
 
-	output, err := conn.GetContainerRecipe(input)
+	output, err := conn.GetContainerRecipeWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error reading Image Builder Container Recipe (%s): %w", aws.StringValue(input.ContainerRecipeArn), err)
+		return sdkdiag.AppendErrorf(diags, "reading Image Builder Container Recipe (%s): %s", aws.StringValue(input.ContainerRecipeArn), err)
 	}
 
 	if output == nil || output.ContainerRecipe == nil {
-		return fmt.Errorf("error reading Image Builder Container Recipe (%s): empty response", aws.StringValue(input.ContainerRecipeArn))
+		return sdkdiag.AppendErrorf(diags, "reading Image Builder Container Recipe (%s): empty response", aws.StringValue(input.ContainerRecipeArn))
 	}
 
 	containerRecipe := output.ContainerRecipe
@@ -236,5 +239,5 @@ func dataSourceContainerRecipeRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("version", containerRecipe.Version)
 	d.Set("working_directory", containerRecipe.WorkingDirectory)
 
-	return nil
+	return diags
 }

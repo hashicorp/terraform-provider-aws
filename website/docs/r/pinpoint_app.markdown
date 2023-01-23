@@ -27,7 +27,6 @@ resource "aws_pinpoint_app" "example" {
 }
 ```
 
-
 ## Argument Reference
 
 The following arguments are supported:
@@ -56,7 +55,6 @@ The following arguments are supported:
 
 * `end` - (Optional) The default end time for quiet time in ISO 8601 format. Required if `start` is set
 * `start` - (Optional) The default start time for quiet time in ISO 8601 format. Required if `end` is set
-
 
 ## Attributes Reference
 

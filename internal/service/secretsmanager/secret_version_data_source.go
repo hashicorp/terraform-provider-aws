@@ -1,20 +1,23 @@
 package secretsmanager
 
 import (
+	"context"
 	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
 func DataSourceSecretVersion() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceSecretVersionRead,
+		ReadWithoutTimeout: dataSourceSecretVersionRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -54,8 +57,9 @@ func DataSourceSecretVersion() *schema.Resource {
 	}
 }
 
-func dataSourceSecretVersionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecretsManagerConn
+func dataSourceSecretVersionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SecretsManagerConn()
 	secretID := d.Get("secret_id").(string)
 	var version string
 
@@ -74,15 +78,15 @@ func dataSourceSecretVersionRead(d *schema.ResourceData, meta interface{}) error
 	}
 
 	log.Printf("[DEBUG] Reading Secrets Manager Secret Version: %s", input)
-	output, err := conn.GetSecretValue(input)
+	output, err := conn.GetSecretValueWithContext(ctx, input)
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, secretsmanager.ErrCodeResourceNotFoundException) {
-			return fmt.Errorf("Secrets Manager Secret %q Version %q not found", secretID, version)
+			return sdkdiag.AppendErrorf(diags, "Secrets Manager Secret %q Version %q not found", secretID, version)
 		}
 		if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeInvalidRequestException, "You can’t perform this operation on the secret because it was deleted") {
-			return fmt.Errorf("Secrets Manager Secret %q Version %q not found", secretID, version)
+			return sdkdiag.AppendErrorf(diags, "Secrets Manager Secret %q Version %q not found", secretID, version)
 		}
-		return fmt.Errorf("error reading Secrets Manager Secret Version: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading Secrets Manager Secret Version: %s", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s|%s", secretID, version))
@@ -93,8 +97,8 @@ func dataSourceSecretVersionRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("arn", output.ARN)
 
 	if err := d.Set("version_stages", flex.FlattenStringList(output.VersionStages)); err != nil {
-		return fmt.Errorf("error setting version_stages: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting version_stages: %s", err)
 	}
 
-	return nil
+	return diags
 }
