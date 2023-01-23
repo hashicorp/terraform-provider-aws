@@ -273,7 +273,7 @@ of several sub-resources - these resources are laid out below.
     response to requests using the specified HTTP methods.
 
 * `cache_policy_id` (Optional) - The unique identifier of the cache policy that
-    is attached to the cache behavior. Either [`cache_policy_id` and optional `origin_request_policy_id`] or
+    is attached to the cache behavior. If configuring the `default_cache_behavior` either `cache_policy_id` or `forwarded_values` must be set.
     `forwarded_values` must be set.
 
 * `compress` (Optional) - Whether you want CloudFront to automatically
