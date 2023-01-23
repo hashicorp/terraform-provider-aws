@@ -8,4 +8,5 @@ var (
 	ResourceAssessmentReport                     = newResourceAssessmentReport
 	ResourceControl                              = newResourceControl
 	ResourceFramework                            = newResourceFramework
+	ResourceFrameworkShare                       = newResourceFrameworkShare
 )
