@@ -274,7 +274,6 @@ of several sub-resources - these resources are laid out below.
 
 * `cache_policy_id` (Optional) - The unique identifier of the cache policy that
     is attached to the cache behavior. If configuring the `default_cache_behavior` either `cache_policy_id` or `forwarded_values` must be set.
-    `forwarded_values` must be set.
 
 * `compress` (Optional) - Whether you want CloudFront to automatically
     compress content for web requests that include `Accept-Encoding: gzip` in
