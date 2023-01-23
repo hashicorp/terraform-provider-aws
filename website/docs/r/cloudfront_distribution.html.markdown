@@ -285,7 +285,7 @@ of several sub-resources - these resources are laid out below.
 
 * `field_level_encryption_id` (Optional) - Field level encryption configuration ID
 
-* `forwarded_values` (Optional) - The [forwarded values configuration](#forwarded-values-arguments) that specifies how CloudFront
+* `forwarded_values` (Optional **Deprecated** use `cache_policy_id` or `origin_request_policy_id ` instead) - The [forwarded values configuration](#forwarded-values-arguments) that specifies how CloudFront
     `forwarded_values` must be set. Note, AWS recommend that you use a cache policy or an 
     origin request policy instead of this field.
 
