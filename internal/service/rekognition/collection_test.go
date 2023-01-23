@@ -100,7 +100,7 @@ func testAccCheckCollectionExists(n string, res *rekognition.DescribeCollectionO
 			return fmt.Errorf("No rekognition id is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RekognitionConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RekognitionConn()
 
 		collection, err := conn.DescribeCollection(&rekognition.DescribeCollectionInput{
 			CollectionId: aws.String(rs.Primary.ID),
@@ -122,7 +122,7 @@ func testAccCheckCollectionDestroy(s *terraform.State) error {
 			continue
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RekognitionConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RekognitionConn()
 		_, err := conn.DescribeCollection(&rekognition.DescribeCollectionInput{
 			CollectionId: aws.String(rs.Primary.ID),
 		})
