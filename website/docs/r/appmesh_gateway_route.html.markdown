@@ -68,6 +68,7 @@ The `grpc_route`, `http_route` and `http2_route`'s `action` object supports the 
 
 The `target` object supports the following:
 
+* `port` - (Optional) The port number that corresponds to the target for Virtual Service provider port. This is required when the provider (router or node) of the Virtual Service has multiple listeners.
 * `virtual_service` - (Required) Virtual service gateway route target.
 
 The `virtual_service` object supports the following:
@@ -82,7 +83,6 @@ The `rewrite` object supports the following:
 
 * `hostname` - (Optional) Host name to rewrite.
 * `prefix` - (Optional) Specified beginning characters to rewrite.
-* `port` - (Optional) The port number to match from the request.
 
 The `hostname` object supports the following:
 
