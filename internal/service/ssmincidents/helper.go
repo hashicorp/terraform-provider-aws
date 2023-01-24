@@ -24,7 +24,7 @@ func GetReplicationSetARN(context context.Context, client *ssmincidents.Client) 
 	return replicationSets.ReplicationSetArns[0], nil
 }
 
-func MapListToMap[T, U any](list []T, keyFunction func(T) string, valueFunction func(T) U) map[string]U {
+func GenerateMapFromList[T, U any](list []T, keyFunction func(T) string, valueFunction func(T) U) map[string]U {
 	output := make(map[string]U)
 
 	for _, itr := range list {
@@ -34,7 +34,7 @@ func MapListToMap[T, U any](list []T, keyFunction func(T) string, valueFunction 
 	return output
 }
 
-func MapMaptoList[T, U any](m map[string]T, f func(string, T) U) []U {
+func GenerateListFromMap[T, U any](m map[string]T, f func(string, T) U) []U {
 	output := make([]U, 0)
 
 	for k, v := range m {
