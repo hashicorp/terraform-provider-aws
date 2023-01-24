@@ -33,7 +33,7 @@ var testAccProviderCognitoUserPoolCustomDomain *schema.Provider
 var testAccProviderCognitoUserPoolCustomDomainConfigure sync.Once
 
 // testAccPreCheckUserPoolCustomDomain verifies AWS credentials and that Cognito User Pool Custom Domains is supported
-func testAccPreCheckUserPoolCustomDomain(t *testing.T) {
+func testAccPreCheckUserPoolCustomDomain(ctx context.Context, t *testing.T) {
 	acctest.PreCheckPartitionHasService(cognitoidentityprovider.EndpointsID, t)
 
 	region := testAccGetUserPoolCustomDomainRegion()
@@ -45,7 +45,6 @@ func testAccPreCheckUserPoolCustomDomain(t *testing.T) {
 	// Since we are outside the scope of the Terraform configuration we must
 	// call Configure() to properly initialize the provider configuration.
 	testAccProviderCognitoUserPoolCustomDomainConfigure.Do(func() {
-		ctx := context.Background()
 		var err error
 		testAccProviderCognitoUserPoolCustomDomain, err = provider.New(ctx)
 

@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func FindGraphByARN(conn *detective.Detective, ctx context.Context, arn string) (*detective.Graph, error) {
+func FindGraphByARN(ctx context.Context, conn *detective.Detective, arn string) (*detective.Graph, error) {
 	input := &detective.ListGraphsInput{}
 	var result *detective.Graph
 

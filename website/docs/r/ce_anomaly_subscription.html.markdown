@@ -139,15 +139,43 @@ resource "aws_ce_anomaly_subscription" "realtime_subscription" {
 
 The following arguments are required:
 
-* `name` - (Required) The name for the subscription.
+* `account_id` - (Optional) The unique identifier for the AWS account in which the anomaly subscription ought to be created.
 * `frequency` - (Required) The frequency that anomaly reports are sent. Valid Values: `DAILY` | `IMMEDIATE` | `WEEKLY`.
 * `monitor_arn_list` - (Required) A list of cost anomaly monitors.
+* `name` - (Required) The name for the subscription.
 * `subscriber` - (Required) A subscriber configuration. Multiple subscribers can be defined.
     * `type` - (Required) The type of subscription. Valid Values: `SNS` | `EMAIL`.
     * `address` - (Required) The address of the subscriber. If type is `SNS`, this will be the arn of the sns topic. If type is `EMAIL`, this will be the destination email address.
-* `threshold` - (Required) The dollar value that triggers a notification if the threshold is exceeded.
-* `account_id` - (Optional) The unique identifier for the AWS account in which the anomaly subscription ought to be created.
+* `threshold` - (Optional) The dollar value that triggers a notification if the threshold is exceeded. Depracated, use `threshold_expression` instead.
+* `threshold_expression` - (Optional) An Expression object used to specify the anomalies that you want to generate alerts for. See [Threshold Expression](#threshold-expression).
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+### Threshold Expression
+
+* `and` - (Optional) Return results that match both [Dimension](#dimension) objects.
+* `cost_category` - (Optional) Configuration block for the filter that's based on  values. See [Cost Category](#cost-category) below.
+* `dimension` - (Optional) Configuration block for the specific [Dimension](#dimension) to use for.
+* `not` - (Optional) Return results that match both [Dimension](#dimension) object.
+* `or` - (Optional) Return results that match both [Dimension](#dimension) object.
+* `tags` - (Optional) Configuration block for the specific Tag to use for. See [Tags](#tags) below.
+
+### Cost Category
+
+* `key` - (Optional) Unique name of the Cost Category.
+* `match_options` - (Optional) Match options that you can use to filter your results. MatchOptions is only applicable for actions related to cost category. The default values for MatchOptions is `EQUALS` and `CASE_SENSITIVE`. Valid values are: `EQUALS`,  `ABSENT`, `STARTS_WITH`, `ENDS_WITH`, `CONTAINS`, `CASE_SENSITIVE`, `CASE_INSENSITIVE`.
+* `values` - (Optional) Specific value of the Cost Category.
+
+### Dimension
+
+* `key` - (Optional) Unique name of the Cost Category.
+* `match_options` - (Optional) Match options that you can use to filter your results. MatchOptions is only applicable for actions related to cost category. The default values for MatchOptions is `EQUALS` and `CASE_SENSITIVE`. Valid values are: `EQUALS`,  `ABSENT`, `STARTS_WITH`, `ENDS_WITH`, `CONTAINS`, `CASE_SENSITIVE`, `CASE_INSENSITIVE`.
+* `values` - (Optional) Specific value of the Cost Category.
+
+### Tags
+
+* `key` - (Optional) Key for the tag.
+* `match_options` - (Optional) Match options that you can use to filter your results. MatchOptions is only applicable for actions related to cost category. The default values for MatchOptions is `EQUALS` and `CASE_SENSITIVE`. Valid values are: `EQUALS`,  `ABSENT`, `STARTS_WITH`, `ENDS_WITH`, `CONTAINS`, `CASE_SENSITIVE`, `CASE_INSENSITIVE`.
+* `values` - (Optional) Specific value of the Cost Category.
 
 ## Attributes Reference
 

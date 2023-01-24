@@ -1,6 +1,7 @@
 package dynamodb_test
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log"
@@ -20,6 +21,7 @@ import (
 )
 
 func TestAccDynamoDBTableReplica_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -31,12 +33,12 @@ func TestAccDynamoDBTableReplica_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckMultipleRegion(t, 2) },
 		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 3),
-		CheckDestroy:             testAccCheckTableReplicaDestroy,
+		CheckDestroy:             testAccCheckTableReplicaDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableReplicaConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(resourceName),
+					testAccCheckTableReplicaExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 				),
 			},
@@ -50,6 +52,7 @@ func TestAccDynamoDBTableReplica_basic(t *testing.T) {
 }
 
 func TestAccDynamoDBTableReplica_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -61,13 +64,13 @@ func TestAccDynamoDBTableReplica_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckMultipleRegion(t, 2) },
 		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 3),
-		CheckDestroy:             testAccCheckTableReplicaDestroy,
+		CheckDestroy:             testAccCheckTableReplicaDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableReplicaConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfdynamodb.ResourceTableReplica(), resourceName),
+					testAccCheckTableReplicaExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdynamodb.ResourceTableReplica(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -76,6 +79,7 @@ func TestAccDynamoDBTableReplica_disappears(t *testing.T) {
 }
 
 func TestAccDynamoDBTableReplica_pitr(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -87,12 +91,12 @@ func TestAccDynamoDBTableReplica_pitr(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckMultipleRegion(t, 2) },
 		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 3),
-		CheckDestroy:             testAccCheckTableReplicaDestroy,
+		CheckDestroy:             testAccCheckTableReplicaDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableReplicaConfig_pitr(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(resourceName),
+					testAccCheckTableReplicaExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery", "true"),
 				),
 			},
@@ -106,6 +110,7 @@ func TestAccDynamoDBTableReplica_pitr(t *testing.T) {
 }
 
 func TestAccDynamoDBTableReplica_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -117,12 +122,12 @@ func TestAccDynamoDBTableReplica_tags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckMultipleRegion(t, 2) },
 		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 3),
-		CheckDestroy:             testAccCheckTableReplicaDestroy,
+		CheckDestroy:             testAccCheckTableReplicaDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableReplicaConfig_tags1(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(resourceName),
+					testAccCheckTableReplicaExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.tape", "Valladolid"),
 				),
@@ -135,7 +140,7 @@ func TestAccDynamoDBTableReplica_tags(t *testing.T) {
 			{
 				Config: testAccTableReplicaConfig_tags2(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(resourceName),
+					testAccCheckTableReplicaExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "5"),
 					resource.TestCheckResourceAttr(resourceName, "tags.arise", "Melandru"),
 					resource.TestCheckResourceAttr(resourceName, "tags.brightest", "Lights"),
@@ -152,7 +157,7 @@ func TestAccDynamoDBTableReplica_tags(t *testing.T) {
 			{
 				Config: testAccTableReplicaConfig_tags3(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(resourceName),
+					testAccCheckTableReplicaExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
@@ -167,6 +172,7 @@ func TestAccDynamoDBTableReplica_tags(t *testing.T) {
 }
 
 func TestAccDynamoDBTableReplica_tableClass(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -178,12 +184,12 @@ func TestAccDynamoDBTableReplica_tableClass(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckMultipleRegion(t, 2) },
 		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 3),
-		CheckDestroy:             testAccCheckTableReplicaDestroy,
+		CheckDestroy:             testAccCheckTableReplicaDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableReplicaConfig_tableClass(rName, "STANDARD"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(resourceName),
+					testAccCheckTableReplicaExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "table_class_override", "STANDARD"),
 				),
 			},
@@ -195,7 +201,7 @@ func TestAccDynamoDBTableReplica_tableClass(t *testing.T) {
 			{
 				Config: testAccTableReplicaConfig_tableClass(rName, "STANDARD_INFREQUENT_ACCESS"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(resourceName),
+					testAccCheckTableReplicaExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "table_class_override", "STANDARD_INFREQUENT_ACCESS"),
 				),
 			},
@@ -203,62 +209,64 @@ func TestAccDynamoDBTableReplica_tableClass(t *testing.T) {
 	})
 }
 
-func testAccCheckTableReplicaDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn()
-	replicaRegion := aws.StringValue(conn.Config.Region)
+func testAccCheckTableReplicaDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn()
+		replicaRegion := aws.StringValue(conn.Config.Region)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_dynamodb_table_replica" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_dynamodb_table_replica" {
+				continue
+			}
+
+			log.Printf("[DEBUG] Checking if DynamoDB table replica %s was destroyed", rs.Primary.ID)
+
+			if rs.Primary.ID == "" {
+				return create.Error(names.DynamoDB, create.ErrActionCheckingDestroyed, tfdynamodb.ResNameTableReplica, rs.Primary.ID, errors.New("no ID"))
+			}
+
+			tableName, mainRegion, err := tfdynamodb.TableReplicaParseID(rs.Primary.ID)
+			if err != nil {
+				return create.Error(names.DynamoDB, create.ErrActionCheckingDestroyed, tfdynamodb.ResNameTableReplica, rs.Primary.ID, err)
+			}
+
+			session, err := conns.NewSessionForRegion(&conn.Config, mainRegion, acctest.Provider.Meta().(*conns.AWSClient).TerraformVersion)
+			if err != nil {
+				return create.Error(names.DynamoDB, create.ErrActionCheckingDestroyed, tfdynamodb.ResNameTableReplica, rs.Primary.ID, fmt.Errorf("region %s: %w", mainRegion, err))
+			}
+
+			conn = dynamodb.New(session) // now global table region
+
+			params := &dynamodb.DescribeTableInput{
+				TableName: aws.String(tableName),
+			}
+
+			result, err := conn.DescribeTableWithContext(ctx, params)
+
+			if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
+				continue
+			}
+
+			if err != nil {
+				return create.Error(names.DynamoDB, create.ErrActionCheckingDestroyed, tfdynamodb.ResNameTableReplica, rs.Primary.ID, err)
+			}
+
+			if result == nil || result.Table == nil {
+				continue
+			}
+
+			if _, err := tfdynamodb.FilterReplicasByRegion(result.Table.Replicas, replicaRegion); err == nil {
+				return create.Error(names.DynamoDB, create.ErrActionCheckingDestroyed, tfdynamodb.ResNameTableReplica, rs.Primary.ID, errors.New("still exists"))
+			}
+
+			return err
 		}
 
-		log.Printf("[DEBUG] Checking if DynamoDB table replica %s was destroyed", rs.Primary.ID)
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.DynamoDB, create.ErrActionCheckingDestroyed, tfdynamodb.ResNameTableReplica, rs.Primary.ID, errors.New("no ID"))
-		}
-
-		tableName, mainRegion, err := tfdynamodb.TableReplicaParseID(rs.Primary.ID)
-		if err != nil {
-			return create.Error(names.DynamoDB, create.ErrActionCheckingDestroyed, tfdynamodb.ResNameTableReplica, rs.Primary.ID, err)
-		}
-
-		session, err := conns.NewSessionForRegion(&conn.Config, mainRegion, acctest.Provider.Meta().(*conns.AWSClient).TerraformVersion)
-		if err != nil {
-			return create.Error(names.DynamoDB, create.ErrActionCheckingDestroyed, tfdynamodb.ResNameTableReplica, rs.Primary.ID, fmt.Errorf("region %s: %w", mainRegion, err))
-		}
-
-		conn = dynamodb.New(session) // now global table region
-
-		params := &dynamodb.DescribeTableInput{
-			TableName: aws.String(tableName),
-		}
-
-		result, err := conn.DescribeTable(params)
-
-		if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
-			continue
-		}
-
-		if err != nil {
-			return create.Error(names.DynamoDB, create.ErrActionCheckingDestroyed, tfdynamodb.ResNameTableReplica, rs.Primary.ID, err)
-		}
-
-		if result == nil || result.Table == nil {
-			continue
-		}
-
-		if _, err := tfdynamodb.FilterReplicasByRegion(result.Table.Replicas, replicaRegion); err == nil {
-			return create.Error(names.DynamoDB, create.ErrActionCheckingDestroyed, tfdynamodb.ResNameTableReplica, rs.Primary.ID, errors.New("still exists"))
-		}
-
-		return err
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckTableReplicaExists(n string) resource.TestCheckFunc {
+func testAccCheckTableReplicaExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		log.Printf("[DEBUG] Trying to create initial table replica state!")
 		rs, ok := s.RootModule().Resources[n]
@@ -288,7 +296,7 @@ func testAccCheckTableReplicaExists(n string) resource.TestCheckFunc {
 			TableName: aws.String(tableName),
 		}
 
-		_, err = conn.DescribeTable(params)
+		_, err = conn.DescribeTableWithContext(ctx, params)
 		if err != nil {
 			return create.Error(names.DynamoDB, create.ErrActionCheckingExistence, tfdynamodb.ResNameTableReplica, rs.Primary.ID, err)
 		}

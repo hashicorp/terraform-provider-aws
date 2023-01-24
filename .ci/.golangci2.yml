@@ -2,7 +2,7 @@ issues:
   exclude-rules:
     - linters:
         - paralleltest
-      text: "(Function|Range statement for test) TestAcc"
+      text: "Function TestAcc"
     - linters:
         - tparallel
       text: "TestAcc"
@@ -73,6 +73,8 @@ linters-settings:
           - validation.*
           # Terraform Plugin Framework
           - int64validator.*
+          - listvalidator.*
+          - stringvalidator.*
           - SetDefaultCreateTimeout
           - SetDefaultReadTimeout
           - SetDefaultUpdateTimeout
@@ -104,5 +106,3 @@ linters-settings:
 
 run:
   timeout: 75m
-  skip-dirs:
-    - .ci/providerlint/vendor

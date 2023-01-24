@@ -67,7 +67,7 @@ func resourceLoadBalancerAttachmentCreate(ctx context.Context, d *schema.Resourc
 
 	op := out.Operations[0]
 
-	err = waitOperation(conn, op.Id)
+	err = waitOperation(ctx, conn, op.Id)
 
 	if err != nil {
 		return create.DiagError(names.Lightsail, lightsail.OperationTypeAttachInstancesToLoadBalancer, ResLoadBalancerAttachment, d.Get("name").(string), errors.New("Error waiting for Attach Instances to Load Balancer request operation"))
@@ -133,7 +133,7 @@ func resourceLoadBalancerAttachmentDelete(ctx context.Context, d *schema.Resourc
 
 	op := out.Operations[0]
 
-	err = waitOperation(conn, op.Id)
+	err = waitOperation(ctx, conn, op.Id)
 
 	if err != nil {
 		return create.DiagError(names.Lightsail, lightsail.OperationTypeDetachInstancesFromLoadBalancer, ResLoadBalancerAttachment, d.Get("name").(string), errors.New("Error waiting for Instances to Detach from the Load Balancer request operation"))

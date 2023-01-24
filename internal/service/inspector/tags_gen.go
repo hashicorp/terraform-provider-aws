@@ -13,11 +13,7 @@ import (
 // ListTags lists inspector service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn inspectoriface.InspectorAPI, identifier string) (tftags.KeyValueTags, error) {
-	return ListTagsWithContext(context.Background(), conn, identifier)
-}
-
-func ListTagsWithContext(ctx context.Context, conn inspectoriface.InspectorAPI, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(ctx context.Context, conn inspectoriface.InspectorAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &inspector.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}

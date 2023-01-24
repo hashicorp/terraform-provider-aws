@@ -4,6 +4,7 @@
 package servicecatalog
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -13,7 +14,7 @@ import (
 
 // Custom Service Catalog tag service update functions using the same format as generated code.
 
-func productUpdateTags(conn *servicecatalog.ServiceCatalog, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func productUpdateTags(ctx context.Context, conn *servicecatalog.ServiceCatalog, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
@@ -29,7 +30,7 @@ func productUpdateTags(conn *servicecatalog.ServiceCatalog, identifier string, o
 		input.AddTags = Tags(updatedTags.IgnoreAWS())
 	}
 
-	_, err := conn.UpdateProduct(input)
+	_, err := conn.UpdateProductWithContext(ctx, input)
 
 	if err != nil {
 		return fmt.Errorf("error updating tags for Service Catalog Product (%s): %w", identifier, err)

@@ -27,7 +27,7 @@ To use with `go generate`, add the following directive to a Go file
 For example, in the file `internal/service/events/generate.go`
 
 ```go
-//go:generate go run -tags generate ../../generate/listpages/main.go -ListOps=ListEventBuses,ListRules,ListTargetsByRule
+//go:generate go run ../../generate/listpages/main.go -ListOps=ListEventBuses,ListRules,ListTargetsByRule
 
 package events
 ```
