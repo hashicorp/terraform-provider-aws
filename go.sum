@@ -84,8 +84,8 @@ github.com/aws/aws-sdk-go-v2/service/pipes v1.1.0 h1:R5uogA6B13eaTgXcqVEh4+uzuKH
 github.com/aws/aws-sdk-go-v2/service/pipes v1.1.0/go.mod h1:IoNBKgOeaqkD/L5DEXSLvc1yG8vV1RSMrbiaGYYpNgg=
 github.com/aws/aws-sdk-go-v2/service/rds v1.40.0 h1:heJr38jKwCDwSKTVcy5LQ8sWecMoEHTTugJ0PAKERBA=
 github.com/aws/aws-sdk-go-v2/service/rds v1.40.0/go.mod h1:Ume9NHqT871hUdxIRojWtWsPFyCswQmSjHHhyGot7v0=
-github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.2.0 h1:hUfHW8E+i8YMsgCRYL7g9+8HMIky2a93UwmX2RdvYW4=
-github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.2.0/go.mod h1:lUeyleY1tUUKDjP6TwzgNp4sXV9EVtfdNMeJX/1eh94=
+github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.2.1 h1:8xMhTkhT5m8idCOaFHtH+hiGQxWM1Jh1vIoPZFC3dP8=
+github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.2.1/go.mod h1:lUeyleY1tUUKDjP6TwzgNp4sXV9EVtfdNMeJX/1eh94=
 github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.1.0 h1:ecjuaA9b39mhLGohBk03bYMi+RLZGOC96h0UdpCxsGw=
 github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.1.0/go.mod h1:wY8k3cLxTBWLurkQaQtU3Etj5h/490WOB7oF6445rYA=
 github.com/aws/aws-sdk-go-v2/service/route53domains v1.14.0 h1:I/rT8QFy58zw4A/tkTPsTjkIe3LaKI6UsvDn/YdJgE0=
