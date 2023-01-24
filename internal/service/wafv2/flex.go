@@ -1005,7 +1005,7 @@ func expandManagedRuleGroupConfigs(tfList []interface{}) []*wafv2.ManagedRuleGro
 		}
 
 		var r wafv2.ManagedRuleGroupConfig
-		if v, ok := m["aws_managed_rules_bot_rule_set"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := m["aws_managed_rules_bot_control_rule_set"].([]interface{}); ok && len(v) > 0 {
 			r.AWSManagedRulesBotControlRuleSet = expandManagedRulesBotControlRuleSet(v)
 		}
 		if v, ok := m["login_path"].(string); ok && v != "" {
