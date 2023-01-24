@@ -80,4 +80,4 @@ $ terraform import aws_rds_cluster_activity_stream.default arn:aws:rds:us-west-2
 
 [1]: https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/DBActivityStreams.html
 [2]: https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_StartActivityStream.html
-[3]: https://docs.aws.amazon.com/cli/latest/reference/rds/start-activity-stream.html
+[3]: https://awscli.amazonaws.com/v2/documentation/api/latest/reference/rds/start-activity-stream.html

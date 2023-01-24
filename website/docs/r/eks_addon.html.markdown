@@ -43,7 +43,7 @@ Custom add-on configuration can be passed using `configuration_values` as a sing
 
 ~> **Note:** `configuration_values` is a single JSON string should match the valid JSON schema for each add-on with specific version.
 
-To find the correct JSON schema for each add-on can be extracted using [describe-addon-configuration](https://docs.aws.amazon.com/cli/latest/reference/eks/describe-addon-configuration.html) call.
+To find the correct JSON schema for each add-on can be extracted using [describe-addon-configuration](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/eks/describe-addon-configuration.html) call.
 This below is an example for extracting the `configuration_values` schema for `coredns`.
 
 ```bash
@@ -115,14 +115,14 @@ resource "aws_iam_role_policy_attachment" "example" {
 The following arguments are required:
 
 * `addon_name` – (Required) Name of the EKS add-on. The name must match one of
-  the names returned by [describe-addon-versions](https://docs.aws.amazon.com/cli/latest/reference/eks/describe-addon-versions.html).
+  the names returned by [describe-addon-versions](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/eks/describe-addon-versions.html).
 * `cluster_name` – (Required) Name of the EKS Cluster. Must be between 1-100 characters in length. Must begin with an alphanumeric character, and must only contain alphanumeric characters, dashes and underscores (`^[0-9A-Za-z][A-Za-z0-9\-_]+$`).
 
 The following arguments are optional:
 
 * `addon_version` – (Optional) The version of the EKS add-on. The version must
-  match one of the versions returned by [describe-addon-versions](https://docs.aws.amazon.com/cli/latest/reference/eks/describe-addon-versions.html).
-* `configuration_values` - (Optional) custom configuration values for addons with single JSON string. This JSON string value must match the JSON schema derived from [describe-addon-configuration](https://docs.aws.amazon.com/cli/latest/reference/eks/describe-addon-configuration.html).
+  match one of the versions returned by [describe-addon-versions](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/eks/describe-addon-versions.html).
+* `configuration_values` - (Optional) custom configuration values for addons with single JSON string. This JSON string value must match the JSON schema derived from [describe-addon-configuration](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/eks/describe-addon-configuration.html).
 * `resolve_conflicts` - (Optional) Define how to resolve parameter value conflicts
   when migrating an existing add-on to an Amazon EKS add-on or when applying
   version updates to the add-on. Valid values are `NONE`, `OVERWRITE` and `PRESERVE`. For more details check [UpdateAddon](https://docs.aws.amazon.com/eks/latest/APIReference/API_UpdateAddon.html) API Docs.

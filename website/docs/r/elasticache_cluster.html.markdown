@@ -155,7 +155,7 @@ The following arguments are optional:
 * `az_mode` - (Optional, Memcached only) Whether the nodes in this Memcached node group are created in a single Availability Zone or created across multiple Availability Zones in the cluster's region. Valid values for this parameter are `single-az` or `cross-az`, default is `single-az`. If you want to choose `cross-az`, `num_cache_nodes` must be greater than `1`.
 * `engine_version` – (Optional) Version number of the cache engine to be used.
   If not set, defaults to the latest version.
-  See [Describe Cache Engine Versions](https://docs.aws.amazon.com/cli/latest/reference/elasticache/describe-cache-engine-versions.html) in the AWS Documentation for supported versions.
+  See [Describe Cache Engine Versions](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/elasticache/describe-cache-engine-versions.html) in the AWS Documentation for supported versions.
   When `engine` is `redis` and the version is 6 or higher, the major and minor version can be set, e.g., `6.2`,
   or the minor version can be unspecified which will use the latest version at creation time, e.g., `6.x`.
   Otherwise, specify the full version desired, e.g., `5.0.6`.

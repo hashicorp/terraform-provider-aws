@@ -164,7 +164,7 @@ Configure additional volumes of the instance besides specified by the AMI. It's 
   [AWS's Block Device Mapping docs](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/block-device-mapping-concepts.html)
   to understand the implications of using these attributes.
 
-To find out more information for an existing AMI to override the configuration, such as `device_name`, you can use the [AWS CLI ec2 describe-images command](https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-images.html).
+To find out more information for an existing AMI to override the configuration, such as `device_name`, you can use the [AWS CLI ec2 describe-images command](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/ec2/describe-images.html).
 
 Each `block_device_mappings` supports the following:
 

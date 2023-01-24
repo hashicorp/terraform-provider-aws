@@ -150,8 +150,8 @@ resource "aws_rds_cluster_instance" "example" {
 For more detailed documentation about each argument, refer to
 the AWS official documentation :
 
-* [create-db-cluster](https://docs.aws.amazon.com/cli/latest/reference/rds/create-db-cluster.html).
-* [modify-db-cluster](https://docs.aws.amazon.com/cli/latest/reference/rds/modify-db-cluster.html)
+* [create-db-cluster](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/rds/create-db-cluster.html).
+* [modify-db-cluster](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/rds/modify-db-cluster.html)
 
 The following arguments are supported:
 

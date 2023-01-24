@@ -135,4 +135,4 @@ interpolation.
 
 - `read` - (Default `20m`)
 
-[1]: https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-images.html
+[1]: https://awscli.amazonaws.com/v2/documentation/api/latest/reference/ec2/describe-images.html

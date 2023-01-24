@@ -47,7 +47,7 @@ resource "aws_rds_cluster" "default" {
 ## Argument Reference
 
 For more detailed documentation about each argument, refer to
-the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/reference/rds/create-db-instance.html).
+the [AWS official documentation](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/rds/create-db-instance.html).
 
 The following arguments are supported:
 

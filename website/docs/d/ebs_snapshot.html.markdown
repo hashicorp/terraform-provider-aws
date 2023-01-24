@@ -71,4 +71,4 @@ In addition to all arguments above, the following attributes are exported:
 
 - `read` - (Default `20m`)
 
-[1]: https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-snapshots.html
+[1]: https://awscli.amazonaws.com/v2/documentation/api/latest/reference/ec2/describe-snapshots.html

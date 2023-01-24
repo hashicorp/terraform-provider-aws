@@ -38,7 +38,7 @@ resource "aws_docdb_cluster" "docdb" {
 ## Argument Reference
 
 For more detailed documentation about each argument, refer to
-the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/reference/docdb/create-db-cluster.html).
+the [AWS official documentation](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/docdb/create-db-cluster.html).
 
 The following arguments are supported:
 

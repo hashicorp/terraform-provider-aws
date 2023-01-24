@@ -39,7 +39,7 @@ func ResourceLifecyclePolicy() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.All(
-					validation.StringMatch(regexp.MustCompile("^[0-9A-Za-z _-]+$"), "see https://docs.aws.amazon.com/cli/latest/reference/dlm/create-lifecycle-policy.html"),
+					validation.StringMatch(regexp.MustCompile("^[0-9A-Za-z _-]+$"), "see https://awscli.amazonaws.com/v2/documentation/api/latest/reference/dlm/create-lifecycle-policy.html"),
 					validation.StringLenBetween(1, 500),
 				),
 			},

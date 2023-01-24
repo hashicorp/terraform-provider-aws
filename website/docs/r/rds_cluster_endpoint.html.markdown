@@ -77,7 +77,7 @@ resource "aws_rds_cluster_endpoint" "static" {
 ## Argument Reference
 
 For more detailed documentation about each argument, refer to
-the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/reference/rds/create-db-cluster-endpoint.html).
+the [AWS official documentation](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/rds/create-db-cluster-endpoint.html).
 
 The following arguments are supported:
 

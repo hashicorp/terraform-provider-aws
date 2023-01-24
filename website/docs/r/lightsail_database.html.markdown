@@ -120,7 +120,7 @@ The following arguments are supported:
 
 ## Blueprint Ids
 
-A list of all available Lightsail Blueprints for Relational Databases the [aws lightsail get-relational-database-blueprints](https://docs.aws.amazon.com/cli/latest/reference/lightsail/get-relational-database-blueprints.html) aws cli command.
+A list of all available Lightsail Blueprints for Relational Databases the [aws lightsail get-relational-database-blueprints](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/lightsail/get-relational-database-blueprints.html) aws cli command.
 
 ### Examples
 
@@ -137,7 +137,7 @@ A Blueprint ID has a sufix of the engine version.
 
 ## Bundles
 
-A list of all available Lightsail Bundles for Relational Databases the [aws lightsail get-relational-database-bundles](https://docs.aws.amazon.com/cli/latest/reference/lightsail/get-relational-database-bundles.html) aws cli command.
+A list of all available Lightsail Bundles for Relational Databases the [aws lightsail get-relational-database-bundles](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/lightsail/get-relational-database-bundles.html) aws cli command.
 
 ### Examples
 

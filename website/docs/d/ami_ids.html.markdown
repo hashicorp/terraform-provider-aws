@@ -46,7 +46,7 @@ options to narrow down the list AWS returns.
 
 `ids` is set to the list of AMI IDs, sorted by creation time according to `sort_ascending`.
 
-[1]: https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-images.html
+[1]: https://awscli.amazonaws.com/v2/documentation/api/latest/reference/ec2/describe-images.html
 
 ## Timeouts
 

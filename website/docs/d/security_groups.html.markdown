@@ -47,7 +47,7 @@ data "aws_security_groups" "test" {
 * `ids` - IDs of the matches security groups.
 * `vpc_ids` - VPC IDs of the matched security groups. The data source's tag or filter *will span VPCs* unless the `vpc-id` filter is also used.
 
-[1]: https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-security-groups.html
+[1]: https://awscli.amazonaws.com/v2/documentation/api/latest/reference/ec2/describe-security-groups.html
 
 ## Timeouts
 

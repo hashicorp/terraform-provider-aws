@@ -30,7 +30,7 @@ resource "aws_db_instance_role_association" "example" {
 The following arguments are supported:
 
 * `db_instance_identifier` - (Required) DB Instance Identifier to associate with the IAM Role.
-* `feature_name` - (Required) Name of the feature for association. This can be found in the AWS documentation relevant to the integration or a full list is available in the `SupportedFeatureNames` list returned by [AWS CLI rds describe-db-engine-versions](https://docs.aws.amazon.com/cli/latest/reference/rds/describe-db-engine-versions.html).
+* `feature_name` - (Required) Name of the feature for association. This can be found in the AWS documentation relevant to the integration or a full list is available in the `SupportedFeatureNames` list returned by [AWS CLI rds describe-db-engine-versions](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/rds/describe-db-engine-versions.html).
 * `role_arn` - (Required) Amazon Resource Name (ARN) of the IAM Role to associate with the DB Instance.
 
 ## Attributes Reference

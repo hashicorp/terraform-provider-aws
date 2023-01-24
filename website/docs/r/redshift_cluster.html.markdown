@@ -31,7 +31,7 @@ resource "aws_redshift_cluster" "example" {
 ## Argument Reference
 
 For more detailed documentation about each argument, refer to
-the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/reference/redshift/index.html#cli-aws-redshift).
+the [AWS official documentation](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/redshift/index.html#cli-aws-redshift).
 
 The following arguments are supported:
 

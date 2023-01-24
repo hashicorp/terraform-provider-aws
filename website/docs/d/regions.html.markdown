@@ -61,4 +61,4 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - Identifier of the current partition (e.g., `aws` in AWS Commercial, `aws-cn` in AWS China).
 * `names` - Names of regions that meets the criteria.
 
-[1]: https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-regions.html
+[1]: https://awscli.amazonaws.com/v2/documentation/api/latest/reference/ec2/describe-regions.html
