@@ -5,11 +5,14 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ssmincidents"
 	"github.com/aws/aws-sdk-go-v2/service/ssmincidents/types"
+	"github.com/aws/aws-sdk-go/aws/arn"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -52,9 +55,10 @@ func ResourceReplicationSet() *schema.Resource {
 							Required: true,
 						},
 						"kms_key_arn": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  "DefaultKey",
+							Type:             schema.TypeString,
+							Optional:         true,
+							Default:          "DefaultKey",
+							ValidateDiagFunc: validateNonAliasARN,
 						},
 						"status": {
 							Type:     schema.TypeString,
@@ -317,4 +321,21 @@ func resourceReplicationSetImport(context context.Context, d *schema.ResourceDat
 	d.SetId(arn)
 
 	return []*schema.ResourceData{d}, nil
+}
+
+func validateNonAliasARN(value interface{}, path cty.Path) diag.Diagnostics {
+
+	parsedARN, err := arn.Parse(value.(string))
+	var diags diag.Diagnostics
+
+	if err != nil || strings.HasPrefix(parsedARN.Resource, "alias/") {
+		diag := diag.Diagnostic{
+			Severity: diag.Error,
+			Summary:  "Invalid kms_key_arn",
+			Detail:   fmt.Sprintf("Alias KMS Key ARNs are not supported. Please use the original key ARN."),
+		}
+		diags = append(diags, diag)
+	}
+
+	return diags
 }
