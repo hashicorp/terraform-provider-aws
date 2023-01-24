@@ -29,10 +29,10 @@ const (
 
 func ResourceReplicationSet() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceReplicationSetCreate,
-		ReadContext:   resourceReplicationSetRead,
-		UpdateContext: resourceReplicationSetUpdate,
-		DeleteContext: resourceReplicationSetDelete,
+		CreateWithoutTimeout: resourceReplicationSetCreate,
+		ReadWithoutTimeout:   resourceReplicationSetRead,
+		UpdateWithoutTimeout: resourceReplicationSetUpdate,
+		DeleteWithoutTimeout: resourceReplicationSetDelete,
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(120 * time.Minute),
