@@ -105,6 +105,11 @@ func ResourceGatewayRoute() *schema.Resource {
 																	},
 																},
 															},
+															"port": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																ValidateFunc: validation.IsPortNumber,
+															},
 														},
 													},
 												},
@@ -175,6 +180,11 @@ func ResourceGatewayRoute() *schema.Resource {
 																		},
 																	},
 																},
+															},
+															"port": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																ValidateFunc: validation.IsPortNumber,
 															},
 														},
 													},
@@ -342,6 +352,11 @@ func ResourceGatewayRoute() *schema.Resource {
 																		},
 																	},
 																},
+															},
+															"port": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																ValidateFunc: validation.IsPortNumber,
 															},
 														},
 													},
@@ -755,6 +770,10 @@ func expandGatewayRouteTarget(vRouteTarget []interface{}) *appmesh.GatewayRouteT
 		routeTarget.VirtualService = virtualService
 	}
 
+	if vPort, ok := mRouteTarget["port"].(int); ok && vPort > 0 {
+		routeTarget.Port = aws.Int64(int64(vPort))
+	}
+
 	return routeTarget
 }
 
@@ -914,7 +933,9 @@ func flattenGatewayRouteTarget(routeTarget *appmesh.GatewayRouteTarget) []interf
 		return []interface{}{}
 	}
 
-	mRouteTarget := map[string]interface{}{}
+	mRouteTarget := map[string]interface{}{
+		"port": int(aws.Int64Value(routeTarget.Port)),
+	}
 
 	if virtualService := routeTarget.VirtualService; virtualService != nil {
 		mVirtualService := map[string]interface{}{
