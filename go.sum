@@ -96,8 +96,8 @@ github.com/aws/aws-sdk-go-v2/service/scheduler v1.1.0 h1:4AYYktQrNoGvQS7hm6SYTUY
 github.com/aws/aws-sdk-go-v2/service/scheduler v1.1.0/go.mod h1:ZnD5i/e5nCIh1w3ivCfifQ5r4PLh3aOCElnOrZz+WnQ=
 github.com/aws/aws-sdk-go-v2/service/sesv2 v1.16.0 h1:ZVu7clQZjixs6IYUcpgkUoigjQn4HUToPiRd1AjmCl0=
 github.com/aws/aws-sdk-go-v2/service/sesv2 v1.16.0/go.mod h1:Q+I4FY+sxSWRVgbNXULzRnK+REDSF8oXzY5Eya/Y33c=
-github.com/aws/aws-sdk-go-v2/service/ssm v1.35.0 h1:QWCcOeLTrjvf7UdYIadzrhNH3PI6T9jXOV64Ez5YUgg=
-github.com/aws/aws-sdk-go-v2/service/ssm v1.35.0/go.mod h1:Hf7wSogKP1XCJ9GgW8erZDL6IZ1NLwLN7bYdV/Gn/LI=
+github.com/aws/aws-sdk-go-v2/service/ssm v1.35.1 h1:uZ06pr/VvHWaYJ3S5YBAqznCa4nnqmm/IPnAWVqJ4nc=
+github.com/aws/aws-sdk-go-v2/service/ssm v1.35.1/go.mod h1:Hf7wSogKP1XCJ9GgW8erZDL6IZ1NLwLN7bYdV/Gn/LI=
 github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.20.0 h1:6oq6phnX8Oz9iAjq1PGO+h7rwobJcLCGaqrglXYNfVA=
 github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.20.0/go.mod h1:Vgq/TeO40RAkIErPwhosQyOwaD4syp5+sUm6uePFO7U=
 github.com/aws/aws-sdk-go-v2/service/sso v1.11.4/go.mod h1:cPDwJwsP4Kff9mldCXAmddjJL6JGQqtA3Mzer2zyr88=
