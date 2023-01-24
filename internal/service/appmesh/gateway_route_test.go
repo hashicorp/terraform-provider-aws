@@ -1232,7 +1232,7 @@ resource "aws_appmesh_gateway_route" "test" {
           virtual_service {
             virtual_service_name = aws_appmesh_virtual_service.multi_test.name
           }
-		  port = 8080
+          port = 8080
         }
       }
 
@@ -1262,7 +1262,7 @@ resource "aws_appmesh_gateway_route" "test" {
           virtual_service {
             virtual_service_name = aws_appmesh_virtual_service.multi_test.name
           }
-		  port = 8081
+          port = 8081
         }
       }
 
@@ -1398,7 +1398,7 @@ resource "aws_appmesh_gateway_route" "test" {
           virtual_service {
             virtual_service_name = aws_appmesh_virtual_service.multi_test.name
           }
-		  port = 8080
+          port = 8080
         }
       }
 
@@ -1428,7 +1428,7 @@ resource "aws_appmesh_gateway_route" "test" {
           virtual_service {
             virtual_service_name = aws_appmesh_virtual_service.multi_test.name
           }
-		  port = 8081
+          port = 8081
         }
       }
 
@@ -1626,7 +1626,7 @@ resource "aws_appmesh_gateway_route" "test" {
           virtual_service {
             virtual_service_name = aws_appmesh_virtual_service.multi_test.name
           }
-		  port = 8080
+          port = 8080
         }
       }
 
@@ -1656,7 +1656,7 @@ resource "aws_appmesh_gateway_route" "test" {
           virtual_service {
             virtual_service_name = aws_appmesh_virtual_service.multi_test.name
           }
-		  port = 8081
+          port = 8081
         }
       }
 
