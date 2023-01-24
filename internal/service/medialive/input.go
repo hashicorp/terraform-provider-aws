@@ -334,10 +334,24 @@ func resourceInputUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			in.Sources = expandSources(d.Get("sources").(*schema.Set).List())
 		}
 
-		out, err := conn.UpdateInput(ctx, in)
+		rawOutput, err := tfresource.RetryWhen(ctx, 2*time.Minute,
+			func() (interface{}, error) {
+				return conn.UpdateInput(ctx, in)
+			},
+			func(err error) (bool, error) {
+				var bre *types.BadRequestException
+				if errors.As(err, &bre) {
+					return strings.Contains(bre.ErrorMessage(), "The first input attached to a channel cannot be a dynamic input"), err
+				}
+				return false, err
+			},
+		)
+
 		if err != nil {
 			return create.DiagError(names.MediaLive, create.ErrActionUpdating, ResNameInput, d.Id(), err)
 		}
+
+		out := rawOutput.(*medialive.UpdateInputOutput)
 
 		if _, err := waitInputUpdated(ctx, conn, aws.ToString(out.Input.Id), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return create.DiagError(names.MediaLive, create.ErrActionWaitingForUpdate, ResNameInput, d.Id(), err)
