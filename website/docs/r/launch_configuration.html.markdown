@@ -181,7 +181,7 @@ identified by the `virtual_name` in the format `ephemeral{0..N}`.
 cannot currently be detected by Terraform. After updating to block device
 configuration, resource recreation can be manually triggered by using the
 [`taint` command](https://www.terraform.io/docs/commands/taint.html).
-  
+
 ### ebs_block_device
 
 Modifying any of the `ebs_block_device` settings requires resource replacement.
