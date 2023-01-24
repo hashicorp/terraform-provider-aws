@@ -3,6 +3,7 @@
 FEATURES:
 
 * **New Data Source:** `aws_auditmanager_framework` ([#28989](https://github.com/hashicorp/terraform-provider-aws/issues/28989))
+* **New Resource:** `aws_auditmanager_framework_share` ([#29049](https://github.com/hashicorp/terraform-provider-aws/issues/29049))
 * **New Resource:** `aws_auditmanager_organization_admin_account_registration` ([#29018](https://github.com/hashicorp/terraform-provider-aws/issues/29018))
 
 BUG FIXES:
@@ -11,6 +12,7 @@ BUG FIXES:
 * resource/aws_medialive_channel: Add missing `rate_control_mode` in `acc_settings` for `audio_descriptions` ([#29051](https://github.com/hashicorp/terraform-provider-aws/issues/29051))
 * resource/aws_medialive_input: Fix eventual consistency error when updating ([#29051](https://github.com/hashicorp/terraform-provider-aws/issues/29051))
 * resource/aws_vpc_ipam_pool_cidr_allocation: Added support for eventual consistency on read operations after create. ([#29022](https://github.com/hashicorp/terraform-provider-aws/issues/29022))
+* resource/aws_wafv2_web_acl: Fix error when setting `aws_managed_rules_bot_control_rule_set` in `manage_rule_group_config` ([#28810](https://github.com/hashicorp/terraform-provider-aws/issues/28810))
 
 ## 4.51.0 (January 19, 2023)
 
