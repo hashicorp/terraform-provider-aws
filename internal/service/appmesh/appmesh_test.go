@@ -11,15 +11,18 @@ func TestAccAppMesh_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"GatewayRoute": {
-			"basic":              testAccGatewayRoute_basic,
-			"disappears":         testAccGatewayRoute_disappears,
-			"grpcRoute":          testAccGatewayRoute_GRPCRoute,
-			"grpcRouteWithPort":  testAccGatewayRoute_GRPCRouteWithPort,
-			"httpRoute":          testAccGatewayRoute_HTTPRoute,
-			"httpRouteWithPort":  testAccGatewayRoute_HTTPRouteWithPort,
-			"http2Route":         testAccGatewayRoute_HTTP2Route,
-			"http2RouteWithPort": testAccGatewayRoute_HTTP2RouteWithPort,
-			"tags":               testAccGatewayRoute_Tags,
+			"basic":                testAccGatewayRoute_basic,
+			"disappears":           testAccGatewayRoute_disappears,
+			"grpcRoute":            testAccGatewayRoute_GRPCRoute,
+			"grpcRouteTargetPort":  testAccGatewayRoute_GRPCRouteTargetPort,
+			"grpcRouteWithPort":    testAccGatewayRoute_GRPCRouteWithPort,
+			"httpRoute":            testAccGatewayRoute_HTTPRoute,
+			"httpRouteTargetPort":  testAccGatewayRoute_HTTPRouteTargetPort,
+			"httpRouteWithPort":    testAccGatewayRoute_HTTPRouteWithPort,
+			"http2Route":           testAccGatewayRoute_HTTP2Route,
+			"http2RouteTargetPort": testAccGatewayRoute_HTTP2RouteTargetPort,
+			"http2RouteWithPort":   testAccGatewayRoute_HTTP2RouteWithPort,
+			"tags":                 testAccGatewayRoute_Tags,
 		},
 		"Mesh": {
 			"basic":        testAccMesh_basic,

@@ -240,6 +240,81 @@ func testAccGatewayRoute_GRPCRouteWithPort(t *testing.T) {
 	})
 }
 
+func testAccGatewayRoute_GRPCRouteTargetPort(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v appmesh.GatewayRouteData
+	resourceName := "aws_appmesh_gateway_route.test"
+	vsMultiResourceName := "aws_appmesh_virtual_service.multi_test"
+	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	vgName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	grName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, appmesh.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayRouteDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGatewayRouteConfig_grpcRouteTargetPort(meshName, vgName, grName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGatewayRouteExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
+					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
+					resource.TestCheckResourceAttr(resourceName, "name", grName),
+					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.action.0.target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.action.0.target.0.port", "8080"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.action.0.target.0.virtual_service.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "spec.0.grpc_route.0.action.0.target.0.virtual_service.0.virtual_service_name", vsMultiResourceName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.match.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.match.0.service_name", "multi-test"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "virtual_gateway_name", vgName),
+					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
+					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
+					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
+				),
+			},
+			{
+				Config: testAccGatewayRouteConfig_grpcRouteTargetPortUpdated(meshName, vgName, grName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGatewayRouteExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
+					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
+					resource.TestCheckResourceAttr(resourceName, "name", grName),
+					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.action.0.target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.action.0.target.0.port", "8081"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.action.0.target.0.virtual_service.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "spec.0.grpc_route.0.action.0.target.0.virtual_service.0.virtual_service_name", vsMultiResourceName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.match.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.match.0.service_name", "multi-test"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "virtual_gateway_name", vgName),
+					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
+					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
+					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateIdFunc: testAccGatewayRouteImportStateIdFunc(resourceName),
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccGatewayRoute_HTTPRoute(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v appmesh.GatewayRouteData
@@ -351,6 +426,81 @@ func testAccGatewayRoute_HTTPRoute(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.0.rewrite.0.prefix.0.default_prefix", "DISABLED"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.prefix", "/"),
+					resource.TestCheckResourceAttr(resourceName, "virtual_gateway_name", vgName),
+					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
+					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
+					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateIdFunc: testAccGatewayRouteImportStateIdFunc(resourceName),
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccGatewayRoute_HTTPRouteTargetPort(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v appmesh.GatewayRouteData
+	resourceName := "aws_appmesh_gateway_route.test"
+	vsMultiResourceName := "aws_appmesh_virtual_service.multi_test"
+	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	vgName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	grName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, appmesh.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayRouteDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGatewayRouteConfig_httpRouteTargetPort(meshName, vgName, grName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGatewayRouteExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
+					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
+					resource.TestCheckResourceAttr(resourceName, "name", grName),
+					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.0.target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.0.target.0.port", "8080"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.0.target.0.virtual_service.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "spec.0.http_route.0.action.0.target.0.virtual_service.0.virtual_service_name", vsMultiResourceName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.prefix", "/"),
+					resource.TestCheckResourceAttr(resourceName, "virtual_gateway_name", vgName),
+					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
+					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
+					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
+				),
+			},
+			{
+				Config: testAccGatewayRouteConfig_httpRouteTargetPortUpdated(meshName, vgName, grName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGatewayRouteExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
+					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
+					resource.TestCheckResourceAttr(resourceName, "name", grName),
+					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.0.target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.0.target.0.port", "8081"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.action.0.target.0.virtual_service.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "spec.0.http_route.0.action.0.target.0.virtual_service.0.virtual_service_name", vsMultiResourceName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.0.match.0.prefix", "/users"),
 					resource.TestCheckResourceAttr(resourceName, "virtual_gateway_name", vgName),
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
@@ -609,6 +759,81 @@ func testAccGatewayRoute_HTTP2Route(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.match.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.match.0.prefix", "/"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "virtual_gateway_name", vgName),
+					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
+					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
+					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateIdFunc: testAccGatewayRouteImportStateIdFunc(resourceName),
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccGatewayRoute_HTTP2RouteTargetPort(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v appmesh.GatewayRouteData
+	resourceName := "aws_appmesh_gateway_route.test"
+	vsMultiResourceName := "aws_appmesh_virtual_service.multi_test"
+	meshName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	vgName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	grName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, appmesh.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayRouteDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGatewayRouteConfig_http2RouteTargetPort(meshName, vgName, grName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGatewayRouteExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
+					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
+					resource.TestCheckResourceAttr(resourceName, "name", grName),
+					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.action.0.target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.action.0.target.0.port", "8080"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.action.0.target.0.virtual_service.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "spec.0.http2_route.0.action.0.target.0.virtual_service.0.virtual_service_name", vsMultiResourceName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.match.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.match.0.prefix", "/"),
+					resource.TestCheckResourceAttr(resourceName, "virtual_gateway_name", vgName),
+					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
+					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
+					acctest.CheckResourceAttrAccountID(resourceName, "resource_owner"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualGateway/%s/gatewayRoute/%s", meshName, vgName, grName)),
+				),
+			},
+			{
+				Config: testAccGatewayRouteConfig_http2RouteTargetPortUpdated(meshName, vgName, grName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGatewayRouteExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
+					acctest.CheckResourceAttrAccountID(resourceName, "mesh_owner"),
+					resource.TestCheckResourceAttr(resourceName, "name", grName),
+					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.action.0.target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.action.0.target.0.port", "8081"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.action.0.target.0.virtual_service.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "spec.0.http2_route.0.action.0.target.0.virtual_service.0.virtual_service_name", vsMultiResourceName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.match.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.0.match.0.prefix", "/users"),
 					resource.TestCheckResourceAttr(resourceName, "virtual_gateway_name", vgName),
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
@@ -894,6 +1119,50 @@ resource "aws_appmesh_virtual_service" "test" {
 `, meshName, vgName, protocol)
 }
 
+func testAccGatewayRouteConfig_ServiceNodeMultipleListeners(vnName string, protocol string) string {
+	return fmt.Sprintf(`
+resource "aws_appmesh_virtual_node" "test" {
+  name      = "%[1]s-multi-listener-vn"
+  mesh_name = aws_appmesh_mesh.test.name
+
+  spec {
+    listener {
+      port_mapping {
+        port     = 8080
+        protocol = "%[2]s"
+      }
+    }
+
+    listener {
+      port_mapping {
+        port     = 8081
+        protocol = "%[2]s"
+      }
+    }
+
+    service_discovery {
+      dns {
+        hostname = "serviceb.simpleapp.local"
+      }
+    }
+  }
+}
+
+resource "aws_appmesh_virtual_service" "multi_test" {
+  name      = "%[1]s-multi-listener"
+  mesh_name = aws_appmesh_mesh.test.name
+
+  spec {
+    provider {
+      virtual_node {
+        virtual_node_name = aws_appmesh_virtual_node.test.name
+      }
+    }
+  }
+}
+`, vnName, protocol)
+}
+
 func testAccGatewayRouteConfig_grpcRoute(meshName, vgName, grName string) string {
 	return acctest.ConfigCompose(testAccGatewayRouteConfigBase(meshName, vgName, "grpc"), fmt.Sprintf(`
 resource "aws_appmesh_gateway_route" "test" {
@@ -939,6 +1208,66 @@ resource "aws_appmesh_gateway_route" "test" {
 
       match {
         service_name = "test2"
+      }
+    }
+  }
+}
+`, grName))
+}
+
+func testAccGatewayRouteConfig_grpcRouteTargetPort(meshName, vgName, grName string) string {
+	return acctest.ConfigCompose(
+		testAccGatewayRouteConfigBase(meshName, vgName, "grpc"),
+		testAccGatewayRouteConfig_ServiceNodeMultipleListeners(vgName, "grpc"),
+		fmt.Sprintf(`
+resource "aws_appmesh_gateway_route" "test" {
+  name                 = %[1]q
+  mesh_name            = aws_appmesh_mesh.test.name
+  virtual_gateway_name = aws_appmesh_virtual_gateway.test.name
+
+  spec {
+    grpc_route {
+      action {
+        target {
+          virtual_service {
+            virtual_service_name = aws_appmesh_virtual_service.multi_test.name
+          }
+		  port = 8080
+        }
+      }
+
+      match {
+        service_name = "multi-test"
+      }
+    }
+  }
+}
+`, grName))
+}
+
+func testAccGatewayRouteConfig_grpcRouteTargetPortUpdated(meshName, vgName, grName string) string {
+	return acctest.ConfigCompose(
+		testAccGatewayRouteConfigBase(meshName, vgName, "grpc"),
+		testAccGatewayRouteConfig_ServiceNodeMultipleListeners(vgName, "grpc"),
+		fmt.Sprintf(`
+resource "aws_appmesh_gateway_route" "test" {
+  name                 = %[1]q
+  mesh_name            = aws_appmesh_mesh.test.name
+  virtual_gateway_name = aws_appmesh_virtual_gateway.test.name
+
+  spec {
+    grpc_route {
+      action {
+        target {
+          virtual_service {
+            virtual_service_name = aws_appmesh_virtual_service.multi_test.name
+          }
+		  port = 8081
+        }
+      }
+
+      match {
+        service_name = "multi-test"
       }
     }
   }
@@ -1040,6 +1369,66 @@ resource "aws_appmesh_gateway_route" "test" {
           virtual_service {
             virtual_service_name = aws_appmesh_virtual_service.test[1].name
           }
+        }
+      }
+
+      match {
+        prefix = "/users"
+      }
+    }
+  }
+}
+`, grName))
+}
+
+func testAccGatewayRouteConfig_httpRouteTargetPort(meshName, vgName, grName string) string {
+	return acctest.ConfigCompose(
+		testAccGatewayRouteConfigBase(meshName, vgName, "http"),
+		testAccGatewayRouteConfig_ServiceNodeMultipleListeners(vgName, "http"),
+		fmt.Sprintf(`
+resource "aws_appmesh_gateway_route" "test" {
+  name                 = %[1]q
+  mesh_name            = aws_appmesh_mesh.test.name
+  virtual_gateway_name = aws_appmesh_virtual_gateway.test.name
+
+  spec {
+    http_route {
+      action {
+        target {
+          virtual_service {
+            virtual_service_name = aws_appmesh_virtual_service.multi_test.name
+          }
+		  port = 8080
+        }
+      }
+
+      match {
+        prefix = "/"
+      }
+    }
+  }
+}
+`, grName))
+}
+
+func testAccGatewayRouteConfig_httpRouteTargetPortUpdated(meshName, vgName, grName string) string {
+	return acctest.ConfigCompose(
+		testAccGatewayRouteConfigBase(meshName, vgName, "http"),
+		testAccGatewayRouteConfig_ServiceNodeMultipleListeners(vgName, "http"),
+		fmt.Sprintf(`
+resource "aws_appmesh_gateway_route" "test" {
+  name                 = %[1]q
+  mesh_name            = aws_appmesh_mesh.test.name
+  virtual_gateway_name = aws_appmesh_virtual_gateway.test.name
+
+  spec {
+    http_route {
+      action {
+        target {
+          virtual_service {
+            virtual_service_name = aws_appmesh_virtual_service.multi_test.name
+          }
+		  port = 8081
         }
       }
 
@@ -1208,6 +1597,66 @@ resource "aws_appmesh_gateway_route" "test" {
           virtual_service {
             virtual_service_name = aws_appmesh_virtual_service.test[1].name
           }
+        }
+      }
+
+      match {
+        prefix = "/users"
+      }
+    }
+  }
+}
+`, grName))
+}
+
+func testAccGatewayRouteConfig_http2RouteTargetPort(meshName, vgName, grName string) string {
+	return acctest.ConfigCompose(
+		testAccGatewayRouteConfigBase(meshName, vgName, "http2"),
+		testAccGatewayRouteConfig_ServiceNodeMultipleListeners(vgName, "http2"),
+		fmt.Sprintf(`
+resource "aws_appmesh_gateway_route" "test" {
+  name                 = %[1]q
+  mesh_name            = aws_appmesh_mesh.test.name
+  virtual_gateway_name = aws_appmesh_virtual_gateway.test.name
+
+  spec {
+    http2_route {
+      action {
+        target {
+          virtual_service {
+            virtual_service_name = aws_appmesh_virtual_service.multi_test.name
+          }
+		  port = 8080
+        }
+      }
+
+      match {
+        prefix = "/"
+      }
+    }
+  }
+}
+`, grName))
+}
+
+func testAccGatewayRouteConfig_http2RouteTargetPortUpdated(meshName, vgName, grName string) string {
+	return acctest.ConfigCompose(
+		testAccGatewayRouteConfigBase(meshName, vgName, "http2"),
+		testAccGatewayRouteConfig_ServiceNodeMultipleListeners(vgName, "http2"),
+		fmt.Sprintf(`
+resource "aws_appmesh_gateway_route" "test" {
+  name                 = %[1]q
+  mesh_name            = aws_appmesh_mesh.test.name
+  virtual_gateway_name = aws_appmesh_virtual_gateway.test.name
+
+  spec {
+    http2_route {
+      action {
+        target {
+          virtual_service {
+            virtual_service_name = aws_appmesh_virtual_service.multi_test.name
+          }
+		  port = 8081
         }
       }
 
