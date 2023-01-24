@@ -270,7 +270,7 @@ func resourceDefaultVPCCreate(ctx context.Context, d *schema.ResourceData, meta 
 		}
 	}
 
-	if newAssignGeneratedIPv6CIDRBlock, newIPv6CIDRBlockNetworkBorderGroup := d.Get("assign_generated_ipv6_cidr_block").(bool), d.Get("ipv6_cidr_block_network_border_group").(string); oldAssignGeneratedIPv6CIDRBlock != newAssignGeneratedIPv6CIDRBlock || oldIPv6CIDRBlockNetworkBorderGroup != newIPv6CIDRBlockNetworkBorderGroup {
+	if newAssignGeneratedIPv6CIDRBlock, newIPv6CIDRBlockNetworkBorderGroup := d.Get("assign_generated_ipv6_cidr_block").(bool), d.Get("ipv6_cidr_block_network_border_group").(string); oldAssignGeneratedIPv6CIDRBlock != newAssignGeneratedIPv6CIDRBlock || (newIPv6CIDRBlockNetworkBorderGroup != "" && oldIPv6CIDRBlockNetworkBorderGroup != newIPv6CIDRBlockNetworkBorderGroup) {
 		associationID, err := modifyVPCIPv6CIDRBlockAssociation(ctx, conn, d.Id(),
 			associationID,
 			newAssignGeneratedIPv6CIDRBlock,
