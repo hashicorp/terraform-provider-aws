@@ -22,6 +22,7 @@ import (
 
 func ResourceCoreNetworkPolicyAttachment() *schema.Resource {
 	return &schema.Resource{
+		CreateWithoutTimeout: resourceCoreNetworkPolicyAttachmentCreate,
 		ReadWithoutTimeout:   resourceCoreNetworkPolicyAttachmentRead,
 		UpdateWithoutTimeout: resourceCoreNetworkPolicyAttachmentUpdate,
 		DeleteWithoutTimeout: schema.NoopContext,
@@ -63,6 +64,12 @@ func ResourceCoreNetworkPolicyAttachment() *schema.Resource {
 			},
 		},
 	}
+}
+
+func resourceCoreNetworkPolicyAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	d.SetId(d.Get("core_network_id").(string))
+
+	return resourceCoreNetworkPolicyAttachmentUpdate(ctx, d, meta)
 }
 
 func resourceCoreNetworkPolicyAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
