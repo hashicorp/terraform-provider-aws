@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/float64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
@@ -26,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwboolplanmodifier "github.com/hashicorp/terraform-provider-aws/internal/framework/boolplanmodifier"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 
 	fwint64planmodifier "github.com/hashicorp/terraform-provider-aws/internal/framework/int64planmodifier"
 	fwstringplanmodifier "github.com/hashicorp/terraform-provider-aws/internal/framework/stringplanmodifier"
@@ -254,7 +256,9 @@ func (r *resourceCluster) Schema(ctx context.Context, request resource.SchemaReq
 			"network_type": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
-				// TODO Validate,
+				Validators: []validator.String{
+					stringvalidator.OneOf(NetworkType_Values()...),
+				},
 			},
 			"port": schema.Int64Attribute{
 				Optional: true,
@@ -278,7 +282,9 @@ func (r *resourceCluster) Schema(ctx context.Context, request resource.SchemaReq
 			},
 			"skip_final_snapshot": schema.BoolAttribute{
 				Optional: true,
-				// TODO Default:false,
+				PlanModifiers: []planmodifier.Bool{
+					fwboolplanmodifier.DefaultValue(false),
+				},
 			},
 			"snapshot_identifier": schema.StringAttribute{
 				Optional: true,
@@ -302,17 +308,8 @@ func (r *resourceCluster) Schema(ctx context.Context, request resource.SchemaReq
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"tags": // TODO tftags.TagsAttribute()
-			schema.MapAttribute{
-				ElementType: types.StringType,
-				Optional:    true,
-			},
-			"tags_all": // TODO tftags.TagsAttributeComputedOnly()
-			schema.MapAttribute{
-				ElementType: types.StringType,
-				Optional:    true,
-				Computed:    true,
-			},
+			"tags":     tftags.TagsAttribute(),
+			"tags_all": tftags.TagsAttributeComputedOnly(),
 			"vpc_security_group_ids": schema.SetAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
@@ -335,7 +332,9 @@ func (r *resourceCluster) Schema(ctx context.Context, request resource.SchemaReq
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.RequiresReplace(),
 							},
-							// TODO Validate,
+							Validators: []validator.String{
+								stringvalidator.OneOf(RestoreType_Values()...),
+							},
 						},
 						"source_cluster_identifier": schema.StringAttribute{
 							Required: true,
@@ -403,27 +402,39 @@ func (r *resourceCluster) Schema(ctx context.Context, request resource.SchemaReq
 					Attributes: map[string]schema.Attribute{
 						"auto_pause": schema.BoolAttribute{
 							Optional: true,
-							// TODO Default:true,
+							PlanModifiers: []planmodifier.Bool{
+								fwboolplanmodifier.DefaultValue(true),
+							},
 						},
 						"max_capacity": schema.Int64Attribute{
 							Optional: true,
-							// TODO Default:16,
+							PlanModifiers: []planmodifier.Int64{
+								fwint64planmodifier.DefaultValue(clusterScalingConfiguration_DefaultMaxCapacity),
+							},
 						},
 						"min_capacity": schema.Int64Attribute{
 							Optional: true,
-							// TODO Default:1,
+							PlanModifiers: []planmodifier.Int64{
+								fwint64planmodifier.DefaultValue(clusterScalingConfiguration_DefaultMinCapacity),
+							},
 						},
 						"seconds_until_auto_pause": schema.Int64Attribute{
 							Optional: true,
-							// TODO Default:300,
-							// TODO Validate,
+							PlanModifiers: []planmodifier.Int64{
+								fwint64planmodifier.DefaultValue(300),
+							},
+							Validators: []validator.Int64{
+								int64validator.Between(300, 86400),
+							},
 						},
 						"timeout_action": schema.StringAttribute{
 							Optional: true,
 							PlanModifiers: []planmodifier.String{
-								fwstringplanmodifier.DefaultValue("RollbackCapacityChange"),
+								fwstringplanmodifier.DefaultValue(TimeoutActionRollbackCapacityChange),
 							},
-							// TODO Validate,
+							Validators: []validator.String{
+								stringvalidator.OneOf(TimeoutAction_Values()...),
+							},
 						},
 					},
 				},
@@ -436,11 +447,15 @@ func (r *resourceCluster) Schema(ctx context.Context, request resource.SchemaReq
 					Attributes: map[string]schema.Attribute{
 						"max_capacity": schema.Float64Attribute{
 							Required: true,
-							// TODO Validate,
+							Validators: []validator.Float64{
+								float64validator.Between(0.5, 128),
+							},
 						},
 						"min_capacity": schema.Float64Attribute{
 							Required: true,
-							// TODO Validate,
+							Validators: []validator.Float64{
+								float64validator.Between(0.5, 128),
+							},
 						},
 					},
 				},
@@ -570,6 +585,15 @@ func (r *resourceCluster) ConfigValidators(ctx context.Context) []resource.Confi
 		resourcevalidator.Conflicting(
 			path.MatchRoot("cluster_identifier"),
 			path.MatchRoot("cluster_identifier_prefix"),
+		),
+		resourcevalidator.Conflicting(
+			path.MatchRoot("restore_to_point_in_time"),
+			path.MatchRoot("s3_import"),
+			path.MatchRoot("snapshot_identifier"),
+		),
+		resourcevalidator.Conflicting(
+			path.MatchRoot("restore_to_point_in_time").AtListIndex(0).AtName("restore_to_time"),
+			path.MatchRoot("restore_to_point_in_time").AtListIndex(0).AtName("use_latest_restorable_time"),
 		),
 	}
 }
