@@ -324,7 +324,6 @@ func resourceReplicationSetImport(context context.Context, d *schema.ResourceDat
 }
 
 func validateNonAliasARN(value interface{}, path cty.Path) diag.Diagnostics {
-
 	parsedARN, err := arn.Parse(value.(string))
 	var diags diag.Diagnostics
 
@@ -332,7 +331,7 @@ func validateNonAliasARN(value interface{}, path cty.Path) diag.Diagnostics {
 		diag := diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Invalid kms_key_arn",
-			Detail:   fmt.Sprintf("Alias KMS Key ARNs are not supported. Please use the original key ARN."),
+			Detail:   "Alias KMS Key ARNs are not supported. Please use the original key ARN.",
 		}
 		diags = append(diags, diag)
 	}

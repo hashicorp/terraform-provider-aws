@@ -64,7 +64,7 @@ func testAccReplicationSet_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckReplicationSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationSetConfig_basicRegions(region1, region2),
+				Config: testAccReplicationSetConfig_basicTwoRegion(region1, region2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationSetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "region.#", "2"),
@@ -108,7 +108,7 @@ func testAccReplicationSet_updateRegionsWithoutCMK(t *testing.T) {
 		CheckDestroy:             testAccCheckReplicationSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationSetConfig_basicRegions(region1),
+				Config: testAccReplicationSetConfig_basicOneRegion(region1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationSetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "region.#", "1"),
@@ -121,13 +121,13 @@ func testAccReplicationSet_updateRegionsWithoutCMK(t *testing.T) {
 				),
 			},
 			{
-				Config:            testAccReplicationSetConfig_basicRegions(region1),
+				Config:            testAccReplicationSetConfig_basicOneRegion(region1),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccReplicationSetConfig_basicRegions(region1, region2),
+				Config: testAccReplicationSetConfig_basicTwoRegion(region1, region2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationSetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "region.#", "2"),
@@ -144,13 +144,13 @@ func testAccReplicationSet_updateRegionsWithoutCMK(t *testing.T) {
 				),
 			},
 			{
-				Config:            testAccReplicationSetConfig_basicRegions(region1, region2),
+				Config:            testAccReplicationSetConfig_basicTwoRegion(region1, region2),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccReplicationSetConfig_basicRegions(region1),
+				Config: testAccReplicationSetConfig_basicOneRegion(region1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationSetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "region.#", "1"),
@@ -163,7 +163,7 @@ func testAccReplicationSet_updateRegionsWithoutCMK(t *testing.T) {
 				),
 			},
 			{
-				Config:            testAccReplicationSetConfig_basicRegions(region1),
+				Config:            testAccReplicationSetConfig_basicOneRegion(region1),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -190,9 +190,7 @@ func testAccReplicationSet_updateRegionsWithCMK(t *testing.T) {
 		CheckDestroy:             testAccCheckReplicationSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationSetConfig_regionsWithCMK(map[string]string{
-					acctest.Region(): "aws_kms_key.default.arn",
-				}),
+				Config: testAccReplicationSetConfig_oneRegionWithCMK(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationSetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "region.#", "1"),
@@ -203,18 +201,13 @@ func testAccReplicationSet_updateRegionsWithCMK(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccReplicationSetConfig_regionsWithCMK(map[string]string{
-					acctest.Region(): "aws_kms_key.default.arn",
-				}),
+				Config:            testAccReplicationSetConfig_oneRegionWithCMK(),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccReplicationSetConfig_regionsWithCMK(map[string]string{
-					acctest.Region():          "aws_kms_key.default.arn",
-					acctest.AlternateRegion(): "aws_kms_key.alternate.arn",
-				}),
+				Config: testAccReplicationSetConfig_twoRegionWithCMK(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationSetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "region.#", "2"),
@@ -228,18 +221,13 @@ func testAccReplicationSet_updateRegionsWithCMK(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccReplicationSetConfig_regionsWithCMK(map[string]string{
-					acctest.Region():          "aws_kms_key.default.arn",
-					acctest.AlternateRegion(): "aws_kms_key.alternate.arn",
-				}),
+				Config:            testAccReplicationSetConfig_twoRegionWithCMK(),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccReplicationSetConfig_regionsWithCMK(map[string]string{
-					acctest.Region(): "aws_kms_key.default.arn",
-				}),
+				Config: testAccReplicationSetConfig_oneRegionWithCMK(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationSetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "region.#", "1"),
@@ -250,9 +238,7 @@ func testAccReplicationSet_updateRegionsWithCMK(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccReplicationSetConfig_regionsWithCMK(map[string]string{
-					acctest.Region(): "aws_kms_key.default.arn",
-				}),
+				Config:            testAccReplicationSetConfig_oneRegionWithCMK(),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -296,9 +282,7 @@ func testAccReplicationSet_updateTags(t *testing.T) {
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigDefaultTags_Tags1(rProviderKey1, rProviderVal1Ini),
-					testAccReplicationSetConfig_tags(map[string]string{
-						rKey1: rVal1Ini,
-					}),
+					testAccReplicationSetConfig_oneTag(rKey1, rVal1Ini),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationSetExists(resourceName),
@@ -317,9 +301,7 @@ func testAccReplicationSet_updateTags(t *testing.T) {
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigDefaultTags_Tags1(rProviderKey1, rProviderVal1Upd),
-					testAccReplicationSetConfig_tags(map[string]string{
-						rKey1: rVal1Updated,
-					}),
+					testAccReplicationSetConfig_oneTag(rKey1, rVal1Updated),
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationSetExists(resourceName),
@@ -338,12 +320,8 @@ func testAccReplicationSet_updateTags(t *testing.T) {
 			{
 				Config: acctest.ConfigCompose(
 					acctest.ConfigDefaultTags_Tags2(rProviderKey2, rProviderVal2, rProviderKey3, rProviderVal3),
-					testAccReplicationSetConfig_tags(map[string]string{
-						rKey2: rVal2,
-						rKey3: rVal3,
-					}),
+					testAccReplicationSetConfig_twoTags(rKey2, rVal2, rKey3, rVal3),
 				),
-
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationSetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -384,9 +362,7 @@ func testAccReplicationSet_updateEmptyTags(t *testing.T) {
 		CheckDestroy:             testAccCheckReplicationSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationSetConfig_tags(map[string]string{
-					rKey1: "",
-				}),
+				Config: testAccReplicationSetConfig_oneTag(rKey1, ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationSetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -400,10 +376,7 @@ func testAccReplicationSet_updateEmptyTags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccReplicationSetConfig_tags(map[string]string{
-					rKey1: "",
-					rKey2: "",
-				}),
+				Config: testAccReplicationSetConfig_twoTags(rKey1, "", rKey2, ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationSetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -418,9 +391,7 @@ func testAccReplicationSet_updateEmptyTags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccReplicationSetConfig_tags(map[string]string{
-					rKey1: "",
-				}),
+				Config: testAccReplicationSetConfig_oneTag(rKey1, ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationSetExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -451,7 +422,7 @@ func testAccReplicationSet_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckReplicationSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationSetConfig_basicRegions(region1, region2),
+				Config: testAccReplicationSetConfig_basicTwoRegion(region1, region2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationSetExists(resourceName),
 					acctest.CheckResourceDisappears(acctest.Provider, tfssmincidents.ResourceReplicationSet(), resourceName),
@@ -517,52 +488,54 @@ func testAccCheckReplicationSetExists(name string) resource.TestCheckFunc {
 	}
 }
 
-func testAccReplicationSetConfig_basicRegions(regions ...string) string {
-	return acctest.ConfigCompose(`
-resource "aws_ssmincidents_replication_set" "test" {
-`, generateReplicationSetRegionsConfig(regions...), `
-}
-`)
-}
-
-func generateReplicationSetRegionsConfig(regions ...string) string {
-	regionSections := make([]string, 0)
-
-	for _, region := range regions {
-		regionSections = append(regionSections, fmt.Sprintf(`
-		region {
-			name = %[1]q
-		}
-		`, region))
-	}
-	return acctest.ConfigCompose(regionSections...)
-}
-
-func testAccReplicationSetConfig_tags(tags map[string]string) string {
-	return acctest.ConfigCompose(fmt.Sprintf(`
+func testAccReplicationSetConfig_basicOneRegion(region1 string) string {
+	return fmt.Sprintf(`
 resource "aws_ssmincidents_replication_set" "test" {
   region {
     name = %[1]q
   }
-`, acctest.Region()), generateReplicationSetTagsConfig(tags), `
 }
-`)
+`, region1)
 }
 
-func generateReplicationSetTagsConfig(tags map[string]string) string {
-	tagsSections := make([]string, 0)
+func testAccReplicationSetConfig_basicTwoRegion(region1, region2 string) string {
+	return fmt.Sprintf(`
+resource "aws_ssmincidents_replication_set" "test" {
+  region {
+    name = %[1]q
+  }
+  region {
+    name = %[2]q
+  }
+}
+`, region1, region2)
+}
 
-	for key, value := range tags {
-		tagsSections = append(tagsSections, fmt.Sprintf(`
-			%[1]q = %[2]q`, key, value),
-		)
-	}
+func testAccReplicationSetConfig_oneTag(tagKey, tagVal string) string {
+	return fmt.Sprintf(`
+resource "aws_ssmincidents_replication_set" "test" {
+  region {
+    name = %[3]q
+  }
+  tags = {
+    %[1]q = %[2]q
+  }
+}
+`, tagKey, tagVal, acctest.Region())
+}
 
-	return acctest.ConfigCompose(`
-	tags = {`,
-		acctest.ConfigCompose(tagsSections...), `
-	}
-	`)
+func testAccReplicationSetConfig_twoTags(tag1Key, tag1Val, tag2Key, tag2Val string) string {
+	return fmt.Sprintf(`
+resource "aws_ssmincidents_replication_set" "test" {
+  region {
+    name = %[5]q
+  }
+  tags = {
+    %[1]q = %[2]q
+    %[3]q = %[4]q
+  }
+}
+`, tag1Key, tag1Val, tag2Key, tag2Val, acctest.Region())
 }
 
 func testAccReplicationSetConfigBaseKeyDefaultRegion() string {
@@ -579,27 +552,34 @@ resource "aws_kms_key" "alternate" {
 `
 }
 
-// input map maps regionName to variable containing arn of cmk key
-func testAccReplicationSetConfig_regionsWithCMK(regions map[string]string) string {
+func testAccReplicationSetConfig_oneRegionWithCMK() string {
 	return acctest.ConfigCompose(
 		testAccReplicationSetConfigBaseKeyDefaultRegion(),
-		testAccReplicationSetConfigBaseKeyAlternateRegion(), `
+		testAccReplicationSetConfigBaseKeyAlternateRegion(),
+		fmt.Sprintf(`
 resource "aws_ssmincidents_replication_set" "test" {
-`, generateReplicationSetRegionsWithCMKConfig(regions), `
+  region {
+    name        = %[1]q
+    kms_key_arn = aws_kms_key.default.arn
+  }
 }
-`)
+`, acctest.Region()))
 }
 
-func generateReplicationSetRegionsWithCMKConfig(regions map[string]string) string {
-	regionsSections := make([]string, 0)
-
-	for region, cmk := range regions {
-		regionsSections = append(regionsSections, fmt.Sprintf(`
-		region {
-			name = %[1]q
-			kms_key_arn = %[2]s
-		}
-		`, region, cmk))
-	}
-	return acctest.ConfigCompose(regionsSections...)
+func testAccReplicationSetConfig_twoRegionWithCMK() string {
+	return acctest.ConfigCompose(
+		testAccReplicationSetConfigBaseKeyDefaultRegion(),
+		testAccReplicationSetConfigBaseKeyAlternateRegion(),
+		fmt.Sprintf(`
+resource "aws_ssmincidents_replication_set" "test" {
+  region {
+    name        = %[1]q
+    kms_key_arn = aws_kms_key.default.arn
+  }
+  region {
+    name        = %[2]q
+    kms_key_arn = aws_kms_key.alternate.arn
+  }
+}
+`, acctest.Region(), acctest.AlternateRegion()))
 }
