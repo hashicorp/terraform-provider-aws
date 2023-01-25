@@ -6,6 +6,10 @@ FEATURES:
 * **New Resource:** `aws_auditmanager_framework_share` ([#29049](https://github.com/hashicorp/terraform-provider-aws/issues/29049))
 * **New Resource:** `aws_auditmanager_organization_admin_account_registration` ([#29018](https://github.com/hashicorp/terraform-provider-aws/issues/29018))
 
+ENHANCEMENTS:
+
+* resource/aws_wafv2_rule_group: Add `oversize_handling` argument to `body` block of the `field_to_match` block ([#29082](https://github.com/hashicorp/terraform-provider-aws/issues/29082))
+
 BUG FIXES:
 
 * resource/aws_api_gateway_integration: Prevent drift of `connection_type` attribute when `aws_api_gateway_deployment` `triggers` are used ([#29016](https://github.com/hashicorp/terraform-provider-aws/issues/29016))
