@@ -210,7 +210,7 @@ func resourceCoreNetworkRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	// getting the policy document uses a different API call
 	// policy document is also optional
-	coreNetworkPolicy, err := findCoreNetworkPolicyByID(ctx, conn, d.Id())
+	coreNetworkPolicy, err := FindCoreNetworkPolicyByID(ctx, conn, d.Id())
 
 	if tfresource.NotFound(err) {
 		d.Set("policy_document", nil)
@@ -373,7 +373,7 @@ func FindCoreNetworkByID(ctx context.Context, conn *networkmanager.NetworkManage
 	return output.CoreNetwork, nil
 }
 
-func findCoreNetworkPolicyByID(ctx context.Context, conn *networkmanager.NetworkManager, id string) (*networkmanager.CoreNetworkPolicy, error) {
+func FindCoreNetworkPolicyByID(ctx context.Context, conn *networkmanager.NetworkManager, id string) (*networkmanager.CoreNetworkPolicy, error) {
 	input := &networkmanager.GetCoreNetworkPolicyInput{
 		CoreNetworkId: aws.String(id),
 	}
