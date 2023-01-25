@@ -76,11 +76,11 @@ resource "aws_ssmincidents_replication_set" "replicationSetName" {
 
 ## Argument Reference
 
-~> **NOTE:** The AWS Region specified by a Terraform provider must always be one of the Regions specified for the replication set. This is especially important when you perform complex update operations.
+~> **NOTE:** The Region specified by a Terraform provider must always be one of the Regions specified for the replication set. This is especially important when you perform complex update operations.
 
 ~> **NOTE:** After a replication set is created, you can add or delete only one Region at a time.
 
-~> **NOTE:** Incident Manager does not support updating the customer managed key associated with a replication set. Instead, for a replication set with multiple AWS Regions, you must first delete a Region from the replication set, then re-add it with a different customer managed key in separate `terraform apply` operations. For a replication set with only one Region, the entire replication set must be deleted and recreated. To do this, comment out the replication set and all response plans, and then run the `terraform apply` command to recreate the replication set with the new customer managed key.
+~> **NOTE:** Incident Manager does not support updating the customer managed key associated with a replication set. Instead, for a replication set with multiple Regions, you must first delete a Region from the replication set, then re-add it with a different customer managed key in separate `terraform apply` operations. For a replication set with only one Region, the entire replication set must be deleted and recreated. To do this, comment out the replication set and all response plans, and then run the `terraform apply` command to recreate the replication set with the new customer managed key.
 
 ~> **NOTE:** You must either associate all Regions with an AWS KMS key or associate no Regions with a key. To change between an AWS owned key and a customer managed key, a replication set and it associated data must be deleted and recreated.
 
@@ -88,7 +88,7 @@ resource "aws_ssmincidents_replication_set" "replicationSetName" {
 
 The `region` configuration block is required and supports the following arguments:
 
-* `name` - (Required) The name of the AWS Region, such as `ap-southeast-2`.
+* `name` - (Required) The name of the Region, such as `ap-southeast-2`.
 * `kms_key_arn` - (Optional) The Amazon Resource name (ARN) of the customer managed key. If omitted, AWS manages the AWS KMS keys for you, using an AWS owned key, as indicated by a default value of `DefaultKey`.
 
 The following arguments are optional:
@@ -105,9 +105,9 @@ In addition to the preceding arguments, the following attributes are exported:
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `created_by` - The ARN of the user who created the replication set.
 * `created_time` - A timestamp showing when the replication set was created.
-* `deletion_protected` - If `true`, the last region in a Replication Set cannot be deleted.
+* `deletion_protected` - If `true`, the last region in a replication set cannot be deleted.
 * `last_modified_by` - A timestamp showing when the replication set was last modified.
-* `last_modified_time` - When the Replication Set was last modified
+* `last_modified_time` - When the replication set was last modified
 * `status` - The overall status of a replication set.
     * Valid Values: `ACTIVE` | `CREATING` | `UPDATING` | `DELETING` | `FAILED`
 
