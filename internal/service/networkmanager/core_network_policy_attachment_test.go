@@ -24,12 +24,12 @@ func TestAccNetworkManagerCoreNetworkPolicyAttachment_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCoreNetworkDestroy(ctx),
+		CheckDestroy:             testAccCheckCoreNetworkPolicyAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCoreNetworkPolicyAttachmentConfig_basic(originalSegmentValue),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCoreNetworkExists(ctx, resourceName),
+					testAccCheckCoreNetworkPolicyAttachmentExists(ctx, resourceName),
 					testAccCheckPolicyDocument(resourceName, originalSegmentValue),
 					resource.TestCheckResourceAttrPair(resourceName, "core_network_id", "aws_networkmanager_core_network.test", "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "id", "aws_networkmanager_core_network.test", "id"),
@@ -44,7 +44,7 @@ func TestAccNetworkManagerCoreNetworkPolicyAttachment_basic(t *testing.T) {
 			{
 				Config: testAccCoreNetworkPolicyAttachmentConfig_basic(updatedSegmentValue),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCoreNetworkExists(ctx, resourceName),
+					testAccCheckCoreNetworkPolicyAttachmentExists(ctx, resourceName),
 					testAccCheckPolicyDocument(resourceName, updatedSegmentValue),
 					resource.TestCheckResourceAttrPair(resourceName, "core_network_id", "aws_networkmanager_core_network.test", "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "id", "aws_networkmanager_core_network.test", "id"),
