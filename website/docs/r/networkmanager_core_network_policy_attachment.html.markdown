@@ -12,7 +12,6 @@ Provides a Core Network Policy Attachment resource.
 
 ~> **NOTE on Core Networks and Policy Attachments:** Terraform currently provides both a standalone [`aws_networkmanager_core_network_policy_attachment`](networkmanager_core_network_policy_attachment.html) resource, and an [`aws_networkmanager_core_network`](networkmanager_core_network.html) resource with `policy_document` defined in-line. These two methods are not mutually-exclusive. If `aws_networkmanager_core_network_policy_attachment` resources are used with inline `policy_document`, the `aws_networkmanager_core_network` resource must be configured to ignore changes to the `policy_document` argument within a [`lifecycle` configuration block](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html).
 
-
 ## Example Usage
 
 ### Basic
