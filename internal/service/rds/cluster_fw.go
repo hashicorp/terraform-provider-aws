@@ -7,6 +7,9 @@ import (
 	"regexp"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/rds"
+	sdkresource "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/float64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
@@ -25,8 +28,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwboolplanmodifier "github.com/hashicorp/terraform-provider-aws/internal/framework/boolplanmodifier"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 
 	fwint64planmodifier "github.com/hashicorp/terraform-provider-aws/internal/framework/int64planmodifier"
@@ -233,13 +238,11 @@ func (r *resourceCluster) Schema(ctx context.Context, request resource.SchemaReq
 				Optional: true,
 			},
 			"kms_key_id": schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
-				},
-				Validators: []validator.String{
-					// TODO validate ARN
 				},
 			},
 			"master_password": schema.StringAttribute{
@@ -482,6 +485,12 @@ func (r *resourceCluster) Schema(ctx context.Context, request resource.SchemaReq
 // Config and planned state values should be read from the CreateRequest and new state values set on the CreateResponse.
 func (r *resourceCluster) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	var data resourceClusterData
+	conn := r.Meta().RDSClient()
+
+	defaultTagsConfig := r.Meta().DefaultTagsConfig
+	ignoreTagsConfig := r.Meta().IgnoreTagsConfig
+	tags := defaultTagsConfig.MergeTags(tftags.New(data.Tags))
+	data.TagsAll = flex.FlattenFrameworkStringValueMapLegacy(ctx, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()
 
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
 
@@ -489,6 +498,37 @@ func (r *resourceCluster) Create(ctx context.Context, request resource.CreateReq
 		return
 	}
 	createTimeout := r.CreateTimeout(ctx, data.Timeouts)
+
+	var requiresModifyDbCluster bool
+	modifyDbClusterInput := &rds.ModifyDBClusterInput{
+		ApplyImmediately: aws.Bool(true),
+	}
+
+	var identifier string
+	if !data.ClusterIdentifier.IsUnknown() && !data.ClusterIdentifier.IsNull() {
+		identifier = data.ClusterIdentifier.ValueString()
+	} else if !data.ClusterIdentifierPrefix.IsUnknown() && !data.ClusterIdentifierPrefix.IsNull() {
+		identifier = sdkresource.PrefixedUniqueId(data.ClusterIdentifierPrefix.ValueString())
+	} else {
+		identifier = sdkresource.PrefixedUniqueId("tf-")
+	}
+
+	if !data.SnapshotIdentifier.IsUnknown() && !data.FinalSnapshotIdentifier.IsNull() {
+		input := &rds.RestoreDBClusterFromSnapshotInput{
+			CopyTagsToSnapshot: aws.Bool(data.CopyTagsToSnapshot.ValueBool()),
+			DBClusterIdentifier: aws.String(identifier),
+			DeletionProtection: aws.Bool(data.DeletionProtection.ValueBool()),
+			Engine: aws.String(data.Engine.ValueString()),
+			EngineMode: aws.String(data.EngineMode.ValueString()),
+			Tags: Tags(tags.IgnoreAWS()),
+		}
+
+		if !data.AvailabilityZones.IsUnknown() && !data.AvailabilityZones.IsNull() {
+			input.AvailabilityZones = flex.ExpandFrameworkStringSet(ctx, data.AvailabilityZones)
+		}
+	}
+
+
 
 	data.ID = types.StringValue("TODO")
 
