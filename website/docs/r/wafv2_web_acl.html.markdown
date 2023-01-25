@@ -10,6 +10,8 @@ description: |-
 
 Creates a WAFv2 Web ACL resource.
 
+~> **Note:** In `field_to_match` blocks, _e.g._, in `byte_match_statement`, the `body` block includes an optional argument `oversize_handling`. AWS indicates this argument will be required starting February 2023. To avoid configurations breaking when that change happens, treat the `oversize_handling` argument as **required** as soon as possible. 
+
 ## Example Usage
 
 This resource is based on `aws_wafv2_rule_group`, check the documentation of the `aws_wafv2_rule_group` resource to see examples of the various available statements.
@@ -689,7 +691,7 @@ The `single_query_argument` block supports the following arguments:
 
 The `body` block supports the following arguments:
 
-* `oversize_handling` - (Required) What WAF should do if the body is larger than WAF can inspect. WAF does not support inspecting the entire contents of the body of a web request when the body exceeds 8 KB (8192 bytes). Only the first 8 KB of the request body are forwarded to WAF by the underlying host service. Valid values: `CONTINUE`, `MATCH`, `NO_MATCH`.
+* `oversize_handling` - (Optional) What WAF should do if the body is larger than WAF can inspect. WAF does not support inspecting the entire contents of the body of a web request when the body exceeds 8 KB (8192 bytes). Only the first 8 KB of the request body are forwarded to WAF by the underlying host service. Valid values: `CONTINUE`, `MATCH`, `NO_MATCH`.
 
 #### `cookies`
 
