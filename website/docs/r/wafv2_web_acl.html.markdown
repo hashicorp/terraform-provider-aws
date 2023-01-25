@@ -10,7 +10,7 @@ description: |-
 
 Creates a WAFv2 Web ACL resource.
 
-~> **Note:** In `field_to_match` blocks, _e.g._, in `byte_match_statement`, the `body` block includes an optional argument `oversize_handling`. AWS indicates this argument will be required starting February 2023. To avoid configurations breaking when that change happens, treat the `oversize_handling` argument as **required** as soon as possible. 
+~> **Note:** In `field_to_match` blocks, _e.g._, in `byte_match_statement`, the `body` block includes an optional argument `oversize_handling`. AWS indicates this argument will be required starting February 2023. To avoid configurations breaking when that change happens, treat the `oversize_handling` argument as **required** as soon as possible.
 
 ## Example Usage
 
@@ -366,7 +366,7 @@ The `count` block supports the following arguments:
 
 The `custom_request_handling` block supports the following arguments:
 
-* `insert_header` - (Required) The `insert_header` blocks used to define HTTP headers added to the request. See [`custom_hTTP_header`](#custom_http_header) below for details.
+* `insert_header` - (Required) The `insert_header` blocks used to define HTTP headers added to the request. See [`response_header`](#response_header) below for details.
 
 #### `custom_response`
 
@@ -374,7 +374,7 @@ The `custom_response` block supports the following arguments:
 
 * `custom_response_body_key` - (Optional) References the response body that you want AWS WAF to return to the web request client. This must reference a `key` defined in a `custom_response_body` block of this resource.
 * `response_code` - (Required) The HTTP status code to return to the client.
-* `response_header` - (Optional) The `response_header` blocks used to define the HTTP response headers added to the response. See [`custom_hTTP_header`](#custom_http_header) below for details.
+* `response_header` - (Optional) The `response_header` blocks used to define the HTTP response headers added to the response. See [`response_header`](#response_header) below for details.
 
 #### `response_header`
 
@@ -410,7 +410,7 @@ The `statement` block supports the following arguments:
 * `regex_pattern_set_reference_statement` - (Optional) Rule statement used to search web request components for matches with regular expressions. See [Regex Pattern Set Reference Statement](#regex_pattern_set_reference_statement) below for details.
 * `rule_group_reference_statement` - (Optional) Rule statement used to run the rules that are defined in an WAFv2 Rule Group. See [Rule Group Reference Statement](#rule_group_reference_statement) below for details.
 * `size_constraint_statement` - (Optional) Rule statement that compares a number of bytes against the size of a request component, using a comparison operator, such as greater than (>) or less than (<). See [`size_constraint_statement`](#size_constraint_statement) below for more details.
-* `sqli_match_statement` - (Optional) An SQL injection match condition identifies the part of web requests, such as the URI or the query string, that you want AWS WAF to inspect. See [SQL Injection Match Statement](#sql_injection_match_statement) below for details.
+* `sqli_match_statement` - (Optional) An SQL injection match condition identifies the part of web requests, such as the URI or the query string, that you want AWS WAF to inspect. See [`sqli_match_statement`](#sqli_match_statement) below for details.
 * `xss_match_statement` - (Optional) Rule statement that defines a cross-site scripting (XSS) match search for AWS WAF to apply to web requests. See [`xss_match_statement`](#xss_match_statement) below for details.
 
 #### `and_statement`
@@ -448,7 +448,7 @@ A rule statement used to detect web requests coming from particular IP addresses
 The `ip_set_reference_statement` block supports the following arguments:
 
 * `arn` - (Required) The Amazon Resource Name (ARN) of the IP Set that this statement references.
-* `ip_set_forwarded_ip_config` - (Optional) Configuration for inspecting IP addresses in an HTTP header that you specify, instead of using the IP address that's reported by the web request origin. See [IPSet Forwarded IP Config](#ipset_forwarded_ip_config) below for more details.
+* `ip_set_forwarded_ip_config` - (Optional) Configuration for inspecting IP addresses in an HTTP header that you specify, instead of using the IP address that's reported by the web request origin. See [`ip_set_forwarded_ip_config`](#ip_set_forwarded_ip_config) below for more details.
 
 #### `label_match_statement`
 
