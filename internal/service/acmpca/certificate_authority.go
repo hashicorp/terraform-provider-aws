@@ -231,28 +231,54 @@ func ResourceCertificateAuthority() *schema.Resource {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ValidateFunc: validation.StringLenBetween(0, 253),
+										DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+											// Ignore attributes if CRL configuration is not enabled
+											if d.Get("revocation_configuration.0.crl_configuration.0.enabled").(bool) {
+												return old == new
+											}
+											return true
+										},
 									},
 									"enabled": {
 										Type:     schema.TypeBool,
 										Optional: true,
 									},
-									// ValidationException: 1 validation error detected: Value null or empty at 'expirationInDays' failed to satisfy constraint: Member must not be null or empty.
-									// InvalidParameter: 1 validation error(s) found. minimum field value of 1, CreateCertificateAuthorityInput.RevocationConfiguration.CrlConfiguration.ExpirationInDays.
 									"expiration_in_days": {
 										Type:         schema.TypeInt,
-										Required:     true,
+										Optional:     true,
 										ValidateFunc: validation.IntBetween(1, 5000),
+										DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+											// Ignore attributes if CRL configuration is not enabled
+											if d.Get("revocation_configuration.0.crl_configuration.0.enabled").(bool) {
+												return old == new
+											}
+											return true
+										},
 									},
 									"s3_bucket_name": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										ValidateFunc: validation.StringLenBetween(0, 255),
+										ValidateFunc: validation.StringLenBetween(3, 255),
+										DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+											// Ignore attributes if CRL configuration is not enabled
+											if d.Get("revocation_configuration.0.crl_configuration.0.enabled").(bool) {
+												return old == new
+											}
+											return true
+										},
 									},
 									"s3_object_acl": {
 										Type:         schema.TypeString,
 										Optional:     true,
 										Computed:     true,
 										ValidateFunc: validation.StringInSlice(acmpca.S3ObjectAcl_Values(), false),
+										DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+											// Ignore attributes if CRL configuration is not enabled
+											if d.Get("revocation_configuration.0.crl_configuration.0.enabled").(bool) {
+												return old == new
+											}
+											return true
+										},
 									},
 								},
 							},
@@ -636,21 +662,25 @@ func expandCrlConfiguration(l []interface{}) *acmpca.CrlConfiguration {
 
 	m := l[0].(map[string]interface{})
 
+	crlEnabled := m["enabled"].(bool)
+
 	config := &acmpca.CrlConfiguration{
-		Enabled: aws.Bool(m["enabled"].(bool)),
+		Enabled: aws.Bool(crlEnabled),
 	}
 
-	if v, ok := m["custom_cname"]; ok && v.(string) != "" {
-		config.CustomCname = aws.String(v.(string))
-	}
-	if v, ok := m["expiration_in_days"]; ok && v.(int) > 0 {
-		config.ExpirationInDays = aws.Int64(int64(v.(int)))
-	}
-	if v, ok := m["s3_bucket_name"]; ok && v.(string) != "" {
-		config.S3BucketName = aws.String(v.(string))
-	}
-	if v, ok := m["s3_object_acl"]; ok && v.(string) != "" {
-		config.S3ObjectAcl = aws.String(v.(string))
+	if crlEnabled {
+		if v, ok := m["custom_cname"]; ok && v.(string) != "" {
+			config.CustomCname = aws.String(v.(string))
+		}
+		if v, ok := m["expiration_in_days"]; ok && v.(int) > 0 {
+			config.ExpirationInDays = aws.Int64(int64(v.(int)))
+		}
+		if v, ok := m["s3_bucket_name"]; ok && v.(string) != "" {
+			config.S3BucketName = aws.String(v.(string))
+		}
+		if v, ok := m["s3_object_acl"]; ok && v.(string) != "" {
+			config.S3ObjectAcl = aws.String(v.(string))
+		}
 	}
 
 	return config
