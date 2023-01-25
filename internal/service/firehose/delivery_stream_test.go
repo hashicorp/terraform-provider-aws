@@ -1645,6 +1645,231 @@ func TestAccFirehoseDeliveryStream_Elasticsearch_ErrorOutputPrefix(t *testing.T)
 	})
 }
 
+func TestAccFirehoseDeliveryStream_openSearchUpdates(t *testing.T) {
+	ctx := acctest.Context(t)
+	var stream firehose.DeliveryStreamDescription
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_kinesis_firehose_delivery_stream.test"
+
+	updatedOpensearchConfig := &firehose.AmazonopensearchserviceDestinationDescription{
+		BufferingHints: &firehose.AmazonopensearchserviceBufferingHints{
+			IntervalInSeconds: aws.Int64(500),
+		},
+		ProcessingConfiguration: &firehose.ProcessingConfiguration{
+			Enabled: aws.Bool(true),
+			Processors: []*firehose.Processor{
+				{
+					Type: aws.String("Lambda"),
+					Parameters: []*firehose.ProcessorParameter{
+						{
+							ParameterName:  aws.String("LambdaArn"),
+							ParameterValue: aws.String("valueNotTested"),
+						},
+					},
+				},
+			},
+		},
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, firehose.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeliveryStreamDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDeliveryStreamConfig_opensearchBasic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
+					testAccCheckDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil, nil),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDeliveryStreamConfig_opensearchUpdate(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
+					testAccCheckDeliveryStreamAttributes(&stream, nil, nil, nil, updatedOpensearchConfig, nil, nil),
+				),
+			},
+		},
+	})
+}
+
+func TestAccFirehoseDeliveryStream_openSearchEndpointUpdates(t *testing.T) {
+	ctx := acctest.Context(t)
+	var stream firehose.DeliveryStreamDescription
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_kinesis_firehose_delivery_stream.test"
+
+	updatedOpensearchConfig := &firehose.AmazonopensearchserviceDestinationConfiguration{
+		BufferingHints: &firehose.AmazonopensearchserviceBufferingHints{
+			IntervalInSeconds: aws.Int64(500),
+		},
+		ProcessingConfiguration: &firehose.ProcessingConfiguration{
+			Enabled: aws.Bool(true),
+			Processors: []*firehose.Processor{
+				{
+					Type: aws.String("Lambda"),
+					Parameters: []*firehose.ProcessorParameter{
+						{
+							ParameterName:  aws.String("LambdaArn"),
+							ParameterValue: aws.String("valueNotTested"),
+						},
+					},
+				},
+			},
+		},
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, firehose.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeliveryStreamDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDeliveryStreamConfig_opensearchEndpoint(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
+					testAccCheckDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil, nil),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDeliveryStreamConfig_opensearchEndpointUpdate(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
+					testAccCheckDeliveryStreamAttributes(&stream, nil, nil, nil, updatedOpensearchConfig, nil, nil),
+				),
+			},
+		},
+	})
+}
+
+// This doesn't actually test updating VPC Configuration. It tests changing OpenSearch configuration
+// when the Kinesis Firehose delivery stream has a VPC Configuration.
+func TestAccFirehoseDeliveryStream_openSearchWithVPCUpdates(t *testing.T) {
+	ctx := acctest.Context(t)
+	var stream firehose.DeliveryStreamDescription
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_kinesis_firehose_delivery_stream.test"
+
+	updatedOpensearchConfig := &firehose.AmazonopensearchserviceDestinationConfiguration{
+		BufferingHints: &firehose.AmazonopensearchserviceBufferingHints{
+			IntervalInSeconds: aws.Int64(500),
+		},
+		ProcessingConfiguration: &firehose.ProcessingConfiguration{
+			Enabled: aws.Bool(true),
+			Processors: []*firehose.Processor{
+				{
+					Type: aws.String("Lambda"),
+					Parameters: []*firehose.ProcessorParameter{
+						{
+							ParameterName:  aws.String("LambdaArn"),
+							ParameterValue: aws.String("valueNotTested"),
+						},
+					},
+				},
+			},
+		},
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRoleEs(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, firehose.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeliveryStreamDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDeliveryStreamConfig_opensearchVPCBasic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
+					testAccCheckDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil, nil),
+					resource.TestCheckResourceAttrPair(resourceName, "opensearch_configuration.0.vpc_config.0.vpc_id", "aws_vpc.opensearch_in_vpc", "id"),
+					resource.TestCheckResourceAttr(resourceName, "opensearch_configuration.0.vpc_config.0.subnet_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "opensearch_configuration.0.vpc_config.0.security_group_ids.#", "2"),
+					resource.TestCheckResourceAttrPair(resourceName, "opensearch_configuration.0.vpc_config.0.role_arn", "aws_iam_role.firehose", "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDeliveryStreamConfig_opensearchVPCUpdate(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
+					testAccCheckDeliveryStreamAttributes(&stream, nil, nil, nil, updatedOpensearchConfig, nil, nil),
+					resource.TestCheckResourceAttrPair(resourceName, "opensearch_configuration.0.vpc_config.0.vpc_id", "aws_vpc.opensearch_in_vpc", "id"),
+					resource.TestCheckResourceAttr(resourceName, "opensearch_configuration.0.vpc_config.0.subnet_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "opensearch_configuration.0.vpc_config.0.security_group_ids.#", "2"),
+					resource.TestCheckResourceAttrPair(resourceName, "opensearch_configuration.0.vpc_config.0.role_arn", "aws_iam_role.firehose", "arn"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccFirehoseDeliveryStream_Opensearch_ErrorOutputPrefix(t *testing.T) {
+	ctx := acctest.Context(t)
+	var stream firehose.DeliveryStreamDescription
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_kinesis_firehose_delivery_stream.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, firehose.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeliveryStreamDestroy_ExtendedS3(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDeliveryStreamConfig_opensearchErrorOutputPrefix(rName, "prefix1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
+					resource.TestCheckResourceAttr(resourceName, "s3_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "s3_configuration.0.error_output_prefix", "prefix1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDeliveryStreamConfig_opensearchErrorOutputPrefix(rName, "prefix2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
+					resource.TestCheckResourceAttr(resourceName, "s3_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "s3_configuration.0.error_output_prefix", "prefix2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDeliveryStreamConfig_opensearchErrorOutputPrefix(rName, ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
+					resource.TestCheckResourceAttr(resourceName, "s3_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "s3_configuration.0.error_output_prefix", ""),
+				),
+			},
+		},
+	})
+}
+
 // Regression test for https://github.com/hashicorp/terraform-provider-aws/issues/1657
 func TestAccFirehoseDeliveryStream_missingProcessing(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -1700,7 +1925,7 @@ func testAccCheckDeliveryStreamExists(ctx context.Context, n string, v *firehose
 	}
 }
 
-func testAccCheckDeliveryStreamAttributes(stream *firehose.DeliveryStreamDescription, s3config interface{}, extendedS3config interface{}, redshiftConfig interface{}, elasticsearchConfig interface{}, splunkConfig interface{}, httpEndpointConfig interface{}) resource.TestCheckFunc {
+func testAccCheckDeliveryStreamAttributes(stream *firehose.DeliveryStreamDescription, s3config interface{}, extendedS3config interface{}, redshiftConfig interface{}, elasticsearchConfig interface{}, opensearchConfig interface{}, splunkConfig interface{}, httpEndpointConfig interface{}) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if !strings.HasPrefix(*stream.DeliveryStreamName, "terraform-kinesis-firehose") && !strings.HasPrefix(*stream.DeliveryStreamName, acctest.ResourcePrefix) {
 			return fmt.Errorf("Bad Stream name: %s", *stream.DeliveryStreamName)
@@ -1806,6 +2031,26 @@ func testAccCheckDeliveryStreamAttributes(stream *firehose.DeliveryStreamDescrip
 				}
 				if !processingConfigMatch {
 					return fmt.Errorf("Mismatch Elasticsearch ProcessingConfiguration.Processors count, expected: %s, got: %s", es, stream.Destinations)
+				}
+			}
+
+			if opensearchConfig != nil {
+				es := opensearchConfig.(*firehose.AmazonopensearchserviceDestinationDescription)
+				// Range over the Stream Destinations, looking for the matching Opensearch destination
+				var match, processingConfigMatch bool
+				for _, d := range stream.Destinations {
+					if d.AmazonopensearchserviceDestinationDescription != nil {
+						match = true
+						if es.ProcessingConfiguration != nil && d.AmazonopensearchserviceDestinationDescription.ProcessingConfiguration != nil {
+							processingConfigMatch = len(es.ProcessingConfiguration.Processors) == len(d.AmazonopensearchserviceDestinationDescription.ProcessingConfiguration.Processors)
+						}
+					}
+				}
+				if !match {
+					return fmt.Errorf("Mismatch Opensearch Buffering Interval, expected: %s, got: %s", es, stream.Destinations)
+				}
+				if !processingConfigMatch {
+					return fmt.Errorf("Mismatch Opensearch ProcessingConfiguration.Processors count, expected: %s, got: %s", es, stream.Destinations)
 				}
 			}
 
@@ -3909,6 +4154,406 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
   }
 }`, rName))
 }
+
+// NEW
+func testAccDeliveryStreamBaseOpensearchConfig(rName string) string {
+	return acctest.ConfigCompose(
+		testAccDeliveryStreamBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_opensearch_domain" "test_cluster" {
+  domain_name = substr(%[1]q, 0, 28)
+
+  cluster_config {
+    instance_type = "m4.large.search"
+  }
+
+  domain_endpoint_options {
+    enforce_https       = true
+    tls_security_policy = "Policy-Min-TLS-1-2-2019-07"
+  }
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+}
+
+resource "aws_iam_role_policy" "firehose-opensearch" {
+  name   = "%[1]s-es"
+  role   = aws_iam_role.firehose.id
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "es:*"
+      ],
+      "Resource": [
+        "${aws_opensearch_domain.test_cluster.arn}",
+        "${aws_opensearch_domain.test_cluster.arn}/*"
+      ]
+    }
+  ]
+}
+EOF
+}
+`, rName))
+}
+
+// Opensearch associated with VPC
+func testAccDeliveryStreamBaseOpensearchVPCConfig(rName string) string {
+	return acctest.ConfigCompose(
+		testAccDeliveryStreamBaseConfig(rName),
+		fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_vpc" "opensearch_in_vpc" {
+  cidr_block = "192.168.0.0/22"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "first" {
+  vpc_id            = aws_vpc.opensearch_in_vpc.id
+  availability_zone = data.aws_availability_zones.available.names[0]
+  cidr_block        = "192.168.0.0/24"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "second" {
+  vpc_id            = aws_vpc.opensearch_in_vpc.id
+  availability_zone = data.aws_availability_zones.available.names[1]
+  cidr_block        = "192.168.1.0/24"
+
+  tags = {
+    Name = "%[1]s-2"
+  }
+}
+
+resource "aws_security_group" "first" {
+  vpc_id = aws_vpc.opensearch_in_vpc.id
+}
+
+resource "aws_security_group" "second" {
+  vpc_id = aws_vpc.opensearch_in_vpc.id
+}
+
+resource "aws_opensearch_domain" "test_cluster" {
+  domain_name = substr(%[1]q, 0, 28)
+
+  cluster_config {
+    instance_count         = 2
+    zone_awareness_enabled = true
+    instance_type          = "t2.small.search"
+  }
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+
+  vpc_options {
+    security_group_ids = [aws_security_group.first.id, aws_security_group.second.id]
+    subnet_ids         = [aws_subnet.first.id, aws_subnet.second.id]
+  }
+}
+
+resource "aws_iam_role_policy" "firehose-opensearch" {
+  name   = "%[1]s-es"
+  role   = aws_iam_role.firehose.id
+  policy = <<EOF
+{
+	"Version":"2012-10-17",
+	"Statement":[
+	   {
+		  "Effect":"Allow",
+		  "Action":[
+			 "es:*"
+		  ],
+		  "Resource":[
+			"${aws_opensearch_domain.test_cluster.arn}",
+			"${aws_opensearch_domain.test_cluster.arn}/*"
+		  ]
+	   },
+	   {
+		  "Effect":"Allow",
+		  "Action":[
+			 "ec2:Describe*",
+			 "ec2:CreateNetworkInterface",
+			 "ec2:CreateNetworkInterfacePermission",
+			 "ec2:DeleteNetworkInterface"
+		  ],
+		  "Resource":[
+			 "*"
+		  ]
+	   }
+	]
+}
+EOF
+}
+`, rName))
+}
+
+func testAccDeliveryStreamConfig_opensearchBasic(rName string) string {
+	return acctest.ConfigCompose(
+		testAccDeliveryStreamBaseOpensearchConfig(rName),
+		fmt.Sprintf(`
+resource "aws_kinesis_firehose_delivery_stream" "test" {
+  depends_on = [aws_iam_role_policy.firehose-opensearch]
+
+  name        = %[1]q
+  destination = "opensearch"
+
+  s3_configuration {
+    role_arn   = aws_iam_role.firehose.arn
+    bucket_arn = aws_s3_bucket.bucket.arn
+  }
+
+  opensearch_configuration {
+    domain_arn = aws_opensearch_domain.test_cluster.arn
+    role_arn   = aws_iam_role.firehose.arn
+    index_name = "test"
+  }
+}
+`, rName))
+}
+
+func testAccDeliveryStreamConfig_opensearchEndpoint(rName string) string {
+	return acctest.ConfigCompose(
+		testAccDeliveryStreamBaseOpensearchConfig(rName),
+		fmt.Sprintf(`
+resource "aws_kinesis_firehose_delivery_stream" "test" {
+  depends_on = [aws_iam_role_policy.firehose-opensearch]
+
+  name        = %[1]q
+  destination = "opensearch"
+
+  s3_configuration {
+    role_arn   = aws_iam_role.firehose.arn
+    bucket_arn = aws_s3_bucket.bucket.arn
+  }
+
+  opensearch_configuration {
+    cluster_endpoint = "https://${aws_opensearch_domain.test_cluster.endpoint}"
+    role_arn         = aws_iam_role.firehose.arn
+    index_name       = "test"
+  }
+}`, rName))
+}
+
+func testAccDeliveryStreamConfig_opensearchEndpointUpdate(rName string) string {
+	return acctest.ConfigCompose(
+		testAccLambdaBasicConfig(rName),
+		testAccDeliveryStreamBaseOpensearchConfig(rName),
+		fmt.Sprintf(`
+resource "aws_kinesis_firehose_delivery_stream" "test" {
+  depends_on = [aws_iam_role_policy.firehose-opensearch]
+
+  name        = %[1]q
+  destination = "opensearch"
+
+  s3_configuration {
+    role_arn   = aws_iam_role.firehose.arn
+    bucket_arn = aws_s3_bucket.bucket.arn
+  }
+
+  opensearch_configuration {
+    cluster_endpoint   = "https://${aws_opensearch_domain.test_cluster.endpoint}"
+    role_arn           = aws_iam_role.firehose.arn
+    index_name         = "test"
+    buffering_interval = 500
+
+    processing_configuration {
+      enabled = false
+
+      processors {
+        type = "Lambda"
+
+        parameters {
+          parameter_name  = "LambdaArn"
+          parameter_value = "${aws_lambda_function.lambda_function_test.arn}:$LATEST"
+        }
+        parameters {
+          parameter_name  = "BufferSizeInMBs"
+          parameter_value = "1"
+        }
+        parameters {
+          parameter_name  = "BufferIntervalInSeconds"
+          parameter_value = "70"
+        }
+      }
+    }
+  }
+}`, rName))
+}
+
+func testAccDeliveryStreamConfig_opensearchErrorOutputPrefix(rName, errorOutputPrefix string) string {
+	return acctest.ConfigCompose(
+		testAccDeliveryStreamBaseOpensearchConfig(rName),
+		fmt.Sprintf(`
+resource "aws_kinesis_firehose_delivery_stream" "test" {
+  depends_on = [aws_iam_role_policy.firehose-opensearch]
+
+  name        = %[1]q
+  destination = "opensearch"
+
+  s3_configuration {
+    role_arn            = aws_iam_role.firehose.arn
+    bucket_arn          = aws_s3_bucket.bucket.arn
+    error_output_prefix = %[2]q
+  }
+
+  opensearch_configuration {
+    domain_arn = aws_opensearch_domain.test_cluster.arn
+    role_arn   = aws_iam_role.firehose.arn
+    index_name = "test"
+  }
+}
+`, rName, errorOutputPrefix))
+}
+
+func testAccDeliveryStreamConfig_opensearchVPCBasic(rName string) string {
+	return acctest.ConfigCompose(
+		testAccDeliveryStreamBaseOpensearchVPCConfig(rName),
+		fmt.Sprintf(`
+resource "aws_kinesis_firehose_delivery_stream" "test" {
+  depends_on = [aws_iam_role_policy.firehose-opensearch]
+
+  name        = %[1]q
+  destination = "opensearch"
+
+  s3_configuration {
+    role_arn   = aws_iam_role.firehose.arn
+    bucket_arn = aws_s3_bucket.bucket.arn
+  }
+
+  opensearch_configuration {
+    domain_arn = aws_opensearch_domain.test_cluster.arn
+    role_arn   = aws_iam_role.firehose.arn
+    index_name = "test"
+
+    vpc_config {
+      subnet_ids         = [aws_subnet.first.id, aws_subnet.second.id]
+      security_group_ids = [aws_security_group.first.id, aws_security_group.second.id]
+      role_arn           = aws_iam_role.firehose.arn
+    }
+  }
+}
+`, rName))
+}
+
+func testAccDeliveryStreamConfig_opensearchUpdate(rName string) string {
+	return acctest.ConfigCompose(
+		testAccLambdaBasicConfig(rName),
+		testAccDeliveryStreamBaseOpensearchConfig(rName),
+		fmt.Sprintf(`
+resource "aws_kinesis_firehose_delivery_stream" "test" {
+  depends_on = [aws_iam_role_policy.firehose-opensearch]
+
+  name        = %[1]q
+  destination = "opensearch"
+
+  s3_configuration {
+    role_arn   = aws_iam_role.firehose.arn
+    bucket_arn = aws_s3_bucket.bucket.arn
+  }
+
+  opensearchconfiguration {
+    domain_arn         = aws_opensearch_domain.test_cluster.arn
+    role_arn           = aws_iam_role.firehose.arn
+    index_name         = "test"
+    buffering_interval = 500
+
+    processing_configuration {
+      enabled = false
+
+      processors {
+        type = "Lambda"
+
+        parameters {
+          parameter_name  = "LambdaArn"
+          parameter_value = "${aws_lambda_function.lambda_function_test.arn}:$LATEST"
+        }
+        parameters {
+          parameter_name  = "BufferSizeInMBs"
+          parameter_value = "1"
+        }
+        parameters {
+          parameter_name  = "BufferIntervalInSeconds"
+          parameter_value = "70"
+        }
+      }
+    }
+  }
+}
+`, rName))
+}
+
+func testAccDeliveryStreamConfig_opensearchVPCUpdate(rName string) string {
+	return acctest.ConfigCompose(
+		testAccLambdaBasicConfig(rName),
+		testAccDeliveryStreamBaseOpensearchVPCConfig(rName),
+		fmt.Sprintf(`
+resource "aws_kinesis_firehose_delivery_stream" "test" {
+  depends_on = [aws_iam_role_policy.firehose-opensearch]
+
+  name        = %[1]q
+  destination = "opensearch"
+
+  s3_configuration {
+    role_arn   = aws_iam_role.firehose.arn
+    bucket_arn = aws_s3_bucket.bucket.arn
+  }
+
+  opensearch_configuration {
+    domain_arn         = aws_opensearch_domain.test_cluster.arn
+    role_arn           = aws_iam_role.firehose.arn
+    index_name         = "test"
+    buffering_interval = 500
+
+    vpc_config {
+      subnet_ids         = [aws_subnet.first.id, aws_subnet.second.id]
+      security_group_ids = [aws_security_group.first.id, aws_security_group.second.id]
+      role_arn           = aws_iam_role.firehose.arn
+    }
+
+    processing_configuration {
+      enabled = false
+      processors {
+        type = "Lambda"
+        parameters {
+          parameter_name  = "LambdaArn"
+          parameter_value = "${aws_lambda_function.lambda_function_test.arn}:$LATEST"
+        }
+        parameters {
+          parameter_name  = "BufferSizeInMBs"
+          parameter_value = "1"
+        }
+        parameters {
+          parameter_name  = "BufferIntervalInSeconds"
+          parameter_value = "70"
+        }
+      }
+    }
+  }
+}`, rName))
+}
+
+// end
 
 func testAccDeliveryStreamConfig_missingProcessingConfiguration(rName string) string {
 	return fmt.Sprintf(`
