@@ -366,7 +366,14 @@ The `count` block supports the following arguments:
 
 The `custom_request_handling` block supports the following arguments:
 
-* `insert_header` - (Required) The `insert_header` blocks used to define HTTP headers added to the request. See [`response_header`](#response_header) below for details.
+* `insert_header` - (Required) The `insert_header` blocks used to define HTTP headers added to the request. See [`insert_header`](#insert_header) below for details.
+
+#### `insert_header`
+
+Each `insert_header` block supports the following arguments. Duplicate header names are not allowed:
+
+* `name` - Name of the custom header. For custom request header insertion, when AWS WAF inserts the header into the request, it prefixes this name `x-amzn-waf-`, to avoid confusion with the headers that are already in the request. For example, for the header name `sample`, AWS WAF inserts the header `x-amzn-waf-sample`.
+* `value` - Value of the custom header.
 
 #### `custom_response`
 
@@ -378,7 +385,7 @@ The `custom_response` block supports the following arguments:
 
 #### `response_header`
 
-Each block supports the following arguments. Duplicate header names are not allowed:
+Each `response_header` block supports the following arguments. Duplicate header names are not allowed:
 
 * `name` - Name of the custom header. For custom request header insertion, when AWS WAF inserts the header into the request, it prefixes this name `x-amzn-waf-`, to avoid confusion with the headers that are already in the request. For example, for the header name `sample`, AWS WAF inserts the header `x-amzn-waf-sample`.
 * `value` - Value of the custom header.
