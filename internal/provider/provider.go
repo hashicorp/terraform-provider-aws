@@ -861,6 +861,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			"aws_route53_resolver_firewall_rules":                  route53resolver.DataSourceResolverFirewallRules(),
 			"aws_route53_resolver_rule":                            route53resolver.DataSourceRule(),
 			"aws_route53_resolver_rules":                           route53resolver.DataSourceRules(),
+			"aws_route53_resolver_query_log_config":                route53resolver.DataSourceQueryLogConfig(),
 
 			"aws_canonical_user_id": s3.DataSourceCanonicalUserID(),
 			"aws_s3_bucket":         s3.DataSourceBucket(),
