@@ -265,7 +265,7 @@ func ResourceTable() *schema.Resource {
 							Optional:     true,
 							Computed:     true,
 							ValidateFunc: verify.ValidARN,
-							ForceNew:     true,
+							// update is equivalent of force a new *replica*
 						},
 						"point_in_time_recovery": {
 							Type:     schema.TypeBool,
@@ -280,6 +280,7 @@ func ResourceTable() *schema.Resource {
 						"region_name": {
 							Type:     schema.TypeString,
 							Required: true,
+							// update is equivalent of force a new *replica*
 						},
 					},
 				},
@@ -1274,15 +1275,14 @@ func updateReplica(ctx context.Context, d *schema.ResourceData, conn *dynamodb.D
 	oRaw, nRaw := d.GetChange("replica")
 	o := oRaw.(*schema.Set)
 	n := nRaw.(*schema.Set)
-	newRegions := replicaRegions(n)
-	oldRegions := replicaRegions(o)
-	// If it is a change in KMS keys causing the diff no updates needed
-	if reflect.DeepEqual(oldRegions, newRegions) {
-		return nil
-	}
 
 	removed := o.Difference(n).List()
 	added := n.Difference(o).List()
+
+	// 1. changing replica kms keys requires recreation of the replica, like ForceNew, but we don't want to ForceNew the *table*
+	// 2. also, in order to update PITR if a replica is encrypted (has KMS key), it requires recreation (how'd u restore from a backup encrypted with a different key?)
+
+	var removeFirst []interface{} // replicas to delete before recreating (~ForceNew without recreating table)
 
 	// For true updates, don't remove and add, just update (i.e., keep in added
 	// but remove from removed)
@@ -1290,10 +1290,23 @@ func updateReplica(ctx context.Context, d *schema.ResourceData, conn *dynamodb.D
 		for j, r := range removed {
 			ma := a.(map[string]interface{})
 			mr := r.(map[string]interface{})
+
+			if ma["region_name"].(string) == mr["region_name"].(string) && (ma["kms_key_arn"].(string) != "" || mr["kms_key_arn"].(string) != "") {
+				removeFirst = append(removeFirst, removed[j])
+				removed = append(removed[:j], removed[j+1:]...)
+				continue
+			}
+
 			if ma["region_name"].(string) == mr["region_name"].(string) {
 				removed = append(removed[:j], removed[j+1:]...)
 				continue
 			}
+		}
+	}
+
+	if len(removeFirst) > 0 { // like ForceNew but doesn't recreate the table
+		if err := deleteReplicas(ctx, conn, d.Id(), removeFirst, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return fmt.Errorf("updating replicas, while deleting: %w", err)
 		}
 	}
 
@@ -1529,9 +1542,8 @@ func deleteReplicas(ctx context.Context, conn *dynamodb.DynamoDB, tableName stri
 }
 
 func replicaPITR(ctx context.Context, conn *dynamodb.DynamoDB, tableName string, region string, tfVersion string) (bool, error) {
-	// At a future time, replicas should probably have a separate resource because,
-	// to manage them, you need connections from the different regions. However, they
-	// have to be created from the starting/main region...
+	// To manage replicas you need connections from the different regions. However, they
+	// have to be created from the starting/main region.
 	session, err := conns.NewSessionForRegion(&conn.Config, region, tfVersion)
 	if err != nil {
 		return false, fmt.Errorf("new session for replica (%s) PITR: %w", region, err)
@@ -1565,8 +1577,7 @@ func replicaPITR(ctx context.Context, conn *dynamodb.DynamoDB, tableName string,
 
 func addReplicaPITRs(ctx context.Context, conn *dynamodb.DynamoDB, tableName string, tfVersion string, replicas []interface{}) ([]interface{}, error) {
 	// This non-standard approach is needed because PITR info for a replica
-	// must come from a region-specific connection. A future table_replica
-	// resource may improve this.
+	// must come from a region-specific connection.
 
 	for i, replicaRaw := range replicas {
 		replica := replicaRaw.(map[string]interface{})
