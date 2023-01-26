@@ -209,6 +209,44 @@ func TestAccDynamoDBTableReplica_tableClass(t *testing.T) {
 	})
 }
 
+func TestAccDynamoDBTableReplica_keys(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	resourceName := "aws_dynamodb_table_replica.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckMultipleRegion(t, 2) },
+		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 2),
+		CheckDestroy:             testAccCheckTableReplicaDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableReplicaConfig_keys(rName, "test1"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTableReplicaExists(ctx, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_arn", "aws_kms_key.test1", "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccTableReplicaConfig_keys(rName, "test2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTableReplicaExists(ctx, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_arn", "aws_kms_key.test2", "arn"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckTableReplicaDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn()
@@ -515,4 +553,69 @@ resource "aws_dynamodb_table_replica" "test" {
   }
 }
 `, rName, class))
+}
+
+func testAccTableReplicaConfig_keys(rName, key string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigMultipleRegionProvider(2),
+		fmt.Sprintf(`
+resource "aws_kms_key" "alternate" {
+  provider                = awsalternate
+  description             = "Julie test KMS key A"
+  multi_region            = false
+  deletion_window_in_days = 7
+}
+
+resource "aws_kms_key" "test1" {
+  description             = "Julie test KMS key Z"
+  multi_region            = false
+  deletion_window_in_days = 7
+}
+
+resource "aws_kms_key" "test2" {
+  description             = "Julie test KMS key Z"
+  multi_region            = false
+  deletion_window_in_days = 7
+}
+
+resource "aws_dynamodb_table" "test" {
+  provider         = awsalternate
+  name             = %[1]q
+  hash_key         = "ParticipantId"
+  range_key        = "SubscriptionId"
+  billing_mode     = "PAY_PER_REQUEST"
+  stream_enabled   = true
+  stream_view_type = "NEW_AND_OLD_IMAGES"
+  table_class      = "STANDARD"
+
+  point_in_time_recovery {
+    enabled = true
+  }
+
+  server_side_encryption {
+    enabled     = true
+    kms_key_arn = aws_kms_key.alternate.arn
+  }
+
+  attribute {
+    name = "ParticipantId"
+    type = "S"
+  }
+
+  attribute {
+    name = "SubscriptionId"
+    type = "S"
+  }
+
+  lifecycle {
+    ignore_changes = [replica]
+  }
+}
+
+resource "aws_dynamodb_table_replica" "test" {
+  global_table_arn       = aws_dynamodb_table.test.arn
+  kms_key_arn            = aws_kms_key.%[2]s.arn
+  point_in_time_recovery = true
+}
+`, rName, key))
 }

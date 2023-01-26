@@ -265,6 +265,7 @@ func ResourceTable() *schema.Resource {
 							Optional:     true,
 							Computed:     true,
 							ValidateFunc: verify.ValidARN,
+							ForceNew:     true,
 						},
 						"point_in_time_recovery": {
 							Type:     schema.TypeBool,

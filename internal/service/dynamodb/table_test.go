@@ -1662,6 +1662,7 @@ func TestAccDynamoDBTable_Replica_singleAddCMK(t *testing.T) {
 	kmsKeyResourceName := "aws_kms_key.test"
 	kmsAliasDatasourceName := "data.aws_kms_alias.dynamodb"
 	kmsKeyReplicaResourceName := "aws_kms_key.replica"
+	kmsKeyReplica2ResourceName := "aws_kms_key.replica2"
 	kmsAliasReplicaDatasourceName := "data.aws_kms_alias.replica"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1686,7 +1687,7 @@ func TestAccDynamoDBTable_Replica_singleAddCMK(t *testing.T) {
 				ExpectNonEmptyPlan: true, // Because of https://github.com/hashicorp/terraform-provider-aws/issues/27850
 			},
 			{
-				Config: testAccTableConfig_replicaCMK(rName),
+				Config: testAccTableConfig_replicaCMKUpdate(rName, "replica"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
@@ -1696,7 +1697,17 @@ func TestAccDynamoDBTable_Replica_singleAddCMK(t *testing.T) {
 				),
 			},
 			{
-				Config:            testAccTableConfig_replicaCMK(rName),
+				Config: testAccTableConfig_replicaCMKUpdate(rName, "replica2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "replica.0.kms_key_arn", kmsKeyReplica2ResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "true"),
+					resource.TestCheckResourceAttrPair(resourceName, "server_side_encryption.0.kms_key_arn", kmsKeyResourceName, "arn"),
+				),
+			},
+			{
+				Config:            testAccTableConfig_replicaCMKUpdate(rName, "replica2"),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -3189,6 +3200,12 @@ resource "aws_kms_key" "replica" {
   deletion_window_in_days = 7
 }
 
+resource "aws_kms_key" "replica2" {
+  provider                = "awsalternate"
+  description             = "%[1]s-3"
+  deletion_window_in_days = 7
+}
+
 resource "aws_dynamodb_table" "test" {
   name             = %[1]q
   hash_key         = "TestTableHashKey"
@@ -3218,6 +3235,62 @@ resource "aws_dynamodb_table" "test" {
   }
 }
 `, rName))
+}
+
+func testAccTableConfig_replicaCMKUpdate(rName, key string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigMultipleRegionProvider(3), // Prevent "Provider configuration not present" errors
+		fmt.Sprintf(`
+data "aws_region" "alternate" {
+  provider = "awsalternate"
+}
+
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+}
+
+resource "aws_kms_key" "replica" {
+  provider                = "awsalternate"
+  description             = "%[1]s-2"
+  deletion_window_in_days = 7
+}
+
+resource "aws_kms_key" "replica2" {
+  provider                = "awsalternate"
+  description             = "%[1]s-3"
+  deletion_window_in_days = 7
+}
+
+resource "aws_dynamodb_table" "test" {
+  name             = %[1]q
+  hash_key         = "TestTableHashKey"
+  billing_mode     = "PAY_PER_REQUEST"
+  stream_enabled   = true
+  stream_view_type = "NEW_AND_OLD_IMAGES"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  replica {
+    region_name = data.aws_region.alternate.name
+    kms_key_arn = aws_kms_key.%[2]s.arn
+  }
+
+  server_side_encryption {
+    enabled     = true
+    kms_key_arn = aws_kms_key.test.arn
+  }
+
+  timeouts {
+    create = "20m"
+    update = "20m"
+    delete = "20m"
+  }
+}
+`, rName, key))
 }
 
 func testAccTableConfig_replicaAmazonManagedKey(rName string) string {

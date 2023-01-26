@@ -68,6 +68,7 @@ func ResourceTableReplica() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: verify.ValidARN,
+				ForceNew:     true,
 			},
 			"point_in_time_recovery": { // direct to replica
 				Type:     schema.TypeBool,
@@ -128,11 +129,9 @@ func resourceTableReplicaCreate(ctx context.Context, d *schema.ResourceData, met
 
 	input := &dynamodb.UpdateTableInput{
 		TableName: aws.String(tableName),
-		ReplicaUpdates: []*dynamodb.ReplicationGroupUpdate{
-			{
-				Create: replicaInput,
-			},
-		},
+		ReplicaUpdates: []*dynamodb.ReplicationGroupUpdate{{
+			Create: replicaInput,
+		}},
 	}
 
 	err = resource.RetryContext(ctx, maxDuration(replicaUpdateTimeout, d.Timeout(schema.TimeoutCreate)), func() *resource.RetryError {
@@ -369,21 +368,19 @@ func resourceTableReplicaUpdate(ctx context.Context, d *schema.ResourceData, met
 
 	viaMainChanges := false
 	viaMainInput := &dynamodb.UpdateReplicationGroupMemberAction{
-		RegionName: aws.String(replicaRegion),
+		RegionName:     aws.String(replicaRegion),
+		KMSMasterKeyId: aws.String(d.Get("kms_key_arn").(string)),
 	}
 
-	if d.HasChange("kms_key_arn") {
+	if d.HasChange("kms_key_arn") && !d.IsNewResource() {
 		viaMainChanges = true
-		viaMainInput.KMSMasterKeyId = aws.String(d.Get("kms_key_arn").(string))
 	}
 
 	if viaMainChanges {
 		input := &dynamodb.UpdateTableInput{
-			ReplicaUpdates: []*dynamodb.ReplicationGroupUpdate{
-				{
-					Update: viaMainInput,
-				},
-			},
+			ReplicaUpdates: []*dynamodb.ReplicationGroupUpdate{{
+				Update: viaMainInput,
+			}},
 			TableName: aws.String(tableName),
 		}
 
