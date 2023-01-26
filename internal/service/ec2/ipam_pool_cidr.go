@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -34,6 +35,10 @@ func ResourceIPAMPoolCIDR() *schema.Resource {
 			// Allocations release are eventually consistent with a max time of 20m.
 			Delete: schema.DefaultTimeout(32 * time.Minute),
 		},
+
+		CustomizeDiff: customdiff.All(
+			resourceIPAMPoolCidrCustomizeDiff,
+		),
 
 		Schema: map[string]*schema.Schema{
 			"cidr": {
@@ -66,10 +71,23 @@ func ResourceIPAMPoolCIDR() *schema.Resource {
 					},
 				},
 			},
+			// This resource's ID is a concatenated id of `<cidr>_<poolid>`
+			// ipam_pool_cidr_id was not part of the inital feature release
+			"ipam_pool_cidr_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"ipam_pool_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+			},
+			"netmask_length": {
+				Type:          schema.TypeInt,
+				Optional:      true,
+				ForceNew:      true,
+				ValidateFunc:  validation.IntBetween(0, 128),
+				ConflictsWith: []string{"cidr"},
 			},
 		},
 	}
@@ -86,6 +104,10 @@ func resourceIPAMPoolCIDRCreate(ctx context.Context, d *schema.ResourceData, met
 
 	if v, ok := d.GetOk("cidr"); ok {
 		input.Cidr = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("netmask_length"); ok {
+		input.NetmaskLength = aws.Int64(int64(v.(int)))
 	}
 
 	if v, ok := d.GetOk("cidr_authorization_context"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -131,6 +153,7 @@ func resourceIPAMPoolCIDRRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	d.Set("cidr", output.Cidr)
+	d.Set("ipam_pool_cidr_id", output.IpamPoolCidrId)
 	d.Set("ipam_pool_id", poolID)
 
 	return diags
@@ -203,4 +226,17 @@ func expandIPAMCIDRAuthorizationContext(tfMap map[string]interface{}) *ec2.IpamC
 	}
 
 	return apiObject
+}
+
+func resourceIPAMPoolCidrCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+	// cidr can be set by a value returned from IPAM or explicitly in config.
+	if diff.Id() != "" && diff.HasChange("cidr") {
+		// If netmask is set then cidr is derived from IPAM, ignore changes.
+		if diff.Get("netmask_length") != 0 {
+			return diff.Clear("cidr")
+		}
+		return diff.ForceNew("cidr")
+	}
+
+	return nil
 }

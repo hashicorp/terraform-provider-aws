@@ -43,6 +43,34 @@ func TestAccIPAMPoolCIDR_basic(t *testing.T) {
 	})
 }
 
+func TestAccIPAMPoolCIDR_basicNetmaskLength(t *testing.T) {
+	var cidr ec2.IpamPoolCidr
+	resourceName := "aws_vpc_ipam_pool_cidr.test"
+	netmaskLength := "24"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIPAMPoolCIDRDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIPAMPoolCIDRConfig_provisionedIPv4NetmaskLength(netmaskLength),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIPAMPoolCIDRExists(resourceName, &cidr),
+					resource.TestCheckResourceAttr(resourceName, "netmask_length", netmaskLength),
+					resource.TestCheckResourceAttrPair(resourceName, "ipam_pool_id", "aws_vpc_ipam_pool.test", "id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccIPAMPoolCIDR_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var cidr ec2.IpamPoolCidr
@@ -184,4 +212,13 @@ resource "aws_vpc_ipam_pool_cidr" "test" {
   cidr         = %[1]q
 }
 `, cidr))
+}
+
+func testAccIPAMPoolCIDRConfig_provisionedIPv4NetmaskLength(netmaskLength string) string {
+	return acctest.ConfigCompose(testAccIPAMPoolCIDRConfig_base, testAccIPAMPoolCIDRConfig_privatePool, fmt.Sprintf(`
+resource "aws_vpc_ipam_pool_cidr" "test" {
+  ipam_pool_id   = aws_vpc_ipam_pool.test.id
+  netmask_length = %[1]q
+}
+`, netmaskLength))
 }
