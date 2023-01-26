@@ -697,9 +697,7 @@ Required when using [dynamic partitioning](https://docs.aws.amazon.com/firehose/
 * `enabled` - (Optional) Enables or disables dynamic partitioning. Defaults to `false`.
 * `retry_duration` - (Optional) Total amount of seconds Firehose spends on retries. Valid values between 0 and 7200. Default is 300.
 
-~> **NOTE:** You can enable dynamic partitioning only when you create a new delivery stream. When adding dynamic partitioning to an existing stream, you must first delete it.
-
-~> **NOTE:** Once you enable dynamic partitioning on a delivery stream, it cannot be disabled on this delivery stream.
+~> **NOTE:** You can enable dynamic partitioning only when you create a new delivery stream. Once you enable dynamic partitioning on a delivery stream, it cannot be disabled on this delivery stream. Therefore, Terraform will recreate the resource whenever dynamic partitioning is enabled or disabled.
 
 ## Attributes Reference
 
