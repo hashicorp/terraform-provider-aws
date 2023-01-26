@@ -22,8 +22,8 @@ const (
 	LifecycleConfigurationRulesStatusNotReady = "NOT_READY"
 )
 
-func retryWhenBucketNotFound(f func() (interface{}, error)) (interface{}, error) {
-	return tfresource.RetryWhenAWSErrCodeEquals(propagationTimeout, f, s3.ErrCodeNoSuchBucket)
+func retryWhenBucketNotFound(ctx context.Context, f func() (interface{}, error)) (interface{}, error) {
+	return tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, f, s3.ErrCodeNoSuchBucket)
 }
 
 func waitForLifecycleConfigurationRulesStatus(ctx context.Context, conn *s3.S3, bucket, expectedBucketOwner string, rules []*s3.LifecycleRule) error {
@@ -37,7 +37,7 @@ func waitForLifecycleConfigurationRulesStatus(ctx context.Context, conn *s3.S3, 
 		NotFoundChecks:            20,
 	}
 
-	_, err := stateConf.WaitForState()
+	_, err := stateConf.WaitForStateContext(ctx)
 
 	return err
 }
@@ -53,7 +53,7 @@ func waitForBucketVersioningStatus(ctx context.Context, conn *s3.S3, bucket, exp
 		Delay:                     1 * time.Second,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*s3.GetBucketVersioningOutput); ok {
 		return output, err

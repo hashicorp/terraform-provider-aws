@@ -83,7 +83,7 @@ func FindImageBuilderByName(ctx context.Context, conn *appstream.AppStream, name
 func findImageBuilders(ctx context.Context, conn *appstream.AppStream, input *appstream.DescribeImageBuildersInput) ([]*appstream.ImageBuilder, error) {
 	var output []*appstream.ImageBuilder
 
-	err := describeImageBuildersPagesWithContext(ctx, conn, input, func(page *appstream.DescribeImageBuildersOutput, lastPage bool) bool {
+	err := describeImageBuildersPages(ctx, conn, input, func(page *appstream.DescribeImageBuildersOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -137,7 +137,7 @@ func FindUserByUserNameAndAuthType(ctx context.Context, conn *appstream.AppStrea
 
 	var result *appstream.User
 
-	err := describeUsersPagesWithContext(ctx, conn, input, func(page *appstream.DescribeUsersOutput, lastPage bool) bool {
+	err := describeUsersPages(ctx, conn, input, func(page *appstream.DescribeUsersOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -182,7 +182,7 @@ func FindFleetStackAssociation(ctx context.Context, conn *appstream.AppStream, f
 	}
 
 	found := false
-	err := listAssociatedStacksPagesWithContext(ctx, conn, input, func(page *appstream.ListAssociatedStacksOutput, lastPage bool) bool {
+	err := listAssociatedStacksPages(ctx, conn, input, func(page *appstream.ListAssociatedStacksOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}

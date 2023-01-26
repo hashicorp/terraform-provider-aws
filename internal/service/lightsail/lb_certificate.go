@@ -27,7 +27,7 @@ func ResourceLoadBalancerCertificate() *schema.Resource {
 		DeleteWithoutTimeout: resourceLoadBalancerCertificateDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -162,7 +162,7 @@ func resourceLoadBalancerCertificateCreate(ctx context.Context, d *schema.Resour
 
 	op := out.Operations[0]
 
-	err = waitOperation(conn, op.Id)
+	err = waitOperation(ctx, conn, op.Id)
 	if err != nil {
 		return create.DiagError(names.Lightsail, lightsail.OperationTypeCreateLoadBalancerTlsCertificate, ResLoadBalancerCertificate, d.Get("name").(string), errors.New("Error waiting for Create Load Balancer request operation"))
 	}
@@ -227,7 +227,7 @@ func resourceLoadBalancerCertificateDelete(ctx context.Context, d *schema.Resour
 
 	op := out.Operations[0]
 
-	err = waitOperation(conn, op.Id)
+	err = waitOperation(ctx, conn, op.Id)
 	if err != nil {
 		return create.DiagError(names.Lightsail, lightsail.OperationTypeCreateLoadBalancerTlsCertificate, ResLoadBalancerCertificate, d.Get("name").(string), errors.New("Error waiting for Delete Load Balancer Certificate request operation"))
 	}

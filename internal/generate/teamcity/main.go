@@ -42,13 +42,13 @@ func main() {
 	serviceConfigs, err := acctestConfigurations(serviceConfigFile)
 
 	if err != nil {
-		g.Fatalf("error reading %s: %s", serviceConfigFile, err.Error())
+		g.Fatalf("error reading %s: %s", serviceConfigFile, err)
 	}
 
 	data, err := common.ReadAllCSVData(namesDataFile)
 
 	if err != nil {
-		g.Fatalf("error reading %s: %s", namesDataFile, err.Error())
+		g.Fatalf("error reading %s: %s", namesDataFile, err)
 	}
 
 	td := TemplateData{}
@@ -102,7 +102,11 @@ func main() {
 	d := g.NewUnformattedFileDestination(servicesAllFile)
 
 	if err := d.WriteTemplate("teamcity", tmpl, td); err != nil {
-		g.Fatalf("error: %s", err.Error())
+		g.Fatalf("generating file (%s): %s", servicesAllFile, err)
+	}
+
+	if err := d.Write(); err != nil {
+		g.Fatalf("generating file (%s): %s", servicesAllFile, err)
 	}
 }
 

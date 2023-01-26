@@ -81,7 +81,7 @@ func resourceDestinationCreate(ctx context.Context, d *schema.ResourceData, meta
 		TargetArn:       aws.String(d.Get("target_arn").(string)),
 	}
 
-	outputRaw, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (interface{}, error) {
 		return conn.PutDestinationWithContext(ctx, input)
 	}, cloudwatchlogs.ErrCodeInvalidParameterException)
 
@@ -95,7 +95,7 @@ func resourceDestinationCreate(ctx context.Context, d *schema.ResourceData, meta
 	// Although PutDestinationInput has a Tags field, specifying tags there results in
 	// "InvalidParameterException: Could not deliver test message to specified destination. Check if the destination is valid."
 	if len(tags) > 0 {
-		if err := UpdateTagsWithContext(ctx, conn, aws.StringValue(destination.Arn), nil, tags); err != nil {
+		if err := UpdateTags(ctx, conn, aws.StringValue(destination.Arn), nil, tags); err != nil {
 			return diag.Errorf("adding CloudWatch Logs Destination (%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -125,7 +125,7 @@ func resourceDestinationRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("role_arn", destination.RoleArn)
 	d.Set("target_arn", destination.TargetArn)
 
-	tags, err := ListTagsWithContext(ctx, conn, d.Get("arn").(string))
+	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
 
 	if err != nil {
 		return diag.Errorf("listing tags for CloudWatch Logs Destination (%s): %s", d.Id(), err)
@@ -155,7 +155,7 @@ func resourceDestinationUpdate(ctx context.Context, d *schema.ResourceData, meta
 			TargetArn:       aws.String(d.Get("target_arn").(string)),
 		}
 
-		_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, propagationTimeout, func() (interface{}, error) {
+		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (interface{}, error) {
 			return conn.PutDestinationWithContext(ctx, input)
 		}, cloudwatchlogs.ErrCodeInvalidParameterException)
 
@@ -167,7 +167,7 @@ func resourceDestinationUpdate(ctx context.Context, d *schema.ResourceData, meta
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			log.Printf("[WARN] failed updating tags for CloudWatch Logs Destination (%s): %s", d.Id(), err)
 		}
 	}

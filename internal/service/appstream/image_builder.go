@@ -227,7 +227,7 @@ func resourceImageBuilderCreate(ctx context.Context, d *schema.ResourceData, met
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	outputRaw, err := tfresource.RetryWhenAWSErrMessageContainsContext(ctx, iamPropagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, iamPropagationTimeout, func() (interface{}, error) {
 		return conn.CreateImageBuilderWithContext(ctx, input)
 	}, appstream.ErrCodeInvalidRoleException, "encountered an error because your IAM role")
 
@@ -291,8 +291,7 @@ func resourceImageBuilderRead(ctx context.Context, d *schema.ResourceData, meta 
 		d.Set("vpc_config", nil)
 	}
 
-	tags, err := ListTagsWithContext(ctx, conn, arn)
-
+	tags, err := ListTags(ctx, conn, arn)
 	if err != nil {
 		return diag.Errorf("listing tags for AppStream ImageBuilder (%s): %s", arn, err)
 	}
@@ -317,7 +316,7 @@ func resourceImageBuilderUpdate(ctx context.Context, d *schema.ResourceData, met
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTagsWithContext(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.Errorf("updating tags for AppStream ImageBuilder (%s): %s", d.Id(), err)
 		}
 	}

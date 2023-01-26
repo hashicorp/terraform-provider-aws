@@ -160,7 +160,7 @@ func resourceACLUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.Errorf("error updating MemoryDB ACL (%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -191,7 +191,7 @@ func resourceACLRead(ctx context.Context, d *schema.ResourceData, meta interface
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(acl.Name)))
 	d.Set("user_names", flex.FlattenStringSet(acl.UserNames))
 
-	tags, err := ListTags(conn, d.Get("arn").(string))
+	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
 
 	if err != nil {
 		return diag.Errorf("error listing tags for MemoryDB ACL (%s): %s", d.Id(), err)

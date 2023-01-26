@@ -1,6 +1,7 @@
 package ec2_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -14,6 +15,7 @@ import (
 )
 
 func TestAccIPAMPoolCIDR_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var cidr ec2.IpamPoolCidr
 	resourceName := "aws_vpc_ipam_pool_cidr.test"
 	cidrBlock := "10.0.0.0/24"
@@ -22,12 +24,12 @@ func TestAccIPAMPoolCIDR_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIPAMPoolCIDRDestroy,
+		CheckDestroy:             testAccCheckIPAMPoolCIDRDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPAMPoolCIDRConfig_provisionedIPv4(cidrBlock),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPAMPoolCIDRExists(resourceName, &cidr),
+					testAccCheckIPAMPoolCIDRExists(ctx, resourceName, &cidr),
 					resource.TestCheckResourceAttr(resourceName, "cidr", cidrBlock),
 					resource.TestCheckResourceAttrPair(resourceName, "ipam_pool_id", "aws_vpc_ipam_pool.test", "id"),
 				),
@@ -42,6 +44,7 @@ func TestAccIPAMPoolCIDR_basic(t *testing.T) {
 }
 
 func TestAccIPAMPoolCIDR_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var cidr ec2.IpamPoolCidr
 	resourceName := "aws_vpc_ipam_pool_cidr.test"
 	cidrBlock := "10.0.0.0/24"
@@ -50,13 +53,13 @@ func TestAccIPAMPoolCIDR_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIPAMPoolCIDRDestroy,
+		CheckDestroy:             testAccCheckIPAMPoolCIDRDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPAMPoolCIDRConfig_provisionedIPv4(cidrBlock),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPAMPoolCIDRExists(resourceName, &cidr),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceIPAMPoolCIDR(), resourceName),
+					testAccCheckIPAMPoolCIDRExists(ctx, resourceName, &cidr),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceIPAMPoolCIDR(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -65,6 +68,7 @@ func TestAccIPAMPoolCIDR_disappears(t *testing.T) {
 }
 
 func TestAccIPAMPoolCIDR_Disappears_ipam(t *testing.T) {
+	ctx := acctest.Context(t)
 	var cidr ec2.IpamPoolCidr
 	resourceName := "aws_vpc_ipam_pool_cidr.test"
 	ipamResourceName := "aws_vpc_ipam.test"
@@ -74,13 +78,13 @@ func TestAccIPAMPoolCIDR_Disappears_ipam(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIPAMPoolCIDRDestroy,
+		CheckDestroy:             testAccCheckIPAMPoolCIDRDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPAMPoolCIDRConfig_provisionedIPv4(cidrBlock),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPAMPoolCIDRExists(resourceName, &cidr),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceIPAM(), ipamResourceName),
+					testAccCheckIPAMPoolCIDRExists(ctx, resourceName, &cidr),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceIPAM(), ipamResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -88,7 +92,7 @@ func TestAccIPAMPoolCIDR_Disappears_ipam(t *testing.T) {
 	})
 }
 
-func testAccCheckIPAMPoolCIDRExists(n string, v *ec2.IpamPoolCidr) resource.TestCheckFunc {
+func testAccCheckIPAMPoolCIDRExists(ctx context.Context, n string, v *ec2.IpamPoolCidr) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -107,7 +111,7 @@ func testAccCheckIPAMPoolCIDRExists(n string, v *ec2.IpamPoolCidr) resource.Test
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
-		output, err := tfec2.FindIPAMPoolCIDRByTwoPartKey(conn, cidrBlock, poolID)
+		output, err := tfec2.FindIPAMPoolCIDRByTwoPartKey(ctx, conn, cidrBlock, poolID)
 
 		if err != nil {
 			return err
@@ -119,34 +123,36 @@ func testAccCheckIPAMPoolCIDRExists(n string, v *ec2.IpamPoolCidr) resource.Test
 	}
 }
 
-func testAccCheckIPAMPoolCIDRDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+func testAccCheckIPAMPoolCIDRDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_vpc_ipam_pool_cidr" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_vpc_ipam_pool_cidr" {
+				continue
+			}
+
+			cidrBlock, poolID, err := tfec2.IPAMPoolCIDRParseResourceID(rs.Primary.ID)
+
+			if err != nil {
+				return err
+			}
+
+			_, err = tfec2.FindIPAMPoolCIDRByTwoPartKey(ctx, conn, cidrBlock, poolID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("IPAM Pool CIDR still exists: %s", rs.Primary.ID)
 		}
 
-		cidrBlock, poolID, err := tfec2.IPAMPoolCIDRParseResourceID(rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		_, err = tfec2.FindIPAMPoolCIDRByTwoPartKey(conn, cidrBlock, poolID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("IPAM Pool CIDR still exists: %s", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
 const testAccIPAMPoolCIDRConfig_base = `

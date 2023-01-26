@@ -30,6 +30,7 @@ func init() {
 }
 
 func sweepUserPoolDomains(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("Error getting client: %s", err)
@@ -40,14 +41,14 @@ func sweepUserPoolDomains(region string) error {
 		MaxResults: aws.Int64(50),
 	}
 
-	err = conn.ListUserPoolsPages(input, func(resp *cognitoidentityprovider.ListUserPoolsOutput, lastPage bool) bool {
+	err = conn.ListUserPoolsPagesWithContext(ctx, input, func(resp *cognitoidentityprovider.ListUserPoolsOutput, lastPage bool) bool {
 		if len(resp.UserPools) == 0 {
 			log.Print("[DEBUG] No Cognito user pools (i.e. domains) to sweep")
 			return false
 		}
 
 		for _, u := range resp.UserPools {
-			output, err := conn.DescribeUserPool(&cognitoidentityprovider.DescribeUserPoolInput{
+			output, err := conn.DescribeUserPoolWithContext(ctx, &cognitoidentityprovider.DescribeUserPoolInput{
 				UserPoolId: u.Id,
 			})
 			if err != nil {
@@ -58,7 +59,7 @@ func sweepUserPoolDomains(region string) error {
 				domain := aws.StringValue(output.UserPool.Domain)
 
 				log.Printf("[INFO] Deleting Cognito user pool domain: %s", domain)
-				_, err := conn.DeleteUserPoolDomain(&cognitoidentityprovider.DeleteUserPoolDomainInput{
+				_, err := conn.DeleteUserPoolDomainWithContext(ctx, &cognitoidentityprovider.DeleteUserPoolDomainInput{
 					Domain:     output.UserPool.Domain,
 					UserPoolId: u.Id,
 				})
@@ -82,6 +83,7 @@ func sweepUserPoolDomains(region string) error {
 }
 
 func sweepUserPools(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -92,7 +94,7 @@ func sweepUserPools(region string) error {
 		MaxResults: aws.Int64(50),
 	}
 
-	err = conn.ListUserPoolsPages(input, func(resp *cognitoidentityprovider.ListUserPoolsOutput, lastPage bool) bool {
+	err = conn.ListUserPoolsPagesWithContext(ctx, input, func(resp *cognitoidentityprovider.ListUserPoolsOutput, lastPage bool) bool {
 		if len(resp.UserPools) == 0 {
 			log.Print("[DEBUG] No Cognito User Pools to sweep")
 			return false
@@ -102,7 +104,7 @@ func sweepUserPools(region string) error {
 			name := aws.StringValue(userPool.Name)
 
 			log.Printf("[INFO] Deleting Cognito User Pool: %s", name)
-			_, err := conn.DeleteUserPool(&cognitoidentityprovider.DeleteUserPoolInput{
+			_, err := conn.DeleteUserPoolWithContext(ctx, &cognitoidentityprovider.DeleteUserPoolInput{
 				UserPoolId: userPool.Id,
 			})
 			if err != nil {
