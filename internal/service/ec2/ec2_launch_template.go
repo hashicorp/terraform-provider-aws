@@ -411,6 +411,13 @@ func ResourceLaunchTemplate() *schema.Resource {
 								ValidateFunc: validation.StringInSlice(ec2.AcceleratorType_Values(), false),
 							},
 						},
+						"allowed_instance_types": {
+							Type:          schema.TypeSet,
+							Optional:      true,
+							MaxItems:      400,
+							Elem:          &schema.Schema{Type: schema.TypeString},
+							ConflictsWith: []string{"instance_requirements.0.excluded_instance_types"},
+						},
 						"bare_metal": {
 							Type:         schema.TypeString,
 							Optional:     true,
@@ -449,10 +456,11 @@ func ResourceLaunchTemplate() *schema.Resource {
 							},
 						},
 						"excluded_instance_types": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							MaxItems: 400,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+							Type:          schema.TypeSet,
+							Optional:      true,
+							MaxItems:      400,
+							Elem:          &schema.Schema{Type: schema.TypeString},
+							ConflictsWith: []string{"instance_requirements.0.allowed_instance_types"},
 						},
 						"instance_generations": {
 							Type:     schema.TypeSet,
@@ -1592,6 +1600,10 @@ func expandInstanceRequirementsRequest(tfMap map[string]interface{}) *ec2.Instan
 		apiObject.AcceleratorTypes = flex.ExpandStringSet(v)
 	}
 
+	if v, ok := tfMap["allowed_instance_types"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.AllowedInstanceTypes = flex.ExpandStringSet(v)
+	}
+
 	if v, ok := tfMap["bare_metal"].(string); ok && v != "" {
 		apiObject.BareMetal = aws.String(v)
 	}
@@ -2586,6 +2598,10 @@ func flattenInstanceRequirements(apiObject *ec2.InstanceRequirements) map[string
 
 	if v := apiObject.AcceleratorTypes; v != nil {
 		tfMap["accelerator_types"] = aws.StringValueSlice(v)
+	}
+
+	if v := apiObject.AllowedInstanceTypes; v != nil {
+		tfMap["allowed_instance_types"] = aws.StringValueSlice(v)
 	}
 
 	if v := apiObject.BareMetal; v != nil {

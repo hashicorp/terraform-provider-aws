@@ -470,6 +470,13 @@ func ResourceSpotFleetRequest() *schema.Resource {
 														ValidateFunc: validation.StringInSlice(ec2.AcceleratorType_Values(), false),
 													},
 												},
+												"allowed_instance_types": {
+													Type:     schema.TypeSet,
+													Optional: true,
+													ForceNew: true,
+													MaxItems: 400,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
 												"bare_metal": {
 													Type:         schema.TypeString,
 													Optional:     true,
@@ -1599,6 +1606,10 @@ func expandInstanceRequirements(tfMap map[string]interface{}) *ec2.InstanceRequi
 
 	if v, ok := tfMap["accelerator_types"].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.AcceleratorTypes = flex.ExpandStringSet(v)
+	}
+
+	if v, ok := tfMap["allowed_instance_types"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.AllowedInstanceTypes = flex.ExpandStringSet(v)
 	}
 
 	if v, ok := tfMap["bare_metal"].(string); ok && v != "" {

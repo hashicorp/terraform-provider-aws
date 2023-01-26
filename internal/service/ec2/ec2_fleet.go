@@ -180,6 +180,12 @@ func ResourceFleet() *schema.Resource {
 														ValidateFunc: validation.StringInSlice(ec2.AcceleratorType_Values(), false),
 													},
 												},
+												"allowed_instance_types": {
+													Type:     schema.TypeSet,
+													Optional: true,
+													MaxItems: 400,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
 												"bare_metal": {
 													Type:         schema.TypeString,
 													Optional:     true,

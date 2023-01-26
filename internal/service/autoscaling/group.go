@@ -429,6 +429,12 @@ func ResourceGroup() *schema.Resource {
 																	ValidateFunc: validation.StringInSlice(autoscaling.AcceleratorType_Values(), false),
 																},
 															},
+															"allowed_instance_types": {
+																Type:     schema.TypeSet,
+																Optional: true,
+																MaxItems: 400,
+																Elem:     &schema.Schema{Type: schema.TypeString},
+															},
 															"bare_metal": {
 																Type:         schema.TypeString,
 																Optional:     true,
@@ -2638,6 +2644,10 @@ func expandInstanceRequirements(tfMap map[string]interface{}) *autoscaling.Insta
 		apiObject.AcceleratorTypes = flex.ExpandStringSet(v)
 	}
 
+	if v, ok := tfMap["allowed_instance_types"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.AllowedInstanceTypes = flex.ExpandStringSet(v)
+	}
+
 	if v, ok := tfMap["bare_metal"].(string); ok && v != "" {
 		apiObject.BareMetal = aws.String(v)
 	}
@@ -3299,6 +3309,10 @@ func flattenInstanceRequirements(apiObject *autoscaling.InstanceRequirements) ma
 
 	if v := apiObject.AcceleratorTypes; v != nil {
 		tfMap["accelerator_types"] = aws.StringValueSlice(v)
+	}
+
+	if v := apiObject.AllowedInstanceTypes; v != nil {
+		tfMap["allowed_instance_types"] = aws.StringValueSlice(v)
 	}
 
 	if v := apiObject.BareMetal; v != nil {
