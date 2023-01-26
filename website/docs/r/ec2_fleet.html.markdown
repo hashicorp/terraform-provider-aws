@@ -40,7 +40,7 @@ The following arguments are supported:
 * `replace_unhealthy_instances` - (Optional) Whether EC2 Fleet should replace unhealthy instances. Defaults to `false`.
 * `spot_options` - (Optional) Nested argument containing Spot configurations. Defined below.
 * `tags` - (Optional) Map of Fleet tags. To tag instances at launch, specify the tags in the Launch Template. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `terminate_instances` - (Optional) Whether to terminate instances for an EC2 Fleet if it is deleted successfully. Defaults to `false`.
+* `terminate_instances` - (Optional) Whether to terminate instances for an EC2 Fleet if it is deleted successfully. if the fleet type = `instant` value must be set to true Defaults to `false`.
 * `terminate_instances_with_expiration` - (Optional) Whether running instances should be terminated when the EC2 Fleet expires. Defaults to `false`.
 * `type` - (Optional) The type of request. Indicates whether the EC2 Fleet only requests the target capacity asynchronous (`request`) or synchronous (`instant`), or also attempts to maintain it asynchronous if capacity reduces. Valid values: `maintain`, `request` , `instant`. Defaults to `maintain`.
 

@@ -52,7 +52,11 @@ func ResourceFleet() *schema.Resource {
 						}
 					}
 				}
-
+				if diff.Get("type").(string) == ec2.FleetTypeInstant {
+					if !diff.Get("terminate_instances").(bool) {
+						return errors.New(`EC2 Fleet of type instant must have terminate_instance set to true`)
+					}
+				}
 				return nil
 			},
 			verify.SetTagsDiff,
@@ -762,20 +766,10 @@ func resourceFleetDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	log.Printf("[DEBUG] Deleting EC2 Fleet: %s", d.Id())
-
-	fleetType := d.Get("type").(string)
-
-	input := &ec2.DeleteFleetsInput{
-		FleetIds: aws.StringSlice([]string{d.Id()}),
-	}
-
-	if fleetType == ec2.FleetTypeInstant {
-		d.Set("terminate_instances", true)
-	}
-
-	input.TerminateInstances = aws.Bool(d.Get("terminate_instances").(bool))
-
-	output, err := conn.DeleteFleetsWithContext(ctx, input)
+	output, err := conn.DeleteFleetsWithContext(ctx, &ec2.DeleteFleetsInput{
+		FleetIds:           aws.StringSlice([]string{d.Id()}),
+		TerminateInstances: aws.Bool(d.Get("terminate_instances").(bool)),
+	})
 
 	if err == nil && output != nil {
 		err = DeleteFleetsError(output.UnsuccessfulFleetDeletions)
@@ -805,7 +799,6 @@ func resourceFleetDelete(ctx context.Context, d *schema.ResourceData, meta inter
 
 	return diags
 }
-
 func expandFleetLaunchTemplateConfigRequests(tfList []interface{}) []*ec2.FleetLaunchTemplateConfigRequest {
 	if len(tfList) == 0 {
 		return nil

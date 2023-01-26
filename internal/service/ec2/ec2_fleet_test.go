@@ -164,7 +164,7 @@ func TestAccEC2Fleet_type_instant(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "launch_template_config.0.launch_template_specification.0.launch_template_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "launch_template_config.0.launch_template_specification.0.version"),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "terminate_instances", "false"),
+					resource.TestCheckResourceAttr(resourceName, "terminate_instances", "true"),
 					resource.TestCheckResourceAttr(resourceName, "terminate_instances_with_expiration", "false"),
 					resource.TestCheckResourceAttr(resourceName, "type", "instant"),
 				),
@@ -2701,13 +2701,6 @@ func TestAccEC2Fleet_type(t *testing.T) {
 			// 		resource.TestCheckResourceAttr(resourceName, "type", "request"),
 			// 	),
 			// },
-			{
-				Config: testAccFleetConfig_type(rName, "instant"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFleetExists(ctx, resourceName, &fleet1),
-					resource.TestCheckResourceAttr(resourceName, "type", "instant"),
-				),
-			},
 		},
 	})
 }
@@ -2916,6 +2909,7 @@ resource "aws_ec2_fleet" "test" {
     total_target_capacity        = 0
   }
   type = "instant" 
+  terminate_instances = true
 }
 `)
 }
