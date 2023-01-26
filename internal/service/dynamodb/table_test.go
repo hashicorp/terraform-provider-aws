@@ -1773,6 +1773,63 @@ func TestAccDynamoDBTable_Replica_pitr(t *testing.T) {
 	})
 }
 
+func TestAccDynamoDBTable_Replica_pitrKMS(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var conf dynamodb.TableDescription
+	resourceName := "aws_dynamodb_table.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 3), // 3 due to shared test configuration
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_replicaPITRKMS(rName, false, true, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
+						"point_in_time_recovery": "true",
+						"region_name":            acctest.AlternateRegion(),
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
+						"point_in_time_recovery": "false",
+						"region_name":            acctest.ThirdRegion(),
+					}),
+					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.0.enabled", "false"),
+				),
+			},
+			{
+				Config: testAccTableConfig_replicaPITRKMS(rName, true, false, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
+						"point_in_time_recovery": "false",
+						"region_name":            acctest.AlternateRegion(),
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
+						"point_in_time_recovery": "true",
+						"region_name":            acctest.ThirdRegion(),
+					}),
+					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.0.enabled", "true"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccDynamoDBTable_Replica_tagsOneOfTwo(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -3375,6 +3432,71 @@ resource "aws_dynamodb_table" "test" {
   replica {
     region_name            = data.aws_region.third.name
     point_in_time_recovery = %[4]t
+  }
+}
+`, rName, mainPITR, replica1, replica2))
+}
+
+func testAccTableConfig_replicaPITRKMS(rName string, mainPITR, replica1, replica2 bool) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigMultipleRegionProvider(3),
+		fmt.Sprintf(`
+data "aws_region" "alternate" {
+  provider = awsalternate
+}
+
+data "aws_region" "third" {
+  provider = awsthird
+}
+
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+}
+
+resource "aws_kms_key" "alternate" {
+  provider                = awsalternate
+  description             = %[1]q
+  deletion_window_in_days = 7
+}
+
+resource "aws_kms_key" "third" {
+  provider                = awsthird
+  description             = %[1]q
+  deletion_window_in_days = 7
+}
+
+resource "aws_dynamodb_table" "test" {
+  name             = %[1]q
+  hash_key         = "TestTableHashKey"
+  billing_mode     = "PAY_PER_REQUEST"
+  stream_enabled   = true
+  stream_view_type = "NEW_AND_OLD_IMAGES"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  point_in_time_recovery {
+    enabled = %[2]t
+  }
+
+  server_side_encryption {
+    enabled     = true
+    kms_key_arn = aws_kms_key.test.arn
+  }
+
+  replica {
+    region_name            = data.aws_region.alternate.name
+    point_in_time_recovery = %[3]t
+    kms_key_arn            = aws_kms_key.alternate.arn
+  }
+
+  replica {
+    region_name            = data.aws_region.third.name
+    point_in_time_recovery = %[4]t
+    kms_key_arn            = aws_kms_key.third.arn
   }
 }
 `, rName, mainPITR, replica1, replica2))
