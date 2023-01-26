@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ssmincidents"
 )
 
-func GetReplicationSetARN(context context.Context, client *ssmincidents.Client) (string, error) {
+func getReplicationSetARN(context context.Context, client *ssmincidents.Client) (string, error) {
 	replicationSets, err := client.ListReplicationSets(context, &ssmincidents.ListReplicationSetsInput{})
 
 	if err != nil {
@@ -24,7 +24,7 @@ func GetReplicationSetARN(context context.Context, client *ssmincidents.Client) 
 	return replicationSets.ReplicationSetArns[0], nil
 }
 
-func GenerateMapFromList[T, U any](list []T, keyFunction func(T) string, valueFunction func(T) U) map[string]U {
+func generateMapFromList[T, U any](list []T, keyFunction func(T) string, valueFunction func(T) U) map[string]U {
 	output := make(map[string]U)
 
 	for _, item := range list {
@@ -34,7 +34,7 @@ func GenerateMapFromList[T, U any](list []T, keyFunction func(T) string, valueFu
 	return output
 }
 
-func GenerateListFromMap[T, U any](m map[string]T, f func(string, T) U) []U {
+func generateListFromMap[T, U any](m map[string]T, f func(string, T) U) []U {
 	output := make([]U, 0)
 
 	for k, v := range m {

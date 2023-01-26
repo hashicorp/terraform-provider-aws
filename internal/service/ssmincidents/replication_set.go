@@ -116,7 +116,7 @@ func resourceReplicationSetCreate(context context.Context, d *schema.ResourceDat
 	client := meta.(*conns.AWSClient).SSMIncidentsClient()
 
 	input := &ssmincidents.CreateReplicationSetInput{
-		Regions: ExpandRegions(d.Get("region").(*schema.Set).List()),
+		Regions: expandRegions(d.Get("region").(*schema.Set).List()),
 	}
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
@@ -171,11 +171,11 @@ func resourceReplicationSetRead(context context.Context, d *schema.ResourceData,
 	d.Set("last_modified_time", replicationSet.LastModifiedTime.String())
 	d.Set("status", replicationSet.Status)
 
-	if err := d.Set("region", FlattenRegions(replicationSet.RegionMap)); err != nil {
+	if err := d.Set("region", flattenRegions(replicationSet.RegionMap)); err != nil {
 		return create.DiagError(names.SSMIncidents, create.ErrActionSetting, ResNameReplicationSet, d.Id(), err)
 	}
 
-	if diagErr := SetResourceDataTags(context, d, meta, client, ResNameReplicationSet); diagErr != nil {
+	if diagErr := setResourceDataTags(context, d, meta, client, ResNameReplicationSet); diagErr != nil {
 		return diagErr
 	}
 
@@ -213,7 +213,7 @@ func resourceReplicationSetUpdate(context context.Context, d *schema.ResourceDat
 	if d.HasChanges("tags_all", "tags") {
 		log.Printf("[DEBUG] Updating SSMIncidents ReplicationSet tags")
 
-		if err := UpdateResourceTags(context, client, d); err != nil {
+		if err := updateResourceTags(context, client, d); err != nil {
 			return create.DiagError(names.SSMIncidents, create.ErrActionUpdating, ResNameReplicationSet, d.Id(), err)
 		}
 	}
@@ -252,7 +252,7 @@ func resourceReplicationSetDelete(context context.Context, d *schema.ResourceDat
 
 // converts a list of regions to a map which maps region name to kms key arn
 func regionListToRegionMap(list []interface{}) map[string]string {
-	return GenerateMapFromList(
+	return generateMapFromList(
 		list,
 		func(region interface{}) string {
 			return region.(map[string]interface{})["name"].(string)
@@ -312,7 +312,7 @@ func updateRegionsInput(d *schema.ResourceData, input *ssmincidents.UpdateReplic
 func resourceReplicationSetImport(context context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
 	client := meta.(*conns.AWSClient).SSMIncidentsClient()
 
-	arn, err := GetReplicationSetARN(context, client)
+	arn, err := getReplicationSetARN(context, client)
 
 	if err != nil {
 		return nil, err

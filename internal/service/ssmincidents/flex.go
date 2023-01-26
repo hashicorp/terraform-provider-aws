@@ -5,12 +5,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ssmincidents/types"
 )
 
-func ExpandRegions(regions []interface{}) map[string]types.RegionMapInputValue {
+func expandRegions(regions []interface{}) map[string]types.RegionMapInputValue {
 	if len(regions) == 0 {
 		return nil
 	}
 
-	return GenerateMapFromList(
+	return generateMapFromList(
 		regions,
 		func(region interface{}) string {
 			return region.(map[string]interface{})["name"].(string)
@@ -29,12 +29,12 @@ func ExpandRegions(regions []interface{}) map[string]types.RegionMapInputValue {
 	)
 }
 
-func FlattenRegions(regions map[string]types.RegionInfo) []map[string]interface{} {
+func flattenRegions(regions map[string]types.RegionInfo) []map[string]interface{} {
 	if len(regions) == 0 {
 		return nil
 	}
 
-	return GenerateListFromMap(
+	return generateListFromMap(
 		regions,
 		func(regionName string, regionData types.RegionInfo) map[string]interface{} {
 			region := make(map[string]interface{})

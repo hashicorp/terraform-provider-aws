@@ -30,7 +30,7 @@ func listResourceTags(context context.Context, client *ssmincidents.Client, arn 
 }
 
 // gets all tags via get request and sets them in Resource Data ssmincidents resource
-func SetResourceDataTags(context context.Context, d *schema.ResourceData, meta interface{}, client *ssmincidents.Client, resourceName string) diag.Diagnostics {
+func setResourceDataTags(context context.Context, d *schema.ResourceData, meta interface{}, client *ssmincidents.Client, resourceName string) diag.Diagnostics {
 	tags, err := listResourceTags(context, client, d.Id())
 	if err != nil {
 		return create.DiagError(names.SSMIncidents, create.ErrActionReading, resourceName, d.Id(), err)
@@ -52,7 +52,7 @@ func SetResourceDataTags(context context.Context, d *schema.ResourceData, meta i
 }
 
 // makes api calls to update Resource Data Tags
-func UpdateResourceTags(context context.Context, client *ssmincidents.Client, d *schema.ResourceData) error {
+func updateResourceTags(context context.Context, client *ssmincidents.Client, d *schema.ResourceData) error {
 	old, new := d.GetChange("tags_all")
 
 	oldTags := tftags.New(old)
