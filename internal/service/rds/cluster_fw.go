@@ -9,6 +9,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	sdkresource "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/float64validator"
@@ -28,11 +30,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwboolplanmodifier "github.com/hashicorp/terraform-provider-aws/internal/framework/boolplanmodifier"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 
 	fwint64planmodifier "github.com/hashicorp/terraform-provider-aws/internal/framework/int64planmodifier"
 	fwstringplanmodifier "github.com/hashicorp/terraform-provider-aws/internal/framework/stringplanmodifier"
@@ -52,6 +57,10 @@ func newResourceCluster(context.Context) (resource.ResourceWithConfigure, error)
 
 	return r, nil
 }
+
+const (
+	ResNameCluster = "Cluster"
+)
 
 type resourceCluster struct {
 	framework.ResourceWithConfigure
@@ -80,6 +89,7 @@ func (r *resourceCluster) Schema(ctx context.Context, request resource.SchemaReq
 				Computed: true,
 			},
 			"arn": schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
 				Computed: true,
 			},
 			"availability_zones": schema.SetAttribute{
@@ -262,6 +272,10 @@ func (r *resourceCluster) Schema(ctx context.Context, request resource.SchemaReq
 				Validators: []validator.String{
 					stringvalidator.OneOf(NetworkType_Values()...),
 				},
+			},
+			"option_group_name": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
 			},
 			"port": schema.Int64Attribute{
 				Optional: true,
@@ -485,7 +499,7 @@ func (r *resourceCluster) Schema(ctx context.Context, request resource.SchemaReq
 // Config and planned state values should be read from the CreateRequest and new state values set on the CreateResponse.
 func (r *resourceCluster) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	var data resourceClusterData
-	conn := r.Meta().RDSClient()
+	conn := r.Meta().RDSConn()
 
 	defaultTagsConfig := r.Meta().DefaultTagsConfig
 	ignoreTagsConfig := r.Meta().IgnoreTagsConfig
@@ -525,6 +539,215 @@ func (r *resourceCluster) Create(ctx context.Context, request resource.CreateReq
 
 		if !data.AvailabilityZones.IsUnknown() && !data.AvailabilityZones.IsNull() {
 			input.AvailabilityZones = flex.ExpandFrameworkStringSet(ctx, data.AvailabilityZones)
+		}
+
+		if !data.BacktrackWindow.IsNull() {
+			input.BacktrackWindow = aws.Int64(data.BacktrackWindow.ValueInt64())
+		}
+
+		if !data.BackupRetentionPeriod.IsNull() {
+			modifyDbClusterInput.BackupRetentionPeriod = aws.Int64(data.BackupRetentionPeriod.ValueInt64())
+			requiresModifyDbCluster = true
+		}
+
+		if !data.DatabaseName.IsUnknown() && !data.DatabaseName.IsNull() {
+			input.DatabaseName = aws.String(data.DatabaseName.ValueString())
+		}
+
+		if !data.DbClusterParameterGroupName.IsUnknown() && !data.DbInstanceParameterGroupName.IsNull() {
+			input.DBClusterParameterGroupName = aws.String(data.DbInstanceParameterGroupName.ValueString())
+		}
+
+		if !data.DbSubnetGroupName.IsUnknown() && !data.DbSubnetGroupName.IsNull() {
+			input.DBSubnetGroupName = aws.String(data.DbSubnetGroupName.ValueString())
+		}
+
+		if !data.EnabledCloudwatchLogsExports.IsNull() {
+			input.EnableCloudwatchLogsExports = flex.ExpandFrameworkStringSet(ctx, data.EnabledCloudwatchLogsExports)
+		}
+
+		if !data.EngineVersion.IsUnknown() && !data.EngineVersion.IsNull() {
+			input.EngineVersion = aws.String(data.EngineVersion.ValueString())
+		}
+
+		if !data.KmsKeyID.IsUnknown() && !data.KmsKeyID.IsNull() {
+			input.KmsKeyId = aws.String(data.KmsKeyID.String())
+		}
+
+		if !data.MasterPassword.IsNull() {
+			modifyDbClusterInput.MasterUserPassword = aws.String(data.MasterPassword.ValueString())
+			requiresModifyDbCluster = true
+		}
+
+		if !data.NetworkType.IsUnknown() && !data.NetworkType.IsNull() {
+			input.NetworkType = aws.String(data.NetworkType.ValueString())
+		}
+
+		if !data.OptionGroupName.IsUnknown() && !data.OptionGroupName.IsNull() {
+			input.OptionGroupName = aws.String(data.OptionGroupName.ValueString())
+		}
+
+		if !data.Port.IsUnknown() && !data.Port.IsNull() {
+			input.Port = aws.Int64(data.Port.ValueInt64())
+		}
+
+		if !data.PreferredBackupWindow.IsUnknown() && !data.PreferredBackupWindow.IsNull() {
+			modifyDbClusterInput.PreferredBackupWindow = aws.String(data.PreferredBackupWindow.ValueString())
+			requiresModifyDbCluster = true
+		}
+
+		if !data.PreferredMaintenanceWindow.IsUnknown() && !data.PreferredMaintenanceWindow.IsNull() {
+			modifyDbClusterInput.PreferredMaintenanceWindow = aws.String(data.PreferredMaintenanceWindow.ValueString())
+			requiresModifyDbCluster = true
+		}
+
+		var scalingConfiguration []scalingConfiguration
+		response.Diagnostics.Append(data.ScalingConfiguration.ElementsAs(ctx, &scalingConfiguration, false)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+		input.ScalingConfiguration = expandScalingConfigurationFramework(scalingConfiguration)
+
+		var serverlessV2ScalingConfiguration []serverlessV2ScalingConfiguration
+		response.Diagnostics.Append(data.ScalingConfiguration.ElementsAs(ctx, &serverlessV2ScalingConfiguration, false)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+		input.ServerlessV2ScalingConfiguration = expandServerlessV2ScalingConfigurationFramework(serverlessV2ScalingConfiguration)
+
+		if !data.VpcSecurityGroupIds.IsUnknown() && !data.VpcSecurityGroupIds.IsNull() {
+			input.VpcSecurityGroupIds = flex.ExpandFrameworkStringSet(ctx, data.VpcSecurityGroupIds)
+		}
+
+		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
+			func() (interface{}, error) {
+				return conn.RestoreDBClusterFromSnapshotWithContext(ctx, input)
+			},
+			errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions")
+
+		if err != nil {
+			response.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.RDS, create.ErrActionCreating, ResNameCluster, identifier, nil),
+				err.Error(),
+				)
+			return
+		}
+	} else if !data.S3Import.IsNull() && len(data.S3Import.Elements()) > 0 {
+		var s3Import []s3Import
+		response.Diagnostics.Append(data.ScalingConfiguration.ElementsAs(ctx, &s3Import, false)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		importValues := s3Import[0]
+		input := &rds.RestoreDBClusterFromS3Input{
+			CopyTagsToSnapshot: aws.Bool(data.CopyTagsToSnapshot.ValueBool()),
+			DBClusterIdentifier: aws.String(identifier),
+			DeletionProtection:  aws.Bool(data.DeletionProtection.ValueBool()),
+			Engine: aws.String(data.Engine.ValueString()),
+			MasterUsername: aws.String(data.MasterUsername.ValueString()),
+			MasterUserPassword: aws.String(data.MasterPassword.ValueString()),
+			S3BucketName: aws.String(importValues.BucketName.ValueString()),
+			S3IngestionRoleArn: aws.String(importValues.IngestionRole.ValueString()),
+			S3Prefix: aws.String(importValues.BucketPrefix.ValueString()),
+			SourceEngine: aws.String(importValues.SourceEngine.ValueString()),
+			SourceEngineVersion: aws.String(importValues.SourceEngineVersion.ValueString()),
+			Tags: Tags(tags.IgnoreAWS()),
+		}
+
+		if !data.AvailabilityZones.IsUnknown() && !data.AvailabilityZones.IsNull() {
+			input.AvailabilityZones = flex.ExpandFrameworkStringSet(ctx, data.AvailabilityZones)
+		}
+
+		if !data.BacktrackWindow.IsNull() {
+			input.BacktrackWindow = aws.Int64(data.BacktrackWindow.ValueInt64())
+		}
+
+		if !data.BackupRetentionPeriod.IsNull() {
+			input.BackupRetentionPeriod = aws.Int64(data.BackupRetentionPeriod.ValueInt64())
+		}
+
+		if !data.DatabaseName.IsUnknown() && !data.DatabaseName.IsNull() {
+			input.DatabaseName = aws.String(data.DatabaseName.ValueString())
+		}
+
+		if !data.DbClusterParameterGroupName.IsUnknown() && !data.DbInstanceParameterGroupName.IsNull() {
+			input.DBClusterParameterGroupName = aws.String(data.DbInstanceParameterGroupName.ValueString())
+		}
+
+		if !data.DbSubnetGroupName.IsUnknown() && !data.DbSubnetGroupName.IsNull() {
+			input.DBSubnetGroupName = aws.String(data.DbSubnetGroupName.ValueString())
+		}
+
+		if !data.EnabledCloudwatchLogsExports.IsNull() {
+			input.EnableCloudwatchLogsExports = flex.ExpandFrameworkStringSet(ctx, data.EnabledCloudwatchLogsExports)
+		}
+
+		if !data.EngineVersion.IsUnknown() && !data.EngineVersion.IsNull() {
+			input.EngineVersion = aws.String(data.EngineVersion.ValueString())
+		}
+
+		if !data.IamDatabaseAuthenticationEnabled.IsNull() {
+			input.EnableIAMDatabaseAuthentication = aws.Bool(data.IamDatabaseAuthenticationEnabled.ValueBool())
+		}
+
+		if !data.KmsKeyID.IsUnknown() && !data.KmsKeyID.IsNull() {
+			input.KmsKeyId = aws.String(data.KmsKeyID.String())
+		}
+
+		if !data.NetworkType.IsUnknown() && !data.NetworkType.IsNull() {
+			input.NetworkType = aws.String(data.NetworkType.ValueString())
+		}
+
+		if !data.Port.IsUnknown() && !data.Port.IsNull() {
+			input.Port = aws.Int64(data.Port.ValueInt64())
+		}
+
+		if !data.PreferredBackupWindow.IsUnknown() && !data.PreferredBackupWindow.IsNull() {
+			input.PreferredBackupWindow = aws.String(data.PreferredBackupWindow.ValueString())
+		}
+
+		if !data.PreferredMaintenanceWindow.IsUnknown() && !data.PreferredMaintenanceWindow.IsNull() {
+			input.PreferredMaintenanceWindow = aws.String(data.PreferredMaintenanceWindow.ValueString())
+		}
+
+		if !data.StorageEncrypted.IsUnknown() && !data.StorageEncrypted.IsNull() {
+			input.StorageEncrypted = aws.Bool(data.StorageEncrypted.ValueBool())
+		}
+
+		if !data.VpcSecurityGroupIds.IsUnknown() && !data.VpcSecurityGroupIds.IsNull() {
+			input.VpcSecurityGroupIds = flex.ExpandFrameworkStringSet(ctx, data.VpcSecurityGroupIds)
+		}
+
+		_, err := tfresource.RetryWhen(ctx, propagationTimeout,
+			func() (interface{}, error) {
+				return conn.RestoreDBClusterFromS3WithContext(ctx, input)
+			},
+			func(err error) (bool, error) {
+				// InvalidParameterValue: Files from the specified Amazon S3 bucket cannot be downloaded.
+				// Make sure that you have created an AWS Identity and Access Management (IAM) role that lets Amazon RDS access Amazon S3 for you.
+				if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "Files from the specified Amazon S3 bucket cannot be downloaded") {
+					return true, err
+				}
+
+				if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "S3_SNAPSHOT_INGESTION") {
+					return true, err
+				}
+
+				if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "S3 bucket cannot be found") {
+					return true, err
+				}
+
+				return false, err
+			},
+		)
+
+		if err != nil {
+			response.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.RDS, create.ErrActionCreating, ResNameCluster, identifier, nil),
+				err.Error(),
+			)
+			return
 		}
 	}
 
@@ -635,6 +858,11 @@ func (r *resourceCluster) ConfigValidators(ctx context.Context) []resource.Confi
 			path.MatchRoot("restore_to_point_in_time").AtListIndex(0).AtName("restore_to_time"),
 			path.MatchRoot("restore_to_point_in_time").AtListIndex(0).AtName("use_latest_restorable_time"),
 		),
+		resourcevalidator.RequiredTogether(
+			path.MatchRoot("s3_import"),
+			path.MatchRoot("master_password"),
+			path.MatchRoot("master_username"),
+			),
 	}
 }
 
@@ -672,15 +900,19 @@ type resourceClusterData struct {
 	IamRoles                         types.Set    `tfsdk:"iam_roles"`
 	ID                               types.String `tfsdk:"id"`
 	Iops                             types.Int64  `tfsdk:"iops"`
-	KmsKeyID                         types.String `tfsdk:"kms_key_id"`
+	KmsKeyID                         fwtypes.ARN `tfsdk:"kms_key_id"`
 	MasterPassword                   types.String `tfsdk:"master_password"`
 	MasterUsername                   types.String `tfsdk:"master_username"`
 	NetworkType                      types.String `tfsdk:"network_type"`
+	OptionGroupName                      types.String `tfsdk:"option_group_name"`
 	Port                             types.Int64  `tfsdk:"port"`
 	PreferredBackupWindow            types.String `tfsdk:"preferred_backup_window"`
 	PreferredMaintenanceWindow       types.String `tfsdk:"preferred_maintenance_window"`
 	ReaderEndpoint                   types.String `tfsdk:"reader_endpoint"`
 	ReplicationSourceIdentifier      types.String `tfsdk:"replication_source_identifier"`
+	S3Import types.List `tfsdk:"s3_import"`
+	ScalingConfiguration types.List `tfsdk:"scaling_configuration"`
+	ServerlessV2ScalingConfiguration types.List `tfsdk:"serverlessv2_scaling_configuration"`
 	SkipFinalSnapshot                types.Bool   `tfsdk:"skip_final_snapshot"`
 	SnapshotIdentifier               types.String `tfsdk:"snapshot_identifier"`
 	SourceRegion                     types.String `tfsdk:"source_region"`
@@ -692,3 +924,47 @@ type resourceClusterData struct {
 
 	Timeouts timeouts.Value `tfsdk:"timeouts"`
 }
+
+type s3Import struct {
+	BucketName types.String	`tfsdk:"bucket_name"`
+	BucketPrefix types.String `tfsdk:"bucket_prefix"`
+	IngestionRole types.String `tfsdk:"ingestion_role"`
+	SourceEngine types.String `tfsdk:"source_engine"`
+	SourceEngineVersion types.String `tfsdk:"source_engine_version"`
+}
+
+type scalingConfiguration struct {
+	AutoPause types.Bool `tfsdk:"auto_pause"`
+	MaxCapacity types.Int64 `tfsdk:"max_capacity"`
+	MinCapacity types.Int64 `tfsdk:"min_capacity"`
+	SecondsUntilAutoPause types.Int64 `tfsdk:"seconds_until_auto_pause"`
+	TimeoutAction types.String `tfsdk:"timeout_action"`
+}
+
+type serverlessV2ScalingConfiguration struct {
+	MaxCapacity types.Float64 `tfsdk:"max_capacity"`
+	MinCapacity types.Float64 `tfsdk:"min_capacity"`
+}
+
+var (
+	s3ImportAttrTypes = map[string]attr.Type{
+		"bucket_name": types.StringType,
+		"bucket_prefix": types.StringType,
+		"ingestion_role": types.StringType,
+		"source_engine": types.StringType,
+		"source_engine_version": types.StringType,
+	}
+
+	scalingConfigurationAttrTypes = map[string]attr.Type{
+		"auto_pause": types.BoolType,
+		"max_capacity": types.Int64Type,
+		"min_capacity": types.Int64Type,
+		"seconds_until_auto_pause": types.Int64Type,
+		"timeout_action": types.StringType,
+	}
+
+	serverlessV2ScalingConfigurationAttrTypes = map[string]attr.Type{
+		"max_capacity": types.Float64Type,
+		"min_capacity": types.Float64Type,
+	}
+)
