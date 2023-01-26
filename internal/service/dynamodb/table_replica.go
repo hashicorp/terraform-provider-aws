@@ -368,12 +368,12 @@ func resourceTableReplicaUpdate(ctx context.Context, d *schema.ResourceData, met
 
 	viaMainChanges := false
 	viaMainInput := &dynamodb.UpdateReplicationGroupMemberAction{
-		RegionName:     aws.String(replicaRegion),
-		KMSMasterKeyId: aws.String(d.Get("kms_key_arn").(string)),
+		RegionName: aws.String(replicaRegion),
 	}
 
-	if d.HasChange("kms_key_arn") && !d.IsNewResource() {
+	if d.HasChange("kms_key_arn") && !d.IsNewResource() { // create ends with update and sets kms_key_arn causing change that is not
 		viaMainChanges = true
+		viaMainInput.KMSMasterKeyId = aws.String(d.Get("kms_key_arn").(string))
 	}
 
 	if viaMainChanges {
