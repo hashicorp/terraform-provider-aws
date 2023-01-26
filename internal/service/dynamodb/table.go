@@ -1325,18 +1325,6 @@ func updateReplica(ctx context.Context, d *schema.ResourceData, conn *dynamodb.D
 	return nil
 }
 
-func replicaRegions(r *schema.Set) []string {
-	var regions []string
-	for _, tfMapRaw := range r.List() {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
-		if !ok {
-			continue
-		}
-		regions = append(regions, tfMap["region_name"].(string))
-	}
-	return regions
-}
-
 func UpdateDiffGSI(oldGsi, newGsi []interface{}, billingMode string) (ops []*dynamodb.GlobalSecondaryIndexUpdate, e error) {
 	// Transform slices into maps
 	oldGsis := make(map[string]interface{})
