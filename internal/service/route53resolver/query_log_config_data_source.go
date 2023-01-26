@@ -133,7 +133,6 @@ func dataSourceQueryLogConfigRead(ctx context.Context, d *schema.ResourceData, m
 		if err := d.Set("tags_all", tags.Map()); err != nil {
 			return create.DiagError(names.AppConfig, create.ErrActionSetting, DSNameQueryLogConfig, configID, err)
 		}
-
 	}
 
 	return nil
