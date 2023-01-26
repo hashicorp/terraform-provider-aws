@@ -79,7 +79,7 @@ func TestAccRoute53ResolverQueryLogConfigDataSource_filter(t *testing.T) {
 func testAccQueryLogConfigDataSourceConfig_basic(rName string, tagKey string, tagValue string) string {
 	return acctest.ConfigCompose(testAccQueryLogConfigConfig_tags1(rName, tagKey, tagValue), `
 data "aws_route53_resolver_query_log_config" "test" {
-	resolver_query_log_config_id = aws_route53_resolver_query_log_config.test.id
+  resolver_query_log_config_id = aws_route53_resolver_query_log_config.test.id
 }
 `)
 }
@@ -87,10 +87,10 @@ data "aws_route53_resolver_query_log_config" "test" {
 func testAccQueryLogConfigDataSourceConfig_filter(rName string, tagKey string, tagValue string) string {
 	return acctest.ConfigCompose(testAccQueryLogConfigConfig_tags1(rName, tagKey, tagValue), `
 data "aws_route53_resolver_query_log_config" "test" {
-	filter {
-		name   = "Name"
-		values = [aws_route53_resolver_query_log_config.test.name]
-	}
+  filter {
+    name   = "Name"
+    values = [aws_route53_resolver_query_log_config.test.name]
+  }
 }
 `)
 }
