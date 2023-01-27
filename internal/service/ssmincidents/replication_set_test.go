@@ -19,32 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccSSMIncidentsReplicationSet_serial(t *testing.T) {
-	testCases := map[string]map[string]func(t *testing.T){
-		"Tests": {
-			"basic":            testAccReplicationSet_basic,
-			"updateDefaultKey": testAccReplicationSet_updateRegionsWithoutCMK,
-			"updateCMK":        testAccReplicationSet_updateRegionsWithCMK,
-			"updateTags":       testAccReplicationSet_updateTags,
-			"updateEmptyTags":  testAccReplicationSet_updateEmptyTags,
-			"disappears":       testAccReplicationSet_disappears,
-		},
-	}
-
-	for group, m := range testCases {
-		m := m
-		t.Run(group, func(t *testing.T) {
-			for name, tc := range m {
-				tc := tc
-				t.Run(name, func(t *testing.T) {
-					tc(t)
-				})
-			}
-		})
-	}
-}
-
-func testAccReplicationSet_basic(t *testing.T) {
+func testReplicationSet_basic(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -88,7 +63,7 @@ func testAccReplicationSet_basic(t *testing.T) {
 	})
 }
 
-func testAccReplicationSet_updateRegionsWithoutCMK(t *testing.T) {
+func testReplicationSet_updateRegionsWithoutCMK(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -172,7 +147,7 @@ func testAccReplicationSet_updateRegionsWithoutCMK(t *testing.T) {
 	})
 }
 
-func testAccReplicationSet_updateRegionsWithCMK(t *testing.T) {
+func testReplicationSet_updateRegionsWithCMK(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -247,7 +222,7 @@ func testAccReplicationSet_updateRegionsWithCMK(t *testing.T) {
 	})
 }
 
-func testAccReplicationSet_updateTags(t *testing.T) {
+func testReplicationSet_updateTags(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -342,7 +317,7 @@ func testAccReplicationSet_updateTags(t *testing.T) {
 	})
 }
 
-func testAccReplicationSet_updateEmptyTags(t *testing.T) {
+func testReplicationSet_updateEmptyTags(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -403,7 +378,7 @@ func testAccReplicationSet_updateEmptyTags(t *testing.T) {
 	})
 }
 
-func testAccReplicationSet_disappears(t *testing.T) {
+func testReplicationSet_disappears(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
