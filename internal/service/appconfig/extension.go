@@ -176,7 +176,7 @@ func resourceExtensionRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("name", out.Name)
 	d.Set("version", out.VersionNumber)
 
-	tags, err := ListTags(conn, *out.Arn)
+	tags, err := ListTags(ctx, conn, *out.Arn)
 
 	if err != nil {
 		return create.DiagError(names.AppConfig, create.ErrActionReading, ResExtension, d.Get("name").(string), errors.New("error listing tags for AppConfig Extension"))

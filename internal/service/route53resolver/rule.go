@@ -29,7 +29,7 @@ func ResourceRule() *schema.Resource {
 		DeleteWithoutTimeout: resourceRuleDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -176,7 +176,7 @@ func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		return diag.Errorf("setting target_ip: %s", err)
 	}
 
-	tags, err := ListTagsWithContext(ctx, conn, arn)
+	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
 		return diag.Errorf("listing tags for Route53 Resolver Rule (%s): %s", arn, err)
@@ -231,7 +231,7 @@ func resourceRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTagsWithContext(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.Errorf("updating Route53 Resolver Rule (%s) tags: %s", d.Id(), err)
 		}
 	}

@@ -398,7 +398,7 @@ func resourceCostCategoryCreate(ctx context.Context, d *schema.ResourceData, met
 		input.ResourceTags = Tags(tags.IgnoreAWS())
 	}
 
-	outputRaw, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, d.Timeout(schema.TimeoutCreate),
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate),
 		func() (interface{}, error) {
 			return conn.CreateCostCategoryDefinitionWithContext(ctx, input)
 		},
@@ -442,7 +442,7 @@ func resourceCostCategoryRead(ctx context.Context, d *schema.ResourceData, meta 
 		return create.DiagError(names.CE, "setting split_charge_rule", ResNameCostCategory, d.Id(), err)
 	}
 
-	tags, err := ListTagsWithContext(ctx, conn, d.Id())
+	tags, err := ListTags(ctx, conn, d.Id())
 
 	if err != nil {
 		return create.DiagError(names.CE, "listing tags", ResNameCostCategory, d.Id(), err)
@@ -492,7 +492,7 @@ func resourceCostCategoryUpdate(ctx context.Context, d *schema.ResourceData, met
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := UpdateTagsWithContext(ctx, conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
 			return create.DiagError(names.CE, create.ErrActionUpdating, ResNameCostCategory, d.Id(), err)
 		}
 	}

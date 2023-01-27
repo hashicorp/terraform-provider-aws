@@ -49,6 +49,7 @@ func init() {
 }
 
 func sweepIPSets(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -59,7 +60,7 @@ func sweepIPSets(region string) error {
 	}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = listIPSetsPages(conn, input, func(page *wafv2.ListIPSetsOutput, lastPage bool) bool {
+	err = listIPSetsPages(ctx, conn, input, func(page *wafv2.ListIPSetsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -87,7 +88,7 @@ func sweepIPSets(region string) error {
 		return fmt.Errorf("error listing WAFv2 IPSets (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping WAFv2 IPSets (%s): %w", region, err)
@@ -97,6 +98,7 @@ func sweepIPSets(region string) error {
 }
 
 func sweepRegexPatternSets(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -107,7 +109,7 @@ func sweepRegexPatternSets(region string) error {
 	}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = listRegexPatternSetsPages(conn, input, func(page *wafv2.ListRegexPatternSetsOutput, lastPage bool) bool {
+	err = listRegexPatternSetsPages(ctx, conn, input, func(page *wafv2.ListRegexPatternSetsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -135,7 +137,7 @@ func sweepRegexPatternSets(region string) error {
 		return fmt.Errorf("error listing WAFv2 RegexPatternSets (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping WAFv2 RegexPatternSets (%s): %w", region, err)
@@ -145,6 +147,7 @@ func sweepRegexPatternSets(region string) error {
 }
 
 func sweepRuleGroups(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -155,7 +158,7 @@ func sweepRuleGroups(region string) error {
 	}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = listRuleGroupsPages(conn, input, func(page *wafv2.ListRuleGroupsOutput, lastPage bool) bool {
+	err = listRuleGroupsPages(ctx, conn, input, func(page *wafv2.ListRuleGroupsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -183,7 +186,7 @@ func sweepRuleGroups(region string) error {
 		return fmt.Errorf("error listing WAFv2 RuleGroups (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping WAFv2 RuleGroups (%s): %w", region, err)
@@ -193,6 +196,7 @@ func sweepRuleGroups(region string) error {
 }
 
 func sweepWebACLs(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -203,7 +207,7 @@ func sweepWebACLs(region string) error {
 	}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = listWebACLsPages(conn, input, func(page *wafv2.ListWebACLsOutput, lastPage bool) bool {
+	err = listWebACLsPages(ctx, conn, input, func(page *wafv2.ListWebACLsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -241,7 +245,7 @@ func sweepWebACLs(region string) error {
 		return fmt.Errorf("error listing WAFv2 WebACLs (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping WAFv2 WebACLs (%s): %w", region, err)

@@ -1,6 +1,3 @@
-//go:build sweep
-// +build sweep
-
 package sweep
 
 import (
@@ -35,7 +32,7 @@ func NewSweepFrameworkResource(factory func(context.Context) (fwresource.Resourc
 }
 
 func (sr *SweepFrameworkResource) Delete(ctx context.Context, timeout time.Duration, optFns ...tfresource.OptionsFunc) error {
-	err := tfresource.RetryContext(ctx, timeout, func() *resource.RetryError {
+	err := tfresource.Retry(ctx, timeout, func() *resource.RetryError {
 		err := DeleteFrameworkResource(sr.factory, sr.id, sr.meta)
 
 		if err != nil {
@@ -80,9 +77,5 @@ func DeleteFrameworkResource(factory func(context.Context) (fwresource.ResourceW
 	response := fwresource.DeleteResponse{}
 	resource.Delete(ctx, fwresource.DeleteRequest{State: state}, &response)
 
-	if response.Diagnostics.HasError() {
-		return fwdiag.DiagnosticsError(response.Diagnostics)
-	}
-
-	return nil
+	return fwdiag.DiagnosticsError(response.Diagnostics)
 }

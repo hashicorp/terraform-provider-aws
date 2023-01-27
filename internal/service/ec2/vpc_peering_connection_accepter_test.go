@@ -13,6 +13,7 @@ import (
 )
 
 func TestAccVPCPeeringConnectionAccepter_sameRegionSameAccount(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v ec2.VpcPeeringConnection
 	resourceNameMainVpc := "aws_vpc.main"                              // Requester
 	resourceNamePeerVpc := "aws_vpc.peer"                              // Accepter
@@ -29,7 +30,7 @@ func TestAccVPCPeeringConnectionAccepter_sameRegionSameAccount(t *testing.T) {
 			{
 				Config: testAccVPCPeeringConnectionAccepterConfig_sameRegionSameAccount(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCPeeringConnectionExists(resourceNameAccepter, &v),
+					testAccCheckVPCPeeringConnectionExists(ctx, resourceNameAccepter, &v),
 					// The aws_vpc_peering_connection documentation says:
 					//	vpc_id - The ID of the requester VPC
 					//	peer_vpc_id - The ID of the VPC with which you are creating the VPC Peering Connection (accepter)
@@ -66,6 +67,7 @@ func TestAccVPCPeeringConnectionAccepter_sameRegionSameAccount(t *testing.T) {
 }
 
 func TestAccVPCPeeringConnectionAccepter_differentRegionSameAccount(t *testing.T) {
+	ctx := acctest.Context(t)
 	var vMain, vPeer ec2.VpcPeeringConnection
 	var providers []*schema.Provider
 	resourceNameMainVpc := "aws_vpc.main"                              // Requester
@@ -86,8 +88,8 @@ func TestAccVPCPeeringConnectionAccepter_differentRegionSameAccount(t *testing.T
 			{
 				Config: testAccVPCPeeringConnectionAccepterConfig_differentRegionSameAccount(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCPeeringConnectionExists(resourceNameConnection, &vMain),
-					testAccCheckVPCPeeringConnectionExistsWithProvider(resourceNameAccepter, &vPeer, acctest.RegionProviderFunc(acctest.AlternateRegion(), &providers)),
+					testAccCheckVPCPeeringConnectionExists(ctx, resourceNameConnection, &vMain),
+					testAccCheckVPCPeeringConnectionExistsWithProvider(ctx, resourceNameAccepter, &vPeer, acctest.RegionProviderFunc(acctest.AlternateRegion(), &providers)),
 					resource.TestCheckResourceAttrPair(resourceNameConnection, "vpc_id", resourceNameMainVpc, "id"),
 					resource.TestCheckResourceAttrPair(resourceNameConnection, "peer_vpc_id", resourceNamePeerVpc, "id"),
 					resource.TestCheckResourceAttrPair(resourceNameConnection, "peer_owner_id", resourceNamePeerVpc, "owner_id"),
@@ -111,6 +113,7 @@ func TestAccVPCPeeringConnectionAccepter_differentRegionSameAccount(t *testing.T
 }
 
 func TestAccVPCPeeringConnectionAccepter_sameRegionDifferentAccount(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v ec2.VpcPeeringConnection
 	resourceNameMainVpc := "aws_vpc.main"                              // Requester
 	resourceNamePeerVpc := "aws_vpc.peer"                              // Accepter
@@ -130,7 +133,7 @@ func TestAccVPCPeeringConnectionAccepter_sameRegionDifferentAccount(t *testing.T
 			{
 				Config: testAccVPCPeeringConnectionAccepterConfig_sameRegionDifferentAccount(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCPeeringConnectionExists(resourceNameConnection, &v),
+					testAccCheckVPCPeeringConnectionExists(ctx, resourceNameConnection, &v),
 					resource.TestCheckResourceAttrPair(resourceNameConnection, "vpc_id", resourceNameMainVpc, "id"),
 					resource.TestCheckResourceAttrPair(resourceNameConnection, "peer_vpc_id", resourceNamePeerVpc, "id"),
 					resource.TestCheckResourceAttrPair(resourceNameConnection, "peer_owner_id", resourceNamePeerVpc, "owner_id"),
@@ -147,6 +150,7 @@ func TestAccVPCPeeringConnectionAccepter_sameRegionDifferentAccount(t *testing.T
 }
 
 func TestAccVPCPeeringConnectionAccepter_differentRegionDifferentAccount(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v ec2.VpcPeeringConnection
 	resourceNameMainVpc := "aws_vpc.main"                              // Requester
 	resourceNamePeerVpc := "aws_vpc.peer"                              // Accepter
@@ -167,7 +171,7 @@ func TestAccVPCPeeringConnectionAccepter_differentRegionDifferentAccount(t *test
 			{
 				Config: testAccVPCPeeringConnectionAccepterConfig_differentRegionDifferentAccount(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCPeeringConnectionExists(resourceNameConnection, &v),
+					testAccCheckVPCPeeringConnectionExists(ctx, resourceNameConnection, &v),
 					resource.TestCheckResourceAttrPair(resourceNameConnection, "vpc_id", resourceNameMainVpc, "id"),
 					resource.TestCheckResourceAttrPair(resourceNameConnection, "peer_vpc_id", resourceNamePeerVpc, "id"),
 					resource.TestCheckResourceAttrPair(resourceNameConnection, "peer_owner_id", resourceNamePeerVpc, "owner_id"),

@@ -35,17 +35,17 @@ const (
 )
 
 // waitOperation waits for an Operation to return Succeeded or Completed
-func waitOperation(conn *lightsail.Lightsail, oid *string) error {
+func waitOperation(ctx context.Context, conn *lightsail.Lightsail, oid *string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{lightsail.OperationStatusStarted},
 		Target:     []string{lightsail.OperationStatusCompleted, lightsail.OperationStatusSucceeded},
-		Refresh:    statusOperation(conn, oid),
+		Refresh:    statusOperation(ctx, conn, oid),
 		Timeout:    OperationTimeout,
 		Delay:      OperationDelay,
 		MinTimeout: OperationMinTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if _, ok := outputRaw.(*lightsail.GetOperationOutput); ok {
 		return err
@@ -59,7 +59,7 @@ func waitDatabaseModified(ctx context.Context, conn *lightsail.Lightsail, db *st
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{DatabaseStateModifying},
 		Target:     []string{DatabaseStateAvailable},
-		Refresh:    statusDatabase(conn, db),
+		Refresh:    statusDatabase(ctx, conn, db),
 		Timeout:    DatabaseTimeout,
 		Delay:      DatabaseDelay,
 		MinTimeout: DatabaseMinTimeout,
@@ -80,7 +80,7 @@ func waitDatabaseBackupRetentionModified(ctx context.Context, conn *lightsail.Li
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{strconv.FormatBool(!target)},
 		Target:     []string{strconv.FormatBool(target)},
-		Refresh:    statusDatabaseBackupRetention(conn, db),
+		Refresh:    statusDatabaseBackupRetention(ctx, conn, db),
 		Timeout:    DatabaseTimeout,
 		Delay:      DatabaseDelay,
 		MinTimeout: DatabaseMinTimeout,
@@ -99,7 +99,7 @@ func waitDatabasePubliclyAccessibleModified(ctx context.Context, conn *lightsail
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{strconv.FormatBool(!target)},
 		Target:     []string{strconv.FormatBool(target)},
-		Refresh:    statusDatabasePubliclyAccessible(conn, db),
+		Refresh:    statusDatabasePubliclyAccessible(ctx, conn, db),
 		Timeout:    DatabaseTimeout,
 		Delay:      DatabaseDelay,
 		MinTimeout: DatabaseMinTimeout,
@@ -233,7 +233,7 @@ func waitInstanceStateWithContext(ctx context.Context, conn *lightsail.Lightsail
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"pending", "stopping"},
 		Target:     []string{"stopped", "running"},
-		Refresh:    statusInstance(conn, id),
+		Refresh:    statusInstance(ctx, conn, id),
 		Timeout:    OperationTimeout,
 		Delay:      OperationDelay,
 		MinTimeout: OperationMinTimeout,
@@ -253,7 +253,7 @@ func waitOperationWithContext(ctx context.Context, conn *lightsail.Lightsail, oi
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{lightsail.OperationStatusStarted},
 		Target:     []string{lightsail.OperationStatusCompleted, lightsail.OperationStatusSucceeded},
-		Refresh:    statusOperation(conn, oid),
+		Refresh:    statusOperation(ctx, conn, oid),
 		Timeout:    OperationTimeout,
 		Delay:      OperationDelay,
 		MinTimeout: OperationMinTimeout,

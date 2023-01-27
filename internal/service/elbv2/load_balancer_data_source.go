@@ -1,7 +1,7 @@
 package elbv2
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"strconv"
 	"time"
@@ -9,8 +9,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -18,7 +20,7 @@ import (
 
 func DataSourceLoadBalancer() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceLoadBalancerRead,
+		ReadWithoutTimeout: dataSourceLoadBalancerRead,
 
 		Timeouts: &schema.ResourceTimeout{
 			Read: schema.DefaultTimeout(20 * time.Minute),
@@ -163,7 +165,8 @@ func DataSourceLoadBalancer() *schema.Resource {
 	}
 }
 
-func dataSourceLoadBalancerRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Conn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -177,10 +180,10 @@ func dataSourceLoadBalancerRead(d *schema.ResourceData, meta interface{}) error 
 		input.Names = aws.StringSlice([]string{v.(string)})
 	}
 
-	results, err := FindLoadBalancers(conn, input)
+	results, err := FindLoadBalancers(ctx, conn, input)
 
 	if err != nil {
-		return fmt.Errorf("reading ELBv2 Load Balancers: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading ELBv2 Load Balancers: %s", err)
 	}
 
 	if len(tagsToMatch) > 0 {
@@ -188,14 +191,14 @@ func dataSourceLoadBalancerRead(d *schema.ResourceData, meta interface{}) error 
 
 		for _, loadBalancer := range results {
 			arn := aws.StringValue(loadBalancer.LoadBalancerArn)
-			tags, err := ListTags(conn, arn)
+			tags, err := ListTags(ctx, conn, arn)
 
 			if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeLoadBalancerNotFoundException) {
 				continue
 			}
 
 			if err != nil {
-				return fmt.Errorf("listing tags for (%s): %w", arn, err)
+				return sdkdiag.AppendErrorf(diags, "listing tags for (%s): %s", arn, err)
 			}
 
 			if !tags.ContainsAll(tagsToMatch) {
@@ -209,7 +212,7 @@ func dataSourceLoadBalancerRead(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	if len(results) != 1 {
-		return fmt.Errorf("Search returned %d results, please revise so only one is returned", len(results))
+		return sdkdiag.AppendErrorf(diags, "Search returned %d results, please revise so only one is returned", len(results))
 	}
 
 	lb := results[0]
@@ -229,18 +232,18 @@ func dataSourceLoadBalancerRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("customer_owned_ipv4_pool", lb.CustomerOwnedIpv4Pool)
 
 	if err := d.Set("subnets", flattenSubnetsFromAvailabilityZones(lb.AvailabilityZones)); err != nil {
-		return fmt.Errorf("setting subnets: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting subnets: %s", err)
 	}
 
 	if err := d.Set("subnet_mapping", flattenSubnetMappingsFromAvailabilityZones(lb.AvailabilityZones)); err != nil {
-		return fmt.Errorf("setting subnet_mapping: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting subnet_mapping: %s", err)
 	}
 
-	attributesResp, err := conn.DescribeLoadBalancerAttributes(&elbv2.DescribeLoadBalancerAttributesInput{
+	attributesResp, err := conn.DescribeLoadBalancerAttributesWithContext(ctx, &elbv2.DescribeLoadBalancerAttributesInput{
 		LoadBalancerArn: aws.String(d.Id()),
 	})
 	if err != nil {
-		return fmt.Errorf("retrieving LB Attributes: %w", err)
+		return sdkdiag.AppendErrorf(diags, "retrieving LB Attributes: %s", err)
 	}
 
 	accessLogMap := map[string]interface{}{
@@ -260,7 +263,7 @@ func dataSourceLoadBalancerRead(d *schema.ResourceData, meta interface{}) error 
 		case "idle_timeout.timeout_seconds":
 			timeout, err := strconv.Atoi(aws.StringValue(attr.Value))
 			if err != nil {
-				return fmt.Errorf("parsing ALB timeout: %w", err)
+				return sdkdiag.AppendErrorf(diags, "parsing ALB timeout: %s", err)
 			}
 			d.Set("idle_timeout", timeout)
 		case "routing.http.drop_invalid_header_fields.enabled":
@@ -288,23 +291,23 @@ func dataSourceLoadBalancerRead(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	if err := d.Set("access_logs", []interface{}{accessLogMap}); err != nil {
-		return fmt.Errorf("setting access_logs: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting access_logs: %s", err)
 	}
 
-	tags, err := ListTags(conn, d.Id())
+	tags, err := ListTags(ctx, conn, d.Id())
 
 	if verify.ErrorISOUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] Unable to list tags for ELBv2 Load Balancer %s: %s", d.Id(), err)
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("listing tags for (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

@@ -1250,6 +1250,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			"aws_datasync_location_fsx_windows_file_system": datasync.ResourceLocationFSxWindowsFileSystem(),
 			"aws_datasync_location_hdfs":                    datasync.ResourceLocationHDFS(),
 			"aws_datasync_location_nfs":                     datasync.ResourceLocationNFS(),
+			"aws_datasync_location_object_storage":          datasync.ResourceLocationObjectStorage(),
 			"aws_datasync_location_s3":                      datasync.ResourceLocationS3(),
 			"aws_datasync_location_smb":                     datasync.ResourceLocationSMB(),
 			"aws_datasync_task":                             datasync.ResourceTask(),
@@ -1601,7 +1602,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			"aws_guardduty_organization_admin_account": guardduty.ResourceOrganizationAdminAccount(),
 			"aws_guardduty_organization_configuration": guardduty.ResourceOrganizationConfiguration(),
 			"aws_guardduty_publishing_destination":     guardduty.ResourcePublishingDestination(),
-			"aws_guardduty_threatintelset":             guardduty.ResourceThreatintelset(),
+			"aws_guardduty_threatintelset":             guardduty.ResourceThreatIntelSet(),
 
 			"aws_iam_access_key":                  iam.ResourceAccessKey(),
 			"aws_iam_account_alias":               iam.ResourceAccountAlias(),

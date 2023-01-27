@@ -1,15 +1,17 @@
 package opsworks
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/opsworks"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func InstanceStatus(conn *opsworks.OpsWorks, instanceID string) resource.StateRefreshFunc {
+func InstanceStatus(ctx context.Context, conn *opsworks.OpsWorks, instanceID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		resp, err := conn.DescribeInstances(&opsworks.DescribeInstancesInput{
+		resp, err := conn.DescribeInstancesWithContext(ctx, &opsworks.DescribeInstancesInput{
 			InstanceIds: []*string{aws.String(instanceID)},
 		})
 

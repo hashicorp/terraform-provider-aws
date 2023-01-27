@@ -1,6 +1,8 @@
 package s3outposts
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3outposts"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -12,9 +14,9 @@ const (
 )
 
 // statusEndpoint fetches the Endpoint and its Status
-func statusEndpoint(conn *s3outposts.S3Outposts, endpointArn string) resource.StateRefreshFunc {
+func statusEndpoint(ctx context.Context, conn *s3outposts.S3Outposts, endpointArn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		endpoint, err := FindEndpoint(conn, endpointArn)
+		endpoint, err := FindEndpoint(ctx, conn, endpointArn)
 
 		if err != nil {
 			return nil, endpointStatusUnknown, err
