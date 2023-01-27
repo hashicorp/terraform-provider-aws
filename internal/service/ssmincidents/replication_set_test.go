@@ -383,6 +383,8 @@ func testReplicationSet_disappears(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
+	context := context.Background()
+
 	resourceName := "aws_ssmincidents_replication_set.test"
 	region1 := acctest.Region()
 	region2 := acctest.AlternateRegion()
@@ -400,7 +402,7 @@ func testReplicationSet_disappears(t *testing.T) {
 				Config: testAccReplicationSetConfig_basicTwoRegion(region1, region2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationSetExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfssmincidents.ResourceReplicationSet(), resourceName),
+					acctest.CheckResourceDisappears(context, acctest.Provider, tfssmincidents.ResourceReplicationSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
