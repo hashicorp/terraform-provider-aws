@@ -6,6 +6,10 @@ resource/aws_dynamodb_table: Fix to allow updating of `replica.*.point_in_time_r
 resource/aws_dynamodb_table: Fix to allow updating of `replica.*.kms_key_arn`
 ```
 
+```release-note:bug
+resource/aws_dynamodb_table: Fix perpetual diffs when using default AWS-managed keys
+```
+
 ```release-note:note
 resource/aws_dynamodb_table: Updating `replica.*.kms_key_arn` or `replica.*.point_in_time_recovery`, when the `replica`'s `kms_key_arn` is set, requires recreating the replica.
 ```
