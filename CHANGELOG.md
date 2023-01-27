@@ -1,5 +1,13 @@
 ## 4.52.0 (Unreleased)
 
+NOTES:
+
+* resource/aws_dynamodb_table: In the past, in certain situations, `kms_key_arn` could be populated with the default DynamoDB key `alias/aws/dynamodb`. This was an error because it would then be sent back to AWS and should not be. ([#29102](https://github.com/hashicorp/terraform-provider-aws/issues/29102))
+* resource/aws_dynamodb_table: In the past, in certain situations, `server_side_encryption.0.kms_key_arn` or `replica.*.kms_key_arn` could be populated with the default DynamoDB key `alias/aws/dynamodb`. This was an error because it would then be sent back to AWS and should not be. ([#29102](https://github.com/hashicorp/terraform-provider-aws/issues/29102))
+* resource/aws_dynamodb_table: Updating `replica.*.kms_key_arn` or `replica.*.point_in_time_recovery`, when the `replica`'s `kms_key_arn` is set, requires recreating the replica. ([#29102](https://github.com/hashicorp/terraform-provider-aws/issues/29102))
+* resource/aws_dynamodb_table_replica: Updating `kms_key_arn` forces replacement of the replica now as required to re-encrypt the replica ([#29102](https://github.com/hashicorp/terraform-provider-aws/issues/29102))
+* resource/aws_dynamodb_table_replica: Updating `kms_key_arn` forces replacement of the replica now as required to re-encrypt the replica ([#29102](https://github.com/hashicorp/terraform-provider-aws/issues/29102))
+
 FEATURES:
 
 * **New Data Source:** `aws_auditmanager_framework` ([#28989](https://github.com/hashicorp/terraform-provider-aws/issues/28989))
@@ -14,7 +22,12 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * resource/aws_api_gateway_integration: Prevent drift of `connection_type` attribute when `aws_api_gateway_deployment` `triggers` are used ([#29016](https://github.com/hashicorp/terraform-provider-aws/issues/29016))
+* resource/aws_dynamodb_table: Fix perpetual diffs when using default AWS-managed keys ([#29102](https://github.com/hashicorp/terraform-provider-aws/issues/29102))
+* resource/aws_dynamodb_table: Fix to allow updating of `replica.*.kms_key_arn` ([#29102](https://github.com/hashicorp/terraform-provider-aws/issues/29102))
+* resource/aws_dynamodb_table: Fix to allow updating of `replica.*.point_in_time_recovery` when a `replica` has `kms_key_arn` set ([#29102](https://github.com/hashicorp/terraform-provider-aws/issues/29102))
 * resource/aws_dynamodb_table: Fix unexpected state 'DISABLED' error when waiting for PITR to update ([#29086](https://github.com/hashicorp/terraform-provider-aws/issues/29086))
+* resource/aws_dynamodb_table_replica: Fix to allow creation of the replica without errors when `kms_key_arn` is set ([#29102](https://github.com/hashicorp/terraform-provider-aws/issues/29102))
+* resource/aws_dynamodb_table_replica: Fix to allow updating of `kms_key_arn` ([#29102](https://github.com/hashicorp/terraform-provider-aws/issues/29102))
 * resource/aws_medialive_channel: Add missing `rate_control_mode` in `acc_settings` for `audio_descriptions` ([#29051](https://github.com/hashicorp/terraform-provider-aws/issues/29051))
 * resource/aws_medialive_input: Fix eventual consistency error when updating ([#29051](https://github.com/hashicorp/terraform-provider-aws/issues/29051))
 * resource/aws_vpc_ipam_pool_cidr_allocation: Added support for eventual consistency on read operations after create. ([#29022](https://github.com/hashicorp/terraform-provider-aws/issues/29022))
