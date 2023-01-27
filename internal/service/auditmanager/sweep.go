@@ -44,6 +44,10 @@ func init() {
 		Name: "aws_auditmanager_framework",
 		F:    sweepFrameworks,
 	})
+	resource.AddTestSweepers("aws_auditmanager_framework_share", &resource.Sweeper{
+		Name: "aws_auditmanager_framework_share",
+		F:    sweepFrameworkShares,
+	})
 }
 
 // isCompleteSetupError checks whether the returned error message indicates
@@ -284,6 +288,49 @@ func sweepFrameworks(region string) error {
 	}
 	if sweep.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping AuditManager Frameworks sweep for %s: %s", region, errs)
+		return nil
+	}
+
+	return errs.ErrorOrNil()
+}
+
+func sweepFrameworkShares(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		fmt.Errorf("error getting client: %s", err)
+	}
+
+	conn := client.(*conns.AWSClient).AuditManagerClient()
+	sweepResources := make([]sweep.Sweepable, 0)
+	in := &auditmanager.ListAssessmentFrameworkShareRequestsInput{RequestType: types.ShareRequestTypeSent}
+	var errs *multierror.Error
+
+	pages := auditmanager.NewListAssessmentFrameworkShareRequestsPaginator(conn, in)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if sweep.SkipSweepError(err) || isCompleteSetupError(err) {
+			log.Printf("[WARN] Skipping AuditManager Framework Shares sweep for %s: %s", region, err)
+			return nil
+		}
+		if err != nil {
+			return fmt.Errorf("error retrieving AuditManager Framework Shares: %w", err)
+		}
+
+		for _, share := range page.AssessmentFrameworkShareRequests {
+			id := aws.ToString(share.Id)
+
+			log.Printf("[INFO] Deleting AuditManager Framework Share: %s", id)
+			sweepResources = append(sweepResources, sweep.NewSweepFrameworkResource(newResourceFrameworkShare, id, client))
+		}
+	}
+
+	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping AuditManager Framework Shares for %s: %w", region, err))
+	}
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping AuditManager Framework Shares sweep for %s: %s", region, errs)
 		return nil
 	}
 
