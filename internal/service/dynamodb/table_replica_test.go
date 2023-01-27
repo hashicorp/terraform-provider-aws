@@ -564,7 +564,7 @@ resource "aws_dynamodb_table" "test" {
   }
 
   server_side_encryption {
-    enabled     = true
+    enabled = true
   }
 
   lifecycle {
