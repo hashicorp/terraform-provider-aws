@@ -6,7 +6,6 @@ NOTES:
 * resource/aws_dynamodb_table: In the past, in certain situations, `server_side_encryption.0.kms_key_arn` or `replica.*.kms_key_arn` could be populated with the default DynamoDB key `alias/aws/dynamodb`. This was an error because it would then be sent back to AWS and should not be. ([#29102](https://github.com/hashicorp/terraform-provider-aws/issues/29102))
 * resource/aws_dynamodb_table: Updating `replica.*.kms_key_arn` or `replica.*.point_in_time_recovery`, when the `replica`'s `kms_key_arn` is set, requires recreating the replica. ([#29102](https://github.com/hashicorp/terraform-provider-aws/issues/29102))
 * resource/aws_dynamodb_table_replica: Updating `kms_key_arn` forces replacement of the replica now as required to re-encrypt the replica ([#29102](https://github.com/hashicorp/terraform-provider-aws/issues/29102))
-* resource/aws_dynamodb_table_replica: Updating `kms_key_arn` forces replacement of the replica now as required to re-encrypt the replica ([#29102](https://github.com/hashicorp/terraform-provider-aws/issues/29102))
 
 FEATURES:
 
