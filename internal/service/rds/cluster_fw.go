@@ -5,6 +5,7 @@ package rds
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
@@ -37,14 +38,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwboolplanmodifier "github.com/hashicorp/terraform-provider-aws/internal/framework/boolplanmodifier"
+	fwint64planmodifier "github.com/hashicorp/terraform-provider-aws/internal/framework/int64planmodifier"
+	fwstringplanmodifier "github.com/hashicorp/terraform-provider-aws/internal/framework/stringplanmodifier"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
-
-	fwint64planmodifier "github.com/hashicorp/terraform-provider-aws/internal/framework/int64planmodifier"
-	fwstringplanmodifier "github.com/hashicorp/terraform-provider-aws/internal/framework/stringplanmodifier"
 )
 
 func init() {
@@ -567,8 +567,8 @@ func (r *resourceCluster) Create(ctx context.Context, request resource.CreateReq
 			input.DatabaseName = aws.String(data.DatabaseName.ValueString())
 		}
 
-		if !data.DbClusterParameterGroupName.IsUnknown() && !data.DbInstanceParameterGroupName.IsNull() {
-			input.DBClusterParameterGroupName = aws.String(data.DbInstanceParameterGroupName.ValueString())
+		if !data.DbClusterParameterGroupName.IsUnknown() && !data.DbClusterParameterGroupName.IsNull() {
+			input.DBClusterParameterGroupName = aws.String(data.DbClusterParameterGroupName.ValueString())
 		}
 
 		if !data.DbSubnetGroupName.IsUnknown() && !data.DbSubnetGroupName.IsNull() {
@@ -684,8 +684,8 @@ func (r *resourceCluster) Create(ctx context.Context, request resource.CreateReq
 			input.DatabaseName = aws.String(data.DatabaseName.ValueString())
 		}
 
-		if !data.DbClusterParameterGroupName.IsUnknown() && !data.DbInstanceParameterGroupName.IsNull() {
-			input.DBClusterParameterGroupName = aws.String(data.DbInstanceParameterGroupName.ValueString())
+		if !data.DbClusterParameterGroupName.IsUnknown() && !data.DbClusterParameterGroupName.IsNull() {
+			input.DBClusterParameterGroupName = aws.String(data.DbClusterParameterGroupName.ValueString())
 		}
 
 		if !data.DbSubnetGroupName.IsUnknown() && !data.DbSubnetGroupName.IsNull() {
@@ -795,8 +795,8 @@ func (r *resourceCluster) Create(ctx context.Context, request resource.CreateReq
 			requiresModifyDbCluster = true
 		}
 
-		if !data.DbClusterParameterGroupName.IsUnknown() && !data.DbInstanceParameterGroupName.IsNull() {
-			input.DBClusterParameterGroupName = aws.String(data.DbInstanceParameterGroupName.ValueString())
+		if !data.DbClusterParameterGroupName.IsUnknown() && !data.DbClusterParameterGroupName.IsNull() {
+			input.DBClusterParameterGroupName = aws.String(data.DbClusterParameterGroupName.ValueString())
 		}
 
 		if !data.DbSubnetGroupName.IsUnknown() && !data.DbSubnetGroupName.IsNull() {
@@ -907,8 +907,8 @@ func (r *resourceCluster) Create(ctx context.Context, request resource.CreateReq
 			input.DBClusterInstanceClass = aws.String(data.DbClusterInstanceClass.ValueString())
 		}
 
-		if !data.DbClusterParameterGroupName.IsUnknown() && !data.DbInstanceParameterGroupName.IsNull() {
-			input.DBClusterParameterGroupName = aws.String(data.DbInstanceParameterGroupName.ValueString())
+		if !data.DbClusterParameterGroupName.IsUnknown() && !data.DbClusterParameterGroupName.IsNull() {
+			input.DBClusterParameterGroupName = aws.String(data.DbClusterParameterGroupName.ValueString())
 		}
 
 		if !data.DbSubnetGroupName.IsUnknown() && !data.DbSubnetGroupName.IsNull() {
@@ -1121,22 +1121,81 @@ func (r *resourceCluster) Read(ctx context.Context, request resource.ReadRequest
 // Update is called to update the state of the resource.
 // Config, planned state, and prior state values should be read from the UpdateRequest and new state values set on the UpdateResponse.
 func (r *resourceCluster) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	var old, new resourceClusterData
+	var plan, state resourceClusterData
 
-	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
-
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
 
 	if response.Diagnostics.HasError() {
 		return
 	}
-	// updateTimeout := r.UpdateTimeout(ctx, new.Timeouts)
 
-	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
+	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
+
+	if response.Diagnostics.HasError() {
+		return
+	}
+	//updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
+
+	input := &rds.ModifyDBClusterInput{
+		ApplyImmediately:    aws.Bool(plan.ApplyImmediately.ValueBool()),
+		DBClusterIdentifier: aws.String(plan.ID.ValueString()),
+	}
+
+	if !plan.AllocatedStorage.Equal(state.AllocatedStorage) {
+		input.AllocatedStorage = aws.Int64(plan.AllocatedStorage.ValueInt64())
+	}
+
+	if !plan.AllowMajorVersionUpgrade.IsNull() {
+		input.AllowMajorVersionUpgrade = aws.Bool(plan.AllowMajorVersionUpgrade.ValueBool())
+	}
+
+	if !plan.BacktrackWindow.Equal(state.BacktrackWindow) {
+		input.BacktrackWindow = aws.Int64(plan.BacktrackWindow.ValueInt64())
+	}
+
+	if !plan.BackupRetentionPeriod.Equal(state.BackupRetentionPeriod) {
+		input.BackupRetentionPeriod = aws.Int64(plan.BackupRetentionPeriod.ValueInt64())
+	}
+
+	if !plan.CopyTagsToSnapshot.Equal(state.CopyTagsToSnapshot) {
+		input.CopyTagsToSnapshot = aws.Bool(plan.CopyTagsToSnapshot.ValueBool())
+	}
+
+	if !plan.DbClusterInstanceClass.Equal(state.DbClusterInstanceClass) {
+		input.DBClusterInstanceClass = aws.String(plan.DbClusterInstanceClass.ValueString())
+	}
+
+	if !plan.DbClusterParameterGroupName.Equal(state.DbClusterParameterGroupName) {
+		input.DBClusterParameterGroupName = aws.String(plan.DbClusterParameterGroupName.ValueString())
+	}
+
+	if !plan.DbInstanceParameterGroupName.Equal(state.DbInstanceParameterGroupName) {
+		input.DBInstanceParameterGroupName = aws.String(plan.DbInstanceParameterGroupName.ValueString())
+	}
+
+	if !plan.DeletionProtection.Equal(state.DeletionProtection) {
+		input.DeletionProtection = aws.Bool(plan.DeletionProtection.ValueBool())
+	}
+
+	if !plan.EnableGlobalWriteForwarding.Equal(state.EnableGlobalWriteForwarding) {
+		input.EnableGlobalWriteForwarding = aws.Bool(plan.EnableGlobalWriteForwarding.ValueBool())
+	}
+
+	if !plan.EnableHttpEndpoint.Equal(state.EnableHttpEndpoint) {
+		input.EnableHttpEndpoint = aws.Bool(plan.EnableHttpEndpoint.ValueBool())
+	}
+
+	if !plan.EnabledCloudwatchLogsExports.Equal(state.EnabledCloudwatchLogsExports) {
+		o := flex.ExpandFrameworkStringValueSet(ctx, state.EnabledCloudwatchLogsExports)
+		n := flex.ExpandFrameworkStringValueSet(ctx, state.EnabledCloudwatchLogsExports)
+
+		input.CloudwatchLogsExportConfiguration = &rds.CloudwatchLogsExportConfiguration{
+			DisableLogTypes: aws.StringSlice(o.Difference(n)),
+			EnableLogTypes:  aws.StringSlice(n.Difference(o)),
+		}
+	}
+
+	response.Diagnostics.Append(response.State.Set(ctx, &plan)...)
 }
 
 // Delete is called when the provider must delete the resource.
@@ -1333,20 +1392,20 @@ type serverlessV2ScalingConfiguration struct {
 }
 
 var (
-	restoreToPointInTimeTypes = map[string]attr.Type{
-		"restore_to_time":            types.StringType,
-		"restore_type":               types.StringType,
-		"source_cluster_identifier":  types.StringType,
-		"use_latest_restorable_time": types.BoolType,
-	}
-
-	s3ImportAttrTypes = map[string]attr.Type{
-		"bucket_name":           types.StringType,
-		"bucket_prefix":         types.StringType,
-		"ingestion_role":        types.StringType,
-		"source_engine":         types.StringType,
-		"source_engine_version": types.StringType,
-	}
+	//restoreToPointInTimeTypes = map[string]attr.Type{
+	//	"restore_to_time":            types.StringType,
+	//	"restore_type":               types.StringType,
+	//	"source_cluster_identifier":  types.StringType,
+	//	"use_latest_restorable_time": types.BoolType,
+	//}
+	//
+	//s3ImportAttrTypes = map[string]attr.Type{
+	//	"bucket_name":           types.StringType,
+	//	"bucket_prefix":         types.StringType,
+	//	"ingestion_role":        types.StringType,
+	//	"source_engine":         types.StringType,
+	//	"source_engine_version": types.StringType,
+	//}
 
 	scalingConfigurationAttrTypes = map[string]attr.Type{
 		"auto_pause":               types.BoolType,
@@ -1419,7 +1478,9 @@ func (r *resourceClusterData) refreshFromOutput(ctx context.Context, meta *conns
 	r.NetworkType = flex.StringToFrameworkLegacy(ctx, out.NetworkType)
 	r.Port = flex.Int64ToFrameworkLegacy(ctx, out.Port)
 	r.PreferredBackupWindow = flex.StringToFrameworkLegacy(ctx, out.PreferredBackupWindow)
-	r.PreferredMaintenanceWindow = flex.StringToFrameworkLegacy(ctx, out.PreferredMaintenanceWindow)
+
+	pmw := strings.ToLower(aws.StringValue(out.PreferredMaintenanceWindow))
+	r.PreferredMaintenanceWindow = flex.StringValueToFrameworkLegacy(ctx, pmw)
 	r.ReaderEndpoint = flex.StringToFrameworkLegacy(ctx, out.ReaderEndpoint)
 	r.ReplicationSourceIdentifier = flex.StringToFrameworkLegacy(ctx, out.ReplicationSourceIdentifier)
 	r.ScalingConfiguration = flattenScalingConfigurationFramework(ctx, out.ScalingConfigurationInfo)
