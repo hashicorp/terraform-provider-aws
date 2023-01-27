@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -51,7 +52,6 @@ func ResourceTable() *schema.Resource {
 			Update: schema.DefaultTimeout(updateTableTimeoutTotal),
 		},
 
-		//TODO: Add a custom diff if it is just the kms keys changing maybe check the replica update function?
 		CustomizeDiff: customdiff.All(
 			func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
 				return validStreamSpec(diff)
@@ -265,7 +265,7 @@ func ResourceTable() *schema.Resource {
 							Optional:     true,
 							Computed:     true,
 							ValidateFunc: verify.ValidARN,
-							// update is equivalent of force a new *replica*
+							// update is equivalent of force a new *replica*, not table
 						},
 						"point_in_time_recovery": {
 							Type:     schema.TypeBool,
@@ -280,7 +280,7 @@ func ResourceTable() *schema.Resource {
 						"region_name": {
 							Type:     schema.TypeString,
 							Required: true,
-							// update is equivalent of force a new *replica*
+							// update is equivalent of force a new *replica*, not table
 						},
 					},
 				},
@@ -653,7 +653,10 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("stream_arn", table.LatestStreamArn)
 	d.Set("stream_label", table.LatestStreamLabel)
 
-	if err := d.Set("server_side_encryption", flattenTableServerSideEncryption(table.SSEDescription)); err != nil {
+	sse := flattenTableServerSideEncryption(table.SSEDescription)
+	sse = clearSSEDefaultKey(ctx, sse, meta)
+
+	if err := d.Set("server_side_encryption", sse); err != nil {
 		return create.DiagSettingError(names.DynamoDB, ResNameTable, d.Id(), "server_side_encryption", err)
 	}
 
@@ -664,6 +667,7 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	replicas = addReplicaTagPropagates(d.Get("replica").(*schema.Set), replicas)
+	replicas = clearReplicaDefaultKeys(ctx, replicas, meta)
 
 	if err := d.Set("replica", replicas); err != nil {
 		return create.DiagSettingError(names.DynamoDB, ResNameTable, d.Id(), "replica", err)
@@ -1125,6 +1129,9 @@ func createReplicas(ctx context.Context, conn *dynamodb.DynamoDB, tableName stri
 				if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeLimitExceededException, "can be created, updated, or deleted simultaneously") {
 					return resource.RetryableError(err)
 				}
+				if tfawserr.ErrMessageContains(err, "ValidationException", "Replica specified in the Replica Update or Replica Delete action of the request was not found") {
+					return resource.RetryableError(err)
+				}
 				if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceInUseException) {
 					return resource.RetryableError(err)
 				}
@@ -1280,9 +1287,9 @@ func updateReplica(ctx context.Context, d *schema.ResourceData, conn *dynamodb.D
 	added := n.Difference(o).List()
 
 	// 1. changing replica kms keys requires recreation of the replica, like ForceNew, but we don't want to ForceNew the *table*
-	// 2. also, in order to update PITR if a replica is encrypted (has KMS key), it requires recreation (how'd u restore from a backup encrypted with a different key?)
+	// 2. also, in order to update PITR if a replica is encrypted (has KMS key), it requires recreation (how'd u recover from a backup encrypted with a different key?)
 
-	var removeFirst []interface{} // replicas to delete before recreating (~ForceNew without recreating table)
+	var removeFirst []interface{} // replicas to delete before recreating (like ForceNew without recreating table)
 
 	// For true updates, don't remove and add, just update (i.e., keep in added
 	// but remove from removed)
@@ -1566,7 +1573,6 @@ func replicaPITR(ctx context.Context, conn *dynamodb.DynamoDB, tableName string,
 func addReplicaPITRs(ctx context.Context, conn *dynamodb.DynamoDB, tableName string, tfVersion string, replicas []interface{}) ([]interface{}, error) {
 	// This non-standard approach is needed because PITR info for a replica
 	// must come from a region-specific connection.
-
 	for i, replicaRaw := range replicas {
 		replica := replicaRaw.(map[string]interface{})
 
@@ -1607,6 +1613,61 @@ func addReplicaTagPropagates(configReplicas *schema.Set, replicas []interface{})
 			}
 		}
 		replica["propagate_tags"] = prop
+		replicas[i] = replica
+	}
+
+	return replicas
+}
+
+// clearSSEDefaultKey sets the kms_key_arn to "" if it is the default key alias/aws/dynamodb.
+// Not clearing the key causes diff problems and sends the key to AWS when it should not be.
+func clearSSEDefaultKey(ctx context.Context, sseList []interface{}, meta interface{}) []interface{} {
+	if len(sseList) == 0 {
+		return sseList
+	}
+
+	sse := sseList[0].(map[string]interface{})
+
+	dk, err := kms.FindDefaultKey(ctx, "dynamodb", meta.(*conns.AWSClient).Region, meta)
+	if err != nil {
+		return sseList
+	}
+
+	if sse["kms_key_arn"].(string) == dk {
+		sse["kms_key_arn"] = ""
+		return []interface{}{sse}
+	}
+
+	return sseList
+}
+
+// clearReplicaDefaultKeys sets a replica's kms_key_arn to "" if it is the default key alias/aws/dynamodb for
+// the replica's region. Not clearing the key causes diff problems and sends the key to AWS when it should not be.
+func clearReplicaDefaultKeys(ctx context.Context, replicas []interface{}, meta interface{}) []interface{} {
+	if len(replicas) == 0 {
+		return replicas
+	}
+
+	for i, replicaRaw := range replicas {
+		replica := replicaRaw.(map[string]interface{})
+
+		if v, ok := replica["kms_key_arn"].(string); !ok || v == "" {
+			continue
+		}
+
+		if v, ok := replica["region_name"].(string); !ok || v == "" {
+			continue
+		}
+
+		dk, err := kms.FindDefaultKey(ctx, "dynamodb", replica["region_name"].(string), meta)
+		if err != nil {
+			continue
+		}
+
+		if replica["kms_key_arn"].(string) == dk {
+			replica["kms_key_arn"] = ""
+		}
+
 		replicas[i] = replica
 	}
 
