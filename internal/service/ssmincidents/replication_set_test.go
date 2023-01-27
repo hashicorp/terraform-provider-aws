@@ -433,11 +433,11 @@ func testAccReplicationSet_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckReplicationSetDestroy(tfState *terraform.State) error {
+func testAccCheckReplicationSetDestroy(s *terraform.State) error {
 	client := acctest.Provider.Meta().(*conns.AWSClient).SSMIncidentsClient()
 	context := context.Background()
 
-	for _, resource := range tfState.RootModule().Resources {
+	for _, resource := range s.RootModule().Resources {
 		if resource.Type != "aws_ssmincidents_replication_set" {
 			continue
 		}
@@ -465,8 +465,8 @@ func testAccCheckReplicationSetDestroy(tfState *terraform.State) error {
 }
 
 func testAccCheckReplicationSetExists(name string) resource.TestCheckFunc {
-	return func(tfState *terraform.State) error {
-		resource, ok := tfState.RootModule().Resources[name]
+	return func(s *terraform.State) error {
+		resource, ok := s.RootModule().Resources[name]
 		if !ok {
 			return create.Error(names.SSMIncidents, create.ErrActionCheckingExistence, tfssmincidents.ResNameReplicationSet, name, errors.New("not found"))
 		}
