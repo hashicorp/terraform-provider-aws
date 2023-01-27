@@ -314,6 +314,10 @@ func ResourceEndpointConfiguration() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
+							ValidateFunc: validation.All(
+								validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9](-*[a-zA-Z0-9])+$`), ""),
+								validation.StringLenBetween(1, 63),
+							),
 						},
 						"volume_size_in_gb": {
 							Type:         schema.TypeInt,
@@ -423,8 +427,7 @@ func ResourceEndpointConfiguration() *schema.Resource {
 						},
 						"variant_name": {
 							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
+							Required: true,
 							ForceNew: true,
 							ValidateFunc: validation.All(
 								validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9](-*[a-zA-Z0-9])+$`), ""),
