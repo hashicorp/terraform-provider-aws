@@ -283,7 +283,7 @@ func updateRegionsInput(d *schema.ResourceData, input *ssmincidents.UpdateReplic
 			input.Actions = append(input.Actions, action)
 		} else {
 			if oldcmk != newcmk {
-				return fmt.Errorf("error: Incident Manager does not support updating Customer Managed Keys. To do this, remove the region, and then re-create it with the new key")
+				return fmt.Errorf("error: Incident Manager does not support updating encryption on a Replication Set's region. To do this, remove the region, and then re-create it with the new key")
 			}
 		}
 	}
@@ -331,7 +331,7 @@ func validateNonAliasARN(value interface{}, path cty.Path) diag.Diagnostics {
 		diag := diag.Diagnostic{
 			Severity: diag.Error,
 			Summary:  "Invalid kms_key_arn",
-			Detail:   "Alias KMS Key ARNs are not supported. Please use the original key ARN.",
+			Detail:   "Failed to parse key ARN. ARN must be a valid key ARN, not a key ID, or alias ARN",
 		}
 		diags = append(diags, diag)
 	}

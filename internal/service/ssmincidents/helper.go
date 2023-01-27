@@ -35,10 +35,12 @@ func generateMapFromList[T, U any](list []T, keyFunction func(T) string, valueFu
 }
 
 func generateListFromMap[T, U any](m map[string]T, f func(string, T) U) []U {
-	output := make([]U, 0)
+	output := make([]U, len(m))
 
+	i := 0
 	for k, v := range m {
-		output = append(output, f(k, v))
+		output[i] = f(k, v)
+		i++
 	}
 
 	return output

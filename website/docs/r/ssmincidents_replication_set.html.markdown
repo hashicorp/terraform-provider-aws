@@ -10,7 +10,7 @@ description: |-
 
 Provides a resource for managing a replication set in AWS Systems Manager Incident Manager.
 
-~> **NOTE:** Deleting a replication set also deletes all associated response plans.
+~> **NOTE:** Deleting a replication set also deletes all Incident Manager related data including response plans, incident records, contacts and escalation plans.
 
 ## Example Usage
 
@@ -82,7 +82,7 @@ resource "aws_ssmincidents_replication_set" "replicationSetName" {
 
 ~> **NOTE:** Incident Manager does not support updating the customer managed key associated with a replication set. Instead, for a replication set with multiple Regions, you must first delete a Region from the replication set, then re-add it with a different customer managed key in separate `terraform apply` operations. For a replication set with only one Region, the entire replication set must be deleted and recreated. To do this, comment out the replication set and all response plans, and then run the `terraform apply` command to recreate the replication set with the new customer managed key.
 
-~> **NOTE:** You must either associate all Regions with an AWS KMS key or associate no Regions with a key. To change between an AWS owned key and a customer managed key, a replication set and it associated data must be deleted and recreated.
+~> **NOTE:** You must either use AWS-owned keys on all regions of a replication set, or customer managed keys. To change between an AWS owned key and a customer managed key, a replication set and it associated data must be deleted and recreated.
 
 ~> **NOTE:** If possible, create all the customer managed keys you need (using the `terraform apply` command) before you create the replication set, or create the keys and replication set in the same `terraform apply` command. Otherwise, to delete a replication set, you must run one `terraform apply` command to delete the replication set and another to delete the AWS KMS keys used by the replication set. Deleting the AWS KMS keys before deleting the replication set results in an error. In that case, you must manually reenable the deleted key using the AWS Management Console before you can delete the replication set.
 
