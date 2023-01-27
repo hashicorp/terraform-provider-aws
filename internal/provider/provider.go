@@ -179,6 +179,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/sns"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/sqs"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/ssmincidents"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ssoadmin"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/swf"
@@ -2138,6 +2139,8 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			"aws_ssm_patch_group":               ssm.ResourcePatchGroup(),
 			"aws_ssm_resource_data_sync":        ssm.ResourceResourceDataSync(),
 			"aws_ssm_service_setting":           ssm.ResourceServiceSetting(),
+
+			"aws_ssmincidents_replication_set": ssmincidents.ResourceReplicationSet(),
 
 			"aws_ssoadmin_account_assignment":                 ssoadmin.ResourceAccountAssignment(),
 			"aws_ssoadmin_customer_managed_policy_attachment": ssoadmin.ResourceCustomerManagedPolicyAttachment(),
