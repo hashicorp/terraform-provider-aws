@@ -2462,6 +2462,7 @@ func sweepIPAMs(region string) error {
 	return nil
 }
 
+// DeleteIpam.Cascade=true cannot handle if a public scope pool has a provisioned cidr
 func sweepIPAMPools(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)

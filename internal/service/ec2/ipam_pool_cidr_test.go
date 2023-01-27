@@ -38,6 +38,9 @@ func TestAccIPAMPoolCIDR_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"netmask_length",
+				},
 			},
 		},
 	})
@@ -60,13 +63,16 @@ func TestAccIPAMPoolCIDR_basicNetmaskLength(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMPoolCIDRExists(ctx, resourceName, &cidr),
 					resource.TestCheckResourceAttr(resourceName, "netmask_length", netmaskLength),
-					resource.TestCheckResourceAttrPair(resourceName, "ipam_pool_id", "aws_vpc_ipam_pool.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "ipam_pool_id", "aws_vpc_ipam_pool.testchild", "id"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"netmask_length",
+				},
 			},
 		},
 	})
@@ -206,6 +212,26 @@ resource "aws_vpc_ipam_pool" "test" {
 }
 `
 
+const testAccIPAMPoolCIDRConfig_privatePoolWithCidr = `
+resource "aws_vpc_ipam_pool" "test" {
+  address_family = "ipv4"
+  ipam_scope_id  = aws_vpc_ipam.test.private_default_scope_id
+  locale         = data.aws_region.current.name
+}
+
+resource "aws_vpc_ipam_pool_cidr" "testparent" {
+  ipam_pool_id = aws_vpc_ipam_pool.test.id
+  cidr         = "10.0.0.0/16"
+}
+
+resource "aws_vpc_ipam_pool" "testchild" {
+  address_family      = "ipv4"
+  ipam_scope_id       = aws_vpc_ipam.test.private_default_scope_id
+  locale              = data.aws_region.current.name
+  source_ipam_pool_id = aws_vpc_ipam_pool.test.id
+}
+`
+
 func testAccIPAMPoolCIDRConfig_provisionedIPv4(cidr string) string {
 	return acctest.ConfigCompose(testAccIPAMPoolCIDRConfig_base, testAccIPAMPoolCIDRConfig_privatePool, fmt.Sprintf(`
 resource "aws_vpc_ipam_pool_cidr" "test" {
@@ -216,10 +242,11 @@ resource "aws_vpc_ipam_pool_cidr" "test" {
 }
 
 func testAccIPAMPoolCIDRConfig_provisionedIPv4NetmaskLength(netmaskLength string) string {
-	return acctest.ConfigCompose(testAccIPAMPoolCIDRConfig_base, testAccIPAMPoolCIDRConfig_privatePool, fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccIPAMPoolCIDRConfig_base, testAccIPAMPoolCIDRConfig_privatePoolWithCidr, fmt.Sprintf(`
 resource "aws_vpc_ipam_pool_cidr" "test" {
-  ipam_pool_id   = aws_vpc_ipam_pool.test.id
+  ipam_pool_id   = aws_vpc_ipam_pool.testchild.id
   netmask_length = %[1]q
+  depends_on     = [aws_vpc_ipam_pool_cidr.testparent]
 }
 `, netmaskLength))
 }

@@ -88,6 +88,13 @@ func ResourceIPAMPoolCIDR() *schema.Resource {
 				ForceNew:      true,
 				ValidateFunc:  validation.IntBetween(0, 128),
 				ConflictsWith: []string{"cidr"},
+				// NetmaskLength is not outputted by GetIpamPoolCidrsOutput
+				DiffSuppressFunc: func(k, o, n string, d *schema.ResourceData) bool {
+					if o != "0" && n == "0" {
+						return true
+					}
+					return false
+				},
 			},
 		},
 	}
@@ -120,12 +127,19 @@ func resourceIPAMPoolCIDRCreate(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "creating IPAM Pool (%s) CIDR: %s", poolID, err)
 	}
 
+	// its possible that cidr is computed based on netmask_length
 	cidrBlock := aws.StringValue(output.IpamPoolCidr.Cidr)
-	d.SetId(IPAMPoolCIDRCreateResourceID(cidrBlock, poolID))
+	poolCidrId := aws.StringValue(output.IpamPoolCidr.IpamPoolCidrId)
 
-	if _, err := WaitIPAMPoolCIDRCreated(ctx, conn, cidrBlock, poolID, d.Timeout(schema.TimeoutDelete)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for IPAM Pool CIDR (%s) create: %s", d.Id(), err)
+	ipamPoolCidr, err := WaitIPAMPoolCIDRIdCreated(ctx, conn, poolCidrId, poolID, cidrBlock, d.Timeout(schema.TimeoutDelete))
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for IPAM Pool CIDR with ID (%s) create: %s", poolCidrId, err)
 	}
+
+	// This resource's ID is a concatenated id of `<cidr>_<poolid>`
+	// ipam_pool_cidr_id was not part of the inital feature release
+	d.SetId(IPAMPoolCIDRCreateResourceID(aws.StringValue(ipamPoolCidr.Cidr), poolID))
 
 	return append(diags, resourceIPAMPoolCIDRRead(ctx, d, meta)...)
 }
@@ -164,6 +178,7 @@ func resourceIPAMPoolCIDRDelete(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	cidrBlock, poolID, err := IPAMPoolCIDRParseResourceID(d.Id())
+	poolCidrId := d.Get("ipam_pool_cidr_id").(string)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting IPAM Pool CIDR (%s): %s", d.Id(), err)
@@ -184,7 +199,7 @@ func resourceIPAMPoolCIDRDelete(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "deleting IPAM Pool CIDR (%s): %s", d.Id(), err)
 	}
 
-	if _, err := WaitIPAMPoolCIDRDeleted(ctx, conn, cidrBlock, poolID, d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err := WaitIPAMPoolCIDRDeleted(ctx, conn, cidrBlock, poolID, poolCidrId, d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for IPAM Pool CIDR (%s) delete: %s", d.Id(), err)
 	}
 
