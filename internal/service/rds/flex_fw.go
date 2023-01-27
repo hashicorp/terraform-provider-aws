@@ -41,7 +41,7 @@ func expandScalingConfigurationFramework(tfList []scalingConfiguration) *rds.Sca
 	return apiObject
 }
 
-func flattenScalingConfigurationFramework(ctx context.Context, apiObject *rds.ScalingConfiguration) types.List {
+func flattenScalingConfigurationFramework(ctx context.Context, apiObject *rds.ScalingConfigurationInfo) types.List {
 	elemType := types.ObjectType{AttrTypes: scalingConfigurationAttrTypes}
 
 	if apiObject == nil {
@@ -52,7 +52,7 @@ func flattenScalingConfigurationFramework(ctx context.Context, apiObject *rds.Sc
 		"auto_pause":               flex.BoolToFrameworkLegacy(ctx, apiObject.AutoPause),
 		"max_capacity":             flex.Int64ToFrameworkLegacy(ctx, apiObject.MaxCapacity),
 		"min_capacity":             flex.Int64ToFrameworkLegacy(ctx, apiObject.MinCapacity),
-		"seconds_until_autl_pause": flex.Int64ToFrameworkLegacy(ctx, apiObject.SecondsUntilAutoPause),
+		"seconds_until_auto_pause": flex.Int64ToFrameworkLegacy(ctx, apiObject.SecondsUntilAutoPause),
 		"timeout_action":           flex.StringToFrameworkLegacy(ctx, apiObject.TimeoutAction),
 	}
 

@@ -4,14 +4,13 @@ package rds
 
 import (
 	"context"
-	"regexp"
+	"fmt"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
-	sdkresource "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/float64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
@@ -19,6 +18,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -30,6 +31,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	sdkresource "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -91,7 +94,7 @@ func (r *resourceCluster) Schema(ctx context.Context, request resource.SchemaReq
 			},
 			"arn": schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
-				Computed: true,
+				Computed:   true,
 			},
 			"availability_zones": schema.SetAttribute{
 				ElementType: types.StringType,
@@ -252,8 +255,8 @@ func (r *resourceCluster) Schema(ctx context.Context, request resource.SchemaReq
 			},
 			"kms_key_id": schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
-				Optional: true,
-				Computed: true,
+				Optional:   true,
+				Computed:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -345,7 +348,9 @@ func (r *resourceCluster) Schema(ctx context.Context, request resource.SchemaReq
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.RequiresReplace(),
 							},
-							// TODO Validate,
+							Validators: []validator.String{
+								fwvalidators.UTCTimestamp(),
+							},
 						},
 						"restore_type": schema.StringAttribute{
 							Optional: true,
@@ -361,7 +366,12 @@ func (r *resourceCluster) Schema(ctx context.Context, request resource.SchemaReq
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.RequiresReplace(),
 							},
-							// TODO Validate,
+							Validators: []validator.String{
+								stringvalidator.Any(
+									fwvalidators.ClusterIdentifier(),
+									// TODO need ARN validator
+								),
+							},
 						},
 						"use_latest_restorable_time": schema.BoolAttribute{
 							Optional: true,
@@ -507,7 +517,7 @@ func (r *resourceCluster) Create(ctx context.Context, request resource.CreateReq
 	defaultTagsConfig := r.Meta().DefaultTagsConfig
 	ignoreTagsConfig := r.Meta().IgnoreTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(data.Tags))
-	data.TagsAll = flex.FlattenFrameworkStringValueMapLegacy(ctx, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()
+	data.TagsAll = flex.FlattenFrameworkStringValueMapLegacy(ctx, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
 
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
 
@@ -532,12 +542,12 @@ func (r *resourceCluster) Create(ctx context.Context, request resource.CreateReq
 
 	if !data.SnapshotIdentifier.IsUnknown() && !data.FinalSnapshotIdentifier.IsNull() {
 		input := &rds.RestoreDBClusterFromSnapshotInput{
-			CopyTagsToSnapshot: aws.Bool(data.CopyTagsToSnapshot.ValueBool()),
+			CopyTagsToSnapshot:  aws.Bool(data.CopyTagsToSnapshot.ValueBool()),
 			DBClusterIdentifier: aws.String(identifier),
-			DeletionProtection: aws.Bool(data.DeletionProtection.ValueBool()),
-			Engine: aws.String(data.Engine.ValueString()),
-			EngineMode: aws.String(data.EngineMode.ValueString()),
-			Tags: Tags(tags.IgnoreAWS()),
+			DeletionProtection:  aws.Bool(data.DeletionProtection.ValueBool()),
+			Engine:              aws.String(data.Engine.ValueString()),
+			EngineMode:          aws.String(data.EngineMode.ValueString()),
+			Tags:                Tags(tags.IgnoreAWS()),
 		}
 
 		if !data.AvailabilityZones.IsUnknown() && !data.AvailabilityZones.IsNull() {
@@ -632,7 +642,7 @@ func (r *resourceCluster) Create(ctx context.Context, request resource.CreateReq
 			response.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.RDS, create.ErrActionCreating, ResNameCluster, identifier, nil),
 				err.Error(),
-				)
+			)
 			return
 		}
 	} else if !data.S3Import.IsNull() && len(data.S3Import.Elements()) > 0 {
@@ -644,18 +654,18 @@ func (r *resourceCluster) Create(ctx context.Context, request resource.CreateReq
 
 		importValues := s3Import[0]
 		input := &rds.RestoreDBClusterFromS3Input{
-			CopyTagsToSnapshot: aws.Bool(data.CopyTagsToSnapshot.ValueBool()),
+			CopyTagsToSnapshot:  aws.Bool(data.CopyTagsToSnapshot.ValueBool()),
 			DBClusterIdentifier: aws.String(identifier),
 			DeletionProtection:  aws.Bool(data.DeletionProtection.ValueBool()),
-			Engine: aws.String(data.Engine.ValueString()),
-			MasterUsername: aws.String(data.MasterUsername.ValueString()),
-			MasterUserPassword: aws.String(data.MasterPassword.ValueString()),
-			S3BucketName: aws.String(importValues.BucketName.ValueString()),
-			S3IngestionRoleArn: aws.String(importValues.IngestionRole.ValueString()),
-			S3Prefix: aws.String(importValues.BucketPrefix.ValueString()),
-			SourceEngine: aws.String(importValues.SourceEngine.ValueString()),
+			Engine:              aws.String(data.Engine.ValueString()),
+			MasterUsername:      aws.String(data.MasterUsername.ValueString()),
+			MasterUserPassword:  aws.String(data.MasterPassword.ValueString()),
+			S3BucketName:        aws.String(importValues.BucketName.ValueString()),
+			S3IngestionRoleArn:  aws.String(importValues.IngestionRole.ValueString()),
+			S3Prefix:            aws.String(importValues.BucketPrefix.ValueString()),
+			SourceEngine:        aws.String(importValues.SourceEngine.ValueString()),
 			SourceEngineVersion: aws.String(importValues.SourceEngineVersion.ValueString()),
-			Tags: Tags(tags.IgnoreAWS()),
+			Tags:                Tags(tags.IgnoreAWS()),
 		}
 
 		if !data.AvailabilityZones.IsUnknown() && !data.AvailabilityZones.IsNull() {
@@ -752,26 +762,359 @@ func (r *resourceCluster) Create(ctx context.Context, request resource.CreateReq
 			)
 			return
 		}
+	} else if !data.RestoreToPointInTime.IsNull() && len(data.RestoreToPointInTime.Elements()) > 0 {
+		var restoreToPointInTime []restoreToPointInTime
+		response.Diagnostics.Append(data.ScalingConfiguration.ElementsAs(ctx, &restoreToPointInTime, false)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		m := restoreToPointInTime[0]
+		input := &rds.RestoreDBClusterToPointInTimeInput{
+			DBClusterIdentifier:       aws.String(identifier),
+			DeletionProtection:        aws.Bool(data.DeletionProtection.ValueBool()),
+			SourceDBClusterIdentifier: aws.String(m.SourceClusterIdentifier.ValueString()),
+			Tags:                      Tags(tags.IgnoreAWS()),
+		}
+
+		if !m.RestoreToTime.IsNull() {
+			v, _ := time.Parse(time.RFC3339, m.RestoreToTime.ValueString())
+			input.RestoreToTime = aws.Time(v)
+		}
+
+		if !m.UseLatestRestorableTime.IsNull() {
+			input.UseLatestRestorableTime = aws.Bool(m.UseLatestRestorableTime.ValueBool())
+		}
+
+		if !data.BacktrackWindow.IsNull() {
+			input.BacktrackWindow = aws.Int64(data.BacktrackWindow.ValueInt64())
+		}
+
+		if !data.BackupRetentionPeriod.IsNull() {
+			modifyDbClusterInput.BackupRetentionPeriod = aws.Int64(data.BackupRetentionPeriod.ValueInt64())
+			requiresModifyDbCluster = true
+		}
+
+		if !data.DbClusterParameterGroupName.IsUnknown() && !data.DbInstanceParameterGroupName.IsNull() {
+			input.DBClusterParameterGroupName = aws.String(data.DbInstanceParameterGroupName.ValueString())
+		}
+
+		if !data.DbSubnetGroupName.IsUnknown() && !data.DbSubnetGroupName.IsNull() {
+			input.DBSubnetGroupName = aws.String(data.DbSubnetGroupName.ValueString())
+		}
+
+		if !data.EnabledCloudwatchLogsExports.IsNull() {
+			input.EnableCloudwatchLogsExports = flex.ExpandFrameworkStringSet(ctx, data.EnabledCloudwatchLogsExports)
+		}
+
+		if !data.IamDatabaseAuthenticationEnabled.IsNull() {
+			input.EnableIAMDatabaseAuthentication = aws.Bool(data.IamDatabaseAuthenticationEnabled.ValueBool())
+		}
+
+		if !data.KmsKeyID.IsUnknown() && !data.KmsKeyID.IsNull() {
+			input.KmsKeyId = aws.String(data.KmsKeyID.String())
+		}
+
+		if !data.NetworkType.IsUnknown() && !data.NetworkType.IsNull() {
+			input.NetworkType = aws.String(data.NetworkType.ValueString())
+		}
+
+		if !data.MasterPassword.IsNull() {
+			modifyDbClusterInput.MasterUserPassword = aws.String(data.MasterPassword.ValueString())
+			requiresModifyDbCluster = true
+		}
+
+		if !data.OptionGroupName.IsUnknown() && !data.OptionGroupName.IsNull() {
+			input.OptionGroupName = aws.String(data.OptionGroupName.ValueString())
+		}
+
+		if !data.Port.IsUnknown() && !data.Port.IsNull() {
+			input.Port = aws.Int64(data.Port.ValueInt64())
+		}
+
+		if !data.PreferredBackupWindow.IsUnknown() && !data.PreferredBackupWindow.IsNull() {
+			modifyDbClusterInput.PreferredBackupWindow = aws.String(data.PreferredBackupWindow.ValueString())
+			requiresModifyDbCluster = true
+		}
+
+		if !data.PreferredMaintenanceWindow.IsUnknown() && !data.PreferredMaintenanceWindow.IsNull() {
+			modifyDbClusterInput.PreferredMaintenanceWindow = aws.String(data.PreferredMaintenanceWindow.ValueString())
+			requiresModifyDbCluster = true
+		}
+
+		if !m.RestoreType.IsNull() {
+			input.RestoreType = aws.String(m.RestoreType.ValueString())
+		}
+
+		var scalingConfiguration []scalingConfiguration
+		response.Diagnostics.Append(data.ScalingConfiguration.ElementsAs(ctx, &scalingConfiguration, false)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+		input.ScalingConfiguration = expandScalingConfigurationFramework(scalingConfiguration)
+
+		var serverlessV2ScalingConfiguration []serverlessV2ScalingConfiguration
+		response.Diagnostics.Append(data.ScalingConfiguration.ElementsAs(ctx, &serverlessV2ScalingConfiguration, false)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+		input.ServerlessV2ScalingConfiguration = expandServerlessV2ScalingConfigurationFramework(serverlessV2ScalingConfiguration)
+
+		if !data.VpcSecurityGroupIds.IsUnknown() && !data.VpcSecurityGroupIds.IsNull() {
+			input.VpcSecurityGroupIds = flex.ExpandFrameworkStringSet(ctx, data.VpcSecurityGroupIds)
+		}
+
+		_, err := conn.RestoreDBClusterToPointInTimeWithContext(ctx, input)
+
+		if err != nil {
+			response.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.RDS, create.ErrActionCreating, ResNameCluster, identifier, nil),
+				err.Error(),
+			)
+			return
+		}
+	} else {
+		input := &rds.CreateDBClusterInput{
+			CopyTagsToSnapshot:  aws.Bool(data.CopyTagsToSnapshot.ValueBool()),
+			DBClusterIdentifier: aws.String(identifier),
+			DeletionProtection:  aws.Bool(data.DeletionProtection.ValueBool()),
+			Engine:              aws.String(data.Engine.ValueString()),
+			EngineMode:          aws.String(data.EngineMode.ValueString()),
+			Tags:                Tags(tags.IgnoreAWS()),
+		}
+
+		if !data.AllocatedStorage.IsUnknown() && !data.AllocatedStorage.IsNull() {
+			input.AllocatedStorage = aws.Int64(data.AllocatedStorage.ValueInt64())
+		}
+
+		if !data.AvailabilityZones.IsUnknown() && !data.AvailabilityZones.IsNull() {
+			input.AvailabilityZones = flex.ExpandFrameworkStringSet(ctx, data.AvailabilityZones)
+		}
+
+		if !data.BacktrackWindow.IsNull() {
+			input.BacktrackWindow = aws.Int64(data.BacktrackWindow.ValueInt64())
+		}
+
+		if !data.BackupRetentionPeriod.IsNull() {
+			input.BackupRetentionPeriod = aws.Int64(data.BackupRetentionPeriod.ValueInt64())
+		}
+
+		if !data.DatabaseName.IsUnknown() && !data.DatabaseName.IsNull() {
+			input.DatabaseName = aws.String(data.DatabaseName.ValueString())
+		}
+
+		if !data.DbClusterInstanceClass.IsNull() {
+			input.DBClusterInstanceClass = aws.String(data.DbClusterInstanceClass.ValueString())
+		}
+
+		if !data.DbClusterParameterGroupName.IsUnknown() && !data.DbInstanceParameterGroupName.IsNull() {
+			input.DBClusterParameterGroupName = aws.String(data.DbInstanceParameterGroupName.ValueString())
+		}
+
+		if !data.DbSubnetGroupName.IsUnknown() && !data.DbSubnetGroupName.IsNull() {
+			input.DBSubnetGroupName = aws.String(data.DbSubnetGroupName.ValueString())
+		}
+
+		if !data.EnableGlobalWriteForwarding.IsNull() {
+			input.EnableGlobalWriteForwarding = aws.Bool(data.EnableGlobalWriteForwarding.ValueBool())
+		}
+
+		if !data.EnableHttpEndpoint.IsNull() {
+			input.EnableHttpEndpoint = aws.Bool(data.EnableHttpEndpoint.ValueBool())
+		}
+
+		if !data.EnabledCloudwatchLogsExports.IsNull() {
+			input.EnableCloudwatchLogsExports = flex.ExpandFrameworkStringSet(ctx, data.EnabledCloudwatchLogsExports)
+		}
+
+		if !data.EngineVersion.IsUnknown() && !data.EngineVersion.IsNull() {
+			input.EngineVersion = aws.String(data.EngineVersion.ValueString())
+		}
+
+		if !data.GlobalClusterIdentifier.IsNull() {
+			input.GlobalClusterIdentifier = aws.String(data.GlobalClusterIdentifier.ValueString())
+		}
+
+		if !data.IamDatabaseAuthenticationEnabled.IsNull() {
+			input.EnableIAMDatabaseAuthentication = aws.Bool(data.IamDatabaseAuthenticationEnabled.ValueBool())
+		}
+
+		if !data.Iops.IsNull() {
+			input.Iops = aws.Int64(data.Iops.ValueInt64())
+		}
+
+		if !data.KmsKeyID.IsUnknown() && !data.KmsKeyID.IsNull() {
+			input.KmsKeyId = aws.String(data.KmsKeyID.String())
+		}
+
+		// Note: Username and password credentials are required and valid
+		// unless the cluster is a read-replica. This also applies to clusters
+		// within a global cluster. Providing a password and/or username for
+		// a replica will result in an InvalidParameterValue error.
+		if !data.MasterPassword.IsNull() {
+			input.MasterUserPassword = aws.String(data.MasterPassword.ValueString())
+		}
+
+		if !data.MasterUsername.IsNull() && !data.MasterUsername.IsUnknown() {
+			input.MasterUsername = aws.String(data.MasterUsername.ValueString())
+		}
+
+		if !data.NetworkType.IsUnknown() && !data.NetworkType.IsNull() {
+			input.NetworkType = aws.String(data.NetworkType.ValueString())
+		}
+
+		if !data.Port.IsUnknown() && !data.Port.IsNull() {
+			input.Port = aws.Int64(data.Port.ValueInt64())
+		}
+
+		if !data.PreferredBackupWindow.IsUnknown() && !data.PreferredBackupWindow.IsNull() {
+			input.PreferredBackupWindow = aws.String(data.PreferredBackupWindow.ValueString())
+		}
+
+		if !data.PreferredMaintenanceWindow.IsUnknown() && !data.PreferredMaintenanceWindow.IsNull() {
+			input.PreferredMaintenanceWindow = aws.String(data.PreferredMaintenanceWindow.ValueString())
+		}
+
+		if !data.ReplicationSourceIdentifier.IsNull() {
+			input.ReplicationSourceIdentifier = aws.String(data.ReplicationSourceIdentifier.ValueString())
+		}
+
+		var scalingConfiguration []scalingConfiguration
+		response.Diagnostics.Append(data.ScalingConfiguration.ElementsAs(ctx, &scalingConfiguration, false)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+		input.ScalingConfiguration = expandScalingConfigurationFramework(scalingConfiguration)
+
+		var serverlessV2ScalingConfiguration []serverlessV2ScalingConfiguration
+		response.Diagnostics.Append(data.ScalingConfiguration.ElementsAs(ctx, &serverlessV2ScalingConfiguration, false)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+		input.ServerlessV2ScalingConfiguration = expandServerlessV2ScalingConfigurationFramework(serverlessV2ScalingConfiguration)
+
+		if !data.SourceRegion.IsNull() {
+			input.SourceRegion = aws.String(data.SourceRegion.ValueString())
+		}
+
+		if !data.StorageEncrypted.IsUnknown() && !data.StorageEncrypted.IsNull() {
+			input.StorageEncrypted = aws.Bool(data.StorageEncrypted.ValueBool())
+		}
+
+		if !data.StorageType.IsNull() {
+			input.StorageType = aws.String(data.StorageType.ValueString())
+		}
+
+		if !data.VpcSecurityGroupIds.IsUnknown() && !data.VpcSecurityGroupIds.IsNull() {
+			input.VpcSecurityGroupIds = flex.ExpandFrameworkStringSet(ctx, data.VpcSecurityGroupIds)
+		}
+
+		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
+			func() (interface{}, error) {
+				return conn.CreateDBClusterWithContext(ctx, input)
+			},
+			errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions")
+
+		if err != nil {
+			response.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.RDS, create.ErrActionCreating, ResNameCluster, identifier, nil),
+				err.Error(),
+			)
+			return
+		}
 	}
-
-
 
 	data.ID = types.StringValue(identifier)
 
-	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
+	if _, err := waitDBClusterCreated(ctx, conn, data.ID.ValueString(), createTimeout); err != nil {
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.RDS, create.ErrActionWaitingForCreation, ResNameCluster, identifier, nil),
+			err.Error(),
+		)
+		return
+	}
+
+	if !data.IamRoles.IsUnknown() && !data.IamRoles.IsNull() {
+		roles := flex.ExpandFrameworkStringValueSet(ctx, data.IamRoles)
+		for _, v := range roles {
+			if err := addIAMRoleToCluster(ctx, conn, data.ID.ValueString(), v); err != nil {
+				response.Diagnostics.AddError(
+					fmt.Sprintf("adding IAM role (%s) to RDS Cluster (%s)", v, data.ID.ValueString()),
+					err.Error(),
+				)
+				return
+			}
+		}
+	}
+
+	if requiresModifyDbCluster {
+		modifyDbClusterInput.DBClusterIdentifier = aws.String(data.ID.ValueString())
+
+		_, err := conn.ModifyDBClusterWithContext(ctx, modifyDbClusterInput)
+		if err != nil {
+			response.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.RDS, create.ErrActionUpdating, ResNameCluster, identifier, nil),
+				err.Error(),
+			)
+			return
+		}
+
+		if _, err := waitDBClusterUpdated(ctx, conn, data.ID.ValueString(), createTimeout); err != nil {
+			response.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.RDS, create.ErrActionWaitingForUpdate, ResNameCluster, identifier, nil),
+				err.Error(),
+			)
+			return
+		}
+	}
+
+	out, err := FindDBClusterByID(ctx, conn, data.ID.ValueString())
+
+	if err != nil {
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.RDS, create.ErrActionWaitingForUpdate, ResNameCluster, identifier, nil),
+			err.Error(),
+		)
+		return
+	}
+
+	state := data
+	response.Diagnostics.Append(state.refreshFromOutput(ctx, r.Meta(), out)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &state)...)
 }
 
 // Read is called when the provider must read resource values in order to update state.
 // Planned state values should be read from the ReadRequest and new state values set on the ReadResponse.
 func (r *resourceCluster) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
-	var data resourceClusterData
+	conn := r.Meta().RDSConn()
 
+	var data resourceClusterData
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 
 	if response.Diagnostics.HasError() {
 		return
 	}
 
+	out, err := FindDBClusterByID(ctx, conn, data.ID.ValueString())
+
+	if tfresource.NotFound(err) {
+		response.Diagnostics.AddWarning(
+			"AWS Resource Not Found During Refresh",
+			fmt.Sprintf("Automatically removing from Terraform State instead of returning the error, which may trigger resource recreation. Original Error: %s", err.Error()),
+		)
+		response.State.RemoveResource(ctx)
+		return
+	}
+
+	if err != nil {
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.RDS, create.ErrActionReading, ResNameCluster, data.ID.String(), nil),
+			err.Error(),
+		)
+		return
+	}
+
+	response.Diagnostics.Append(data.refreshFromOutput(ctx, r.Meta(), out)...)
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
@@ -791,7 +1134,7 @@ func (r *resourceCluster) Update(ctx context.Context, request resource.UpdateReq
 	if response.Diagnostics.HasError() {
 		return
 	}
-	updateTimeout := r.UpdateTimeout(ctx, new.Timeouts)
+	// updateTimeout := r.UpdateTimeout(ctx, new.Timeouts)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
@@ -809,7 +1152,7 @@ func (r *resourceCluster) Delete(ctx context.Context, request resource.DeleteReq
 	if response.Diagnostics.HasError() {
 		return
 	}
-	deleteTimeout := r.DeleteTimeout(ctx, data.Timeouts)
+	// deleteTimeout := r.DeleteTimeout(ctx, data.Timeouts)
 
 	tflog.Debug(ctx, "deleting TODO", map[string]interface{}{
 		"id": data.ID.ValueString(),
@@ -822,6 +1165,11 @@ func (r *resourceCluster) Delete(ctx context.Context, request resource.DeleteReq
 // If setting an attribute with the import identifier, it is recommended to use the ImportStatePassthroughID() call in this method.
 func (r *resourceCluster) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), request, response)
+
+	// Neither skip_final_snapshot nor final_snapshot_identifier can be fetched
+	// from any API call, so we need to default skip_final_snapshot to true so
+	// that final_snapshot_identifier is not required
+	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("skip_final_snapshot"), true)...)
 }
 
 // ModifyPlan is called when the provider has an opportunity to modify
@@ -846,7 +1194,7 @@ func (r *resourceCluster) ModifyPlan(ctx context.Context, request resource.Modif
 	r.SetTagsAll(ctx, request, response)
 }
 
-func (r *resourceCluster) ConfigValidators(ctx context.Context) []resource.ConfigValidator {
+func (r *resourceCluster) ConfigValidators(_ context.Context) []resource.ConfigValidator {
 	return []resource.ConfigValidator{
 		resourcevalidator.Conflicting(
 			path.MatchRoot("cluster_identifier"),
@@ -865,7 +1213,34 @@ func (r *resourceCluster) ConfigValidators(ctx context.Context) []resource.Confi
 			path.MatchRoot("s3_import"),
 			path.MatchRoot("master_password"),
 			path.MatchRoot("master_username"),
-			),
+		),
+	}
+}
+
+func (r *resourceCluster) ValidateConfig(ctx context.Context, request resource.ValidateConfigRequest, response *resource.ValidateConfigResponse) {
+	var data resourceClusterData
+	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
+
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	if !data.RestoreToPointInTime.IsNull() || len(data.RestoreToPointInTime.Elements()) > 0 {
+		var restoreToPointInTime []restoreToPointInTime
+		response.Diagnostics.Append(data.RestoreToPointInTime.ElementsAs(ctx, &restoreToPointInTime, false)...)
+
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		m := restoreToPointInTime[0]
+		if m.RestoreToTime.IsNull() && m.UseLatestRestorableTime.IsNull() {
+			response.Diagnostics.AddAttributeError(
+				path.Root("restore_to_point_in_time"),
+				"Both Attributes cannot be empty",
+				"Either attribute restore_to_time or use_latest_restorable_time must be set",
+			)
+		}
 	}
 }
 
@@ -903,19 +1278,20 @@ type resourceClusterData struct {
 	IamRoles                         types.Set    `tfsdk:"iam_roles"`
 	ID                               types.String `tfsdk:"id"`
 	Iops                             types.Int64  `tfsdk:"iops"`
-	KmsKeyID                         fwtypes.ARN `tfsdk:"kms_key_id"`
+	KmsKeyID                         fwtypes.ARN  `tfsdk:"kms_key_id"`
 	MasterPassword                   types.String `tfsdk:"master_password"`
 	MasterUsername                   types.String `tfsdk:"master_username"`
 	NetworkType                      types.String `tfsdk:"network_type"`
-	OptionGroupName                      types.String `tfsdk:"option_group_name"`
+	OptionGroupName                  types.String `tfsdk:"option_group_name"`
 	Port                             types.Int64  `tfsdk:"port"`
 	PreferredBackupWindow            types.String `tfsdk:"preferred_backup_window"`
 	PreferredMaintenanceWindow       types.String `tfsdk:"preferred_maintenance_window"`
 	ReaderEndpoint                   types.String `tfsdk:"reader_endpoint"`
 	ReplicationSourceIdentifier      types.String `tfsdk:"replication_source_identifier"`
-	S3Import types.List `tfsdk:"s3_import"`
-	ScalingConfiguration types.List `tfsdk:"scaling_configuration"`
-	ServerlessV2ScalingConfiguration types.List `tfsdk:"serverlessv2_scaling_configuration"`
+	RestoreToPointInTime             types.List   `tfsdk:"restore_to_point_in_time"`
+	S3Import                         types.List   `tfsdk:"s3_import"`
+	ScalingConfiguration             types.List   `tfsdk:"scaling_configuration"`
+	ServerlessV2ScalingConfiguration types.List   `tfsdk:"serverlessv2_scaling_configuration"`
 	SkipFinalSnapshot                types.Bool   `tfsdk:"skip_final_snapshot"`
 	SnapshotIdentifier               types.String `tfsdk:"snapshot_identifier"`
 	SourceRegion                     types.String `tfsdk:"source_region"`
@@ -928,20 +1304,27 @@ type resourceClusterData struct {
 	Timeouts timeouts.Value `tfsdk:"timeouts"`
 }
 
+type restoreToPointInTime struct {
+	RestoreToTime           types.String `tfsdk:"restore_to_time"`
+	RestoreType             types.String `tfsdk:"restore_type"`
+	SourceClusterIdentifier types.String `tfsdk:"source_cluster_identifier"`
+	UseLatestRestorableTime types.Bool   `tfsdk:"use_latest_restorable_time"`
+}
+
 type s3Import struct {
-	BucketName types.String	`tfsdk:"bucket_name"`
-	BucketPrefix types.String `tfsdk:"bucket_prefix"`
-	IngestionRole types.String `tfsdk:"ingestion_role"`
-	SourceEngine types.String `tfsdk:"source_engine"`
+	BucketName          types.String `tfsdk:"bucket_name"`
+	BucketPrefix        types.String `tfsdk:"bucket_prefix"`
+	IngestionRole       types.String `tfsdk:"ingestion_role"`
+	SourceEngine        types.String `tfsdk:"source_engine"`
 	SourceEngineVersion types.String `tfsdk:"source_engine_version"`
 }
 
 type scalingConfiguration struct {
-	AutoPause types.Bool `tfsdk:"auto_pause"`
-	MaxCapacity types.Int64 `tfsdk:"max_capacity"`
-	MinCapacity types.Int64 `tfsdk:"min_capacity"`
-	SecondsUntilAutoPause types.Int64 `tfsdk:"seconds_until_auto_pause"`
-	TimeoutAction types.String `tfsdk:"timeout_action"`
+	AutoPause             types.Bool   `tfsdk:"auto_pause"`
+	MaxCapacity           types.Int64  `tfsdk:"max_capacity"`
+	MinCapacity           types.Int64  `tfsdk:"min_capacity"`
+	SecondsUntilAutoPause types.Int64  `tfsdk:"seconds_until_auto_pause"`
+	TimeoutAction         types.String `tfsdk:"timeout_action"`
 }
 
 type serverlessV2ScalingConfiguration struct {
@@ -950,20 +1333,27 @@ type serverlessV2ScalingConfiguration struct {
 }
 
 var (
+	restoreToPointInTimeTypes = map[string]attr.Type{
+		"restore_to_time":            types.StringType,
+		"restore_type":               types.StringType,
+		"source_cluster_identifier":  types.StringType,
+		"use_latest_restorable_time": types.BoolType,
+	}
+
 	s3ImportAttrTypes = map[string]attr.Type{
-		"bucket_name": types.StringType,
-		"bucket_prefix": types.StringType,
-		"ingestion_role": types.StringType,
-		"source_engine": types.StringType,
+		"bucket_name":           types.StringType,
+		"bucket_prefix":         types.StringType,
+		"ingestion_role":        types.StringType,
+		"source_engine":         types.StringType,
 		"source_engine_version": types.StringType,
 	}
 
 	scalingConfigurationAttrTypes = map[string]attr.Type{
-		"auto_pause": types.BoolType,
-		"max_capacity": types.Int64Type,
-		"min_capacity": types.Int64Type,
+		"auto_pause":               types.BoolType,
+		"max_capacity":             types.Int64Type,
+		"min_capacity":             types.Int64Type,
 		"seconds_until_auto_pause": types.Int64Type,
-		"timeout_action": types.StringType,
+		"timeout_action":           types.StringType,
 	}
 
 	serverlessV2ScalingConfigurationAttrTypes = map[string]attr.Type{
@@ -971,3 +1361,102 @@ var (
 		"min_capacity": types.Float64Type,
 	}
 )
+
+func (r *resourceClusterData) refreshFromOutput(ctx context.Context, meta *conns.AWSClient, out *rds.DBCluster) diag.Diagnostics {
+	var diags diag.Diagnostics
+	defaultTagsConfig := meta.DefaultTagsConfig
+	ignoreTagsConfig := meta.IgnoreTagsConfig
+
+	r.AllocatedStorage = flex.Int64ToFrameworkLegacy(ctx, out.AllocatedStorage)
+	r.ARN = flex.StringToFrameworkLegacy(ctx, out.DBClusterArn)
+	r.AvailabilityZones = flex.FlattenFrameworkStringSetLegacy(ctx, out.AvailabilityZones)
+	r.BacktrackWindow = flex.Int64ToFrameworkLegacy(ctx, out.BacktrackWindow)
+	r.BackupRetentionPeriod = flex.Int64ToFrameworkLegacy(ctx, out.BackupRetentionPeriod)
+	r.BackupRetentionPeriod = flex.Int64ToFrameworkLegacy(ctx, out.BackupRetentionPeriod)
+	r.ClusterIdentifier = flex.StringToFrameworkLegacy(ctx, out.DBClusterIdentifier)
+
+	var clusterMembers []string
+	for _, v := range out.DBClusterMembers {
+		clusterMembers = append(clusterMembers, aws.StringValue(v.DBInstanceIdentifier))
+	}
+	r.ClusterMembers = flex.FlattenFrameworkStringValueSet(ctx, clusterMembers)
+	r.ClusterResourceID = flex.StringToFrameworkLegacy(ctx, out.DbClusterResourceId)
+	r.CopyTagsToSnapshot = flex.BoolToFramework(ctx, out.CopyTagsToSnapshot)
+
+	// Only set the DatabaseName if it is not nil. There is a known API bug where
+	// RDS accepts a DatabaseName but does not return it, causing a perpetual
+	// diff.
+	//	See https://github.com/hashicorp/terraform/issues/4671 for backstory
+	if out.DatabaseName != nil {
+		r.DatabaseName = flex.StringToFrameworkLegacy(ctx, out.DatabaseName)
+	}
+	r.DbClusterInstanceClass = flex.StringToFrameworkLegacy(ctx, out.DBClusterInstanceClass)
+	r.DbClusterParameterGroupName = flex.StringToFrameworkLegacy(ctx, out.DBClusterParameterGroup)
+	r.DbSubnetGroupName = flex.StringToFrameworkLegacy(ctx, out.DBSubnetGroup)
+	r.DeletionProtection = flex.BoolToFramework(ctx, out.DeletionProtection)
+	r.EnabledCloudwatchLogsExports = flex.FlattenFrameworkStringSetLegacy(ctx, out.EnabledCloudwatchLogsExports)
+	r.EnableHttpEndpoint = flex.BoolToFramework(ctx, out.HttpEndpointEnabled)
+	r.Endpoint = flex.StringToFrameworkLegacy(ctx, out.Endpoint)
+	r.Engine = flex.StringToFrameworkLegacy(ctx, out.Engine)
+	r.EngineMode = flex.StringToFrameworkLegacy(ctx, out.EngineMode)
+	r.setResourceDataEngineVersionFromCluster(ctx, out)
+	r.HostedZoneID = flex.StringToFrameworkLegacy(ctx, out.HostedZoneId)
+	r.IamDatabaseAuthenticationEnabled = flex.BoolToFramework(ctx, out.IAMDatabaseAuthenticationEnabled)
+
+	var iamRoleARNs []string
+	for _, v := range out.AssociatedRoles {
+		iamRoleARNs = append(iamRoleARNs, aws.StringValue(v.RoleArn))
+	}
+	r.IamRoles = flex.FlattenFrameworkStringValueSetLegacy(ctx, iamRoleARNs)
+	r.Iops = flex.Int64ToFrameworkLegacy(ctx, out.Iops)
+
+	if out.KmsKeyId != nil {
+		kmsKeyId, _ := arn.Parse(aws.StringValue(out.KmsKeyId))
+		r.KmsKeyID = fwtypes.ARNValue(kmsKeyId)
+	}
+
+	r.MasterUsername = flex.StringToFrameworkLegacy(ctx, out.MasterUsername)
+	r.NetworkType = flex.StringToFrameworkLegacy(ctx, out.NetworkType)
+	r.Port = flex.Int64ToFrameworkLegacy(ctx, out.Port)
+	r.PreferredBackupWindow = flex.StringToFrameworkLegacy(ctx, out.PreferredBackupWindow)
+	r.PreferredMaintenanceWindow = flex.StringToFrameworkLegacy(ctx, out.PreferredMaintenanceWindow)
+	r.ReaderEndpoint = flex.StringToFrameworkLegacy(ctx, out.ReaderEndpoint)
+	r.ReplicationSourceIdentifier = flex.StringToFrameworkLegacy(ctx, out.ReplicationSourceIdentifier)
+	r.ScalingConfiguration = flattenScalingConfigurationFramework(ctx, out.ScalingConfigurationInfo)
+	r.ServerlessV2ScalingConfiguration = flattenServerlessV2ScalingConfigurationFramework(ctx, out.ServerlessV2ScalingConfiguration)
+	r.StorageEncrypted = flex.BoolToFramework(ctx, out.StorageEncrypted)
+	r.StorageType = flex.StringToFrameworkLegacy(ctx, out.StorageType)
+
+	var securityGroupIDs []string
+	for _, v := range out.VpcSecurityGroups {
+		securityGroupIDs = append(securityGroupIDs, aws.StringValue(v.VpcSecurityGroupId))
+	}
+	r.VpcSecurityGroupIds = flex.FlattenFrameworkStringValueSetLegacy(ctx, securityGroupIDs)
+
+	tags := KeyValueTags(out.TagList).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	// AWS APIs often return empty lists of tags when none have been configured.
+	if tags := tags.RemoveDefaultConfig(defaultTagsConfig).Map(); len(tags) == 0 {
+		r.Tags = tftags.Null
+	} else {
+		r.Tags = flex.FlattenFrameworkStringValueMapLegacy(ctx, tags)
+	}
+	r.TagsAll = flex.FlattenFrameworkStringValueMapLegacy(ctx, tags.Map())
+
+	return diags
+}
+
+func (r *resourceClusterData) setResourceDataEngineVersionFromCluster(ctx context.Context, out *rds.DBCluster) {
+	oldVersion := r.EngineVersion.ValueString()
+	newVersion := aws.StringValue(out.EngineVersion)
+	newVersionSubstr := newVersion
+
+	if len(newVersion) > len(oldVersion) {
+		newVersionSubstr = string([]byte(newVersion)[0 : len(oldVersion)+1])
+	}
+
+	if oldVersion != newVersion && string(append([]byte(oldVersion), []byte(".")...)) != newVersionSubstr {
+		r.EngineVersion = flex.StringValueToFrameworkLegacy(ctx, newVersion)
+	}
+
+	r.EngineVersionActual = flex.StringValueToFrameworkLegacy(ctx, newVersion)
+}
