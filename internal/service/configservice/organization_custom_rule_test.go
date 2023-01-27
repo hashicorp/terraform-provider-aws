@@ -542,7 +542,7 @@ POLICY
 }
 
 resource "aws_iam_role_policy_attachment" "config" {
-  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSConfigRole"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWS_ConfigRole"
   role       = aws_iam_role.config.name
 }
 
