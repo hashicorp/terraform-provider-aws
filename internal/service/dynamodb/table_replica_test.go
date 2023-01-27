@@ -157,6 +157,54 @@ func TestAccDynamoDBTableReplica_pitrKMS(t *testing.T) {
 	})
 }
 
+func TestAccDynamoDBTableReplica_pitrDefault(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	resourceName := "aws_dynamodb_table_replica.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckMultipleRegion(t, 2) },
+		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 3),
+		CheckDestroy:             testAccCheckTableReplicaDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableReplicaConfig_pitrDefault(rName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTableReplicaExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery", "false"),
+					resource.TestCheckResourceAttr(resourceName, "kms_key_arn", ""),
+				),
+			},
+			{
+				Config: testAccTableReplicaConfig_pitrDefault(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTableReplicaExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery", "true"),
+					resource.TestCheckResourceAttr(resourceName, "kms_key_arn", ""),
+				),
+			},
+			{
+				Config: testAccTableReplicaConfig_pitrDefault(rName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTableReplicaExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery", "false"),
+					resource.TestCheckResourceAttr(resourceName, "kms_key_arn", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccDynamoDBTableReplica_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -495,6 +543,39 @@ resource "aws_dynamodb_table_replica" "test" {
   global_table_arn       = aws_dynamodb_table.test.arn
   point_in_time_recovery = %[2]t
   kms_key_arn            = aws_kms_key.alternate.arn
+}
+`, rName, pitr))
+}
+
+func testAccTableReplicaConfig_pitrDefault(rName string, pitr bool) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigMultipleRegionProvider(3),
+		fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name             = %[1]q
+  hash_key         = "TestTableHashKey"
+  billing_mode     = "PAY_PER_REQUEST"
+  stream_enabled   = true
+  stream_view_type = "NEW_AND_OLD_IMAGES"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  server_side_encryption {
+    enabled     = true
+  }
+
+  lifecycle {
+    ignore_changes = [replica]
+  }
+}
+
+resource "aws_dynamodb_table_replica" "test" {
+  provider               = awsalternate
+  global_table_arn       = aws_dynamodb_table.test.arn
+  point_in_time_recovery = %[2]t
 }
 `, rName, pitr))
 }
