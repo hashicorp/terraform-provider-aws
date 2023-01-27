@@ -35,6 +35,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwboolplanmodifier "github.com/hashicorp/terraform-provider-aws/internal/framework/boolplanmodifier"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -51,9 +52,9 @@ func init() {
 func newResourceCluster(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceCluster{}
 	r.SetMigratedFromPluginSDK(true)
-	r.SetDefaultCreateTimeout(7200000000000 * time.Nanosecond) // TODO Convert to more human-friendly duration.
-	r.SetDefaultUpdateTimeout(7200000000000 * time.Nanosecond) // TODO Convert to more human-friendly duration.
-	r.SetDefaultDeleteTimeout(7200000000000 * time.Nanosecond) // TODO Convert to more human-friendly duration.
+	r.SetDefaultCreateTimeout(120 * time.Minute)
+	r.SetDefaultUpdateTimeout(120 * time.Minute)
+	r.SetDefaultDeleteTimeout(120 * time.Minute)
 
 	return r, nil
 }
@@ -122,9 +123,7 @@ func (r *resourceCluster) Schema(ctx context.Context, request resource.SchemaReq
 					stringplanmodifier.RequiresReplace(),
 				},
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(regexp.MustCompile(`^[0-9a-z-]+$`), "only lowercase alphanumeric characters and hyphens allowed"),
-					stringvalidator.RegexMatches(regexp.MustCompile(`^[a-z]`), "first character must be a letter"),
-					// TODO finish validators
+					fwvalidators.ClusterIdentifier(),
 				},
 			},
 			"cluster_identifier_prefix": schema.StringAttribute{
@@ -133,7 +132,9 @@ func (r *resourceCluster) Schema(ctx context.Context, request resource.SchemaReq
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
-				// TODO Validate,
+				Validators: []validator.String{
+					fwvalidators.ClusterIdentifierPrefix(),
+				},
 			},
 			"cluster_members": schema.SetAttribute{
 				ElementType: types.StringType,
@@ -227,7 +228,9 @@ func (r *resourceCluster) Schema(ctx context.Context, request resource.SchemaReq
 			},
 			"final_snapshot_identifier": schema.StringAttribute{
 				Optional: true,
-				// TODO Validate,
+				Validators: []validator.String{
+					fwvalidators.ClusterFinalSnapshotIdentifier(),
+				},
 			},
 			"global_cluster_identifier": schema.StringAttribute{
 				Optional: true,
@@ -753,7 +756,7 @@ func (r *resourceCluster) Create(ctx context.Context, request resource.CreateReq
 
 
 
-	data.ID = types.StringValue("TODO")
+	data.ID = types.StringValue(identifier)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }

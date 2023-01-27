@@ -156,6 +156,12 @@ const (
 	ExportableLogTypeUpgrade    = "upgrade"
 )
 
+const (
+	clusterScalingConfiguration_DefaultMinCapacity = 1
+	clusterScalingConfiguration_DefaultMaxCapacity = 16
+	clusterTimeoutDelete                           = 2 * time.Minute
+)
+
 func ClusterExportableLogType_Values() []string {
 	return []string{
 		ExportableLogTypeAudit,
