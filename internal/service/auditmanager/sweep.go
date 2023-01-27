@@ -28,6 +28,10 @@ func init() {
 			"aws_s3_bucket",
 		},
 	})
+	resource.AddTestSweepers("aws_auditmanager_assessment_report", &resource.Sweeper{
+		Name: "aws_auditmanager_assessment_report",
+		F:    sweepAssessmentReports,
+	})
 	resource.AddTestSweepers("aws_auditmanager_control", &resource.Sweeper{
 		Name: "aws_auditmanager_control",
 		F:    sweepControls,
@@ -88,6 +92,54 @@ func sweepAssessments(region string) error {
 	}
 	if sweep.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping AuditManager Assessments sweep for %s: %s", region, errs)
+		return nil
+	}
+
+	return errs.ErrorOrNil()
+}
+
+func sweepAssessmentReports(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(region)
+	if err != nil {
+		fmt.Errorf("error getting client: %s", err)
+	}
+
+	conn := client.(*conns.AWSClient).AuditManagerClient()
+	sweepResources := make([]sweep.Sweepable, 0)
+	in := &auditmanager.ListAssessmentReportsInput{}
+	var errs *multierror.Error
+
+	pages := auditmanager.NewListAssessmentReportsPaginator(conn, in)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if sweep.SkipSweepError(err) || isCompleteSetupError(err) {
+			log.Printf("[WARN] Skipping AuditManager Assesment Reports sweep for %s: %s", region, err)
+			return nil
+		}
+		if err != nil {
+			return fmt.Errorf("error retrieving AuditManager Assessment Reports: %w", err)
+		}
+
+		for _, report := range page.AssessmentReports {
+			id := aws.ToString(report.Id)
+			// assessment ID is required for delete operations
+			assessmentIDAttr := sweep.FrameworkSupplementalAttribute{
+				Path:  "assessment_id",
+				Value: aws.ToString(report.AssessmentId),
+			}
+
+			log.Printf("[INFO] Deleting AuditManager Assessment Report: %s", id)
+			sweepResources = append(sweepResources, sweep.NewSweepFrameworkResource(newResourceAssessmentReport, id, client, assessmentIDAttr))
+		}
+	}
+
+	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping AuditManager Assessment Reports for %s: %w", region, err))
+	}
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping AuditManager Assessment Reports sweep for %s: %s", region, errs)
 		return nil
 	}
 
