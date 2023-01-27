@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -249,7 +250,16 @@ func resourceTableReplicaRead(ctx context.Context, d *schema.ResourceData, meta 
 		return create.DiagError(names.DynamoDB, create.ErrActionReading, ResNameTableReplica, d.Id(), err)
 	}
 
-	d.Set("kms_key_arn", replica.KMSMasterKeyId)
+	dk, err := kms.FindDefaultKey(ctx, "dynamodb", replicaRegion, meta)
+	if err != nil {
+		return create.DiagError(names.DynamoDB, create.ErrActionReading, ResNameTableReplica, d.Id(), err)
+	}
+
+	if replica.KMSMasterKeyId == nil || aws.StringValue(replica.KMSMasterKeyId) == dk {
+		d.Set("kms_key_arn", nil)
+	} else {
+		d.Set("kms_key_arn", replica.KMSMasterKeyId)
+	}
 
 	if replica.ReplicaTableClassSummary != nil {
 		d.Set("table_class_override", replica.ReplicaTableClassSummary.TableClass)
@@ -372,8 +382,15 @@ func resourceTableReplicaUpdate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if d.HasChange("kms_key_arn") && !d.IsNewResource() { // create ends with update and sets kms_key_arn causing change that is not
-		viaMainChanges = true
-		viaMainInput.KMSMasterKeyId = aws.String(d.Get("kms_key_arn").(string))
+		dk, err := kms.FindDefaultKey(ctx, "dynamodb", replicaRegion, meta)
+		if err != nil {
+			return create.DiagError(names.DynamoDB, create.ErrActionUpdating, ResNameTableReplica, d.Id(), fmt.Errorf("region %s: %w", replicaRegion, err))
+		}
+
+		if d.Get("kms_key_arn").(string) != dk {
+			viaMainChanges = true
+			viaMainInput.KMSMasterKeyId = aws.String(d.Get("kms_key_arn").(string))
+		}
 	}
 
 	if viaMainChanges {
