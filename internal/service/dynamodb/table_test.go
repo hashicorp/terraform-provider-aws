@@ -1610,6 +1610,10 @@ func TestAccDynamoDBTable_Replica_single(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
 				),
 			},
+			{
+				Config:   testAccTableConfig_replica1(rName),
+				PlanOnly: true,
+			},
 		},
 	})
 }
