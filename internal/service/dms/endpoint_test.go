@@ -344,7 +344,7 @@ func TestAccDMSEndpoint_S3_key(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.timestamp_column_name", "tx_commit_time"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.use_task_start_time_for_full_load_timestamp", "false"),
 				),
-				ExpectNonEmptyPlan: true,
+				ExpectNonEmptyPlan: true, // this SHOULD be empty: https://github.com/hashicorp/terraform-provider-aws/issues/29131
 			},
 		},
 	})
