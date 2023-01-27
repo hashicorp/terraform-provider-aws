@@ -1,0 +1,3 @@
+```release-note:new-resource
+aws_ssmincidents_replication_set
+```
