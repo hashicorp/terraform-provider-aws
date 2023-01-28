@@ -112,6 +112,7 @@ func (r *resourceCluster) Schema(ctx context.Context, request resource.SchemaReq
 			},
 			"backup_retention_period": schema.Int64Attribute{
 				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
 					fwint64planmodifier.DefaultValue(1),
 				},
@@ -149,6 +150,7 @@ func (r *resourceCluster) Schema(ctx context.Context, request resource.SchemaReq
 			},
 			"copy_tags_to_snapshot": schema.BoolAttribute{
 				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					fwboolplanmodifier.DefaultValue(false),
 				},
@@ -182,12 +184,13 @@ func (r *resourceCluster) Schema(ctx context.Context, request resource.SchemaReq
 			},
 			"enable_global_write_forwarding": schema.BoolAttribute{
 				Optional: true,
-				PlanModifiers: []planmodifier.Bool{
-					fwboolplanmodifier.DefaultValue(false),
-				},
+				//PlanModifiers: []planmodifier.Bool{
+				//	fwboolplanmodifier.DefaultValue(false),
+				//},
 			},
 			"enable_http_endpoint": schema.BoolAttribute{
 				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					fwboolplanmodifier.DefaultValue(false),
 				},
@@ -204,6 +207,7 @@ func (r *resourceCluster) Schema(ctx context.Context, request resource.SchemaReq
 			},
 			"engine": schema.StringAttribute{
 				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 					fwstringplanmodifier.DefaultValue(ClusterEngineAurora),
@@ -214,6 +218,7 @@ func (r *resourceCluster) Schema(ctx context.Context, request resource.SchemaReq
 			},
 			"engine_mode": schema.StringAttribute{
 				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 					fwstringplanmodifier.DefaultValue(EngineModeProvisioned),
@@ -305,6 +310,7 @@ func (r *resourceCluster) Schema(ctx context.Context, request resource.SchemaReq
 			},
 			"skip_final_snapshot": schema.BoolAttribute{
 				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					fwboolplanmodifier.DefaultValue(false),
 				},
@@ -915,7 +921,7 @@ func (r *resourceCluster) Create(ctx context.Context, request resource.CreateReq
 			input.DBSubnetGroupName = aws.String(data.DbSubnetGroupName.ValueString())
 		}
 
-		if !data.EnableGlobalWriteForwarding.IsNull() {
+		if !data.EnableGlobalWriteForwarding.IsUnknown() && !data.EnableGlobalWriteForwarding.IsNull() {
 			input.EnableGlobalWriteForwarding = aws.Bool(data.EnableGlobalWriteForwarding.ValueBool())
 		}
 
@@ -1290,7 +1296,7 @@ func (r *resourceCluster) Update(ctx context.Context, request resource.UpdateReq
 	// can only be removed.
 	if !plan.GlobalClusterIdentifier.Equal(state.GlobalClusterIdentifier) {
 		in := &rds.RemoveFromGlobalClusterInput{
-			DbClusterIdentifier:     aws.String(state.ARN.ValueString()),
+			DbClusterIdentifier:     aws.String(state.ARN.String()),
 			GlobalClusterIdentifier: aws.String(state.GlobalClusterIdentifier.ValueString()),
 		}
 
@@ -1343,7 +1349,7 @@ func (r *resourceCluster) Update(ctx context.Context, request resource.UpdateReq
 	response.Diagnostics.Append(state.refreshFromOutput(ctx, r.Meta(), out)...)
 
 	if !plan.TagsAll.Equal(state.TagsAll) {
-		if err := UpdateTags(ctx, conn, plan.ARN.ValueString(), state.TagsAll, plan.TagsAll); err != nil {
+		if err := UpdateTags(ctx, conn, plan.ARN.String(), state.TagsAll, plan.TagsAll); err != nil {
 			response.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.RDS, create.ErrActionUpdating, ResNameCluster, plan.ID.String(), nil),
 				err.Error(),
@@ -1377,12 +1383,12 @@ func (r *resourceCluster) Delete(ctx context.Context, request resource.DeleteReq
 	// InvalidDBClusterStateFault: This cluster is a part of a global cluster, please remove it from globalcluster first
 	if !data.GlobalClusterIdentifier.IsNull() || data.GlobalClusterIdentifier.ValueString() != "" {
 		input := &rds.RemoveFromGlobalClusterInput{
-			DbClusterIdentifier:     aws.String(data.ARN.ValueString()),
+			DbClusterIdentifier:     aws.String(data.ARN.String()),
 			GlobalClusterIdentifier: aws.String(data.GlobalClusterIdentifier.ValueString()),
 		}
 
 		tflog.Debug(ctx, "removing RDS Cluster from RDS Global Cluster", map[string]interface{}{
-			"arn":                       data.ARN.ValueString(),
+			"arn":                       data.ARN.String(),
 			"global_cluster_identifier": data.GlobalClusterIdentifier.ValueString(),
 		})
 
@@ -1582,11 +1588,6 @@ func (r *resourceCluster) ConfigValidators(_ context.Context) []resource.ConfigV
 			path.MatchRoot("restore_to_point_in_time").AtListIndex(0).AtName("restore_to_time"),
 			path.MatchRoot("restore_to_point_in_time").AtListIndex(0).AtName("use_latest_restorable_time"),
 		),
-		resourcevalidator.RequiredTogether(
-			path.MatchRoot("s3_import"),
-			path.MatchRoot("master_password"),
-			path.MatchRoot("master_username"),
-		),
 	}
 }
 
@@ -1615,13 +1616,23 @@ func (r *resourceCluster) ValidateConfig(ctx context.Context, request resource.V
 			)
 		}
 	}
+
+	if !data.S3Import.IsUnknown() || !data.S3Import.IsNull() || len(data.S3Import.Elements()) > 0 {
+		if (data.MasterUsername.IsUnknown() || data.MasterUsername.IsNull()) || (data.MasterPassword.IsNull() || data.MasterPassword.IsUnknown()) {
+			response.Diagnostics.AddAttributeError(
+				path.Root("s3_import"),
+				"Master Username and Password not set",
+				"Attributes master_username and master_password must be set with s3_import",
+			)
+		}
+	}
 }
 
 type resourceClusterData struct {
 	AllocatedStorage                 types.Int64  `tfsdk:"allocated_storage"`
 	AllowMajorVersionUpgrade         types.Bool   `tfsdk:"allow_major_version_upgrade"`
 	ApplyImmediately                 types.Bool   `tfsdk:"apply_immediately"`
-	ARN                              types.String `tfsdk:"arn"`
+	ARN                              fwtypes.ARN  `tfsdk:"arn"`
 	AvailabilityZones                types.Set    `tfsdk:"availability_zones"`
 	BacktrackWindow                  types.Int64  `tfsdk:"backtrack_window"`
 	BackupRetentionPeriod            types.Int64  `tfsdk:"backup_retention_period"`
@@ -1741,7 +1752,10 @@ func (r *resourceClusterData) refreshFromOutput(ctx context.Context, meta *conns
 	ignoreTagsConfig := meta.IgnoreTagsConfig
 
 	r.AllocatedStorage = flex.Int64ToFrameworkLegacy(ctx, out.AllocatedStorage)
-	r.ARN = flex.StringToFrameworkLegacy(ctx, out.DBClusterArn)
+
+	dbARN, _ := arn.Parse(aws.StringValue(out.DBClusterArn))
+	r.ARN = fwtypes.ARNValue(dbARN)
+
 	r.AvailabilityZones = flex.FlattenFrameworkStringSetLegacy(ctx, out.AvailabilityZones)
 	r.BacktrackWindow = flex.Int64ToFrameworkLegacy(ctx, out.BacktrackWindow)
 	r.BackupRetentionPeriod = flex.Int64ToFrameworkLegacy(ctx, out.BackupRetentionPeriod)
@@ -1784,10 +1798,12 @@ func (r *resourceClusterData) refreshFromOutput(ctx context.Context, meta *conns
 	r.Iops = flex.Int64ToFrameworkLegacy(ctx, out.Iops)
 
 	if out.KmsKeyId != nil {
-		kmsKeyId, _ := arn.Parse(aws.StringValue(out.KmsKeyId))
-		r.KmsKeyID = fwtypes.ARNValue(kmsKeyId)
+		if v, err := arn.Parse(aws.StringValue(out.KmsKeyId)); err != nil {
+			diags.AddError("parsing ARN", err.Error())
+		} else {
+			r.KmsKeyID = fwtypes.ARNValue(v)
+		}
 	}
-
 	r.MasterUsername = flex.StringToFrameworkLegacy(ctx, out.MasterUsername)
 	r.NetworkType = flex.StringToFrameworkLegacy(ctx, out.NetworkType)
 	r.Port = flex.Int64ToFrameworkLegacy(ctx, out.Port)
