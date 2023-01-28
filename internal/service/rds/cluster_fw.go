@@ -1028,7 +1028,7 @@ func (r *resourceCluster) Create(ctx context.Context, request resource.CreateReq
 
 	if _, err := waitDBClusterCreated(ctx, conn, data.ID.ValueString(), createTimeout); err != nil {
 		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.RDS, create.ErrActionWaitingForCreation, ResNameCluster, identifier, nil),
+			create.ProblemStandardMessage(names.RDS, create.ErrActionWaitingForCreation, ResNameCluster, data.ID.ValueString(), nil),
 			err.Error(),
 		)
 		return
@@ -1053,7 +1053,7 @@ func (r *resourceCluster) Create(ctx context.Context, request resource.CreateReq
 		_, err := conn.ModifyDBClusterWithContext(ctx, modifyDbClusterInput)
 		if err != nil {
 			response.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.RDS, create.ErrActionUpdating, ResNameCluster, identifier, nil),
+				create.ProblemStandardMessage(names.RDS, create.ErrActionUpdating, ResNameCluster, data.ID.ValueString(), nil),
 				err.Error(),
 			)
 			return
@@ -1061,7 +1061,7 @@ func (r *resourceCluster) Create(ctx context.Context, request resource.CreateReq
 
 		if _, err := waitDBClusterUpdated(ctx, conn, data.ID.ValueString(), createTimeout); err != nil {
 			response.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.RDS, create.ErrActionWaitingForUpdate, ResNameCluster, identifier, nil),
+				create.ProblemStandardMessage(names.RDS, create.ErrActionWaitingForUpdate, ResNameCluster, data.ID.ValueString(), nil),
 				err.Error(),
 			)
 			return
@@ -1072,7 +1072,7 @@ func (r *resourceCluster) Create(ctx context.Context, request resource.CreateReq
 
 	if err != nil {
 		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.RDS, create.ErrActionWaitingForUpdate, ResNameCluster, identifier, nil),
+			create.ProblemStandardMessage(names.RDS, create.ErrActionWaitingForUpdate, ResNameCluster, data.ID.ValueString(), nil),
 			err.Error(),
 		)
 		return
@@ -1108,7 +1108,7 @@ func (r *resourceCluster) Read(ctx context.Context, request resource.ReadRequest
 
 	if err != nil {
 		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.RDS, create.ErrActionReading, ResNameCluster, data.ID.String(), nil),
+			create.ProblemStandardMessage(names.RDS, create.ErrActionReading, ResNameCluster, data.ID.ValueString(), nil),
 			err.Error(),
 		)
 		return
@@ -1121,6 +1121,7 @@ func (r *resourceCluster) Read(ctx context.Context, request resource.ReadRequest
 // Update is called to update the state of the resource.
 // Config, planned state, and prior state values should be read from the UpdateRequest and new state values set on the UpdateResponse.
 func (r *resourceCluster) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	conn := r.Meta().RDSConn()
 	var plan, state resourceClusterData
 
 	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
@@ -1134,7 +1135,7 @@ func (r *resourceCluster) Update(ctx context.Context, request resource.UpdateReq
 	if response.Diagnostics.HasError() {
 		return
 	}
-	//updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
+	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
 
 	input := &rds.ModifyDBClusterInput{
 		ApplyImmediately:    aws.Bool(plan.ApplyImmediately.ValueBool()),
@@ -1195,7 +1196,165 @@ func (r *resourceCluster) Update(ctx context.Context, request resource.UpdateReq
 		}
 	}
 
-	response.Diagnostics.Append(response.State.Set(ctx, &plan)...)
+	if !plan.EngineVersion.Equal(state.EngineVersion) {
+		input.EngineVersion = aws.String(plan.EngineVersion.ValueString())
+	}
+
+	if !plan.IamDatabaseAuthenticationEnabled.Equal(state.IamDatabaseAuthenticationEnabled) {
+		input.EnableIAMDatabaseAuthentication = aws.Bool(plan.IamDatabaseAuthenticationEnabled.ValueBool())
+	}
+
+	if !plan.Iops.Equal(state.Iops) {
+		input.Iops = aws.Int64(plan.Iops.ValueInt64())
+	}
+
+	if !plan.MasterPassword.Equal(state.MasterPassword) {
+		input.MasterUserPassword = aws.String(plan.MasterPassword.ValueString())
+	}
+
+	if !plan.NetworkType.Equal(state.NetworkType) {
+		input.NetworkType = aws.String(plan.NetworkType.ValueString())
+	}
+
+	if !plan.Port.Equal(state.Port) {
+		input.Port = aws.Int64(plan.Port.ValueInt64())
+	}
+
+	if !plan.PreferredBackupWindow.Equal(state.PreferredBackupWindow) {
+		input.PreferredBackupWindow = aws.String(plan.PreferredBackupWindow.ValueString())
+	}
+
+	if !plan.PreferredMaintenanceWindow.Equal(state.PreferredMaintenanceWindow) {
+		input.PreferredMaintenanceWindow = aws.String(plan.PreferredMaintenanceWindow.ValueString())
+	}
+
+	if !plan.ScalingConfiguration.Equal(state.ScalingConfiguration) {
+		var scalingConfiguration []scalingConfiguration
+		response.Diagnostics.Append(plan.ScalingConfiguration.ElementsAs(ctx, &scalingConfiguration, false)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+		input.ScalingConfiguration = expandScalingConfigurationFramework(scalingConfiguration)
+	}
+
+	if !plan.ServerlessV2ScalingConfiguration.Equal(state.ServerlessV2ScalingConfiguration) {
+		var serverlessV2ScalingConfiguration []serverlessV2ScalingConfiguration
+		response.Diagnostics.Append(plan.ScalingConfiguration.ElementsAs(ctx, &serverlessV2ScalingConfiguration, false)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+		input.ServerlessV2ScalingConfiguration = expandServerlessV2ScalingConfigurationFramework(serverlessV2ScalingConfiguration)
+	}
+
+	if !plan.StorageType.Equal(state.StorageType) {
+		input.StorageType = aws.String(plan.StorageType.ValueString())
+	}
+
+	if !plan.VpcSecurityGroupIds.Equal(state.VpcSecurityGroupIds) {
+		input.VpcSecurityGroupIds = flex.ExpandFrameworkStringSet(ctx, plan.VpcSecurityGroupIds)
+	}
+
+	_, err := tfresource.RetryWhen(ctx, 5*time.Minute,
+		func() (interface{}, error) {
+			return conn.ModifyDBClusterWithContext(ctx, input)
+		},
+		func(err error) (bool, error) {
+			if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions") {
+				return true, err
+			}
+
+			if tfawserr.ErrCodeEquals(err, rds.ErrCodeInvalidDBClusterStateFault) {
+				return true, err
+			}
+
+			return false, err
+		},
+	)
+
+	if err != nil {
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.RDS, create.ErrActionUpdating, ResNameCluster, plan.ID.ValueString(), nil),
+			err.Error(),
+		)
+		return
+	}
+
+	if _, err := waitDBClusterUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout); err != nil {
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.RDS, create.ErrActionWaitingForUpdate, ResNameCluster, plan.ID.ValueString(), nil),
+			err.Error(),
+		)
+		return
+	}
+
+	// can only be removed.
+	if !plan.GlobalClusterIdentifier.Equal(state.GlobalClusterIdentifier) {
+		in := &rds.RemoveFromGlobalClusterInput{
+			DbClusterIdentifier:     aws.String(state.ARN.ValueString()),
+			GlobalClusterIdentifier: aws.String(state.GlobalClusterIdentifier.ValueString()),
+		}
+
+		_, err := conn.RemoveFromGlobalClusterWithContext(ctx, in)
+
+		if err != nil && !tfawserr.ErrCodeEquals(err, rds.ErrCodeGlobalClusterNotFoundFault) && !tfawserr.ErrMessageContains(err, "InvalidParameterValue", "is not found in global cluster") {
+			response.Diagnostics.AddError(
+				fmt.Sprintf("removing RDS Cluster (%s) from RDS Global Cluster", plan.ID.ValueString()),
+				err.Error(),
+			)
+			return
+		}
+	}
+
+	if !plan.IamRoles.Equal(state.IamRoles) {
+		o := flex.ExpandFrameworkStringValueSet(ctx, state.IamRoles)
+		n := flex.ExpandFrameworkStringValueSet(ctx, plan.IamRoles)
+
+		for _, v := range n.Difference(o) {
+			if err := addIAMRoleToCluster(ctx, conn, plan.ID.ValueString(), v); err != nil {
+				response.Diagnostics.AddError(
+					fmt.Sprintf("adding IAM Role (%s) to RDS Cluster (%s)", v, plan.ID.ValueString()),
+					err.Error(),
+				)
+				return
+			}
+		}
+
+		for _, v := range o.Difference(n) {
+			if err := removeIAMRoleFromCluster(ctx, conn, plan.ID.ValueString(), v); err != nil {
+				response.Diagnostics.AddError(
+					fmt.Sprintf("removing IAM Role (%s) to RDS Cluster (%s)", v, plan.ID.ValueString()),
+					err.Error(),
+				)
+				return
+			}
+		}
+	}
+
+	out, err := FindDBClusterByID(ctx, conn, plan.ID.ValueString())
+
+	if err != nil {
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.RDS, create.ErrActionWaitingForUpdate, ResNameCluster, plan.ID.ValueString(), nil),
+			err.Error(),
+		)
+		return
+	}
+
+	response.Diagnostics.Append(state.refreshFromOutput(ctx, r.Meta(), out)...)
+
+	if !plan.TagsAll.Equal(state.TagsAll) {
+		if err := UpdateTags(ctx, conn, plan.ARN.ValueString(), state.TagsAll, plan.TagsAll); err != nil {
+			response.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.RDS, create.ErrActionUpdating, ResNameCluster, plan.ID.String(), nil),
+				err.Error(),
+			)
+			return
+		}
+		state.Tags = plan.Tags
+		state.TagsAll = plan.TagsAll
+	}
+
+	response.Diagnostics.Append(response.State.Set(ctx, &state)...)
 }
 
 // Delete is called when the provider must delete the resource.
@@ -1204,6 +1363,7 @@ func (r *resourceCluster) Update(ctx context.Context, request resource.UpdateReq
 // If execution completes without error, the framework will automatically call DeleteResponse.State.RemoveResource(),
 // so it can be omitted from provider logic.
 func (r *resourceCluster) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	conn := r.Meta().RDSConn()
 	var data resourceClusterData
 
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
@@ -1211,11 +1371,116 @@ func (r *resourceCluster) Delete(ctx context.Context, request resource.DeleteReq
 	if response.Diagnostics.HasError() {
 		return
 	}
-	// deleteTimeout := r.DeleteTimeout(ctx, data.Timeouts)
+	deleteTimeout := r.DeleteTimeout(ctx, data.Timeouts)
 
-	tflog.Debug(ctx, "deleting TODO", map[string]interface{}{
+	// Automatically remove from global cluster to bypass this error on deletion:
+	// InvalidDBClusterStateFault: This cluster is a part of a global cluster, please remove it from globalcluster first
+	if !data.GlobalClusterIdentifier.IsNull() || data.GlobalClusterIdentifier.ValueString() != "" {
+		input := &rds.RemoveFromGlobalClusterInput{
+			DbClusterIdentifier:     aws.String(data.ARN.ValueString()),
+			GlobalClusterIdentifier: aws.String(data.GlobalClusterIdentifier.ValueString()),
+		}
+
+		tflog.Debug(ctx, "removing RDS Cluster from RDS Global Cluster", map[string]interface{}{
+			"arn":                       data.ARN.ValueString(),
+			"global_cluster_identifier": data.GlobalClusterIdentifier.ValueString(),
+		})
+
+		_, err := conn.RemoveFromGlobalClusterWithContext(ctx, input)
+
+		if err != nil && !tfawserr.ErrCodeEquals(err, rds.ErrCodeGlobalClusterNotFoundFault) && !tfawserr.ErrMessageContains(err, "InvalidParameterValue", "is not found in global cluster") {
+			response.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.RDS, create.ErrActionDeleting, ResNameCluster, data.ID.String(), nil),
+				err.Error(),
+			)
+			return
+		}
+	}
+
+	input := &rds.DeleteDBClusterInput{
+		DBClusterIdentifier: aws.String(data.ID.ValueString()),
+		SkipFinalSnapshot:   aws.Bool(data.SkipFinalSnapshot.ValueBool()),
+	}
+
+	if !data.SkipFinalSnapshot.ValueBool() {
+		input.FinalDBSnapshotIdentifier = aws.String(data.FinalSnapshotIdentifier.ValueString())
+	}
+
+	tflog.Debug(ctx, "deleting RDS Cluster", map[string]interface{}{
 		"id": data.ID.ValueString(),
 	})
+
+	_, err := tfresource.RetryWhen(ctx, clusterTimeoutDelete,
+		func() (interface{}, error) {
+			return conn.DeleteDBClusterWithContext(ctx, input)
+		},
+		func(err error) (bool, error) {
+			if tfawserr.ErrMessageContains(err, "InvalidParameterCombination", "disable deletion pro") {
+				if (data.DeletionProtection.IsNull() || !data.DeletionProtection.ValueBool()) && data.ApplyImmediately.ValueBool() {
+					_, err := tfresource.RetryWhen(ctx, deleteTimeout,
+						func() (interface{}, error) {
+							return conn.ModifyDBClusterWithContext(ctx, &rds.ModifyDBClusterInput{
+								ApplyImmediately:    aws.Bool(true),
+								DBClusterIdentifier: aws.String(data.ID.ValueString()),
+								DeletionProtection:  aws.Bool(false),
+							})
+						},
+						func(err error) (bool, error) {
+							if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions") {
+								return true, err
+							}
+
+							if tfawserr.ErrCodeEquals(err, rds.ErrCodeInvalidDBClusterStateFault) {
+								return true, err
+							}
+
+							return false, err
+						},
+					)
+
+					if err != nil {
+						return false, fmt.Errorf("modifying RDS Cluster (%s) DeletionProtection=false: %s", data.ID.ValueString(), err)
+					}
+
+					if _, err := waitDBClusterUpdated(ctx, conn, data.ID.ValueString(), deleteTimeout); err != nil {
+						return false, fmt.Errorf("waiting for RDS Cluster (%s) update: %s", data.ID.ValueString(), err)
+					}
+				}
+
+				return true, err
+			}
+
+			if tfawserr.ErrMessageContains(err, rds.ErrCodeInvalidDBClusterStateFault, "is not currently in the available state") {
+				return true, err
+			}
+
+			if tfawserr.ErrMessageContains(err, rds.ErrCodeInvalidDBClusterStateFault, "cluster is a part of a global cluster") {
+				return true, err
+			}
+
+			return false, err
+		},
+	)
+
+	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBClusterNotFoundFault) {
+		return
+	}
+
+	if err != nil {
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.RDS, create.ErrActionDeleting, ResNameCluster, data.ID.ValueString(), nil),
+			err.Error(),
+		)
+		return
+	}
+
+	if _, err := waitDBClusterDeleted(ctx, conn, data.ID.ValueString(), deleteTimeout); err != nil {
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.RDS, create.ErrActionWaitingForDeletion, ResNameCluster, data.ID.ValueString(), nil),
+			err.Error(),
+		)
+		return
+	}
 }
 
 // ImportState is called when the provider must import the state of a resource instance.
@@ -1250,6 +1515,55 @@ func (r *resourceCluster) ImportState(ctx context.Context, request resource.Impo
 //
 // Any errors will prevent further resource-level plan modifications.
 func (r *resourceCluster) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+	if request.Plan.Raw.IsNull() {
+		var finalSnapshotIdentifier types.String
+		var skipFinalSnapshot types.Bool
+
+		response.Diagnostics.Append(request.State.GetAttribute(ctx, path.Root("final_snapshot_identifier"), &finalSnapshotIdentifier)...)
+		response.Diagnostics.Append(request.State.GetAttribute(ctx, path.Root("skip_final_snapshot"), &skipFinalSnapshot)...)
+
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		if !skipFinalSnapshot.ValueBool() && (finalSnapshotIdentifier.IsNull() || finalSnapshotIdentifier.ValueString() == "") {
+			response.Diagnostics.AddAttributeError(
+				path.Root("final_snapshot_identifier"),
+				"Attribute cannot be empty",
+				"Attribute final_snapshot_identifier cannot be empty when skip_final_snapshot is set to false. "+
+					"Please apply resource with a value for final_snapshot_identifier before trying to destroy",
+			)
+			return
+		}
+	}
+
+	var planGlobalClusterIdentifier, stateGlobalClusterIdentifier types.String
+
+	response.Diagnostics.Append(request.Plan.GetAttribute(ctx, path.Root("global_cluster_identifier"), &planGlobalClusterIdentifier)...)
+	response.Diagnostics.Append(request.State.GetAttribute(ctx, path.Root("global_cluster_identifier"), &stateGlobalClusterIdentifier)...)
+
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	if !stateGlobalClusterIdentifier.IsNull() && !planGlobalClusterIdentifier.IsNull() {
+		if stateGlobalClusterIdentifier.ValueString() == "" {
+			response.Diagnostics.AddAttributeError(
+				path.Root("global_cluster_identifier"),
+				"Cluster exists",
+				"existing RDS Clusters cannot be added to an existing RDS Global Cluster",
+			)
+		}
+	}
+
+	if !stateGlobalClusterIdentifier.IsNull() && (planGlobalClusterIdentifier.IsNull() || planGlobalClusterIdentifier.ValueString() != "") {
+		response.Diagnostics.AddAttributeError(
+			path.Root("global_cluster_identifier"),
+			"Cluster cannot be migrated",
+			"existing RDS Clusters cannot be migrated between existing RDS Global Clusters",
+		)
+	}
+
 	r.SetTagsAll(ctx, request, response)
 }
 
