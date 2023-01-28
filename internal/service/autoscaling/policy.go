@@ -264,13 +264,6 @@ func ResourcePolicy() *schema.Resource {
 								Schema: map[string]*schema.Schema{
 									"metrics": func() *schema.Schema {
 										schema := customizedMetricDataQuerySchema()
-										schema.ConflictsWith = []string{
-											"target_tracking_configuration.0.customized_metric_specification.0.metric_dimension",
-											"target_tracking_configuration.0.customized_metric_specification.0.metric_name",
-											"target_tracking_configuration.0.customized_metric_specification.0.namespace",
-											"target_tracking_configuration.0.customized_metric_specification.0.statistic",
-											"target_tracking_configuration.0.customized_metric_specification.0.unit",
-										}
 										schema.Required = false
 										schema.Optional = true
 										return schema
@@ -292,19 +285,16 @@ func ResourcePolicy() *schema.Resource {
 										},
 									},
 									"metric_name": {
-										Type:          schema.TypeString,
-										Optional:      true,
-										ConflictsWith: []string{"target_tracking_configuration.0.customized_metric_specification.0.metrics"},
+										Type:     schema.TypeString,
+										Optional: true,
 									},
 									"namespace": {
-										Type:          schema.TypeString,
-										Optional:      true,
-										ConflictsWith: []string{"target_tracking_configuration.0.customized_metric_specification.0.metrics"},
+										Type:     schema.TypeString,
+										Optional: true,
 									},
 									"statistic": {
-										Type:          schema.TypeString,
-										Optional:      true,
-										ConflictsWith: []string{"target_tracking_configuration.0.customized_metric_specification.0.metrics"},
+										Type:     schema.TypeString,
+										Optional: true,
 									},
 									"unit": {
 										Type:     schema.TypeString,

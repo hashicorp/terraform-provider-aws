@@ -269,11 +269,42 @@ The following arguments are supported:
 
 The following arguments are supported:
 
+* `metrics` - (Optional) The metrics to include in the target tracking scaling policy, as a metric data query. This can include both raw metric and metric math expressions.
 * `metric_dimension` - (Optional) Dimensions of the metric.
+* `metric_name` - (Optional) Name of the metric.
+* `namespace` - (Optional) Namespace of the metric.
+* `statistic` - (Optional) Statistic of the metric.
+* `unit` - (Optional) Unit of the metric.
+
+#### metrics
+
+The following arguments are supported:
+
+* `expression` - (Optional) Math expression used on the returned metric. You must specify either `expression` or `metric_stat`, but not both.
+* `id` - (Required) Short name for the metric used in target tracking scaling policy.
+* `label` - (Optional) Human-readable label for this metric or expression.
+* `metric_stat` - (Optional) Structure that defines CloudWatch metric to be used in target tracking scaling policy. You must specify either `expression` or `metric_stat`, but not both.
+* `return_data` - (Optional) Boolean that indicates whether to return the timestamps and raw data values of this metric, the default it true
+
+##### metric_stat
+The following arguments are supported:
+
+* `metric` - (Required) Structure that defines the CloudWatch metric to return, including the metric name, namespace, and dimensions.
+* `stat` - (Required) Statistic of the metrics to return.
+* `unit` - (Optional) Unit of the metrics to return.
+
+##### metric
+The following arguments are supported:
+
+* `dimensions` - (Optional) Dimensions of the metric.
 * `metric_name` - (Required) Name of the metric.
 * `namespace` - (Required) Namespace of the metric.
-* `statistic` - (Required) Statistic of the metric.
-* `unit` - (Optional) Unit of the metric.
+
+##### dimensions
+The following arguments are supported:
+
+* `name` - (Required) Name of the dimension.
+* `value` - (Required) Value of the dimension.
 
 #### metric_dimension
 
