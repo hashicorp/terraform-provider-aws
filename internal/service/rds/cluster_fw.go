@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -25,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
@@ -40,7 +40,6 @@ import (
 	fwboolplanmodifier "github.com/hashicorp/terraform-provider-aws/internal/framework/boolplanmodifier"
 	fwint64planmodifier "github.com/hashicorp/terraform-provider-aws/internal/framework/int64planmodifier"
 	fwstringplanmodifier "github.com/hashicorp/terraform-provider-aws/internal/framework/stringplanmodifier"
-	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -84,17 +83,21 @@ func (r *resourceCluster) Schema(ctx context.Context, request resource.SchemaReq
 			"allocated_storage": schema.Int64Attribute{
 				Optional: true,
 				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.UseStateForUnknown(),
+				},
 			},
 			"allow_major_version_upgrade": schema.BoolAttribute{
 				Optional: true,
 			},
 			"apply_immediately": schema.BoolAttribute{
 				Optional: true,
-				Computed: true,
 			},
 			"arn": schema.StringAttribute{
-				CustomType: fwtypes.ARNType,
-				Computed:   true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"availability_zones": schema.SetAttribute{
 				ElementType: types.StringType,
@@ -106,8 +109,12 @@ func (r *resourceCluster) Schema(ctx context.Context, request resource.SchemaReq
 			},
 			"backtrack_window": schema.Int64Attribute{
 				Optional: true,
+				Computed: true,
 				Validators: []validator.Int64{
 					int64validator.Between(0, 259200),
+				},
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.UseStateForUnknown(),
 				},
 			},
 			"backup_retention_period": schema.Int64Attribute{
@@ -115,6 +122,7 @@ func (r *resourceCluster) Schema(ctx context.Context, request resource.SchemaReq
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
 					fwint64planmodifier.DefaultValue(1),
+					int64planmodifier.UseStateForUnknown(),
 				},
 				Validators: []validator.Int64{
 					int64validator.AtMost(35),
@@ -125,6 +133,7 @@ func (r *resourceCluster) Schema(ctx context.Context, request resource.SchemaReq
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
 				Validators: []validator.String{
 					fwvalidators.ClusterIdentifier(),
@@ -132,9 +141,9 @@ func (r *resourceCluster) Schema(ctx context.Context, request resource.SchemaReq
 			},
 			"cluster_identifier_prefix": schema.StringAttribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
 				Validators: []validator.String{
 					fwvalidators.ClusterIdentifierPrefix(),
@@ -144,15 +153,22 @@ func (r *resourceCluster) Schema(ctx context.Context, request resource.SchemaReq
 				ElementType: types.StringType,
 				Optional:    true,
 				Computed:    true,
+				PlanModifiers: []planmodifier.Set{
+					setplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"cluster_resource_id": schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"copy_tags_to_snapshot": schema.BoolAttribute{
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					fwboolplanmodifier.DefaultValue(false),
+					boolplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"database_name": schema.StringAttribute{
@@ -160,14 +176,22 @@ func (r *resourceCluster) Schema(ctx context.Context, request resource.SchemaReq
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"db_cluster_instance_class": schema.StringAttribute{
 				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"db_cluster_parameter_group_name": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"db_instance_parameter_group_name": schema.StringAttribute{
 				Optional: true,
@@ -177,33 +201,48 @@ func (r *resourceCluster) Schema(ctx context.Context, request resource.SchemaReq
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"deletion_protection": schema.BoolAttribute{
 				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"enable_global_write_forwarding": schema.BoolAttribute{
 				Optional: true,
-				//PlanModifiers: []planmodifier.Bool{
-				//	fwboolplanmodifier.DefaultValue(false),
-				//},
+				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					fwboolplanmodifier.DefaultValue(false),
+					boolplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"enable_http_endpoint": schema.BoolAttribute{
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					fwboolplanmodifier.DefaultValue(false),
+					boolplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"enabled_cloudwatch_logs_exports": schema.SetAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
+				Computed:    true,
+				PlanModifiers: []planmodifier.Set{
+					setplanmodifier.UseStateForUnknown(),
+				},
 				Validators: []validator.Set{
 					setvalidator.ValueStringsAre(stringvalidator.OneOf(ClusterExportableLogType_Values()...)),
 				},
 			},
 			"endpoint": schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"engine": schema.StringAttribute{
 				Optional: true,
@@ -230,9 +269,15 @@ func (r *resourceCluster) Schema(ctx context.Context, request resource.SchemaReq
 			"engine_version": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"engine_version_actual": schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"final_snapshot_identifier": schema.StringAttribute{
 				Optional: true,
@@ -245,25 +290,39 @@ func (r *resourceCluster) Schema(ctx context.Context, request resource.SchemaReq
 			},
 			"hosted_zone_id": schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"iam_database_authentication_enabled": schema.BoolAttribute{
 				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"iam_roles": schema.SetAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
 				Computed:    true,
+				PlanModifiers: []planmodifier.Set{
+					setplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"id": framework.IDAttribute(),
 			"iops": schema.Int64Attribute{
 				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.UseStateForUnknown(),
+				},
 			},
 			"kms_key_id": schema.StringAttribute{
-				CustomType: fwtypes.ARNType,
-				Optional:   true,
-				Computed:   true,
+				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"master_password": schema.StringAttribute{
@@ -275,6 +334,7 @@ func (r *resourceCluster) Schema(ctx context.Context, request resource.SchemaReq
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"network_type": schema.StringAttribute{
@@ -283,30 +343,48 @@ func (r *resourceCluster) Schema(ctx context.Context, request resource.SchemaReq
 				Validators: []validator.String{
 					stringvalidator.OneOf(NetworkType_Values()...),
 				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"option_group_name": schema.StringAttribute{
 				Optional: true,
-				Computed: true,
 			},
 			"port": schema.Int64Attribute{
 				Optional: true,
 				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.UseStateForUnknown(),
+				},
 			},
 			"preferred_backup_window": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 				// TODO Validate,
 			},
 			"preferred_maintenance_window": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 				// TODO Validate,
 			},
 			"reader_endpoint": schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"replication_source_identifier": schema.StringAttribute{
 				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"skip_final_snapshot": schema.BoolAttribute{
 				Optional: true,
@@ -329,12 +407,15 @@ func (r *resourceCluster) Schema(ctx context.Context, request resource.SchemaReq
 				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.RequiresReplace(),
+					boolplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"storage_type": schema.StringAttribute{
 				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"tags":     tftags.TagsAttribute(),
@@ -343,6 +424,9 @@ func (r *resourceCluster) Schema(ctx context.Context, request resource.SchemaReq
 				ElementType: types.StringType,
 				Optional:    true,
 				Computed:    true,
+				PlanModifiers: []planmodifier.Set{
+					setplanmodifier.UseStateForUnknown(),
+				},
 			},
 		},
 		Blocks: map[string]schema.Block{
@@ -546,7 +630,7 @@ func (r *resourceCluster) Create(ctx context.Context, request resource.CreateReq
 		identifier = sdkresource.PrefixedUniqueId("tf-")
 	}
 
-	if !data.SnapshotIdentifier.IsUnknown() && !data.FinalSnapshotIdentifier.IsNull() {
+	if !data.SnapshotIdentifier.IsUnknown() && !data.SnapshotIdentifier.IsNull() {
 		input := &rds.RestoreDBClusterFromSnapshotInput{
 			CopyTagsToSnapshot:  aws.Bool(data.CopyTagsToSnapshot.ValueBool()),
 			DBClusterIdentifier: aws.String(identifier),
@@ -560,7 +644,7 @@ func (r *resourceCluster) Create(ctx context.Context, request resource.CreateReq
 			input.AvailabilityZones = flex.ExpandFrameworkStringSet(ctx, data.AvailabilityZones)
 		}
 
-		if !data.BacktrackWindow.IsNull() {
+		if !data.BacktrackWindow.IsUnknown() && !data.BacktrackWindow.IsNull() {
 			input.BacktrackWindow = aws.Int64(data.BacktrackWindow.ValueInt64())
 		}
 
@@ -590,7 +674,7 @@ func (r *resourceCluster) Create(ctx context.Context, request resource.CreateReq
 		}
 
 		if !data.KmsKeyID.IsUnknown() && !data.KmsKeyID.IsNull() {
-			input.KmsKeyId = aws.String(data.KmsKeyID.String())
+			input.KmsKeyId = aws.String(data.KmsKeyID.ValueString())
 		}
 
 		if !data.MasterPassword.IsNull() {
@@ -678,7 +762,7 @@ func (r *resourceCluster) Create(ctx context.Context, request resource.CreateReq
 			input.AvailabilityZones = flex.ExpandFrameworkStringSet(ctx, data.AvailabilityZones)
 		}
 
-		if !data.BacktrackWindow.IsNull() {
+		if !data.BacktrackWindow.IsUnknown() && !data.BacktrackWindow.IsNull() {
 			input.BacktrackWindow = aws.Int64(data.BacktrackWindow.ValueInt64())
 		}
 
@@ -706,12 +790,12 @@ func (r *resourceCluster) Create(ctx context.Context, request resource.CreateReq
 			input.EngineVersion = aws.String(data.EngineVersion.ValueString())
 		}
 
-		if !data.IamDatabaseAuthenticationEnabled.IsNull() {
+		if !data.IamDatabaseAuthenticationEnabled.IsUnknown() && !data.IamDatabaseAuthenticationEnabled.IsNull() {
 			input.EnableIAMDatabaseAuthentication = aws.Bool(data.IamDatabaseAuthenticationEnabled.ValueBool())
 		}
 
 		if !data.KmsKeyID.IsUnknown() && !data.KmsKeyID.IsNull() {
-			input.KmsKeyId = aws.String(data.KmsKeyID.String())
+			input.KmsKeyId = aws.String(data.KmsKeyID.ValueString())
 		}
 
 		if !data.NetworkType.IsUnknown() && !data.NetworkType.IsNull() {
@@ -792,7 +876,7 @@ func (r *resourceCluster) Create(ctx context.Context, request resource.CreateReq
 			input.UseLatestRestorableTime = aws.Bool(m.UseLatestRestorableTime.ValueBool())
 		}
 
-		if !data.BacktrackWindow.IsNull() {
+		if !data.BacktrackWindow.IsUnknown() && !data.BacktrackWindow.IsNull() {
 			input.BacktrackWindow = aws.Int64(data.BacktrackWindow.ValueInt64())
 		}
 
@@ -813,12 +897,12 @@ func (r *resourceCluster) Create(ctx context.Context, request resource.CreateReq
 			input.EnableCloudwatchLogsExports = flex.ExpandFrameworkStringSet(ctx, data.EnabledCloudwatchLogsExports)
 		}
 
-		if !data.IamDatabaseAuthenticationEnabled.IsNull() {
+		if !data.IamDatabaseAuthenticationEnabled.IsUnknown() && !data.IamDatabaseAuthenticationEnabled.IsNull() {
 			input.EnableIAMDatabaseAuthentication = aws.Bool(data.IamDatabaseAuthenticationEnabled.ValueBool())
 		}
 
 		if !data.KmsKeyID.IsUnknown() && !data.KmsKeyID.IsNull() {
-			input.KmsKeyId = aws.String(data.KmsKeyID.String())
+			input.KmsKeyId = aws.String(data.KmsKeyID.ValueString())
 		}
 
 		if !data.NetworkType.IsUnknown() && !data.NetworkType.IsNull() {
@@ -897,7 +981,7 @@ func (r *resourceCluster) Create(ctx context.Context, request resource.CreateReq
 			input.AvailabilityZones = flex.ExpandFrameworkStringSet(ctx, data.AvailabilityZones)
 		}
 
-		if !data.BacktrackWindow.IsNull() {
+		if !data.BacktrackWindow.IsUnknown() && !data.BacktrackWindow.IsNull() {
 			input.BacktrackWindow = aws.Int64(data.BacktrackWindow.ValueInt64())
 		}
 
@@ -909,7 +993,7 @@ func (r *resourceCluster) Create(ctx context.Context, request resource.CreateReq
 			input.DatabaseName = aws.String(data.DatabaseName.ValueString())
 		}
 
-		if !data.DbClusterInstanceClass.IsNull() {
+		if !data.DbClusterInstanceClass.IsUnknown() && !data.DbClusterInstanceClass.IsNull() {
 			input.DBClusterInstanceClass = aws.String(data.DbClusterInstanceClass.ValueString())
 		}
 
@@ -921,9 +1005,9 @@ func (r *resourceCluster) Create(ctx context.Context, request resource.CreateReq
 			input.DBSubnetGroupName = aws.String(data.DbSubnetGroupName.ValueString())
 		}
 
-		if !data.EnableGlobalWriteForwarding.IsUnknown() && !data.EnableGlobalWriteForwarding.IsNull() {
-			input.EnableGlobalWriteForwarding = aws.Bool(data.EnableGlobalWriteForwarding.ValueBool())
-		}
+		//if !data.EnableGlobalWriteForwarding.IsUnknown() && !data.EnableGlobalWriteForwarding.IsNull() {
+		//	input.EnableGlobalWriteForwarding = aws.Bool(data.EnableGlobalWriteForwarding.ValueBool())
+		//}
 
 		if !data.EnableHttpEndpoint.IsNull() {
 			input.EnableHttpEndpoint = aws.Bool(data.EnableHttpEndpoint.ValueBool())
@@ -939,18 +1023,19 @@ func (r *resourceCluster) Create(ctx context.Context, request resource.CreateReq
 
 		if !data.GlobalClusterIdentifier.IsNull() {
 			input.GlobalClusterIdentifier = aws.String(data.GlobalClusterIdentifier.ValueString())
+			input.EnableGlobalWriteForwarding = aws.Bool(data.EnableGlobalWriteForwarding.ValueBool())
 		}
 
-		if !data.IamDatabaseAuthenticationEnabled.IsNull() {
+		if !data.IamDatabaseAuthenticationEnabled.IsUnknown() && !data.IamDatabaseAuthenticationEnabled.IsNull() {
 			input.EnableIAMDatabaseAuthentication = aws.Bool(data.IamDatabaseAuthenticationEnabled.ValueBool())
 		}
 
-		if !data.Iops.IsNull() {
+		if !data.Iops.IsUnknown() && !data.Iops.IsNull() {
 			input.Iops = aws.Int64(data.Iops.ValueInt64())
 		}
 
 		if !data.KmsKeyID.IsUnknown() && !data.KmsKeyID.IsNull() {
-			input.KmsKeyId = aws.String(data.KmsKeyID.String())
+			input.KmsKeyId = aws.String(data.KmsKeyID.ValueString())
 		}
 
 		// Note: Username and password credentials are required and valid
@@ -981,7 +1066,7 @@ func (r *resourceCluster) Create(ctx context.Context, request resource.CreateReq
 			input.PreferredMaintenanceWindow = aws.String(data.PreferredMaintenanceWindow.ValueString())
 		}
 
-		if !data.ReplicationSourceIdentifier.IsNull() {
+		if !data.ReplicationSourceIdentifier.IsUnknown() && !data.ReplicationSourceIdentifier.IsNull() {
 			input.ReplicationSourceIdentifier = aws.String(data.ReplicationSourceIdentifier.ValueString())
 		}
 
@@ -1007,7 +1092,7 @@ func (r *resourceCluster) Create(ctx context.Context, request resource.CreateReq
 			input.StorageEncrypted = aws.Bool(data.StorageEncrypted.ValueBool())
 		}
 
-		if !data.StorageType.IsNull() {
+		if !data.StorageType.IsUnknown() && !data.StorageType.IsNull() {
 			input.StorageType = aws.String(data.StorageType.ValueString())
 		}
 
@@ -1143,6 +1228,7 @@ func (r *resourceCluster) Update(ctx context.Context, request resource.UpdateReq
 	}
 	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
 
+	var modifyCluster bool
 	input := &rds.ModifyDBClusterInput{
 		ApplyImmediately:    aws.Bool(plan.ApplyImmediately.ValueBool()),
 		DBClusterIdentifier: aws.String(plan.ID.ValueString()),
@@ -1150,46 +1236,57 @@ func (r *resourceCluster) Update(ctx context.Context, request resource.UpdateReq
 
 	if !plan.AllocatedStorage.Equal(state.AllocatedStorage) {
 		input.AllocatedStorage = aws.Int64(plan.AllocatedStorage.ValueInt64())
+		modifyCluster = true
 	}
 
 	if !plan.AllowMajorVersionUpgrade.IsNull() {
 		input.AllowMajorVersionUpgrade = aws.Bool(plan.AllowMajorVersionUpgrade.ValueBool())
+		modifyCluster = true
 	}
 
 	if !plan.BacktrackWindow.Equal(state.BacktrackWindow) {
 		input.BacktrackWindow = aws.Int64(plan.BacktrackWindow.ValueInt64())
+		modifyCluster = true
 	}
 
 	if !plan.BackupRetentionPeriod.Equal(state.BackupRetentionPeriod) {
 		input.BackupRetentionPeriod = aws.Int64(plan.BackupRetentionPeriod.ValueInt64())
+		modifyCluster = true
 	}
 
 	if !plan.CopyTagsToSnapshot.Equal(state.CopyTagsToSnapshot) {
 		input.CopyTagsToSnapshot = aws.Bool(plan.CopyTagsToSnapshot.ValueBool())
+		modifyCluster = true
 	}
 
 	if !plan.DbClusterInstanceClass.Equal(state.DbClusterInstanceClass) {
 		input.DBClusterInstanceClass = aws.String(plan.DbClusterInstanceClass.ValueString())
+		modifyCluster = true
 	}
 
 	if !plan.DbClusterParameterGroupName.Equal(state.DbClusterParameterGroupName) {
 		input.DBClusterParameterGroupName = aws.String(plan.DbClusterParameterGroupName.ValueString())
+		modifyCluster = true
 	}
 
 	if !plan.DbInstanceParameterGroupName.Equal(state.DbInstanceParameterGroupName) {
 		input.DBInstanceParameterGroupName = aws.String(plan.DbInstanceParameterGroupName.ValueString())
+		modifyCluster = true
 	}
 
 	if !plan.DeletionProtection.Equal(state.DeletionProtection) {
 		input.DeletionProtection = aws.Bool(plan.DeletionProtection.ValueBool())
+		modifyCluster = true
 	}
 
 	if !plan.EnableGlobalWriteForwarding.Equal(state.EnableGlobalWriteForwarding) {
 		input.EnableGlobalWriteForwarding = aws.Bool(plan.EnableGlobalWriteForwarding.ValueBool())
+		modifyCluster = true
 	}
 
 	if !plan.EnableHttpEndpoint.Equal(state.EnableHttpEndpoint) {
 		input.EnableHttpEndpoint = aws.Bool(plan.EnableHttpEndpoint.ValueBool())
+		modifyCluster = true
 	}
 
 	if !plan.EnabledCloudwatchLogsExports.Equal(state.EnabledCloudwatchLogsExports) {
@@ -1200,38 +1297,47 @@ func (r *resourceCluster) Update(ctx context.Context, request resource.UpdateReq
 			DisableLogTypes: aws.StringSlice(o.Difference(n)),
 			EnableLogTypes:  aws.StringSlice(n.Difference(o)),
 		}
+		modifyCluster = true
 	}
 
 	if !plan.EngineVersion.Equal(state.EngineVersion) {
 		input.EngineVersion = aws.String(plan.EngineVersion.ValueString())
+		modifyCluster = true
 	}
 
 	if !plan.IamDatabaseAuthenticationEnabled.Equal(state.IamDatabaseAuthenticationEnabled) {
 		input.EnableIAMDatabaseAuthentication = aws.Bool(plan.IamDatabaseAuthenticationEnabled.ValueBool())
+		modifyCluster = true
 	}
 
 	if !plan.Iops.Equal(state.Iops) {
 		input.Iops = aws.Int64(plan.Iops.ValueInt64())
+		modifyCluster = true
 	}
 
 	if !plan.MasterPassword.Equal(state.MasterPassword) {
 		input.MasterUserPassword = aws.String(plan.MasterPassword.ValueString())
+		modifyCluster = true
 	}
 
 	if !plan.NetworkType.Equal(state.NetworkType) {
 		input.NetworkType = aws.String(plan.NetworkType.ValueString())
+		modifyCluster = true
 	}
 
 	if !plan.Port.Equal(state.Port) {
 		input.Port = aws.Int64(plan.Port.ValueInt64())
+		modifyCluster = true
 	}
 
 	if !plan.PreferredBackupWindow.Equal(state.PreferredBackupWindow) {
 		input.PreferredBackupWindow = aws.String(plan.PreferredBackupWindow.ValueString())
+		modifyCluster = true
 	}
 
 	if !plan.PreferredMaintenanceWindow.Equal(state.PreferredMaintenanceWindow) {
 		input.PreferredMaintenanceWindow = aws.String(plan.PreferredMaintenanceWindow.ValueString())
+		modifyCluster = true
 	}
 
 	if !plan.ScalingConfiguration.Equal(state.ScalingConfiguration) {
@@ -1241,6 +1347,7 @@ func (r *resourceCluster) Update(ctx context.Context, request resource.UpdateReq
 			return
 		}
 		input.ScalingConfiguration = expandScalingConfigurationFramework(scalingConfiguration)
+		modifyCluster = true
 	}
 
 	if !plan.ServerlessV2ScalingConfiguration.Equal(state.ServerlessV2ScalingConfiguration) {
@@ -1250,53 +1357,58 @@ func (r *resourceCluster) Update(ctx context.Context, request resource.UpdateReq
 			return
 		}
 		input.ServerlessV2ScalingConfiguration = expandServerlessV2ScalingConfigurationFramework(serverlessV2ScalingConfiguration)
+		modifyCluster = true
 	}
 
 	if !plan.StorageType.Equal(state.StorageType) {
 		input.StorageType = aws.String(plan.StorageType.ValueString())
+		modifyCluster = true
 	}
 
 	if !plan.VpcSecurityGroupIds.Equal(state.VpcSecurityGroupIds) {
 		input.VpcSecurityGroupIds = flex.ExpandFrameworkStringSet(ctx, plan.VpcSecurityGroupIds)
+		modifyCluster = true
 	}
 
-	_, err := tfresource.RetryWhen(ctx, 5*time.Minute,
-		func() (interface{}, error) {
-			return conn.ModifyDBClusterWithContext(ctx, input)
-		},
-		func(err error) (bool, error) {
-			if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions") {
-				return true, err
-			}
+	if modifyCluster {
+		_, err := tfresource.RetryWhen(ctx, 5*time.Minute,
+			func() (interface{}, error) {
+				return conn.ModifyDBClusterWithContext(ctx, input)
+			},
+			func(err error) (bool, error) {
+				if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions") {
+					return true, err
+				}
 
-			if tfawserr.ErrCodeEquals(err, rds.ErrCodeInvalidDBClusterStateFault) {
-				return true, err
-			}
+				if tfawserr.ErrCodeEquals(err, rds.ErrCodeInvalidDBClusterStateFault) {
+					return true, err
+				}
 
-			return false, err
-		},
-	)
-
-	if err != nil {
-		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.RDS, create.ErrActionUpdating, ResNameCluster, plan.ID.ValueString(), nil),
-			err.Error(),
+				return false, err
+			},
 		)
-		return
-	}
 
-	if _, err := waitDBClusterUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout); err != nil {
-		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.RDS, create.ErrActionWaitingForUpdate, ResNameCluster, plan.ID.ValueString(), nil),
-			err.Error(),
-		)
-		return
+		if err != nil {
+			response.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.RDS, create.ErrActionUpdating, ResNameCluster, plan.ID.ValueString(), nil),
+				err.Error(),
+			)
+			return
+		}
+
+		if _, err := waitDBClusterUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout); err != nil {
+			response.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.RDS, create.ErrActionWaitingForUpdate, ResNameCluster, plan.ID.ValueString(), nil),
+				err.Error(),
+			)
+			return
+		}
 	}
 
 	// can only be removed.
 	if !plan.GlobalClusterIdentifier.Equal(state.GlobalClusterIdentifier) {
 		in := &rds.RemoveFromGlobalClusterInput{
-			DbClusterIdentifier:     aws.String(state.ARN.String()),
+			DbClusterIdentifier:     aws.String(state.ARN.ValueString()),
 			GlobalClusterIdentifier: aws.String(state.GlobalClusterIdentifier.ValueString()),
 		}
 
@@ -1346,21 +1458,20 @@ func (r *resourceCluster) Update(ctx context.Context, request resource.UpdateReq
 		return
 	}
 
-	response.Diagnostics.Append(state.refreshFromOutput(ctx, r.Meta(), out)...)
-
 	if !plan.TagsAll.Equal(state.TagsAll) {
-		if err := UpdateTags(ctx, conn, plan.ARN.String(), state.TagsAll, plan.TagsAll); err != nil {
+		if err := UpdateTags(ctx, conn, plan.ARN.ValueString(), state.TagsAll, plan.TagsAll); err != nil {
 			response.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.RDS, create.ErrActionUpdating, ResNameCluster, plan.ID.String(), nil),
 				err.Error(),
 			)
 			return
 		}
-		state.Tags = plan.Tags
-		state.TagsAll = plan.TagsAll
+		//state.Tags = plan.Tags
+		//state.TagsAll = plan.TagsAll
 	}
 
-	response.Diagnostics.Append(response.State.Set(ctx, &state)...)
+	response.Diagnostics.Append(plan.refreshFromOutput(ctx, r.Meta(), out)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &plan)...)
 }
 
 // Delete is called when the provider must delete the resource.
@@ -1383,12 +1494,12 @@ func (r *resourceCluster) Delete(ctx context.Context, request resource.DeleteReq
 	// InvalidDBClusterStateFault: This cluster is a part of a global cluster, please remove it from globalcluster first
 	if !data.GlobalClusterIdentifier.IsNull() || data.GlobalClusterIdentifier.ValueString() != "" {
 		input := &rds.RemoveFromGlobalClusterInput{
-			DbClusterIdentifier:     aws.String(data.ARN.String()),
+			DbClusterIdentifier:     aws.String(data.ARN.ValueString()),
 			GlobalClusterIdentifier: aws.String(data.GlobalClusterIdentifier.ValueString()),
 		}
 
 		tflog.Debug(ctx, "removing RDS Cluster from RDS Global Cluster", map[string]interface{}{
-			"arn":                       data.ARN.String(),
+			"arn":                       data.ARN.ValueString(),
 			"global_cluster_identifier": data.GlobalClusterIdentifier.ValueString(),
 		})
 
@@ -1632,7 +1743,7 @@ type resourceClusterData struct {
 	AllocatedStorage                 types.Int64  `tfsdk:"allocated_storage"`
 	AllowMajorVersionUpgrade         types.Bool   `tfsdk:"allow_major_version_upgrade"`
 	ApplyImmediately                 types.Bool   `tfsdk:"apply_immediately"`
-	ARN                              fwtypes.ARN  `tfsdk:"arn"`
+	ARN                              types.String `tfsdk:"arn"`
 	AvailabilityZones                types.Set    `tfsdk:"availability_zones"`
 	BacktrackWindow                  types.Int64  `tfsdk:"backtrack_window"`
 	BackupRetentionPeriod            types.Int64  `tfsdk:"backup_retention_period"`
@@ -1662,7 +1773,7 @@ type resourceClusterData struct {
 	IamRoles                         types.Set    `tfsdk:"iam_roles"`
 	ID                               types.String `tfsdk:"id"`
 	Iops                             types.Int64  `tfsdk:"iops"`
-	KmsKeyID                         fwtypes.ARN  `tfsdk:"kms_key_id"`
+	KmsKeyID                         types.String `tfsdk:"kms_key_id"`
 	MasterPassword                   types.String `tfsdk:"master_password"`
 	MasterUsername                   types.String `tfsdk:"master_username"`
 	NetworkType                      types.String `tfsdk:"network_type"`
@@ -1752,10 +1863,7 @@ func (r *resourceClusterData) refreshFromOutput(ctx context.Context, meta *conns
 	ignoreTagsConfig := meta.IgnoreTagsConfig
 
 	r.AllocatedStorage = flex.Int64ToFrameworkLegacy(ctx, out.AllocatedStorage)
-
-	dbARN, _ := arn.Parse(aws.StringValue(out.DBClusterArn))
-	r.ARN = fwtypes.ARNValue(dbARN)
-
+	r.ARN = flex.StringToFrameworkLegacy(ctx, out.DBClusterArn)
 	r.AvailabilityZones = flex.FlattenFrameworkStringSetLegacy(ctx, out.AvailabilityZones)
 	r.BacktrackWindow = flex.Int64ToFrameworkLegacy(ctx, out.BacktrackWindow)
 	r.BackupRetentionPeriod = flex.Int64ToFrameworkLegacy(ctx, out.BackupRetentionPeriod)
@@ -1766,9 +1874,9 @@ func (r *resourceClusterData) refreshFromOutput(ctx context.Context, meta *conns
 	for _, v := range out.DBClusterMembers {
 		clusterMembers = append(clusterMembers, aws.StringValue(v.DBInstanceIdentifier))
 	}
-	r.ClusterMembers = flex.FlattenFrameworkStringValueSet(ctx, clusterMembers)
+	r.ClusterMembers = flex.FlattenFrameworkStringValueSetLegacy(ctx, clusterMembers)
 	r.ClusterResourceID = flex.StringToFrameworkLegacy(ctx, out.DbClusterResourceId)
-	r.CopyTagsToSnapshot = flex.BoolToFramework(ctx, out.CopyTagsToSnapshot)
+	r.CopyTagsToSnapshot = flex.BoolToFrameworkLegacy(ctx, out.CopyTagsToSnapshot)
 
 	// Only set the DatabaseName if it is not nil. There is a known API bug where
 	// RDS accepts a DatabaseName but does not return it, causing a perpetual
@@ -1781,14 +1889,14 @@ func (r *resourceClusterData) refreshFromOutput(ctx context.Context, meta *conns
 	r.DbClusterParameterGroupName = flex.StringToFrameworkLegacy(ctx, out.DBClusterParameterGroup)
 	r.DbSubnetGroupName = flex.StringToFrameworkLegacy(ctx, out.DBSubnetGroup)
 	r.DeletionProtection = flex.BoolToFramework(ctx, out.DeletionProtection)
-	r.EnabledCloudwatchLogsExports = flex.FlattenFrameworkStringSetLegacy(ctx, out.EnabledCloudwatchLogsExports)
-	r.EnableHttpEndpoint = flex.BoolToFramework(ctx, out.HttpEndpointEnabled)
+	r.EnabledCloudwatchLogsExports = flex.FlattenFrameworkStringValueSet(ctx, aws.StringValueSlice(out.EnabledCloudwatchLogsExports))
+	r.EnableHttpEndpoint = flex.BoolToFrameworkLegacy(ctx, out.HttpEndpointEnabled)
 	r.Endpoint = flex.StringToFrameworkLegacy(ctx, out.Endpoint)
 	r.Engine = flex.StringToFrameworkLegacy(ctx, out.Engine)
 	r.EngineMode = flex.StringToFrameworkLegacy(ctx, out.EngineMode)
 	r.setResourceDataEngineVersionFromCluster(ctx, out)
 	r.HostedZoneID = flex.StringToFrameworkLegacy(ctx, out.HostedZoneId)
-	r.IamDatabaseAuthenticationEnabled = flex.BoolToFramework(ctx, out.IAMDatabaseAuthenticationEnabled)
+	r.IamDatabaseAuthenticationEnabled = flex.BoolToFrameworkLegacy(ctx, out.IAMDatabaseAuthenticationEnabled)
 
 	var iamRoleARNs []string
 	for _, v := range out.AssociatedRoles {
@@ -1796,14 +1904,7 @@ func (r *resourceClusterData) refreshFromOutput(ctx context.Context, meta *conns
 	}
 	r.IamRoles = flex.FlattenFrameworkStringValueSetLegacy(ctx, iamRoleARNs)
 	r.Iops = flex.Int64ToFrameworkLegacy(ctx, out.Iops)
-
-	if out.KmsKeyId != nil {
-		if v, err := arn.Parse(aws.StringValue(out.KmsKeyId)); err != nil {
-			diags.AddError("parsing ARN", err.Error())
-		} else {
-			r.KmsKeyID = fwtypes.ARNValue(v)
-		}
-	}
+	r.KmsKeyID = flex.StringToFrameworkLegacy(ctx, out.KmsKeyId)
 	r.MasterUsername = flex.StringToFrameworkLegacy(ctx, out.MasterUsername)
 	r.NetworkType = flex.StringToFrameworkLegacy(ctx, out.NetworkType)
 	r.Port = flex.Int64ToFrameworkLegacy(ctx, out.Port)
@@ -1824,8 +1925,15 @@ func (r *resourceClusterData) refreshFromOutput(ctx context.Context, meta *conns
 	}
 	r.VpcSecurityGroupIds = flex.FlattenFrameworkStringValueSetLegacy(ctx, securityGroupIDs)
 
-	tags := KeyValueTags(out.TagList).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-	// AWS APIs often return empty lists of tags when none have been configured.
+	tags, err := ListTags(ctx, meta.RDSConn(), aws.StringValue(out.DBClusterArn))
+	if err != nil {
+		diags.AddError(
+			"Cannot list tags for RDS Cluster",
+			err.Error(),
+		)
+	}
+
+	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 	if tags := tags.RemoveDefaultConfig(defaultTagsConfig).Map(); len(tags) == 0 {
 		r.Tags = tftags.Null
 	} else {
