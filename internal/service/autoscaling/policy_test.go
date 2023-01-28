@@ -868,9 +868,9 @@ resource "aws_autoscaling_policy" "test" {
   target_tracking_configuration {
     customized_metric_specification {
       metrics {
-        id = "e1"
-        expression = "m1 / m2"
-        label = "e1 label"
+        id          = "e1"
+        expression  = "m1 / m2"
+        label       = "e1 label"
         return_data = true
       }
 
@@ -887,7 +887,7 @@ resource "aws_autoscaling_policy" "test" {
           }
           stat = "Sum"
         }
-        label = "m1 metric stat"
+        label       = "m1 metric stat"
         return_data = false
       }
 
@@ -904,7 +904,7 @@ resource "aws_autoscaling_policy" "test" {
           }
           stat = "Average"
         }
-        label = "m2 metric stat"
+        label       = "m2 metric stat"
         return_data = false
       }
     }
