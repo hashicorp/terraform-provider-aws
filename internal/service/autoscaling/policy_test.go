@@ -401,6 +401,53 @@ func TestAccAutoScalingPolicy_TargetTrack_custom(t *testing.T) {
 	})
 }
 
+func TestAccAutoScalingPolicy_TargetTrack_advance(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v autoscaling.ScalingPolicy
+	resourceName := "aws_autoscaling_policy.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyConfig_targetTrackingAdvance(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckScalingPolicyExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "target_tracking_configuration.0.customized_metric_specification.0.metrics.0.id", "e1"),
+					resource.TestCheckResourceAttr(resourceName, "target_tracking_configuration.0.customized_metric_specification.0.metrics.0.expression", "m1 / m2"),
+					resource.TestCheckResourceAttr(resourceName, "target_tracking_configuration.0.customized_metric_specification.0.metrics.0.label", "e1 label"),
+					resource.TestCheckResourceAttr(resourceName, "target_tracking_configuration.0.customized_metric_specification.0.metrics.0.return_data", "true"),
+					resource.TestCheckResourceAttr(resourceName, "target_tracking_configuration.0.customized_metric_specification.0.metrics.1.id", "m1"),
+					resource.TestCheckResourceAttr(resourceName, "target_tracking_configuration.0.customized_metric_specification.0.metrics.1.metric_stat.0.metric.0.dimensions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_tracking_configuration.0.customized_metric_specification.0.metrics.1.metric_stat.0.metric.0.metric_name", "metric_name_foo"),
+					resource.TestCheckResourceAttr(resourceName, "target_tracking_configuration.0.customized_metric_specification.0.metrics.1.metric_stat.0.metric.0.namespace", "namespace_foo"),
+					resource.TestCheckResourceAttr(resourceName, "target_tracking_configuration.0.customized_metric_specification.0.metrics.1.metric_stat.0.stat", "Sum"),
+					resource.TestCheckResourceAttr(resourceName, "target_tracking_configuration.0.customized_metric_specification.0.metrics.1.label", "m1 metric stat"),
+					resource.TestCheckResourceAttr(resourceName, "target_tracking_configuration.0.customized_metric_specification.0.metrics.1.return_data", "false"),
+					resource.TestCheckResourceAttr(resourceName, "target_tracking_configuration.0.customized_metric_specification.0.metrics.2.id", "m2"),
+					resource.TestCheckResourceAttr(resourceName, "target_tracking_configuration.0.customized_metric_specification.0.metrics.2.metric_stat.0.metric.0.dimensions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_tracking_configuration.0.customized_metric_specification.0.metrics.2.metric_stat.0.metric.0.metric_name", "metric_name_bar"),
+					resource.TestCheckResourceAttr(resourceName, "target_tracking_configuration.0.customized_metric_specification.0.metrics.2.metric_stat.0.metric.0.namespace", "namespace_bar"),
+					resource.TestCheckResourceAttr(resourceName, "target_tracking_configuration.0.customized_metric_specification.0.metrics.2.metric_stat.0.stat", "Average"),
+					resource.TestCheckResourceAttr(resourceName, "target_tracking_configuration.0.customized_metric_specification.0.metrics.2.label", "m2 metric stat"),
+					resource.TestCheckResourceAttr(resourceName, "target_tracking_configuration.0.customized_metric_specification.0.metrics.2.return_data", "false"),
+					resource.TestCheckResourceAttr(resourceName, "target_tracking_configuration.0.target_value", "10"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccPolicyImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAutoScalingPolicy_zeroValue(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1, v2 autoscaling.ScalingPolicy
@@ -806,6 +853,63 @@ resource "aws_autoscaling_policy" "test" {
     }
 
     target_value = 40.0
+  }
+}
+`, rName))
+}
+
+func testAccPolicyConfig_targetTrackingAdvance(rName string) string {
+	return acctest.ConfigCompose(testAccPolicyConfigBase(rName), fmt.Sprintf(`
+resource "aws_autoscaling_policy" "test" {
+  name                   = "%[1]s-tracking"
+  policy_type            = "TargetTrackingScaling"
+  autoscaling_group_name = aws_autoscaling_group.test.name
+
+  target_tracking_configuration {
+    customized_metric_specification {
+      metrics {
+        id = "e1"
+        expression = "m1 / m2"
+        label = "e1 label"
+        return_data = true
+      }
+
+      metrics {
+        id = "m1"
+        metric_stat {
+          metric {
+            namespace   = "namespace_foo"
+            metric_name = "metric_name_foo"
+            dimensions {
+              name  = "foo"
+              value = "bar"
+            }
+          }
+          stat = "Sum"
+        }
+        label = "m1 metric stat"
+        return_data = false
+      }
+
+      metrics {
+        id = "m2"
+        metric_stat {
+          metric {
+            namespace   = "namespace_bar"
+            metric_name = "metric_name_bar"
+            dimensions {
+              name  = "foo"
+              value = "bar"
+            }
+          }
+          stat = "Average"
+        }
+        label = "m2 metric stat"
+        return_data = false
+      }
+    }
+
+    target_value = 10
   }
 }
 `, rName))
