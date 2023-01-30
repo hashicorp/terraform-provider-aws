@@ -41,9 +41,11 @@ func flattenRegions(regions map[string]types.RegionInfo) []map[string]interface{
 
 			region["name"] = regionName
 			region["status"] = regionData.Status
-			region["status_update_time"] = aws.ToTime(regionData.StatusUpdateDateTime).String()
 			region["kms_key_arn"] = aws.ToString(regionData.SseKmsKeyId)
-			region["status_message"] = aws.ToString(regionData.StatusMessage)
+
+			if v := regionData.StatusMessage; v != nil {
+				region["status_message"] = aws.ToString(v)
+			}
 
 			return region
 		},

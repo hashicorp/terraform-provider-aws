@@ -64,10 +64,6 @@ func ResourceReplicationSet() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"status_update_time": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
 						"status_message": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -82,19 +78,11 @@ func ResourceReplicationSet() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"deletion_protected": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
 			"last_modified_by": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"last_modified_time": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -165,10 +153,8 @@ func resourceReplicationSetRead(context context.Context, d *schema.ResourceData,
 
 	d.Set("arn", replicationSet.Arn)
 	d.Set("created_by", replicationSet.CreatedBy)
-	d.Set("created_time", replicationSet.CreatedTime.String())
 	d.Set("deletion_protected", replicationSet.DeletionProtected)
 	d.Set("last_modified_by", replicationSet.LastModifiedBy)
-	d.Set("last_modified_time", replicationSet.LastModifiedTime.String())
 	d.Set("status", replicationSet.Status)
 
 	if err := d.Set("region", flattenRegions(replicationSet.RegionMap)); err != nil {
