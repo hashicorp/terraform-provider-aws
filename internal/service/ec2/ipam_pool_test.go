@@ -294,11 +294,11 @@ resource "aws_vpc_ipam_pool" "test" {
 
 var testAccIPAMPoolConfig_ipv6Contig = acctest.ConfigCompose(testAccIPAMPoolConfig_base, `
 resource "aws_vpc_ipam_pool" "test" {
-  address_family        = "ipv6"
-  ipam_scope_id         = aws_vpc_ipam.test.public_default_scope_id
-  locale                = data.aws_region.current.name
-  public_ip_source      = "amazon"
-  aws_service           = "ec2"
+  address_family   = "ipv6"
+  ipam_scope_id    = aws_vpc_ipam.test.public_default_scope_id
+  locale           = data.aws_region.current.name
+  public_ip_source = "amazon"
+  aws_service      = "ec2"
 }
 `)
 

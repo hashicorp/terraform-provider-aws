@@ -190,7 +190,7 @@ func testAccCheckIPAMPoolCIDRDestroy(ctx context.Context) resource.TestCheckFunc
 	}
 }
 
-const testAccIPAMPoolCIDRConfig_base = `
+const TestAccIPAMPoolCIDRConfig_base = `
 data "aws_region" "current" {}
 
 resource "aws_vpc_ipam" "test" {
@@ -204,7 +204,7 @@ resource "aws_vpc_ipam" "test" {
 }
 `
 
-const testAccIPAMPoolCIDRConfig_privatePool = `
+const TestAccIPAMPoolCIDRConfig_privatePool = `
 resource "aws_vpc_ipam_pool" "test" {
   address_family = "ipv4"
   ipam_scope_id  = aws_vpc_ipam.test.private_default_scope_id
@@ -212,7 +212,7 @@ resource "aws_vpc_ipam_pool" "test" {
 }
 `
 
-const testAccIPAMPoolCIDRConfig_privatePoolWithCidr = `
+const TestAccIPAMPoolCIDRConfig_privatePoolWithCidr = `
 resource "aws_vpc_ipam_pool" "test" {
   address_family = "ipv4"
   ipam_scope_id  = aws_vpc_ipam.test.private_default_scope_id
@@ -233,7 +233,7 @@ resource "aws_vpc_ipam_pool" "testchild" {
 `
 
 func testAccIPAMPoolCIDRConfig_provisionedIPv4(cidr string) string {
-	return acctest.ConfigCompose(testAccIPAMPoolCIDRConfig_base, testAccIPAMPoolCIDRConfig_privatePool, fmt.Sprintf(`
+	return acctest.ConfigCompose(TestAccIPAMPoolCIDRConfig_base, TestAccIPAMPoolCIDRConfig_privatePool, fmt.Sprintf(`
 resource "aws_vpc_ipam_pool_cidr" "test" {
   ipam_pool_id = aws_vpc_ipam_pool.test.id
   cidr         = %[1]q
@@ -242,7 +242,7 @@ resource "aws_vpc_ipam_pool_cidr" "test" {
 }
 
 func testAccIPAMPoolCIDRConfig_provisionedIPv4NetmaskLength(netmaskLength string) string {
-	return acctest.ConfigCompose(testAccIPAMPoolCIDRConfig_base, testAccIPAMPoolCIDRConfig_privatePoolWithCidr, fmt.Sprintf(`
+	return acctest.ConfigCompose(TestAccIPAMPoolCIDRConfig_base, TestAccIPAMPoolCIDRConfig_privatePoolWithCidr, fmt.Sprintf(`
 resource "aws_vpc_ipam_pool_cidr" "test" {
   ipam_pool_id   = aws_vpc_ipam_pool.testchild.id
   netmask_length = %[1]q

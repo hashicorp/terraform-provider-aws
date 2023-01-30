@@ -2469,7 +2469,7 @@ func sweepIPAMPools(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).EC2Conn
+	conn := client.(*conns.AWSClient).EC2Conn()
 	input := &ec2.DescribeIpamPoolsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 

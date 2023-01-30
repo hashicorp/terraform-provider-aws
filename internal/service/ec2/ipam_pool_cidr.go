@@ -37,7 +37,7 @@ func ResourceIPAMPoolCIDR() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			resourceIPAMPoolCidrCustomizeDiff,
+			ResourceIPAMPoolCidrCustomizeDiff,
 		),
 
 		Schema: map[string]*schema.Schema{
@@ -72,7 +72,7 @@ func ResourceIPAMPoolCIDR() *schema.Resource {
 				},
 			},
 			// This resource's ID is a concatenated id of `<cidr>_<poolid>`
-			// ipam_pool_cidr_id was not part of the inital feature release
+			// ipam_pool_cidr_id was not part of the initial feature release
 			"ipam_pool_cidr_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -138,7 +138,7 @@ func resourceIPAMPoolCIDRCreate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	// This resource's ID is a concatenated id of `<cidr>_<poolid>`
-	// ipam_pool_cidr_id was not part of the inital feature release
+	// ipam_pool_cidr_id was not part of the initial feature release
 	d.SetId(IPAMPoolCIDRCreateResourceID(aws.StringValue(ipamPoolCidr.Cidr), poolID))
 
 	return append(diags, resourceIPAMPoolCIDRRead(ctx, d, meta)...)
@@ -243,7 +243,7 @@ func expandIPAMCIDRAuthorizationContext(tfMap map[string]interface{}) *ec2.IpamC
 	return apiObject
 }
 
-func resourceIPAMPoolCidrCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+func ResourceIPAMPoolCidrCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 	// cidr can be set by a value returned from IPAM or explicitly in config.
 	if diff.Id() != "" && diff.HasChange("cidr") {
 		// If netmask is set then cidr is derived from IPAM, ignore changes.
