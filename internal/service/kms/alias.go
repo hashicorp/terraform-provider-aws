@@ -172,5 +172,5 @@ func resourceAliasDelete(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func suppressEquivalentKeyARNOrID(k, old, new string, d *schema.ResourceData) bool {
-	return KeyARNOrIDEqual(old, new)
+	return keyARNOrIDEqual(old, new)
 }
