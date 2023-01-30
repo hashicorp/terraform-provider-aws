@@ -37,7 +37,7 @@ func ResourceIPAMPoolCIDR() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			ResourceIPAMPoolCidrCustomizeDiff,
+			ResourceIPAMPoolCIDRCustomizeDiff,
 		),
 
 		Schema: map[string]*schema.Schema{
@@ -243,7 +243,7 @@ func expandIPAMCIDRAuthorizationContext(tfMap map[string]interface{}) *ec2.IpamC
 	return apiObject
 }
 
-func ResourceIPAMPoolCidrCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+func ResourceIPAMPoolCIDRCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 	// cidr can be set by a value returned from IPAM or explicitly in config.
 	if diff.Id() != "" && diff.HasChange("cidr") {
 		// If netmask is set then cidr is derived from IPAM, ignore changes.

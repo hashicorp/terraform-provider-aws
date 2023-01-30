@@ -212,7 +212,7 @@ resource "aws_vpc_ipam_pool" "test" {
 }
 `
 
-const TestAccIPAMPoolCIDRConfig_privatePoolWithCidr = `
+const TestAccIPAMPoolCIDRConfig_privatePoolWithCIDR = `
 resource "aws_vpc_ipam_pool" "test" {
   address_family = "ipv4"
   ipam_scope_id  = aws_vpc_ipam.test.private_default_scope_id
@@ -242,7 +242,7 @@ resource "aws_vpc_ipam_pool_cidr" "test" {
 }
 
 func testAccIPAMPoolCIDRConfig_provisionedIPv4NetmaskLength(netmaskLength string) string {
-	return acctest.ConfigCompose(TestAccIPAMPoolCIDRConfig_base, TestAccIPAMPoolCIDRConfig_privatePoolWithCidr, fmt.Sprintf(`
+	return acctest.ConfigCompose(TestAccIPAMPoolCIDRConfig_base, TestAccIPAMPoolCIDRConfig_privatePoolWithCIDR, fmt.Sprintf(`
 resource "aws_vpc_ipam_pool_cidr" "test" {
   ipam_pool_id   = aws_vpc_ipam_pool.testchild.id
   netmask_length = %[1]q
