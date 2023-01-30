@@ -678,7 +678,30 @@ func ResourceEndpoint() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			resourceEndpointCustomizeDiff,
+			requireEnginerSettingsCustomizeDiff,
+			func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
+				if d.Get("engine_name").(string) == engineNameS3 {
+					if d.Get("kms_key_arn") != "" {
+						return fmt.Errorf("kms_key_arn must not be set when engine is %q. Use s3_settings.server_side_encryption_kms_key_id instead", engineNameS3)
+					}
+				}
+				return nil
+			},
+			func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
+				if d.Get("engine_name").(string) == engineNameS3 {
+					if v, ok := d.GetOk("s3_settings"); ok {
+						m := v.([]interface{})[0].(map[string]interface{})
+						encryptionMode := m["encryption_mode"].(string)
+						kmsKeyId := m["server_side_encryption_kms_key_id"].(string)
+						if encryptionMode == encryptionModeSseS3 {
+							if kmsKeyId != "" {
+								return fmt.Errorf("s3_settings.server_side_encryption_kms_key_id must not be set when encryption_mode is %q", encryptionModeSseS3)
+							}
+						}
+					}
+				}
+				return nil
+			},
 			verify.SetTagsDiff,
 		),
 	}
@@ -1313,7 +1336,7 @@ func resourceEndpointDelete(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func resourceEndpointCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+func requireEnginerSettingsCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 	switch engineName := diff.Get("engine_name").(string); engineName {
 	case engineNameElasticsearch, engineNameOpenSearch:
 		if v, ok := diff.GetOk("elasticsearch_settings"); !ok || len(v.([]interface{})) == 0 || v.([]interface{})[0] == nil {
