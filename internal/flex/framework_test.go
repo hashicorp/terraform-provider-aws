@@ -158,6 +158,45 @@ func TestExpandFrameworkStringSet(t *testing.T) {
 	}
 }
 
+func TestSet_Difference(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		original Set
+		new      Set
+		expected Set
+	}
+	tests := map[string]testCase{
+		"nil": {
+			original: nil,
+			new:      nil,
+			expected: nil,
+		},
+		"equal": {
+			original: Set{"one"},
+			new:      Set{"one"},
+			expected: nil,
+		},
+		"difference": {
+			original: Set{"one", "two", "four"},
+			new:      Set{"one", "two", "three"},
+			expected: Set{"four"},
+		},
+	}
+
+	for name, test := range tests {
+		name, test := name, test
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			got := test.original.Difference(test.new)
+			if diff := cmp.Diff(got, test.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
 func TestExpandFrameworkStringValueSet(t *testing.T) {
 	t.Parallel()
 

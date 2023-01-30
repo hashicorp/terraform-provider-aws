@@ -93,12 +93,7 @@ func (r *resourceCluster) Schema(ctx context.Context, request resource.SchemaReq
 			"apply_immediately": schema.BoolAttribute{
 				Optional: true,
 			},
-			"arn": schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
+			"arn": framework.ARNAttributeComputedOnly(),
 			"availability_zones": schema.SetAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
@@ -121,8 +116,8 @@ func (r *resourceCluster) Schema(ctx context.Context, request resource.SchemaReq
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
-					fwint64planmodifier.DefaultValue(1),
 					int64planmodifier.UseStateForUnknown(),
+					fwint64planmodifier.DefaultValue(1),
 				},
 				Validators: []validator.Int64{
 					int64validator.AtMost(35),
@@ -287,6 +282,10 @@ func (r *resourceCluster) Schema(ctx context.Context, request resource.SchemaReq
 			},
 			"global_cluster_identifier": schema.StringAttribute{
 				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"hosted_zone_id": schema.StringAttribute{
 				Computed: true,
@@ -766,7 +765,7 @@ func (r *resourceCluster) Create(ctx context.Context, request resource.CreateReq
 			input.BacktrackWindow = aws.Int64(data.BacktrackWindow.ValueInt64())
 		}
 
-		if !data.BackupRetentionPeriod.IsNull() {
+		if !data.BackupRetentionPeriod.IsUnknown() && !data.BackupRetentionPeriod.IsNull() {
 			input.BackupRetentionPeriod = aws.Int64(data.BackupRetentionPeriod.ValueInt64())
 		}
 
@@ -944,7 +943,7 @@ func (r *resourceCluster) Create(ctx context.Context, request resource.CreateReq
 		input.ScalingConfiguration = expandScalingConfigurationFramework(scalingConfiguration)
 
 		var serverlessV2ScalingConfiguration []serverlessV2ScalingConfiguration
-		response.Diagnostics.Append(data.ScalingConfiguration.ElementsAs(ctx, &serverlessV2ScalingConfiguration, false)...)
+		response.Diagnostics.Append(data.ServerlessV2ScalingConfiguration.ElementsAs(ctx, &serverlessV2ScalingConfiguration, false)...)
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -1005,10 +1004,6 @@ func (r *resourceCluster) Create(ctx context.Context, request resource.CreateReq
 			input.DBSubnetGroupName = aws.String(data.DbSubnetGroupName.ValueString())
 		}
 
-		//if !data.EnableGlobalWriteForwarding.IsUnknown() && !data.EnableGlobalWriteForwarding.IsNull() {
-		//	input.EnableGlobalWriteForwarding = aws.Bool(data.EnableGlobalWriteForwarding.ValueBool())
-		//}
-
 		if !data.EnableHttpEndpoint.IsNull() {
 			input.EnableHttpEndpoint = aws.Bool(data.EnableHttpEndpoint.ValueBool())
 		}
@@ -1021,7 +1016,7 @@ func (r *resourceCluster) Create(ctx context.Context, request resource.CreateReq
 			input.EngineVersion = aws.String(data.EngineVersion.ValueString())
 		}
 
-		if !data.GlobalClusterIdentifier.IsNull() {
+		if !data.GlobalClusterIdentifier.IsUnknown() && !data.GlobalClusterIdentifier.IsNull() {
 			input.GlobalClusterIdentifier = aws.String(data.GlobalClusterIdentifier.ValueString())
 			input.EnableGlobalWriteForwarding = aws.Bool(data.EnableGlobalWriteForwarding.ValueBool())
 		}
@@ -1078,7 +1073,7 @@ func (r *resourceCluster) Create(ctx context.Context, request resource.CreateReq
 		input.ScalingConfiguration = expandScalingConfigurationFramework(scalingConfiguration)
 
 		var serverlessV2ScalingConfiguration []serverlessV2ScalingConfiguration
-		response.Diagnostics.Append(data.ScalingConfiguration.ElementsAs(ctx, &serverlessV2ScalingConfiguration, false)...)
+		response.Diagnostics.Append(data.ServerlessV2ScalingConfiguration.ElementsAs(ctx, &serverlessV2ScalingConfiguration, false)...)
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -1291,11 +1286,11 @@ func (r *resourceCluster) Update(ctx context.Context, request resource.UpdateReq
 
 	if !plan.EnabledCloudwatchLogsExports.Equal(state.EnabledCloudwatchLogsExports) {
 		o := flex.ExpandFrameworkStringValueSet(ctx, state.EnabledCloudwatchLogsExports)
-		n := flex.ExpandFrameworkStringValueSet(ctx, state.EnabledCloudwatchLogsExports)
+		n := flex.ExpandFrameworkStringValueSet(ctx, plan.EnabledCloudwatchLogsExports)
 
 		input.CloudwatchLogsExportConfiguration = &rds.CloudwatchLogsExportConfiguration{
-			DisableLogTypes: aws.StringSlice(o.Difference(n)),
-			EnableLogTypes:  aws.StringSlice(n.Difference(o)),
+			DisableLogTypes: aws.StringSlice(o.Difference(n)), // anything in old set that is not in new
+			EnableLogTypes:  aws.StringSlice(n.Difference(o)), // anything in new set that is not in old
 		}
 		modifyCluster = true
 	}
@@ -1352,7 +1347,7 @@ func (r *resourceCluster) Update(ctx context.Context, request resource.UpdateReq
 
 	if !plan.ServerlessV2ScalingConfiguration.Equal(state.ServerlessV2ScalingConfiguration) {
 		var serverlessV2ScalingConfiguration []serverlessV2ScalingConfiguration
-		response.Diagnostics.Append(plan.ScalingConfiguration.ElementsAs(ctx, &serverlessV2ScalingConfiguration, false)...)
+		response.Diagnostics.Append(plan.ServerlessV2ScalingConfiguration.ElementsAs(ctx, &serverlessV2ScalingConfiguration, false)...)
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -1448,6 +1443,16 @@ func (r *resourceCluster) Update(ctx context.Context, request resource.UpdateReq
 		}
 	}
 
+	if !plan.TagsAll.Equal(state.TagsAll) {
+		if err := UpdateTags(ctx, conn, plan.ARN.ValueString(), state.TagsAll, plan.TagsAll); err != nil {
+			response.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.RDS, create.ErrActionUpdating, ResNameCluster, plan.ID.String(), nil),
+				err.Error(),
+			)
+			return
+		}
+	}
+
 	out, err := FindDBClusterByID(ctx, conn, plan.ID.ValueString())
 
 	if err != nil {
@@ -1458,27 +1463,10 @@ func (r *resourceCluster) Update(ctx context.Context, request resource.UpdateReq
 		return
 	}
 
-	if !plan.TagsAll.Equal(state.TagsAll) {
-		if err := UpdateTags(ctx, conn, plan.ARN.ValueString(), state.TagsAll, plan.TagsAll); err != nil {
-			response.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.RDS, create.ErrActionUpdating, ResNameCluster, plan.ID.String(), nil),
-				err.Error(),
-			)
-			return
-		}
-		//state.Tags = plan.Tags
-		//state.TagsAll = plan.TagsAll
-	}
-
 	response.Diagnostics.Append(plan.refreshFromOutput(ctx, r.Meta(), out)...)
 	response.Diagnostics.Append(response.State.Set(ctx, &plan)...)
 }
 
-// Delete is called when the provider must delete the resource.
-// Config values may be read from the DeleteRequest.
-//
-// If execution completes without error, the framework will automatically call DeleteResponse.State.RemoveResource(),
-// so it can be omitted from provider logic.
 func (r *resourceCluster) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	conn := r.Meta().RDSConn()
 	var data resourceClusterData
@@ -1492,7 +1480,7 @@ func (r *resourceCluster) Delete(ctx context.Context, request resource.DeleteReq
 
 	// Automatically remove from global cluster to bypass this error on deletion:
 	// InvalidDBClusterStateFault: This cluster is a part of a global cluster, please remove it from globalcluster first
-	if !data.GlobalClusterIdentifier.IsNull() || data.GlobalClusterIdentifier.ValueString() != "" {
+	if !data.GlobalClusterIdentifier.IsNull() && data.GlobalClusterIdentifier.ValueString() != "" {
 		input := &rds.RemoveFromGlobalClusterInput{
 			DbClusterIdentifier:     aws.String(data.ARN.ValueString()),
 			GlobalClusterIdentifier: aws.String(data.GlobalClusterIdentifier.ValueString()),
@@ -1643,7 +1631,7 @@ func (r *resourceCluster) ModifyPlan(ctx context.Context, request resource.Modif
 			return
 		}
 
-		if !skipFinalSnapshot.ValueBool() && (finalSnapshotIdentifier.IsNull() || finalSnapshotIdentifier.ValueString() == "") {
+		if skipFinalSnapshot.ValueBool() == false && finalSnapshotIdentifier.IsNull() {
 			response.Diagnostics.AddAttributeError(
 				path.Root("final_snapshot_identifier"),
 				"Attribute cannot be empty",
@@ -1663,22 +1651,23 @@ func (r *resourceCluster) ModifyPlan(ctx context.Context, request resource.Modif
 		return
 	}
 
-	if !stateGlobalClusterIdentifier.IsNull() && !planGlobalClusterIdentifier.IsNull() {
-		if stateGlobalClusterIdentifier.ValueString() == "" {
+	if !stateGlobalClusterIdentifier.IsUnknown() && !planGlobalClusterIdentifier.IsUnknown() {
+		if stateGlobalClusterIdentifier.ValueString() == "" && planGlobalClusterIdentifier.ValueString() != "" {
 			response.Diagnostics.AddAttributeError(
 				path.Root("global_cluster_identifier"),
 				"Cluster exists",
 				"existing RDS Clusters cannot be added to an existing RDS Global Cluster",
 			)
+			return
 		}
-	}
-
-	if !stateGlobalClusterIdentifier.IsNull() && (planGlobalClusterIdentifier.IsNull() || planGlobalClusterIdentifier.ValueString() != "") {
-		response.Diagnostics.AddAttributeError(
-			path.Root("global_cluster_identifier"),
-			"Cluster cannot be migrated",
-			"existing RDS Clusters cannot be migrated between existing RDS Global Clusters",
-		)
+		if !stateGlobalClusterIdentifier.Equal(planGlobalClusterIdentifier) || planGlobalClusterIdentifier.ValueString() != "" {
+			response.Diagnostics.AddAttributeError(
+				path.Root("global_cluster_identifier"),
+				"Cluster exists",
+				"existing RDS Clusters cannot be migrated between existing RDS Global Clusters",
+			)
+			return
+		}
 	}
 
 	r.SetTagsAll(ctx, request, response)
@@ -1729,7 +1718,7 @@ func (r *resourceCluster) ValidateConfig(ctx context.Context, request resource.V
 	}
 
 	if !data.S3Import.IsUnknown() || !data.S3Import.IsNull() || len(data.S3Import.Elements()) > 0 {
-		if (data.MasterUsername.IsUnknown() || data.MasterUsername.IsNull()) || (data.MasterPassword.IsNull() || data.MasterPassword.IsUnknown()) {
+		if (data.MasterUsername.IsUnknown() || data.MasterUsername.IsNull()) && (data.MasterPassword.IsNull() || data.MasterPassword.IsUnknown()) {
 			response.Diagnostics.AddAttributeError(
 				path.Root("s3_import"),
 				"Master Username and Password not set",
@@ -1828,21 +1817,6 @@ type serverlessV2ScalingConfiguration struct {
 }
 
 var (
-	//restoreToPointInTimeTypes = map[string]attr.Type{
-	//	"restore_to_time":            types.StringType,
-	//	"restore_type":               types.StringType,
-	//	"source_cluster_identifier":  types.StringType,
-	//	"use_latest_restorable_time": types.BoolType,
-	//}
-	//
-	//s3ImportAttrTypes = map[string]attr.Type{
-	//	"bucket_name":           types.StringType,
-	//	"bucket_prefix":         types.StringType,
-	//	"ingestion_role":        types.StringType,
-	//	"source_engine":         types.StringType,
-	//	"source_engine_version": types.StringType,
-	//}
-
 	scalingConfigurationAttrTypes = map[string]attr.Type{
 		"auto_pause":               types.BoolType,
 		"max_capacity":             types.Int64Type,
@@ -1884,6 +1858,8 @@ func (r *resourceClusterData) refreshFromOutput(ctx context.Context, meta *conns
 	//	See https://github.com/hashicorp/terraform/issues/4671 for backstory
 	if out.DatabaseName != nil {
 		r.DatabaseName = flex.StringToFrameworkLegacy(ctx, out.DatabaseName)
+	} else {
+		r.DatabaseName = types.StringNull()
 	}
 	r.DbClusterInstanceClass = flex.StringToFrameworkLegacy(ctx, out.DBClusterInstanceClass)
 	r.DbClusterParameterGroupName = flex.StringToFrameworkLegacy(ctx, out.DBClusterParameterGroup)
@@ -1895,6 +1871,25 @@ func (r *resourceClusterData) refreshFromOutput(ctx context.Context, meta *conns
 	r.Engine = flex.StringToFrameworkLegacy(ctx, out.Engine)
 	r.EngineMode = flex.StringToFrameworkLegacy(ctx, out.EngineMode)
 	r.setResourceDataEngineVersionFromCluster(ctx, out)
+
+	// Fetch and save Global Cluster if engine mode is global
+	r.GlobalClusterIdentifier = types.StringValue("")
+	if aws.StringValue(out.EngineMode) == EngineModeGlobal || aws.StringValue(out.EngineMode) == EngineModeProvisioned {
+		globalCluster, err := FindGlobalClusterByDBClusterARN(ctx, meta.RDSConn(), aws.StringValue(out.DBClusterArn))
+
+		if err == nil {
+			r.GlobalClusterIdentifier = flex.StringToFrameworkLegacy(ctx, globalCluster.GlobalClusterIdentifier)
+		} else if tfresource.NotFound(err) || tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "Access Denied to API Version: APIGlobalDatabases") {
+			// Ignore the following API error for regions/partitions that do not support RDS Global Clusters:
+			// InvalidParameterValue: Access Denied to API Version: APIGlobalDatabases
+		} else {
+			diags.AddError(
+				"reading RSS Global Cluster",
+				err.Error(),
+			)
+		}
+	}
+
 	r.HostedZoneID = flex.StringToFrameworkLegacy(ctx, out.HostedZoneId)
 	r.IamDatabaseAuthenticationEnabled = flex.BoolToFrameworkLegacy(ctx, out.IAMDatabaseAuthenticationEnabled)
 
