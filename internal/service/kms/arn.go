@@ -35,8 +35,8 @@ func AliasARNToKeyARN(inputARN, keyID string) (string, error) {
 	return outputARN, nil
 }
 
-// keyARNOrIDEqual returns whether two CMK ARNs or IDs are equal.
-func keyARNOrIDEqual(arnOrID1, arnOrID2 string) bool {
+// KeyARNOrIDEqual returns whether two CMK ARNs or IDs are equal.
+func KeyARNOrIDEqual(arnOrID1, arnOrID2 string) bool {
 	if arnOrID1 == arnOrID2 {
 		return true
 	}
