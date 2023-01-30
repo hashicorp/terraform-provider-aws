@@ -355,17 +355,9 @@ func init() {
 		},
 	})
 
-	resource.AddTestSweepers("aws_vpc_ipam_pool", &resource.Sweeper{
-		Name: "aws_vpc_ipam_pool",
-		F:    sweepIPAMPools,
-	})
-
 	resource.AddTestSweepers("aws_vpc_ipam", &resource.Sweeper{
 		Name: "aws_vpc_ipam",
 		F:    sweepIPAMs,
-		Dependencies: []string{
-			"aws_vpc_ipam_pool",
-		},
 	})
 
 	resource.AddTestSweepers("aws_ami", &resource.Sweeper{
@@ -2457,51 +2449,6 @@ func sweepIPAMs(region string) error {
 
 	if err != nil {
 		return fmt.Errorf("error sweeping IPAMs (%s): %w", region, err)
-	}
-
-	return nil
-}
-
-// DeleteIpam.Cascade=true cannot handle if a public scope pool has a provisioned cidr
-func sweepIPAMPools(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
-	}
-	conn := client.(*conns.AWSClient).EC2Conn()
-	input := &ec2.DescribeIpamPoolsInput{}
-	sweepResources := make([]sweep.Sweepable, 0)
-
-	err = conn.DescribeIpamPoolsPagesWithContext(ctx, input, func(page *ec2.DescribeIpamPoolsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, v := range page.IpamPools {
-			r := ResourceIPAMPool()
-			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.IpamPoolId))
-
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping IPAM Pool sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing IPAM Pools (%s): %w", region, err)
-	}
-
-	err = sweep.SweepOrchestrator(sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping IPAM Pools (%s): %w", region, err)
 	}
 
 	return nil

@@ -126,7 +126,7 @@ func TestAccIPAMPool_ipv6Basic(t *testing.T) {
 	})
 }
 
-func TestAccIPAMPool_ipv6Contig(t *testing.T) {
+func TestAccIPAMPool_ipv6Contiguous(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pool ec2.IpamPool
 	resourceName := "aws_vpc_ipam_pool.test"
@@ -138,11 +138,11 @@ func TestAccIPAMPool_ipv6Contig(t *testing.T) {
 		CheckDestroy:             testAccCheckIPAMPoolDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIPAMPoolConfig_ipv6Contig,
+				Config: testAccIPAMPoolConfig_ipv6Contiguous,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMPoolExists(ctx, resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv6"),
-					resource.TestCheckResourceAttr(resourceName, "public_ip_source", "amazon"),
+					resource.TestCheckResourceAttr(resourceName, "public_ip_source", "byoip"),
 					resource.TestCheckResourceAttr(resourceName, "publicly_advertisable", "false"),
 				),
 			},
@@ -292,12 +292,12 @@ resource "aws_vpc_ipam_pool" "test" {
 }
 `)
 
-var testAccIPAMPoolConfig_ipv6Contig = acctest.ConfigCompose(testAccIPAMPoolConfig_base, `
+var testAccIPAMPoolConfig_ipv6Contiguous = acctest.ConfigCompose(testAccIPAMPoolConfig_base, `
 resource "aws_vpc_ipam_pool" "test" {
   address_family   = "ipv6"
   ipam_scope_id    = aws_vpc_ipam.test.public_default_scope_id
   locale           = data.aws_region.current.name
-  public_ip_source = "amazon"
+  public_ip_source = "byoip"
   aws_service      = "ec2"
 }
 `)
