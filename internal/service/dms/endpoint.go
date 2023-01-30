@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -611,9 +612,10 @@ func ResourceEndpoint() *schema.Resource {
 							ValidateFunc: validation.IntAtLeast(0),
 						},
 						"server_side_encryption_kms_key_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  "",
+							Type:             schema.TypeString,
+							Optional:         true,
+							DiffSuppressFunc: tfkms.DiffSuppressKey,
+							ValidateFunc:     tfkms.ValidateKey,
 						},
 						"service_access_role_arn": {
 							Type:         schema.TypeString,
