@@ -1509,6 +1509,13 @@ func (r *resourceCluster) Delete(ctx context.Context, request resource.DeleteReq
 
 	if !data.SkipFinalSnapshot.ValueBool() {
 		input.FinalDBSnapshotIdentifier = aws.String(data.FinalSnapshotIdentifier.ValueString())
+	} else {
+		response.Diagnostics.AddAttributeWarning(
+			path.Root("final_snapshot_identifier"),
+			"final_snapshot_identifier is required",
+			"RDS Cluster final_snapshot_identifier is required when skip_final_snapshot is false",
+		)
+		return
 	}
 
 	tflog.Debug(ctx, "deleting RDS Cluster", map[string]interface{}{
@@ -1620,26 +1627,23 @@ func (r *resourceCluster) ImportState(ctx context.Context, request resource.Impo
 //
 // Any errors will prevent further resource-level plan modifications.
 func (r *resourceCluster) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	if request.Plan.Raw.IsNull() {
-		var finalSnapshotIdentifier types.String
-		var skipFinalSnapshot types.Bool
+	var finalSnapshotIdentifier types.String
+	var skipFinalSnapshot types.Bool
 
-		response.Diagnostics.Append(request.State.GetAttribute(ctx, path.Root("final_snapshot_identifier"), &finalSnapshotIdentifier)...)
-		response.Diagnostics.Append(request.State.GetAttribute(ctx, path.Root("skip_final_snapshot"), &skipFinalSnapshot)...)
+	response.Diagnostics.Append(request.Plan.GetAttribute(ctx, path.Root("final_snapshot_identifier"), &finalSnapshotIdentifier)...)
+	response.Diagnostics.Append(request.Plan.GetAttribute(ctx, path.Root("skip_final_snapshot"), &skipFinalSnapshot)...)
 
-		if response.Diagnostics.HasError() {
-			return
-		}
+	if response.Diagnostics.HasError() {
+		return
+	}
 
-		if skipFinalSnapshot.ValueBool() == false && finalSnapshotIdentifier.IsNull() {
-			response.Diagnostics.AddAttributeError(
-				path.Root("final_snapshot_identifier"),
-				"Attribute cannot be empty",
-				"Attribute final_snapshot_identifier cannot be empty when skip_final_snapshot is set to false. "+
-					"Please apply resource with a value for final_snapshot_identifier before trying to destroy",
-			)
-			return
-		}
+	if skipFinalSnapshot.ValueBool() == false && finalSnapshotIdentifier.IsNull() {
+		response.Diagnostics.AddAttributeWarning(
+			path.Root("final_snapshot_identifier"),
+			"Attribute cannot be null",
+			"Attribute final_snapshot_identifier cannot be null when skip_final_snapshot is set to false. "+
+				"Please include a final_snapshot_identifier",
+		)
 	}
 
 	var planGlobalClusterIdentifier, stateGlobalClusterIdentifier types.String
