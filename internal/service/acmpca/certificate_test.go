@@ -65,6 +65,7 @@ func TestAccACMPCACertificate_rootCertificate(t *testing.T) {
 }
 
 func TestAccACMPCACertificate_rootCertificateWithApiPassthrough(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_acmpca_certificate.test"
 	certificateAuthorityResourceName := "aws_acmpca_certificate_authority.test"
 
@@ -74,12 +75,12 @@ func TestAccACMPCACertificate_rootCertificateWithApiPassthrough(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCertificateDestroy,
+		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificateConfig_rootWithAPIPassthrough(domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCertificateExists(resourceName),
+					testAccCheckCertificateExists(ctx, resourceName),
 					testAccCheckCertificateExtension(resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "acm-pca", regexp.MustCompile(`certificate-authority/.+/certificate/.+$`)),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate"),
