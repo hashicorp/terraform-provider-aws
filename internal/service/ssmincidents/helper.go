@@ -23,25 +23,3 @@ func getReplicationSetARN(context context.Context, client *ssmincidents.Client) 
 	// currently only one replication set is supported
 	return replicationSets.ReplicationSetArns[0], nil
 }
-
-func generateMapFromList[T, U any](list []T, keyFunction func(T) string, valueFunction func(T) U) map[string]U {
-	output := make(map[string]U)
-
-	for _, item := range list {
-		output[keyFunction(item)] = valueFunction(item)
-	}
-
-	return output
-}
-
-func generateListFromMap[T, U any](m map[string]T, f func(string, T) U) []U {
-	output := make([]U, len(m))
-
-	i := 0
-	for k, v := range m {
-		output[i] = f(k, v)
-		i++
-	}
-
-	return output
-}

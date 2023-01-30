@@ -238,15 +238,14 @@ func resourceReplicationSetDelete(context context.Context, d *schema.ResourceDat
 
 // converts a list of regions to a map which maps region name to kms key arn
 func regionListToRegionMap(list []interface{}) map[string]string {
-	return generateMapFromList(
-		list,
-		func(region interface{}) string {
-			return region.(map[string]interface{})["name"].(string)
-		},
-		func(region interface{}) string {
-			return region.(map[string]interface{})["kms_key_arn"].(string)
-		},
-	)
+	regionMap := make(map[string]string)
+	for _, region := range list {
+		regionData := region.(map[string]interface{})
+		regionName := regionData["name"].(string)
+		regionMap[regionName] = regionData["kms_key_arn"].(string)
+	}
+
+	return regionMap
 }
 
 // updates UpdateReplicationSetInput to include any required actions
