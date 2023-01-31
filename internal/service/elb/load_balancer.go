@@ -375,7 +375,7 @@ func flattenLoadBalancerResource(ctx context.Context, d *schema.ResourceData, ec
 
 		// Manually look up the ELB Security Group ID, since it's not provided
 		if lb.VPCId != nil {
-			sg, err := tfec2.FindSecurityGroupByNameAndVPCID(ctx, ec2conn, aws.StringValue(lb.SourceSecurityGroup.GroupName), aws.StringValue(lb.VPCId))
+			sg, err := tfec2.FindSecurityGroupByNameAndVPCIDAndOwnerID(ctx, ec2conn, aws.StringValue(lb.SourceSecurityGroup.GroupName), aws.StringValue(lb.VPCId), aws.StringValue(lb.SourceSecurityGroup.OwnerAlias))
 			if err != nil {
 				return fmt.Errorf("Error looking up ELB Security Group ID: %w", err)
 			} else {
