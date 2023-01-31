@@ -3,8 +3,10 @@ package ec2_test
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -63,6 +65,7 @@ func TestAccIPAMPoolCIDR_basicNetmaskLength(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMPoolCIDRExists(ctx, resourceName, &cidr),
 					resource.TestCheckResourceAttr(resourceName, "netmask_length", netmaskLength),
+					testAccCheckIPAMPoolCIDRPrefix(&cidr, netmaskLength),
 					resource.TestCheckResourceAttrPair(resourceName, "ipam_pool_id", "aws_vpc_ipam_pool.testchild", "id"),
 				),
 			},
@@ -184,6 +187,16 @@ func testAccCheckIPAMPoolCIDRDestroy(ctx context.Context) resource.TestCheckFunc
 			}
 
 			return fmt.Errorf("IPAM Pool CIDR still exists: %s", rs.Primary.ID)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckIPAMPoolCIDRPrefix(cidr *ec2.IpamPoolCidr, expected string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if strings.Split(aws.StringValue(cidr.Cidr), "/")[1] != expected {
+			return fmt.Errorf("Bad cidr prefix: got %s, expected %s", aws.StringValue(cidr.Cidr), expected)
 		}
 
 		return nil
