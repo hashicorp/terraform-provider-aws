@@ -1,14 +1,15 @@
 package rds_test
 
 import (
-	"context"
 	"reflect"
 	"testing"
 
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 )
 
 func TestInstanceStateUpgradeV0(t *testing.T) {
+	ctx := acctest.Context(t)
 	t.Parallel()
 
 	testCases := []struct {
@@ -50,7 +51,7 @@ func TestInstanceStateUpgradeV0(t *testing.T) {
 		t.Run(testCase.Description, func(t *testing.T) {
 			t.Parallel()
 
-			got, err := tfrds.InstanceStateUpgradeV0(context.Background(), testCase.InputState, nil)
+			got, err := tfrds.InstanceStateUpgradeV0(ctx, testCase.InputState, nil)
 
 			if err != nil {
 				t.Fatalf("error migrating state: %s", err)

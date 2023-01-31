@@ -1,6 +1,8 @@
 package dms
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
 	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -8,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindEndpointByID(conn *dms.DatabaseMigrationService, id string) (*dms.Endpoint, error) {
+func FindEndpointByID(ctx context.Context, conn *dms.DatabaseMigrationService, id string) (*dms.Endpoint, error) {
 	input := &dms.DescribeEndpointsInput{
 		Filters: []*dms.Filter{
 			{
@@ -18,7 +20,7 @@ func FindEndpointByID(conn *dms.DatabaseMigrationService, id string) (*dms.Endpo
 		},
 	}
 
-	output, err := conn.DescribeEndpoints(input)
+	output, err := conn.DescribeEndpointsWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
 		return nil, &resource.NotFoundError{
@@ -42,7 +44,7 @@ func FindEndpointByID(conn *dms.DatabaseMigrationService, id string) (*dms.Endpo
 	return output.Endpoints[0], nil
 }
 
-func FindReplicationTaskByID(conn *dms.DatabaseMigrationService, id string) (*dms.ReplicationTask, error) {
+func FindReplicationTaskByID(ctx context.Context, conn *dms.DatabaseMigrationService, id string) (*dms.ReplicationTask, error) {
 	input := &dms.DescribeReplicationTasksInput{
 		Filters: []*dms.Filter{
 			{
@@ -54,7 +56,7 @@ func FindReplicationTaskByID(conn *dms.DatabaseMigrationService, id string) (*dm
 
 	var results []*dms.ReplicationTask
 
-	err := conn.DescribeReplicationTasksPages(input, func(page *dms.DescribeReplicationTasksOutput, lastPage bool) bool {
+	err := conn.DescribeReplicationTasksPagesWithContext(ctx, input, func(page *dms.DescribeReplicationTasksOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}

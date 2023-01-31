@@ -33,7 +33,7 @@ var testAccProviderLightsailDomain *schema.Provider
 var testAccProviderLightsailDomainConfigure sync.Once
 
 // testAccPreCheckDomain verifies AWS credentials and that Lightsail Domains is supported
-func testAccPreCheckDomain(t *testing.T) {
+func testAccPreCheckDomain(ctx context.Context, t *testing.T) {
 	acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
 
 	region := testAccGetDomainRegion()
@@ -45,7 +45,6 @@ func testAccPreCheckDomain(t *testing.T) {
 	// Since we are outside the scope of the Terraform configuration we must
 	// call Configure() to properly initialize the provider configuration.
 	testAccProviderLightsailDomainConfigure.Do(func() {
-		ctx := context.Background()
 		var err error
 		testAccProviderLightsailDomain, err = provider.New(ctx)
 

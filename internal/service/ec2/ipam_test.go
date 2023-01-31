@@ -1,6 +1,7 @@
 package ec2_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -15,6 +16,7 @@ import (
 )
 
 func TestAccIPAM_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var ipam ec2.Ipam
 	resourceName := "aws_vpc_ipam.test"
 
@@ -22,12 +24,12 @@ func TestAccIPAM_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIPAMDestroy,
+		CheckDestroy:             testAccCheckIPAMDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPAMConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIPAMExists(resourceName, &ipam),
+					testAccCheckIPAMExists(ctx, resourceName, &ipam),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "operating_regions.#", "1"),
@@ -45,6 +47,7 @@ func TestAccIPAM_basic(t *testing.T) {
 }
 
 func TestAccIPAM_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var ipam ec2.Ipam
 	resourceName := "aws_vpc_ipam.test"
 
@@ -52,13 +55,13 @@ func TestAccIPAM_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIPAMDestroy,
+		CheckDestroy:             testAccCheckIPAMDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPAMConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPAMExists(resourceName, &ipam),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceIPAM(), resourceName),
+					testAccCheckIPAMExists(ctx, resourceName, &ipam),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceIPAM(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -67,6 +70,7 @@ func TestAccIPAM_disappears(t *testing.T) {
 }
 
 func TestAccIPAM_description(t *testing.T) {
+	ctx := acctest.Context(t)
 	var ipam ec2.Ipam
 	resourceName := "aws_vpc_ipam.test"
 
@@ -74,12 +78,12 @@ func TestAccIPAM_description(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIPAMDestroy,
+		CheckDestroy:             testAccCheckIPAMDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPAMConfig_description("test1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPAMExists(resourceName, &ipam),
+					testAccCheckIPAMExists(ctx, resourceName, &ipam),
 					resource.TestCheckResourceAttr(resourceName, "description", "test1"),
 				),
 			},
@@ -91,7 +95,7 @@ func TestAccIPAM_description(t *testing.T) {
 			{
 				Config: testAccIPAMConfig_description("test2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPAMExists(resourceName, &ipam),
+					testAccCheckIPAMExists(ctx, resourceName, &ipam),
 					resource.TestCheckResourceAttr(resourceName, "description", "test2"),
 				),
 			},
@@ -100,6 +104,7 @@ func TestAccIPAM_description(t *testing.T) {
 }
 
 func TestAccIPAM_operatingRegions(t *testing.T) {
+	ctx := acctest.Context(t)
 	var ipam ec2.Ipam
 	resourceName := "aws_vpc_ipam.test"
 
@@ -107,12 +112,12 @@ func TestAccIPAM_operatingRegions(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckMultipleRegion(t, 2) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 2),
-		CheckDestroy:             testAccCheckIPAMDestroy,
+		CheckDestroy:             testAccCheckIPAMDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPAMConfig_twoOperatingRegions(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPAMExists(resourceName, &ipam),
+					testAccCheckIPAMExists(ctx, resourceName, &ipam),
 					resource.TestCheckResourceAttr(resourceName, "operating_regions.#", "2"),
 				),
 			},
@@ -124,14 +129,14 @@ func TestAccIPAM_operatingRegions(t *testing.T) {
 			{
 				Config: testAccIPAMConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPAMExists(resourceName, &ipam),
+					testAccCheckIPAMExists(ctx, resourceName, &ipam),
 					resource.TestCheckResourceAttr(resourceName, "operating_regions.#", "1"),
 				),
 			},
 			{
 				Config: testAccIPAMConfig_twoOperatingRegions(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPAMExists(resourceName, &ipam),
+					testAccCheckIPAMExists(ctx, resourceName, &ipam),
 					resource.TestCheckResourceAttr(resourceName, "operating_regions.#", "2"),
 				),
 			},
@@ -140,6 +145,7 @@ func TestAccIPAM_operatingRegions(t *testing.T) {
 }
 
 func TestAccIPAM_cascade(t *testing.T) {
+	ctx := acctest.Context(t)
 	var ipam ec2.Ipam
 	resourceName := "aws_vpc_ipam.test"
 
@@ -147,13 +153,13 @@ func TestAccIPAM_cascade(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIPAMDestroy,
+		CheckDestroy:             testAccCheckIPAMDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPAMConfig_cascade,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPAMExists(resourceName, &ipam),
-					testAccCheckIPAMScopeCreate(&ipam),
+					testAccCheckIPAMExists(ctx, resourceName, &ipam),
+					testAccCheckIPAMScopeCreate(ctx, &ipam),
 				),
 			},
 			{
@@ -167,6 +173,7 @@ func TestAccIPAM_cascade(t *testing.T) {
 }
 
 func TestAccIPAM_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var ipam ec2.Ipam
 	resourceName := "aws_vpc_ipam.test"
 
@@ -174,12 +181,12 @@ func TestAccIPAM_tags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIPAMDestroy,
+		CheckDestroy:             testAccCheckIPAMDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPAMConfig_tags("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPAMExists(resourceName, &ipam),
+					testAccCheckIPAMExists(ctx, resourceName, &ipam),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -192,7 +199,7 @@ func TestAccIPAM_tags(t *testing.T) {
 			{
 				Config: testAccIPAMConfig_tags2("key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPAMExists(resourceName, &ipam),
+					testAccCheckIPAMExists(ctx, resourceName, &ipam),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -201,7 +208,7 @@ func TestAccIPAM_tags(t *testing.T) {
 			{
 				Config: testAccIPAMConfig_tags("key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPAMExists(resourceName, &ipam),
+					testAccCheckIPAMExists(ctx, resourceName, &ipam),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -210,7 +217,7 @@ func TestAccIPAM_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckIPAMExists(n string, v *ec2.Ipam) resource.TestCheckFunc {
+func testAccCheckIPAMExists(ctx context.Context, n string, v *ec2.Ipam) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -223,7 +230,7 @@ func testAccCheckIPAMExists(n string, v *ec2.Ipam) resource.TestCheckFunc {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
-		output, err := tfec2.FindIPAMByID(conn, rs.Primary.ID)
+		output, err := tfec2.FindIPAMByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -235,35 +242,37 @@ func testAccCheckIPAMExists(n string, v *ec2.Ipam) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckIPAMDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_vpc_ipam" {
-			continue
-		}
-
-		_, err := tfec2.FindIPAMByID(conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("IPAM still exists: %s", rs.Primary.ID)
-	}
-
-	return nil
-}
-
-func testAccCheckIPAMScopeCreate(ipam *ec2.Ipam) resource.TestCheckFunc {
+func testAccCheckIPAMDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
-		_, err := conn.CreateIpamScope(&ec2.CreateIpamScopeInput{
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_vpc_ipam" {
+				continue
+			}
+
+			_, err := tfec2.FindIPAMByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("IPAM still exists: %s", rs.Primary.ID)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckIPAMScopeCreate(ctx context.Context, ipam *ec2.Ipam) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+
+		_, err := conn.CreateIpamScopeWithContext(ctx, &ec2.CreateIpamScopeInput{
 			ClientToken: aws.String(resource.UniqueId()),
 			IpamId:      aws.String(*ipam.IpamId),
 		})

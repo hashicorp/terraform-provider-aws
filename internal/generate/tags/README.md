@@ -27,6 +27,7 @@ Some flags control generation a certain section of code, such as whether the gen
 | `ServiceTagsMap` |  | Whether to generate map service tags (use this or `ServiceTagsSlice`, not both) | `-ServiceTagsMap` |
 | `ServiceTagsSlice` |  | Whether to generate slice service tags (use this or `ServiceTagsMap`, not both) | `-ServiceTagsSlice` |
 | `UpdateTags` |  | Whether to generate UpdateTags | `-UpdateTags` |
+| `ContextOnly` |  | Whether to generator only Context-aware functions | `-ContextOnly` |
 | `ListTagsInFiltIDName` |  | List tags input filter identifier name | `-ListTagsInFiltIDName=resource-id` |
 | `ListTagsInIDElem` | `ResourceArn` | List tags input identifier element | `-ListTagsInIDElem=ResourceARN` |
 | `ListTagsInIDNeedSlice` |  | Whether list tags input identifier needs a slice | `-ListTagsInIDNeedSlice=yes` |
@@ -350,7 +351,7 @@ func AthenaUpdateTags(conn *athena.Athena, identifier string, oldTagsMap interfa
         _, err := conn.UntagResource(input)
 
         if err != nil {
-            return fmt.Errorf("error untagging resource (%s): %s", identifier, err)
+            return fmt.Errorf("untagging resource (%s): %s", identifier, err)
         }
     }
 
@@ -363,7 +364,7 @@ func AthenaUpdateTags(conn *athena.Athena, identifier string, oldTagsMap interfa
         _, err := conn.TagResource(input)
 
         if err != nil {
-            return fmt.Errorf("error tagging resource (%s): %s", identifier, err)
+            return fmt.Errorf("tagging resource (%s): %s", identifier, err)
         }
     }
 

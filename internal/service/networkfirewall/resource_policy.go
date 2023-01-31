@@ -118,7 +118,7 @@ func resourceResourcePolicyDelete(ctx context.Context, d *schema.ResourceData, m
 		ResourceArn: aws.String(d.Id()),
 	}
 
-	_, err := tfresource.RetryWhenContext(ctx, resourcePolicyDeleteTimeout,
+	_, err := tfresource.RetryWhen(ctx, resourcePolicyDeleteTimeout,
 		func() (interface{}, error) {
 			return conn.DeleteResourcePolicyWithContext(ctx, input)
 		},

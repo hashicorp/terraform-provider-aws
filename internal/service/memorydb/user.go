@@ -148,7 +148,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		o, n := d.GetChange("tags_all")
 
 		log.Printf("[DEBUG] Updating MemoryDB User (%s) tags", d.Id())
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.Errorf("error updating MemoryDB User (%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -191,7 +191,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("minimum_engine_version", user.MinimumEngineVersion)
 	d.Set("user_name", user.Name)
 
-	tags, err := ListTags(conn, d.Get("arn").(string))
+	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
 
 	if err != nil {
 		return diag.Errorf("error listing tags for MemoryDB User (%s): %s", d.Id(), err)

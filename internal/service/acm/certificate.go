@@ -52,7 +52,7 @@ func ResourceCertificate() *schema.Resource {
 		DeleteWithoutTimeout: resourceCertificateDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -484,7 +484,7 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	d.Set("pending_renewal", certificateSetPendingRenewal(d))
 
-	tags, err := ListTagsWithContext(ctx, conn, d.Id())
+	tags, err := ListTags(ctx, conn, d.Id())
 
 	if err != nil {
 		return diag.Errorf("listing tags for ACM Certificate (%s): %s", d.Id(), err)
@@ -548,7 +548,7 @@ func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTagsWithContext(ctx, conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
 			return diag.Errorf("updating ACM Certificate (%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -560,7 +560,7 @@ func resourceCertificateDelete(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).ACMConn()
 
 	log.Printf("[INFO] Deleting ACM Certificate: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, certificateCrossServicePropagationTimeout,
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, certificateCrossServicePropagationTimeout,
 		func() (interface{}, error) {
 			return conn.DeleteCertificateWithContext(ctx, &acm.DeleteCertificateInput{
 				CertificateArn: aws.String(d.Id()),

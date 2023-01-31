@@ -11,6 +11,7 @@ import (
 )
 
 func testAccDirectoryDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandString(8)
 	domain := acctest.RandomDomainName()
 
@@ -20,7 +21,7 @@ func testAccDirectoryDataSource_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckDirectory(t)
+			testAccPreCheckDirectory(ctx, t)
 			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
 			acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole")
 		},

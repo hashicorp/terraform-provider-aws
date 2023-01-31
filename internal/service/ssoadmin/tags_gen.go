@@ -14,11 +14,7 @@ import (
 // ListTags lists ssoadmin service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn ssoadminiface.SSOAdminAPI, identifier string, resourceType string) (tftags.KeyValueTags, error) {
-	return ListTagsWithContext(context.Background(), conn, identifier, resourceType)
-}
-
-func ListTagsWithContext(ctx context.Context, conn ssoadminiface.SSOAdminAPI, identifier string, resourceType string) (tftags.KeyValueTags, error) {
+func ListTags(ctx context.Context, conn ssoadminiface.SSOAdminAPI, identifier string, resourceType string) (tftags.KeyValueTags, error) {
 	input := &ssoadmin.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 		InstanceArn: aws.String(resourceType),
@@ -65,10 +61,7 @@ func KeyValueTags(tags []*ssoadmin.Tag) tftags.KeyValueTags {
 // UpdateTags updates ssoadmin service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn ssoadminiface.SSOAdminAPI, identifier string, resourceType string, oldTags interface{}, newTags interface{}) error {
-	return UpdateTagsWithContext(context.Background(), conn, identifier, resourceType, oldTags, newTags)
-}
-func UpdateTagsWithContext(ctx context.Context, conn ssoadminiface.SSOAdminAPI, identifier string, resourceType string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(ctx context.Context, conn ssoadminiface.SSOAdminAPI, identifier string, resourceType string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 

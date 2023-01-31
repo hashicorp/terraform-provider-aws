@@ -126,7 +126,7 @@ func resourceCompositeAlarmCreate(ctx context.Context, d *schema.ResourceData, m
 			return diag.Errorf("error reading CloudWatch Composite Alarm (%s): %s", name, err)
 		}
 
-		err = UpdateTags(conn, aws.StringValue(alarm.AlarmArn), nil, tags)
+		err = UpdateTags(ctx, conn, aws.StringValue(alarm.AlarmArn), nil, tags)
 
 		// If default tags only, log and continue. Otherwise, error.
 		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.ErrorISOUnsupported(conn.PartitionID, err) {
@@ -188,7 +188,7 @@ func resourceCompositeAlarmRead(ctx context.Context, d *schema.ResourceData, met
 		return diag.Errorf("error setting ok_actions: %s", err)
 	}
 
-	tags, err := ListTags(conn, aws.StringValue(alarm.AlarmArn))
+	tags, err := ListTags(ctx, conn, aws.StringValue(alarm.AlarmArn))
 
 	// Some partitions (i.e., ISO) may not support tagging, giving error
 	if verify.ErrorISOUnsupported(conn.PartitionID, err) {
@@ -229,7 +229,7 @@ func resourceCompositeAlarmUpdate(ctx context.Context, d *schema.ResourceData, m
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		err := UpdateTags(conn, arn, o, n)
+		err := UpdateTags(ctx, conn, arn, o, n)
 
 		// Some partitions (i.e., ISO) may not support tagging, giving error
 		if verify.ErrorISOUnsupported(conn.PartitionID, err) {

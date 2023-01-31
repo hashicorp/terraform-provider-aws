@@ -4,7 +4,6 @@
 package servicediscovery
 
 import (
-	"context"
 	"fmt"
 	"log"
 
@@ -47,6 +46,7 @@ func init() {
 }
 
 func sweepHTTPNamespaces(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -54,7 +54,7 @@ func sweepHTTPNamespaces(region string) error {
 	conn := client.(*conns.AWSClient).ServiceDiscoveryConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	namespaces, err := findNamespacesByType(context.Background(), conn, servicediscovery.NamespaceTypeHttp)
+	namespaces, err := findNamespacesByType(ctx, conn, servicediscovery.NamespaceTypeHttp)
 
 	if sweep.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Service Discovery HTTP Namespace sweep for %s: %s", region, err)
@@ -73,7 +73,7 @@ func sweepHTTPNamespaces(region string) error {
 		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Service Discovery HTTP Namespaces (%s): %w", region, err)
@@ -83,6 +83,7 @@ func sweepHTTPNamespaces(region string) error {
 }
 
 func sweepPrivateDNSNamespaces(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -90,7 +91,7 @@ func sweepPrivateDNSNamespaces(region string) error {
 	conn := client.(*conns.AWSClient).ServiceDiscoveryConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	namespaces, err := findNamespacesByType(context.Background(), conn, servicediscovery.NamespaceTypeDnsPrivate)
+	namespaces, err := findNamespacesByType(ctx, conn, servicediscovery.NamespaceTypeDnsPrivate)
 
 	if sweep.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Service Discovery Private DNS Namespace sweep for %s: %s", region, err)
@@ -109,7 +110,7 @@ func sweepPrivateDNSNamespaces(region string) error {
 		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Service Discovery Private DNS Namespaces (%s): %w", region, err)
@@ -119,6 +120,7 @@ func sweepPrivateDNSNamespaces(region string) error {
 }
 
 func sweepPublicDNSNamespaces(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -126,7 +128,7 @@ func sweepPublicDNSNamespaces(region string) error {
 	conn := client.(*conns.AWSClient).ServiceDiscoveryConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	namespaces, err := findNamespacesByType(context.Background(), conn, servicediscovery.NamespaceTypeDnsPublic)
+	namespaces, err := findNamespacesByType(ctx, conn, servicediscovery.NamespaceTypeDnsPublic)
 
 	if sweep.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Service Discovery Public DNS Namespace sweep for %s: %s", region, err)
@@ -145,7 +147,7 @@ func sweepPublicDNSNamespaces(region string) error {
 		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Service Discovery Public DNS Namespaces (%s): %w", region, err)
@@ -155,6 +157,7 @@ func sweepPublicDNSNamespaces(region string) error {
 }
 
 func sweepServices(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -163,7 +166,7 @@ func sweepServices(region string) error {
 	input := &servicediscovery.ListServicesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	services, err := findServices(context.Background(), conn, input)
+	services, err := findServices(ctx, conn, input)
 
 	if sweep.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Service Discovery Service sweep for %s: %s", region, err)
@@ -183,7 +186,7 @@ func sweepServices(region string) error {
 		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Service Discovery Services (%s): %w", region, err)

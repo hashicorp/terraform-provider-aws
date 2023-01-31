@@ -252,7 +252,7 @@ func resourceQuickConnectUpdate(ctx context.Context, d *schema.ResourceData, met
 		_, err = conn.UpdateQuickConnectNameWithContext(ctx, inputNameDesc)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("[ERROR] Error updating QuickConnect Name (%s): %w", d.Id(), err))
+			return diag.FromErr(fmt.Errorf("updating QuickConnect Name (%s): %w", d.Id(), err))
 		}
 	}
 
@@ -268,14 +268,14 @@ func resourceQuickConnectUpdate(ctx context.Context, d *schema.ResourceData, met
 		inputConfig.QuickConnectConfig = quickConnectConfig
 		_, err = conn.UpdateQuickConnectConfigWithContext(ctx, inputConfig)
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("[ERROR] Error updating QuickConnect (%s): %w", d.Id(), err))
+			return diag.FromErr(fmt.Errorf("updating QuickConnect (%s): %w", d.Id(), err))
 		}
 	}
 
 	// updates to tags
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.FromErr(fmt.Errorf("error updating tags: %w", err))
 		}
 	}

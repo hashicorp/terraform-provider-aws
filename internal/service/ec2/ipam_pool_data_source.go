@@ -1,21 +1,23 @@
 package ec2
 
 import (
-	"fmt"
+	"context"
 	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func DataSourceIPAMPool() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceIPAMPoolRead,
+		ReadWithoutTimeout: dataSourceIPAMPoolRead,
 
 		Timeouts: &schema.ResourceTimeout{
 			Read: schema.DefaultTimeout(20 * time.Minute),
@@ -97,7 +99,8 @@ func DataSourceIPAMPool() *schema.Resource {
 	}
 }
 
-func dataSourceIPAMPoolRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceIPAMPoolRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -115,10 +118,10 @@ func dataSourceIPAMPoolRead(d *schema.ResourceData, meta interface{}) error {
 		input.Filters = nil
 	}
 
-	pool, err := FindIPAMPool(conn, input)
+	pool, err := FindIPAMPool(ctx, conn, input)
 
 	if err != nil {
-		return tfresource.SingularDataSourceFindError("IPAM Pool", err)
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("IPAM Pool", err))
 	}
 
 	d.SetId(aws.StringValue(pool.IpamPoolId))
@@ -141,8 +144,8 @@ func dataSourceIPAMPoolRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("state", pool.State)
 
 	if err := d.Set("tags", KeyValueTags(pool.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

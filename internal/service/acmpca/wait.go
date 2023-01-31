@@ -1,6 +1,7 @@
 package acmpca
 
 import (
+	"context"
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/acmpca"
@@ -8,15 +9,15 @@ import (
 )
 
 // waitCertificateAuthorityCreated waits for a CertificateAuthority to return Active or PendingCertificate
-func waitCertificateAuthorityCreated(conn *acmpca.ACMPCA, arn string, timeout time.Duration) (*acmpca.CertificateAuthority, error) {
+func waitCertificateAuthorityCreated(ctx context.Context, conn *acmpca.ACMPCA, arn string, timeout time.Duration) (*acmpca.CertificateAuthority, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"", acmpca.CertificateAuthorityStatusCreating},
 		Target:  []string{acmpca.CertificateAuthorityStatusActive, acmpca.CertificateAuthorityStatusPendingCertificate},
-		Refresh: statusCertificateAuthority(conn, arn),
+		Refresh: statusCertificateAuthority(ctx, conn, arn),
 		Timeout: timeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if v, ok := outputRaw.(*acmpca.CertificateAuthority); ok {
 		return v, err
