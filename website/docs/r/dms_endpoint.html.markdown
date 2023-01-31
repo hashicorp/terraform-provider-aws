@@ -57,7 +57,9 @@ The following arguments are optional:
 * `certificate_arn` - (Optional, Default: empty string) ARN for the certificate.
 * `database_name` - (Optional) Name of the endpoint database.
 * `elasticsearch_settings` - (Optional) Configuration block for OpenSearch settings. See below.
-* `extra_connection_attributes` - (Optional) Additional attributes associated with the connection. For available attributes see [Using Extra Connection Attributes with AWS Database Migration Service](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.html).
+* `extra_connection_attributes` - (Optional) Additional attributes associated with the connection.
+  For available attributes for a `source` Endpoint, see [Sources for data migration](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.html).
+  For available attributes for a `target` Endpoint, see [Targets for data migration](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.html).
 * `kafka_settings` - (Optional) Configuration block for Kafka settings. See below.
 * `kinesis_settings` - (Optional) Configuration block for Kinesis settings. See below.
 * `mongodb_settings` - (Optional) Configuration block for MongoDB settings. See below.
@@ -66,10 +68,10 @@ The following arguments are optional:
 * `redshift_settings` - (Optional) Configuration block for Redshift settings. See below.
 * `s3_settings` - (Optional) Configuration block for S3 settings. See below.
 * `secrets_manager_access_role_arn` - (Optional) ARN of the IAM role that specifies AWS DMS as the trusted entity and has the required permissions to access the value in SecretsManagerSecret.
-* `secrets_manager_arn` - (Optional) Full ARN, partial ARN, or friendly name of the SecretsManagerSecret that contains the endpoint connection details. Supported only for `engine_name` as `aurora`, `aurora-postgresql`, `mariadb`, `mongodb`, `mysql`, `oracle`, `postgres`, `redshift` or `sqlserver`.
+* `secrets_manager_arn` - (Optional) Full ARN, partial ARN, or friendly name of the SecretsManagerSecret that contains the endpoint connection details. Supported only when `engine_name` is `aurora`, `aurora-postgresql`, `mariadb`, `mongodb`, `mysql`, `oracle`, `postgres`, `redshift`, or `sqlserver`.
 * `server_name` - (Optional) Host name of the server.
 * `service_access_role` - (Optional) ARN used by the service access IAM role for dynamodb endpoints.
-* `ssl_mode` - (Optional, Default: none) SSL mode to use for the connection. Valid values are `none`, `require`, `verify-ca`, `verify-full`
+* `ssl_mode` - (Optional, Default: `none`) SSL mode to use for the connection. Valid values are `none`, `require`, `verify-ca`, `verify-full`
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `username` - (Optional) User name to be used to login to the endpoint database.
 
