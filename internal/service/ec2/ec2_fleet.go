@@ -1123,7 +1123,7 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	if v, ok := d.GetOk("valid_from"); ok {
 		validFrom, err := time.Parse(time.RFC3339, v.(string))
 		if err != nil {
-			return err
+			return sdkdiag.AppendErrorf(diags, "creating EC2 Fleet: %s", err)
 		}
 		input.ValidFrom = aws.Time(validFrom)
 	}
@@ -1131,7 +1131,7 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	if v, ok := d.GetOk("valid_until"); ok {
 		validUntil, err := time.Parse(time.RFC3339, v.(string))
 		if err != nil {
-			return err
+			return sdkdiag.AppendErrorf(diags, "creating EC2 Fleet: %s", err)
 		}
 		input.ValidUntil = aws.Time(validUntil)
 	}
@@ -1153,9 +1153,10 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 			targetStates = append(targetStates, ec2.FleetStateCodeDeleted, ec2.FleetStateCodeDeletedRunning, ec2.FleetStateCodeDeletedTerminating)
 		}
 
-	if _, err := WaitFleet(ctx, conn, d.Id(), []string{ec2.FleetStateCodeSubmitted}, targetStates, d.Timeout(schema.TimeoutCreate), 0); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Fleet (%s) create: %s", d.Id(), err)
+		if _, err := WaitFleet(ctx, conn, d.Id(), []string{ec2.FleetStateCodeSubmitted}, targetStates, d.Timeout(schema.TimeoutCreate), 0); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for EC2 Fleet (%s) create: %s", d.Id(), err)
 
+		}
 	}
 
 	return append(diags, resourceFleetRead(ctx, d, meta)...)
@@ -1190,7 +1191,7 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("excess_capacity_termination_policy", fleet.ExcessCapacityTerminationPolicy)
 	if fleet.Instances != nil {
 		if err := d.Set("fleet_instance_set", flattenFleetInstanceSet(fleet.Instances)); err != nil {
-			return fmt.Errorf("setting fleet_instance_set: %w", err)
+			return sdkdiag.AppendErrorf(diags, "creating EC2 Fleet: %s", err)
 		}
 	}
 	d.Set("fleet_state", fleet.FleetState)
