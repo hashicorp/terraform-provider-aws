@@ -15,3 +15,6 @@ resource/aws_ec2_fleet: Add `on_demand_options.capacity_reservation_options`,`on
 resource/aws_ec2_launch_template: Add expand and flatten support for `instance_requirements.allowed_instance_types`,  `instance_requirements.network_bandwidth_gbps_request`
 ```
 
+```release-note:enhancement
+resource/aws_ec2_fleet: Add `spot_options.maintenance_strategies.capacity_rebalance.termination_delay` argument
+```

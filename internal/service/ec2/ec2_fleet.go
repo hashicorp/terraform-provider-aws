@@ -918,6 +918,7 @@ func ResourceFleet() *schema.Resource {
 				Type:             schema.TypeList,
 				Optional:         true,
 				MaxItems:         1,
+				ForceNew:         true,
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -961,6 +962,11 @@ func ResourceFleet() *schema.Resource {
 													Optional:     true,
 													ForceNew:     true,
 													ValidateFunc: validation.StringInSlice(ec2.FleetReplacementStrategy_Values(), false),
+												},
+												"termination_delay": {
+													Type:         schema.TypeInt,
+													Optional:     true,
+													ValidateFunc: validation.IntBetween(120, 7200),
 												},
 											},
 										},
@@ -1535,6 +1541,10 @@ func expandFleetSpotCapacityRebalanceRequest(tfMap map[string]interface{}) *ec2.
 		apiObject.ReplacementStrategy = aws.String(v)
 	}
 
+	if v, ok := tfMap["termination_delay"].(int64); ok {
+		apiObject.TerminationDelay = aws.Int64(v)
+	}
+
 	return apiObject
 }
 
@@ -1871,6 +1881,10 @@ func flattenFleetSpotCapacityRebalance(apiObject *ec2.FleetSpotCapacityRebalance
 
 	if v := apiObject.ReplacementStrategy; v != nil {
 		tfMap["replacement_strategy"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.TerminationDelay; v != nil {
+		tfMap["termination_delay"] = aws.Int64Value(v)
 	}
 
 	return tfMap
