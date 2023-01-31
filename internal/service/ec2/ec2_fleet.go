@@ -876,6 +876,36 @@ func ResourceFleet() *schema.Resource {
 							Default:      FleetOnDemandAllocationStrategyLowestPrice,
 							ValidateFunc: validation.StringInSlice(FleetOnDemandAllocationStrategy_Values(), false),
 						},
+						"capacity_reservation_options": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"usage_strategy": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringInSlice(ec2.FleetCapacityReservationUsageStrategy_Values(), false),
+									},
+								},
+							},
+						},
+						"max_total_price": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"min_target_capacity": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"single_availability_zone": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"single_instance_type": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
 					},
 				},
 			},
@@ -1273,6 +1303,20 @@ func resourceFleetDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
+func expandCapacityReservationOptionsRequest(tfMap map[string]interface{}) *ec2.CapacityReservationOptionsRequest {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &ec2.CapacityReservationOptionsRequest{}
+
+	if v, ok := tfMap["usage_strategy"].(string); ok && v != "" {
+		apiObject.UsageStrategy = aws.String(v)
+	}
+
+	return apiObject
+}
+
 func expandFleetLaunchTemplateConfigRequests(tfList []interface{}) []*ec2.FleetLaunchTemplateConfigRequest {
 	if len(tfList) == 0 {
 		return nil
@@ -1414,6 +1458,26 @@ func expandOnDemandOptionsRequest(tfMap map[string]interface{}) *ec2.OnDemandOpt
 		apiObject.AllocationStrategy = aws.String(v)
 	}
 
+	if v, ok := tfMap["capacity_reservation_options"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		apiObject.CapacityReservationOptions = expandCapacityReservationOptionsRequest(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["max_total_price"].(string); ok && v != "" {
+		apiObject.MaxTotalPrice = aws.String(v)
+	}
+
+	if v, ok := tfMap["min_target_capacity"].(int64); ok {
+		apiObject.MinTargetCapacity = aws.Int64(v)
+	}
+
+	if v, ok := tfMap["single_availability_zone"].(bool); ok {
+		apiObject.SingleAvailabilityZone = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["single_instance_type"].(bool); ok {
+		apiObject.SingleInstanceType = aws.Bool(v)
+	}
+
 	return apiObject
 }
 
@@ -1502,6 +1566,20 @@ func expandTargetCapacitySpecificationRequest(tfMap map[string]interface{}) *ec2
 	}
 
 	return apiObject
+}
+
+func flattenCapacityReservationsOptions(apiObject *ec2.CapacityReservationOptions) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.UsageStrategy; v != nil {
+		tfMap["usage_strategy"] = aws.StringValue(v)
+	}
+
+	return tfMap
 }
 
 func flattenFleetInstances(apiObject *ec2.DescribeFleetsInstances) map[string]interface{} {
@@ -1701,6 +1779,26 @@ func flattenOnDemandOptions(apiObject *ec2.OnDemandOptions) map[string]interface
 
 	if v := apiObject.AllocationStrategy; v != nil {
 		tfMap["allocation_strategy"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.CapacityReservationOptions; v != nil {
+		tfMap["capacity_reservation_options"] = []interface{}{flattenCapacityReservationsOptions(v)}
+	}
+
+	if v := apiObject.MaxTotalPrice; v != nil {
+		tfMap["max_total_price"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.MinTargetCapacity; v != nil {
+		tfMap["min_target_capacity"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.SingleAvailabilityZone; v != nil {
+		tfMap["single_availability_zone"] = aws.BoolValue(v)
+	}
+
+	if v := apiObject.SingleInstanceType; v != nil {
+		tfMap["single_instance_type"] = aws.BoolValue(v)
 	}
 
 	return tfMap
