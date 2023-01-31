@@ -32,6 +32,7 @@ func TestAccDMSEndpoint_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
+					resource.TestCheckResourceAttr(resourceName, "extra_connection_attributes", ""),
 				),
 			},
 			{
@@ -296,7 +297,7 @@ func TestAccDMSEndpoint_S3_basic(t *testing.T) {
 				Config: testAccEndpointConfig_s3Update(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
-					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexp.MustCompile(``)),
+					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexp.MustCompile(`detachTargetOnLobLookupFailureParquet=false`)),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.external_table_definition", "new-external_table_definition"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.csv_row_delimiter", "\\r"),
@@ -1851,7 +1852,6 @@ resource "aws_dms_endpoint" "test" {
   endpoint_id                 = %[1]q
   endpoint_type               = "source"
   engine_name                 = "aurora"
-  extra_connection_attributes = ""
   password                    = "tftest"
   port                        = 3306
   server_name                 = "tftest"
@@ -2558,7 +2558,7 @@ resource "aws_dms_endpoint" "test" {
   endpoint_type               = "target"
   engine_name                 = "s3"
   ssl_mode                    = "none"
-  extra_connection_attributes = ""
+  extra_connection_attributes = "detachTargetOnLobLookupFailureParquet=false"
 
   tags = {
     Name   = %[1]q
