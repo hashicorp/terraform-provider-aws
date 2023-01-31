@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_ec2_fleet: Add computed `fleet_instance_set`,`fleet_state`, `fulfilled_capacity`, and `fulfilled_on_demand_capacity` arguments
+```
