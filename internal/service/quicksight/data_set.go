@@ -755,7 +755,8 @@ func ResourceDataSet() *schema.Resource {
 }
 
 func resourceDataSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightConn
+	conn := meta.(*conns.AWSClient).QuickSightConn()
+
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -825,7 +826,7 @@ func resourceDataSetCreate(ctx context.Context, d *schema.ResourceData, meta int
 func resourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	// arn.IsARN(d.Id()
 
-	conn := meta.(*conns.AWSClient).QuickSightConn
+	conn := meta.(*conns.AWSClient).QuickSightConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -895,7 +896,7 @@ func resourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.Errorf("error setting row_level_permission_tag_configuration: %s", err)
 	}
 
-	tags, err := ListTags(conn, d.Get("arn").(string))
+	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
 
 	if err != nil {
 		return diag.Errorf("error listing tags for QuickSight Data Set (%s): %s", d.Id(), err)
@@ -921,14 +922,14 @@ func resourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.Errorf("error describing QuickSight Data Source (%s) Permissions: %s", d.Id(), err)
 	}
 
-	if err := d.Set("permissions", flattenQuickSightPermissions(permsResp.Permissions)); err != nil {
+	if err := d.Set("permissions", flattenPermissions(permsResp.Permissions)); err != nil {
 		return diag.Errorf("error setting permissions: %s", err)
 	}
 	return nil
 }
 
 func resourceDataSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightConn
+	conn := meta.(*conns.AWSClient).QuickSightConn()
 
 	if d.HasChangesExcept("permissions", "tags", "tags_all") {
 		awsAccountId, dataSetId, err := ParseDataSetID(d.Id())
@@ -1025,7 +1026,7 @@ func resourceDataSetUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.Errorf("error updating QuickSight Data Source (%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -1034,7 +1035,7 @@ func resourceDataSetUpdate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceDataSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightConn
+	conn := meta.(*conns.AWSClient).QuickSightConn()
 
 	awsAccountId, dataSetId, err := ParseDataSetID(d.Id())
 	if err != nil {

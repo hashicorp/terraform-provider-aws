@@ -7,8 +7,8 @@ import (
 )
 
 func DiffPermissions(o, n []interface{}) ([]*quicksight.ResourcePermission, []*quicksight.ResourcePermission) {
-	old := expandQuickSightDataSourcePermissions(o)
-	new := expandQuickSightDataSourcePermissions(n)
+	old := expandDataSourcePermissions(o)
+	new := expandDataSourcePermissions(n)
 
 	var toGrant, toRevoke []*quicksight.ResourcePermission
 
