@@ -603,12 +603,12 @@ func (r *resourceCluster) Create(ctx context.Context, request resource.CreateReq
 	var data resourceClusterData
 	conn := r.Meta().RDSConn()
 
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+
 	defaultTagsConfig := r.Meta().DefaultTagsConfig
 	ignoreTagsConfig := r.Meta().IgnoreTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(data.Tags))
 	data.TagsAll = flex.FlattenFrameworkStringValueMapLegacy(ctx, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
-
-	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
 
 	if response.Diagnostics.HasError() {
 		return
@@ -636,6 +636,7 @@ func (r *resourceCluster) Create(ctx context.Context, request resource.CreateReq
 			DeletionProtection:  aws.Bool(data.DeletionProtection.ValueBool()),
 			Engine:              aws.String(data.Engine.ValueString()),
 			EngineMode:          aws.String(data.EngineMode.ValueString()),
+			SnapshotIdentifier:  aws.String(data.SnapshotIdentifier.ValueString()),
 			Tags:                Tags(tags.IgnoreAWS()),
 		}
 
@@ -1723,7 +1724,7 @@ func (r *resourceCluster) ValidateConfig(ctx context.Context, request resource.V
 		}
 	}
 
-	if !data.S3Import.IsUnknown() || !data.S3Import.IsNull() || len(data.S3Import.Elements()) > 0 {
+	if !data.S3Import.IsUnknown() && !data.S3Import.IsNull() && len(data.S3Import.Elements()) > 0 {
 		if (data.MasterUsername.IsUnknown() || data.MasterUsername.IsNull()) && (data.MasterPassword.IsNull() || data.MasterPassword.IsUnknown()) {
 			response.Diagnostics.AddAttributeError(
 				path.Root("s3_import"),
@@ -1890,7 +1891,7 @@ func (r *resourceClusterData) refreshFromOutput(ctx context.Context, meta *conns
 			// InvalidParameterValue: Access Denied to API Version: APIGlobalDatabases
 		} else {
 			diags.AddError(
-				"reading RSS Global Cluster",
+				"reading RDS Global Cluster",
 				err.Error(),
 			)
 		}
