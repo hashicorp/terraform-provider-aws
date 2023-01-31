@@ -38,25 +38,10 @@ func ResourceFleet() *schema.Resource {
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 			Update: schema.DefaultTimeout(10 * time.Minute),
 		},
-
 		CustomizeDiff: customdiff.All(
-			func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
-				if diff.Id() == "" {
-					if diff.Get("type").(string) != ec2.FleetTypeMaintain {
-						if v, ok := diff.GetOk("spot_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-							tfMap := v.([]interface{})[0].(map[string]interface{})
-							if v, ok := tfMap["maintenance_strategies"].([]interface{}); ok && len(v) > 0 {
-								return errors.New(`EC2 Fleet has an invalid configuration and can not be created. Capacity Rebalance maintenance strategies can only be specified for fleets of type maintain.`)
-							}
-						}
-					}
-				}
-
-				return nil
-			},
+			resourceFleetCustomizeDiff,
 			verify.SetTagsDiff,
 		),
-
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -1953,4 +1938,78 @@ func flattenTargetCapacitySpecification(apiObject *ec2.TargetCapacitySpecificati
 	}
 
 	return tfMap
+}
+
+func resourceFleetCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+	input := &ec2.CreateFleetInput{}
+
+	if diff.Id() == "" {
+		if diff.Get("type").(string) != ec2.FleetTypeMaintain {
+			if v, ok := diff.GetOk("spot_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				tfMap := v.([]interface{})[0].(map[string]interface{})
+				if v, ok := tfMap["maintenance_strategies"].([]interface{}); ok && len(v) > 0 {
+					return errors.New(`EC2 Fleet has an invalid configuration and can not be created. Capacity Rebalance maintenance strategies can only be specified for fleets of type maintain.`)
+				}
+			}
+		}
+	}
+
+	// Launch template config validation:
+	if v, ok := diff.GetOk("launch_template_config"); ok && len(v.([]interface{})) > 0 {
+		input.LaunchTemplateConfigs = expandFleetLaunchTemplateConfigRequests(v.([]interface{}))
+		for _, config := range input.LaunchTemplateConfigs {
+			for _, override := range config.Overrides {
+				// InvalidOverride:
+				if override.InstanceRequirements != nil && override.InstanceType != nil {
+					return errors.New("launch_template_configs.overrides can specify instance_requirements or instance_type, but not both")
+				}
+				// InvalidPlacementConfigs:
+				if override.Placement.GroupId != nil && override.Placement.GroupName != nil {
+					return errors.New("launch_template_configs.overrides.placement can specify a group_id or group_name, but not both")
+				}
+			}
+		}
+	}
+
+	// Fleet type `instant` specific validation:
+	if v, ok := diff.GetOk("type"); ok {
+		if v == ec2.FleetTypeInstant {
+			if v, ok := diff.GetOk("terminate_instances"); ok {
+				if !v.(bool) {
+					return errors.New(`EC2 Fleet of type instant must have terminate_instances set to true`)
+				}
+			}
+			if v, ok := diff.GetOk("excess_capacity_termination_policy"); ok {
+				if v.(string) != "" {
+					return errors.New(`EC2 Fleet of type instant must not have excess_capacity_termination_policy set`)
+				}
+			}
+		} else {
+			if v, ok := diff.GetOk("on_demand_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				input.OnDemandOptions = expandOnDemandOptionsRequest(v.([]interface{})[0].(map[string]interface{}))
+				if input.OnDemandOptions.CapacityReservationOptions != nil {
+					return errors.New("on_demand_options.capacity_reservation_options can only be specified for fleets of type instant")
+				}
+				if input.OnDemandOptions.MinTargetCapacity != nil {
+					return errors.New("on_demand_options.min_target_capacity can only be specified for fleets of type instant")
+				}
+				if input.OnDemandOptions.SingleAvailabilityZone != nil {
+					return errors.New("on_demand_options.single_availability_zone can only be specified for fleets of type instant")
+				}
+				if input.OnDemandOptions.SingleInstanceType != nil {
+					return errors.New("on_demand_options.single_instance_type can only be specified for fleets of type instant")
+				}
+				if input.SpotOptions.MinTargetCapacity != nil {
+					return errors.New("spot_options.min_target_capacity can only be specified for fleets of type instant")
+				}
+				if input.SpotOptions.SingleAvailabilityZone != nil {
+					return errors.New("spot_options.single_availability_zone can only be specified for fleets of type instant")
+				}
+				if input.SpotOptions.SingleInstanceType != nil {
+					return errors.New("spot_options.single_instance_type can only be specified for fleets of type instant")
+				}
+			}
+		}
+	}
+	return nil
 }
