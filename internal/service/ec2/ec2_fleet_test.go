@@ -2579,11 +2579,13 @@ func TestAccEC2Fleet_terminateInstancesWithExpiration(t *testing.T) {
 	})
 }
 
-func TestAccEC2Fleet_type(t *testing.T) {
+func TestAccEC2Fleet_type_maintain(t *testing.T) {
 	var fleet1 ec2.FleetData
 	resourceName := "aws_ec2_fleet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
+	excessCapacityTerminationPolicy := "termination"
+	fleetType := "maintain"
+	terminateInstances := false
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckFleet(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
@@ -2591,10 +2593,49 @@ func TestAccEC2Fleet_type(t *testing.T) {
 		CheckDestroy:             testAccCheckFleetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetConfig_type(rName, "maintain"),
+				Config: testAccFleetConfig_type(rName, fleetType, excessCapacityTerminationPolicy, terminateInstances),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(resourceName, &fleet1),
-					resource.TestCheckResourceAttr(resourceName, "type", "maintain"),
+					resource.TestCheckResourceAttr(resourceName, "type", fleetType),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"terminate_instances"},
+			},
+			// This configuration will fulfill immediately, skip until ValidFrom is implemented
+			// {
+			// 	Config: testAccFleetConfig_type(rName, "request"),
+			// 	Check: resource.ComposeTestCheckFunc(
+			// 		testAccCheckFleetExists(resourceName, &fleet2),
+			// 		testAccCheckFleetRecreated(&fleet1, &fleet2),
+			// 		resource.TestCheckResourceAttr(resourceName, "type", "request"),
+			// 	),
+			// },
+		},
+	})
+}
+
+func TestAccEC2Fleet_type_instant(t *testing.T) {
+	var fleet1 ec2.FleetData
+	resourceName := "aws_ec2_fleet.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	excessCapacityTerminationPolicy := ""
+	fleetType := "instant"
+	terminateInstances := true
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckFleet(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFleetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFleetConfig_type(rName, fleetType, excessCapacityTerminationPolicy, terminateInstances),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFleetExists(resourceName, &fleet1),
+					resource.TestCheckResourceAttr(resourceName, "type", fleetType),
 				),
 			},
 			{
@@ -3654,10 +3695,12 @@ resource "aws_ec2_fleet" "test" {
 `, rName, terminateInstancesWithExpiration))
 }
 
-func testAccFleetConfig_type(rName, fleetType string) string {
+func testAccFleetConfig_type(rName, fleetType string, excessCapacityTerminationPolicy string, terminateInstance bool) string {
 	return acctest.ConfigCompose(testAccFleetConfig_BaseLaunchTemplate(rName), fmt.Sprintf(`
 resource "aws_ec2_fleet" "test" {
   type = %[2]q
+
+  excess_capacity_termination_policy = %[3]q
 
   launch_template_config {
     launch_template_specification {
@@ -3671,9 +3714,10 @@ resource "aws_ec2_fleet" "test" {
     total_target_capacity        = 0
   }
 
+  terminate_instances = %[4]t
   tags = {
     Name = %[1]q
   }
 }
-`, rName, fleetType))
+`, rName, fleetType, excessCapacityTerminationPolicy, terminateInstance))
 }
