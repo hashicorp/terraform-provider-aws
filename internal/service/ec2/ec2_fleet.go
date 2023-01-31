@@ -532,6 +532,10 @@ func ResourceFleet() *schema.Resource {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
+									"image_id": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
 									"instance_requirements": {
 										Type:     schema.TypeList,
 										Optional: true,
@@ -600,6 +604,19 @@ func ResourceFleet() *schema.Resource {
 														ValidateFunc: validation.StringInSlice(ec2.AcceleratorType_Values(), false),
 													},
 												},
+												"allowed_instance_types": {
+													Type:     schema.TypeSet,
+													Optional: true,
+													MinItems: 0,
+													MaxItems: 400,
+													Elem: &schema.Schema{
+														Type: schema.TypeString,
+														ValidateFunc: validation.Any(
+															validation.StringMatch(regexp.MustCompile(`[a-zA-Z0-9\(\)\.\-/_]+`), "must begin with a letter and contain only alphanumeric, period, wildcard, or hyphen characters"),
+															validation.StringLenBetween(1, 30),
+														),
+													},
+												},
 												"bare_metal": {
 													Type:         schema.TypeString,
 													Optional:     true,
@@ -640,8 +657,15 @@ func ResourceFleet() *schema.Resource {
 												"excluded_instance_types": {
 													Type:     schema.TypeSet,
 													Optional: true,
+													MinItems: 0,
 													MaxItems: 400,
-													Elem:     &schema.Schema{Type: schema.TypeString},
+													Elem: &schema.Schema{
+														Type: schema.TypeString,
+														ValidateFunc: validation.Any(
+															validation.StringMatch(regexp.MustCompile(`[a-zA-Z0-9\(\)\.\-/_]+`), "must begin with a letter and contain only alphanumeric, period, wildcard, or hyphen characters"),
+															validation.StringLenBetween(1, 30),
+														),
+													},
 												},
 												"instance_generations": {
 													Type:     schema.TypeSet,
@@ -698,6 +722,25 @@ func ResourceFleet() *schema.Resource {
 																Type:         schema.TypeInt,
 																Required:     true,
 																ValidateFunc: validation.IntAtLeast(1),
+															},
+														},
+													},
+												},
+												"network_bandwidth_gbps_request": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"max": {
+																Type:         schema.TypeFloat,
+																Optional:     true,
+																ValidateFunc: verify.FloatGreaterThan(0.0),
+															},
+															"min": {
+																Type:         schema.TypeFloat,
+																Optional:     true,
+																ValidateFunc: verify.FloatGreaterThan(0.0),
 															},
 														},
 													},
@@ -783,6 +826,23 @@ func ResourceFleet() *schema.Resource {
 									"max_price": {
 										Type:     schema.TypeString,
 										Optional: true,
+									},
+									"placement": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"group_id": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+												"group_name": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+											},
+										},
 									},
 									"priority": {
 										Type:     schema.TypeFloat,

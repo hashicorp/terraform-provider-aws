@@ -1586,6 +1586,10 @@ func expandInstanceRequirementsRequest(tfMap map[string]interface{}) *ec2.Instan
 		apiObject.AcceleratorTypes = flex.ExpandStringSet(v)
 	}
 
+	if v, ok := tfMap["allowed_instance_types"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.AllowedInstanceTypes = flex.ExpandStringSet(v)
+	}
+
 	if v, ok := tfMap["bare_metal"].(string); ok && v != "" {
 		apiObject.BareMetal = aws.String(v)
 	}
@@ -1624,6 +1628,10 @@ func expandInstanceRequirementsRequest(tfMap map[string]interface{}) *ec2.Instan
 
 	if v, ok := tfMap["memory_mib"].([]interface{}); ok && len(v) > 0 {
 		apiObject.MemoryMiB = expandMemoryMiBRequest(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["network_bandwidth_gbps"].([]interface{}); ok && len(v) > 0 {
+		apiObject.NetworkBandwidthGbps = expandNetworkBandwidthGbpsRequest(v[0].(map[string]interface{}))
 	}
 
 	if v, ok := tfMap["network_interface_count"].([]interface{}); ok && len(v) > 0 {
@@ -1748,6 +1756,25 @@ func expandMemoryMiBRequest(tfMap map[string]interface{}) *ec2.MemoryMiBRequest 
 
 	if v, ok := tfMap["max"].(int); ok && v >= min {
 		apiObject.Max = aws.Int64(int64(v))
+	}
+
+	return apiObject
+}
+
+func expandNetworkBandwidthGbpsRequest(tfMap map[string]interface{}) *ec2.NetworkBandwidthGbpsRequest {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &ec2.NetworkBandwidthGbpsRequest{}
+
+	var min float64
+	if v, ok := tfMap["min"].(float64); ok {
+		apiObject.Min = aws.Float64(float64(v))
+	}
+
+	if v, ok := tfMap["max"].(float64); ok && v >= min {
+		apiObject.Max = aws.Float64(float64(v))
 	}
 
 	return apiObject
@@ -2582,6 +2609,10 @@ func flattenInstanceRequirements(apiObject *ec2.InstanceRequirements) map[string
 		tfMap["accelerator_types"] = aws.StringValueSlice(v)
 	}
 
+	if v := apiObject.AllowedInstanceTypes; v != nil {
+		tfMap["allowed_instance_types"] = aws.StringValueSlice(v)
+	}
+
 	if v := apiObject.BareMetal; v != nil {
 		tfMap["bare_metal"] = aws.StringValue(v)
 	}
@@ -2620,6 +2651,10 @@ func flattenInstanceRequirements(apiObject *ec2.InstanceRequirements) map[string
 
 	if v := apiObject.MemoryMiB; v != nil {
 		tfMap["memory_mib"] = []interface{}{flattenMemoryMiB(v)}
+	}
+
+	if v := apiObject.NetworkBandwidthGbps; v != nil {
+		tfMap["network_bandwidth_gbps"] = []interface{}{flattenNetworkBandwidthGbps(v)}
 	}
 
 	if v := apiObject.NetworkInterfaceCount; v != nil {
@@ -2734,6 +2769,24 @@ func flattenMemoryMiB(apiObject *ec2.MemoryMiB) map[string]interface{} {
 
 	if v := apiObject.Min; v != nil {
 		tfMap["min"] = aws.Int64Value(v)
+	}
+
+	return tfMap
+}
+
+func flattenNetworkBandwidthGbps(apiObject *ec2.NetworkBandwidthGbps) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Max; v != nil {
+		tfMap["max"] = aws.Float64Value(v)
+	}
+
+	if v := apiObject.Min; v != nil {
+		tfMap["min"] = aws.Float64Value(v)
 	}
 
 	return tfMap
