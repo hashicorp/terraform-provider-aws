@@ -18,3 +18,7 @@ resource/aws_ec2_launch_template: Add expand and flatten support for `instance_r
 ```release-note:enhancement
 resource/aws_ec2_fleet: Add `spot_options.maintenance_strategies.capacity_rebalance.termination_delay` argument
 ```
+
+```release-note:enhancement
+resource/aws_ec2_fleet: Add `valid_from`, `valid_until` arguments
+```

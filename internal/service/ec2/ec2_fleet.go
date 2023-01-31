@@ -1072,14 +1072,23 @@ func ResourceFleet() *schema.Resource {
 				ForceNew: true,
 			},
 			"type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Default:  ec2.FleetTypeMaintain,
-				ValidateFunc: validation.StringInSlice([]string{
-					ec2.FleetTypeMaintain,
-					ec2.FleetTypeRequest,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Default:      ec2.FleetTypeMaintain,
+				ValidateFunc: validation.StringInSlice(ec2.FleetType_Values(), false),
+			},
+			"valid_from": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IsRFC3339Time,
+			},
+			"valid_until": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IsRFC3339Time,
 			},
 		},
 	}
@@ -1121,6 +1130,22 @@ func resourceFleetCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("context"); ok {
 		input.Context = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("valid_from"); ok {
+		validFrom, err := time.Parse(time.RFC3339, v.(string))
+		if err != nil {
+			return err
+		}
+		input.ValidFrom = aws.Time(validFrom)
+	}
+
+	if v, ok := d.GetOk("valid_until"); ok {
+		validUntil, err := time.Parse(time.RFC3339, v.(string))
+		if err != nil {
+			return err
+		}
+		input.ValidUntil = aws.Time(validUntil)
 	}
 
 	log.Printf("[DEBUG] Creating EC2 Fleet: %s", input)
@@ -1217,6 +1242,16 @@ func resourceFleetRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("terminate_instances_with_expiration", fleet.TerminateInstancesWithExpiration)
 	d.Set("type", fleet.Type)
+
+	if fleet.ValidFrom != nil && aws.TimeValue(fleet.ValidFrom).Format(time.RFC3339) != "1970-01-01T00:00:00Z" {
+		d.Set("valid_from",
+			aws.TimeValue(fleet.ValidFrom).Format(time.RFC3339))
+	}
+
+	if fleet.ValidUntil != nil && aws.TimeValue(fleet.ValidUntil).Format(time.RFC3339) != "1970-01-01T00:00:00Z" {
+		d.Set("valid_until",
+			aws.TimeValue(fleet.ValidUntil).Format(time.RFC3339))
+	}
 
 	tags := KeyValueTags(fleet.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
