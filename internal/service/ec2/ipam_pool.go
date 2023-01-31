@@ -191,7 +191,7 @@ func ResourceIPAMPoolCreate(ctx context.Context, d *schema.ResourceData, meta in
 	// The request can only contain PubliclyAdvertisable if the AddressFamily is IPv6 and PublicIpSource is byoip.
 	// PubliclyAdvertisable option is not available for pools with AddressFamily set to ipv4 .
 	if addressFamily == ec2.AddressFamilyIpv6 && publicIpSource != ec2.IpamPoolPublicIpSourceAmazon {
-		if v := d.Get("publicly_advertisable"); v != "" {
+		if v, ok := d.GetOk("publicly_advertisable"); ok {
 			input.PubliclyAdvertisable = aws.Bool(v.(bool))
 		}
 	}
