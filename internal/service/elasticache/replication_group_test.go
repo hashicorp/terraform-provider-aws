@@ -3882,8 +3882,8 @@ resource "aws_elasticache_replication_group" "test" {
   replication_group_id          = %[1]q
   replication_group_description = "test description"
   node_type                     = "cache.t3.small"
-  ip_discovery					= "ipv6"
-  network_type					= "ipv6"
+  ip_discovery                  = "ipv6"
+  network_type                  = "ipv6"
 }
 `, rName)
 }
@@ -3894,8 +3894,8 @@ resource "aws_elasticache_replication_group" "test" {
   replication_group_id          = %[1]q
   replication_group_description = "test description"
   node_type                     = "cache.t3.small"
-  ip_discovery					= "ipv6"
-  network_type					= "dual_stack"
+  ip_discovery                  = "ipv6"
+  network_type                  = "dual_stack"
 }
 `, rName)
 }
