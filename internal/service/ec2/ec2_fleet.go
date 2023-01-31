@@ -1087,35 +1087,34 @@ func resourceFleetCreate(d *schema.ResourceData, meta interface{}) error {
 
 	fleetType := d.Get("type").(string)
 	input := &ec2.CreateFleetInput{
-		ExcessCapacityTerminationPolicy:  aws.String(d.Get("excess_capacity_termination_policy").(string)),
-		ReplaceUnhealthyInstances:        aws.Bool(d.Get("replace_unhealthy_instances").(bool)),
-		TagSpecifications:                tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeFleet),
-		TerminateInstancesWithExpiration: aws.Bool(d.Get("terminate_instances_with_expiration").(bool)),
-		Type:                             aws.String(fleetType),
+		LaunchTemplateConfigs:       expandFleetLaunchTemplateConfigRequests(d.Get("launch_template_config").([]interface{})),
+		TargetCapacitySpecification: expandTargetCapacitySpecificationRequest(d.Get("target_capacity_specification").([]interface{})[0].(map[string]interface{})),
+		TagSpecifications:           tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeFleet),
+		Type:                        aws.String(fleetType),
 	}
 
 	if v, ok := d.GetOk("context"); ok {
 		input.Context = aws.String(v.(string))
 	}
-
-	if v, ok := d.GetOk("launch_template_config"); ok && len(v.([]interface{})) > 0 {
-		input.LaunchTemplateConfigs = expandFleetLaunchTemplateConfigRequests(v.([]interface{}))
+	// this argument is only valid for fleet_type of `maintain`, but was defaulted in the schema above, hence the extra check
+	if v, ok := d.GetOk("excess_capacity_termination_policy"); ok && v != "" && fleetType == "maintain" {
+		input.ExcessCapacityTerminationPolicy = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("on_demand_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.OnDemandOptions = expandOnDemandOptionsRequest(v.([]interface{})[0].(map[string]interface{}))
 	}
 
+	if v, ok := d.GetOk("replace_unhealthy_instances"); ok {
+		input.ReplaceUnhealthyInstances = aws.Bool(v.(bool))
+	}
+
 	if v, ok := d.GetOk("spot_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.SpotOptions = expandSpotOptionsRequest(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk("target_capacity_specification"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.TargetCapacitySpecification = expandTargetCapacitySpecificationRequest(v.([]interface{})[0].(map[string]interface{}))
-	}
-
-	if v, ok := d.GetOk("context"); ok {
-		input.Context = aws.String(v.(string))
+	if v, ok := d.GetOk("terminate_instances_with_expiration"); ok {
+		input.TerminateInstancesWithExpiration = aws.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk("valid_from"); ok {
@@ -1145,13 +1144,15 @@ func resourceFleetCreate(d *schema.ResourceData, meta interface{}) error {
 
 	// If a request type is fulfilled immediately, we can miss the transition from active to deleted.
 	// Instead of an error here, allow the Read function to trigger recreation.
-	targetStates := []string{ec2.FleetStateCodeActive}
-	if fleetType == ec2.FleetTypeRequest {
-		targetStates = append(targetStates, ec2.FleetStateCodeDeleted, ec2.FleetStateCodeDeletedRunning, ec2.FleetStateCodeDeletedTerminating)
-	}
+	if input.ValidFrom == nil {
+		targetStates := []string{ec2.FleetStateCodeActive}
+		if fleetType == ec2.FleetTypeRequest {
+			targetStates = append(targetStates, ec2.FleetStateCodeDeleted, ec2.FleetStateCodeDeletedRunning, ec2.FleetStateCodeDeletedTerminating)
+		}
 
-	if _, err := WaitFleet(conn, d.Id(), []string{ec2.FleetStateCodeSubmitted}, targetStates, d.Timeout(schema.TimeoutCreate), 0); err != nil {
-		return fmt.Errorf("waiting for EC2 Fleet (%s) create: %w", d.Id(), err)
+		if _, err := WaitFleet(conn, d.Id(), []string{ec2.FleetStateCodeSubmitted}, targetStates, d.Timeout(schema.TimeoutCreate), 0); err != nil {
+			return fmt.Errorf("waiting for EC2 Fleet (%s) create: %w", d.Id(), err)
+		}
 	}
 
 	return resourceFleetRead(d, meta)
@@ -1173,7 +1174,6 @@ func resourceFleetRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return fmt.Errorf("reading EC2 Fleet (%s): %w", d.Id(), err)
 	}
-
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   ec2.ServiceName,
@@ -1181,25 +1181,20 @@ func resourceFleetRead(d *schema.ResourceData, meta interface{}) error {
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("fleet/%s", d.Id()),
 	}.String()
-
 	d.Set("arn", arn)
 	d.Set("context", fleet.Context)
 	d.Set("excess_capacity_termination_policy", fleet.ExcessCapacityTerminationPolicy)
-
 	if fleet.Instances != nil {
 		if err := d.Set("fleet_instance_set", flattenFleetInstanceSet(fleet.Instances)); err != nil {
 			return fmt.Errorf("setting fleet_instance_set: %w", err)
 		}
 	}
-
 	d.Set("fleet_state", fleet.FleetState)
 	d.Set("fulfilled_capacity", fleet.FulfilledCapacity)
 	d.Set("fulfilled_on_demand_capacity", fleet.FulfilledOnDemandCapacity)
-
 	if err := d.Set("launch_template_config", flattenFleetLaunchTemplateConfigs(fleet.LaunchTemplateConfigs)); err != nil {
 		return fmt.Errorf("setting launch_template_config: %w", err)
 	}
-
 	if fleet.OnDemandOptions != nil {
 		if err := d.Set("on_demand_options", []interface{}{flattenOnDemandOptions(fleet.OnDemandOptions)}); err != nil {
 			return fmt.Errorf("setting on_demand_options: %w", err)
@@ -1207,9 +1202,7 @@ func resourceFleetRead(d *schema.ResourceData, meta interface{}) error {
 	} else {
 		d.Set("on_demand_options", nil)
 	}
-
 	d.Set("replace_unhealthy_instances", fleet.ReplaceUnhealthyInstances)
-
 	if fleet.SpotOptions != nil {
 		if err := d.Set("spot_options", []interface{}{flattenSpotOptions(fleet.SpotOptions)}); err != nil {
 			return fmt.Errorf("setting spot_options: %w", err)
@@ -1217,7 +1210,6 @@ func resourceFleetRead(d *schema.ResourceData, meta interface{}) error {
 	} else {
 		d.Set("spot_options", nil)
 	}
-
 	if fleet.TargetCapacitySpecification != nil {
 		if err := d.Set("target_capacity_specification", []interface{}{flattenTargetCapacitySpecification(fleet.TargetCapacitySpecification)}); err != nil {
 			return fmt.Errorf("setting target_capacity_specification: %w", err)
@@ -1225,7 +1217,6 @@ func resourceFleetRead(d *schema.ResourceData, meta interface{}) error {
 	} else {
 		d.Set("target_capacity_specification", nil)
 	}
-
 	d.Set("terminate_instances_with_expiration", fleet.TerminateInstancesWithExpiration)
 	d.Set("type", fleet.Type)
 
@@ -1257,11 +1248,12 @@ func resourceFleetUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
+
 		input := &ec2.ModifyFleetInput{
 			Context:                         aws.String(d.Get("context").(string)),
 			ExcessCapacityTerminationPolicy: aws.String(d.Get("excess_capacity_termination_policy").(string)),
-			LaunchTemplateConfigs:           expandFleetLaunchTemplateConfigRequests(d.Get("launch_template_config").([]interface{})),
 			FleetId:                         aws.String(d.Id()),
+			LaunchTemplateConfigs:           expandFleetLaunchTemplateConfigRequests(d.Get("launch_template_config").([]interface{})),
 			// InvalidTargetCapacitySpecification: Currently we only support total target capacity modification.
 			// TargetCapacitySpecification: expandEc2TargetCapacitySpecificationRequest(d.Get("target_capacity_specification").([]interface{})),
 			TargetCapacitySpecification: &ec2.TargetCapacitySpecificationRequest{
