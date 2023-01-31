@@ -752,14 +752,20 @@ func TestAccDMSEndpoint_MongoDB_update(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfig_mongoDB(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
+					resource.TestCheckResourceAttr(resourceName, "server_name", "tftest"),
+					resource.TestCheckResourceAttr(resourceName, "port", "27017"),
+					resource.TestCheckResourceAttr(resourceName, "username", "tftest"),
+					resource.TestCheckResourceAttr(resourceName, "password", "tftest"),
+					resource.TestCheckResourceAttr(resourceName, "database_name", "tftest"),
+					resource.TestCheckResourceAttr(resourceName, "ssl_mode", "none"),
 				),
 			},
 			{
 				Config: testAccEndpointConfig_mongoDBUpdate(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "server_name", "tftest-new-server_name"),
 					resource.TestCheckResourceAttr(resourceName, "port", "27018"),
@@ -767,7 +773,6 @@ func TestAccDMSEndpoint_MongoDB_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "password", "tftest-new-password"),
 					resource.TestCheckResourceAttr(resourceName, "database_name", "tftest-new-database_name"),
 					resource.TestCheckResourceAttr(resourceName, "ssl_mode", "require"),
-					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexp.MustCompile(`key=value;`)),
 					resource.TestCheckResourceAttr(resourceName, "mongodb_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "mongodb_settings.0.auth_mechanism", "scram-sha-1"),
 					resource.TestCheckResourceAttr(resourceName, "mongodb_settings.0.nesting_level", "one"),
@@ -993,6 +998,7 @@ func TestAccDMSEndpoint_Oracle_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
+					resource.TestCheckResourceAttr(resourceName, "extra_connection_attributes", ""),
 				),
 			},
 			{
@@ -1048,6 +1054,13 @@ func TestAccDMSEndpoint_Oracle_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
+					resource.TestCheckResourceAttr(resourceName, "server_name", "tftest"),
+					resource.TestCheckResourceAttr(resourceName, "port", "27017"),
+					resource.TestCheckResourceAttr(resourceName, "username", "tftest"),
+					resource.TestCheckResourceAttr(resourceName, "password", "tftest"),
+					resource.TestCheckResourceAttr(resourceName, "database_name", "tftest"),
+					resource.TestCheckResourceAttr(resourceName, "ssl_mode", "none"),
+					resource.TestCheckResourceAttr(resourceName, "extra_connection_attributes", ""),
 				),
 			},
 			{
@@ -1060,7 +1073,7 @@ func TestAccDMSEndpoint_Oracle_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "password", "tftest-new-password"),
 					resource.TestCheckResourceAttr(resourceName, "database_name", "tftest-new-database_name"),
 					resource.TestCheckResourceAttr(resourceName, "ssl_mode", "none"),
-					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexp.MustCompile(`key=value;`)),
+					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexp.MustCompile(`charLengthSemantics=CHAR;`)),
 				),
 			},
 			{
@@ -1379,14 +1392,21 @@ func TestAccDMSEndpoint_Sybase_update(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfig_sybase(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
+					resource.TestCheckResourceAttr(resourceName, "server_name", "tftest"),
+					resource.TestCheckResourceAttr(resourceName, "port", "27017"),
+					resource.TestCheckResourceAttr(resourceName, "username", "tftest"),
+					resource.TestCheckResourceAttr(resourceName, "password", "tftest"),
+					resource.TestCheckResourceAttr(resourceName, "database_name", "tftest"),
+					resource.TestCheckResourceAttr(resourceName, "ssl_mode", "none"),
+					resource.TestCheckResourceAttr(resourceName, "extra_connection_attributes", ""),
 				),
 			},
 			{
 				Config: testAccEndpointConfig_sybaseUpdate(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "server_name", "tftest-new-server_name"),
 					resource.TestCheckResourceAttr(resourceName, "port", "27018"),
@@ -1394,7 +1414,7 @@ func TestAccDMSEndpoint_Sybase_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "password", "tftest-new-password"),
 					resource.TestCheckResourceAttr(resourceName, "database_name", "tftest-new-database_name"),
 					resource.TestCheckResourceAttr(resourceName, "ssl_mode", "none"),
-					resource.TestMatchResourceAttr(resourceName, "extra_connection_attributes", regexp.MustCompile(`key=value;`)),
+					resource.TestCheckResourceAttr(resourceName, "extra_connection_attributes", ""),
 				),
 			},
 			{
@@ -2743,17 +2763,16 @@ data "aws_kms_alias" "dms" {
 }
 
 resource "aws_dms_endpoint" "test" {
-  endpoint_id                 = %[1]q
-  endpoint_type               = "source"
-  engine_name                 = "mongodb"
-  server_name                 = "tftest-new-server_name"
-  port                        = 27018
-  username                    = "tftest-new-username"
-  password                    = "tftest-new-password"
-  database_name               = "tftest-new-database_name"
-  ssl_mode                    = "require"
-  extra_connection_attributes = "key=value;"
-  kms_key_arn                 = data.aws_kms_alias.dms.target_key_arn
+  endpoint_id   = %[1]q
+  endpoint_type = "source"
+  engine_name   = "mongodb"
+  server_name   = "tftest-new-server_name"
+  port          = 27018
+  username      = "tftest-new-username"
+  password      = "tftest-new-password"
+  database_name = "tftest-new-database_name"
+  ssl_mode      = "require"
+  kms_key_arn   = data.aws_kms_alias.dms.target_key_arn
 
   tags = {
     Name   = %[1]q
@@ -2902,16 +2921,15 @@ resource "aws_dms_endpoint" "test" {
 func testAccEndpointConfig_oracle(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dms_endpoint" "test" {
-  endpoint_id                 = %[1]q
-  endpoint_type               = "source"
-  engine_name                 = "oracle"
-  server_name                 = "tftest"
-  port                        = 27017
-  username                    = "tftest"
-  password                    = "tftest"
-  database_name               = "tftest"
-  ssl_mode                    = "none"
-  extra_connection_attributes = ""
+  endpoint_id   = %[1]q
+  endpoint_type = "source"
+  engine_name   = "oracle"
+  server_name   = "tftest"
+  port          = 27017
+  username      = "tftest"
+  password      = "tftest"
+  database_name = "tftest"
+  ssl_mode      = "none"
 
   tags = {
     Name   = %[1]q
@@ -2934,7 +2952,7 @@ resource "aws_dms_endpoint" "test" {
   password                    = "tftest-new-password"
   database_name               = "tftest-new-database_name"
   ssl_mode                    = "none"
-  extra_connection_attributes = "key=value;"
+  extra_connection_attributes = "charLengthSemantics=CHAR;"
 
   tags = {
     Name   = %[1]q
@@ -3106,16 +3124,15 @@ resource "aws_dms_endpoint" "test" {
 func testAccEndpointConfig_sybase(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dms_endpoint" "test" {
-  endpoint_id                 = %[1]q
-  endpoint_type               = "source"
-  engine_name                 = "sybase"
-  server_name                 = "tftest"
-  port                        = 27017
-  username                    = "tftest"
-  password                    = "tftest"
-  database_name               = "tftest"
-  ssl_mode                    = "none"
-  extra_connection_attributes = ""
+  endpoint_id   = %[1]q
+  endpoint_type = "source"
+  engine_name   = "sybase"
+  server_name   = "tftest"
+  port          = 27017
+  username      = "tftest"
+  password      = "tftest"
+  database_name = "tftest"
+  ssl_mode      = "none"
 
   tags = {
     Name   = %[1]q
@@ -3129,16 +3146,15 @@ resource "aws_dms_endpoint" "test" {
 func testAccEndpointConfig_sybaseUpdate(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dms_endpoint" "test" {
-  endpoint_id                 = %[1]q
-  endpoint_type               = "source"
-  engine_name                 = "sybase"
-  server_name                 = "tftest-new-server_name"
-  port                        = 27018
-  username                    = "tftest-new-username"
-  password                    = "tftest-new-password"
-  database_name               = "tftest-new-database_name"
-  ssl_mode                    = "none"
-  extra_connection_attributes = "key=value;"
+  endpoint_id   = %[1]q
+  endpoint_type = "source"
+  engine_name   = "sybase"
+  server_name   = "tftest-new-server_name"
+  port          = 27018
+  username      = "tftest-new-username"
+  password      = "tftest-new-password"
+  database_name = "tftest-new-database_name"
+  ssl_mode      = "none"
 
   tags = {
     Name   = %[1]q
