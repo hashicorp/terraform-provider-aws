@@ -228,13 +228,12 @@ func sweepClusters(region string) error {
 		for _, v := range page.DBClusters {
 			arn := aws.StringValue(v.DBClusterArn)
 			id := aws.StringValue(v.DBClusterIdentifier)
-			r := ResourceCluster()
-			d := r.Data(nil)
-			d.SetId(id)
-			d.Set("apply_immediately", true)
-			d.Set("arn", arn)
-			d.Set("deletion_protection", false)
-			d.Set("skip_final_snapshot", true)
+
+			sa := sweep.NewFrameworkSupplementalAttributes()
+			sa.Add("apply_immediately", true)
+			sa.Add("arn", arn)
+			sa.Add("deletion_protection", false)
+			sa.Add("skip_final_snapshot", true)
 
 			if engineMode := aws.StringValue(v.EngineMode); engineMode == EngineModeGlobal || engineMode == EngineModeProvisioned {
 				globalCluster, err := DescribeGlobalClusterFromClusterARN(ctx, conn, arn)
@@ -247,11 +246,11 @@ func sweepClusters(region string) error {
 				}
 
 				if globalCluster != nil && globalCluster.GlobalClusterIdentifier != nil {
-					d.Set("global_cluster_identifier", globalCluster.GlobalClusterIdentifier)
+					sa.Add("global_cluster_identifier", globalCluster.GlobalClusterIdentifier)
 				}
 			}
 
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+			sweepResources = append(sweepResources, sweep.NewSweepFrameworkResource(newResourceCluster, id, client, sa...))
 		}
 
 		return !lastPage
