@@ -1508,14 +1508,16 @@ func (r *resourceCluster) Delete(ctx context.Context, request resource.DeleteReq
 	}
 
 	if !data.SkipFinalSnapshot.ValueBool() {
-		input.FinalDBSnapshotIdentifier = aws.String(data.FinalSnapshotIdentifier.ValueString())
-	} else {
-		response.Diagnostics.AddAttributeWarning(
-			path.Root("final_snapshot_identifier"),
-			"final_snapshot_identifier is required",
-			"RDS Cluster final_snapshot_identifier is required when skip_final_snapshot is false",
-		)
-		return
+		if !data.FinalSnapshotIdentifier.IsNull() {
+			input.FinalDBSnapshotIdentifier = aws.String(data.FinalSnapshotIdentifier.ValueString())
+		} else {
+			response.Diagnostics.AddAttributeError(
+				path.Root("final_snapshot_identifier"),
+				"final_snapshot_identifier is required",
+				"RDS Cluster final_snapshot_identifier is required when skip_final_snapshot is false",
+			)
+			return
+		}
 	}
 
 	tflog.Debug(ctx, "deleting RDS Cluster", map[string]interface{}{
@@ -1957,4 +1959,127 @@ func (r *resourceClusterData) setResourceDataEngineVersionFromCluster(ctx contex
 	}
 
 	r.EngineVersionActual = flex.StringValueToFrameworkLegacy(ctx, newVersion)
+}
+
+func FindDBClusterByID(ctx context.Context, conn *rds.RDS, id string) (*rds.DBCluster, error) {
+	input := &rds.DescribeDBClustersInput{
+		DBClusterIdentifier: aws.String(id),
+	}
+
+	output, err := conn.DescribeDBClustersWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBClusterNotFoundFault) {
+		return nil, &sdkresource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if output == nil || len(output.DBClusters) == 0 || output.DBClusters[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	dbCluster := output.DBClusters[0]
+
+	// Eventual consistency check.
+	if aws.StringValue(dbCluster.DBClusterIdentifier) != id {
+		return nil, &sdkresource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return dbCluster, nil
+}
+
+func waitDBClusterCreated(ctx context.Context, conn *rds.RDS, id string, timeout time.Duration) (*rds.DBCluster, error) { //nolint:unparam
+	stateConf := &sdkresource.StateChangeConf{
+		Pending: []string{
+			ClusterStatusBackingUp,
+			ClusterStatusCreating,
+			ClusterStatusMigrating,
+			ClusterStatusModifying,
+			ClusterStatusPreparingDataMigration,
+			ClusterStatusRebooting,
+			ClusterStatusResettingMasterCredentials,
+		},
+		Target:     []string{ClusterStatusAvailable},
+		Refresh:    statusDBCluster(ctx, conn, id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*rds.DBCluster); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitDBClusterUpdated(ctx context.Context, conn *rds.RDS, id string, timeout time.Duration) (*rds.DBCluster, error) { //nolint:unparam
+	stateConf := &sdkresource.StateChangeConf{
+		Pending: []string{
+			ClusterStatusBackingUp,
+			ClusterStatusConfiguringIAMDatabaseAuth,
+			ClusterStatusModifying,
+			ClusterStatusRenaming,
+			ClusterStatusResettingMasterCredentials,
+			ClusterStatusUpgrading,
+		},
+		Target:     []string{ClusterStatusAvailable},
+		Refresh:    statusDBCluster(ctx, conn, id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*rds.DBCluster); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitDBClusterDeleted(ctx context.Context, conn *rds.RDS, id string, timeout time.Duration) (*rds.DBCluster, error) { //nolint:unparam
+	stateConf := &sdkresource.StateChangeConf{
+		Pending: []string{
+			ClusterStatusAvailable,
+			ClusterStatusBackingUp,
+			ClusterStatusDeleting,
+			ClusterStatusModifying,
+		},
+		Target:     []string{},
+		Refresh:    statusDBCluster(ctx, conn, id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*rds.DBCluster); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func statusDBCluster(ctx context.Context, conn *rds.RDS, id string) sdkresource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindDBClusterByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Status), nil
+	}
 }
