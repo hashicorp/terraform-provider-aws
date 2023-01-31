@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -681,29 +682,8 @@ func ResourceEndpoint() *schema.Resource {
 
 		CustomizeDiff: customdiff.All(
 			requireEnginerSettingsCustomizeDiff,
-			func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
-				if d.Get("engine_name").(string) == engineNameS3 {
-					if d.Get("kms_key_arn") != "" {
-						return fmt.Errorf("kms_key_arn must not be set when engine is %q. Use s3_settings.server_side_encryption_kms_key_id instead", engineNameS3)
-					}
-				}
-				return nil
-			},
-			func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
-				if d.Get("engine_name").(string) == engineNameS3 {
-					if v, ok := d.GetOk("s3_settings"); ok {
-						m := v.([]interface{})[0].(map[string]interface{})
-						encryptionMode := m["encryption_mode"].(string)
-						kmsKeyId := m["server_side_encryption_kms_key_id"].(string)
-						if encryptionMode == encryptionModeSseS3 {
-							if kmsKeyId != "" {
-								return fmt.Errorf("s3_settings.server_side_encryption_kms_key_id must not be set when encryption_mode is %q", encryptionModeSseS3)
-							}
-						}
-					}
-				}
-				return nil
-			},
+			validateKMSKeyEngineCustomizeDiff,
+			validateS3SSEKMSKeyCustomizeDiff,
 			verify.SetTagsDiff,
 		),
 	}
@@ -1366,6 +1346,49 @@ func requireEnginerSettingsCustomizeDiff(_ context.Context, diff *schema.Resourc
 		}
 	}
 
+	return nil
+}
+
+func validateKMSKeyEngineCustomizeDiff(_ context.Context, d *schema.ResourceDiff, _ any) error {
+	if d.Get("engine_name").(string) == engineNameS3 {
+		if d.Get("kms_key_arn") != "" {
+			return fmt.Errorf("kms_key_arn must not be set when engine is %q. Use s3_settings.server_side_encryption_kms_key_id instead", engineNameS3)
+		}
+	}
+	return nil
+}
+
+func validateS3SSEKMSKeyCustomizeDiff(_ context.Context, d *schema.ResourceDiff, _ any) error {
+	if d.Get("engine_name").(string) == engineNameS3 {
+		rawConfig := d.GetRawConfig()
+		s3Settings := rawConfig.GetAttr("s3_settings")
+		if s3Settings.IsKnown() && !s3Settings.IsNull() && s3Settings.LengthInt() > 0 {
+			setting := s3Settings.Index(cty.NumberIntVal(0))
+			if setting.IsKnown() && !setting.IsNull() {
+				kmsKeyId := setting.GetAttr("server_side_encryption_kms_key_id")
+				if !kmsKeyId.IsKnown() {
+					return nil
+				}
+				encryptionMode := setting.GetAttr("encryption_mode")
+				if encryptionMode.IsKnown() && !encryptionMode.IsNull() {
+					id := ""
+					if !kmsKeyId.IsNull() {
+						id = kmsKeyId.AsString()
+					}
+					switch encryptionMode.AsString() {
+					case encryptionModeSseS3:
+						if id != "" {
+							return fmt.Errorf("s3_settings.server_side_encryption_kms_key_id must not be set when encryption_mode is %q", encryptionModeSseS3)
+						}
+					case encryptionModeSseKMS:
+						if id == "" {
+							return fmt.Errorf("s3_settings.server_side_encryption_kms_key_id is required when encryption_mode is %q", encryptionModeSseKMS)
+						}
+					}
+				}
+			}
+		}
+	}
 	return nil
 }
 
