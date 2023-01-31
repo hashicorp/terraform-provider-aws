@@ -502,7 +502,7 @@ func ResourceFleet() *schema.Resource {
 									},
 									"version": {
 										Type:     schema.TypeString,
-										Required: true,
+										Optional: true,
 									},
 								},
 							},
@@ -510,7 +510,7 @@ func ResourceFleet() *schema.Resource {
 						"override": {
 							Type:     schema.TypeList,
 							Optional: true,
-							MaxItems: 50,
+							MaxItems: 300,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"availability_zone": {
@@ -851,6 +851,7 @@ func ResourceFleet() *schema.Resource {
 				Type:             schema.TypeList,
 				Optional:         true,
 				MaxItems:         1,
+				ForceNew:         true,
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -1454,10 +1455,17 @@ func expandFleetLaunchTemplateOverridesRequest(tfMap map[string]interface{}) *ec
 		apiObject.InstanceType = aws.String(v)
 	}
 
+	if v, ok := tfMap["image_id"].(string); ok && v != "" {
+		apiObject.ImageId = aws.String(v)
+	}
+
 	if v, ok := tfMap["max_price"].(string); ok && v != "" {
 		apiObject.MaxPrice = aws.String(v)
 	}
 
+	if v, ok := tfMap["placement"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		apiObject.Placement = expandPlacement(v.([]interface{})[0].(map[string]interface{}))
+	}
 	if v, ok := tfMap["priority"].(float64); ok && v != 0 {
 		apiObject.Priority = aws.Float64(v)
 	}
@@ -1531,6 +1539,52 @@ func expandSpotOptionsRequest(tfMap map[string]interface{}) *ec2.SpotOptionsRequ
 
 	if v, ok := tfMap["maintenance_strategies"].([]interface{}); ok && len(v) > 0 {
 		apiObject.MaintenanceStrategies = expandFleetSpotMaintenanceStrategiesRequest(v[0].(map[string]interface{}))
+	}
+
+	return apiObject
+}
+
+func expandPlacement(tfMap map[string]interface{}) *ec2.Placement {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &ec2.Placement{}
+
+	if v, ok := tfMap["affinity"].(string); ok && v != "" {
+		apiObject.Affinity = aws.String(v)
+	}
+
+	if v, ok := tfMap["availability_zone"].(string); ok && v != "" {
+		apiObject.AvailabilityZone = aws.String(v)
+	}
+
+	if v, ok := tfMap["group_id"].(string); ok && v != "" {
+		apiObject.GroupId = aws.String(v)
+	}
+
+	if v, ok := tfMap["group_name"].(string); ok && v != "" {
+		apiObject.GroupName = aws.String(v)
+	}
+
+	if v, ok := tfMap["host_id"].(string); ok && v != "" {
+		apiObject.HostId = aws.String(v)
+	}
+
+	if v, ok := tfMap["host_resource_group_arn"].(string); ok && v != "" {
+		apiObject.HostResourceGroupArn = aws.String(v)
+	}
+
+	if v, ok := tfMap["partition_number"].(int); ok && v != 0 {
+		apiObject.PartitionNumber = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["spread_domain"].(string); ok && v != "" {
+		apiObject.SpreadDomain = aws.String(v)
+	}
+
+	if v, ok := tfMap["tenancy"].(string); ok && v != "" {
+		apiObject.Tenancy = aws.String(v)
 	}
 
 	return apiObject
