@@ -1,5 +1,5 @@
 ---
-subcategory: "RDS"
+subcategory: "RDS (Relational Database)"
 layout: "aws"
 page_title: "AWS: aws_db_instance_role_association"
 description: |-

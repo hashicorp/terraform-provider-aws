@@ -9,10 +9,10 @@ import (
 )
 
 func init() {
-	acctest.RegisterServiceErrorCheckFunc(sagemaker.EndpointsID, testAccErrorCheckSkipSagemaker)
+	acctest.RegisterServiceErrorCheckFunc(sagemaker.EndpointsID, testAccErrorCheckSkip)
 }
 
-func testAccErrorCheckSkipSagemaker(t *testing.T) resource.ErrorCheckFunc {
+func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 	return acctest.ErrorCheckSkipMessagesContaining(t,
 		"is not supported in region",
 		"is not supported for the chosen region",
@@ -21,14 +21,18 @@ func testAccErrorCheckSkipSagemaker(t *testing.T) resource.ErrorCheckFunc {
 
 // Tests are serialized as SagmMaker Domain resources are limited to 1 per account by default.
 // SageMaker UserProfile and App depend on the Domain resources and as such are also part of the serialized test suite.
-// Sagemaker Workteam tests must also be serialized
+// SageMaker Workteam tests must also be serialized
 func TestAccSageMaker_serial(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]map[string]func(t *testing.T){
 		"App": {
-			"basic":        testAccApp_basic,
-			"disappears":   testAccApp_tags,
-			"tags":         testAccApp_disappears,
-			"resourceSpec": testAccApp_resourceSpec,
+			"basic":                 testAccApp_basic,
+			"disappears":            testAccApp_disappears,
+			"tags":                  testAccApp_tags,
+			"resourceSpec":          testAccApp_resourceSpec,
+			"resourceSpecLifecycle": testAccApp_resourceSpecLifecycle,
+			"space":                 testAccApp_space,
 		},
 		"Domain": {
 			"basic":                                    testAccDomain_basic,
@@ -39,10 +43,17 @@ func TestAccSageMaker_serial(t *testing.T) {
 			"kernelGatewayAppSettings":                 testAccDomain_kernelGatewayAppSettings,
 			"kernelGatewayAppSettings_customImage":     testAccDomain_kernelGatewayAppSettings_customImage,
 			"kernelGatewayAppSettings_lifecycleConfig": testAccDomain_kernelGatewayAppSettings_lifecycleConfig,
-			"jupyterServerAppSettings":                 testAccDomain_jupyterServerAppSettings,
-			"kms":                                      testAccDomain_kms,
-			"securityGroup":                            testAccDomain_securityGroup,
-			"sharingSettings":                          testAccDomain_sharingSettings,
+			"kernelGatewayAppSettings_defaultResourceAndCustomImage": testAccDomain_kernelGatewayAppSettings_defaultResourceSpecAndCustomImage,
+			"jupyterServerAppSettings":                               testAccDomain_jupyterServerAppSettings,
+			"kms":                                                    testAccDomain_kms,
+			"securityGroup":                                          testAccDomain_securityGroup,
+			"sharingSettings":                                        testAccDomain_sharingSettings,
+			"defaultUserSettingsUpdated":                             testAccDomain_defaultUserSettingsUpdated,
+			"canvas":                                                 testAccDomain_canvasAppSettings,
+			"domainSettings":                                         testAccDomain_domainSettings,
+			"rSessionAppSettings":                                    testAccDomain_rSessionAppSettings,
+			"spaceSettingsKernelGatewayAppSettings":                  testAccDomain_spaceSettingsKernelGatewayAppSettings,
+			"code":                                                   testAccDomain_jupyterServerAppSettings_code,
 		},
 		"FlowDefinition": {
 			"basic":                          testAccFlowDefinition_basic,
@@ -50,6 +61,15 @@ func TestAccSageMaker_serial(t *testing.T) {
 			"HumanLoopConfigPublicWorkforce": testAccFlowDefinition_humanLoopConfig_publicWorkforce,
 			"HumanLoopRequestSource":         testAccFlowDefinition_humanLoopRequestSource,
 			"Tags":                           testAccFlowDefinition_tags,
+		},
+		"Space": {
+			"basic":                    testAccSpace_basic,
+			"disappears":               testAccSpace_tags,
+			"tags":                     testAccSpace_disappears,
+			"kernelGatewayAppSettings": testAccSpace_kernelGatewayAppSettings,
+			"kernelGatewayAppSettings_lifecycleConfig": testAccSpace_kernelGatewayAppSettings_lifecycleconfig,
+			"kernelGatewayAppSettings_imageConfig":     testAccSpace_kernelGatewayAppSettings_imageconfig,
+			"jupyterServerAppSettings":                 testAccSpace_jupyterServerAppSettings,
 		},
 		"UserProfile": {
 			"basic":                           testAccUserProfile_basic,
@@ -59,6 +79,7 @@ func TestAccSageMaker_serial(t *testing.T) {
 			"tensorboardAppSettingsWithImage": testAccUserProfile_tensorboardAppSettingsWithImage,
 			"kernelGatewayAppSettings":        testAccUserProfile_kernelGatewayAppSettings,
 			"kernelGatewayAppSettings_lifecycleConfig": testAccUserProfile_kernelGatewayAppSettings_lifecycleconfig,
+			"kernelGatewayAppSettings_imageConfig":     testAccUserProfile_kernelGatewayAppSettings_imageconfig,
 			"jupyterServerAppSettings":                 testAccUserProfile_jupyterServerAppSettings,
 		},
 		"Workforce": {
@@ -66,6 +87,7 @@ func TestAccSageMaker_serial(t *testing.T) {
 			"CognitoConfig":  testAccWorkforce_cognitoConfig,
 			"OidcConfig":     testAccWorkforce_oidcConfig,
 			"SourceIpConfig": testAccWorkforce_sourceIPConfig,
+			"VPC":            testAccWorkforce_vpc,
 		},
 		"Workteam": {
 			"disappears":         testAccWorkteam_disappears,
@@ -74,17 +96,10 @@ func TestAccSageMaker_serial(t *testing.T) {
 			"OidcConfig":         testAccWorkteam_oidcConfig,
 			"Tags":               testAccWorkteam_tags,
 		},
+		"Servicecatalog": {
+			"basic": testAccServicecatalogPortfolioStatus_basic,
+		},
 	}
 
-	for group, m := range testCases {
-		m := m
-		t.Run(group, func(t *testing.T) {
-			for name, tc := range m {
-				tc := tc
-				t.Run(name, func(t *testing.T) {
-					tc(t)
-				})
-			}
-		})
-	}
+	acctest.RunSerialTests2Levels(t, testCases, 0)
 }

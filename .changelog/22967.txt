@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/aws_gamelift_fleet: Add `certificate_configuration` argument
+```
+
+```release-note:enhancement
+resource/aws_gamelift_fleet: Add plan time validation to `ec2_instance_type`
+```
+
+```release-note:enhancement
+resource/aws_gamelift_fleet: Add import support
+```

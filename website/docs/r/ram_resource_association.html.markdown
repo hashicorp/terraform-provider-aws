@@ -1,5 +1,5 @@
 ---
-subcategory: "RAM"
+subcategory: "RAM (Resource Access Manager)"
 layout: "aws"
 page_title: "AWS: aws_ram_resource_association"
 description: |-

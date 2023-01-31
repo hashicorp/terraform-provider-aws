@@ -13,6 +13,8 @@ const (
 	firewallTimeout = 20 * time.Minute
 	// Maximum amount of time to wait for a Firewall Policy to be deleted
 	firewallPolicyTimeout = 10 * time.Minute
+	// Maximum amount of time to wait for a Resource Policy to be deleted
+	resourcePolicyDeleteTimeout = 2 * time.Minute
 	// Maximum amount of time to wait for a Rule Group to be deleted
 	ruleGroupDeleteTimeout = 10 * time.Minute
 )
@@ -25,7 +27,7 @@ func waitFirewallCreated(ctx context.Context, conn *networkfirewall.NetworkFirew
 		Timeout: firewallTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if v, ok := outputRaw.(*networkfirewall.Firewall); ok {
 		return v, err
@@ -46,7 +48,7 @@ func waitFirewallUpdated(ctx context.Context, conn *networkfirewall.NetworkFirew
 		Delay: 30 * time.Second,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if v, ok := outputRaw.(*string); ok {
 		return v, err
@@ -64,27 +66,9 @@ func waitFirewallDeleted(ctx context.Context, conn *networkfirewall.NetworkFirew
 		Timeout: firewallTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if v, ok := outputRaw.(*networkfirewall.Firewall); ok {
-		return v, err
-	}
-
-	return nil, err
-}
-
-// waitFirewallPolicyDeleted waits for a Firewall Policy to return "Deleted"
-func waitFirewallPolicyDeleted(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string) (*networkfirewall.FirewallPolicy, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{networkfirewall.ResourceStatusDeleting},
-		Target:  []string{resourceStatusDeleted},
-		Refresh: statusFirewallPolicy(ctx, conn, arn),
-		Timeout: firewallPolicyTimeout,
-	}
-
-	outputRaw, err := stateConf.WaitForState()
-
-	if v, ok := outputRaw.(*networkfirewall.FirewallPolicy); ok {
 		return v, err
 	}
 
@@ -100,7 +84,7 @@ func waitRuleGroupDeleted(ctx context.Context, conn *networkfirewall.NetworkFire
 		Timeout: ruleGroupDeleteTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if v, ok := outputRaw.(*networkfirewall.RuleGroup); ok {
 		return v, err

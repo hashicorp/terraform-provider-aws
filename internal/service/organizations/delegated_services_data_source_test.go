@@ -6,12 +6,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccOrganizationsDelegatedServicesDataSource_basic(t *testing.T) {
-	var providers []*schema.Provider
 	dataSourceName := "data.aws_organizations_delegated_services.test"
 	dataSourceIdentity := "data.aws_caller_identity.delegated"
 	servicePrincipal := "config-multiaccountsetup.amazonaws.com"
@@ -21,11 +19,11 @@ func TestAccOrganizationsDelegatedServicesDataSource_basic(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, organizations.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
+		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDelegatedServicesDataSourceConfig(servicePrincipal),
+				Config: testAccDelegatedServicesDataSourceConfig_basic(servicePrincipal),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "delegated_services.#", "1"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "account_id", dataSourceIdentity, "account_id"),
@@ -38,7 +36,6 @@ func TestAccOrganizationsDelegatedServicesDataSource_basic(t *testing.T) {
 }
 
 func TestAccOrganizationsDelegatedServicesDataSource_empty(t *testing.T) {
-	var providers []*schema.Provider
 	dataSourceName := "data.aws_organizations_delegated_services.test"
 	dataSourceIdentity := "data.aws_caller_identity.delegated"
 
@@ -47,11 +44,11 @@ func TestAccOrganizationsDelegatedServicesDataSource_empty(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, organizations.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
+		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDelegatedServicesEmptyDataSourceConfig(),
+				Config: testAccDelegatedServicesDataSourceConfig_empty(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "delegated_services.#", "0"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "account_id", dataSourceIdentity, "account_id"),
@@ -62,7 +59,6 @@ func TestAccOrganizationsDelegatedServicesDataSource_empty(t *testing.T) {
 }
 
 func TestAccOrganizationsDelegatedServicesDataSource_multiple(t *testing.T) {
-	var providers []*schema.Provider
 	dataSourceName := "data.aws_organizations_delegated_services.test"
 	dataSourceIdentity := "data.aws_caller_identity.delegated"
 	servicePrincipal := "config-multiaccountsetup.amazonaws.com"
@@ -73,11 +69,11 @@ func TestAccOrganizationsDelegatedServicesDataSource_multiple(t *testing.T) {
 			acctest.PreCheck(t)
 			acctest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, organizations.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
+		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDelegatedServicesMultipleDataSourceConfig(servicePrincipal, servicePrincipal2),
+				Config: testAccDelegatedServicesDataSourceConfig_multiple(servicePrincipal, servicePrincipal2),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "delegated_services.#", "2"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "account_id", dataSourceIdentity, "account_id"),
@@ -91,7 +87,7 @@ func TestAccOrganizationsDelegatedServicesDataSource_multiple(t *testing.T) {
 	})
 }
 
-func testAccDelegatedServicesEmptyDataSourceConfig() string {
+func testAccDelegatedServicesDataSourceConfig_empty() string {
 	return acctest.ConfigAlternateAccountProvider() + `
 data "aws_caller_identity" "delegated" {
   provider = "awsalternate"
@@ -103,7 +99,7 @@ data "aws_organizations_delegated_services" "test" {
 `
 }
 
-func testAccDelegatedServicesDataSourceConfig(servicePrincipal string) string {
+func testAccDelegatedServicesDataSourceConfig_basic(servicePrincipal string) string {
 	return acctest.ConfigAlternateAccountProvider() + fmt.Sprintf(`
 data "aws_caller_identity" "delegated" {
   provider = "awsalternate"
@@ -120,7 +116,7 @@ data "aws_organizations_delegated_services" "test" {
 `, servicePrincipal)
 }
 
-func testAccDelegatedServicesMultipleDataSourceConfig(servicePrincipal, servicePrincipal2 string) string {
+func testAccDelegatedServicesDataSourceConfig_multiple(servicePrincipal, servicePrincipal2 string) string {
 	return acctest.ConfigAlternateAccountProvider() + fmt.Sprintf(`
 data "aws_caller_identity" "delegated" {
   provider = "awsalternate"

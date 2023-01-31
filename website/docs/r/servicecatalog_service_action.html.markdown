@@ -53,6 +53,15 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - Identifier of the service action.
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `create` - (Default `3m`)
+- `read` - (Default `10m`)
+- `update` - (Default `3m`)
+- `delete` - (Default `3m`)
+
 ## Import
 
 `aws_servicecatalog_service_action` can be imported using the service action ID, e.g.,

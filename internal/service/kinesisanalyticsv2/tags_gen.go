@@ -2,22 +2,24 @@
 package kinesisanalyticsv2
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kinesisanalyticsv2"
+	"github.com/aws/aws-sdk-go/service/kinesisanalyticsv2/kinesisanalyticsv2iface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // ListTags lists kinesisanalyticsv2 service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *kinesisanalyticsv2.KinesisAnalyticsV2, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(ctx context.Context, conn kinesisanalyticsv2iface.KinesisAnalyticsV2API, identifier string) (tftags.KeyValueTags, error) {
 	input := &kinesisanalyticsv2.ListTagsForResourceInput{
 		ResourceARN: aws.String(identifier),
 	}
 
-	output, err := conn.ListTagsForResource(input)
+	output, err := conn.ListTagsForResourceWithContext(ctx, input)
 
 	if err != nil {
 		return tftags.New(nil), err
@@ -58,7 +60,7 @@ func KeyValueTags(tags []*kinesisanalyticsv2.Tag) tftags.KeyValueTags {
 // UpdateTags updates kinesisanalyticsv2 service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *kinesisanalyticsv2.KinesisAnalyticsV2, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(ctx context.Context, conn kinesisanalyticsv2iface.KinesisAnalyticsV2API, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
@@ -68,10 +70,10 @@ func UpdateTags(conn *kinesisanalyticsv2.KinesisAnalyticsV2, identifier string, 
 			TagKeys:     aws.StringSlice(removedTags.IgnoreAWS().Keys()),
 		}
 
-		_, err := conn.UntagResource(input)
+		_, err := conn.UntagResourceWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -81,10 +83,10 @@ func UpdateTags(conn *kinesisanalyticsv2.KinesisAnalyticsV2, identifier string, 
 			Tags:        Tags(updatedTags.IgnoreAWS()),
 		}
 
-		_, err := conn.TagResource(input)
+		_, err := conn.TagResourceWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
 		}
 	}
 

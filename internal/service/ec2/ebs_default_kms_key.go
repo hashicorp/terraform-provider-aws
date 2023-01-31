@@ -1,22 +1,24 @@
 package ec2
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceEBSDefaultKMSKey() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceEBSDefaultKMSKeyCreate,
-		Read:   resourceEBSDefaultKMSKeyRead,
-		Delete: resourceEBSDefaultKMSKeyDelete,
+		CreateWithoutTimeout: resourceEBSDefaultKMSKeyCreate,
+		ReadWithoutTimeout:   resourceEBSDefaultKMSKeyRead,
+		DeleteWithoutTimeout: resourceEBSDefaultKMSKeyDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -30,41 +32,44 @@ func ResourceEBSDefaultKMSKey() *schema.Resource {
 	}
 }
 
-func resourceEBSDefaultKMSKeyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceEBSDefaultKMSKeyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
-	resp, err := conn.ModifyEbsDefaultKmsKeyId(&ec2.ModifyEbsDefaultKmsKeyIdInput{
+	resp, err := conn.ModifyEbsDefaultKmsKeyIdWithContext(ctx, &ec2.ModifyEbsDefaultKmsKeyIdInput{
 		KmsKeyId: aws.String(d.Get("key_arn").(string)),
 	})
 	if err != nil {
-		return fmt.Errorf("error creating EBS default KMS key: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating EBS default KMS key: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resp.KmsKeyId))
 
-	return resourceEBSDefaultKMSKeyRead(d, meta)
+	return append(diags, resourceEBSDefaultKMSKeyRead(ctx, d, meta)...)
 }
 
-func resourceEBSDefaultKMSKeyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceEBSDefaultKMSKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
-	resp, err := conn.GetEbsDefaultKmsKeyId(&ec2.GetEbsDefaultKmsKeyIdInput{})
+	resp, err := conn.GetEbsDefaultKmsKeyIdWithContext(ctx, &ec2.GetEbsDefaultKmsKeyIdInput{})
 	if err != nil {
-		return fmt.Errorf("error reading EBS default KMS key: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading EBS default KMS key: %s", err)
 	}
 
 	d.Set("key_arn", resp.KmsKeyId)
 
-	return nil
+	return diags
 }
 
-func resourceEBSDefaultKMSKeyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceEBSDefaultKMSKeyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
-	_, err := conn.ResetEbsDefaultKmsKeyId(&ec2.ResetEbsDefaultKmsKeyIdInput{})
+	_, err := conn.ResetEbsDefaultKmsKeyIdWithContext(ctx, &ec2.ResetEbsDefaultKmsKeyIdInput{})
 	if err != nil {
-		return fmt.Errorf("error deleting EBS default KMS key: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting EBS default KMS key: %s", err)
 	}
 
-	return nil
+	return diags
 }

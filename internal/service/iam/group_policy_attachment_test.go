@@ -1,6 +1,7 @@
 package iam_test
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"testing"
@@ -15,6 +16,7 @@ import (
 )
 
 func TestAccIAMGroupPolicyAttachment_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var out iam.ListAttachedGroupPoliciesOutput
 
 	rString := sdkacctest.RandString(8)
@@ -24,15 +26,15 @@ func TestAccIAMGroupPolicyAttachment_basic(t *testing.T) {
 	policyName3 := fmt.Sprintf("tf-acc-policy-gpa-basic-3-%s", rString)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGroupPolicyAttachmentDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGroupPolicyAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupPolicyAttachConfig(groupName, policyName),
+				Config: testAccGroupPolicyAttachmentConfig_attach(groupName, policyName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupPolicyAttachmentExists("aws_iam_group_policy_attachment.test-attach", 1, &out),
+					testAccCheckGroupPolicyAttachmentExists(ctx, "aws_iam_group_policy_attachment.test-attach", 1, &out),
 					testAccCheckGroupPolicyAttachmentAttributes([]string{policyName}, &out),
 				),
 			},
@@ -55,9 +57,9 @@ func TestAccIAMGroupPolicyAttachment_basic(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccGroupPolicyAttachUpdateConfig(groupName, policyName, policyName2, policyName3),
+				Config: testAccGroupPolicyAttachmentConfig_attachUpdate(groupName, policyName, policyName2, policyName3),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupPolicyAttachmentExists("aws_iam_group_policy_attachment.test-attach", 2, &out),
+					testAccCheckGroupPolicyAttachmentExists(ctx, "aws_iam_group_policy_attachment.test-attach", 2, &out),
 					testAccCheckGroupPolicyAttachmentAttributes([]string{policyName2, policyName3}, &out),
 				),
 			},
@@ -69,7 +71,7 @@ func testAccCheckGroupPolicyAttachmentDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckGroupPolicyAttachmentExists(n string, c int, out *iam.ListAttachedGroupPoliciesOutput) resource.TestCheckFunc {
+func testAccCheckGroupPolicyAttachmentExists(ctx context.Context, n string, c int, out *iam.ListAttachedGroupPoliciesOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -80,10 +82,10 @@ func testAccCheckGroupPolicyAttachmentExists(n string, c int, out *iam.ListAttac
 			return fmt.Errorf("No policy name is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 		group := rs.Primary.Attributes["group"]
 
-		attachedPolicies, err := conn.ListAttachedGroupPolicies(&iam.ListAttachedGroupPoliciesInput{
+		attachedPolicies, err := conn.ListAttachedGroupPoliciesWithContext(ctx, &iam.ListAttachedGroupPoliciesInput{
 			GroupName: aws.String(group),
 		})
 		if err != nil {
@@ -118,7 +120,7 @@ func testAccCheckGroupPolicyAttachmentAttributes(policies []string, out *iam.Lis
 	}
 }
 
-func testAccGroupPolicyAttachConfig(groupName, policyName string) string {
+func testAccGroupPolicyAttachmentConfig_attach(groupName, policyName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_group" "group" {
   name = "%s"
@@ -151,7 +153,7 @@ resource "aws_iam_group_policy_attachment" "test-attach" {
 `, groupName, policyName)
 }
 
-func testAccGroupPolicyAttachUpdateConfig(groupName, policyName, policyName2, policyName3 string) string {
+func testAccGroupPolicyAttachmentConfig_attachUpdate(groupName, policyName, policyName2, policyName3 string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_group" "group" {
   name = "%s"

@@ -1,5 +1,5 @@
 ---
-subcategory: "Quantum Ledger Database (QLDB)"
+subcategory: "QLDB (Quantum Ledger Database)"
 layout: "aws"
 page_title: "AWS: aws_qldb_ledger"
 description: |-
@@ -20,7 +20,7 @@ data "aws_qldb_ledger" "example" {
 
 ## Argument Reference
 
-* `name` - (Required) The friendly name of the ledger to match.
+* `name` - (Required) Friendly name of the ledger to match.
 
 ## Attributes Reference
 

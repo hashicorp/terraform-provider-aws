@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_s3_bucket: Speed up resource deletion, especially when the S3 buckets contains a large number of objects and `force_destroy` is `true`
+```

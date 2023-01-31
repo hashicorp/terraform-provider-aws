@@ -1,18 +1,21 @@
 package route53
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func statusChangeInfo(conn *route53.Route53, changeID string) resource.StateRefreshFunc {
+func statusChangeInfo(ctx context.Context, conn *route53.Route53, changeID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &route53.GetChangeInput{
 			Id: aws.String(changeID),
 		}
 
-		output, err := conn.GetChange(input)
+		output, err := conn.GetChangeWithContext(ctx, input)
 
 		if err != nil {
 			return nil, "", err
@@ -26,9 +29,9 @@ func statusChangeInfo(conn *route53.Route53, changeID string) resource.StateRefr
 	}
 }
 
-func statusHostedZoneDNSSEC(conn *route53.Route53, hostedZoneID string) resource.StateRefreshFunc {
+func statusHostedZoneDNSSEC(ctx context.Context, conn *route53.Route53, hostedZoneID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		hostedZoneDnssec, err := FindHostedZoneDNSSEC(conn, hostedZoneID)
+		hostedZoneDnssec, err := FindHostedZoneDNSSEC(ctx, conn, hostedZoneID)
 
 		if err != nil {
 			return nil, "", err
@@ -42,9 +45,9 @@ func statusHostedZoneDNSSEC(conn *route53.Route53, hostedZoneID string) resource
 	}
 }
 
-func statusKeySigningKey(conn *route53.Route53, hostedZoneID string, name string) resource.StateRefreshFunc {
+func statusKeySigningKey(ctx context.Context, conn *route53.Route53, hostedZoneID string, name string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		keySigningKey, err := FindKeySigningKey(conn, hostedZoneID, name)
+		keySigningKey, err := FindKeySigningKey(ctx, conn, hostedZoneID, name)
 
 		if err != nil {
 			return nil, "", err
@@ -55,5 +58,21 @@ func statusKeySigningKey(conn *route53.Route53, hostedZoneID string, name string
 		}
 
 		return keySigningKey, aws.StringValue(keySigningKey.Status), nil
+	}
+}
+
+func statusTrafficPolicyInstanceState(ctx context.Context, conn *route53.Route53, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindTrafficPolicyInstanceByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.State), nil
 	}
 }

@@ -1,0 +1,15 @@
+```release-note:bug
+resource/aws_iam_group_policy: Fix order-related diffs in `policy`
+```
+
+```release-note:bug
+resource/aws_iam_policy: Fix order-related diffs in `policy`
+```
+
+```release-note:bug
+resource/aws_iam_role_policy: Fix order-related diffs in `policy`
+```
+
+```release-note:bug
+resource/aws_iam_user_policy: Fix order-related diffs in `policy`
+```

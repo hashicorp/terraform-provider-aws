@@ -1,5 +1,5 @@
 ---
-subcategory: "EC2"
+subcategory: "EBS (EC2)"
 layout: "aws"
 page_title: "AWS: aws_ebs_encryption_by_default"
 description: |-

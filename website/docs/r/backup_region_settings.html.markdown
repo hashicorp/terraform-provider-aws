@@ -15,14 +15,22 @@ Provides an AWS Backup Region Settings resource.
 ```terraform
 resource "aws_backup_region_settings" "test" {
   resource_type_opt_in_preference = {
-    "DynamoDB"        = true
     "Aurora"          = true
+    "DocumentDB"      = true
+    "DynamoDB"        = true
     "EBS"             = true
     "EC2"             = true
     "EFS"             = true
     "FSx"             = true
+    "Neptune"         = true
     "RDS"             = true
     "Storage Gateway" = true
+    "VirtualMachine"  = true
+  }
+
+  resource_type_management_preference = {
+    "DynamoDB" = true
+    "EFS"      = true
   }
 }
 ```
@@ -32,6 +40,7 @@ resource "aws_backup_region_settings" "test" {
 The following arguments are supported:
 
 * `resource_type_opt_in_preference` - (Required) A map of services along with the opt-in preferences for the Region.
+* `resource_type_management_preference` - (Optional) A map of services along with the management preferences for the Region.
 
 ## Attributes Reference
 

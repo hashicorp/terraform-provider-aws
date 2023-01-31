@@ -23,20 +23,21 @@ func init() {
 }
 
 func sweepDomains(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).ElasticsearchConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	conn := client.(*conns.AWSClient).ElasticsearchConn()
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &elasticsearchservice.ListDomainNamesInput{}
 
 	// ListDomainNames has no pagination support whatsoever
-	output, err := conn.ListDomainNames(input)
+	output, err := conn.ListDomainNamesWithContext(ctx, input)
 
 	if sweep.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Elasticsearch Domain sweep for %s: %s", region, err)
@@ -66,12 +67,7 @@ func sweepDomains(region string) error {
 		// e.g. Deleted and Processing are both true for days in the API
 		// Filter out domains that are Deleted already.
 
-		input := &elasticsearchservice.DescribeElasticsearchDomainInput{
-			DomainName: domainInfo.DomainName,
-		}
-
-		output, err := conn.DescribeElasticsearchDomain(input)
-
+		output, err := FindDomainByName(ctx, conn, name)
 		if err != nil {
 			sweeperErr := fmt.Errorf("error describing Elasticsearch Domain (%s): %w", name, err)
 			log.Printf("[ERROR] %s", sweeperErr)
@@ -79,7 +75,7 @@ func sweepDomains(region string) error {
 			continue
 		}
 
-		if output != nil && output.DomainStatus != nil && aws.BoolValue(output.DomainStatus.Deleted) {
+		if output != nil && aws.BoolValue(output.Deleted) {
 			log.Printf("[INFO] Skipping Elasticsearch Domain (%s) with deleted status", name)
 			continue
 		}
@@ -92,7 +88,7 @@ func sweepDomains(region string) error {
 		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 	}
 
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Elasticsearch Domains for %s: %w", region, err))
 	}
 

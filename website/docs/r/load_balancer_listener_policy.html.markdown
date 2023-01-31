@@ -1,5 +1,5 @@
 ---
-subcategory: "Elastic Load Balancing (ELB Classic)"
+subcategory: "ELB Classic"
 layout: "aws"
 page_title: "AWS: aws_load_balancer_listener_policy"
 description: |-
@@ -9,7 +9,6 @@ description: |-
 # Resource: aws_load_balancer_listener_policy
 
 Attaches a load balancer policy to an ELB Listener.
-
 
 ## Example Usage
 

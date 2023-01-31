@@ -1,0 +1,11 @@
+// map[string]string handling
+
+// Tags returns {{ .ServicePackage }} service tags.
+func Tags(tags tftags.KeyValueTags) map[string]string {
+	return tags.Map()
+}
+
+// KeyValueTags creates KeyValueTags from {{ .ServicePackage }} service tags.
+func KeyValueTags(tags map[string]string) tftags.KeyValueTags {
+	return tftags.New(tags)
+}

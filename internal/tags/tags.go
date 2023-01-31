@@ -5,7 +5,6 @@ import (
 )
 
 // TagsSchema returns the schema to use for tags.
-//
 func TagsSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeMap,
@@ -20,6 +19,15 @@ func TagsSchemaComputed() *schema.Schema {
 		Optional: true,
 		Computed: true,
 		Elem:     &schema.Schema{Type: schema.TypeString},
+	}
+}
+
+func TagsSchemaComputedDeprecated(message string) *schema.Schema {
+	return &schema.Schema{
+		Type:       schema.TypeMap,
+		Computed:   true,
+		Elem:       &schema.Schema{Type: schema.TypeString},
+		Deprecated: message,
 	}
 }
 

@@ -1,14 +1,15 @@
 package route53
 
 import (
+	"context"
 	"errors"
-	"fmt"
 	"math/rand"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 const (
@@ -21,9 +22,11 @@ const (
 	hostedZoneDNSSECStatusTimeout = 5 * time.Minute
 
 	keySigningKeyStatusTimeout = 5 * time.Minute
+
+	trafficPolicyInstanceOperationTimeout = 4 * time.Minute
 )
 
-func waitChangeInfoStatusInsync(conn *route53.Route53, changeID string) (*route53.ChangeInfo, error) { //nolint:unparam
+func waitChangeInfoStatusInsync(ctx context.Context, conn *route53.Route53, changeID string) (*route53.ChangeInfo, error) { //nolint:unparam
 	rand.Seed(time.Now().UTC().UnixNano())
 
 	// Route53 is vulnerable to throttling so longer delays, poll intervals helps significantly to avoid
@@ -34,11 +37,11 @@ func waitChangeInfoStatusInsync(conn *route53.Route53, changeID string) (*route5
 		Delay:        time.Duration(rand.Int63n(changeMaxDelay-changeMinDelay)+changeMinDelay) * time.Second,
 		MinTimeout:   changeMinTimeout,
 		PollInterval: changePollInterval,
-		Refresh:      statusChangeInfo(conn, changeID),
+		Refresh:      statusChangeInfo(ctx, conn, changeID),
 		Timeout:      changeTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*route53.ChangeInfo); ok {
 		return output, err
@@ -47,30 +50,19 @@ func waitChangeInfoStatusInsync(conn *route53.Route53, changeID string) (*route5
 	return nil, err
 }
 
-func waitHostedZoneDNSSECStatusUpdated(conn *route53.Route53, hostedZoneID string, status string) (*route53.DNSSECStatus, error) { //nolint:unparam
+func waitHostedZoneDNSSECStatusUpdated(ctx context.Context, conn *route53.Route53, hostedZoneID string, status string) (*route53.DNSSECStatus, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Target:     []string{status},
-		Refresh:    statusHostedZoneDNSSEC(conn, hostedZoneID),
+		Refresh:    statusHostedZoneDNSSEC(ctx, conn, hostedZoneID),
 		MinTimeout: 5 * time.Second,
 		Timeout:    hostedZoneDNSSECStatusTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*route53.DNSSECStatus); ok {
-		if err != nil && output != nil && output.ServeSignature != nil && output.StatusMessage != nil {
-			newErr := fmt.Errorf("%s: %s", aws.StringValue(output.ServeSignature), aws.StringValue(output.StatusMessage))
-
-			switch e := err.(type) {
-			case *resource.TimeoutError:
-				if e.LastError == nil {
-					e.LastError = newErr
-				}
-			case *resource.UnexpectedStateError:
-				if e.LastError == nil {
-					e.LastError = newErr
-				}
-			}
+		if serveSignature := aws.StringValue(output.ServeSignature); serveSignature == ServeSignatureInternalFailure {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.StatusMessage)))
 		}
 
 		return output, err
@@ -79,27 +71,82 @@ func waitHostedZoneDNSSECStatusUpdated(conn *route53.Route53, hostedZoneID strin
 	return nil, err
 }
 
-func waitKeySigningKeyStatusUpdated(conn *route53.Route53, hostedZoneID string, name string, status string) (*route53.KeySigningKey, error) { //nolint:unparam
+func waitKeySigningKeyStatusUpdated(ctx context.Context, conn *route53.Route53, hostedZoneID string, name string, status string) (*route53.KeySigningKey, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Target:     []string{status},
-		Refresh:    statusKeySigningKey(conn, hostedZoneID, name),
+		Refresh:    statusKeySigningKey(ctx, conn, hostedZoneID, name),
 		MinTimeout: 5 * time.Second,
 		Timeout:    keySigningKeyStatusTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*route53.KeySigningKey); ok {
-		if err != nil && output != nil && output.Status != nil && output.StatusMessage != nil {
-			newErr := fmt.Errorf("%s: %s", aws.StringValue(output.Status), aws.StringValue(output.StatusMessage))
+		if status := aws.StringValue(output.Status); status == KeySigningKeyStatusInternalFailure {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.StatusMessage)))
+		}
 
-			var te *resource.TimeoutError
-			var use *resource.UnexpectedStateError
-			if ok := errors.As(err, &te); ok && te.LastError == nil {
-				te.LastError = newErr
-			} else if ok := errors.As(err, &use); ok && use.LastError == nil {
-				use.LastError = newErr
-			}
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitTrafficPolicyInstanceStateCreated(ctx context.Context, conn *route53.Route53, id string) (*route53.TrafficPolicyInstance, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{TrafficPolicyInstanceStateCreating},
+		Target:  []string{TrafficPolicyInstanceStateApplied},
+		Refresh: statusTrafficPolicyInstanceState(ctx, conn, id),
+		Timeout: trafficPolicyInstanceOperationTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*route53.TrafficPolicyInstance); ok {
+		if state := aws.StringValue(output.State); state == TrafficPolicyInstanceStateFailed {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitTrafficPolicyInstanceStateDeleted(ctx context.Context, conn *route53.Route53, id string) (*route53.TrafficPolicyInstance, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{TrafficPolicyInstanceStateDeleting},
+		Target:  []string{},
+		Refresh: statusTrafficPolicyInstanceState(ctx, conn, id),
+		Timeout: trafficPolicyInstanceOperationTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*route53.TrafficPolicyInstance); ok {
+		if state := aws.StringValue(output.State); state == TrafficPolicyInstanceStateFailed {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitTrafficPolicyInstanceStateUpdated(ctx context.Context, conn *route53.Route53, id string) (*route53.TrafficPolicyInstance, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{TrafficPolicyInstanceStateUpdating},
+		Target:  []string{TrafficPolicyInstanceStateApplied},
+		Refresh: statusTrafficPolicyInstanceState(ctx, conn, id),
+		Timeout: trafficPolicyInstanceOperationTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*route53.TrafficPolicyInstance); ok {
+		if state := aws.StringValue(output.State); state == TrafficPolicyInstanceStateFailed {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.Message)))
 		}
 
 		return output, err

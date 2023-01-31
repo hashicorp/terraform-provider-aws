@@ -1,30 +1,27 @@
 package glue_test
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+)
 
 func TestAccGlue_serial(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]map[string]func(t *testing.T){
 		"DataCatalogEncryptionSettings": {
-			"basic":      testAccGlueDataCatalogEncryptionSettings_basic,
-			"DataSource": testAccGlueDataCatalogEncryptionSettingsDataSource_basic,
+			"basic":      testAccDataCatalogEncryptionSettings_basic,
+			"dataSource": testAccDataCatalogEncryptionSettingsDataSource_basic,
 		},
 		"ResourcePolicy": {
 			"basic":      testAccResourcePolicy_basic,
 			"update":     testAccResourcePolicy_update,
 			"hybrid":     testAccResourcePolicy_hybrid,
 			"disappears": testAccResourcePolicy_disappears,
+			"equivalent": testAccResourcePolicy_ignoreEquivalent,
 		},
 	}
 
-	for group, m := range testCases {
-		m := m
-		t.Run(group, func(t *testing.T) {
-			for name, tc := range m {
-				tc := tc
-				t.Run(name, func(t *testing.T) {
-					tc(t)
-				})
-			}
-		})
-	}
+	acctest.RunSerialTests2Levels(t, testCases, 0)
 }

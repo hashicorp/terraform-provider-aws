@@ -1,6 +1,7 @@
 package apigateway_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -16,21 +17,22 @@ import (
 )
 
 func TestAccAPIGatewayGatewayResponse_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf apigateway.UpdateGatewayResponseOutput
 
 	rName := sdkacctest.RandString(10)
 	resourceName := "aws_api_gateway_gateway_response.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGatewayResponseDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayResponseDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGatewayResponseConfig(rName),
+				Config: testAccGatewayResponseConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGatewayResponseExists(resourceName, &conf),
+					testAccCheckGatewayResponseExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "status_code", "401"),
 					resource.TestCheckResourceAttr(resourceName, "response_parameters.gatewayresponse.header.Authorization", "'Basic'"),
 					resource.TestCheckResourceAttr(resourceName, "response_templates.application/xml", "#set($inputRoot = $input.path('$'))\n{ }"),
@@ -39,9 +41,9 @@ func TestAccAPIGatewayGatewayResponse_basic(t *testing.T) {
 			},
 
 			{
-				Config: testAccGatewayResponseUpdateConfig(rName),
+				Config: testAccGatewayResponseConfig_update(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGatewayResponseExists(resourceName, &conf),
+					testAccCheckGatewayResponseExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "status_code", "477"),
 					resource.TestCheckResourceAttr(resourceName, "response_templates.application/json", "{'message':$context.error.messageString}"),
 					resource.TestCheckNoResourceAttr(resourceName, "response_templates.application/xml"),
@@ -59,22 +61,23 @@ func TestAccAPIGatewayGatewayResponse_basic(t *testing.T) {
 }
 
 func TestAccAPIGatewayGatewayResponse_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf apigateway.UpdateGatewayResponseOutput
 
 	rName := sdkacctest.RandString(10)
 	resourceName := "aws_api_gateway_gateway_response.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckGatewayResponseDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGatewayResponseDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGatewayResponseConfig(rName),
+				Config: testAccGatewayResponseConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGatewayResponseExists(resourceName, &conf),
-					acctest.CheckResourceDisappears(acctest.Provider, tfapigateway.ResourceGatewayResponse(), resourceName),
+					testAccCheckGatewayResponseExists(ctx, resourceName, &conf),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigateway.ResourceGatewayResponse(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -82,7 +85,7 @@ func TestAccAPIGatewayGatewayResponse_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckGatewayResponseExists(n string, res *apigateway.UpdateGatewayResponseOutput) resource.TestCheckFunc {
+func testAccCheckGatewayResponseExists(ctx context.Context, n string, res *apigateway.UpdateGatewayResponseOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -93,13 +96,13 @@ func testAccCheckGatewayResponseExists(n string, res *apigateway.UpdateGatewayRe
 			return fmt.Errorf("No API Gateway Gateway Response ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
 
 		req := &apigateway.GetGatewayResponseInput{
 			RestApiId:    aws.String(s.RootModule().Resources["aws_api_gateway_rest_api.test"].Primary.ID),
 			ResponseType: aws.String(rs.Primary.Attributes["response_type"]),
 		}
-		describe, err := conn.GetGatewayResponse(req)
+		describe, err := conn.GetGatewayResponseWithContext(ctx, req)
 		if err != nil {
 			return err
 		}
@@ -110,36 +113,38 @@ func testAccCheckGatewayResponseExists(n string, res *apigateway.UpdateGatewayRe
 	}
 }
 
-func testAccCheckGatewayResponseDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
+func testAccCheckGatewayResponseDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_api_gateway_gateway_response" {
-			continue
-		}
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_api_gateway_gateway_response" {
+				continue
+			}
 
-		req := &apigateway.GetGatewayResponseInput{
-			RestApiId:    aws.String(s.RootModule().Resources["aws_api_gateway_rest_api.test"].Primary.ID),
-			ResponseType: aws.String(rs.Primary.Attributes["response_type"]),
-		}
-		_, err := conn.GetGatewayResponse(req)
+			req := &apigateway.GetGatewayResponseInput{
+				RestApiId:    aws.String(s.RootModule().Resources["aws_api_gateway_rest_api.test"].Primary.ID),
+				ResponseType: aws.String(rs.Primary.Attributes["response_type"]),
+			}
+			_, err := conn.GetGatewayResponseWithContext(ctx, req)
 
-		if err == nil {
-			return fmt.Errorf("API Gateway Gateway Response still exists")
-		}
+			if err == nil {
+				return fmt.Errorf("API Gateway Gateway Response still exists")
+			}
 
-		aws2err, ok := err.(awserr.Error)
-		if !ok {
-			return err
-		}
-		if aws2err.Code() != "NotFoundException" {
-			return err
+			aws2err, ok := err.(awserr.Error)
+			if !ok {
+				return err
+			}
+			if aws2err.Code() != "NotFoundException" {
+				return err
+			}
+
+			return nil
 		}
 
 		return nil
 	}
-
-	return nil
 }
 
 func testAccGatewayResponseImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
@@ -153,7 +158,7 @@ func testAccGatewayResponseImportStateIdFunc(resourceName string) resource.Impor
 	}
 }
 
-func testAccGatewayResponseConfig(rName string) string {
+func testAccGatewayResponseConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
   name = "%s"
@@ -175,7 +180,7 @@ resource "aws_api_gateway_gateway_response" "test" {
 `, rName)
 }
 
-func testAccGatewayResponseUpdateConfig(rName string) string {
+func testAccGatewayResponseConfig_update(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
   name = "%s"

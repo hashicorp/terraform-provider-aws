@@ -1,19 +1,20 @@
 package batch
 
 import (
-	"fmt"
-	"log"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/batch"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceComputeEnvironment() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceComputeEnvironmentRead,
+		ReadWithoutTimeout: dataSourceComputeEnvironmentRead,
 
 		Schema: map[string]*schema.Schema{
 			"compute_environment_name": {
@@ -61,26 +62,24 @@ func DataSourceComputeEnvironment() *schema.Resource {
 	}
 }
 
-func dataSourceComputeEnvironmentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BatchConn
+func dataSourceComputeEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).BatchConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	params := &batch.DescribeComputeEnvironmentsInput{
 		ComputeEnvironments: []*string{aws.String(d.Get("compute_environment_name").(string))},
 	}
-	log.Printf("[DEBUG] Reading Batch Compute Environment: %s", params)
-	desc, err := conn.DescribeComputeEnvironments(params)
+	desc, err := conn.DescribeComputeEnvironmentsWithContext(ctx, params)
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading Batch Compute Environment (%s): %s", d.Get("compute_environment_name").(string), err)
 	}
 
-	if len(desc.ComputeEnvironments) == 0 {
-		return fmt.Errorf("no matches found for name: %s", d.Get("compute_environment_name").(string))
-	}
-
-	if len(desc.ComputeEnvironments) > 1 {
-		return fmt.Errorf("multiple matches found for name: %s", d.Get("compute_environment_name").(string))
+	if l := len(desc.ComputeEnvironments); l == 0 {
+		return sdkdiag.AppendErrorf(diags, "reading Batch Compute Environment (%s): empty response", d.Get("compute_environment_name").(string))
+	} else if l > 1 {
+		return sdkdiag.AppendErrorf(diags, "reading Batch Compute Environment (%s): too many results: wanted 1, got %d", d.Get("compute_environment_name").(string), l)
 	}
 
 	computeEnvironment := desc.ComputeEnvironments[0]
@@ -95,8 +94,8 @@ func dataSourceComputeEnvironmentRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("state", computeEnvironment.State)
 
 	if err := d.Set("tags", KeyValueTags(computeEnvironment.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

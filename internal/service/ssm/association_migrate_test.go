@@ -8,6 +8,8 @@ import (
 )
 
 func TestAssociationRuleMigrateState(t *testing.T) {
+	t.Parallel()
+
 	cases := map[string]struct {
 		StateVersion int
 		ID           string

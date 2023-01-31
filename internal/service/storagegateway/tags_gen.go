@@ -2,22 +2,24 @@
 package storagegateway
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
+	"github.com/aws/aws-sdk-go/service/storagegateway/storagegatewayiface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // ListTags lists storagegateway service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *storagegateway.StorageGateway, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(ctx context.Context, conn storagegatewayiface.StorageGatewayAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &storagegateway.ListTagsForResourceInput{
 		ResourceARN: aws.String(identifier),
 	}
 
-	output, err := conn.ListTagsForResource(input)
+	output, err := conn.ListTagsForResourceWithContext(ctx, input)
 
 	if err != nil {
 		return tftags.New(nil), err
@@ -58,7 +60,7 @@ func KeyValueTags(tags []*storagegateway.Tag) tftags.KeyValueTags {
 // UpdateTags updates storagegateway service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *storagegateway.StorageGateway, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(ctx context.Context, conn storagegatewayiface.StorageGatewayAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
@@ -68,10 +70,10 @@ func UpdateTags(conn *storagegateway.StorageGateway, identifier string, oldTagsM
 			TagKeys:     aws.StringSlice(removedTags.IgnoreAWS().Keys()),
 		}
 
-		_, err := conn.RemoveTagsFromResource(input)
+		_, err := conn.RemoveTagsFromResourceWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -81,10 +83,10 @@ func UpdateTags(conn *storagegateway.StorageGateway, identifier string, oldTagsM
 			Tags:        Tags(updatedTags.IgnoreAWS()),
 		}
 
-		_, err := conn.AddTagsToResource(input)
+		_, err := conn.AddTagsToResourceWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
 		}
 	}
 

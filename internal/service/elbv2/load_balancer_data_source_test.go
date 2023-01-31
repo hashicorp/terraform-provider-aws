@@ -18,12 +18,12 @@ func TestAccELBV2LoadBalancerDataSource_basic(t *testing.T) {
 	resourceName := "aws_lb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAcclbBasicDataSourceConfig(rName),
+				Config: testAccLoadBalancerDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "internal", resourceName, "internal"),
@@ -85,12 +85,12 @@ func TestAccELBV2LoadBalancerDataSource_outpost(t *testing.T) {
 	resourceName := "aws_lb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
-		ErrorCheck: acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAcclbOutpostDataSourceConfig(rName),
+				Config: testAccLoadBalancerDataSourceConfig_outpost(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "internal", resourceName, "internal"),
@@ -122,12 +122,12 @@ func TestAccELBV2LoadBalancerDataSource_backwardsCompatibility(t *testing.T) {
 	resourceName := "aws_alb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, elbv2.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAcclbBackwardsCompatibilityDataSourceConfig(rName),
+				Config: testAccLoadBalancerDataSourceConfig_backwardsCompatibility(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName1, "name", resourceName, "name"),
 					resource.TestCheckResourceAttrPair(dataSourceName1, "internal", resourceName, "internal"),
@@ -145,6 +145,7 @@ func TestAccELBV2LoadBalancerDataSource_backwardsCompatibility(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName1, "ip_address_type", resourceName, "ip_address_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName1, "subnet_mapping.#", resourceName, "subnet_mapping.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName1, "drop_invalid_header_fields", resourceName, "drop_invalid_header_fields"),
+					resource.TestCheckResourceAttrPair(dataSourceName1, "preserve_host_header", resourceName, "preserve_host_header"),
 					resource.TestCheckResourceAttrPair(dataSourceName1, "enable_http2", resourceName, "enable_http2"),
 					resource.TestCheckResourceAttrPair(dataSourceName1, "enable_waf_fail_open", resourceName, "enable_waf_fail_open"),
 					resource.TestCheckResourceAttrPair(dataSourceName1, "access_logs.#", resourceName, "access_logs.#"),
@@ -164,6 +165,7 @@ func TestAccELBV2LoadBalancerDataSource_backwardsCompatibility(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName2, "ip_address_type", resourceName, "ip_address_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "subnet_mapping.#", resourceName, "subnet_mapping.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "drop_invalid_header_fields", resourceName, "drop_invalid_header_fields"),
+					resource.TestCheckResourceAttrPair(dataSourceName2, "preserve_host_header", resourceName, "preserve_host_header"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "enable_http2", resourceName, "enable_http2"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "enable_waf_fail_open", resourceName, "enable_waf_fail_open"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "access_logs.#", resourceName, "access_logs.#"),
@@ -183,6 +185,7 @@ func TestAccELBV2LoadBalancerDataSource_backwardsCompatibility(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName3, "ip_address_type", resourceName, "ip_address_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName3, "subnet_mapping.#", resourceName, "subnet_mapping.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName3, "drop_invalid_header_fields", resourceName, "drop_invalid_header_fields"),
+					resource.TestCheckResourceAttrPair(dataSourceName3, "preserve_host_header", resourceName, "preserve_host_header"),
 					resource.TestCheckResourceAttrPair(dataSourceName3, "enable_http2", resourceName, "enable_http2"),
 					resource.TestCheckResourceAttrPair(dataSourceName3, "enable_waf_fail_open", resourceName, "enable_waf_fail_open"),
 					resource.TestCheckResourceAttrPair(dataSourceName3, "access_logs.#", resourceName, "access_logs.#"),
@@ -192,7 +195,7 @@ func TestAccELBV2LoadBalancerDataSource_backwardsCompatibility(t *testing.T) {
 	})
 }
 
-func testAcclbBasicDataSourceConfig(rName string) string {
+func testAccLoadBalancerDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_lb" "test" {
   name            = %[1]q
@@ -274,7 +277,7 @@ data "aws_lb" "alb_test_with_tags" {
 `, rName))
 }
 
-func testAcclbOutpostDataSourceConfig(rName string) string {
+func testAccLoadBalancerDataSourceConfig_outpost(rName string) string {
 	return fmt.Sprintf(`
 data "aws_outposts_outposts" "test" {}
 
@@ -346,7 +349,7 @@ data "aws_lb" "alb_test_with_arn" {
 `, rName)
 }
 
-func testAcclbBackwardsCompatibilityDataSourceConfig(rName string) string {
+func testAccLoadBalancerDataSourceConfig_backwardsCompatibility(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_alb" "test" {
   name            = %[1]q

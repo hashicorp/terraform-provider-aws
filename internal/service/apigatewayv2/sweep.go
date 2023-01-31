@@ -9,8 +9,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
@@ -37,59 +35,60 @@ func init() {
 }
 
 func sweepAPIs(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).APIGatewayV2Conn
+	conn := client.(*conns.AWSClient).APIGatewayV2Conn()
 	input := &apigatewayv2.GetApisInput{}
-	var sweeperErrs *multierror.Error
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	for {
-		output, err := conn.GetApis(input)
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping API Gateway v2 API sweep for %s: %s", region, err)
-			return nil
-		}
-		if err != nil {
-			return fmt.Errorf("error retrieving API Gateway v2 APIs: %s", err)
+	err = getAPIsPages(ctx, conn, input, func(page *apigatewayv2.GetApisOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
 
-		for _, api := range output.Items {
-			log.Printf("[INFO] Deleting API Gateway v2 API: %s", aws.StringValue(api.ApiId))
-			_, err := conn.DeleteApi(&apigatewayv2.DeleteApiInput{
-				ApiId: api.ApiId,
-			})
-			if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
-				continue
-			}
-			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting API Gateway v2 API (%s): %w", aws.StringValue(api.ApiId), err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-				continue
-			}
+		for _, v := range page.Items {
+			r := ResourceAPI()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(v.ApiId))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
-		input.NextToken = output.NextToken
+		return !lastPage
+	})
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping API Gateway v2 API sweep for %s: %s", region, err)
+		return nil
 	}
 
-	return sweeperErrs.ErrorOrNil()
+	if err != nil {
+		return fmt.Errorf("error listing API Gateway v2 APIs (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping API Gateway v2 APIs (%s): %w", region, err)
+	}
+
+	return nil
 }
 
 func sweepDomainNames(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).APIGatewayV2Conn
-	input := &apigatewayv2.GetDomainNamesInput{}
-	var sweeperErrs *multierror.Error
+	conn := client.(*conns.AWSClient).APIGatewayV2Conn()
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = getDomainNamesPages(conn, input, func(page *apigatewayv2.GetDomainNamesOutput, lastPage bool) bool {
+	input := &apigatewayv2.GetDomainNamesInput{}
+	err = getDomainNamesPages(ctx, conn, input, func(page *apigatewayv2.GetDomainNamesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -98,81 +97,70 @@ func sweepDomainNames(region string) error {
 			r := ResourceDomainName()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(domainName.DomainName))
-			err = r.Delete(d, client)
 
-			if err != nil {
-				log.Printf("[ERROR] %s", err)
-				sweeperErrs = multierror.Append(sweeperErrs, err)
-				continue
-			}
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
 		return !lastPage
 	})
 
 	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping API Gateway v2 domain names sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+		log.Printf("[WARN] Skipping API Gateway v2 Domain Name sweep for %s: %s", region, err)
+		return nil
 	}
+	if err != nil {
+		return fmt.Errorf("error listing API Gateway v2 Domain Names (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing API Gateway v2 domain names: %w", err))
+		return fmt.Errorf("error sweeping API Gateway v2 Domain Names (%s): %w", region, err)
 	}
 
-	return sweeperErrs.ErrorOrNil()
+	return nil
 }
 
 func sweepVPCLinks(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).APIGatewayV2Conn
+	conn := client.(*conns.AWSClient).APIGatewayV2Conn()
 	input := &apigatewayv2.GetVpcLinksInput{}
-	var sweeperErrs *multierror.Error
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	for {
-		output, err := conn.GetVpcLinks(input)
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping API Gateway v2 VPC Link sweep for %s: %s", region, err)
-			return nil
-		}
-		if err != nil {
-			return fmt.Errorf("error retrieving API Gateway v2 VPC Links: %s", err)
+	err = getVPCLinksPages(ctx, conn, input, func(page *apigatewayv2.GetVpcLinksOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
 
-		for _, link := range output.Items {
-			log.Printf("[INFO] Deleting API Gateway v2 VPC Link: %s", aws.StringValue(link.VpcLinkId))
-			_, err := conn.DeleteVpcLink(&apigatewayv2.DeleteVpcLinkInput{
-				VpcLinkId: link.VpcLinkId,
-			})
-			if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
-				continue
-			}
-			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting API Gateway v2 VPC Link (%s): %w", aws.StringValue(link.VpcLinkId), err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-				continue
-			}
+		for _, v := range page.Items {
+			r := ResourceVPCLink()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(v.VpcLinkId))
 
-			_, err = WaitVPCLinkDeleted(conn, aws.StringValue(link.VpcLinkId))
-			if tfawserr.ErrMessageContains(err, apigatewayv2.ErrCodeNotFoundException, "") {
-				continue
-			}
-			if err != nil {
-				sweeperErr := fmt.Errorf("error waiting for API Gateway v2 VPC Link (%s) deletion: %w", aws.StringValue(link.VpcLinkId), err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-				continue
-			}
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
-		input.NextToken = output.NextToken
+		return !lastPage
+	})
+
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping API Gateway v2 VPC Link sweep for %s: %s", region, err)
+		return nil
 	}
 
-	return sweeperErrs.ErrorOrNil()
+	if err != nil {
+		return fmt.Errorf("error listing API Gateway v2 VPC Links (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping API Gateway v2 VPC Links (%s): %w", region, err)
+	}
+
+	return nil
 }

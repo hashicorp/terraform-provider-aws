@@ -2,7 +2,19 @@ package ecs
 
 import (
 	"fmt"
+	"regexp"
+
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
+
+func validateClusterName(v interface{}, k string) (ws []string, errors []error) {
+	return validation.All(
+		validation.StringLenBetween(1, 255),
+		validation.StringMatch(
+			regexp.MustCompile("[a-zA-Z0-9_-]+"),
+			"The cluster name must consist of alphanumerics, hyphens, and underscores."),
+	)(v, k)
+}
 
 // Validates that ECS Placement Constraints are set correctly
 // Takes type, and expression as strings

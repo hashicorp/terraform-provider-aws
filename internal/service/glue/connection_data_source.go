@@ -17,7 +17,7 @@ import (
 
 func DataSourceConnection() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceConnectionRead,
+		ReadWithoutTimeout: dataSourceConnectionRead,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -84,7 +84,7 @@ func DataSourceConnection() *schema.Resource {
 }
 
 func dataSourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).GlueConn
+	conn := meta.(*conns.AWSClient).GlueConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	id := d.Get("id").(string)
@@ -93,7 +93,7 @@ func dataSourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta 
 		return diag.Errorf("error decoding Glue Connection %s: %s", id, err)
 	}
 
-	connection, err := FindConnectionByName(conn, connectionName, catalogID)
+	connection, err := FindConnectionByName(ctx, conn, connectionName, catalogID)
 	if err != nil {
 		if tfresource.NotFound(err) {
 			return diag.Errorf("error Glue Connection (%s) not found", id)
@@ -120,7 +120,7 @@ func dataSourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta 
 		return diag.Errorf("error setting connection_properties: %s", err)
 	}
 
-	if err := d.Set("physical_connection_requirements", flattenGluePhysicalConnectionRequirements(connection.PhysicalConnectionRequirements)); err != nil {
+	if err := d.Set("physical_connection_requirements", flattenPhysicalConnectionRequirements(connection.PhysicalConnectionRequirements)); err != nil {
 		return diag.Errorf("error setting physical_connection_requirements: %s", err)
 	}
 
@@ -128,7 +128,7 @@ func dataSourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta 
 		return diag.Errorf("error setting match_criteria: %s", err)
 	}
 
-	tags, err := ListTags(conn, connectionArn)
+	tags, err := ListTags(ctx, conn, connectionArn)
 
 	if err != nil {
 		return diag.Errorf("error listing tags for Glue Connection (%s): %s", connectionArn, err)

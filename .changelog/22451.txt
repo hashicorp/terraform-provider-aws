@@ -1,0 +1,2 @@
+```release-note:enhancement
+resource/aws_autoscaling_policy: Add `customized_capacity_metric_specification`, `customized_load_metric_specification` and `customized_scaling_metric_specification` to the `predictive_scaling_configuration.metric_specification` argument

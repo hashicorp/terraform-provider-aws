@@ -1,11 +1,14 @@
 package transfer
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func DataSourceServer() *schema.Resource {
@@ -74,19 +77,20 @@ func DataSourceServer() *schema.Resource {
 			},
 		},
 
-		Read: dataSourceServerRead,
+		ReadWithoutTimeout: dataSourceServerRead,
 	}
 }
 
-func dataSourceServerRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).TransferConn
+func dataSourceServerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).TransferConn()
 
 	serverID := d.Get("server_id").(string)
 
-	output, err := FindServerByID(conn, serverID)
+	output, err := FindServerByID(ctx, conn, serverID)
 
 	if err != nil {
-		return fmt.Errorf("error reading Transfer Server (%s): %w", serverID, err)
+		return sdkdiag.AppendErrorf(diags, "reading Transfer Server (%s): %s", serverID, err)
 	}
 
 	d.SetId(aws.StringValue(output.ServerId))
@@ -110,5 +114,5 @@ func dataSourceServerRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("url", "")
 	}
 
-	return nil
+	return diags
 }

@@ -9,18 +9,19 @@ import (
 )
 
 func testAccOrganizationalUnitsDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_organizations_organizational_unit.test"
 	dataSourceName := "data.aws_organizations_organizational_units.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckOrganizationsAccount(t)
+			acctest.PreCheckOrganizationsAccount(ctx, t)
 		},
-		ErrorCheck: acctest.ErrorCheck(t, organizations.EndpointsID),
-		Providers:  acctest.Providers,
+		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationalUnitsDataSourceConfig,
+				Config: testAccOrganizationalUnitsDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "children.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "children.0.name"),
@@ -32,7 +33,7 @@ func testAccOrganizationalUnitsDataSource_basic(t *testing.T) {
 	})
 }
 
-const testAccOrganizationalUnitsDataSourceConfig = `
+const testAccOrganizationalUnitsDataSourceConfig_basic = `
 resource "aws_organizations_organization" "test" {}
 
 resource "aws_organizations_organizational_unit" "test" {

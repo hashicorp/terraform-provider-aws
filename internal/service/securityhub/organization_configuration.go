@@ -1,23 +1,25 @@
 package securityhub
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/securityhub"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func ResourceOrganizationConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceOrganizationConfigurationUpdate,
-		Read:   resourceOrganizationConfigurationRead,
-		Update: resourceOrganizationConfigurationUpdate,
-		Delete: schema.Noop,
+		CreateWithoutTimeout: resourceOrganizationConfigurationUpdate,
+		ReadWithoutTimeout:   resourceOrganizationConfigurationRead,
+		UpdateWithoutTimeout: resourceOrganizationConfigurationUpdate,
+		DeleteWithoutTimeout: schema.NoopContext,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -29,34 +31,36 @@ func ResourceOrganizationConfiguration() *schema.Resource {
 	}
 }
 
-func resourceOrganizationConfigurationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecurityHubConn
+func resourceOrganizationConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SecurityHubConn()
 
 	input := &securityhub.UpdateOrganizationConfigurationInput{
 		AutoEnable: aws.Bool(d.Get("auto_enable").(bool)),
 	}
 
-	_, err := conn.UpdateOrganizationConfiguration(input)
+	_, err := conn.UpdateOrganizationConfigurationWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error updating Security Hub Organization Configuration (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating Security Hub Organization Configuration (%s): %s", d.Id(), err)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).AccountID)
 
-	return resourceOrganizationConfigurationRead(d, meta)
+	return append(diags, resourceOrganizationConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceOrganizationConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecurityHubConn
+func resourceOrganizationConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SecurityHubConn()
 
-	output, err := conn.DescribeOrganizationConfiguration(&securityhub.DescribeOrganizationConfigurationInput{})
+	output, err := conn.DescribeOrganizationConfigurationWithContext(ctx, &securityhub.DescribeOrganizationConfigurationInput{})
 
 	if err != nil {
-		return fmt.Errorf("error reading Security Hub Organization Configuration: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading Security Hub Organization Configuration: %s", err)
 	}
 
 	d.Set("auto_enable", output.AutoEnable)
 
-	return nil
+	return diags
 }

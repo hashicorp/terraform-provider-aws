@@ -1,26 +1,29 @@
 package elb
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strconv"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elb"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func ResourceCookieStickinessPolicy() *schema.Resource {
 	return &schema.Resource{
 		// There is no concept of "updating" an LB Stickiness policy in
 		// the AWS API.
-		Create: resourceCookieStickinessPolicyCreate,
-		Read:   resourceCookieStickinessPolicyRead,
-		Delete: resourceCookieStickinessPolicyDelete,
+		CreateWithoutTimeout: resourceCookieStickinessPolicyCreate,
+		ReadWithoutTimeout:   resourceCookieStickinessPolicyRead,
+		DeleteWithoutTimeout: resourceCookieStickinessPolicyDelete,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -51,8 +54,9 @@ func ResourceCookieStickinessPolicy() *schema.Resource {
 	}
 }
 
-func resourceCookieStickinessPolicyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBConn
+func resourceCookieStickinessPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ELBConn()
 
 	// Provision the LBStickinessPolicy
 	lbspOpts := &elb.CreateLBCookieStickinessPolicyInput{
@@ -65,8 +69,8 @@ func resourceCookieStickinessPolicyCreate(d *schema.ResourceData, meta interface
 	}
 
 	log.Printf("[DEBUG] LB Cookie Stickiness Policy opts: %#v", lbspOpts)
-	if _, err := conn.CreateLBCookieStickinessPolicy(lbspOpts); err != nil {
-		return fmt.Errorf("Error creating LBCookieStickinessPolicy: %s", err)
+	if _, err := conn.CreateLBCookieStickinessPolicyWithContext(ctx, lbspOpts); err != nil {
+		return sdkdiag.AppendErrorf(diags, "creating LBCookieStickinessPolicy: %s", err)
 	}
 
 	setLoadBalancerOpts := &elb.SetLoadBalancerPoliciesOfListenerInput{
@@ -76,19 +80,20 @@ func resourceCookieStickinessPolicyCreate(d *schema.ResourceData, meta interface
 	}
 
 	log.Printf("[DEBUG] LB Cookie Stickiness create configuration: %#v", setLoadBalancerOpts)
-	if _, err := conn.SetLoadBalancerPoliciesOfListener(setLoadBalancerOpts); err != nil {
-		return fmt.Errorf("Error setting LBCookieStickinessPolicy: %s", err)
+	if _, err := conn.SetLoadBalancerPoliciesOfListenerWithContext(ctx, setLoadBalancerOpts); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting LBCookieStickinessPolicy: %s", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%d:%s",
 		*lbspOpts.LoadBalancerName,
 		*setLoadBalancerOpts.LoadBalancerPort,
 		*lbspOpts.PolicyName))
-	return nil
+	return diags
 }
 
-func resourceCookieStickinessPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBConn
+func resourceCookieStickinessPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ELBConn()
 
 	lbName, lbPort, policyName := CookieStickinessPolicyParseID(d.Id())
 
@@ -97,43 +102,47 @@ func resourceCookieStickinessPolicyRead(d *schema.ResourceData, meta interface{}
 		PolicyNames:      []*string{aws.String(policyName)},
 	}
 
-	getResp, err := conn.DescribeLoadBalancerPolicies(request)
+	getResp, err := conn.DescribeLoadBalancerPoliciesWithContext(ctx, request)
 	if err != nil {
-		if ec2err, ok := err.(awserr.Error); ok {
-			if ec2err.Code() == "PolicyNotFound" || ec2err.Code() == "LoadBalancerNotFound" {
-				d.SetId("")
-			}
-			return nil
+		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, elb.ErrCodePolicyNotFoundException) {
+			log.Printf("[WARN] ELB Classic LB (%s) LB Cookie Policy (%s) not found, removing from state", lbName, policyName)
+			d.SetId("")
+			return diags
 		}
-		return fmt.Errorf("Error retrieving policy: %s", err)
+		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, elb.ErrCodeAccessPointNotFoundException) {
+			log.Printf("[WARN] ELB Classic LB (%s) not found, removing from state", lbName)
+			d.SetId("")
+			return diags
+		}
+		return sdkdiag.AppendErrorf(diags, "retrieving ELB Classic (%s) LB Cookie Policy (%s): %s", lbName, policyName, err)
 	}
 
 	if len(getResp.PolicyDescriptions) != 1 {
-		return fmt.Errorf("Unable to find policy %#v", getResp.PolicyDescriptions)
+		return sdkdiag.AppendErrorf(diags, "Unable to find policy %#v", getResp.PolicyDescriptions)
 	}
 
 	// we know the policy exists now, but we have to check if it's assigned to a listener
-	assigned, err := resourceSticknessPolicyAssigned(policyName, lbName, lbPort, conn)
+	assigned, err := resourceSticknessPolicyAssigned(ctx, conn, policyName, lbName, lbPort)
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading ELB Classic LB Cookie Stickiness Policy (%s): %s", d.Id(), err)
 	}
-	if !assigned {
+	if !d.IsNewResource() && !assigned {
 		// policy exists, but isn't assigned to a listener
-		log.Printf("[DEBUG] policy '%s' exists, but isn't assigned to a listener", policyName)
+		log.Printf("[WARN] ELB Classic LB (%s) LB Cookie Policy (%s) exists, but isn't assigned to a listener", lbName, policyName)
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	// We can get away with this because there's only one attribute, the
 	// cookie expiration, in these descriptions.
 	policyDesc := getResp.PolicyDescriptions[0]
 	cookieAttr := policyDesc.PolicyAttributeDescriptions[0]
-	if *cookieAttr.AttributeName != "CookieExpirationPeriod" {
-		return fmt.Errorf("Unable to find cookie expiration period.")
+	if aws.StringValue(cookieAttr.AttributeName) != "CookieExpirationPeriod" {
+		return sdkdiag.AppendErrorf(diags, "Unable to find cookie expiration period.")
 	}
 	cookieVal, err := strconv.Atoi(aws.StringValue(cookieAttr.AttributeValue))
 	if err != nil {
-		return fmt.Errorf("Error parsing cookie expiration period: %s", err)
+		return sdkdiag.AppendErrorf(diags, "parsing cookie expiration period: %s", err)
 	}
 	d.Set("cookie_expiration_period", cookieVal)
 
@@ -141,15 +150,16 @@ func resourceCookieStickinessPolicyRead(d *schema.ResourceData, meta interface{}
 	d.Set("load_balancer", lbName)
 	lbPortInt, err := strconv.Atoi(lbPort)
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading ELB Classic LB Cookie Stickiness Policy (%s): parsing port number: %s", d.Id(), err)
 	}
 	d.Set("lb_port", lbPortInt)
 
-	return nil
+	return diags
 }
 
-func resourceCookieStickinessPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBConn
+func resourceCookieStickinessPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ELBConn()
 
 	lbName, _, policyName := CookieStickinessPolicyParseID(d.Id())
 
@@ -162,8 +172,8 @@ func resourceCookieStickinessPolicyDelete(d *schema.ResourceData, meta interface
 		PolicyNames:      []*string{},
 	}
 
-	if _, err := conn.SetLoadBalancerPoliciesOfListener(setLoadBalancerOpts); err != nil {
-		return fmt.Errorf("Error removing LBCookieStickinessPolicy: %s", err)
+	if _, err := conn.SetLoadBalancerPoliciesOfListenerWithContext(ctx, setLoadBalancerOpts); err != nil {
+		return sdkdiag.AppendErrorf(diags, "removing LBCookieStickinessPolicy: %s", err)
 	}
 
 	request := &elb.DeleteLoadBalancerPolicyInput{
@@ -171,10 +181,10 @@ func resourceCookieStickinessPolicyDelete(d *schema.ResourceData, meta interface
 		PolicyName:       aws.String(policyName),
 	}
 
-	if _, err := conn.DeleteLoadBalancerPolicy(request); err != nil {
-		return fmt.Errorf("Error deleting LB stickiness policy %s: %s", d.Id(), err)
+	if _, err := conn.DeleteLoadBalancerPolicyWithContext(ctx, request); err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting LB stickiness policy %s: %s", d.Id(), err)
 	}
-	return nil
+	return diags
 }
 
 // CookieStickinessPolicyParseID takes an ID and parses it into

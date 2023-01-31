@@ -1,25 +1,28 @@
 package imagebuilder
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/generate/namevaluesfilters"
 )
 
 func DataSourceImageRecipes() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceImageRecipesRead,
+		ReadWithoutTimeout: dataSourceImageRecipesRead,
 		Schema: map[string]*schema.Schema{
 			"arns": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"filter": dataSourceFiltersSchema(),
+			"filter": namevaluesfilters.Schema(),
 			"names": {
 				Type:     schema.TypeSet,
 				Computed: true,
@@ -34,8 +37,9 @@ func DataSourceImageRecipes() *schema.Resource {
 	}
 }
 
-func dataSourceImageRecipesRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ImageBuilderConn
+func dataSourceImageRecipesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ImageBuilderConn()
 
 	input := &imagebuilder.ListImageRecipesInput{}
 
@@ -44,12 +48,12 @@ func dataSourceImageRecipesRead(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	if v, ok := d.GetOk("filter"); ok {
-		input.Filters = buildFiltersDataSource(v.(*schema.Set))
+		input.Filters = namevaluesfilters.New(v.(*schema.Set)).ImagebuilderFilters()
 	}
 
 	var results []*imagebuilder.ImageRecipeSummary
 
-	err := conn.ListImageRecipesPages(input, func(page *imagebuilder.ListImageRecipesOutput, lastPage bool) bool {
+	err := conn.ListImageRecipesPagesWithContext(ctx, input, func(page *imagebuilder.ListImageRecipesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -66,7 +70,7 @@ func dataSourceImageRecipesRead(d *schema.ResourceData, meta interface{}) error 
 	})
 
 	if err != nil {
-		return fmt.Errorf("error reading Image Builder Image Recipes: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading Image Builder Image Recipes: %s", err)
 	}
 
 	var arns, names []string
@@ -80,5 +84,5 @@ func dataSourceImageRecipesRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("arns", arns)
 	d.Set("names", names)
 
-	return nil
+	return diags
 }

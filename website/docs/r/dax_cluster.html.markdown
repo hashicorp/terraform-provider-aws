@@ -25,6 +25,10 @@ resource "aws_dax_cluster" "bar" {
 
 The following arguments are supported:
 
+* `cluster_endpoint_encryption_type` – (Optional) The type of encryption the
+cluster's endpoint should support. Valid values are: `NONE` and `TLS`.
+Default value is `NONE`.
+
 * `cluster_name` – (Required) Group identifier. DAX converts this name to
 lowercase
 
@@ -64,7 +68,7 @@ with the cluster
 * `subnet_group_name` – (Optional) Name of the subnet group to be used for the
 cluster
 
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 The `server_side_encryption` object supports the following:
 
@@ -87,16 +91,15 @@ consisting of a DNS name and a port number
 
 * `port` - The port used by the configuration endpoint
 
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
-`aws_dax_cluster` provides the following
-[Timeouts](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts) configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `45 minutes`) Used for creating a DAX cluster
-- `update` - (Default `45 minutes`) Used for cluster modifications
-- `delete` - (Default `90 minutes`) Used for destroying a DAX cluster
+- `create` - (Default `45m`)
+- `update` - (Default `45m`)
+- `delete` - (Default `90m`)
 
 ## Import
 

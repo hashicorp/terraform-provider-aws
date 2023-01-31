@@ -1,25 +1,27 @@
 package glue
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceDataCatalogEncryptionSettings() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceDataCatalogEncryptionSettingsPut,
-		Read:   resourceDataCatalogEncryptionSettingsRead,
-		Update: resourceDataCatalogEncryptionSettingsPut,
-		Delete: resourceDataCatalogEncryptionSettingsDelete,
+		CreateWithoutTimeout: resourceDataCatalogEncryptionSettingsPut,
+		ReadWithoutTimeout:   resourceDataCatalogEncryptionSettingsRead,
+		UpdateWithoutTimeout: resourceDataCatalogEncryptionSettingsPut,
+		DeleteWithoutTimeout: resourceDataCatalogEncryptionSettingsDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -79,8 +81,9 @@ func ResourceDataCatalogEncryptionSettings() *schema.Resource {
 	}
 }
 
-func resourceDataCatalogEncryptionSettingsPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+func resourceDataCatalogEncryptionSettingsPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlueConn()
 
 	catalogID := createCatalogID(d, meta.(*conns.AWSClient).AccountID)
 	input := &glue.PutDataCatalogEncryptionSettingsInput{
@@ -92,42 +95,44 @@ func resourceDataCatalogEncryptionSettingsPut(d *schema.ResourceData, meta inter
 	}
 
 	log.Printf("[DEBUG] Putting Glue Data Catalog Encryption Settings: %s", input)
-	_, err := conn.PutDataCatalogEncryptionSettings(input)
+	_, err := conn.PutDataCatalogEncryptionSettingsWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error putting Glue Data Catalog Encryption Settings (%s): %w", catalogID, err)
+		return sdkdiag.AppendErrorf(diags, "putting Glue Data Catalog Encryption Settings (%s): %s", catalogID, err)
 	}
 
 	d.SetId(catalogID)
 
-	return resourceDataCatalogEncryptionSettingsRead(d, meta)
+	return append(diags, resourceDataCatalogEncryptionSettingsRead(ctx, d, meta)...)
 }
 
-func resourceDataCatalogEncryptionSettingsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+func resourceDataCatalogEncryptionSettingsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlueConn()
 
-	output, err := conn.GetDataCatalogEncryptionSettings(&glue.GetDataCatalogEncryptionSettingsInput{
+	output, err := conn.GetDataCatalogEncryptionSettingsWithContext(ctx, &glue.GetDataCatalogEncryptionSettingsInput{
 		CatalogId: aws.String(d.Id()),
 	})
 
 	if err != nil {
-		return fmt.Errorf("error reading Glue Data Catalog Encryption Settings (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Glue Data Catalog Encryption Settings (%s): %s", d.Id(), err)
 	}
 
 	d.Set("catalog_id", d.Id())
 	if output.DataCatalogEncryptionSettings != nil {
 		if err := d.Set("data_catalog_encryption_settings", []interface{}{flattenDataCatalogEncryptionSettings(output.DataCatalogEncryptionSettings)}); err != nil {
-			return fmt.Errorf("error setting data_catalog_encryption_settings: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting data_catalog_encryption_settings: %s", err)
 		}
 	} else {
 		d.Set("data_catalog_encryption_settings", nil)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceDataCatalogEncryptionSettingsDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+func resourceDataCatalogEncryptionSettingsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlueConn()
 
 	input := &glue.PutDataCatalogEncryptionSettingsInput{
 		CatalogId:                     aws.String(d.Id()),
@@ -135,13 +140,13 @@ func resourceDataCatalogEncryptionSettingsDelete(d *schema.ResourceData, meta in
 	}
 
 	log.Printf("[DEBUG] Deleting Glue Data Catalog Encryption Settings: %s", input)
-	_, err := conn.PutDataCatalogEncryptionSettings(input)
+	_, err := conn.PutDataCatalogEncryptionSettingsWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error putting Glue Data Catalog Encryption Settings (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "putting Glue Data Catalog Encryption Settings (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandDataCatalogEncryptionSettings(tfMap map[string]interface{}) *glue.DataCatalogEncryptionSettings {

@@ -1,5 +1,5 @@
 ---
-subcategory: "EC2"
+subcategory: "EBS (EC2)"
 layout: "aws"
 page_title: "AWS: aws_volume_attachment"
 description: |-
@@ -11,7 +11,7 @@ description: |-
 Provides an AWS EBS Volume Attachment as a top level resource, to attach and
 detach volumes from AWS Instances.
 
-~> **NOTE on EBS block devices:** If you use `ebs_block_device` on an `aws_instance`, Terraform will assume management over the full set of non-root EBS block devices for the instance, and treats additional block devices as drift. For this reason, `ebs_block_device` cannot be mixed with external `aws_ebs_volume` + `aws_ebs_volume_attachment` resources for a given instance.
+~> **NOTE on EBS block devices:** If you use `ebs_block_device` on an `aws_instance`, Terraform will assume management over the full set of non-root EBS block devices for the instance, and treats additional block devices as drift. For this reason, `ebs_block_device` cannot be mixed with external `aws_ebs_volume` + `aws_volume_attachment` resources for a given instance.
 
 ## Example Usage
 
@@ -73,7 +73,6 @@ EBS Volume Attachments can be imported using `DEVICE_NAME:VOLUME_ID:INSTANCE_ID`
 ```
 $ terraform import aws_volume_attachment.example /dev/sdh:vol-049df61146c4d7901:i-12345678
 ```
-
 
 [1]: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/device_naming.html#available-ec2-device-names
 [2]: https://docs.aws.amazon.com/AWSEC2/latest/WindowsGuide/device_naming.html#available-ec2-device-names

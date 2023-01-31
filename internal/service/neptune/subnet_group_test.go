@@ -1,6 +1,7 @@
 package neptune_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -16,21 +17,21 @@ import (
 )
 
 func TestAccNeptuneSubnetGroup_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v neptune.DBSubnetGroup
 
 	rName := fmt.Sprintf("tf-test-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNeptuneSubnetGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSubnetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNeptuneSubnetGroupConfig(rName),
+				Config: testAccSubnetGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNeptuneSubnetGroupExists(
-						"aws_neptune_subnet_group.foo", &v),
+					testAccCheckSubnetGroupExists(ctx, "aws_neptune_subnet_group.foo", &v),
 					resource.TestCheckResourceAttr(
 						"aws_neptune_subnet_group.foo", "name", rName),
 					resource.TestCheckResourceAttr(
@@ -47,19 +48,19 @@ func TestAccNeptuneSubnetGroup_basic(t *testing.T) {
 }
 
 func TestAccNeptuneSubnetGroup_namePrefix(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v neptune.DBSubnetGroup
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNeptuneSubnetGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSubnetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNeptuneSubnetGroupConfig_namePrefix(),
+				Config: testAccSubnetGroupConfig_namePrefix(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNeptuneSubnetGroupExists(
-						"aws_neptune_subnet_group.test", &v),
+					testAccCheckSubnetGroupExists(ctx, "aws_neptune_subnet_group.test", &v),
 					resource.TestMatchResourceAttr(
 						"aws_neptune_subnet_group.test", "name", regexp.MustCompile("^tf_test-")),
 				),
@@ -75,19 +76,19 @@ func TestAccNeptuneSubnetGroup_namePrefix(t *testing.T) {
 }
 
 func TestAccNeptuneSubnetGroup_generatedName(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v neptune.DBSubnetGroup
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNeptuneSubnetGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSubnetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNeptuneSubnetGroupConfig_generatedName(),
+				Config: testAccSubnetGroupConfig_generatedName(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNeptuneSubnetGroupExists(
-						"aws_neptune_subnet_group.test", &v),
+					testAccCheckSubnetGroupExists(ctx, "aws_neptune_subnet_group.test", &v),
 				),
 			},
 			{
@@ -100,30 +101,29 @@ func TestAccNeptuneSubnetGroup_generatedName(t *testing.T) {
 }
 
 func TestAccNeptuneSubnetGroup_updateDescription(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v neptune.DBSubnetGroup
 
 	rName := fmt.Sprintf("tf-test-%d", sdkacctest.RandInt())
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, neptune.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckNeptuneSubnetGroupDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSubnetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNeptuneSubnetGroupConfig(rName),
+				Config: testAccSubnetGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNeptuneSubnetGroupExists(
-						"aws_neptune_subnet_group.foo", &v),
+					testAccCheckSubnetGroupExists(ctx, "aws_neptune_subnet_group.foo", &v),
 					resource.TestCheckResourceAttr(
 						"aws_neptune_subnet_group.foo", "description", "Managed by Terraform"),
 				),
 			},
 
 			{
-				Config: testAccNeptuneSubnetGroupConfig_updatedDescription(rName),
+				Config: testAccSubnetGroupConfig_updatedDescription(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNeptuneSubnetGroupExists(
-						"aws_neptune_subnet_group.foo", &v),
+					testAccCheckSubnetGroupExists(ctx, "aws_neptune_subnet_group.foo", &v),
 					resource.TestCheckResourceAttr(
 						"aws_neptune_subnet_group.foo", "description", "foo description updated"),
 				),
@@ -137,39 +137,40 @@ func TestAccNeptuneSubnetGroup_updateDescription(t *testing.T) {
 	})
 }
 
-func testAccCheckNeptuneSubnetGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn
+func testAccCheckSubnetGroupDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_neptune_subnet_group" {
-			continue
-		}
-
-		// Try to find the resource
-		resp, err := conn.DescribeDBSubnetGroups(
-			&neptune.DescribeDBSubnetGroupsInput{DBSubnetGroupName: aws.String(rs.Primary.ID)})
-		if err == nil {
-			if len(resp.DBSubnetGroups) > 0 {
-				return fmt.Errorf("still exist.")
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_neptune_subnet_group" {
+				continue
 			}
 
-			return nil
+			// Try to find the resource
+			resp, err := conn.DescribeDBSubnetGroupsWithContext(ctx, &neptune.DescribeDBSubnetGroupsInput{DBSubnetGroupName: aws.String(rs.Primary.ID)})
+			if err == nil {
+				if len(resp.DBSubnetGroups) > 0 {
+					return fmt.Errorf("still exist.")
+				}
+
+				return nil
+			}
+
+			// Verify the error is what we want
+			neptuneerr, ok := err.(awserr.Error)
+			if !ok {
+				return err
+			}
+			if neptuneerr.Code() != "DBSubnetGroupNotFoundFault" {
+				return err
+			}
 		}
 
-		// Verify the error is what we want
-		neptuneerr, ok := err.(awserr.Error)
-		if !ok {
-			return err
-		}
-		if neptuneerr.Code() != "DBSubnetGroupNotFoundFault" {
-			return err
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckNeptuneSubnetGroupExists(n string, v *neptune.DBSubnetGroup) resource.TestCheckFunc {
+func testAccCheckSubnetGroupExists(ctx context.Context, n string, v *neptune.DBSubnetGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -180,9 +181,8 @@ func testAccCheckNeptuneSubnetGroupExists(n string, v *neptune.DBSubnetGroup) re
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn
-		resp, err := conn.DescribeDBSubnetGroups(
-			&neptune.DescribeDBSubnetGroupsInput{DBSubnetGroupName: aws.String(rs.Primary.ID)})
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn()
+		resp, err := conn.DescribeDBSubnetGroupsWithContext(ctx, &neptune.DescribeDBSubnetGroupsInput{DBSubnetGroupName: aws.String(rs.Primary.ID)})
 		if err != nil {
 			return err
 		}
@@ -196,7 +196,7 @@ func testAccCheckNeptuneSubnetGroupExists(n string, v *neptune.DBSubnetGroup) re
 	}
 }
 
-func testAccNeptuneSubnetGroupConfig(rName string) string {
+func testAccSubnetGroupConfig_basic(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
@@ -237,7 +237,7 @@ resource "aws_neptune_subnet_group" "foo" {
 `, rName))
 }
 
-func testAccNeptuneSubnetGroupConfig_updatedDescription(rName string) string {
+func testAccSubnetGroupConfig_updatedDescription(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
@@ -279,7 +279,7 @@ resource "aws_neptune_subnet_group" "foo" {
 `, rName))
 }
 
-func testAccNeptuneSubnetGroupConfig_namePrefix() string {
+func testAccSubnetGroupConfig_namePrefix() string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), `
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -316,7 +316,7 @@ resource "aws_neptune_subnet_group" "test" {
 `)
 }
 
-func testAccNeptuneSubnetGroupConfig_generatedName() string {
+func testAccSubnetGroupConfig_generatedName() string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), `
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"

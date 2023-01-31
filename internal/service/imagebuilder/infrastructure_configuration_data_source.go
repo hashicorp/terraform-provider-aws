@@ -1,19 +1,21 @@
 package imagebuilder
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func DataSourceInfrastructureConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceInfrastructureConfigurationRead,
+		ReadWithoutTimeout: dataSourceInfrastructureConfigurationRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -32,6 +34,22 @@ func DataSourceInfrastructureConfiguration() *schema.Resource {
 			"description": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"instance_metadata_options": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"http_put_response_hop_limit": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"http_tokens": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
 			},
 			"instance_profile_name": {
 				Type:     schema.TypeString,
@@ -97,8 +115,9 @@ func DataSourceInfrastructureConfiguration() *schema.Resource {
 	}
 }
 
-func dataSourceInfrastructureConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ImageBuilderConn
+func dataSourceInfrastructureConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ImageBuilderConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &imagebuilder.GetInfrastructureConfigurationInput{}
@@ -107,14 +126,14 @@ func dataSourceInfrastructureConfigurationRead(d *schema.ResourceData, meta inte
 		input.InfrastructureConfigurationArn = aws.String(v.(string))
 	}
 
-	output, err := conn.GetInfrastructureConfiguration(input)
+	output, err := conn.GetInfrastructureConfigurationWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error getting Image Builder Infrastructure Configuration (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "getting Image Builder Infrastructure Configuration (%s): %s", d.Id(), err)
 	}
 
 	if output == nil || output.InfrastructureConfiguration == nil {
-		return fmt.Errorf("error getting Image Builder Infrastructure Configuration (%s): empty response", d.Id())
+		return sdkdiag.AppendErrorf(diags, "getting Image Builder Infrastructure Configuration (%s): empty response", d.Id())
 	}
 
 	infrastructureConfiguration := output.InfrastructureConfiguration
@@ -124,6 +143,13 @@ func dataSourceInfrastructureConfigurationRead(d *schema.ResourceData, meta inte
 	d.Set("date_created", infrastructureConfiguration.DateCreated)
 	d.Set("date_updated", infrastructureConfiguration.DateUpdated)
 	d.Set("description", infrastructureConfiguration.Description)
+
+	if infrastructureConfiguration.InstanceMetadataOptions != nil {
+		d.Set("instance_metadata_options", []interface{}{flattenInstanceMetadataOptions(infrastructureConfiguration.InstanceMetadataOptions)})
+	} else {
+		d.Set("instance_metadata_options", nil)
+	}
+
 	d.Set("instance_profile_name", infrastructureConfiguration.InstanceProfileName)
 	d.Set("instance_types", aws.StringValueSlice(infrastructureConfiguration.InstanceTypes))
 	d.Set("key_pair", infrastructureConfiguration.KeyPair)
@@ -140,5 +166,5 @@ func dataSourceInfrastructureConfigurationRead(d *schema.ResourceData, meta inte
 	d.Set("tags", KeyValueTags(infrastructureConfiguration.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
 	d.Set("terminate_instance_on_failure", infrastructureConfiguration.TerminateInstanceOnFailure)
 
-	return nil
+	return diags
 }

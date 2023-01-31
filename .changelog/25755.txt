@@ -1,0 +1,19 @@
+```release-note:new-resource
+aws_directory_service_region
+```
+
+```release-note:enhancement
+resource/aws_directory_service_directory: Add configurable timeouts for Create, Update and Delete
+```
+
+```release-note:enhancement
+resource/aws_directory_service_shared_directory: Add configurable timeouts for Delete
+```
+
+```release-note:enhancement
+resource/aws_directory_service_shared_directory_accepter: Add configurable timeouts for Create and Delete
+```
+
+```release-note:enhancement
+resource/aws_directory_service_directory: Add `desired_number_of_domain_controllers` argument
+```

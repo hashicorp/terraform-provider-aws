@@ -1,4 +1,4 @@
-package namevaluesfilters
+package namevaluesfilters_test
 
 import (
 	"reflect"
@@ -6,22 +6,25 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/generate/namevaluesfilters"
 )
 
 func TestNameValuesFiltersMap(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		name    string
-		filters NameValuesFilters
+		filters namevaluesfilters.NameValuesFilters
 		want    map[string][]string
 	}{
 		{
 			name:    "empty",
-			filters: New(map[string][]string{}),
+			filters: namevaluesfilters.New(map[string][]string{}),
 			want:    map[string][]string{},
 		},
 		{
 			name: "empty_strings",
-			filters: New(map[string][]string{
+			filters: namevaluesfilters.New(map[string][]string{
 				"name1": {""},
 				"name2": {"", ""},
 			}),
@@ -29,7 +32,7 @@ func TestNameValuesFiltersMap(t *testing.T) {
 		},
 		{
 			name: "duplicates",
-			filters: New(map[string][]string{
+			filters: namevaluesfilters.New(map[string][]string{
 				"name1": {"value1"},
 				"name2": {"value2a", "value2b", "", "value2a", "value2c", "value2c"},
 			}),
@@ -41,7 +44,10 @@ func TestNameValuesFiltersMap(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
 			got := testCase.filters.Map()
 
 			testNameValuesFiltersVerifyMap(t, got, testCase.want)
@@ -50,26 +56,28 @@ func TestNameValuesFiltersMap(t *testing.T) {
 }
 
 func TestNameValuesFiltersAdd(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		name    string
-		filters NameValuesFilters
+		filters namevaluesfilters.NameValuesFilters
 		add     interface{}
 		want    map[string][]string
 	}{
 		{
 			name:    "empty",
-			filters: New(map[string][]string{}),
+			filters: namevaluesfilters.New(map[string][]string{}),
 			add:     nil,
 			want:    map[string][]string{},
 		},
 		{
 			name: "add_all",
-			filters: New(map[string]string{
+			filters: namevaluesfilters.New(map[string]string{
 				"name1": "value1",
 				"name2": "value2",
 				"name3": "value3",
 			}),
-			add: New(map[string][]string{
+			add: namevaluesfilters.New(map[string][]string{
 				"name4": {"value4a", "value4b"},
 				"name5": {"value5"},
 				"name6": {"value6a", "value6b", "value6c"},
@@ -85,7 +93,7 @@ func TestNameValuesFiltersAdd(t *testing.T) {
 		},
 		{
 			name: "mixed",
-			filters: New(map[string][]string{
+			filters: namevaluesfilters.New(map[string][]string{
 				"name1": {"value1a"},
 				"name2": {"value2a", "value2b"},
 			}),
@@ -101,7 +109,7 @@ func TestNameValuesFiltersAdd(t *testing.T) {
 		},
 		{
 			name: "from_set",
-			filters: New(schema.NewSet(testNameValuesFiltersHashSet, []interface{}{
+			filters: namevaluesfilters.New(schema.NewSet(testNameValuesFiltersHashSet, []interface{}{
 				map[string]interface{}{
 					"name": "name1",
 					"values": schema.NewSet(schema.HashString, []interface{}{
@@ -135,7 +143,10 @@ func TestNameValuesFiltersAdd(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
 			got := testCase.filters.Add(testCase.add)
 
 			testNameValuesFiltersVerifyMap(t, got.Map(), testCase.want)

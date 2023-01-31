@@ -28,28 +28,32 @@ import (
 // for the "Filters" attribute on most of the "Describe..." API functions in
 // the EC2 API, to aid in the implementation of Terraform data sources that
 // retrieve data about EC2 objects.
-func BuildAttributeFilterList(attrs map[string]string) []*ec2.Filter {
+func BuildAttributeFilterList(m map[string]string) []*ec2.Filter {
 	var filters []*ec2.Filter
 
 	// sort the filters by name to make the output deterministic
 	var names []string
-	for filterName := range attrs {
-		names = append(names, filterName)
+	for k := range m {
+		names = append(names, k)
 	}
 
 	sort.Strings(names)
 
-	for _, filterName := range names {
-		value := attrs[filterName]
+	for _, name := range names {
+		value := m[name]
 		if value == "" {
 			continue
 		}
 
-		filters = append(filters, &ec2.Filter{
-			Name:   aws.String(filterName),
-			Values: []*string{aws.String(value)},
-		})
+		filters = append(filters, NewFilter(name, []string{value}))
 	}
 
 	return filters
+}
+
+func NewFilter(name string, values []string) *ec2.Filter {
+	return &ec2.Filter{
+		Name:   aws.String(name),
+		Values: aws.StringSlice(values),
+	}
 }

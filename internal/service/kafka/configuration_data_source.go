@@ -1,18 +1,20 @@
 package kafka
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kafka"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func DataSourceConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceConfigurationRead,
+		ReadWithoutTimeout: dataSourceConfigurationRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -47,13 +49,14 @@ func DataSourceConfiguration() *schema.Resource {
 	}
 }
 
-func dataSourceConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KafkaConn
+func dataSourceConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).KafkaConn()
 
 	listConfigurationsInput := &kafka.ListConfigurationsInput{}
 
 	var configuration *kafka.Configuration
-	err := conn.ListConfigurationsPages(listConfigurationsInput, func(page *kafka.ListConfigurationsOutput, lastPage bool) bool {
+	err := conn.ListConfigurationsPagesWithContext(ctx, listConfigurationsInput, func(page *kafka.ListConfigurationsOutput, lastPage bool) bool {
 		for _, config := range page.Configurations {
 			if aws.StringValue(config.Name) == d.Get("name").(string) {
 				configuration = config
@@ -65,15 +68,15 @@ func dataSourceConfigurationRead(d *schema.ResourceData, meta interface{}) error
 	})
 
 	if err != nil {
-		return fmt.Errorf("error listing MSK Configurations: %w", err)
+		return sdkdiag.AppendErrorf(diags, "listing MSK Configurations: %s", err)
 	}
 
 	if configuration == nil {
-		return fmt.Errorf("error reading MSK Configuration: no results found")
+		return sdkdiag.AppendErrorf(diags, "reading MSK Configuration: no results found")
 	}
 
 	if configuration.LatestRevision == nil {
-		return fmt.Errorf("error describing MSK Configuration (%s): missing latest revision", d.Id())
+		return sdkdiag.AppendErrorf(diags, "describing MSK Configuration (%s): missing latest revision", d.Id())
 	}
 
 	revision := configuration.LatestRevision.Revision
@@ -82,21 +85,21 @@ func dataSourceConfigurationRead(d *schema.ResourceData, meta interface{}) error
 		Revision: revision,
 	}
 
-	revisionOutput, err := conn.DescribeConfigurationRevision(revisionInput)
+	revisionOutput, err := conn.DescribeConfigurationRevisionWithContext(ctx, revisionInput)
 
 	if err != nil {
-		return fmt.Errorf("error describing MSK Configuration (%s) Revision (%d): %w", d.Id(), aws.Int64Value(revision), err)
+		return sdkdiag.AppendErrorf(diags, "describing MSK Configuration (%s) Revision (%d): %s", d.Id(), aws.Int64Value(revision), err)
 	}
 
 	if revisionOutput == nil {
-		return fmt.Errorf("error describing MSK Configuration (%s) Revision (%d): missing result", d.Id(), aws.Int64Value(revision))
+		return sdkdiag.AppendErrorf(diags, "describing MSK Configuration (%s) Revision (%d): missing result", d.Id(), aws.Int64Value(revision))
 	}
 
 	d.Set("arn", configuration.Arn)
 	d.Set("description", configuration.Description)
 
 	if err := d.Set("kafka_versions", aws.StringValueSlice(configuration.KafkaVersions)); err != nil {
-		return fmt.Errorf("error setting kafka_versions: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting kafka_versions: %s", err)
 	}
 
 	d.Set("latest_revision", revision)
@@ -105,5 +108,5 @@ func dataSourceConfigurationRead(d *schema.ResourceData, meta interface{}) error
 
 	d.SetId(aws.StringValue(configuration.Arn))
 
-	return nil
+	return diags
 }

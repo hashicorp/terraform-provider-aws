@@ -1,6 +1,7 @@
 package iam_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -13,19 +14,20 @@ import (
 )
 
 func TestAccIAMAccountPasswordPolicy_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var policy iam.GetAccountPasswordPolicyOutput
 	resourceName := "aws_iam_account_password_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckAccountPasswordPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccountPasswordPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccountPasswordPolicy,
+				Config: testAccAccountPasswordPolicyConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccountPasswordPolicyExists(resourceName, &policy),
+					testAccCheckAccountPasswordPolicyExists(ctx, resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, "minimum_password_length", "8"),
 				),
 			},
@@ -35,9 +37,9 @@ func TestAccIAMAccountPasswordPolicy_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAccountPasswordPolicy_modified,
+				Config: testAccAccountPasswordPolicyConfig_modified,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccountPasswordPolicyExists(resourceName, &policy),
+					testAccCheckAccountPasswordPolicyExists(ctx, resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, "minimum_password_length", "7"),
 				),
 			},
@@ -45,34 +47,36 @@ func TestAccIAMAccountPasswordPolicy_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckAccountPasswordPolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+func testAccCheckAccountPasswordPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_iam_account_password_policy" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_iam_account_password_policy" {
+				continue
+			}
+
+			// Try to get policy
+			_, err := conn.GetAccountPasswordPolicyWithContext(ctx, &iam.GetAccountPasswordPolicyInput{})
+			if err == nil {
+				return fmt.Errorf("still exist.")
+			}
+
+			// Verify the error is what we want
+			awsErr, ok := err.(awserr.Error)
+			if !ok {
+				return err
+			}
+			if awsErr.Code() != "NoSuchEntity" {
+				return err
+			}
 		}
 
-		// Try to get policy
-		_, err := conn.GetAccountPasswordPolicy(&iam.GetAccountPasswordPolicyInput{})
-		if err == nil {
-			return fmt.Errorf("still exist.")
-		}
-
-		// Verify the error is what we want
-		awsErr, ok := err.(awserr.Error)
-		if !ok {
-			return err
-		}
-		if awsErr.Code() != "NoSuchEntity" {
-			return err
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckAccountPasswordPolicyExists(n string, res *iam.GetAccountPasswordPolicyOutput) resource.TestCheckFunc {
+func testAccCheckAccountPasswordPolicyExists(ctx context.Context, n string, res *iam.GetAccountPasswordPolicyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -83,9 +87,9 @@ func testAccCheckAccountPasswordPolicyExists(n string, res *iam.GetAccountPasswo
 			return fmt.Errorf("No policy ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
-		resp, err := conn.GetAccountPasswordPolicy(&iam.GetAccountPasswordPolicyInput{})
+		resp, err := conn.GetAccountPasswordPolicyWithContext(ctx, &iam.GetAccountPasswordPolicyInput{})
 		if err != nil {
 			return err
 		}
@@ -96,7 +100,7 @@ func testAccCheckAccountPasswordPolicyExists(n string, res *iam.GetAccountPasswo
 	}
 }
 
-const testAccAccountPasswordPolicy = `
+const testAccAccountPasswordPolicyConfig_basic = `
 resource "aws_iam_account_password_policy" "test" {
   allow_users_to_change_password = true
   minimum_password_length        = 8
@@ -104,7 +108,7 @@ resource "aws_iam_account_password_policy" "test" {
 }
 `
 
-const testAccAccountPasswordPolicy_modified = `
+const testAccAccountPasswordPolicyConfig_modified = `
 resource "aws_iam_account_password_policy" "test" {
   allow_users_to_change_password = true
   minimum_password_length        = 7

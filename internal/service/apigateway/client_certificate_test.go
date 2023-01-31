@@ -1,6 +1,7 @@
 package apigateway_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -16,19 +17,20 @@ import (
 )
 
 func TestAccAPIGatewayClientCertificate_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf apigateway.ClientCertificate
 	resourceName := "aws_api_gateway_client_certificate.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClientCertificateDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClientCertificateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClientCertificateConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClientCertificateExists(resourceName, &conf),
+					testAccCheckClientCertificateExists(ctx, resourceName, &conf),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/clientcertificates/+.`)),
 					resource.TestCheckResourceAttr(resourceName, "description", "Hello from TF acceptance test"),
 				),
@@ -39,9 +41,9 @@ func TestAccAPIGatewayClientCertificate_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccClientCertificateConfig_basic_updated,
+				Config: testAccClientCertificateConfig_basicUpdated,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClientCertificateExists(resourceName, &conf),
+					testAccCheckClientCertificateExists(ctx, resourceName, &conf),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/clientcertificates/+.`)),
 					resource.TestCheckResourceAttr(resourceName, "description", "Hello from TF acceptance test - updated"),
 				),
@@ -51,19 +53,20 @@ func TestAccAPIGatewayClientCertificate_basic(t *testing.T) {
 }
 
 func TestAccAPIGatewayClientCertificate_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf apigateway.ClientCertificate
 	resourceName := "aws_api_gateway_client_certificate.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClientCertificateDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClientCertificateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClientCertificateTags1Config("key1", "value1"),
+				Config: testAccClientCertificateConfig_tags1("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClientCertificateExists(resourceName, &conf),
+					testAccCheckClientCertificateExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -74,18 +77,18 @@ func TestAccAPIGatewayClientCertificate_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccClientCertificateTags2Config("key1", "value1updated", "key2", "value2"),
+				Config: testAccClientCertificateConfig_tags2("key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClientCertificateExists(resourceName, &conf),
+					testAccCheckClientCertificateExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccClientCertificateTags1Config("key2", "value2"),
+				Config: testAccClientCertificateConfig_tags1("key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClientCertificateExists(resourceName, &conf),
+					testAccCheckClientCertificateExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -95,20 +98,21 @@ func TestAccAPIGatewayClientCertificate_tags(t *testing.T) {
 }
 
 func TestAccAPIGatewayClientCertificate_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf apigateway.ClientCertificate
 	resourceName := "aws_api_gateway_client_certificate.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckClientCertificateDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClientCertificateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClientCertificateConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClientCertificateExists(resourceName, &conf),
-					acctest.CheckResourceDisappears(acctest.Provider, tfapigateway.ResourceClientCertificate(), resourceName),
+					testAccCheckClientCertificateExists(ctx, resourceName, &conf),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigateway.ResourceClientCertificate(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -116,7 +120,7 @@ func TestAccAPIGatewayClientCertificate_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckClientCertificateExists(n string, res *apigateway.ClientCertificate) resource.TestCheckFunc {
+func testAccCheckClientCertificateExists(ctx context.Context, n string, res *apigateway.ClientCertificate) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -127,12 +131,12 @@ func testAccCheckClientCertificateExists(n string, res *apigateway.ClientCertifi
 			return fmt.Errorf("No API Gateway Client Certificate ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
 
 		req := &apigateway.GetClientCertificateInput{
 			ClientCertificateId: aws.String(rs.Primary.ID),
 		}
-		out, err := conn.GetClientCertificate(req)
+		out, err := conn.GetClientCertificateWithContext(ctx, req)
 		if err != nil {
 			return err
 		}
@@ -143,34 +147,36 @@ func testAccCheckClientCertificateExists(n string, res *apigateway.ClientCertifi
 	}
 }
 
-func testAccCheckClientCertificateDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
+func testAccCheckClientCertificateDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_api_gateway_client_certificate" {
-			continue
-		}
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_api_gateway_client_certificate" {
+				continue
+			}
 
-		req := &apigateway.GetClientCertificateInput{
-			ClientCertificateId: aws.String(rs.Primary.ID),
-		}
-		out, err := conn.GetClientCertificate(req)
-		if err == nil {
-			return fmt.Errorf("API Gateway Client Certificate still exists: %s", out)
-		}
+			req := &apigateway.GetClientCertificateInput{
+				ClientCertificateId: aws.String(rs.Primary.ID),
+			}
+			out, err := conn.GetClientCertificateWithContext(ctx, req)
+			if err == nil {
+				return fmt.Errorf("API Gateway Client Certificate still exists: %s", out)
+			}
 
-		awsErr, ok := err.(awserr.Error)
-		if !ok {
-			return err
-		}
-		if awsErr.Code() != apigateway.ErrCodeNotFoundException {
-			return err
+			awsErr, ok := err.(awserr.Error)
+			if !ok {
+				return err
+			}
+			if awsErr.Code() != apigateway.ErrCodeNotFoundException {
+				return err
+			}
+
+			return nil
 		}
 
 		return nil
 	}
-
-	return nil
 }
 
 const testAccClientCertificateConfig_basic = `
@@ -179,13 +185,13 @@ resource "aws_api_gateway_client_certificate" "test" {
 }
 `
 
-const testAccClientCertificateConfig_basic_updated = `
+const testAccClientCertificateConfig_basicUpdated = `
 resource "aws_api_gateway_client_certificate" "test" {
   description = "Hello from TF acceptance test - updated"
 }
 `
 
-func testAccClientCertificateTags1Config(tagKey1, tagValue1 string) string {
+func testAccClientCertificateConfig_tags1(tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_client_certificate" "test" {
   description = "Hello from TF acceptance test"
@@ -197,7 +203,7 @@ resource "aws_api_gateway_client_certificate" "test" {
 `, tagKey1, tagValue1)
 }
 
-func testAccClientCertificateTags2Config(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccClientCertificateConfig_tags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_client_certificate" "test" {
   description = "Hello from TF acceptance test"

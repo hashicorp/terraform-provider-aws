@@ -22,16 +22,17 @@ func init() {
 }
 
 func sweepApps(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).PinpointConn
+	conn := client.(*conns.AWSClient).PinpointConn()
 
 	input := &pinpoint.GetAppsInput{}
 
 	for {
-		output, err := conn.GetApps(input)
+		output, err := conn.GetAppsWithContext(ctx, input)
 		if err != nil {
 			if sweep.SkipSweepError(err) {
 				log.Printf("[WARN] Skipping Pinpoint app sweep for %s: %s", region, err)
@@ -49,7 +50,7 @@ func sweepApps(region string) error {
 			name := aws.StringValue(item.Name)
 
 			log.Printf("[INFO] Deleting Pinpoint app %s", name)
-			_, err := conn.DeleteApp(&pinpoint.DeleteAppInput{
+			_, err := conn.DeleteAppWithContext(ctx, &pinpoint.DeleteAppInput{
 				ApplicationId: item.Id,
 			})
 			if err != nil {

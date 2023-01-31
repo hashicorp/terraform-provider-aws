@@ -21,7 +21,6 @@ func expandCognitoOptions(c []interface{}) *elasticsearch.CognitoOptions {
 		options.Enabled = aws.Bool(cognitoEnabled.(bool))
 
 		if cognitoEnabled.(bool) {
-
 			if v, ok := m["user_pool_id"]; ok && v.(string) != "" {
 				options.UserPoolId = aws.String(v.(string))
 			}
@@ -79,6 +78,9 @@ func expandEBSOptions(m map[string]interface{}) *elasticsearch.EBSOptions {
 		if ebsEnabled.(bool) {
 			if v, ok := m["iops"]; ok && v.(int) > 0 {
 				options.Iops = aws.Int64(int64(v.(int)))
+			}
+			if v, ok := m["throughput"]; ok && v.(int) > 0 {
+				options.Throughput = aws.Int64(int64(v.(int)))
 			}
 			if v, ok := m["volume_size"]; ok && v.(int) > 0 {
 				options.VolumeSize = aws.Int64(int64(v.(int)))
@@ -158,18 +160,21 @@ func flattenEBSOptions(o *elasticsearch.EBSOptions) []map[string]interface{} {
 	m := map[string]interface{}{}
 
 	if o.EBSEnabled != nil {
-		m["ebs_enabled"] = *o.EBSEnabled
+		m["ebs_enabled"] = aws.BoolValue(o.EBSEnabled)
 	}
 
 	if aws.BoolValue(o.EBSEnabled) {
 		if o.Iops != nil {
-			m["iops"] = *o.Iops
+			m["iops"] = aws.Int64Value(o.Iops)
+		}
+		if o.Throughput != nil {
+			m["throughput"] = aws.Int64Value(o.Throughput)
 		}
 		if o.VolumeSize != nil {
-			m["volume_size"] = *o.VolumeSize
+			m["volume_size"] = aws.Int64Value(o.VolumeSize)
 		}
 		if o.VolumeType != nil {
-			m["volume_type"] = *o.VolumeType
+			m["volume_type"] = aws.StringValue(o.VolumeType)
 		}
 	}
 
@@ -184,10 +189,10 @@ func flattenEncryptAtRestOptions(o *elasticsearch.EncryptionAtRestOptions) []map
 	m := map[string]interface{}{}
 
 	if o.Enabled != nil {
-		m["enabled"] = *o.Enabled
+		m["enabled"] = aws.BoolValue(o.Enabled)
 	}
 	if o.KmsKeyId != nil {
-		m["kms_key_id"] = *o.KmsKeyId
+		m["kms_key_id"] = aws.StringValue(o.KmsKeyId)
 	}
 
 	return []map[string]interface{}{m}
@@ -218,7 +223,7 @@ func flattenVPCDerivedInfo(o *elasticsearch.VPCDerivedInfo) []map[string]interfa
 		m["subnet_ids"] = flex.FlattenStringSet(o.SubnetIds)
 	}
 	if o.VPCId != nil {
-		m["vpc_id"] = *o.VPCId
+		m["vpc_id"] = aws.StringValue(o.VPCId)
 	}
 
 	return []map[string]interface{}{m}

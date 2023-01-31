@@ -2,11 +2,13 @@
 package autoscaling
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
+	"github.com/aws/aws-sdk-go/service/autoscaling/autoscalingiface"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -17,7 +19,7 @@ import (
 // This function will optimise the handling over ListTags, if possible.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func GetTag(conn *autoscaling.AutoScaling, identifier string, resourceType string, key string) (*tftags.TagData, error) {
+func GetTag(ctx context.Context, conn autoscalingiface.AutoScalingAPI, identifier string, resourceType string, key string) (*tftags.TagData, error) {
 	input := &autoscaling.DescribeTagsInput{
 		Filters: []*autoscaling.Filter{
 			{
@@ -31,7 +33,7 @@ func GetTag(conn *autoscaling.AutoScaling, identifier string, resourceType strin
 		},
 	}
 
-	output, err := conn.DescribeTags(input)
+	output, err := conn.DescribeTagsWithContext(ctx, input)
 
 	if err != nil {
 		return nil, err
@@ -49,7 +51,7 @@ func GetTag(conn *autoscaling.AutoScaling, identifier string, resourceType strin
 // ListTags lists autoscaling service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *autoscaling.AutoScaling, identifier string, resourceType string) (tftags.KeyValueTags, error) {
+func ListTags(ctx context.Context, conn autoscalingiface.AutoScalingAPI, identifier string, resourceType string) (tftags.KeyValueTags, error) {
 	input := &autoscaling.DescribeTagsInput{
 		Filters: []*autoscaling.Filter{
 			{
@@ -59,7 +61,7 @@ func ListTags(conn *autoscaling.AutoScaling, identifier string, resourceType str
 		},
 	}
 
-	output, err := conn.DescribeTags(input)
+	output, err := conn.DescribeTagsWithContext(ctx, input)
 
 	if err != nil {
 		return tftags.New(nil), err
@@ -229,7 +231,7 @@ func KeyValueTags(tags interface{}, identifier string, resourceType string) tfta
 // UpdateTags updates autoscaling service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *autoscaling.AutoScaling, identifier string, resourceType string, oldTagsSet interface{}, newTagsSet interface{}) error {
+func UpdateTags(ctx context.Context, conn autoscalingiface.AutoScalingAPI, identifier string, resourceType string, oldTagsSet interface{}, newTagsSet interface{}) error {
 	oldTags := KeyValueTags(oldTagsSet, identifier, resourceType)
 	newTags := KeyValueTags(newTagsSet, identifier, resourceType)
 
@@ -238,10 +240,10 @@ func UpdateTags(conn *autoscaling.AutoScaling, identifier string, resourceType s
 			Tags: Tags(removedTags.IgnoreAWS()),
 		}
 
-		_, err := conn.DeleteTags(input)
+		_, err := conn.DeleteTagsWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -250,10 +252,10 @@ func UpdateTags(conn *autoscaling.AutoScaling, identifier string, resourceType s
 			Tags: Tags(updatedTags.IgnoreAWS()),
 		}
 
-		_, err := conn.CreateOrUpdateTags(input)
+		_, err := conn.CreateOrUpdateTagsWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
 		}
 	}
 

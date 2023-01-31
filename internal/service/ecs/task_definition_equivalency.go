@@ -61,17 +61,17 @@ func (cd containerDefinitions) Reduce(isAWSVPC bool) error {
 
 	for i, def := range cd {
 		// Deal with special fields which have defaults
-		if def.Cpu != nil && *def.Cpu == 0 {
+		if def.Cpu != nil && aws.Int64Value(def.Cpu) == 0 {
 			def.Cpu = nil
 		}
 		if def.Essential == nil {
 			def.Essential = aws.Bool(true)
 		}
 		for j, pm := range def.PortMappings {
-			if pm.Protocol != nil && *pm.Protocol == "tcp" {
+			if pm.Protocol != nil && aws.StringValue(pm.Protocol) == "tcp" {
 				cd[i].PortMappings[j].Protocol = nil
 			}
-			if pm.HostPort != nil && *pm.HostPort == 0 {
+			if pm.HostPort != nil && aws.Int64Value(pm.HostPort) == 0 {
 				cd[i].PortMappings[j].HostPort = nil
 			}
 			if isAWSVPC && cd[i].PortMappings[j].HostPort == nil {

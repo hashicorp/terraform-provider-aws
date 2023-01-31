@@ -2,22 +2,24 @@
 package dax
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dax"
+	"github.com/aws/aws-sdk-go/service/dax/daxiface"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 // ListTags lists dax service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn *dax.DAX, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(ctx context.Context, conn daxiface.DAXAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &dax.ListTagsInput{
 		ResourceName: aws.String(identifier),
 	}
 
-	output, err := conn.ListTags(input)
+	output, err := conn.ListTagsWithContext(ctx, input)
 
 	if err != nil {
 		return tftags.New(nil), err
@@ -58,7 +60,7 @@ func KeyValueTags(tags []*dax.Tag) tftags.KeyValueTags {
 // UpdateTags updates dax service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn *dax.DAX, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(ctx context.Context, conn daxiface.DAXAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
@@ -68,10 +70,10 @@ func UpdateTags(conn *dax.DAX, identifier string, oldTagsMap interface{}, newTag
 			TagKeys:      aws.StringSlice(removedTags.IgnoreAWS().Keys()),
 		}
 
-		_, err := conn.UntagResource(input)
+		_, err := conn.UntagResourceWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
 		}
 	}
 
@@ -81,10 +83,10 @@ func UpdateTags(conn *dax.DAX, identifier string, oldTagsMap interface{}, newTag
 			Tags:         Tags(updatedTags.IgnoreAWS()),
 		}
 
-		_, err := conn.TagResource(input)
+		_, err := conn.TagResourceWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
 		}
 	}
 

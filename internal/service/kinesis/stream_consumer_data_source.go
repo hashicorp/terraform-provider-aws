@@ -1,19 +1,21 @@
 package kinesis
 
 import (
-	"fmt"
+	"context"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kinesis"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func DataSourceStreamConsumer() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceStreamConsumerRead,
+		ReadWithoutTimeout: dataSourceStreamConsumerRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -48,8 +50,9 @@ func DataSourceStreamConsumer() *schema.Resource {
 	}
 }
 
-func dataSourceStreamConsumerRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KinesisConn
+func dataSourceStreamConsumerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).KinesisConn()
 
 	streamArn := d.Get("stream_arn").(string)
 
@@ -59,7 +62,7 @@ func dataSourceStreamConsumerRead(d *schema.ResourceData, meta interface{}) erro
 
 	var results []*kinesis.Consumer
 
-	err := conn.ListStreamConsumersPages(input, func(page *kinesis.ListStreamConsumersOutput, lastPage bool) bool {
+	err := conn.ListStreamConsumersPagesWithContext(ctx, input, func(page *kinesis.ListStreamConsumersOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -78,22 +81,21 @@ func dataSourceStreamConsumerRead(d *schema.ResourceData, meta interface{}) erro
 			}
 
 			results = append(results, consumer)
-
 		}
 
 		return !lastPage
 	})
 
 	if err != nil {
-		return fmt.Errorf("error listing Kinesis Stream Consumers: %w", err)
+		return sdkdiag.AppendErrorf(diags, "listing Kinesis Stream Consumers: %s", err)
 	}
 
 	if len(results) == 0 {
-		return fmt.Errorf("no Kinesis Stream Consumer found matching criteria; try different search")
+		return sdkdiag.AppendErrorf(diags, "no Kinesis Stream Consumer found matching criteria; try different search")
 	}
 
 	if len(results) > 1 {
-		return fmt.Errorf("multiple Kinesis Stream Consumers found matching criteria; try different search")
+		return sdkdiag.AppendErrorf(diags, "multiple Kinesis Stream Consumers found matching criteria; try different search")
 	}
 
 	consumer := results[0]
@@ -105,5 +107,5 @@ func dataSourceStreamConsumerRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("stream_arn", streamArn)
 	d.Set("creation_timestamp", aws.TimeValue(consumer.ConsumerCreationTimestamp).Format(time.RFC3339))
 
-	return nil
+	return diags
 }

@@ -1,0 +1,7 @@
+```release-note:new-data-source
+aws_waf_subscribed_rule_group
+```
+
+```release-note:new-data-source
+aws_wafregional_subscribed_rule_group
+```

@@ -13,17 +13,17 @@ func RecordMigrateState(
 	switch v {
 	case 0:
 		log.Println("[INFO] Found AWS Route53 Record State v0; migrating to v1 then v2")
-		v1InstanceState := migrateRoute53RecordStateV0toV1(is)
-		return migrateRoute53RecordStateV1toV2(v1InstanceState)
+		v1InstanceState := migrateRecordStateV0toV1(is)
+		return migrateRecordStateV1toV2(v1InstanceState)
 	case 1:
 		log.Println("[INFO] Found AWS Route53 Record State v1; migrating to v2")
-		return migrateRoute53RecordStateV1toV2(is)
+		return migrateRecordStateV1toV2(is)
 	default:
 		return is, fmt.Errorf("Unexpected schema version: %d", v)
 	}
 }
 
-func migrateRoute53RecordStateV0toV1(is *terraform.InstanceState) *terraform.InstanceState {
+func migrateRecordStateV0toV1(is *terraform.InstanceState) *terraform.InstanceState {
 	if is.Empty() {
 		log.Println("[DEBUG] Empty InstanceState; nothing to migrate.")
 		return is
@@ -36,7 +36,7 @@ func migrateRoute53RecordStateV0toV1(is *terraform.InstanceState) *terraform.Ins
 	return is
 }
 
-func migrateRoute53RecordStateV1toV2(is *terraform.InstanceState) (*terraform.InstanceState, error) {
+func migrateRecordStateV1toV2(is *terraform.InstanceState) (*terraform.InstanceState, error) {
 	if is.Empty() {
 		log.Println("[DEBUG] Empty InstanceState; nothing to migrate.")
 		return is, nil

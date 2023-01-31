@@ -1,5 +1,5 @@
 ---
-subcategory: "Elastic Load Balancing (ELB Classic)"
+subcategory: "ELB Classic"
 layout: "aws"
 page_title: "AWS: aws_elb_hosted_zone_id"
 description: |-
@@ -34,7 +34,6 @@ resource "aws_route53_record" "www" {
 * `region` - (Optional) Name of the region whose AWS ELB HostedZoneId is desired.
   Defaults to the region from the AWS provider configuration.
 
-
 ## Attributes Reference
 
-* `id` - The ID of the AWS ELB HostedZoneId in the selected region.
+* `id` - ID of the AWS ELB HostedZoneId in the selected region.

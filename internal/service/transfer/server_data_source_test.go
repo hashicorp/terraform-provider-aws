@@ -11,13 +11,14 @@ import (
 )
 
 func TestAccTransferServerDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_transfer_server.test"
 	datasourceName := "data.aws_transfer_server.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, transfer.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, transfer.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServerDataSourceConfig_basic,
@@ -34,17 +35,18 @@ func TestAccTransferServerDataSource_basic(t *testing.T) {
 }
 
 func TestAccTransferServerDataSource_Service_managed(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandString(5)
 	resourceName := "aws_transfer_server.test"
 	datasourceName := "data.aws_transfer_server.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, transfer.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, transfer.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServerDataSourceConfig_service_managed(rName),
+				Config: testAccServerDataSourceConfig_serviceManaged(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, "certificate", resourceName, "certificate"),
@@ -63,14 +65,15 @@ func TestAccTransferServerDataSource_Service_managed(t *testing.T) {
 }
 
 func TestAccTransferServerDataSource_apigateway(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandString(5)
 	resourceName := "aws_transfer_server.test"
 	datasourceName := "data.aws_transfer_server.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck: acctest.ErrorCheck(t, transfer.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, transfer.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServerDataSourceConfig_apigateway(rName),
@@ -95,7 +98,7 @@ data "aws_transfer_server" "test" {
 }
 `
 
-func testAccServerDataSourceConfig_service_managed(rName string) string {
+func testAccServerDataSourceConfig_serviceManaged(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = "tf-test-transfer-server-iam-role-%[1]s"

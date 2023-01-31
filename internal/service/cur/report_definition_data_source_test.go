@@ -12,6 +12,7 @@ import (
 )
 
 func TestAccCURReportDefinitionDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_cur_report_definition.test"
 	datasourceName := "data.aws_cur_report_definition.test"
 
@@ -19,10 +20,10 @@ func TestAccCURReportDefinitionDataSource_basic(t *testing.T) {
 	bucketName := fmt.Sprintf("tf-test-bucket-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckCur(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, costandusagereportservice.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckReportDefinitionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, costandusagereportservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReportDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReportDefinitionDataSourceConfig_basic(reportName, bucketName),
@@ -43,6 +44,7 @@ func TestAccCURReportDefinitionDataSource_basic(t *testing.T) {
 }
 
 func TestAccCURReportDefinitionDataSource_additional(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_cur_report_definition.test"
 	datasourceName := "data.aws_cur_report_definition.test"
 
@@ -50,10 +52,10 @@ func TestAccCURReportDefinitionDataSource_additional(t *testing.T) {
 	bucketName := fmt.Sprintf("tf-test-bucket-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckCur(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, costandusagereportservice.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckReportDefinitionDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, costandusagereportservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReportDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReportDefinitionDataSourceConfig_additional(reportName, bucketName),
@@ -91,7 +93,7 @@ func testAccReportDefinitionCheckExistsDataSource(datasourceName, resourceName s
 
 func testAccReportDefinitionDataSourceConfig_basic(reportName string, bucketName string) string {
 	return acctest.ConfigCompose(
-		testAccCurRegionProviderConfig(),
+		testAccRegionProviderConfig(),
 		fmt.Sprintf(`
 data "aws_billing_service_account" "test" {}
 
@@ -99,8 +101,12 @@ data "aws_partition" "current" {}
 
 resource "aws_s3_bucket" "test" {
   bucket        = "%[2]s"
-  acl           = "private"
   force_destroy = true
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "private"
 }
 
 resource "aws_s3_bucket_policy" "test" {
@@ -159,7 +165,7 @@ data "aws_cur_report_definition" "test" {
 
 func testAccReportDefinitionDataSourceConfig_additional(reportName string, bucketName string) string {
 	return acctest.ConfigCompose(
-		testAccCurRegionProviderConfig(),
+		testAccRegionProviderConfig(),
 		fmt.Sprintf(`
 data "aws_billing_service_account" "test" {}
 
@@ -167,8 +173,12 @@ data "aws_partition" "current" {}
 
 resource "aws_s3_bucket" "test" {
   bucket        = "%[2]s"
-  acl           = "private"
   force_destroy = true
+}
+
+resource "aws_s3_bucket_acl" "test" {
+  bucket = aws_s3_bucket.test.id
+  acl    = "private"
 }
 
 resource "aws_s3_bucket_policy" "test" {

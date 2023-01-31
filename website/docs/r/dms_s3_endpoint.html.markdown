@@ -1,0 +1,170 @@
+---
+subcategory: "DMS (Database Migration)"
+layout: "aws"
+page_title: "AWS: aws_dms_s3_endpoint"
+description: |-
+  Provides a DMS (Data Migration Service) S3 endpoint resource.
+---
+
+# Resource: aws_dms_s3_endpoint
+
+Provides a DMS (Data Migration Service) S3 endpoint resource. DMS S3 endpoints can be created, updated, deleted, and imported.
+
+~> **Note:** AWS is deprecating `extra_connection_attributes`, such as used with `aws_dms_endpoint`. This resource is an alternative to `aws_dms_endpoint` and does not use `extra_connection_attributes`. (AWS currently includes `extra_connection_attributes` in the raw responses to the AWS Provider requests and so they may be visible in Terraform logs.)
+
+~> **Note:** Some of this resource's arguments have default values that come from the AWS Provider. Other default values are provided by AWS and subject to change without notice. When relying on AWS defaults, the Terraform state will often have a zero value. For example, the AWS Provider does not provide a default for `cdc_max_batch_interval` but the AWS default is `60` (seconds). However, the Terraform state will show `0` since this is the value return by AWS when no value is present. Below, we aim to flag the defaults that come from AWS (_e.g._, "AWS default...").
+
+## Example Usage
+
+### Minimal Configuration
+
+This is the minimal configuration for an `aws_dms_s3_endpoint`. This endpoint will rely on the AWS Provider and AWS defaults.
+
+```terraform
+resource "aws_dms_s3_endpoint" "example" {
+  endpoint_id             = "donnedtipi"
+  endpoint_type           = "target"
+  bucket_name             = "beckut_name"
+  service_access_role_arn = aws_iam_role.example.arn
+
+  depends_on = [aws_iam_role_policy.example]
+}
+```
+
+### Complete Configuration
+
+```terraform
+resource "aws_dms_s3_endpoint" "example" {
+  endpoint_id   = "donnedtipi"
+  endpoint_type = "target"
+  ssl_mode      = "none"
+
+  tags = {
+    Name   = "donnedtipi"
+    Update = "to-update"
+    Remove = "to-remove"
+  }
+
+  add_column_name                             = true
+  add_trailing_padding_character              = false
+  bucket_folder                               = "folder"
+  bucket_name                                 = "bucket_name"
+  canned_acl_for_objects                      = "private"
+  cdc_inserts_and_updates                     = true
+  cdc_inserts_only                            = false
+  cdc_max_batch_interval                      = 100
+  cdc_min_file_size                           = 16
+  cdc_path                                    = "cdc/path"
+  compression_type                            = "GZIP"
+  csv_delimiter                               = ";"
+  csv_no_sup_value                            = "x"
+  csv_null_value                              = "?"
+  csv_row_delimiter                           = "\\r\\n"
+  data_format                                 = "parquet"
+  data_page_size                              = 1100000
+  date_partition_delimiter                    = "UNDERSCORE"
+  date_partition_enabled                      = true
+  date_partition_sequence                     = "yyyymmddhh"
+  date_partition_timezone                     = "Asia/Seoul"
+  dict_page_size_limit                        = 1000000
+  enable_statistics                           = false
+  encoding_type                               = "plain"
+  encryption_mode                             = "SSE_S3"
+  expected_bucket_owner                       = data.aws_caller_identity.current.account_id
+  external_table_definition                   = "etd"
+  ignore_header_rows                          = 1
+  include_op_for_full_load                    = true
+  max_file_size                               = 1000000
+  parquet_timestamp_in_millisecond            = true
+  parquet_version                             = "parquet-2-0"
+  preserve_transactions                       = false
+  rfc_4180                                    = false
+  row_group_length                            = 11000
+  server_side_encryption_kms_key_id           = aws_kms_key.example.arn
+  service_access_role_arn                     = aws_iam_role.example.arn
+  timestamp_column_name                       = "tx_commit_time"
+  use_csv_no_sup_value                        = false
+  use_task_start_time_for_full_load_timestamp = true
+
+  depends_on = [aws_iam_role_policy.example]
+}
+```
+
+## Argument Reference
+
+The following arguments are required:
+
+* `bucket_name` - (Required) S3 bucket name.
+* `cdc_path` - (Required for CDC; otherwise, Optional) Folder path of CDC files. If `cdc_path` is set, AWS DMS reads CDC files from this path and replicates the data changes to the target endpoint. Supported in AWS DMS versions 3.4.2 and later.
+* `endpoint_id` - (Required) Database endpoint identifier. Identifiers must contain from 1 to 255 alphanumeric characters or hyphens, begin with a letter, contain only ASCII letters, digits, and hyphens, not end with a hyphen, and not contain two consecutive hyphens.
+* `endpoint_type` - (Required) Type of endpoint. Valid values are `source`, `target`.
+* `external_table_definition` - (Required for `source` endpoints; otherwise, Optional) JSON document that describes how AWS DMS should interpret the data.
+* `service_access_role_arn` - (Required) ARN of the IAM role with permissions to the S3 Bucket.
+
+The following arguments are optional:
+
+* `add_column_name` - (Optional) Whether to add column name information to the .csv output file. Default is `false`.
+* `add_trailing_padding_character` - (Optional) Whether to add padding. Default is `false`. (Ignored for source endpoints.)
+* `bucket_folder` - (Optional) S3 object prefix.
+* `canned_acl_for_objects` - (Optional) Predefined (canned) access control list for objects created in an S3 bucket. Valid values include `NONE`, `PRIVATE`, `PUBLIC_READ`, `PUBLIC_READ_WRITE`, `AUTHENTICATED_READ`, `AWS_EXEC_READ`, `BUCKET_OWNER_READ`, and `BUCKET_OWNER_FULL_CONTROL`. (AWS default is `NONE`.)
+* `cdc_inserts_and_updates` - (Optional) Whether to write insert and update operations to .csv or .parquet output files. Default is `false`.
+* `cdc_inserts_only` - (Optional) Whether to write insert operations to .csv or .parquet output files. Default is `false`.
+* `cdc_max_batch_interval` - (Optional) Maximum length of the interval, defined in seconds, after which to output a file to Amazon S3. (AWS default is `60`.)
+* `cdc_min_file_size` - (Optional) Minimum file size condition as defined in kilobytes to output a file to Amazon S3. (AWS default is 32000 KB.)
+* `certificate_arn` - (Optional, Default: empty string) ARN for the certificate.
+* `compression_type` - (Optional) Set to compress target files. Valid values are `GZIP` and `NONE`. Default is `NONE`. (Ignored for source endpoints.)
+* `csv_delimiter` - (Optional) Delimiter used to separate columns in the source files. Default is `,`.
+* `csv_no_sup_value` - (Optional) Only applies if output files for a CDC load are written in .csv format. If `use_csv_no_sup_value` is set to `true`, string to use for all columns not included in the supplemental log. If you do not specify a string value, DMS uses the null value for these columns regardless of `use_csv_no_sup_value`. (Ignored for source endpoints.)
+* `csv_null_value` - (Optional) String to as null when writing to the target. (AWS default is `NULL`.)
+* `csv_row_delimiter` - (Optional) Delimiter used to separate rows in the source files. Default is newline (_i.e._, `\n`).
+* `data_format` - (Optional) Output format for the files that AWS DMS uses to create S3 objects. Valid values are `csv` and `parquet`.  (Ignored for source endpoints -- only `csv` is valid.)
+* `data_page_size` - (Optional) Size of one data page in bytes. (AWS default is 1 MiB, _i.e._, `1048576`.)
+* `date_partition_delimiter` - (Optional) Date separating delimiter to use during folder partitioning. Valid values are `SLASH`, `UNDERSCORE`, `DASH`, and `NONE`. (AWS default is `SLASH`.) (Ignored for source endpoints.)
+* `date_partition_enabled` - (Optional) Partition S3 bucket folders based on transaction commit dates. Default is `false`. (Ignored for source endpoints.)
+* `date_partition_sequence` - (Optional) Date format to use during folder partitioning. Use this parameter when `date_partition_enabled` is set to true. Valid values are `YYYYMMDD`, `YYYYMMDDHH`, `YYYYMM`, `MMYYYYDD`, and `DDMMYYYY`. (AWS default is `YYYYMMDD`.) (Ignored for source endpoints.)
+* `date_partition_timezone` - (Optional) Convert the current UTC time to a timezone. The conversion occurs when a date partition folder is created and a CDC filename is generated. The timezone format is Area/Location (_e.g._, `Europe/Paris`). Use this when `date_partition_enabled` is `true`. (Ignored for source endpoints.)
+* `dict_page_size_limit` - (Optional) Maximum size in bytes of an encoded dictionary page of a column. (AWS default is 1 MiB, _i.e._, `1048576`.)
+* `enable_statistics` - (Optional) Whether to enable statistics for Parquet pages and row groups. Default is `true`.
+* `encoding_type` - (Optional) Type of encoding to use. Value values are `rle_dictionary`, `plain`, and `plain_dictionary`. (AWS default is `rle_dictionary`.)
+* `encryption_mode` - (Optional) Server-side encryption mode that you want to encrypt your .csv or .parquet object files copied to S3. Valid values are `SSE_S3` and `SSE_KMS`. (AWS default is `SSE_S3`.) (Ignored for source endpoints -- only `SSE_S3` is valid.)
+* `expected_bucket_owner` - (Optional) Bucket owner to prevent sniping. Value is an AWS account ID.
+* `ignore_header_rows` - (Optional, Force New) When this value is set to `1`, DMS ignores the first row header in a .csv file. (AWS default is `0`.)
+* `include_op_for_full_load` - (Optional) Whether to enable a full load to write INSERT operations to the .csv output files only to indicate how the rows were added to the source database. Default is `false`.
+* `kms_key_arn` - (Optional) ARN for the KMS key that will be used to encrypt the connection parameters. If you do not specify a value for `kms_key_arn`, then AWS DMS will use your default encryption key. AWS KMS creates the default encryption key for your AWS account. Your AWS account has a different default encryption key for each AWS region.
+* `max_file_size` - (Optional) Maximum size (in KB) of any .csv file to be created while migrating to an S3 target during full load. Valid values are from `1` to `1048576`. (AWS default is 1 GB, _i.e._, `1048576`.)
+* `parquet_timestamp_in_millisecond` - (Optional) - Specifies the precision of any TIMESTAMP column values written to an S3 object file in .parquet format. Default is `false`. (Ignored for source endpoints.)
+* `parquet_version` - (Optional) Version of the .parquet file format. Valid values are `parquet-1-0` and `parquet-2-0`. (AWS default is `parquet-1-0`.) (Ignored for source endpoints.)
+* `preserve_transactions` - (Optional) Whether DMS saves the transaction order for a CDC load on the S3 target specified by `cdc_path`. Default is `false`. (Ignored for source endpoints.)
+* `rfc_4180` - (Optional) For an S3 source, whether each leading double quotation mark has to be followed by an ending double quotation mark. Default is `true`.
+* `row_group_length` - (Optional) Number of rows in a row group. (AWS default is `10000`.)
+* `server_side_encryption_kms_key_id` - (Optional) When `encryption_mode` is `SSE_KMS`, ARN for the AWS KMS key. (Ignored for source endpoints -- only `SSE_S3` `encryption_mode` is valid.)
+* `ssl_mode` - (Optional) SSL mode to use for the connection. Valid values are `none`, `require`, `verify-ca`, `verify-full`. (AWS default is `none`.)
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `timestamp_column_name` - (Optional) Column to add with timestamp information to the endpoint data for an Amazon S3 target.
+* `use_csv_no_sup_value` - (Optional) Whether to use `csv_no_sup_value` for columns not included in the supplemental log. (Ignored for source endpoints.)
+* `use_task_start_time_for_full_load_timestamp` - (Optional) When set to `true`, uses the task start time as the timestamp column value instead of the time data is written to target. For full load, when set to `true`, each row of the timestamp column contains the task start time. For CDC loads, each row of the timestamp column contains the transaction commit time.When set to false, the full load timestamp in the timestamp column increments with the time data arrives at the target. Default is `false`.
+
+## Attributes Reference
+
+In addition to all arguments above, the following attributes are exported:
+
+* `endpoint_arn` - ARN for the endpoint.
+* `engine_display_name` - Expanded name for the engine name.
+* `external_id` - Can be used for cross-account validation. Use it in another account with `aws_dms_s3_endpoint` to create the endpoint cross-account.
+* `status` - Status of the endpoint.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `create` - (Default `5m`)
+- `delete` - (Default `5m`)
+
+## Import
+
+Endpoints can be imported using the `endpoint_id`, e.g.,
+
+```
+$ terraform import aws_dms_s3_endpoint.example example-dms-endpoint-tf
+```

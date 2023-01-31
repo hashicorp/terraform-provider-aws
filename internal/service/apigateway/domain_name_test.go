@@ -1,6 +1,7 @@
 package apigateway_test
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"regexp"
@@ -8,7 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -18,6 +19,7 @@ import (
 )
 
 func TestAccAPIGatewayDomainName_certificateARN(t *testing.T) {
+	ctx := acctest.Context(t)
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
 	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
 
@@ -26,16 +28,16 @@ func TestAccAPIGatewayDomainName_certificateARN(t *testing.T) {
 	resourceName := "aws_api_gateway_domain_name.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { acctest.PreCheck(t); testAccPreCheckApigatewayEdgeDomainName(t) },
-		ErrorCheck:        acctest.ErrorCheck(t, apigateway.EndpointsID),
-		ProviderFactories: acctest.ProviderFactories,
-		CheckDestroy:      testAccCheckEdgeDomainNameDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckEdgeDomainName(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEdgeDomainNameDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainNameConfig_CertificateARN(rootDomain, domain),
+				Config: testAccDomainNameConfig_certificateARN(rootDomain, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEdgeDomainNameExists(resourceName, &domainName),
-					testAccCheckResourceAttrRegionalARNApigatewayEdgeDomainName(resourceName, "arn", "apigateway", domain),
+					testAccCheckEdgeDomainNameExists(ctx, resourceName, &domainName),
+					testAccCheckResourceAttrRegionalARNEdgeDomainName(resourceName, "arn", "apigateway", domain),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate_arn", acmCertificateResourceName, "arn"),
 					resource.TestMatchResourceAttr(resourceName, "cloudfront_domain_name", regexp.MustCompile(`[a-z0-9]+.cloudfront.net`)),
 					resource.TestCheckResourceAttr(resourceName, "cloudfront_zone_id", "Z2FDTNDATAQYW2"),
@@ -52,6 +54,7 @@ func TestAccAPIGatewayDomainName_certificateARN(t *testing.T) {
 }
 
 func TestAccAPIGatewayDomainName_certificateName(t *testing.T) {
+	ctx := acctest.Context(t)
 	certificateBody := os.Getenv("AWS_API_GATEWAY_DOMAIN_NAME_CERTIFICATE_BODY")
 	if certificateBody == "" {
 		t.Skip(
@@ -88,15 +91,15 @@ func TestAccAPIGatewayDomainName_certificateName(t *testing.T) {
 	resourceName := "aws_api_gateway_domain_name.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDomainNameDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainNameDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainNameConfig_CertificateName(domainName, certificatePrivateKey, certificateBody, certificateChain),
+				Config: testAccDomainNameConfig_certificate(domainName, certificatePrivateKey, certificateBody, certificateChain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainNameExists(resourceName, &conf),
+					testAccCheckDomainNameExists(ctx, resourceName, &conf),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/domainnames/+.`)),
 					resource.TestCheckResourceAttr(resourceName, "certificate_name", "tf-acc-apigateway-domain-name"),
 					resource.TestCheckResourceAttrSet(resourceName, "cloudfront_domain_name"),
@@ -116,24 +119,25 @@ func TestAccAPIGatewayDomainName_certificateName(t *testing.T) {
 }
 
 func TestAccAPIGatewayDomainName_regionalCertificateARN(t *testing.T) {
+	ctx := acctest.Context(t)
 	var domainName apigateway.DomainName
 	resourceName := "aws_api_gateway_domain_name.test"
 	rName := acctest.RandomSubdomain()
 
-	key := acctest.TLSRSAPrivateKeyPEM(2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, rName)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, rName)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDomainNameDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainNameDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainNameConfig_RegionalCertificateARN(rName, key, certificate),
+				Config: testAccDomainNameConfig_regionalCertificateARN(rName, key, certificate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainNameExists(resourceName, &domainName),
-					testAccCheckResourceAttrRegionalARNApigatewayRegionalDomainName(resourceName, "arn", "apigateway", rName),
+					testAccCheckDomainNameExists(ctx, resourceName, &domainName),
+					testAccCheckResourceAttrRegionalARNRegionalDomainName(resourceName, "arn", "apigateway", rName),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", rName),
 					acctest.MatchResourceAttrRegionalHostname(resourceName, "regional_domain_name", "execute-api", regexp.MustCompile(`d-[a-z0-9]+`)),
 					resource.TestMatchResourceAttr(resourceName, "regional_zone_id", regexp.MustCompile(`^Z`)),
@@ -144,6 +148,8 @@ func TestAccAPIGatewayDomainName_regionalCertificateARN(t *testing.T) {
 }
 
 func TestAccAPIGatewayDomainName_regionalCertificateName(t *testing.T) {
+	ctx := acctest.Context(t)
+
 	// For now, use an environment variable to limit running this test
 	// BadRequestException: Uploading certificates is not supported for REGIONAL.
 	// See Remarks section of https://docs.aws.amazon.com/apigateway/api-reference/link-relation/domainname-create/
@@ -164,22 +170,22 @@ func TestAccAPIGatewayDomainName_regionalCertificateName(t *testing.T) {
 	domainWildcard := fmt.Sprintf("*.%s", domain)
 	rName := fmt.Sprintf("%s.%s", sdkacctest.RandString(8), domain)
 
-	caKey := acctest.TLSRSAPrivateKeyPEM(2048)
-	caCertificate := acctest.TLSRSAX509SelfSignedCACertificatePEM(caKey)
-	key := acctest.TLSRSAPrivateKeyPEM(2048)
-	certificate := acctest.TLSRSAX509LocallySignedCertificatePEM(caKey, caCertificate, key, domainWildcard)
+	caKey := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	caCertificate := acctest.TLSRSAX509SelfSignedCACertificatePEM(t, caKey)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509LocallySignedCertificatePEM(t, caKey, caCertificate, key, domainWildcard)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDomainNameDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainNameDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainNameConfig_RegionalCertificateName(rName, key, certificate, caCertificate),
+				Config: testAccDomainNameConfig_regionalCertificate(rName, key, certificate, caCertificate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainNameExists(resourceName, &domainName),
-					testAccCheckResourceAttrRegionalARNApigatewayRegionalDomainName(resourceName, "arn", "apigateway", rName),
+					testAccCheckDomainNameExists(ctx, resourceName, &domainName),
+					testAccCheckResourceAttrRegionalARNRegionalDomainName(resourceName, "arn", "apigateway", rName),
 					resource.TestCheckResourceAttr(resourceName, "certificate_body", certificate),
 					resource.TestCheckResourceAttr(resourceName, "certificate_chain", caCertificate),
 					resource.TestCheckResourceAttr(resourceName, "certificate_name", "tf-acc-apigateway-domain-name"),
@@ -195,23 +201,24 @@ func TestAccAPIGatewayDomainName_regionalCertificateName(t *testing.T) {
 }
 
 func TestAccAPIGatewayDomainName_securityPolicy(t *testing.T) {
+	ctx := acctest.Context(t)
 	var domainName apigateway.DomainName
 	resourceName := "aws_api_gateway_domain_name.test"
 	rName := acctest.RandomSubdomain()
 
-	key := acctest.TLSRSAPrivateKeyPEM(2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, rName)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, rName)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDomainNameDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainNameDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainNameConfig_SecurityPolicy(rName, key, certificate, apigateway.SecurityPolicyTls12),
+				Config: testAccDomainNameConfig_securityPolicy(rName, key, certificate, apigateway.SecurityPolicyTls12),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainNameExists(resourceName, &domainName),
+					testAccCheckDomainNameExists(ctx, resourceName, &domainName),
 					resource.TestCheckResourceAttr(resourceName, "security_policy", apigateway.SecurityPolicyTls12),
 				),
 			},
@@ -225,40 +232,41 @@ func TestAccAPIGatewayDomainName_securityPolicy(t *testing.T) {
 }
 
 func TestAccAPIGatewayDomainName_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var domainName apigateway.DomainName
 	resourceName := "aws_api_gateway_domain_name.test"
 	rName := acctest.RandomSubdomain()
 
-	key := acctest.TLSRSAPrivateKeyPEM(2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, rName)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, rName)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDomainNameDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainNameDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainNameTags1Config(rName, key, certificate, "key1", "value1"),
+				Config: testAccDomainNameConfig_tags1(rName, key, certificate, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainNameExists(resourceName, &domainName),
+					testAccCheckDomainNameExists(ctx, resourceName, &domainName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
-				Config: testAccDomainNameTags2Config(rName, key, certificate, "key1", "value1updated", "key2", "value2"),
+				Config: testAccDomainNameConfig_tags2(rName, key, certificate, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainNameExists(resourceName, &domainName),
+					testAccCheckDomainNameExists(ctx, resourceName, &domainName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccDomainNameTags1Config(rName, key, certificate, "key2", "value2"),
+				Config: testAccDomainNameConfig_tags1(rName, key, certificate, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainNameExists(resourceName, &domainName),
+					testAccCheckDomainNameExists(ctx, resourceName, &domainName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -273,24 +281,25 @@ func TestAccAPIGatewayDomainName_tags(t *testing.T) {
 }
 
 func TestAccAPIGatewayDomainName_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var domainName apigateway.DomainName
 	resourceName := "aws_api_gateway_domain_name.test"
 	rName := acctest.RandomSubdomain()
 
-	key := acctest.TLSRSAPrivateKeyPEM(2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, rName)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, rName)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDomainNameDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainNameDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainNameConfig_RegionalCertificateARN(rName, key, certificate),
+				Config: testAccDomainNameConfig_regionalCertificateARN(rName, key, certificate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainNameExists(resourceName, &domainName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfapigateway.ResourceDomainName(), resourceName),
+					testAccCheckDomainNameExists(ctx, resourceName, &domainName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigateway.ResourceDomainName(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -298,31 +307,32 @@ func TestAccAPIGatewayDomainName_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAPIGatewayDomainName_mutualTLSAuthentication(t *testing.T) {
+func TestAccAPIGatewayDomainName_MutualTLSAuthentication_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
-	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
+	domain := fmt.Sprintf("%s.%s", acctest.RandomSubdomain(), rootDomain)
 
 	var v apigateway.DomainName
 	resourceName := "aws_api_gateway_domain_name.test"
 	acmCertificateResourceName := "aws_acm_certificate.test"
-	s3BucketObjectResourceName := "aws_s3_bucket_object.test"
+	s3ObjectResourceName := "aws_s3_object.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDomainNameDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainNameDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainNameConfig_MutualTLSAuthentication(rootDomain, domain, rName),
+				Config: testAccDomainNameConfig_mutualTLSAuthentication(rName, rootDomain, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainNameExists(resourceName, &v),
+					testAccCheckDomainNameExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/domainnames/+.`)),
 					resource.TestCheckResourceAttrPair(resourceName, "domain_name", acmCertificateResourceName, "domain_name"),
 					resource.TestCheckResourceAttr(resourceName, "mutual_tls_authentication.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "mutual_tls_authentication.0.truststore_uri", fmt.Sprintf("s3://%s/%s", rName, rName)),
-					resource.TestCheckResourceAttrPair(resourceName, "mutual_tls_authentication.0.truststore_version", s3BucketObjectResourceName, "version_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "mutual_tls_authentication.0.truststore_version", s3ObjectResourceName, "version_id"),
 				),
 			},
 			{
@@ -332,9 +342,9 @@ func TestAccAPIGatewayDomainName_mutualTLSAuthentication(t *testing.T) {
 			},
 			// Test disabling mutual TLS authentication.
 			{
-				Config: testAccDomainNameConfig_MutualTLSAuthenticationMissing(rootDomain, domain),
+				Config: testAccDomainNameConfig_mutualTLSAuthenticationMissing(rootDomain, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainNameExists(resourceName, &v),
+					testAccCheckDomainNameExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "domain_name", acmCertificateResourceName, "domain_name"),
 					resource.TestCheckResourceAttr(resourceName, "mutual_tls_authentication.#", "0"),
 				),
@@ -343,7 +353,47 @@ func TestAccAPIGatewayDomainName_mutualTLSAuthentication(t *testing.T) {
 	})
 }
 
-func testAccCheckDomainNameExists(n string, res *apigateway.DomainName) resource.TestCheckFunc {
+func TestAccAPIGatewayDomainName_MutualTLSAuthentication_ownership(t *testing.T) {
+	ctx := acctest.Context(t)
+	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
+	domain := fmt.Sprintf("%s.%s", acctest.RandomSubdomain(), rootDomain)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, domain)
+
+	var v apigateway.DomainName
+	resourceName := "aws_api_gateway_domain_name.test"
+	publicAcmCertificateResourceName := "aws_acm_certificate.test"
+	s3ObjectResourceName := "aws_s3_object.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainNameDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainNameConfig_mutualTLSOwnership(rName, rootDomain, domain, certificate, key),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainNameExists(ctx, resourceName, &v),
+					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/domainnames/+.`)),
+					resource.TestCheckResourceAttrPair(resourceName, "domain_name", publicAcmCertificateResourceName, "domain_name"),
+					resource.TestCheckResourceAttrPair(resourceName, "ownership_verification_certificate_arn", publicAcmCertificateResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "mutual_tls_authentication.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "mutual_tls_authentication.0.truststore_uri", fmt.Sprintf("s3://%s/%s", rName, rName)),
+					resource.TestCheckResourceAttrPair(resourceName, "mutual_tls_authentication.0.truststore_version", s3ObjectResourceName, "version_id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccCheckDomainNameExists(ctx context.Context, n string, res *apigateway.DomainName) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -354,12 +404,12 @@ func testAccCheckDomainNameExists(n string, res *apigateway.DomainName) resource
 			return fmt.Errorf("No API Gateway DomainName ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
 
 		req := &apigateway.GetDomainNameInput{
 			DomainName: aws.String(rs.Primary.ID),
 		}
-		describe, err := conn.GetDomainName(req)
+		describe, err := conn.GetDomainNameWithContext(ctx, req)
 		if err != nil {
 			return err
 		}
@@ -374,32 +424,34 @@ func testAccCheckDomainNameExists(n string, res *apigateway.DomainName) resource
 	}
 }
 
-func testAccCheckDomainNameDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
+func testAccCheckDomainNameDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_api_gateway_domain_name" {
-			continue
-		}
-
-		_, err := conn.GetDomainName(&apigateway.GetDomainNameInput{
-			DomainName: aws.String(rs.Primary.ID),
-		})
-
-		if err != nil {
-			if tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
-				return nil
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_api_gateway_domain_name" {
+				continue
 			}
-			return err
+
+			_, err := conn.GetDomainNameWithContext(ctx, &apigateway.GetDomainNameInput{
+				DomainName: aws.String(rs.Primary.ID),
+			})
+
+			if err != nil {
+				if tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
+					return nil
+				}
+				return err
+			}
+
+			return fmt.Errorf("API Gateway Domain Name still exists: %s", rs.Primary.ID)
 		}
 
-		return fmt.Errorf("API Gateway Domain Name still exists: %s", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckEdgeDomainNameExists(resourceName string, domainName *apigateway.DomainName) resource.TestCheckFunc {
+func testAccCheckEdgeDomainNameExists(ctx context.Context, resourceName string, domainName *apigateway.DomainName) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 
@@ -411,13 +463,13 @@ func testAccCheckEdgeDomainNameExists(resourceName string, domainName *apigatewa
 			return fmt.Errorf("resource ID not set")
 		}
 
-		conn := testAccProviderApigatewayEdgeDomainName.Meta().(*conns.AWSClient).APIGatewayConn
+		conn := testAccProviderEdgeDomainName.Meta().(*conns.AWSClient).APIGatewayConn()
 
 		input := &apigateway.GetDomainNameInput{
 			DomainName: aws.String(rs.Primary.ID),
 		}
 
-		output, err := conn.GetDomainName(input)
+		output, err := conn.GetDomainNameWithContext(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("error reading API Gateway Domain Name (%s): %w", rs.Primary.ID, err)
@@ -429,34 +481,36 @@ func testAccCheckEdgeDomainNameExists(resourceName string, domainName *apigatewa
 	}
 }
 
-func testAccCheckEdgeDomainNameDestroy(s *terraform.State) error {
-	conn := testAccProviderApigatewayEdgeDomainName.Meta().(*conns.AWSClient).APIGatewayConn
+func testAccCheckEdgeDomainNameDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProviderEdgeDomainName.Meta().(*conns.AWSClient).APIGatewayConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_api_gateway_domain_name" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_api_gateway_domain_name" {
+				continue
+			}
+
+			input := &apigateway.GetDomainNameInput{
+				DomainName: aws.String(rs.Primary.ID),
+			}
+
+			output, err := conn.GetDomainNameWithContext(ctx, input)
+
+			if tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
+				continue
+			}
+
+			if err != nil {
+				return fmt.Errorf("error reading API Gateway Domain Name (%s): %w", rs.Primary.ID, err)
+			}
+
+			if output != nil && aws.StringValue(output.DomainName) == rs.Primary.ID {
+				return fmt.Errorf("API Gateway Domain Name (%s) still exists", rs.Primary.ID)
+			}
 		}
 
-		input := &apigateway.GetDomainNameInput{
-			DomainName: aws.String(rs.Primary.ID),
-		}
-
-		output, err := conn.GetDomainName(input)
-
-		if tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
-			continue
-		}
-
-		if err != nil {
-			return fmt.Errorf("error reading API Gateway Domain Name (%s): %w", rs.Primary.ID, err)
-		}
-
-		if output != nil && aws.StringValue(output.DomainName) == rs.Primary.ID {
-			return fmt.Errorf("API Gateway Domain Name (%s) still exists", rs.Primary.ID)
-		}
+		return nil
 	}
-
-	return nil
 }
 
 func testAccDomainNamePublicCertConfig(rootDomain, domain string) string {
@@ -507,9 +561,9 @@ resource "aws_acm_certificate_validation" "test" {
 `, rootDomain, domain)
 }
 
-func testAccDomainNameConfig_CertificateARN(rootDomain string, domain string) string {
+func testAccDomainNameConfig_certificateARN(rootDomain string, domain string) string {
 	return acctest.ConfigCompose(
-		testAccApigatewayEdgeDomainNameRegionProviderConfig(),
+		testAccEdgeDomainNameRegionProviderConfig(),
 		testAccDomainNamePublicCertConfig(rootDomain, domain),
 		`
 resource "aws_api_gateway_domain_name" "test" {
@@ -523,7 +577,7 @@ resource "aws_api_gateway_domain_name" "test" {
 `)
 }
 
-func testAccDomainNameConfig_CertificateName(domainName, key, certificate, chainCertificate string) string {
+func testAccDomainNameConfig_certificate(domainName, key, certificate, chainCertificate string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_domain_name" "test" {
   domain_name             = "%[1]s"
@@ -535,7 +589,7 @@ resource "aws_api_gateway_domain_name" "test" {
 `, domainName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(chainCertificate), acctest.TLSPEMEscapeNewlines(key))
 }
 
-func testAccDomainNameConfig_RegionalCertificateARN(domainName, key, certificate string) string {
+func testAccDomainNameConfig_regionalCertificateARN(domainName, key, certificate string) string {
 	return fmt.Sprintf(`
 resource "aws_acm_certificate" "test" {
   certificate_body = "%[2]s"
@@ -553,7 +607,7 @@ resource "aws_api_gateway_domain_name" "test" {
 `, domainName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key))
 }
 
-func testAccDomainNameConfig_RegionalCertificateName(domainName, key, certificate, chainCertificate string) string {
+func testAccDomainNameConfig_regionalCertificate(domainName, key, certificate, chainCertificate string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_domain_name" "test" {
   certificate_body          = "%[2]s"
@@ -569,7 +623,7 @@ resource "aws_api_gateway_domain_name" "test" {
 `, domainName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(chainCertificate), acctest.TLSPEMEscapeNewlines(key))
 }
 
-func testAccDomainNameConfig_SecurityPolicy(domainName, key, certificate, securityPolicy string) string {
+func testAccDomainNameConfig_securityPolicy(domainName, key, certificate, securityPolicy string) string {
 	return fmt.Sprintf(`
 resource "aws_acm_certificate" "test" {
   certificate_body = "%[2]s"
@@ -588,7 +642,7 @@ resource "aws_api_gateway_domain_name" "test" {
 `, domainName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key), securityPolicy)
 }
 
-func testAccDomainNameTags1Config(domainName, key, certificate, tagKey1, tagValue1 string) string {
+func testAccDomainNameConfig_tags1(domainName, key, certificate, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_acm_certificate" "test" {
   certificate_body = "%[2]s"
@@ -610,7 +664,7 @@ resource "aws_api_gateway_domain_name" "test" {
 `, domainName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key), tagKey1, tagValue1)
 }
 
-func testAccDomainNameTags2Config(domainName, key, certificate, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccDomainNameConfig_tags2(domainName, key, certificate, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_acm_certificate" "test" {
   certificate_body = "%[2]s"
@@ -633,7 +687,7 @@ resource "aws_api_gateway_domain_name" "test" {
 `, domainName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key), tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccDomainNameConfig_MutualTLSAuthentication(rootDomain, domain, rName string) string {
+func testAccDomainNameConfig_mutualTLSAuthentication(rName, rootDomain, domain string) string {
 	return acctest.ConfigCompose(
 		testAccDomainNamePublicCertConfig(rootDomain, domain),
 		fmt.Sprintf(`
@@ -641,14 +695,17 @@ resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 
   force_destroy = true
+}
 
-  versioning {
-    enabled = true
+resource "aws_s3_bucket_versioning" "test" {
+  bucket = aws_s3_bucket.test.id
+  versioning_configuration {
+    status = "Enabled"
   }
 }
 
-resource "aws_s3_bucket_object" "test" {
-  bucket = aws_s3_bucket.test.id
+resource "aws_s3_object" "test" {
+  bucket = aws_s3_bucket_versioning.test.bucket
   key    = %[1]q
   source = "test-fixtures/apigateway-domain-name-truststore-1.pem"
 }
@@ -663,14 +720,14 @@ resource "aws_api_gateway_domain_name" "test" {
   }
 
   mutual_tls_authentication {
-    truststore_uri     = "s3://${aws_s3_bucket_object.test.bucket}/${aws_s3_bucket_object.test.key}"
-    truststore_version = aws_s3_bucket_object.test.version_id
+    truststore_uri     = "s3://${aws_s3_object.test.bucket}/${aws_s3_object.test.key}"
+    truststore_version = aws_s3_object.test.version_id
   }
 }
 `, rName))
 }
 
-func testAccDomainNameConfig_MutualTLSAuthenticationMissing(rootDomain, domain string) string {
+func testAccDomainNameConfig_mutualTLSAuthenticationMissing(rootDomain, domain string) string {
 	return acctest.ConfigCompose(
 		testAccDomainNamePublicCertConfig(rootDomain, domain),
 		`
@@ -684,4 +741,54 @@ resource "aws_api_gateway_domain_name" "test" {
   }
 }
 `)
+}
+
+func testAccDomainNameConfig_mutualTLSOwnership(rName, rootDomain, domain, certificate, key string) string {
+	return acctest.ConfigCompose(
+		testAccDomainNamePublicCertConfig(rootDomain, domain),
+		fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+
+  force_destroy = true
+}
+
+resource "aws_s3_bucket_versioning" "test" {
+  bucket = aws_s3_bucket.test.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_object" "test" {
+  bucket = aws_s3_bucket_versioning.test.bucket
+  key    = %[1]q
+  source = "test-fixtures/apigateway-domain-name-truststore-1.pem"
+}
+
+resource "aws_acm_certificate" "imported" {
+  certificate_body = %[2]q
+  private_key      = %[3]q
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_api_gateway_domain_name" "test" {
+  domain_name                            = aws_acm_certificate.test.domain_name
+  regional_certificate_arn               = aws_acm_certificate.imported.arn
+  security_policy                        = "TLS_1_2"
+  ownership_verification_certificate_arn = aws_acm_certificate_validation.test.certificate_arn
+
+  endpoint_configuration {
+    types = ["REGIONAL"]
+  }
+
+  mutual_tls_authentication {
+    truststore_uri     = "s3://${aws_s3_object.test.bucket}/${aws_s3_object.test.key}"
+    truststore_version = aws_s3_object.test.version_id
+  }
+}
+`, rName, certificate, key))
 }

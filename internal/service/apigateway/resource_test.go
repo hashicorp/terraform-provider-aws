@@ -1,6 +1,7 @@
 package apigateway_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -16,20 +17,21 @@ import (
 )
 
 func TestAccAPIGatewayResource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf apigateway.Resource
 	rName := fmt.Sprintf("tf-test-acc-%s", sdkacctest.RandString(8))
 	resourceName := "aws_api_gateway_resource.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckResourceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourceConfig(rName),
+				Config: testAccResourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceExists(resourceName, &conf),
+					testAccCheckResourceExists(ctx, resourceName, &conf),
 					testAccCheckResourceAttributes(&conf, "/test"),
 					resource.TestCheckResourceAttr(
 						resourceName, "path_part", "test"),
@@ -48,20 +50,21 @@ func TestAccAPIGatewayResource_basic(t *testing.T) {
 }
 
 func TestAccAPIGatewayResource_update(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf apigateway.Resource
 	rName := fmt.Sprintf("tf-test-acc-%s", sdkacctest.RandString(8))
 	resourceName := "aws_api_gateway_resource.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckResourceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourceConfig(rName),
+				Config: testAccResourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceExists(resourceName, &conf),
+					testAccCheckResourceExists(ctx, resourceName, &conf),
 					testAccCheckResourceAttributes(&conf, "/test"),
 					resource.TestCheckResourceAttr(
 						resourceName, "path_part", "test"),
@@ -73,7 +76,7 @@ func TestAccAPIGatewayResource_update(t *testing.T) {
 			{
 				Config: testAccResourceConfig_updatePathPart(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceExists(resourceName, &conf),
+					testAccCheckResourceExists(ctx, resourceName, &conf),
 					testAccCheckResourceAttributes(&conf, "/test_changed"),
 					resource.TestCheckResourceAttr(
 						resourceName, "path_part", "test_changed"),
@@ -92,21 +95,22 @@ func TestAccAPIGatewayResource_update(t *testing.T) {
 }
 
 func TestAccAPIGatewayResource_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf apigateway.Resource
 	rName := fmt.Sprintf("tf-test-acc-%s", sdkacctest.RandString(8))
 	resourceName := "aws_api_gateway_resource.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckResourceDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourceConfig(rName),
+				Config: testAccResourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceExists(resourceName, &conf),
-					acctest.CheckResourceDisappears(acctest.Provider, tfapigateway.ResourceResource(), resourceName),
+					testAccCheckResourceExists(ctx, resourceName, &conf),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigateway.ResourceResource(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -124,7 +128,7 @@ func testAccCheckResourceAttributes(conf *apigateway.Resource, path string) reso
 	}
 }
 
-func testAccCheckResourceExists(n string, res *apigateway.Resource) resource.TestCheckFunc {
+func testAccCheckResourceExists(ctx context.Context, n string, res *apigateway.Resource) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -135,13 +139,13 @@ func testAccCheckResourceExists(n string, res *apigateway.Resource) resource.Tes
 			return fmt.Errorf("No API Gateway Resource ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
 
 		req := &apigateway.GetResourceInput{
 			ResourceId: aws.String(rs.Primary.ID),
 			RestApiId:  aws.String(s.RootModule().Resources["aws_api_gateway_rest_api.test"].Primary.ID),
 		}
-		describe, err := conn.GetResource(req)
+		describe, err := conn.GetResourceWithContext(ctx, req)
 		if err != nil {
 			return err
 		}
@@ -156,38 +160,40 @@ func testAccCheckResourceExists(n string, res *apigateway.Resource) resource.Tes
 	}
 }
 
-func testAccCheckResourceDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
+func testAccCheckResourceDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_api_gateway_resource" {
-			continue
-		}
-
-		req := &apigateway.GetResourcesInput{
-			RestApiId: aws.String(s.RootModule().Resources["aws_api_gateway_rest_api.test"].Primary.ID),
-		}
-		describe, err := conn.GetResources(req)
-
-		if err == nil {
-			if len(describe.Items) != 0 &&
-				*describe.Items[0].Id == rs.Primary.ID {
-				return fmt.Errorf("API Gateway Resource still exists")
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_api_gateway_resource" {
+				continue
 			}
-		}
 
-		aws2err, ok := err.(awserr.Error)
-		if !ok {
-			return err
-		}
-		if aws2err.Code() != "NotFoundException" {
-			return err
+			req := &apigateway.GetResourcesInput{
+				RestApiId: aws.String(s.RootModule().Resources["aws_api_gateway_rest_api.test"].Primary.ID),
+			}
+			describe, err := conn.GetResourcesWithContext(ctx, req)
+
+			if err == nil {
+				if len(describe.Items) != 0 &&
+					*describe.Items[0].Id == rs.Primary.ID {
+					return fmt.Errorf("API Gateway Resource still exists")
+				}
+			}
+
+			aws2err, ok := err.(awserr.Error)
+			if !ok {
+				return err
+			}
+			if aws2err.Code() != "NotFoundException" {
+				return err
+			}
+
+			return nil
 		}
 
 		return nil
 	}
-
-	return nil
 }
 
 func testAccResourceImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
@@ -201,7 +207,7 @@ func testAccResourceImportStateIdFunc(resourceName string) resource.ImportStateI
 	}
 }
 
-func testAccResourceConfig(rName string) string {
+func testAccResourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
   name = "%s"

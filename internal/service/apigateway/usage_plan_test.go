@@ -1,13 +1,14 @@
 package apigateway_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -17,21 +18,22 @@ import (
 )
 
 func TestAccAPIGatewayUsagePlan_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf apigateway.UsagePlan
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	updatedName := sdkacctest.RandomWithPrefix("tf-acc-test-2")
 	resourceName := "aws_api_gateway_usage_plan.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUsagePlanDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUsagePlanDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUsagePlanBasicConfig(rName),
+				Config: testAccUsagePlanConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUsagePlanExists(resourceName, &conf),
+					testAccCheckUsagePlanExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/usageplans/+.`)),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
@@ -47,7 +49,7 @@ func TestAccAPIGatewayUsagePlan_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccUsagePlanBasicConfig(updatedName),
+				Config: testAccUsagePlanConfig_basic(updatedName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", updatedName),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
@@ -58,20 +60,21 @@ func TestAccAPIGatewayUsagePlan_basic(t *testing.T) {
 }
 
 func TestAccAPIGatewayUsagePlan_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf apigateway.UsagePlan
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_usage_plan.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUsagePlanDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUsagePlanDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUsagePlanBasicTags1(rName, "key1", "value1"),
+				Config: testAccUsagePlanConfig_basicTags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUsagePlanExists(resourceName, &conf),
+					testAccCheckUsagePlanExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
@@ -83,7 +86,7 @@ func TestAccAPIGatewayUsagePlan_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccUsagePlanBasicTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccUsagePlanConfig_basicTags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -92,9 +95,9 @@ func TestAccAPIGatewayUsagePlan_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccUsagePlanBasicTags1(rName, "key2", "value2"),
+				Config: testAccUsagePlanConfig_basicTags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUsagePlanExists(resourceName, &conf),
+					testAccCheckUsagePlanExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -105,20 +108,21 @@ func TestAccAPIGatewayUsagePlan_tags(t *testing.T) {
 }
 
 func TestAccAPIGatewayUsagePlan_description(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf apigateway.UsagePlan
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_usage_plan.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUsagePlanDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUsagePlanDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUsagePlanBasicConfig(rName),
+				Config: testAccUsagePlanConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUsagePlanExists(resourceName, &conf),
+					testAccCheckUsagePlanExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 				),
 			},
@@ -128,29 +132,29 @@ func TestAccAPIGatewayUsagePlan_description(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccUsagePlanDescriptionConfig(rName, "This is a description"),
+				Config: testAccUsagePlanConfig_description(rName, "This is a description"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUsagePlanExists(resourceName, &conf),
+					testAccCheckUsagePlanExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "description", "This is a description"),
 				),
 			},
 			{
-				Config: testAccUsagePlanDescriptionConfig(rName, "This is a new description"),
+				Config: testAccUsagePlanConfig_description(rName, "This is a new description"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "description", "This is a new description"),
 				),
 			},
 			{
-				Config: testAccUsagePlanDescriptionConfig(rName, "This is a description"),
+				Config: testAccUsagePlanConfig_description(rName, "This is a description"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUsagePlanExists(resourceName, &conf),
+					testAccCheckUsagePlanExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "description", "This is a description"),
 				),
 			},
 			{
-				Config: testAccUsagePlanBasicConfig(rName),
+				Config: testAccUsagePlanConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUsagePlanExists(resourceName, &conf),
+					testAccCheckUsagePlanExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 				),
 			},
@@ -159,20 +163,21 @@ func TestAccAPIGatewayUsagePlan_description(t *testing.T) {
 }
 
 func TestAccAPIGatewayUsagePlan_productCode(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf apigateway.UsagePlan
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_usage_plan.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUsagePlanDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUsagePlanDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUsagePlanProductCodeConfig(rName, "MYCODE"),
+				Config: testAccUsagePlanConfig_productCode(rName, "MYCODE"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUsagePlanExists(resourceName, &conf),
+					testAccCheckUsagePlanExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "product_code", "MYCODE"),
 				),
 			},
@@ -182,23 +187,23 @@ func TestAccAPIGatewayUsagePlan_productCode(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccUsagePlanProductCodeConfig(rName, "MYCODE2"),
+				Config: testAccUsagePlanConfig_productCode(rName, "MYCODE2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUsagePlanExists(resourceName, &conf),
+					testAccCheckUsagePlanExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "product_code", "MYCODE2"),
 				),
 			},
 			{
-				Config: testAccUsagePlanBasicConfig(rName),
+				Config: testAccUsagePlanConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUsagePlanExists(resourceName, &conf),
+					testAccCheckUsagePlanExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "product_code", ""),
 				),
 			},
 			{
-				Config: testAccUsagePlanProductCodeConfig(rName, "MYCODE"),
+				Config: testAccUsagePlanConfig_productCode(rName, "MYCODE"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUsagePlanExists(resourceName, &conf),
+					testAccCheckUsagePlanExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "product_code", "MYCODE"),
 				),
 			},
@@ -207,20 +212,21 @@ func TestAccAPIGatewayUsagePlan_productCode(t *testing.T) {
 }
 
 func TestAccAPIGatewayUsagePlan_throttling(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf apigateway.UsagePlan
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_usage_plan.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUsagePlanDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUsagePlanDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUsagePlanBasicConfig(rName),
+				Config: testAccUsagePlanConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUsagePlanExists(resourceName, &conf),
+					testAccCheckUsagePlanExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckNoResourceAttr(resourceName, "throttle_settings"),
 				),
@@ -231,27 +237,27 @@ func TestAccAPIGatewayUsagePlan_throttling(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccUsagePlanThrottlingConfig(rName),
+				Config: testAccUsagePlanConfig_throttling(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUsagePlanExists(resourceName, &conf),
+					testAccCheckUsagePlanExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "throttle_settings.0.burst_limit", "2"),
 					resource.TestCheckResourceAttr(resourceName, "throttle_settings.0.rate_limit", "5"),
 				),
 			},
 			{
-				Config: testAccUsagePlanThrottlingModifiedConfig(rName),
+				Config: testAccUsagePlanConfig_throttlingModified(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUsagePlanExists(resourceName, &conf),
+					testAccCheckUsagePlanExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "throttle_settings.0.burst_limit", "3"),
 					resource.TestCheckResourceAttr(resourceName, "throttle_settings.0.rate_limit", "6"),
 				),
 			},
 			{
-				Config: testAccUsagePlanBasicConfig(rName),
+				Config: testAccUsagePlanConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUsagePlanExists(resourceName, &conf),
+					testAccCheckUsagePlanExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckNoResourceAttr(resourceName, "throttle_settings"),
 				),
@@ -262,20 +268,21 @@ func TestAccAPIGatewayUsagePlan_throttling(t *testing.T) {
 
 // https://github.com/hashicorp/terraform-provider-aws/issues/2057
 func TestAccAPIGatewayUsagePlan_throttlingInitialRateLimit(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf apigateway.UsagePlan
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_usage_plan.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUsagePlanDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUsagePlanDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUsagePlanThrottlingConfig(rName),
+				Config: testAccUsagePlanConfig_throttling(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUsagePlanExists(resourceName, &conf),
+					testAccCheckUsagePlanExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "throttle_settings.0.rate_limit", "5"),
 				),
 			},
@@ -289,20 +296,21 @@ func TestAccAPIGatewayUsagePlan_throttlingInitialRateLimit(t *testing.T) {
 }
 
 func TestAccAPIGatewayUsagePlan_quota(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf apigateway.UsagePlan
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_usage_plan.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUsagePlanDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUsagePlanDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUsagePlanBasicConfig(rName),
+				Config: testAccUsagePlanConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUsagePlanExists(resourceName, &conf),
+					testAccCheckUsagePlanExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckNoResourceAttr(resourceName, "quota_settings"),
 				),
@@ -313,9 +321,9 @@ func TestAccAPIGatewayUsagePlan_quota(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccUsagePlanQuotaConfig(rName),
+				Config: testAccUsagePlanConfig_quota(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUsagePlanExists(resourceName, &conf),
+					testAccCheckUsagePlanExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "quota_settings.0.limit", "100"),
 					resource.TestCheckResourceAttr(resourceName, "quota_settings.0.offset", "6"),
@@ -323,9 +331,9 @@ func TestAccAPIGatewayUsagePlan_quota(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccUsagePlanQuotaModifiedConfig(rName),
+				Config: testAccUsagePlanConfig_quotaModified(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUsagePlanExists(resourceName, &conf),
+					testAccCheckUsagePlanExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "quota_settings.0.limit", "200"),
 					resource.TestCheckResourceAttr(resourceName, "quota_settings.0.offset", "20"),
@@ -333,9 +341,9 @@ func TestAccAPIGatewayUsagePlan_quota(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccUsagePlanBasicConfig(rName),
+				Config: testAccUsagePlanConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUsagePlanExists(resourceName, &conf),
+					testAccCheckUsagePlanExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckNoResourceAttr(resourceName, "quota_settings"),
 				),
@@ -345,22 +353,23 @@ func TestAccAPIGatewayUsagePlan_quota(t *testing.T) {
 }
 
 func TestAccAPIGatewayUsagePlan_apiStages(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf apigateway.UsagePlan
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_usage_plan.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUsagePlanDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUsagePlanDestroy(ctx),
 		Steps: []resource.TestStep{
 			// Create UsagePlan WITH Stages as the API calls are different
 			// when creating or updating.
 			{
-				Config: testAccUsagePlanAPIStagesConfig(rName),
+				Config: testAccUsagePlanConfig_apiStages(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUsagePlanExists(resourceName, &conf),
+					testAccCheckUsagePlanExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "api_stages.*", map[string]string{
 						"stage": "test",
@@ -374,18 +383,18 @@ func TestAccAPIGatewayUsagePlan_apiStages(t *testing.T) {
 			},
 			// Handle api stages removal
 			{
-				Config: testAccUsagePlanBasicConfig(rName),
+				Config: testAccUsagePlanConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUsagePlanExists(resourceName, &conf),
+					testAccCheckUsagePlanExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckNoResourceAttr(resourceName, "api_stages"),
 				),
 			},
 			// Handle api stages additions
 			{
-				Config: testAccUsagePlanAPIStagesConfig(rName),
+				Config: testAccUsagePlanConfig_apiStages(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUsagePlanExists(resourceName, &conf),
+					testAccCheckUsagePlanExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "api_stages.*", map[string]string{
 						"stage": "test",
@@ -394,9 +403,9 @@ func TestAccAPIGatewayUsagePlan_apiStages(t *testing.T) {
 			},
 			// Handle api stages updates
 			{
-				Config: testAccUsagePlanAPIStagesMultipleConfig(rName),
+				Config: testAccUsagePlanConfig_apiStagesMultiple(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUsagePlanExists(resourceName, &conf),
+					testAccCheckUsagePlanExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "api_stages.*", map[string]string{
 						"stage": "foo",
@@ -407,9 +416,9 @@ func TestAccAPIGatewayUsagePlan_apiStages(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccUsagePlanAPIStagesModifiedConfig(rName),
+				Config: testAccUsagePlanConfig_apiStagesModified(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUsagePlanExists(resourceName, &conf),
+					testAccCheckUsagePlanExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "api_stages.*", map[string]string{
 						"stage": "foo",
@@ -417,9 +426,9 @@ func TestAccAPIGatewayUsagePlan_apiStages(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccUsagePlanBasicConfig(rName),
+				Config: testAccUsagePlanConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUsagePlanExists(resourceName, &conf),
+					testAccCheckUsagePlanExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckNoResourceAttr(resourceName, "api_stages"),
 				),
@@ -429,20 +438,21 @@ func TestAccAPIGatewayUsagePlan_apiStages(t *testing.T) {
 }
 
 func TestAccAPIGatewayUsagePlan_APIStages_multiple(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf apigateway.UsagePlan
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_usage_plan.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUsagePlanDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUsagePlanDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUsagePlanAPIStagesMultipleConfig(rName),
+				Config: testAccUsagePlanConfig_apiStagesMultiple(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUsagePlanExists(resourceName, &conf),
+					testAccCheckUsagePlanExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "api_stages.*", map[string]string{
 						"stage": "foo",
@@ -462,20 +472,21 @@ func TestAccAPIGatewayUsagePlan_APIStages_multiple(t *testing.T) {
 }
 
 func TestAccAPIGatewayUsagePlan_APIStages_throttle(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf apigateway.UsagePlan
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_usage_plan.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUsagePlanDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUsagePlanDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUsagePlanAPIStagesConfigThrottle(rName),
+				Config: testAccUsagePlanConfig_apiStagesThrottle(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUsagePlanExists(resourceName, &conf),
+					testAccCheckUsagePlanExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "api_stages.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "api_stages.*", map[string]string{
@@ -490,9 +501,9 @@ func TestAccAPIGatewayUsagePlan_APIStages_throttle(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccUsagePlanAPIStagesConfigThrottleMulti(rName),
+				Config: testAccUsagePlanConfig_apiStagesThrottleMulti(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUsagePlanExists(resourceName, &conf),
+					testAccCheckUsagePlanExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "api_stages.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "api_stages.*", map[string]string{
@@ -520,22 +531,23 @@ func TestAccAPIGatewayUsagePlan_APIStages_throttle(t *testing.T) {
 }
 
 func TestAccAPIGatewayUsagePlan_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf apigateway.UsagePlan
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_usage_plan.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, apigateway.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckUsagePlanDestroy,
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUsagePlanDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUsagePlanBasicConfig(rName),
+				Config: testAccUsagePlanConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUsagePlanExists(resourceName, &conf),
-					acctest.CheckResourceDisappears(acctest.Provider, tfapigateway.ResourceUsagePlan(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfapigateway.ResourceUsagePlan(), resourceName),
+					testAccCheckUsagePlanExists(ctx, resourceName, &conf),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigateway.ResourceUsagePlan(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigateway.ResourceUsagePlan(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -543,7 +555,7 @@ func TestAccAPIGatewayUsagePlan_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckUsagePlanExists(n string, res *apigateway.UsagePlan) resource.TestCheckFunc {
+func testAccCheckUsagePlanExists(ctx context.Context, n string, res *apigateway.UsagePlan) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -554,12 +566,12 @@ func testAccCheckUsagePlanExists(n string, res *apigateway.UsagePlan) resource.T
 			return fmt.Errorf("No API Gateway Usage Plan ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
 
 		req := &apigateway.GetUsagePlanInput{
 			UsagePlanId: aws.String(rs.Primary.ID),
 		}
-		up, err := conn.GetUsagePlan(req)
+		up, err := conn.GetUsagePlanWithContext(ctx, req)
 		if err != nil {
 			return err
 		}
@@ -574,33 +586,35 @@ func testAccCheckUsagePlanExists(n string, res *apigateway.UsagePlan) resource.T
 	}
 }
 
-func testAccCheckUsagePlanDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
+func testAccCheckUsagePlanDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_api_gateway_usage_plan" {
-			continue
-		}
-
-		req := &apigateway.GetUsagePlanInput{
-			UsagePlanId: aws.String(rs.Primary.ID),
-		}
-		describe, err := conn.GetUsagePlan(req)
-
-		if err == nil {
-			if describe.Id != nil && aws.StringValue(describe.Id) == rs.Primary.ID {
-				return fmt.Errorf("API Gateway Usage Plan still exists")
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_api_gateway_usage_plan" {
+				continue
 			}
-		}
 
-		if !tfawserr.ErrMessageContains(err, apigateway.ErrCodeNotFoundException, "") {
-			return err
+			req := &apigateway.GetUsagePlanInput{
+				UsagePlanId: aws.String(rs.Primary.ID),
+			}
+			describe, err := conn.GetUsagePlanWithContext(ctx, req)
+
+			if err == nil {
+				if describe.Id != nil && aws.StringValue(describe.Id) == rs.Primary.ID {
+					return fmt.Errorf("API Gateway Usage Plan still exists")
+				}
+			}
+
+			if !tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
+				return err
+			}
+
+			return nil
 		}
 
 		return nil
 	}
-
-	return nil
 }
 
 func testAccUsagePlanConfig(rName string) string {
@@ -671,7 +685,7 @@ resource "aws_api_gateway_deployment" "foo" {
 `, rName)
 }
 
-func testAccUsagePlanBasicConfig(rName string) string {
+func testAccUsagePlanConfig_basic(rName string) string {
 	return testAccUsagePlanConfig(rName) + fmt.Sprintf(`
 resource "aws_api_gateway_usage_plan" "test" {
   name = "%s"
@@ -679,7 +693,7 @@ resource "aws_api_gateway_usage_plan" "test" {
 `, rName)
 }
 
-func testAccUsagePlanBasicTags1(rName, tagKey1, tagValue1 string) string {
+func testAccUsagePlanConfig_basicTags1(rName, tagKey1, tagValue1 string) string {
 	return testAccUsagePlanConfig(rName) + fmt.Sprintf(`
 resource "aws_api_gateway_usage_plan" "test" {
   name = "%s"
@@ -691,7 +705,7 @@ resource "aws_api_gateway_usage_plan" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccUsagePlanBasicTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccUsagePlanConfig_basicTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return testAccUsagePlanConfig(rName) + fmt.Sprintf(`
 resource "aws_api_gateway_usage_plan" "test" {
   name = "%s"
@@ -704,7 +718,7 @@ resource "aws_api_gateway_usage_plan" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccUsagePlanDescriptionConfig(rName, desc string) string {
+func testAccUsagePlanConfig_description(rName, desc string) string {
 	return testAccUsagePlanConfig(rName) + fmt.Sprintf(`
 resource "aws_api_gateway_usage_plan" "test" {
   name        = %[1]q
@@ -713,7 +727,7 @@ resource "aws_api_gateway_usage_plan" "test" {
 `, rName, desc)
 }
 
-func testAccUsagePlanProductCodeConfig(rName, code string) string {
+func testAccUsagePlanConfig_productCode(rName, code string) string {
 	return testAccUsagePlanConfig(rName) + fmt.Sprintf(`
 resource "aws_api_gateway_usage_plan" "test" {
   name         = %[1]q
@@ -722,7 +736,7 @@ resource "aws_api_gateway_usage_plan" "test" {
 `, rName, code)
 }
 
-func testAccUsagePlanThrottlingConfig(rName string) string {
+func testAccUsagePlanConfig_throttling(rName string) string {
 	return testAccUsagePlanConfig(rName) + fmt.Sprintf(`
 resource "aws_api_gateway_usage_plan" "test" {
   name = "%s"
@@ -735,7 +749,7 @@ resource "aws_api_gateway_usage_plan" "test" {
 `, rName)
 }
 
-func testAccUsagePlanThrottlingModifiedConfig(rName string) string {
+func testAccUsagePlanConfig_throttlingModified(rName string) string {
 	return testAccUsagePlanConfig(rName) + fmt.Sprintf(`
 resource "aws_api_gateway_usage_plan" "test" {
   name = "%s"
@@ -748,7 +762,7 @@ resource "aws_api_gateway_usage_plan" "test" {
 `, rName)
 }
 
-func testAccUsagePlanQuotaConfig(rName string) string {
+func testAccUsagePlanConfig_quota(rName string) string {
 	return testAccUsagePlanConfig(rName) + fmt.Sprintf(`
 resource "aws_api_gateway_usage_plan" "test" {
   name = "%s"
@@ -762,7 +776,7 @@ resource "aws_api_gateway_usage_plan" "test" {
 `, rName)
 }
 
-func testAccUsagePlanQuotaModifiedConfig(rName string) string {
+func testAccUsagePlanConfig_quotaModified(rName string) string {
 	return testAccUsagePlanConfig(rName) + fmt.Sprintf(`
 resource "aws_api_gateway_usage_plan" "test" {
   name = "%s"
@@ -776,7 +790,7 @@ resource "aws_api_gateway_usage_plan" "test" {
 `, rName)
 }
 
-func testAccUsagePlanAPIStagesConfig(rName string) string {
+func testAccUsagePlanConfig_apiStages(rName string) string {
 	return testAccUsagePlanConfig(rName) + fmt.Sprintf(`
 resource "aws_api_gateway_usage_plan" "test" {
   name = "%s"
@@ -789,7 +803,7 @@ resource "aws_api_gateway_usage_plan" "test" {
 `, rName)
 }
 
-func testAccUsagePlanAPIStagesConfigThrottle(rName string) string {
+func testAccUsagePlanConfig_apiStagesThrottle(rName string) string {
 	return testAccUsagePlanConfig(rName) + fmt.Sprintf(`
 resource "aws_api_gateway_usage_plan" "test" {
   name = "%s"
@@ -813,7 +827,7 @@ resource "aws_api_gateway_usage_plan" "test" {
 `, rName)
 }
 
-func testAccUsagePlanAPIStagesConfigThrottleMulti(rName string) string {
+func testAccUsagePlanConfig_apiStagesThrottleMulti(rName string) string {
 	return testAccUsagePlanConfig(rName) + fmt.Sprintf(`
 resource "aws_api_gateway_usage_plan" "test" {
   name = "%s"
@@ -848,7 +862,7 @@ resource "aws_api_gateway_usage_plan" "test" {
 `, rName)
 }
 
-func testAccUsagePlanAPIStagesModifiedConfig(rName string) string {
+func testAccUsagePlanConfig_apiStagesModified(rName string) string {
 	return testAccUsagePlanConfig(rName) + fmt.Sprintf(`
 resource "aws_api_gateway_usage_plan" "test" {
   name = "%s"
@@ -861,7 +875,7 @@ resource "aws_api_gateway_usage_plan" "test" {
 `, rName)
 }
 
-func testAccUsagePlanAPIStagesMultipleConfig(rName string) string {
+func testAccUsagePlanConfig_apiStagesMultiple(rName string) string {
 	return testAccUsagePlanConfig(rName) + fmt.Sprintf(`
 resource "aws_api_gateway_usage_plan" "test" {
   name = "%s"

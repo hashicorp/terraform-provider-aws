@@ -6,6 +6,8 @@ import (
 )
 
 func TestValidGrantName(t *testing.T) {
+	t.Parallel()
+
 	validValues := []string{
 		"123",
 		"Abc",
@@ -35,7 +37,9 @@ func TestValidGrantName(t *testing.T) {
 	}
 }
 
-func TestValidName(t *testing.T) {
+func TestValidNameForDataSource(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Value    string
 		ErrCount int
@@ -45,8 +49,16 @@ func TestValidName(t *testing.T) {
 			ErrCount: 0,
 		},
 		{
+			Value:    "alias/aws-service-test",
+			ErrCount: 0,
+		},
+		{
 			Value:    "alias/hashicorp",
 			ErrCount: 0,
+		},
+		{
+			Value:    "alias/Service:Test",
+			ErrCount: 1,
 		},
 		{
 			Value:    "hashicorp",
@@ -59,7 +71,48 @@ func TestValidName(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		_, errors := validName(tc.Value, "name")
+		_, errors := validNameForDataSource(tc.Value, "name")
+		if len(errors) != tc.ErrCount {
+			t.Fatalf("AWS KMS Alias Name validation failed: %v", errors)
+		}
+	}
+}
+
+func TestValidNameForResource(t *testing.T) {
+	t.Parallel()
+
+	cases := []struct {
+		Value    string
+		ErrCount int
+	}{
+		{
+			Value:    "alias/hashicorp",
+			ErrCount: 0,
+		},
+		{
+			Value:    "alias/aws-service-test",
+			ErrCount: 0,
+		},
+		{
+			Value:    "alias/aws/s3",
+			ErrCount: 1,
+		},
+		{
+			Value:    "alias/Service:Test",
+			ErrCount: 1,
+		},
+		{
+			Value:    "hashicorp",
+			ErrCount: 1,
+		},
+		{
+			Value:    "hashicorp/terraform",
+			ErrCount: 1,
+		},
+	}
+
+	for _, tc := range cases {
+		_, errors := validNameForResource(tc.Value, "name")
 		if len(errors) != tc.ErrCount {
 			t.Fatalf("AWS KMS Alias Name validation failed: %v", errors)
 		}
@@ -67,6 +120,8 @@ func TestValidName(t *testing.T) {
 }
 
 func TestValidKey(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Value    string
 		ErrCount int

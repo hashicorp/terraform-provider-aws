@@ -30,7 +30,7 @@ data "aws_identitystore_group" "example" {
 }
 
 resource "aws_ssoadmin_account_assignment" "example" {
-  instance_arn       = data.aws_ssoadmin_permission_set.example.instance_arn
+  instance_arn       = tolist(data.aws_ssoadmin_instances.example.arns)[0]
   permission_set_arn = data.aws_ssoadmin_permission_set.example.arn
 
   principal_id   = data.aws_identitystore_group.example.group_id
