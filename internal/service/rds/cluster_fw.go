@@ -283,10 +283,6 @@ func (r *resourceCluster) Schema(ctx context.Context, request resource.SchemaReq
 			},
 			"global_cluster_identifier": schema.StringAttribute{
 				Optional: true,
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
 			},
 			"hosted_zone_id": schema.StringAttribute{
 				Computed: true,
@@ -433,6 +429,10 @@ func (r *resourceCluster) Schema(ctx context.Context, request resource.SchemaReq
 				PlanModifiers: []planmodifier.Set{
 					setplanmodifier.UseStateForUnknown(),
 				},
+			},
+			"scaling_configuration_all": schema.ListAttribute{
+				ElementType: types.ObjectType{AttrTypes: scalingConfigurationAttrTypes},
+				Computed:    true,
 			},
 		},
 		Blocks: map[string]schema.Block{
@@ -1420,7 +1420,7 @@ func (r *resourceCluster) Update(ctx context.Context, request resource.UpdateReq
 
 	// can only be removed.
 	if !plan.GlobalClusterIdentifier.Equal(state.GlobalClusterIdentifier) {
-		if state.GlobalClusterIdentifier.IsNull() || state.GlobalClusterIdentifier.ValueString() == "" {
+		if state.GlobalClusterIdentifier.IsNull() || state.GlobalClusterIdentifier.IsUnknown() || state.GlobalClusterIdentifier.ValueString() == "" {
 			response.Diagnostics.AddError(
 				"existing RDS Clusters cannot be added to an existing RDS Global Cluster",
 				"existing RDS Clusters cannot be added to an existing RDS Global Cluster",
@@ -1792,6 +1792,7 @@ type resourceClusterData struct {
 	RestoreToPointInTime             types.List   `tfsdk:"restore_to_point_in_time"`
 	S3Import                         types.List   `tfsdk:"s3_import"`
 	ScalingConfiguration             types.List   `tfsdk:"scaling_configuration"`
+	ScalingConfigurationAll          types.List   `tfsdk:"scaling_configuration_all"`
 	ServerlessV2ScalingConfiguration types.List   `tfsdk:"serverlessv2_scaling_configuration"`
 	SkipFinalSnapshot                types.Bool   `tfsdk:"skip_final_snapshot"`
 	SnapshotIdentifier               types.String `tfsdk:"snapshot_identifier"`
@@ -1890,7 +1891,6 @@ func (r *resourceClusterData) refreshFromOutput(ctx context.Context, meta *conns
 	r.setResourceDataEngineVersionFromCluster(ctx, out)
 
 	// Fetch and save Global Cluster if engine mode is global
-	r.GlobalClusterIdentifier = types.StringValue("")
 	if aws.StringValue(out.EngineMode) == EngineModeGlobal || aws.StringValue(out.EngineMode) == EngineModeProvisioned {
 		globalCluster, err := FindGlobalClusterByDBClusterARN(ctx, meta.RDSConn(), aws.StringValue(out.DBClusterArn))
 
@@ -1934,7 +1934,7 @@ func (r *resourceClusterData) refreshFromOutput(ctx context.Context, meta *conns
 	r.PreferredMaintenanceWindow = flex.StringValueToFrameworkLegacy(ctx, pmw)
 	r.ReaderEndpoint = flex.StringToFrameworkLegacy(ctx, out.ReaderEndpoint)
 	r.ReplicationSourceIdentifier = flex.StringToFrameworkLegacy(ctx, out.ReplicationSourceIdentifier)
-	r.ScalingConfiguration = flattenScalingConfigurationFramework(ctx, out.ScalingConfigurationInfo)
+	r.ScalingConfigurationAll = flattenScalingConfigurationFramework(ctx, out.ScalingConfigurationInfo)
 	r.ServerlessV2ScalingConfiguration = flattenServerlessV2ScalingConfigurationFramework(ctx, out.ServerlessV2ScalingConfiguration)
 	r.StorageEncrypted = flex.BoolToFramework(ctx, out.StorageEncrypted)
 	r.StorageType = flex.StringToFrameworkLegacy(ctx, out.StorageType)

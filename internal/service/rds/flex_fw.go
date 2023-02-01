@@ -45,7 +45,7 @@ func flattenScalingConfigurationFramework(ctx context.Context, apiObject *rds.Sc
 	elemType := types.ObjectType{AttrTypes: scalingConfigurationAttrTypes}
 
 	if apiObject == nil {
-		return types.ListNull(elemType)
+		return types.ListValueMust(elemType, []attr.Value{})
 	}
 
 	attrs := map[string]attr.Value{
