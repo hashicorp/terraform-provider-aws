@@ -403,9 +403,10 @@ func ResourceEndpoint() *schema.Resource {
 							ValidateFunc: validation.StringInSlice(encryptionMode_Values(), false),
 						},
 						"server_side_encryption_kms_key_id": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
+							Type:             schema.TypeString,
+							Optional:         true,
+							DiffSuppressFunc: tfkms.DiffSuppressKey,
+							ValidateFunc:     tfkms.ValidateKey,
 						},
 						"service_access_role_arn": {
 							Type:         schema.TypeString,
@@ -684,6 +685,7 @@ func ResourceEndpoint() *schema.Resource {
 			requireEngineSettingsCustomizeDiff,
 			validateKMSKeyEngineCustomizeDiff,
 			validateS3SSEKMSKeyCustomizeDiff,
+			validateRedshiftSSEKMSKeyCustomizeDiff,
 			verify.SetTagsDiff,
 		),
 	}
@@ -1383,6 +1385,40 @@ func validateS3SSEKMSKeyCustomizeDiff(_ context.Context, d *schema.ResourceDiff,
 					case encryptionModeSseKMS:
 						if id == "" {
 							return fmt.Errorf("s3_settings.server_side_encryption_kms_key_id is required when encryption_mode is %q", encryptionModeSseKMS)
+						}
+					}
+				}
+			}
+		}
+	}
+	return nil
+}
+
+func validateRedshiftSSEKMSKeyCustomizeDiff(_ context.Context, d *schema.ResourceDiff, _ any) error {
+	if d.Get("engine_name").(string) == engineNameRedshift {
+		rawConfig := d.GetRawConfig()
+		redshiftSettings := rawConfig.GetAttr("redshift_settings")
+		if redshiftSettings.IsKnown() && !redshiftSettings.IsNull() && redshiftSettings.LengthInt() > 0 {
+			setting := redshiftSettings.Index(cty.NumberIntVal(0))
+			if setting.IsKnown() && !setting.IsNull() {
+				kmsKeyId := setting.GetAttr("server_side_encryption_kms_key_id")
+				if !kmsKeyId.IsKnown() {
+					return nil
+				}
+				encryptionMode := setting.GetAttr("encryption_mode")
+				if encryptionMode.IsKnown() && !encryptionMode.IsNull() {
+					id := ""
+					if !kmsKeyId.IsNull() {
+						id = kmsKeyId.AsString()
+					}
+					switch encryptionMode.AsString() {
+					case encryptionModeSseS3:
+						if id != "" {
+							return fmt.Errorf("redshift_settings.server_side_encryption_kms_key_id must not be set when encryption_mode is %q", encryptionModeSseS3)
+						}
+					case encryptionModeSseKMS:
+						if id == "" {
+							return fmt.Errorf("redshift_settings.server_side_encryption_kms_key_id is required when encryption_mode is %q", encryptionModeSseKMS)
 						}
 					}
 				}

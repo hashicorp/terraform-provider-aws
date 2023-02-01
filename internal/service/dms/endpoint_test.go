@@ -1735,6 +1735,66 @@ func TestAccDMSEndpoint_Redshift_kmsKey(t *testing.T) {
 	})
 }
 
+func TestAccDMSEndpoint_Redshift_SSEKMSKeyARN(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_redshiftConnSSEKMSKeyARN(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "redshift_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "redshift_settings.0.encryption_mode", "SSE_KMS"),
+					resource.TestCheckResourceAttrPair(resourceName, "redshift_settings.0.server_side_encryption_kms_key_id", "aws_kms_key.test", "arn"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"password"},
+			},
+		},
+	})
+}
+
+func TestAccDMSEndpoint_Redshift_SSEKMSKeyId(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_redshiftConnSSEKMSKeyId(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "redshift_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "redshift_settings.0.encryption_mode", "SSE_KMS"),
+					resource.TestCheckResourceAttrPair(resourceName, "redshift_settings.0.server_side_encryption_kms_key_id", "aws_kms_key.test", "arn"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"password"},
+			},
+		},
+	})
+}
+
 // testAccCheckResourceAttrRegionalHostname ensures the Terraform state exactly matches a formatted DNS hostname with region and partition DNS suffix
 func testAccCheckResourceAttrRegionalHostname(resourceName, attributeName, serviceName, hostnamePrefix string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -3761,6 +3821,70 @@ resource "aws_dms_endpoint" "test" {
     Name   = %[1]q
     Update = "to-update"
     Remove = "to-remove"
+  }
+}
+
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+}
+`, rName))
+}
+
+func testAccEndpointConfig_redshiftConnSSEKMSKeyARN(rName string) string {
+	return acctest.ConfigCompose(testAccEndpointConfig_redshiftBase(rName), fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  endpoint_id   = %[1]q
+  endpoint_type = "target"
+  engine_name   = "redshift"
+  server_name   = aws_redshift_cluster.test.dns_name
+  port          = 27017
+  username      = "tftest"
+  password      = "tftest"
+  database_name = "tftest"
+  ssl_mode      = "none"
+
+  tags = {
+    Name   = %[1]q
+    Update = "to-update"
+    Remove = "to-remove"
+  }
+
+  redshift_settings {
+    encryption_mode                   = "SSE_KMS"
+    server_side_encryption_kms_key_id = aws_kms_key.test.arn
+  }
+}
+
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+}
+`, rName))
+}
+
+func testAccEndpointConfig_redshiftConnSSEKMSKeyId(rName string) string {
+	return acctest.ConfigCompose(testAccEndpointConfig_redshiftBase(rName), fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  endpoint_id   = %[1]q
+  endpoint_type = "target"
+  engine_name   = "redshift"
+  server_name   = aws_redshift_cluster.test.dns_name
+  port          = 27017
+  username      = "tftest"
+  password      = "tftest"
+  database_name = "tftest"
+  ssl_mode      = "none"
+
+  tags = {
+    Name   = %[1]q
+    Update = "to-update"
+    Remove = "to-remove"
+  }
+
+  redshift_settings {
+    encryption_mode                   = "SSE_KMS"
+    server_side_encryption_kms_key_id = aws_kms_key.test.key_id
   }
 }
 
