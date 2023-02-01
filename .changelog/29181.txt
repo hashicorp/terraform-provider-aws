@@ -3,7 +3,7 @@ resource/aws_ec2_fleet: Add computed `fleet_instance_set`,`fleet_state`, `fulfil
 ```
 
 ```release-note:enhancement
-resource/aws_ec2_fleet: Add `launch_template_config.override.image_id`, `launch_template_config.override.instance_requirements.allowed_instance_types`,  launch_template_config.override.instance_requirements.network_bandwidth_gbps_request`, `launch_template_config.override.placement` arguments
+resource/aws_ec2_fleet: Add `launch_template_config.override.image_id`, `launch_template_config.override.instance_requirements.allowed_instance_types`,  launch_template_config.override.instance_requirements.network_bandwidth_gbps`, `launch_template_config.override.placement` arguments
 ```
 
 ```release-note:enhancement

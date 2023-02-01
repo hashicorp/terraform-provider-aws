@@ -58,6 +58,13 @@ func ResourceFleet() *schema.Resource {
 				Optional:     true,
 				Default:      ec2.FleetExcessCapacityTerminationPolicyTermination,
 				ValidateFunc: validation.StringInSlice(ec2.FleetExcessCapacityTerminationPolicy_Values(), false),
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if old == "" {
+						return true
+					}
+					return false
+				},
+				DiffSuppressOnRefresh: true,
 			},
 			"fleet_instance_set": {
 				Type:     schema.TypeList,
@@ -301,7 +308,7 @@ func ResourceFleet() *schema.Resource {
 																	},
 																},
 															},
-															"network_bandwidth_gbps_request": {
+															"network_bandwidth_gbps": {
 																Type:     schema.TypeList,
 																Optional: true,
 																Computed: true,
@@ -713,7 +720,7 @@ func ResourceFleet() *schema.Resource {
 														},
 													},
 												},
-												"network_bandwidth_gbps_request": {
+												"network_bandwidth_gbps": {
 													Type:     schema.TypeList,
 													Optional: true,
 													MaxItems: 1,
@@ -820,10 +827,6 @@ func ResourceFleet() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"group_id": {
-													Type:     schema.TypeString,
-													Optional: true,
-												},
 												"group_name": {
 													Type:     schema.TypeString,
 													Optional: true,
@@ -1256,15 +1259,23 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChangesExcept("tags", "tags_all") {
 
 		input := &ec2.ModifyFleetInput{
-			Context:                         aws.String(d.Get("context").(string)),
-			ExcessCapacityTerminationPolicy: aws.String(d.Get("excess_capacity_termination_policy").(string)),
-			FleetId:                         aws.String(d.Id()),
-			LaunchTemplateConfigs:           expandFleetLaunchTemplateConfigRequests(d.Get("launch_template_config").([]interface{})),
-			// InvalidTargetCapacitySpecification: Currently we only support total target capacity modification.
-			// TargetCapacitySpecification: expandEc2TargetCapacitySpecificationRequest(d.Get("target_capacity_specification").([]interface{})),
-			TargetCapacitySpecification: &ec2.TargetCapacitySpecificationRequest{
-				TotalTargetCapacity: aws.Int64(int64(d.Get("target_capacity_specification.0.total_target_capacity").(int))),
-			},
+			FleetId: aws.String(d.Id()),
+		}
+
+		if v, ok := d.GetOk("context"); ok {
+			input.Context = aws.String(v.(string))
+		}
+		// this argument is only valid for fleet_type of `maintain`, but was defaulted in the schema above, hence the extra check
+		if v, ok := d.GetOk("excess_capacity_termination_policy"); ok && v != "" && d.Get("type") == "maintain" {
+			input.ExcessCapacityTerminationPolicy = aws.String(v.(string))
+		}
+
+		input.LaunchTemplateConfigs = expandFleetLaunchTemplateConfigRequests(d.Get("launch_template_config").([]interface{}))
+
+		// InvalidTargetCapacitySpecification: Currently we only support total target capacity modification.
+		// TargetCapacitySpecification: expandEc2TargetCapacitySpecificationRequest(d.Get("target_capacity_specification").([]interface{})),
+		input.TargetCapacitySpecification = &ec2.TargetCapacitySpecificationRequest{
+			TotalTargetCapacity: aws.Int64(int64(d.Get("target_capacity_specification.0.total_target_capacity").(int))),
 		}
 
 		log.Printf("[DEBUG] Modifying EC2 Fleet: %s", input)
@@ -1312,18 +1323,22 @@ func resourceFleetDelete(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "deleting EC2 Fleet (%s): %s", d.Id(), err)
 	}
 
-	delay := 0 * time.Second
-	pendingStates := []string{ec2.FleetStateCodeActive}
-	targetStates := []string{ec2.FleetStateCodeDeleted}
-	if d.Get("terminate_instances").(bool) {
-		pendingStates = append(pendingStates, ec2.FleetStateCodeDeletedTerminating)
-		delay = 5 * time.Minute
-	} else {
-		targetStates = append(targetStates, ec2.FleetStateCodeDeletedRunning)
-	}
+	// limiting waiter to non-instant fleet types.
+	// `instant` fleet state is eventually consistent and can take 48 hours to update
+	if d.Get("type") != "instant" {
+		delay := 0 * time.Second
+		pendingStates := []string{ec2.FleetStateCodeActive}
+		targetStates := []string{ec2.FleetStateCodeDeleted}
+		if d.Get("terminate_instances").(bool) {
+			pendingStates = append(pendingStates, ec2.FleetStateCodeDeletedTerminating)
+			delay = 5 * time.Minute
+		} else {
+			targetStates = append(targetStates, ec2.FleetStateCodeDeletedRunning)
+		}
 
-	if _, err := WaitFleet(ctx, conn, d.Id(), pendingStates, targetStates, d.Timeout(schema.TimeoutDelete), delay); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Fleet (%s) delete: %s", d.Id(), err)
+		if _, err := WaitFleet(ctx, conn, d.Id(), pendingStates, targetStates, d.Timeout(schema.TimeoutDelete), delay); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for EC2 Fleet (%s) delete: %s", d.Id(), err)
+		}
 	}
 
 	return diags
@@ -1499,8 +1514,8 @@ func expandOnDemandOptionsRequest(tfMap map[string]interface{}) *ec2.OnDemandOpt
 		apiObject.MaxTotalPrice = aws.String(v)
 	}
 
-	if v, ok := tfMap["min_target_capacity"].(int64); ok {
-		apiObject.MinTargetCapacity = aws.Int64(v)
+	if v, ok := tfMap["min_target_capacity"].(int); ok {
+		apiObject.MinTargetCapacity = aws.Int64(int64(v))
 	}
 
 	if v, ok := tfMap["single_availability_zone"].(bool); ok {
@@ -1614,8 +1629,8 @@ func expandFleetSpotCapacityRebalanceRequest(tfMap map[string]interface{}) *ec2.
 		apiObject.ReplacementStrategy = aws.String(v)
 	}
 
-	if v, ok := tfMap["termination_delay"].(int64); ok {
-		apiObject.TerminationDelay = aws.Int64(v)
+	if v, ok := tfMap["termination_delay"].(int); ok {
+		apiObject.TerminationDelay = aws.Int64(int64(v))
 	}
 
 	return apiObject
@@ -1994,7 +2009,7 @@ func flattenTargetCapacitySpecification(apiObject *ec2.TargetCapacitySpecificati
 }
 
 func resourceFleetCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
-	input := &ec2.CreateFleetInput{}
+	// input := &ec2.CreateFleetInput{}
 
 	if diff.Id() == "" {
 		if diff.Get("type").(string) != ec2.FleetTypeMaintain {
@@ -2007,62 +2022,62 @@ func resourceFleetCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v 
 		}
 	}
 
-	// Launch template config validation:
-	if v, ok := diff.GetOk("launch_template_config"); ok && len(v.([]interface{})) > 0 {
-		input.LaunchTemplateConfigs = expandFleetLaunchTemplateConfigRequests(v.([]interface{}))
-		for _, config := range input.LaunchTemplateConfigs {
-			for _, override := range config.Overrides {
-				// InvalidOverride:
-				if override.InstanceRequirements != nil && override.InstanceType != nil {
-					return errors.New("launch_template_configs.overrides can specify instance_requirements or instance_type, but not both")
-				}
-				// InvalidPlacementConfigs:
-				if override.Placement.GroupId != nil && override.Placement.GroupName != nil {
-					return errors.New("launch_template_configs.overrides.placement can specify a group_id or group_name, but not both")
-				}
-			}
-		}
-	}
+	// // Launch template config validation:
+	// if v, ok := diff.GetOk("launch_template_config"); ok && len(v.([]interface{})) > 0 {
+	// 	input.LaunchTemplateConfigs = expandFleetLaunchTemplateConfigRequests(v.([]interface{}))
+	// 	for _, config := range input.LaunchTemplateConfigs {
+	// 		for _, override := range config.Overrides {
+	// 			// InvalidOverride:
+	// 			if override.InstanceRequirements != nil && override.InstanceType != nil {
+	// 				return errors.New("launch_template_configs.overrides can specify instance_requirements or instance_type, but not both")
+	// 			}
+	// 			// InvalidPlacementConfigs:
+	// 			if override.Placement.GroupId != nil && override.Placement.GroupName != nil {
+	// 				return errors.New("launch_template_configs.overrides.placement can specify a group_id or group_name, but not both")
+	// 			}
+	// 		}
+	// 	}
+	// }
 
-	// Fleet type `instant` specific validation:
-	if v, ok := diff.GetOk("type"); ok {
-		if v == ec2.FleetTypeInstant {
-			if v, ok := diff.GetOk("terminate_instances"); ok {
-				if !v.(bool) {
-					return errors.New(`EC2 Fleet of type instant must have terminate_instances set to true`)
-				}
-			}
-			if v, ok := diff.GetOk("excess_capacity_termination_policy"); ok {
-				if v.(string) != "" {
-					return errors.New(`EC2 Fleet of type instant must not have excess_capacity_termination_policy set`)
-				}
-			}
-		} else {
-			if v, ok := diff.GetOk("on_demand_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.OnDemandOptions = expandOnDemandOptionsRequest(v.([]interface{})[0].(map[string]interface{}))
-				if input.OnDemandOptions.CapacityReservationOptions != nil {
-					return errors.New("on_demand_options.capacity_reservation_options can only be specified for fleets of type instant")
-				}
-				if input.OnDemandOptions.MinTargetCapacity != nil {
-					return errors.New("on_demand_options.min_target_capacity can only be specified for fleets of type instant")
-				}
-				if input.OnDemandOptions.SingleAvailabilityZone != nil {
-					return errors.New("on_demand_options.single_availability_zone can only be specified for fleets of type instant")
-				}
-				if input.OnDemandOptions.SingleInstanceType != nil {
-					return errors.New("on_demand_options.single_instance_type can only be specified for fleets of type instant")
-				}
-				if input.SpotOptions.MinTargetCapacity != nil {
-					return errors.New("spot_options.min_target_capacity can only be specified for fleets of type instant")
-				}
-				if input.SpotOptions.SingleAvailabilityZone != nil {
-					return errors.New("spot_options.single_availability_zone can only be specified for fleets of type instant")
-				}
-				if input.SpotOptions.SingleInstanceType != nil {
-					return errors.New("spot_options.single_instance_type can only be specified for fleets of type instant")
-				}
-			}
-		}
-	}
+	// // Fleet type `instant` specific validation:
+	// if v, ok := diff.GetOk("type"); ok {
+	// 	if v == ec2.FleetTypeInstant {
+	// 		if v, ok := diff.GetOk("terminate_instances"); ok {
+	// 			if !v.(bool) {
+	// 				return errors.New(`EC2 Fleet of type instant must have terminate_instances set to true`)
+	// 			}
+	// 		}
+	// 		if v, ok := diff.GetOk("excess_capacity_termination_policy"); ok {
+	// 			if v.(string) != "" {
+	// 				return errors.New(`EC2 Fleet of type instant must not have excess_capacity_termination_policy set`)
+	// 			}
+	// 		}
+	// 	} else {
+	// 		if v, ok := diff.GetOk("on_demand_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	// 			input.OnDemandOptions = expandOnDemandOptionsRequest(v.([]interface{})[0].(map[string]interface{}))
+	// 			if input.OnDemandOptions.CapacityReservationOptions != nil {
+	// 				return errors.New("on_demand_options.capacity_reservation_options can only be specified for fleets of type instant")
+	// 			}
+	// 			if input.OnDemandOptions.MinTargetCapacity != nil {
+	// 				return errors.New("on_demand_options.min_target_capacity can only be specified for fleets of type instant")
+	// 			}
+	// 			if input.OnDemandOptions.SingleAvailabilityZone != nil {
+	// 				return errors.New("on_demand_options.single_availability_zone can only be specified for fleets of type instant")
+	// 			}
+	// 			if input.OnDemandOptions.SingleInstanceType != nil {
+	// 				return errors.New("on_demand_options.single_instance_type can only be specified for fleets of type instant")
+	// 			}
+	// 			if input.SpotOptions.MinTargetCapacity != nil {
+	// 				return errors.New("spot_options.min_target_capacity can only be specified for fleets of type instant")
+	// 			}
+	// 			if input.SpotOptions.SingleAvailabilityZone != nil {
+	// 				return errors.New("spot_options.single_availability_zone can only be specified for fleets of type instant")
+	// 			}
+	// 			if input.SpotOptions.SingleInstanceType != nil {
+	// 				return errors.New("spot_options.single_instance_type can only be specified for fleets of type instant")
+	// 			}
+	// 		}
+	// 	}
+	// }
 	return nil
 }
