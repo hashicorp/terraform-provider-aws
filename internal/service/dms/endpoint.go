@@ -1362,64 +1362,42 @@ func validateKMSKeyEngineCustomizeDiff(_ context.Context, d *schema.ResourceDiff
 
 func validateS3SSEKMSKeyCustomizeDiff(_ context.Context, d *schema.ResourceDiff, _ any) error {
 	if d.Get("engine_name").(string) == engineNameS3 {
-		rawConfig := d.GetRawConfig()
-		s3Settings := rawConfig.GetAttr("s3_settings")
-		if s3Settings.IsKnown() && !s3Settings.IsNull() && s3Settings.LengthInt() > 0 {
-			setting := s3Settings.Index(cty.NumberIntVal(0))
-			if setting.IsKnown() && !setting.IsNull() {
-				kmsKeyId := setting.GetAttr("server_side_encryption_kms_key_id")
-				if !kmsKeyId.IsKnown() {
-					return nil
-				}
-				encryptionMode := setting.GetAttr("encryption_mode")
-				if encryptionMode.IsKnown() && !encryptionMode.IsNull() {
-					id := ""
-					if !kmsKeyId.IsNull() {
-						id = kmsKeyId.AsString()
-					}
-					switch encryptionMode.AsString() {
-					case encryptionModeSseS3:
-						if id != "" {
-							return fmt.Errorf("s3_settings.server_side_encryption_kms_key_id must not be set when encryption_mode is %q", encryptionModeSseS3)
-						}
-					case encryptionModeSseKMS:
-						if id == "" {
-							return fmt.Errorf("s3_settings.server_side_encryption_kms_key_id is required when encryption_mode is %q", encryptionModeSseKMS)
-						}
-					}
-				}
-			}
-		}
+		return validateSSEKMSKey("s3_settings", d)
 	}
 	return nil
 }
 
 func validateRedshiftSSEKMSKeyCustomizeDiff(_ context.Context, d *schema.ResourceDiff, _ any) error {
 	if d.Get("engine_name").(string) == engineNameRedshift {
-		rawConfig := d.GetRawConfig()
-		redshiftSettings := rawConfig.GetAttr("redshift_settings")
-		if redshiftSettings.IsKnown() && !redshiftSettings.IsNull() && redshiftSettings.LengthInt() > 0 {
-			setting := redshiftSettings.Index(cty.NumberIntVal(0))
-			if setting.IsKnown() && !setting.IsNull() {
-				kmsKeyId := setting.GetAttr("server_side_encryption_kms_key_id")
-				if !kmsKeyId.IsKnown() {
-					return nil
+		return validateSSEKMSKey("redshift_settings", d)
+	}
+	return nil
+}
+
+func validateSSEKMSKey(settingsAttrName string, d *schema.ResourceDiff) error {
+	rawConfig := d.GetRawConfig()
+	settings := rawConfig.GetAttr(settingsAttrName)
+	if settings.IsKnown() && !settings.IsNull() && settings.LengthInt() > 0 {
+		setting := settings.Index(cty.NumberIntVal(0))
+		if setting.IsKnown() && !setting.IsNull() {
+			kmsKeyId := setting.GetAttr("server_side_encryption_kms_key_id")
+			if !kmsKeyId.IsKnown() {
+				return nil
+			}
+			encryptionMode := setting.GetAttr("encryption_mode")
+			if encryptionMode.IsKnown() && !encryptionMode.IsNull() {
+				id := ""
+				if !kmsKeyId.IsNull() {
+					id = kmsKeyId.AsString()
 				}
-				encryptionMode := setting.GetAttr("encryption_mode")
-				if encryptionMode.IsKnown() && !encryptionMode.IsNull() {
-					id := ""
-					if !kmsKeyId.IsNull() {
-						id = kmsKeyId.AsString()
+				switch encryptionMode.AsString() {
+				case encryptionModeSseS3:
+					if id != "" {
+						return fmt.Errorf("%s.server_side_encryption_kms_key_id must not be set when encryption_mode is %q", settingsAttrName, encryptionModeSseS3)
 					}
-					switch encryptionMode.AsString() {
-					case encryptionModeSseS3:
-						if id != "" {
-							return fmt.Errorf("redshift_settings.server_side_encryption_kms_key_id must not be set when encryption_mode is %q", encryptionModeSseS3)
-						}
-					case encryptionModeSseKMS:
-						if id == "" {
-							return fmt.Errorf("redshift_settings.server_side_encryption_kms_key_id is required when encryption_mode is %q", encryptionModeSseKMS)
-						}
+				case encryptionModeSseKMS:
+					if id == "" {
+						return fmt.Errorf("%s.server_side_encryption_kms_key_id is required when encryption_mode is %q", settingsAttrName, encryptionModeSseKMS)
 					}
 				}
 			}
