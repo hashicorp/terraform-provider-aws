@@ -1,4 +1,4 @@
-package acctest_test
+package provider_test
 
 import (
 	"context"
