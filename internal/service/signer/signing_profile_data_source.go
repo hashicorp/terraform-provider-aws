@@ -1,18 +1,20 @@
 package signer
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/signer"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceSigningProfile() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceSigningProfileRead,
+		ReadWithoutTimeout: dataSourceSigningProfileRead,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -84,21 +86,22 @@ func DataSourceSigningProfile() *schema.Resource {
 	}
 }
 
-func dataSourceSigningProfileRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SignerConn
+func dataSourceSigningProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SignerConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	profileName := d.Get("name").(string)
-	signingProfileOutput, err := conn.GetSigningProfile(&signer.GetSigningProfileInput{
+	signingProfileOutput, err := conn.GetSigningProfileWithContext(ctx, &signer.GetSigningProfileInput{
 		ProfileName: aws.String(profileName),
 	})
 
 	if err != nil {
-		return fmt.Errorf("error reading Signer signing profile (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Signer signing profile (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("platform_id", signingProfileOutput.PlatformId); err != nil {
-		return fmt.Errorf("error setting signer signing profile platform id: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting signer signing profile platform id: %s", err)
 	}
 
 	if err := d.Set("signature_validity_period", []interface{}{
@@ -107,38 +110,38 @@ func dataSourceSigningProfileRead(d *schema.ResourceData, meta interface{}) erro
 			"type":  signingProfileOutput.SignatureValidityPeriod.Type,
 		},
 	}); err != nil {
-		return fmt.Errorf("error setting signer signing profile signature validity period: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting signer signing profile signature validity period: %s", err)
 	}
 
 	if err := d.Set("platform_display_name", signingProfileOutput.PlatformDisplayName); err != nil {
-		return fmt.Errorf("error setting signer signing profile platform display name: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting signer signing profile platform display name: %s", err)
 	}
 
 	if err := d.Set("arn", signingProfileOutput.Arn); err != nil {
-		return fmt.Errorf("error setting signer signing profile arn: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting signer signing profile arn: %s", err)
 	}
 
 	if err := d.Set("version", signingProfileOutput.ProfileVersion); err != nil {
-		return fmt.Errorf("error setting signer signing profile version: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting signer signing profile version: %s", err)
 	}
 
 	if err := d.Set("version_arn", signingProfileOutput.ProfileVersionArn); err != nil {
-		return fmt.Errorf("error setting signer signing profile version arn: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting signer signing profile version arn: %s", err)
 	}
 
 	if err := d.Set("status", signingProfileOutput.Status); err != nil {
-		return fmt.Errorf("error setting signer signing profile status: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting signer signing profile status: %s", err)
 	}
 
 	if err := d.Set("tags", KeyValueTags(signingProfileOutput.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting signer signing profile tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting signer signing profile tags: %s", err)
 	}
 
 	if err := d.Set("revocation_record", flattenSigningProfileRevocationRecord(signingProfileOutput.RevocationRecord)); err != nil {
-		return fmt.Errorf("error setting signer signing profile revocation record: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting signer signing profile revocation record: %s", err)
 	}
 
 	d.SetId(aws.StringValue(signingProfileOutput.ProfileName))
 
-	return nil
+	return diags
 }

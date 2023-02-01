@@ -1,6 +1,7 @@
 package redshift_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -15,6 +16,7 @@ import (
 )
 
 func TestAccRedshiftSnapshotCopyGrant_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_redshift_snapshot_copy_grant.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -22,12 +24,12 @@ func TestAccRedshiftSnapshotCopyGrant_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, redshift.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSnapshotCopyGrantDestroy,
+		CheckDestroy:             testAccCheckSnapshotCopyGrantDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSnapshotCopyGrantConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSnapshotCopyGrantExists(resourceName),
+					testAccCheckSnapshotCopyGrantExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "snapshot_copy_grant_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "kms_key_id"),
@@ -43,6 +45,7 @@ func TestAccRedshiftSnapshotCopyGrant_basic(t *testing.T) {
 }
 
 func TestAccRedshiftSnapshotCopyGrant_update(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_redshift_snapshot_copy_grant.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -50,12 +53,12 @@ func TestAccRedshiftSnapshotCopyGrant_update(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, redshift.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSnapshotCopyGrantDestroy,
+		CheckDestroy:             testAccCheckSnapshotCopyGrantDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSnapshotCopyGrantConfig_tags(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSnapshotCopyGrantExists(resourceName),
+					testAccCheckSnapshotCopyGrantExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.Env", "Test"),
@@ -64,14 +67,14 @@ func TestAccRedshiftSnapshotCopyGrant_update(t *testing.T) {
 			{
 				Config: testAccSnapshotCopyGrantConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSnapshotCopyGrantExists(resourceName),
+					testAccCheckSnapshotCopyGrantExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
 				Config: testAccSnapshotCopyGrantConfig_tags(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSnapshotCopyGrantExists(resourceName),
+					testAccCheckSnapshotCopyGrantExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.Env", "Test"),
@@ -87,6 +90,7 @@ func TestAccRedshiftSnapshotCopyGrant_update(t *testing.T) {
 }
 
 func TestAccRedshiftSnapshotCopyGrant_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_redshift_snapshot_copy_grant.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -94,13 +98,13 @@ func TestAccRedshiftSnapshotCopyGrant_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, redshift.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSnapshotCopyGrantDestroy,
+		CheckDestroy:             testAccCheckSnapshotCopyGrantDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSnapshotCopyGrantConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSnapshotCopyGrantExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfredshift.ResourceSnapshotCopyGrant(), resourceName),
+					testAccCheckSnapshotCopyGrantExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfredshift.ResourceSnapshotCopyGrant(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -108,22 +112,24 @@ func TestAccRedshiftSnapshotCopyGrant_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckSnapshotCopyGrantDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn
+func testAccCheckSnapshotCopyGrantDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_redshift_snapshot_copy_grant" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_redshift_snapshot_copy_grant" {
+				continue
+			}
+
+			err := tfredshift.WaitForSnapshotCopyGrantToBeDeleted(ctx, conn, rs.Primary.ID)
+			return err
 		}
 
-		err := tfredshift.WaitForSnapshotCopyGrantToBeDeleted(conn, rs.Primary.ID)
-		return err
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckSnapshotCopyGrantExists(name string) resource.TestCheckFunc {
+func testAccCheckSnapshotCopyGrantExists(ctx context.Context, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -135,14 +141,14 @@ func testAccCheckSnapshotCopyGrantExists(name string) resource.TestCheckFunc {
 		}
 
 		// retrieve the client from the test provider
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn()
 
 		input := redshift.DescribeSnapshotCopyGrantsInput{
 			MaxRecords:            aws.Int64(100),
 			SnapshotCopyGrantName: aws.String(rs.Primary.ID),
 		}
 
-		response, err := conn.DescribeSnapshotCopyGrants(&input)
+		response, err := conn.DescribeSnapshotCopyGrantsWithContext(ctx, &input)
 
 		if err != nil {
 			return err

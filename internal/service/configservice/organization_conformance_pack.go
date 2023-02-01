@@ -1,7 +1,7 @@
 package configservice
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"regexp"
 	"time"
@@ -9,22 +9,24 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/configservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceOrganizationConformancePack() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceOrganizationConformancePackCreate,
-		Read:   resourceOrganizationConformancePackRead,
-		Update: resourceOrganizationConformancePackUpdate,
-		Delete: resourceOrganizationConformancePackDelete,
+		CreateWithoutTimeout: resourceOrganizationConformancePackCreate,
+		ReadWithoutTimeout:   resourceOrganizationConformancePackRead,
+		UpdateWithoutTimeout: resourceOrganizationConformancePackUpdate,
+		DeleteWithoutTimeout: resourceOrganizationConformancePackDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -110,8 +112,9 @@ func ResourceOrganizationConformancePack() *schema.Resource {
 	}
 }
 
-func resourceOrganizationConformancePackCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigServiceConn
+func resourceOrganizationConformancePackCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ConfigServiceConn()
 
 	name := d.Get("name").(string)
 
@@ -143,44 +146,45 @@ func resourceOrganizationConformancePackCreate(d *schema.ResourceData, meta inte
 		input.TemplateS3Uri = aws.String(v.(string))
 	}
 
-	_, err := conn.PutOrganizationConformancePack(input)
+	_, err := conn.PutOrganizationConformancePackWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating Config Organization Conformance Pack (%s): %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating Config Organization Conformance Pack (%s): %s", name, err)
 	}
 
 	d.SetId(name)
 
-	if err := waitForOrganizationConformancePackStatusCreateSuccessful(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("error waiting for Config Organization Conformance Pack (%s) to be created: %w", d.Id(), err)
+	if err := waitForOrganizationConformancePackStatusCreateSuccessful(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Config Organization Conformance Pack (%s) to be created: %s", d.Id(), err)
 	}
 
-	return resourceOrganizationConformancePackRead(d, meta)
+	return append(diags, resourceOrganizationConformancePackRead(ctx, d, meta)...)
 }
 
-func resourceOrganizationConformancePackRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigServiceConn
+func resourceOrganizationConformancePackRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ConfigServiceConn()
 
-	pack, err := DescribeOrganizationConformancePack(conn, d.Id())
+	pack, err := DescribeOrganizationConformancePack(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchOrganizationConformancePackException) {
 		log.Printf("[WARN] Config Organization Conformance Pack (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error describing Config Organization Conformance Pack (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "describing Config Organization Conformance Pack (%s): %s", d.Id(), err)
 	}
 
 	if pack == nil {
 		if d.IsNewResource() {
-			return fmt.Errorf("error describing Config Organization Conformance Pack (%s): not found", d.Id())
+			return sdkdiag.AppendErrorf(diags, "describing Config Organization Conformance Pack (%s): not found", d.Id())
 		}
 
 		log.Printf("[WARN] Config Organization Conformance Pack (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	d.Set("arn", pack.OrganizationConformancePackArn)
@@ -189,18 +193,19 @@ func resourceOrganizationConformancePackRead(d *schema.ResourceData, meta interf
 	d.Set("delivery_s3_key_prefix", pack.DeliveryS3KeyPrefix)
 
 	if err = d.Set("excluded_accounts", flex.FlattenStringSet(pack.ExcludedAccounts)); err != nil {
-		return fmt.Errorf("error setting excluded_accounts: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting excluded_accounts: %s", err)
 	}
 
 	if err = d.Set("input_parameter", flattenConfigConformancePackInputParameters(pack.ConformancePackInputParameters)); err != nil {
-		return fmt.Errorf("error setting input_parameter: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting input_parameter: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceOrganizationConformancePackUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigServiceConn
+func resourceOrganizationConformancePackUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ConfigServiceConn()
 
 	input := &configservice.PutOrganizationConformancePackInput{
 		OrganizationConformancePackName: aws.String(d.Id()),
@@ -230,42 +235,43 @@ func resourceOrganizationConformancePackUpdate(d *schema.ResourceData, meta inte
 		input.TemplateS3Uri = aws.String(v.(string))
 	}
 
-	_, err := conn.PutOrganizationConformancePack(input)
+	_, err := conn.PutOrganizationConformancePackWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error updating Config Organization Conformance Pack (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating Config Organization Conformance Pack (%s): %s", d.Id(), err)
 	}
 
-	if err := waitForOrganizationConformancePackStatusUpdateSuccessful(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return fmt.Errorf("error waiting for Config Organization Conformance Pack (%s) to be updated: %w", d.Id(), err)
+	if err := waitForOrganizationConformancePackStatusUpdateSuccessful(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Config Organization Conformance Pack (%s) to be updated: %s", d.Id(), err)
 	}
 
-	return resourceOrganizationConformancePackRead(d, meta)
+	return append(diags, resourceOrganizationConformancePackRead(ctx, d, meta)...)
 }
 
-func resourceOrganizationConformancePackDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigServiceConn
+func resourceOrganizationConformancePackDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ConfigServiceConn()
 
 	input := &configservice.DeleteOrganizationConformancePackInput{
 		OrganizationConformancePackName: aws.String(d.Id()),
 	}
 
-	_, err := conn.DeleteOrganizationConformancePack(input)
+	_, err := conn.DeleteOrganizationConformancePackWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchOrganizationConformancePackException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("erorr deleting Config Organization Conformance Pack (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "erorr deleting Config Organization Conformance Pack (%s): %s", d.Id(), err)
 	}
 
-	if err := waitForOrganizationConformancePackStatusDeleteSuccessful(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if err := waitForOrganizationConformancePackStatusDeleteSuccessful(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		if tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchOrganizationConformancePackException) {
-			return nil
+			return diags
 		}
-		return fmt.Errorf("error waiting for Config Organization Conformance Pack (%s) to be deleted: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Config Organization Conformance Pack (%s) to be deleted: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

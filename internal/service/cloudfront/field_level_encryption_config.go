@@ -1,27 +1,29 @@
 package cloudfront
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourceFieldLevelEncryptionConfig() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceFieldLevelEncryptionConfigCreate,
-		Read:   resourceFieldLevelEncryptionConfigRead,
-		Update: resourceFieldLevelEncryptionConfigUpdate,
-		Delete: resourceFieldLevelEncryptionConfigDelete,
+		CreateWithoutTimeout: resourceFieldLevelEncryptionConfigCreate,
+		ReadWithoutTimeout:   resourceFieldLevelEncryptionConfigRead,
+		UpdateWithoutTimeout: resourceFieldLevelEncryptionConfigUpdate,
+		DeleteWithoutTimeout: resourceFieldLevelEncryptionConfigDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -122,8 +124,9 @@ func ResourceFieldLevelEncryptionConfig() *schema.Resource {
 	}
 }
 
-func resourceFieldLevelEncryptionConfigCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+func resourceFieldLevelEncryptionConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 
 	apiObject := &cloudfront.FieldLevelEncryptionConfig{
 		CallerReference: aws.String(resource.UniqueId()),
@@ -146,30 +149,31 @@ func resourceFieldLevelEncryptionConfigCreate(d *schema.ResourceData, meta inter
 	}
 
 	log.Printf("[DEBUG] Creating CloudFront Field-level Encryption Config: (%s)", input)
-	output, err := conn.CreateFieldLevelEncryptionConfig(input)
+	output, err := conn.CreateFieldLevelEncryptionConfigWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating CloudFront Field-level Encryption Config (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "creating CloudFront Field-level Encryption Config (%s): %s", d.Id(), err)
 	}
 
 	d.SetId(aws.StringValue(output.FieldLevelEncryption.Id))
 
-	return resourceFieldLevelEncryptionConfigRead(d, meta)
+	return append(diags, resourceFieldLevelEncryptionConfigRead(ctx, d, meta)...)
 }
 
-func resourceFieldLevelEncryptionConfigRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+func resourceFieldLevelEncryptionConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 
-	output, err := FindFieldLevelEncryptionConfigByID(conn, d.Id())
+	output, err := FindFieldLevelEncryptionConfigByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudFront Field-level Encryption Config (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading CloudFront Field-level Encryption Config (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading CloudFront Field-level Encryption Config (%s): %s", d.Id(), err)
 	}
 
 	apiObject := output.FieldLevelEncryptionConfig
@@ -177,7 +181,7 @@ func resourceFieldLevelEncryptionConfigRead(d *schema.ResourceData, meta interfa
 	d.Set("comment", apiObject.Comment)
 	if apiObject.ContentTypeProfileConfig != nil {
 		if err := d.Set("content_type_profile_config", []interface{}{flattenContentTypeProfileConfig(apiObject.ContentTypeProfileConfig)}); err != nil {
-			return fmt.Errorf("error setting content_type_profile_config: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting content_type_profile_config: %s", err)
 		}
 	} else {
 		d.Set("content_type_profile_config", nil)
@@ -185,17 +189,18 @@ func resourceFieldLevelEncryptionConfigRead(d *schema.ResourceData, meta interfa
 	d.Set("etag", output.ETag)
 	if apiObject.QueryArgProfileConfig != nil {
 		if err := d.Set("query_arg_profile_config", []interface{}{flattenQueryArgProfileConfig(apiObject.QueryArgProfileConfig)}); err != nil {
-			return fmt.Errorf("error setting query_arg_profile_config: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting query_arg_profile_config: %s", err)
 		}
 	} else {
 		d.Set("query_arg_profile_config", nil)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceFieldLevelEncryptionConfigUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+func resourceFieldLevelEncryptionConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 
 	apiObject := &cloudfront.FieldLevelEncryptionConfig{
 		CallerReference: aws.String(d.Get("caller_reference").(string)),
@@ -220,33 +225,34 @@ func resourceFieldLevelEncryptionConfigUpdate(d *schema.ResourceData, meta inter
 	}
 
 	log.Printf("[DEBUG] Updating CloudFront Field-level Encryption Config: (%s)", input)
-	_, err := conn.UpdateFieldLevelEncryptionConfig(input)
+	_, err := conn.UpdateFieldLevelEncryptionConfigWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error updating CloudFront Field-level Encryption Config (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating CloudFront Field-level Encryption Config (%s): %s", d.Id(), err)
 	}
 
-	return resourceFieldLevelEncryptionConfigRead(d, meta)
+	return append(diags, resourceFieldLevelEncryptionConfigRead(ctx, d, meta)...)
 }
 
-func resourceFieldLevelEncryptionConfigDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+func resourceFieldLevelEncryptionConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 
 	log.Printf("[DEBUG] Deleting CloudFront Field-level Encryption Config: (%s)", d.Id())
-	_, err := conn.DeleteFieldLevelEncryptionConfig(&cloudfront.DeleteFieldLevelEncryptionConfigInput{
+	_, err := conn.DeleteFieldLevelEncryptionConfigWithContext(ctx, &cloudfront.DeleteFieldLevelEncryptionConfigInput{
 		Id:      aws.String(d.Id()),
 		IfMatch: aws.String(d.Get("etag").(string)),
 	})
 
 	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchFieldLevelEncryptionConfig) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting CloudFront Field-level Encryption Config (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting CloudFront Field-level Encryption Config (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandContentTypeProfileConfig(tfMap map[string]interface{}) *cloudfront.ContentTypeProfileConfig {

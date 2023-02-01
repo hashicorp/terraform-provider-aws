@@ -108,7 +108,7 @@ func DataSourcePipelineDefinition() *schema.Resource {
 }
 
 func dataSourcePipelineDefinitionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DataPipelineConn
+	conn := meta.(*conns.AWSClient).DataPipelineConn()
 
 	pipelineID := d.Get("pipeline_id").(string)
 	input := &datapipeline.GetPipelineDefinitionInput{

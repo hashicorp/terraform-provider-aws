@@ -1,6 +1,7 @@
 package lakeformation_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -15,18 +16,19 @@ import (
 )
 
 func testAccDataLakeSettings_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_lakeformation_data_lake_settings.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lakeformation.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, lakeformation.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataLakeSettingsDestroy,
+		CheckDestroy:             testAccCheckDataLakeSettingsDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataLakeSettingsConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataLakeSettingsExists(resourceName),
+					testAccCheckDataLakeSettingsExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "catalog_id", "data.aws_caller_identity.current", "account_id"),
 					resource.TestCheckResourceAttr(resourceName, "admins.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "admins.0", "data.aws_iam_session_context.current", "issuer_arn"),
@@ -37,19 +39,20 @@ func testAccDataLakeSettings_basic(t *testing.T) {
 }
 
 func testAccDataLakeSettings_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_lakeformation_data_lake_settings.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lakeformation.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, lakeformation.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataLakeSettingsDestroy,
+		CheckDestroy:             testAccCheckDataLakeSettingsDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataLakeSettingsConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataLakeSettingsExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tflakeformation.ResourceDataLakeSettings(), resourceName),
+					testAccCheckDataLakeSettingsExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflakeformation.ResourceDataLakeSettings(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -58,18 +61,19 @@ func testAccDataLakeSettings_disappears(t *testing.T) {
 }
 
 func testAccDataLakeSettings_withoutCatalogID(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_lakeformation_data_lake_settings.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, lakeformation.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataLakeSettingsDestroy,
+		CheckDestroy:             testAccCheckDataLakeSettingsDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataLakeSettingsConfig_withoutCatalogID,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataLakeSettingsExists(resourceName),
+					testAccCheckDataLakeSettingsExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "admins.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "admins.0", "data.aws_iam_session_context.current", "issuer_arn"),
 				),
@@ -78,46 +82,48 @@ func testAccDataLakeSettings_withoutCatalogID(t *testing.T) {
 	})
 }
 
-func testAccCheckDataLakeSettingsDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationConn
+func testAccCheckDataLakeSettingsDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_lakeformation_data_lake_settings" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_lakeformation_data_lake_settings" {
+				continue
+			}
+
+			input := &lakeformation.GetDataLakeSettingsInput{}
+
+			if rs.Primary.Attributes["catalog_id"] != "" {
+				input.CatalogId = aws.String(rs.Primary.Attributes["catalog_id"])
+			}
+
+			output, err := conn.GetDataLakeSettingsWithContext(ctx, input)
+
+			if tfawserr.ErrCodeEquals(err, lakeformation.ErrCodeEntityNotFoundException) {
+				continue
+			}
+
+			if err != nil {
+				return fmt.Errorf("error getting Lake Formation data lake settings (%s): %w", rs.Primary.ID, err)
+			}
+
+			if output != nil && output.DataLakeSettings != nil && len(output.DataLakeSettings.DataLakeAdmins) > 0 {
+				return fmt.Errorf("Lake Formation data lake admin(s) (%s) still exist", rs.Primary.ID)
+			}
 		}
 
-		input := &lakeformation.GetDataLakeSettingsInput{}
-
-		if rs.Primary.Attributes["catalog_id"] != "" {
-			input.CatalogId = aws.String(rs.Primary.Attributes["catalog_id"])
-		}
-
-		output, err := conn.GetDataLakeSettings(input)
-
-		if tfawserr.ErrCodeEquals(err, lakeformation.ErrCodeEntityNotFoundException) {
-			continue
-		}
-
-		if err != nil {
-			return fmt.Errorf("error getting Lake Formation data lake settings (%s): %w", rs.Primary.ID, err)
-		}
-
-		if output != nil && output.DataLakeSettings != nil && len(output.DataLakeSettings.DataLakeAdmins) > 0 {
-			return fmt.Errorf("Lake Formation data lake admin(s) (%s) still exist", rs.Primary.ID)
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckDataLakeSettingsExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckDataLakeSettingsExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationConn()
 
 		input := &lakeformation.GetDataLakeSettingsInput{}
 
@@ -125,7 +131,7 @@ func testAccCheckDataLakeSettingsExists(resourceName string) resource.TestCheckF
 			input.CatalogId = aws.String(rs.Primary.Attributes["catalog_id"])
 		}
 
-		_, err := conn.GetDataLakeSettings(input)
+		_, err := conn.GetDataLakeSettingsWithContext(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("error getting Lake Formation data lake settings (%s): %w", rs.Primary.ID, err)

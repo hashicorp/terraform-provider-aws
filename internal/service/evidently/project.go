@@ -152,7 +152,7 @@ func ResourceProject() *schema.Resource {
 }
 
 func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EvidentlyConn
+	conn := meta.(*conns.AWSClient).EvidentlyConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -182,7 +182,7 @@ func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	d.SetId(aws.StringValue(output.Project.Name))
 
-	if _, err := waitProjectCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waitProjectCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return diag.Errorf("waiting for CloudWatch Evidently Project (%s) creation: %s", d.Id(), err)
 	}
 
@@ -190,7 +190,7 @@ func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EvidentlyConn
+	conn := meta.(*conns.AWSClient).EvidentlyConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -236,7 +236,7 @@ func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EvidentlyConn
+	conn := meta.(*conns.AWSClient).EvidentlyConn()
 
 	// Project has 2 update APIs
 	// UpdateProjectWithContext: Updates the description of an existing project.
@@ -252,7 +252,7 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			return diag.Errorf("updating CloudWatch Evidently Project (%s): %s", d.Id(), err)
 		}
 
-		if _, err := waitProjectUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if _, err := waitProjectUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return diag.Errorf("waiting for CloudWatch Evidently Project (%s) update: %s", d.Id(), err)
 		}
 	}
@@ -285,7 +285,7 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			return diag.Errorf("updating CloudWatch Evidently Project (%s) data delivery: %s", d.Id(), err)
 		}
 
-		if _, err := waitProjectUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if _, err := waitProjectUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return diag.Errorf("waiting for CloudWatch Evidently Project (%s) update: %s", d.Id(), err)
 		}
 	}
@@ -294,7 +294,7 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTagsWithContext(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.Errorf("updating tags: %s", err)
 		}
 	}
@@ -303,7 +303,7 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceProjectDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EvidentlyConn
+	conn := meta.(*conns.AWSClient).EvidentlyConn()
 
 	log.Printf("[DEBUG] Deleting CloudWatch Evidently Project: %s", d.Id())
 	_, err := conn.DeleteProjectWithContext(ctx, &cloudwatchevidently.DeleteProjectInput{
@@ -318,7 +318,7 @@ func resourceProjectDelete(ctx context.Context, d *schema.ResourceData, meta int
 		return diag.Errorf("deleting CloudWatch Evidently Project (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitProjectDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err := waitProjectDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return diag.Errorf("waiting for CloudWatch Evidently Project (%s) deletion: %s", d.Id(), err)
 	}
 

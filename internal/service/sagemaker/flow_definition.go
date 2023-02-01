@@ -1,7 +1,7 @@
 package sagemaker
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"regexp"
 
@@ -9,10 +9,12 @@ import (
 	"github.com/aws/aws-sdk-go/private/protocol"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -21,13 +23,13 @@ import (
 
 func ResourceFlowDefinition() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceFlowDefinitionCreate,
-		Read:   resourceFlowDefinitionRead,
-		Update: resourceFlowDefinitionUpdate,
-		Delete: resourceFlowDefinitionDelete,
+		CreateWithoutTimeout: resourceFlowDefinitionCreate,
+		ReadWithoutTimeout:   resourceFlowDefinitionRead,
+		UpdateWithoutTimeout: resourceFlowDefinitionUpdate,
+		DeleteWithoutTimeout: resourceFlowDefinitionDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -239,8 +241,9 @@ func ResourceFlowDefinition() *schema.Resource {
 	}
 }
 
-func resourceFlowDefinitionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+func resourceFlowDefinitionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -255,7 +258,7 @@ func resourceFlowDefinitionCreate(d *schema.ResourceData, meta interface{}) erro
 	if v, ok := d.GetOk("human_loop_activation_config"); ok && (len(v.([]interface{})) > 0) {
 		loopConfig, err := expandFlowDefinitionHumanLoopActivationConfig(v.([]interface{}))
 		if err != nil {
-			return fmt.Errorf("creating SageMaker Flow Definition Human Loop Activation Config (%s): %w", name, err)
+			return sdkdiag.AppendErrorf(diags, "creating SageMaker Flow Definition Human Loop Activation Config (%s): %s", name, err)
 		}
 		input.HumanLoopActivationConfig = loopConfig
 	}
@@ -269,38 +272,39 @@ func resourceFlowDefinitionCreate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	log.Printf("[DEBUG] Creating SageMaker Flow Definition: %s", input)
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(propagationTimeout, func() (interface{}, error) {
-		return conn.CreateFlowDefinition(input)
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (interface{}, error) {
+		return conn.CreateFlowDefinitionWithContext(ctx, input)
 	}, "ValidationException")
 
 	if err != nil {
-		return fmt.Errorf("creating SageMaker Flow Definition (%s): %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker Flow Definition (%s): %s", name, err)
 	}
 
 	d.SetId(name)
 
-	if _, err := WaitFlowDefinitionActive(conn, d.Id()); err != nil {
-		return fmt.Errorf("waiting for SageMaker Flow Definition (%s) to become active: %w", d.Id(), err)
+	if _, err := WaitFlowDefinitionActive(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Flow Definition (%s) to become active: %s", d.Id(), err)
 	}
 
-	return resourceFlowDefinitionRead(d, meta)
+	return append(diags, resourceFlowDefinitionRead(ctx, d, meta)...)
 }
 
-func resourceFlowDefinitionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+func resourceFlowDefinitionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	flowDefinition, err := FindFlowDefinitionByName(conn, d.Id())
+	flowDefinition, err := FindFlowDefinitionByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SageMaker Flow Definition (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading SageMaker Flow Definition (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker Flow Definition (%s): %s", d.Id(), err)
 	}
 
 	arn := aws.StringValue(flowDefinition.FlowDefinitionArn)
@@ -309,76 +313,78 @@ func resourceFlowDefinitionRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("flow_definition_name", flowDefinition.FlowDefinitionName)
 
 	if err := d.Set("human_loop_activation_config", flattenFlowDefinitionHumanLoopActivationConfig(flowDefinition.HumanLoopActivationConfig)); err != nil {
-		return fmt.Errorf("setting human_loop_activation_config: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting human_loop_activation_config: %s", err)
 	}
 
 	if err := d.Set("human_loop_config", flattenFlowDefinitionHumanLoopConfig(flowDefinition.HumanLoopConfig)); err != nil {
-		return fmt.Errorf("setting human_loop_config: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting human_loop_config: %s", err)
 	}
 
 	if err := d.Set("human_loop_request_source", flattenFlowDefinitionHumanLoopRequestSource(flowDefinition.HumanLoopRequestSource)); err != nil {
-		return fmt.Errorf("setting human_loop_request_source: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting human_loop_request_source: %s", err)
 	}
 
 	if err := d.Set("output_config", flattenFlowDefinitionOutputConfig(flowDefinition.OutputConfig)); err != nil {
-		return fmt.Errorf("setting output_config: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting output_config: %s", err)
 	}
 
-	tags, err := ListTags(conn, arn)
+	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("listing tags for SageMaker Flow Definition (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for SageMaker Flow Definition (%s): %s", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceFlowDefinitionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+func resourceFlowDefinitionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("updating SageMaker Flow Definition (%s) tags: %w", d.Id(), err)
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating SageMaker Flow Definition (%s) tags: %s", d.Id(), err)
 		}
 	}
 
-	return resourceFlowDefinitionRead(d, meta)
+	return append(diags, resourceFlowDefinitionRead(ctx, d, meta)...)
 }
 
-func resourceFlowDefinitionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+func resourceFlowDefinitionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	log.Printf("[DEBUG] Deleting SageMaker Flow Definition: %s", d.Id())
-	_, err := conn.DeleteFlowDefinition(&sagemaker.DeleteFlowDefinitionInput{
+	_, err := conn.DeleteFlowDefinitionWithContext(ctx, &sagemaker.DeleteFlowDefinitionInput{
 		FlowDefinitionName: aws.String(d.Id()),
 	})
 
 	if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("deleting SageMaker Flow Definition (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting SageMaker Flow Definition (%s): %s", d.Id(), err)
 	}
 
-	if _, err := WaitFlowDefinitionDeleted(conn, d.Id()); err != nil {
-		return fmt.Errorf("waiting for SageMaker Flow Definition (%s) to delete: %w", d.Id(), err)
+	if _, err := WaitFlowDefinitionDeleted(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Flow Definition (%s) to delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandFlowDefinitionHumanLoopActivationConfig(l []interface{}) (*sagemaker.HumanLoopActivationConfig, error) {

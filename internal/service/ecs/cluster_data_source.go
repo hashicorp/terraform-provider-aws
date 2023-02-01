@@ -71,7 +71,7 @@ func DataSourceCluster() *schema.Resource {
 }
 
 func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ECSConn
+	conn := meta.(*conns.AWSClient).ECSConn()
 
 	clusterName := d.Get("cluster_name").(string)
 	cluster, err := FindClusterByNameOrARN(ctx, conn, d.Get("cluster_name").(string))

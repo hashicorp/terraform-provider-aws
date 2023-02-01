@@ -17,19 +17,20 @@ import (
 )
 
 func TestAccAppRunnerConnection_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_apprunner_connection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, apprunner.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectionDestroy,
+		CheckDestroy:             testAccCheckConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectionExists(resourceName),
+					testAccCheckConnectionExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "apprunner", regexp.MustCompile(fmt.Sprintf(`connection/%s/.+`, rName))),
 					resource.TestCheckResourceAttr(resourceName, "connection_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "provider_type", apprunner.ProviderTypeGithub),
@@ -47,20 +48,21 @@ func TestAccAppRunnerConnection_basic(t *testing.T) {
 }
 
 func TestAccAppRunnerConnection_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_apprunner_connection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, apprunner.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectionDestroy,
+		CheckDestroy:             testAccCheckConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectionExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfapprunner.ResourceConnection(), resourceName),
+					testAccCheckConnectionExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapprunner.ResourceConnection(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -69,19 +71,20 @@ func TestAccAppRunnerConnection_disappears(t *testing.T) {
 }
 
 func TestAccAppRunnerConnection_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_apprunner_connection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, apprunner.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectionDestroy,
+		CheckDestroy:             testAccCheckConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectionConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectionExists(resourceName),
+					testAccCheckConnectionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
@@ -96,7 +99,7 @@ func TestAccAppRunnerConnection_tags(t *testing.T) {
 			{
 				Config: testAccConnectionConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectionExists(resourceName),
+					testAccCheckConnectionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -108,7 +111,7 @@ func TestAccAppRunnerConnection_tags(t *testing.T) {
 			{
 				Config: testAccConnectionConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectionExists(resourceName),
+					testAccCheckConnectionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
@@ -119,33 +122,35 @@ func TestAccAppRunnerConnection_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckConnectionDestroy(s *terraform.State) error {
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_apprunner_connection" {
-			continue
+func testAccCheckConnectionDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_apprunner_connection" {
+				continue
+			}
+
+			conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn()
+
+			connection, err := tfapprunner.FindConnectionSummaryByName(ctx, conn, rs.Primary.ID)
+
+			if tfawserr.ErrCodeEquals(err, apprunner.ErrCodeResourceNotFoundException) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			if connection != nil {
+				return fmt.Errorf("App Runner Connection (%s) still exists", rs.Primary.ID)
+			}
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn
-
-		connection, err := tfapprunner.FindConnectionSummaryByName(context.Background(), conn, rs.Primary.ID)
-
-		if tfawserr.ErrCodeEquals(err, apprunner.ErrCodeResourceNotFoundException) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		if connection != nil {
-			return fmt.Errorf("App Runner Connection (%s) still exists", rs.Primary.ID)
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckConnectionExists(n string) resource.TestCheckFunc {
+func testAccCheckConnectionExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -156,9 +161,9 @@ func testAccCheckConnectionExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No App Runner Connection ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn()
 
-		connection, err := tfapprunner.FindConnectionSummaryByName(context.Background(), conn, rs.Primary.ID)
+		connection, err := tfapprunner.FindConnectionSummaryByName(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

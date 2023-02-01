@@ -1,18 +1,20 @@
 package ssm
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
 func DataSourceMaintenanceWindows() *schema.Resource {
 	return &schema.Resource{
-		Read: dataMaintenanceWindowsRead,
+		ReadWithoutTimeout: dataMaintenanceWindowsRead,
 		Schema: map[string]*schema.Schema{
 			"filter": {
 				Type:     schema.TypeSet,
@@ -41,8 +43,9 @@ func DataSourceMaintenanceWindows() *schema.Resource {
 	}
 }
 
-func dataMaintenanceWindowsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+func dataMaintenanceWindowsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SSMConn()
 
 	input := &ssm.DescribeMaintenanceWindowsInput{}
 
@@ -52,7 +55,7 @@ func dataMaintenanceWindowsRead(d *schema.ResourceData, meta interface{}) error 
 
 	var results []*ssm.MaintenanceWindowIdentity
 
-	err := conn.DescribeMaintenanceWindowsPages(input, func(page *ssm.DescribeMaintenanceWindowsOutput, lastPage bool) bool {
+	err := conn.DescribeMaintenanceWindowsPagesWithContext(ctx, input, func(page *ssm.DescribeMaintenanceWindowsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -69,7 +72,7 @@ func dataMaintenanceWindowsRead(d *schema.ResourceData, meta interface{}) error 
 	})
 
 	if err != nil {
-		return fmt.Errorf("error reading SSM Maintenance Windows: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading SSM Maintenance Windows: %s", err)
 	}
 
 	var windowIDs []string
@@ -81,7 +84,7 @@ func dataMaintenanceWindowsRead(d *schema.ResourceData, meta interface{}) error 
 	d.SetId(meta.(*conns.AWSClient).Region)
 	d.Set("ids", windowIDs)
 
-	return nil
+	return diags
 }
 
 func expandMaintenanceWindowFilters(tfList []interface{}) []*ssm.MaintenanceWindowFilter {

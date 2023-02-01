@@ -1,6 +1,7 @@
 package acmpca_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -17,6 +18,7 @@ import (
 )
 
 func TestAccACMPCACertificateAuthority_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var certificateAuthority acmpca.CertificateAuthority
 	resourceName := "aws_acmpca_certificate_authority.test"
 
@@ -26,7 +28,7 @@ func TestAccACMPCACertificateAuthority_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCertificateAuthorityDestroy,
+		CheckDestroy:             testAccCheckCertificateAuthorityDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificateAuthorityConfig_required(commonName),
@@ -65,6 +67,7 @@ func TestAccACMPCACertificateAuthority_basic(t *testing.T) {
 }
 
 func TestAccACMPCACertificateAuthority_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var certificateAuthority acmpca.CertificateAuthority
 	resourceName := "aws_acmpca_certificate_authority.test"
 
@@ -74,13 +77,13 @@ func TestAccACMPCACertificateAuthority_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCertificateAuthorityDestroy,
+		CheckDestroy:             testAccCheckCertificateAuthorityDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificateAuthorityConfig_required(commonName),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckACMPCACertificateAuthorityExists(resourceName, &certificateAuthority),
-					acctest.CheckResourceDisappears(acctest.Provider, tfacmpca.ResourceCertificateAuthority(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfacmpca.ResourceCertificateAuthority(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -89,6 +92,7 @@ func TestAccACMPCACertificateAuthority_disappears(t *testing.T) {
 }
 
 func TestAccACMPCACertificateAuthority_enabledDeprecated(t *testing.T) {
+	ctx := acctest.Context(t)
 	var certificateAuthority acmpca.CertificateAuthority
 	resourceName := "aws_acmpca_certificate_authority.test"
 
@@ -98,7 +102,7 @@ func TestAccACMPCACertificateAuthority_enabledDeprecated(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCertificateAuthorityDestroy,
+		CheckDestroy:             testAccCheckCertificateAuthorityDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificateAuthorityConfig_enabled(commonName, acmpca.CertificateAuthorityTypeRoot, true),
@@ -140,6 +144,7 @@ func TestAccACMPCACertificateAuthority_enabledDeprecated(t *testing.T) {
 }
 
 func TestAccACMPCACertificateAuthority_usageMode(t *testing.T) {
+	ctx := acctest.Context(t)
 	var certificateAuthority acmpca.CertificateAuthority
 	resourceName := "aws_acmpca_certificate_authority.test"
 
@@ -149,7 +154,7 @@ func TestAccACMPCACertificateAuthority_usageMode(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCertificateAuthorityDestroy,
+		CheckDestroy:             testAccCheckCertificateAuthorityDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificateAuthorityConfig_usageMode(commonName, acmpca.CertificateAuthorityTypeRoot, "SHORT_LIVED_CERTIFICATE"),
@@ -171,6 +176,7 @@ func TestAccACMPCACertificateAuthority_usageMode(t *testing.T) {
 }
 
 func TestAccACMPCACertificateAuthority_deleteFromActiveState(t *testing.T) {
+	ctx := acctest.Context(t)
 	var certificateAuthority acmpca.CertificateAuthority
 	resourceName := "aws_acmpca_certificate_authority.test"
 
@@ -180,7 +186,7 @@ func TestAccACMPCACertificateAuthority_deleteFromActiveState(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCertificateAuthorityDestroy,
+		CheckDestroy:             testAccCheckCertificateAuthorityDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificateAuthorityConfig_root(commonName),
@@ -198,6 +204,7 @@ func TestAccACMPCACertificateAuthority_deleteFromActiveState(t *testing.T) {
 }
 
 func TestAccACMPCACertificateAuthority_RevocationConfiguration_empty(t *testing.T) {
+	ctx := acctest.Context(t)
 	var certificateAuthority acmpca.CertificateAuthority
 	resourceName := "aws_acmpca_certificate_authority.test"
 
@@ -207,7 +214,7 @@ func TestAccACMPCACertificateAuthority_RevocationConfiguration_empty(t *testing.
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCertificateAuthorityDestroy,
+		CheckDestroy:             testAccCheckCertificateAuthorityDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificateAuthorityConfig_revocationConfigurationEmpty(commonName),
@@ -246,6 +253,7 @@ func TestAccACMPCACertificateAuthority_RevocationConfiguration_empty(t *testing.
 }
 
 func TestAccACMPCACertificateAuthority_RevocationCrl_customCNAME(t *testing.T) {
+	ctx := acctest.Context(t)
 	var certificateAuthority acmpca.CertificateAuthority
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_acmpca_certificate_authority.test"
@@ -259,7 +267,7 @@ func TestAccACMPCACertificateAuthority_RevocationCrl_customCNAME(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCertificateAuthorityDestroy,
+		CheckDestroy:             testAccCheckCertificateAuthorityDestroy(ctx),
 		Steps: []resource.TestStep{
 			// Test creating revocation configuration on resource creation
 			{
@@ -337,6 +345,7 @@ func TestAccACMPCACertificateAuthority_RevocationCrl_customCNAME(t *testing.T) {
 }
 
 func TestAccACMPCACertificateAuthority_RevocationCrl_enabled(t *testing.T) {
+	ctx := acctest.Context(t)
 	var certificateAuthority acmpca.CertificateAuthority
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_acmpca_certificate_authority.test"
@@ -347,7 +356,7 @@ func TestAccACMPCACertificateAuthority_RevocationCrl_enabled(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCertificateAuthorityDestroy,
+		CheckDestroy:             testAccCheckCertificateAuthorityDestroy(ctx),
 		Steps: []resource.TestStep{
 			// Test creating revocation configuration on resource creation
 			{
@@ -409,6 +418,7 @@ func TestAccACMPCACertificateAuthority_RevocationCrl_enabled(t *testing.T) {
 }
 
 func TestAccACMPCACertificateAuthority_RevocationCrl_expirationInDays(t *testing.T) {
+	ctx := acctest.Context(t)
 	var certificateAuthority acmpca.CertificateAuthority
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_acmpca_certificate_authority.test"
@@ -419,7 +429,7 @@ func TestAccACMPCACertificateAuthority_RevocationCrl_expirationInDays(t *testing
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCertificateAuthorityDestroy,
+		CheckDestroy:             testAccCheckCertificateAuthorityDestroy(ctx),
 		Steps: []resource.TestStep{
 			// Test creating revocation configuration on resource creation
 			{
@@ -471,6 +481,7 @@ func TestAccACMPCACertificateAuthority_RevocationCrl_expirationInDays(t *testing
 }
 
 func TestAccACMPCACertificateAuthority_RevocationCrl_s3ObjectACL(t *testing.T) {
+	ctx := acctest.Context(t)
 	var certificateAuthority acmpca.CertificateAuthority
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_acmpca_certificate_authority.test"
@@ -481,7 +492,7 @@ func TestAccACMPCACertificateAuthority_RevocationCrl_s3ObjectACL(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCertificateAuthorityDestroy,
+		CheckDestroy:             testAccCheckCertificateAuthorityDestroy(ctx),
 		Steps: []resource.TestStep{
 			// Test creating revocation configuration on resource creation
 			{
@@ -523,6 +534,7 @@ func TestAccACMPCACertificateAuthority_RevocationCrl_s3ObjectACL(t *testing.T) {
 }
 
 func TestAccACMPCACertificateAuthority_RevocationOcsp_enabled(t *testing.T) {
+	ctx := acctest.Context(t)
 	var certificateAuthority acmpca.CertificateAuthority
 	resourceName := "aws_acmpca_certificate_authority.test"
 
@@ -532,7 +544,7 @@ func TestAccACMPCACertificateAuthority_RevocationOcsp_enabled(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCertificateAuthorityDestroy,
+		CheckDestroy:             testAccCheckCertificateAuthorityDestroy(ctx),
 		Steps: []resource.TestStep{
 			// Test creating OCSP revocation configuration on resource creation
 			{
@@ -590,6 +602,7 @@ func TestAccACMPCACertificateAuthority_RevocationOcsp_enabled(t *testing.T) {
 }
 
 func TestAccACMPCACertificateAuthority_RevocationOcsp_customCNAME(t *testing.T) {
+	ctx := acctest.Context(t)
 	var certificateAuthority acmpca.CertificateAuthority
 	resourceName := "aws_acmpca_certificate_authority.test"
 
@@ -602,7 +615,7 @@ func TestAccACMPCACertificateAuthority_RevocationOcsp_customCNAME(t *testing.T) 
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCertificateAuthorityDestroy,
+		CheckDestroy:             testAccCheckCertificateAuthorityDestroy(ctx),
 		Steps: []resource.TestStep{
 			// Test creating revocation configuration on resource creation
 			{
@@ -672,6 +685,7 @@ func TestAccACMPCACertificateAuthority_RevocationOcsp_customCNAME(t *testing.T) 
 }
 
 func TestAccACMPCACertificateAuthority_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var certificateAuthority acmpca.CertificateAuthority
 	resourceName := "aws_acmpca_certificate_authority.test"
 
@@ -681,7 +695,7 @@ func TestAccACMPCACertificateAuthority_tags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCertificateAuthorityDestroy,
+		CheckDestroy:             testAccCheckCertificateAuthorityDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificateAuthorityConfig_tagsSingle(commonName),
@@ -728,33 +742,35 @@ func TestAccACMPCACertificateAuthority_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckCertificateAuthorityDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAConn
+func testAccCheckCertificateAuthorityDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_acmpca_certificate_authority" {
-			continue
-		}
-
-		input := &acmpca.DescribeCertificateAuthorityInput{
-			CertificateAuthorityArn: aws.String(rs.Primary.ID),
-		}
-
-		output, err := conn.DescribeCertificateAuthority(input)
-
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, acmpca.ErrCodeResourceNotFoundException) {
-				return nil
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_acmpca_certificate_authority" {
+				continue
 			}
-			return err
+
+			input := &acmpca.DescribeCertificateAuthorityInput{
+				CertificateAuthorityArn: aws.String(rs.Primary.ID),
+			}
+
+			output, err := conn.DescribeCertificateAuthorityWithContext(ctx, input)
+
+			if err != nil {
+				if tfawserr.ErrCodeEquals(err, acmpca.ErrCodeResourceNotFoundException) {
+					return nil
+				}
+				return err
+			}
+
+			if output != nil && output.CertificateAuthority != nil && aws.StringValue(output.CertificateAuthority.Arn) == rs.Primary.ID && aws.StringValue(output.CertificateAuthority.Status) != acmpca.CertificateAuthorityStatusDeleted {
+				return fmt.Errorf("ACM PCA Certificate Authority %q still exists in non-DELETED state: %s", rs.Primary.ID, aws.StringValue(output.CertificateAuthority.Status))
+			}
 		}
 
-		if output != nil && output.CertificateAuthority != nil && aws.StringValue(output.CertificateAuthority.Arn) == rs.Primary.ID && aws.StringValue(output.CertificateAuthority.Status) != acmpca.CertificateAuthorityStatusDeleted {
-			return fmt.Errorf("ACM PCA Certificate Authority %q still exists in non-DELETED state: %s", rs.Primary.ID, aws.StringValue(output.CertificateAuthority.Status))
-		}
+		return nil
 	}
-
-	return nil
 }
 
 func testAccCertificateAuthorityConfig_enabled(commonName, certificateAuthorityType string, enabled bool) string {

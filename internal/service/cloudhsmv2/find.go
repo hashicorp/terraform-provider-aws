@@ -1,11 +1,13 @@
 package cloudhsmv2
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudhsmv2"
 )
 
-func FindCluster(conn *cloudhsmv2.CloudHSMV2, id string) (*cloudhsmv2.Cluster, error) {
+func FindCluster(ctx context.Context, conn *cloudhsmv2.CloudHSMV2, id string) (*cloudhsmv2.Cluster, error) {
 	input := &cloudhsmv2.DescribeClustersInput{
 		Filters: map[string][]*string{
 			"clusterIds": aws.StringSlice([]string{id}),
@@ -14,7 +16,7 @@ func FindCluster(conn *cloudhsmv2.CloudHSMV2, id string) (*cloudhsmv2.Cluster, e
 
 	var result *cloudhsmv2.Cluster
 
-	err := conn.DescribeClustersPages(input, func(page *cloudhsmv2.DescribeClustersOutput, lastPage bool) bool {
+	err := conn.DescribeClustersPagesWithContext(ctx, input, func(page *cloudhsmv2.DescribeClustersOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -40,12 +42,12 @@ func FindCluster(conn *cloudhsmv2.CloudHSMV2, id string) (*cloudhsmv2.Cluster, e
 	return result, nil
 }
 
-func FindHSM(conn *cloudhsmv2.CloudHSMV2, hsmID string, eniID string) (*cloudhsmv2.Hsm, error) {
+func FindHSM(ctx context.Context, conn *cloudhsmv2.CloudHSMV2, hsmID string, eniID string) (*cloudhsmv2.Hsm, error) {
 	input := &cloudhsmv2.DescribeClustersInput{}
 
 	var result *cloudhsmv2.Hsm
 
-	err := conn.DescribeClustersPages(input, func(page *cloudhsmv2.DescribeClustersOutput, lastPage bool) bool {
+	err := conn.DescribeClustersPagesWithContext(ctx, input, func(page *cloudhsmv2.DescribeClustersOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}

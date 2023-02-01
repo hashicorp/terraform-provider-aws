@@ -1,27 +1,29 @@
 package glue
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
 func ResourcePartition() *schema.Resource {
 	return &schema.Resource{
-		Create: resourcePartitionCreate,
-		Read:   resourcePartitionRead,
-		Update: resourcePartitionUpdate,
-		Delete: resourcePartitionDelete,
+		CreateWithoutTimeout: resourcePartitionCreate,
+		ReadWithoutTimeout:   resourcePartitionRead,
+		UpdateWithoutTimeout: resourcePartitionUpdate,
+		DeleteWithoutTimeout: resourcePartitionDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -198,8 +200,9 @@ func ResourcePartition() *schema.Resource {
 	}
 }
 
-func resourcePartitionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+func resourcePartitionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlueConn()
 	catalogID := createCatalogID(d, meta.(*conns.AWSClient).AccountID)
 	dbName := d.Get("database_name").(string)
 	tableName := d.Get("table_name").(string)
@@ -213,28 +216,29 @@ func resourcePartitionCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Creating Glue Partition: %#v", input)
-	_, err := conn.CreatePartition(input)
+	_, err := conn.CreatePartitionWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("error creating Glue Partition: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating Glue Partition: %s", err)
 	}
 
 	d.SetId(createPartitionID(catalogID, dbName, tableName, values))
 
-	return resourcePartitionRead(d, meta)
+	return append(diags, resourcePartitionRead(ctx, d, meta)...)
 }
 
-func resourcePartitionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+func resourcePartitionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlueConn()
 
 	log.Printf("[DEBUG] Reading Glue Partition: %s", d.Id())
-	partition, err := FindPartitionByValues(conn, d.Id())
+	partition, err := FindPartitionByValues(ctx, conn, d.Id())
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 			log.Printf("[WARN] Glue Partition (%s) not found, removing from state", d.Id())
 			d.SetId("")
-			return nil
+			return diags
 		}
-		return fmt.Errorf("error reading Glue Partition: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading Glue Partition: %s", err)
 	}
 
 	d.Set("table_name", partition.TableName)
@@ -255,22 +259,23 @@ func resourcePartitionRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err := d.Set("storage_descriptor", flattenStorageDescriptor(partition.StorageDescriptor)); err != nil {
-		return fmt.Errorf("error setting storage_descriptor: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting storage_descriptor: %s", err)
 	}
 
 	if err := d.Set("parameters", aws.StringValueMap(partition.Parameters)); err != nil {
-		return fmt.Errorf("error setting parameters: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting parameters: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourcePartitionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+func resourcePartitionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlueConn()
 
 	catalogID, dbName, tableName, values, err := readPartitionID(d.Id())
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "updating Glue Partition (%s): %s", d.Id(), err)
 	}
 
 	input := &glue.UpdatePartitionInput{
@@ -281,33 +286,33 @@ func resourcePartitionUpdate(d *schema.ResourceData, meta interface{}) error {
 		PartitionValueList: aws.StringSlice(values),
 	}
 
-	log.Printf("[DEBUG] Updating Glue Partition: %#v", input)
-	if _, err := conn.UpdatePartition(input); err != nil {
-		return fmt.Errorf("error updating Glue Partition: %w", err)
+	if _, err := conn.UpdatePartitionWithContext(ctx, input); err != nil {
+		return sdkdiag.AppendErrorf(diags, "updating Glue Partition (%s): %s", d.Id(), err)
 	}
 
-	return resourcePartitionRead(d, meta)
+	return append(diags, resourcePartitionRead(ctx, d, meta)...)
 }
 
-func resourcePartitionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+func resourcePartitionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlueConn()
 
-	catalogID, dbName, tableName, values, tableErr := readPartitionID(d.Id())
-	if tableErr != nil {
-		return tableErr
+	catalogID, dbName, tableName, values, err := readPartitionID(d.Id())
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting Glue Partition: %s", err)
 	}
 
 	log.Printf("[DEBUG] Deleting Glue Partition: %s", d.Id())
-	_, err := conn.DeletePartition(&glue.DeletePartitionInput{
+	_, err = conn.DeletePartitionWithContext(ctx, &glue.DeletePartitionInput{
 		CatalogId:       aws.String(catalogID),
 		TableName:       aws.String(tableName),
 		DatabaseName:    aws.String(dbName),
 		PartitionValues: aws.StringSlice(values),
 	})
 	if err != nil {
-		return fmt.Errorf("Error deleting Glue Partition: %w", err)
+		return sdkdiag.AppendErrorf(diags, "deleting Glue Partition: %s", err)
 	}
-	return nil
+	return diags
 }
 
 func expandPartitionInput(d *schema.ResourceData) *glue.PartitionInput {

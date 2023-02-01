@@ -1,6 +1,7 @@
 package codeartifact_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -17,6 +18,7 @@ import (
 )
 
 func testAccDomainPermissionsPolicy_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codeartifact_domain_permissions_policy.test"
 
@@ -24,12 +26,12 @@ func testAccDomainPermissionsPolicy_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codeartifact.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, codeartifact.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainPermissionsDestroy,
+		CheckDestroy:             testAccCheckDomainPermissionsDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainPermissionsPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainPermissionsExists(resourceName),
+					testAccCheckDomainPermissionsExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", "aws_codeartifact_domain.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "domain", rName),
 					resource.TestMatchResourceAttr(resourceName, "policy_document", regexp.MustCompile("codeartifact:CreateRepository")),
@@ -44,7 +46,7 @@ func testAccDomainPermissionsPolicy_basic(t *testing.T) {
 			{
 				Config: testAccDomainPermissionsPolicyConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainPermissionsExists(resourceName),
+					testAccCheckDomainPermissionsExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", "aws_codeartifact_domain.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "domain", rName),
 					resource.TestMatchResourceAttr(resourceName, "policy_document", regexp.MustCompile("codeartifact:CreateRepository")),
@@ -57,6 +59,7 @@ func testAccDomainPermissionsPolicy_basic(t *testing.T) {
 }
 
 func testAccDomainPermissionsPolicy_ignoreEquivalent(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codeartifact_domain_permissions_policy.test"
 
@@ -64,12 +67,12 @@ func testAccDomainPermissionsPolicy_ignoreEquivalent(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codeartifact.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, codeartifact.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainPermissionsDestroy,
+		CheckDestroy:             testAccCheckDomainPermissionsDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainPermissionsPolicyConfig_order(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainPermissionsExists(resourceName),
+					testAccCheckDomainPermissionsExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", "aws_codeartifact_domain.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "domain", rName),
 					resource.TestMatchResourceAttr(resourceName, "policy_document", regexp.MustCompile("codeartifact:CreateRepository")),
@@ -86,6 +89,7 @@ func testAccDomainPermissionsPolicy_ignoreEquivalent(t *testing.T) {
 }
 
 func testAccDomainPermissionsPolicy_owner(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codeartifact_domain_permissions_policy.test"
 
@@ -93,12 +97,12 @@ func testAccDomainPermissionsPolicy_owner(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codeartifact.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, codeartifact.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainPermissionsDestroy,
+		CheckDestroy:             testAccCheckDomainPermissionsDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainPermissionsPolicyConfig_owner(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainPermissionsExists(resourceName),
+					testAccCheckDomainPermissionsExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", "aws_codeartifact_domain.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "domain", rName),
 					resource.TestMatchResourceAttr(resourceName, "policy_document", regexp.MustCompile("codeartifact:CreateRepository")),
@@ -115,6 +119,7 @@ func testAccDomainPermissionsPolicy_owner(t *testing.T) {
 }
 
 func testAccDomainPermissionsPolicy_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codeartifact_domain_permissions_policy.test"
 
@@ -122,13 +127,13 @@ func testAccDomainPermissionsPolicy_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codeartifact.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, codeartifact.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainPermissionsDestroy,
+		CheckDestroy:             testAccCheckDomainPermissionsDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainPermissionsPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainPermissionsExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcodeartifact.ResourceDomainPermissionsPolicy(), resourceName),
+					testAccCheckDomainPermissionsExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcodeartifact.ResourceDomainPermissionsPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -137,6 +142,7 @@ func testAccDomainPermissionsPolicy_disappears(t *testing.T) {
 }
 
 func testAccDomainPermissionsPolicy_Disappears_domain(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codeartifact_domain_permissions_policy.test"
 
@@ -144,13 +150,13 @@ func testAccDomainPermissionsPolicy_Disappears_domain(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codeartifact.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, codeartifact.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainPermissionsDestroy,
+		CheckDestroy:             testAccCheckDomainPermissionsDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainPermissionsPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainPermissionsExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcodeartifact.ResourceDomain(), resourceName),
+					testAccCheckDomainPermissionsExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcodeartifact.ResourceDomain(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -158,7 +164,7 @@ func testAccDomainPermissionsPolicy_Disappears_domain(t *testing.T) {
 	})
 }
 
-func testAccCheckDomainPermissionsExists(n string) resource.TestCheckFunc {
+func testAccCheckDomainPermissionsExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -169,14 +175,14 @@ func testAccCheckDomainPermissionsExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("no CodeArtifact domain set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeArtifactConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeArtifactConn()
 
 		domainOwner, domainName, err := tfcodeartifact.DecodeDomainID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
 
-		_, err = conn.GetDomainPermissionsPolicy(&codeartifact.GetDomainPermissionsPolicyInput{
+		_, err = conn.GetDomainPermissionsPolicyWithContext(ctx, &codeartifact.GetDomainPermissionsPolicyInput{
 			Domain:      aws.String(domainName),
 			DomainOwner: aws.String(domainOwner),
 		})
@@ -185,38 +191,40 @@ func testAccCheckDomainPermissionsExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckDomainPermissionsDestroy(s *terraform.State) error {
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_codeartifact_domain_permissions_policy" {
-			continue
-		}
+func testAccCheckDomainPermissionsDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_codeartifact_domain_permissions_policy" {
+				continue
+			}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeArtifactConn
+			conn := acctest.Provider.Meta().(*conns.AWSClient).CodeArtifactConn()
 
-		domainOwner, domainName, err := tfcodeartifact.DecodeDomainID(rs.Primary.ID)
-		if err != nil {
+			domainOwner, domainName, err := tfcodeartifact.DecodeDomainID(rs.Primary.ID)
+			if err != nil {
+				return err
+			}
+
+			resp, err := conn.GetDomainPermissionsPolicyWithContext(ctx, &codeartifact.GetDomainPermissionsPolicyInput{
+				Domain:      aws.String(domainName),
+				DomainOwner: aws.String(domainOwner),
+			})
+
+			if err == nil {
+				if aws.StringValue(resp.Policy.ResourceArn) == rs.Primary.ID {
+					return fmt.Errorf("CodeArtifact Domain %s still exists", rs.Primary.ID)
+				}
+			}
+
+			if tfawserr.ErrCodeEquals(err, codeartifact.ErrCodeResourceNotFoundException) {
+				return nil
+			}
+
 			return err
 		}
 
-		resp, err := conn.GetDomainPermissionsPolicy(&codeartifact.GetDomainPermissionsPolicyInput{
-			Domain:      aws.String(domainName),
-			DomainOwner: aws.String(domainOwner),
-		})
-
-		if err == nil {
-			if aws.StringValue(resp.Policy.ResourceArn) == rs.Primary.ID {
-				return fmt.Errorf("CodeArtifact Domain %s still exists", rs.Primary.ID)
-			}
-		}
-
-		if tfawserr.ErrCodeEquals(err, codeartifact.ErrCodeResourceNotFoundException) {
-			return nil
-		}
-
-		return err
+		return nil
 	}
-
-	return nil
 }
 
 func testAccDomainPermissionsPolicyConfig_basic(rName string) string {

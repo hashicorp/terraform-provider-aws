@@ -1,20 +1,22 @@
 package ec2
 
 import (
-	"fmt"
+	"context"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func DataSourceEIP() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceEIPRead,
+		ReadWithoutTimeout: dataSourceEIPRead,
 
 		Timeouts: &schema.ResourceTimeout{
 			Read: schema.DefaultTimeout(20 * time.Minute),
@@ -85,8 +87,9 @@ func DataSourceEIP() *schema.Resource {
 	}
 }
 
-func dataSourceEIPRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func dataSourceEIPRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeAddressesInput{}
@@ -112,10 +115,10 @@ func dataSourceEIPRead(d *schema.ResourceData, meta interface{}) error {
 		input.Filters = nil
 	}
 
-	eip, err := FindEIP(conn, input)
+	eip, err := FindEIP(ctx, conn, input)
 
 	if err != nil {
-		return tfresource.SingularDataSourceFindError("EC2 EIP", err)
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 EIP", err))
 	}
 
 	if aws.StringValue(eip.Domain) == ec2.DomainTypeVpc {
@@ -144,8 +147,8 @@ func dataSourceEIPRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err := d.Set("tags", KeyValueTags(eip.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

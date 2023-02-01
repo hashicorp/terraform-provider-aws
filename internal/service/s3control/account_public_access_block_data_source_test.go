@@ -8,10 +8,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccS3ControlAccountPublicAccessBlockDataSource_basic(t *testing.T) {
+func testAccAccountPublicAccessBlockDataSource_basic(t *testing.T) {
 	resourceName := "aws_s3_account_public_access_block.test"
 	dataSourceName := "data.aws_s3_account_public_access_block.test"
-	resource.ParallelTest(t, resource.TestCase{
+
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

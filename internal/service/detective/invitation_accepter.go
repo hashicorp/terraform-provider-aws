@@ -33,7 +33,7 @@ func ResourceInvitationAccepter() *schema.Resource {
 }
 
 func resourceInvitationAccepterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DetectiveConn
+	conn := meta.(*conns.AWSClient).DetectiveConn()
 
 	graphArn := d.Get("graph_arn").(string)
 
@@ -53,7 +53,7 @@ func resourceInvitationAccepterCreate(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceInvitationAccepterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DetectiveConn
+	conn := meta.(*conns.AWSClient).DetectiveConn()
 
 	graphArn, err := FindInvitationByGraphARN(ctx, conn, d.Id())
 
@@ -72,7 +72,7 @@ func resourceInvitationAccepterRead(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceInvitationAccepterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DetectiveConn
+	conn := meta.(*conns.AWSClient).DetectiveConn()
 
 	input := &detective.DisassociateMembershipInput{
 		GraphArn: aws.String(d.Id()),

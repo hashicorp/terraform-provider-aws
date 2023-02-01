@@ -4,6 +4,7 @@
 package s3
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -23,12 +24,12 @@ const (
 
 // BucketListTags lists S3 bucket tags.
 // The identifier is the bucket name.
-func BucketListTags(conn *s3.S3, identifier string) (tftags.KeyValueTags, error) {
+func BucketListTags(ctx context.Context, conn *s3.S3, identifier string) (tftags.KeyValueTags, error) {
 	input := &s3.GetBucketTaggingInput{
 		Bucket: aws.String(identifier),
 	}
 
-	output, err := conn.GetBucketTagging(input)
+	output, err := conn.GetBucketTaggingWithContext(ctx, input)
 
 	// S3 API Reference (https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetBucketTagging.html)
 	// lists the special error as NoSuchTagSetError, however the existing logic used NoSuchTagSet
@@ -46,12 +47,12 @@ func BucketListTags(conn *s3.S3, identifier string) (tftags.KeyValueTags, error)
 
 // BucketUpdateTags updates S3 bucket tags.
 // The identifier is the bucket name.
-func BucketUpdateTags(conn *s3.S3, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func BucketUpdateTags(ctx context.Context, conn *s3.S3, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
 	// We need to also consider any existing ignored tags.
-	allTags, err := BucketListTags(conn, identifier)
+	allTags, err := BucketListTags(ctx, conn, identifier)
 
 	if err != nil {
 		return fmt.Errorf("error listing resource tags (%s): %w", identifier, err)
@@ -67,7 +68,7 @@ func BucketUpdateTags(conn *s3.S3, identifier string, oldTagsMap interface{}, ne
 			},
 		}
 
-		_, err := conn.PutBucketTagging(input)
+		_, err := conn.PutBucketTaggingWithContext(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("error setting resource tags (%s): %w", identifier, err)
@@ -77,7 +78,7 @@ func BucketUpdateTags(conn *s3.S3, identifier string, oldTagsMap interface{}, ne
 			Bucket: aws.String(identifier),
 		}
 
-		_, err := conn.DeleteBucketTagging(input)
+		_, err := conn.DeleteBucketTaggingWithContext(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("error deleting resource tags (%s): %w", identifier, err)
@@ -88,7 +89,7 @@ func BucketUpdateTags(conn *s3.S3, identifier string, oldTagsMap interface{}, ne
 }
 
 // ObjectListTags lists S3 object tags.
-func ObjectListTags(conn *s3.S3, bucket, key string) (tftags.KeyValueTags, error) {
+func ObjectListTags(ctx context.Context, conn *s3.S3, bucket, key string) (tftags.KeyValueTags, error) {
 	input := &s3.GetObjectTaggingInput{
 		Bucket: aws.String(bucket),
 		Key:    aws.String(key),
@@ -96,9 +97,9 @@ func ObjectListTags(conn *s3.S3, bucket, key string) (tftags.KeyValueTags, error
 
 	var output *s3.GetObjectTaggingOutput
 
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+	err := resource.RetryContext(ctx, 1*time.Minute, func() *resource.RetryError {
 		var err error
-		output, err = conn.GetObjectTagging(input)
+		output, err = conn.GetObjectTaggingWithContext(ctx, input)
 
 		if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchKey) {
 			return resource.RetryableError(fmt.Errorf("getting object tagging %s, retrying: %w", bucket, err))
@@ -111,7 +112,7 @@ func ObjectListTags(conn *s3.S3, bucket, key string) (tftags.KeyValueTags, error
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		output, err = conn.GetObjectTagging(input)
+		output, err = conn.GetObjectTaggingWithContext(ctx, input)
 	}
 
 	if tfawserr.ErrCodeEquals(err, ErrCodeNoSuchTagSet) {
@@ -126,12 +127,12 @@ func ObjectListTags(conn *s3.S3, bucket, key string) (tftags.KeyValueTags, error
 }
 
 // ObjectUpdateTags updates S3 object tags.
-func ObjectUpdateTags(conn *s3.S3, bucket, key string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func ObjectUpdateTags(ctx context.Context, conn *s3.S3, bucket, key string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
 	// We need to also consider any existing ignored tags.
-	allTags, err := ObjectListTags(conn, bucket, key)
+	allTags, err := ObjectListTags(ctx, conn, bucket, key)
 
 	if err != nil {
 		return fmt.Errorf("error listing resource tags (%s/%s): %w", bucket, key, err)
@@ -148,7 +149,7 @@ func ObjectUpdateTags(conn *s3.S3, bucket, key string, oldTagsMap interface{}, n
 			},
 		}
 
-		_, err := conn.PutObjectTagging(input)
+		_, err := conn.PutObjectTaggingWithContext(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("error setting resource tags (%s/%s): %w", bucket, key, err)
@@ -159,7 +160,7 @@ func ObjectUpdateTags(conn *s3.S3, bucket, key string, oldTagsMap interface{}, n
 			Key:    aws.String(key),
 		}
 
-		_, err := conn.DeleteObjectTagging(input)
+		_, err := conn.DeleteObjectTaggingWithContext(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("error deleting resource tags (%s/%s): %w", bucket, key, err)

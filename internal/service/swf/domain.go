@@ -27,7 +27,7 @@ func ResourceDomain() *schema.Resource {
 		DeleteWithoutTimeout: resourceDomainDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -76,7 +76,7 @@ func ResourceDomain() *schema.Resource {
 }
 
 func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SWFConn
+	conn := meta.(*conns.AWSClient).SWFConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -103,7 +103,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SWFConn
+	conn := meta.(*conns.AWSClient).SWFConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -126,7 +126,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(output.DomainInfo.Name)))
 	d.Set("workflow_execution_retention_period_in_days", output.Configuration.WorkflowExecutionRetentionPeriodInDays)
 
-	tags, err := ListTagsWithContext(ctx, conn, arn)
+	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
 		return diag.Errorf("listing tags for SWF Domain (%s): %s", arn, err)
@@ -147,12 +147,12 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SWFConn
+	conn := meta.(*conns.AWSClient).SWFConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTagsWithContext(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.Errorf("updating SWF Domain (%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -161,7 +161,7 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SWFConn
+	conn := meta.(*conns.AWSClient).SWFConn()
 
 	_, err := conn.DeprecateDomainWithContext(ctx, &swf.DeprecateDomainInput{
 		Name: aws.String(d.Get("name").(string)),

@@ -1,6 +1,7 @@
 package cloud9_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -16,6 +17,7 @@ import (
 )
 
 func TestAccCloud9EnvironmentEC2_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf cloud9.Environment
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -25,12 +27,12 @@ func TestAccCloud9EnvironmentEC2_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloud9.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloud9.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEnvironmentEC2Destroy,
+		CheckDestroy:             testAccCheckEnvironmentEC2Destroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnvironmentEC2Config_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEnvironmentEC2Exists(resourceName, &conf),
+					testAccCheckEnvironmentEC2Exists(ctx, resourceName, &conf),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "cloud9", regexp.MustCompile(`environment:.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "CONNECT_SSH"),
 					resource.TestCheckResourceAttr(resourceName, "instance_type", "t2.micro"),
@@ -50,6 +52,7 @@ func TestAccCloud9EnvironmentEC2_basic(t *testing.T) {
 }
 
 func TestAccCloud9EnvironmentEC2_allFields(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf cloud9.Environment
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -63,12 +66,12 @@ func TestAccCloud9EnvironmentEC2_allFields(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloud9.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloud9.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEnvironmentEC2Destroy,
+		CheckDestroy:             testAccCheckEnvironmentEC2Destroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnvironmentEC2Config_allFields(rName, name1, description1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEnvironmentEC2Exists(resourceName, &conf),
+					testAccCheckEnvironmentEC2Exists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "automatic_stop_time_minutes", "60"),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "CONNECT_SSH"),
 					resource.TestCheckResourceAttr(resourceName, "description", description1),
@@ -89,7 +92,7 @@ func TestAccCloud9EnvironmentEC2_allFields(t *testing.T) {
 			{
 				Config: testAccEnvironmentEC2Config_allFields(rName, name2, description2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEnvironmentEC2Exists(resourceName, &conf),
+					testAccCheckEnvironmentEC2Exists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "description", description2),
 					resource.TestCheckResourceAttr(resourceName, "name", name2),
 				),
@@ -99,6 +102,7 @@ func TestAccCloud9EnvironmentEC2_allFields(t *testing.T) {
 }
 
 func TestAccCloud9EnvironmentEC2_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf cloud9.Environment
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -108,12 +112,12 @@ func TestAccCloud9EnvironmentEC2_tags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloud9.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloud9.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEnvironmentEC2Destroy,
+		CheckDestroy:             testAccCheckEnvironmentEC2Destroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnvironmentEC2Config_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEnvironmentEC2Exists(resourceName, &conf),
+					testAccCheckEnvironmentEC2Exists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -127,7 +131,7 @@ func TestAccCloud9EnvironmentEC2_tags(t *testing.T) {
 			{
 				Config: testAccEnvironmentEC2Config_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEnvironmentEC2Exists(resourceName, &conf),
+					testAccCheckEnvironmentEC2Exists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -136,7 +140,7 @@ func TestAccCloud9EnvironmentEC2_tags(t *testing.T) {
 			{
 				Config: testAccEnvironmentEC2Config_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEnvironmentEC2Exists(resourceName, &conf),
+					testAccCheckEnvironmentEC2Exists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -146,6 +150,7 @@ func TestAccCloud9EnvironmentEC2_tags(t *testing.T) {
 }
 
 func TestAccCloud9EnvironmentEC2_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf cloud9.Environment
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -155,14 +160,14 @@ func TestAccCloud9EnvironmentEC2_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloud9.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloud9.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEnvironmentEC2Destroy,
+		CheckDestroy:             testAccCheckEnvironmentEC2Destroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnvironmentEC2Config_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEnvironmentEC2Exists(resourceName, &conf),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcloud9.ResourceEnvironmentEC2(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcloud9.ResourceEnvironmentEC2(), resourceName),
+					testAccCheckEnvironmentEC2Exists(ctx, resourceName, &conf),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloud9.ResourceEnvironmentEC2(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloud9.ResourceEnvironmentEC2(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -170,7 +175,7 @@ func TestAccCloud9EnvironmentEC2_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckEnvironmentEC2Exists(n string, v *cloud9.Environment) resource.TestCheckFunc {
+func testAccCheckEnvironmentEC2Exists(ctx context.Context, n string, v *cloud9.Environment) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -181,9 +186,9 @@ func testAccCheckEnvironmentEC2Exists(n string, v *cloud9.Environment) resource.
 			return fmt.Errorf("No Cloud9 Environment EC2 ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Cloud9Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Cloud9Conn()
 
-		output, err := tfcloud9.FindEnvironmentByID(conn, rs.Primary.ID)
+		output, err := tfcloud9.FindEnvironmentByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -195,27 +200,29 @@ func testAccCheckEnvironmentEC2Exists(n string, v *cloud9.Environment) resource.
 	}
 }
 
-func testAccCheckEnvironmentEC2Destroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).Cloud9Conn
+func testAccCheckEnvironmentEC2Destroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Cloud9Conn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_cloud9_environment_ec2" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_cloud9_environment_ec2" {
+				continue
+			}
+
+			_, err := tfcloud9.FindEnvironmentByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Cloud9 Environment EC2 %s still exists.", rs.Primary.ID)
 		}
-
-		_, err := tfcloud9.FindEnvironmentByID(conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("Cloud9 Environment EC2 %s still exists.", rs.Primary.ID)
+		return nil
 	}
-	return nil
 }
 
 func testAccEnvironmentEC2BaseConfig(rName string) string {

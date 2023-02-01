@@ -1,6 +1,7 @@
 package rds_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -12,13 +13,14 @@ import (
 )
 
 func TestAccRDSOrderableInstanceDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_rds_orderable_db_instance.test"
 	engine := "mysql"
 	licenseModel := "general-public-license"
 	storageType := "standard"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccOrderableInstancePreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccOrderableInstancePreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
@@ -38,6 +40,7 @@ func TestAccRDSOrderableInstanceDataSource_basic(t *testing.T) {
 }
 
 func TestAccRDSOrderableInstanceDataSource_preferredClass(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -46,7 +49,7 @@ func TestAccRDSOrderableInstanceDataSource_preferredClass(t *testing.T) {
 	preferredClass := "db.t3.micro"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccOrderableInstancePreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccOrderableInstancePreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
@@ -62,6 +65,7 @@ func TestAccRDSOrderableInstanceDataSource_preferredClass(t *testing.T) {
 }
 
 func TestAccRDSOrderableInstanceDataSource_preferredVersion(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -69,7 +73,7 @@ func TestAccRDSOrderableInstanceDataSource_preferredVersion(t *testing.T) {
 	dataSourceName := "data.aws_rds_orderable_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccOrderableInstancePreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccOrderableInstancePreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
@@ -85,6 +89,7 @@ func TestAccRDSOrderableInstanceDataSource_preferredVersion(t *testing.T) {
 }
 
 func TestAccRDSOrderableInstanceDataSource_preferredClassAndVersion(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -92,7 +97,7 @@ func TestAccRDSOrderableInstanceDataSource_preferredClassAndVersion(t *testing.T
 	dataSourceName := "data.aws_rds_orderable_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccOrderableInstancePreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccOrderableInstancePreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
@@ -109,6 +114,7 @@ func TestAccRDSOrderableInstanceDataSource_preferredClassAndVersion(t *testing.T
 }
 
 func TestAccRDSOrderableInstanceDataSource_supportsEnhancedMonitoring(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -116,7 +122,7 @@ func TestAccRDSOrderableInstanceDataSource_supportsEnhancedMonitoring(t *testing
 	dataSourceName := "data.aws_rds_orderable_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccOrderableInstancePreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccOrderableInstancePreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
@@ -132,6 +138,7 @@ func TestAccRDSOrderableInstanceDataSource_supportsEnhancedMonitoring(t *testing
 }
 
 func TestAccRDSOrderableInstanceDataSource_supportsIAMDatabaseAuthentication(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -139,7 +146,7 @@ func TestAccRDSOrderableInstanceDataSource_supportsIAMDatabaseAuthentication(t *
 	dataSourceName := "data.aws_rds_orderable_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccOrderableInstancePreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccOrderableInstancePreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
@@ -155,6 +162,7 @@ func TestAccRDSOrderableInstanceDataSource_supportsIAMDatabaseAuthentication(t *
 }
 
 func TestAccRDSOrderableInstanceDataSource_supportsIops(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -162,7 +170,7 @@ func TestAccRDSOrderableInstanceDataSource_supportsIops(t *testing.T) {
 	dataSourceName := "data.aws_rds_orderable_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccOrderableInstancePreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccOrderableInstancePreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
@@ -178,6 +186,7 @@ func TestAccRDSOrderableInstanceDataSource_supportsIops(t *testing.T) {
 }
 
 func TestAccRDSOrderableInstanceDataSource_supportsKerberosAuthentication(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -185,7 +194,7 @@ func TestAccRDSOrderableInstanceDataSource_supportsKerberosAuthentication(t *tes
 	dataSourceName := "data.aws_rds_orderable_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccOrderableInstancePreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccOrderableInstancePreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
@@ -201,6 +210,7 @@ func TestAccRDSOrderableInstanceDataSource_supportsKerberosAuthentication(t *tes
 }
 
 func TestAccRDSOrderableInstanceDataSource_supportsPerformanceInsights(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -210,8 +220,8 @@ func TestAccRDSOrderableInstanceDataSource_supportsPerformanceInsights(t *testin
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccOrderableInstancePreCheck(t)
-			testAccPerformanceInsightsDefaultVersionPreCheck(t, "mysql")
+			testAccOrderableInstancePreCheck(ctx, t)
+			testAccPerformanceInsightsDefaultVersionPreCheck(ctx, t, "mysql")
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -228,6 +238,7 @@ func TestAccRDSOrderableInstanceDataSource_supportsPerformanceInsights(t *testin
 }
 
 func TestAccRDSOrderableInstanceDataSource_supportsStorageAutoScaling(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -235,7 +246,7 @@ func TestAccRDSOrderableInstanceDataSource_supportsStorageAutoScaling(t *testing
 	dataSourceName := "data.aws_rds_orderable_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccOrderableInstancePreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccOrderableInstancePreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
@@ -251,6 +262,7 @@ func TestAccRDSOrderableInstanceDataSource_supportsStorageAutoScaling(t *testing
 }
 
 func TestAccRDSOrderableInstanceDataSource_supportsStorageEncryption(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -258,7 +270,7 @@ func TestAccRDSOrderableInstanceDataSource_supportsStorageEncryption(t *testing.
 	dataSourceName := "data.aws_rds_orderable_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccOrderableInstancePreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccOrderableInstancePreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
@@ -273,8 +285,8 @@ func TestAccRDSOrderableInstanceDataSource_supportsStorageEncryption(t *testing.
 	})
 }
 
-func testAccOrderableInstancePreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
+func testAccOrderableInstancePreCheck(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
 
 	input := &rds.DescribeOrderableDBInstanceOptionsInput{
 		Engine:          aws.String("mysql"),
@@ -282,7 +294,7 @@ func testAccOrderableInstancePreCheck(t *testing.T) {
 		DBInstanceClass: aws.String("db.m5.xlarge"),
 	}
 
-	_, err := conn.DescribeOrderableDBInstanceOptions(input)
+	_, err := conn.DescribeOrderableDBInstanceOptionsWithContext(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

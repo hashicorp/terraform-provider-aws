@@ -17,7 +17,10 @@ func init() {
 
 // newDataSourceCallerIdentity instantiates a new DataSource for the aws_caller_identity data source.
 func newDataSourceCallerIdentity(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceCallerIdentity{}, nil
+	d := &dataSourceCallerIdentity{}
+	d.SetMigratedFromPluginSDK(true)
+
+	return d, nil
 }
 
 type dataSourceCallerIdentity struct {
@@ -62,7 +65,7 @@ func (d *dataSourceCallerIdentity) Read(ctx context.Context, request datasource.
 		return
 	}
 
-	conn := d.Meta().STSConn
+	conn := d.Meta().STSConn()
 
 	output, err := FindCallerIdentity(ctx, conn)
 

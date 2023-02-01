@@ -1,22 +1,24 @@
 package ds
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directoryservice"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func ResourceLogSubscription() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceLogSubscriptionCreate,
-		Read:   resourceLogSubscriptionRead,
-		Delete: resourceLogSubscriptionDelete,
+		CreateWithoutTimeout: resourceLogSubscriptionCreate,
+		ReadWithoutTimeout:   resourceLogSubscriptionRead,
+		DeleteWithoutTimeout: resourceLogSubscriptionDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -34,8 +36,9 @@ func ResourceLogSubscription() *schema.Resource {
 	}
 }
 
-func resourceLogSubscriptionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DSConn
+func resourceLogSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DSConn()
 
 	directoryId := d.Get("directory_id")
 	logGroupName := d.Get("log_group_name")
@@ -45,18 +48,19 @@ func resourceLogSubscriptionCreate(d *schema.ResourceData, meta interface{}) err
 		LogGroupName: aws.String(logGroupName.(string)),
 	}
 
-	_, err := conn.CreateLogSubscription(&input)
+	_, err := conn.CreateLogSubscriptionWithContext(ctx, &input)
 	if err != nil {
-		return fmt.Errorf("error creating Directory Service Log Subscription: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Directory Service Log Subscription: %s", err)
 	}
 
 	d.SetId(directoryId.(string))
 
-	return resourceLogSubscriptionRead(d, meta)
+	return append(diags, resourceLogSubscriptionRead(ctx, d, meta)...)
 }
 
-func resourceLogSubscriptionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DSConn
+func resourceLogSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DSConn()
 
 	directoryId := d.Id()
 
@@ -64,26 +68,27 @@ func resourceLogSubscriptionRead(d *schema.ResourceData, meta interface{}) error
 		DirectoryId: aws.String(directoryId),
 	}
 
-	out, err := conn.ListLogSubscriptions(&input)
+	out, err := conn.ListLogSubscriptionsWithContext(ctx, &input)
 	if err != nil {
-		return fmt.Errorf("error listing Directory Service Log Subscription: %s", err)
+		return sdkdiag.AppendErrorf(diags, "listing Directory Service Log Subscription: %s", err)
 	}
 
 	if len(out.LogSubscriptions) == 0 {
 		log.Printf("[WARN] No log subscriptions for directory %s found", directoryId)
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	logSubscription := out.LogSubscriptions[0]
 	d.Set("directory_id", logSubscription.DirectoryId)
 	d.Set("log_group_name", logSubscription.LogGroupName)
 
-	return nil
+	return diags
 }
 
-func resourceLogSubscriptionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DSConn
+func resourceLogSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DSConn()
 
 	directoryId := d.Id()
 
@@ -91,10 +96,10 @@ func resourceLogSubscriptionDelete(d *schema.ResourceData, meta interface{}) err
 		DirectoryId: aws.String(directoryId),
 	}
 
-	_, err := conn.DeleteLogSubscription(&input)
+	_, err := conn.DeleteLogSubscriptionWithContext(ctx, &input)
 	if err != nil {
-		return fmt.Errorf("error deleting Directory Service Log Subscription: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting Directory Service Log Subscription: %s", err)
 	}
 
-	return nil
+	return diags
 }

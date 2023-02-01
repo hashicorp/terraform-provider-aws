@@ -1,6 +1,7 @@
 package lambda
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -10,22 +11,24 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceFunctionEventInvokeConfig() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceFunctionEventInvokeConfigCreate,
-		Read:   resourceFunctionEventInvokeConfigRead,
-		Update: resourceFunctionEventInvokeConfigUpdate,
-		Delete: resourceFunctionEventInvokeConfigDelete,
+		CreateWithoutTimeout: resourceFunctionEventInvokeConfigCreate,
+		ReadWithoutTimeout:   resourceFunctionEventInvokeConfigRead,
+		UpdateWithoutTimeout: resourceFunctionEventInvokeConfigUpdate,
+		DeleteWithoutTimeout: resourceFunctionEventInvokeConfigDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -93,8 +96,9 @@ func ResourceFunctionEventInvokeConfig() *schema.Resource {
 	}
 }
 
-func resourceFunctionEventInvokeConfigCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LambdaConn
+func resourceFunctionEventInvokeConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).LambdaConn()
 	functionName := d.Get("function_name").(string)
 	qualifier := d.Get("qualifier").(string)
 
@@ -119,8 +123,8 @@ func resourceFunctionEventInvokeConfigCreate(d *schema.ResourceData, meta interf
 	}
 
 	// Retry for destination validation eventual consistency errors
-	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
-		_, err := conn.PutFunctionEventInvokeConfig(input)
+	err := resource.RetryContext(ctx, 2*time.Minute, func() *resource.RetryError {
+		_, err := conn.PutFunctionEventInvokeConfigWithContext(ctx, input)
 
 		// InvalidParameterValueException: The destination ARN arn:PARTITION:SERVICE:REGION:ACCOUNT:RESOURCE is invalid.
 		if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "destination ARN") {
@@ -140,25 +144,26 @@ func resourceFunctionEventInvokeConfigCreate(d *schema.ResourceData, meta interf
 	})
 
 	if tfresource.TimedOut(err) {
-		_, err = conn.PutFunctionEventInvokeConfig(input)
+		_, err = conn.PutFunctionEventInvokeConfigWithContext(ctx, input)
 	}
 
 	if err != nil {
-		return fmt.Errorf("error putting Lambda Function Event Invoke Config (%s): %s", id, err)
+		return sdkdiag.AppendErrorf(diags, "creating Lambda Function Event Invoke Config (%s): %s", id, err)
 	}
 
 	d.SetId(id)
 
-	return resourceFunctionEventInvokeConfigRead(d, meta)
+	return append(diags, resourceFunctionEventInvokeConfigRead(ctx, d, meta)...)
 }
 
-func resourceFunctionEventInvokeConfigRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LambdaConn
+func resourceFunctionEventInvokeConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).LambdaConn()
 
 	functionName, qualifier, err := FunctionEventInvokeConfigParseID(d.Id())
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading Lambda Function Event Invoke Config (%s): %s", d.Id(), err)
 	}
 
 	input := &lambda.GetFunctionEventInvokeConfigInput{
@@ -169,20 +174,20 @@ func resourceFunctionEventInvokeConfigRead(d *schema.ResourceData, meta interfac
 		input.Qualifier = aws.String(qualifier)
 	}
 
-	output, err := conn.GetFunctionEventInvokeConfig(input)
+	output, err := conn.GetFunctionEventInvokeConfigWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Lambda Function Event Invoke Config (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error getting Lambda Function Event Invoke Config (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Lambda Function Event Invoke Config (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("destination_config", flattenFunctionEventInvokeConfigDestinationConfig(output.DestinationConfig)); err != nil {
-		return fmt.Errorf("error setting destination_config: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting destination_config: %s", err)
 	}
 
 	d.Set("function_name", functionName)
@@ -190,16 +195,17 @@ func resourceFunctionEventInvokeConfigRead(d *schema.ResourceData, meta interfac
 	d.Set("maximum_retry_attempts", output.MaximumRetryAttempts)
 	d.Set("qualifier", qualifier)
 
-	return nil
+	return diags
 }
 
-func resourceFunctionEventInvokeConfigUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LambdaConn
+func resourceFunctionEventInvokeConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).LambdaConn()
 
 	functionName, qualifier, err := FunctionEventInvokeConfigParseID(d.Id())
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "updating Lambda Function Event Invoke Config (%s): %s", d.Id(), err)
 	}
 
 	input := &lambda.PutFunctionEventInvokeConfigInput{
@@ -217,8 +223,8 @@ func resourceFunctionEventInvokeConfigUpdate(d *schema.ResourceData, meta interf
 	}
 
 	// Retry for destination validation eventual consistency errors
-	err = resource.Retry(2*time.Minute, func() *resource.RetryError {
-		_, err := conn.PutFunctionEventInvokeConfig(input)
+	err = resource.RetryContext(ctx, 2*time.Minute, func() *resource.RetryError {
+		_, err := conn.PutFunctionEventInvokeConfigWithContext(ctx, input)
 
 		// InvalidParameterValueException: The destination ARN arn:PARTITION:SERVICE:REGION:ACCOUNT:RESOURCE is invalid.
 		if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "destination ARN") {
@@ -238,23 +244,24 @@ func resourceFunctionEventInvokeConfigUpdate(d *schema.ResourceData, meta interf
 	})
 
 	if tfresource.TimedOut(err) {
-		_, err = conn.PutFunctionEventInvokeConfig(input)
+		_, err = conn.PutFunctionEventInvokeConfigWithContext(ctx, input)
 	}
 
 	if err != nil {
-		return fmt.Errorf("error putting Lambda Function Event Invoke Config (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating Lambda Function Event Invoke Config (%s): %s", d.Id(), err)
 	}
 
-	return resourceFunctionEventInvokeConfigRead(d, meta)
+	return append(diags, resourceFunctionEventInvokeConfigRead(ctx, d, meta)...)
 }
 
-func resourceFunctionEventInvokeConfigDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LambdaConn
+func resourceFunctionEventInvokeConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).LambdaConn()
 
 	functionName, qualifier, err := FunctionEventInvokeConfigParseID(d.Id())
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "deleting Lambda Function Event Invoke Config (%s): %s", d.Id(), err)
 	}
 
 	input := &lambda.DeleteFunctionEventInvokeConfigInput{
@@ -265,17 +272,17 @@ func resourceFunctionEventInvokeConfigDelete(d *schema.ResourceData, meta interf
 		input.Qualifier = aws.String(qualifier)
 	}
 
-	_, err = conn.DeleteFunctionEventInvokeConfig(input)
+	_, err = conn.DeleteFunctionEventInvokeConfigWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error putting Lambda Function Event Invoke Config (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Lambda Function Event Invoke Config (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func FunctionEventInvokeConfigParseID(id string) (string, string, error) {

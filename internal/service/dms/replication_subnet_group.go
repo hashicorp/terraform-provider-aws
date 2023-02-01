@@ -1,31 +1,42 @@
 package dms
 
 import (
+	"context"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func ResourceReplicationSubnetGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceReplicationSubnetGroupCreate,
-		Read:   resourceReplicationSubnetGroupRead,
-		Update: resourceReplicationSubnetGroupUpdate,
-		Delete: resourceReplicationSubnetGroupDelete,
+		CreateWithoutTimeout: resourceReplicationSubnetGroupCreate,
+		ReadWithoutTimeout:   resourceReplicationSubnetGroupRead,
+		UpdateWithoutTimeout: resourceReplicationSubnetGroupUpdate,
+		DeleteWithoutTimeout: resourceReplicationSubnetGroupDelete,
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(15 * time.Minute),
+			Update: schema.DefaultTimeout(15 * time.Minute),
+			Delete: schema.DefaultTimeout(15 * time.Minute),
+		},
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -47,6 +58,7 @@ func ResourceReplicationSubnetGroup() *schema.Resource {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
+				MinItems: 2,
 				Required: true,
 			},
 			"tags":     tftags.TagsSchema(),
@@ -61,8 +73,13 @@ func ResourceReplicationSubnetGroup() *schema.Resource {
 	}
 }
 
-func resourceReplicationSubnetGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DMSConn
+const (
+	ResNameReplicationSubnetGroup = "Replication Subnet Group"
+)
+
+func resourceReplicationSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DMSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -75,8 +92,8 @@ func resourceReplicationSubnetGroupCreate(d *schema.ResourceData, meta interface
 
 	log.Println("[DEBUG] DMS create replication subnet group:", request)
 
-	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
-		_, err := conn.CreateReplicationSubnetGroup(request)
+	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+		_, err := conn.CreateReplicationSubnetGroupWithContext(ctx, request)
 
 		if tfawserr.ErrCodeEquals(err, dms.ErrCodeAccessDeniedFault) {
 			return resource.RetryableError(err)
@@ -90,23 +107,28 @@ func resourceReplicationSubnetGroupCreate(d *schema.ResourceData, meta interface
 	})
 
 	if tfresource.TimedOut(err) {
-		_, err = conn.CreateReplicationSubnetGroup(request)
+		_, err = conn.CreateReplicationSubnetGroupWithContext(ctx, request)
 
 		if err != nil {
-			return err
+			return create.DiagError(names.DMS, create.ErrActionCreating, ResNameReplicationSubnetGroup, d.Get("replication_subnet_group_id").(string), err)
 		}
 	}
 
+	if err != nil {
+		return create.DiagError(names.DMS, create.ErrActionCreating, ResNameReplicationSubnetGroup, d.Get("replication_subnet_group_id").(string), err)
+	}
+
 	d.SetId(d.Get("replication_subnet_group_id").(string))
-	return resourceReplicationSubnetGroupRead(d, meta)
+	return append(diags, resourceReplicationSubnetGroupRead(ctx, d, meta)...)
 }
 
-func resourceReplicationSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DMSConn
+func resourceReplicationSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DMSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	response, err := conn.DescribeReplicationSubnetGroups(&dms.DescribeReplicationSubnetGroupsInput{
+	response, err := conn.DescribeReplicationSubnetGroupsWithContext(ctx, &dms.DescribeReplicationSubnetGroupsInput{
 		Filters: []*dms.Filter{
 			{
 				Name:   aws.String("replication-subnet-group-id"),
@@ -114,12 +136,20 @@ func resourceReplicationSubnetGroupRead(d *schema.ResourceData, meta interface{}
 			},
 		},
 	})
-	if err != nil {
-		return err
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		create.LogNotFoundRemoveState(names.DMS, create.ErrActionReading, ResNameReplicationSubnetGroup, d.Id())
+		d.SetId("")
+		return diags
 	}
+
+	if err != nil {
+		return create.DiagError(names.DMS, create.ErrActionReading, ResNameReplicationSubnetGroup, d.Id(), err)
+	}
+
 	if len(response.ReplicationSubnetGroups) == 0 {
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	// The AWS API for DMS subnet groups does not return the ARN which is required to
@@ -133,33 +163,43 @@ func resourceReplicationSubnetGroupRead(d *schema.ResourceData, meta interface{}
 	}.String()
 	d.Set("replication_subnet_group_arn", arn)
 
-	err = resourceReplicationSubnetGroupSetState(d, response.ReplicationSubnetGroups[0])
-	if err != nil {
-		return err
+	group := response.ReplicationSubnetGroups[0]
+
+	d.SetId(aws.StringValue(group.ReplicationSubnetGroupIdentifier))
+
+	subnet_ids := []string{}
+	for _, subnet := range group.Subnets {
+		subnet_ids = append(subnet_ids, aws.StringValue(subnet.SubnetIdentifier))
 	}
 
-	tags, err := ListTags(conn, arn)
+	d.Set("replication_subnet_group_description", group.ReplicationSubnetGroupDescription)
+	d.Set("replication_subnet_group_id", group.ReplicationSubnetGroupIdentifier)
+	d.Set("subnet_ids", subnet_ids)
+	d.Set("vpc_id", group.VpcId)
+
+	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for DMS Replication Subnet Group (%s): %s", arn, err)
+		return create.DiagError(names.DMS, create.ErrActionReading, ResNameReplicationSubnetGroup, d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return create.DiagSettingError(names.DMS, ResNameReplicationSubnetGroup, d.Id(), "tags", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return create.DiagSettingError(names.DMS, ResNameReplicationSubnetGroup, d.Id(), "tags_all", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceReplicationSubnetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DMSConn
+func resourceReplicationSubnetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DMSConn()
 
 	// Updates to subnet groups are only valid when sending SubnetIds even if there are no
 	// changes to SubnetIds.
@@ -176,23 +216,24 @@ func resourceReplicationSubnetGroupUpdate(d *schema.ResourceData, meta interface
 		arn := d.Get("replication_subnet_group_arn").(string)
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, arn, o, n); err != nil {
-			return fmt.Errorf("error updating DMS Replication Subnet Group (%s) tags: %s", arn, err)
+		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
+			return create.DiagError(names.DMS, create.ErrActionUpdating, ResNameReplicationSubnetGroup, d.Id(), err)
 		}
 	}
 
 	log.Println("[DEBUG] DMS update replication subnet group:", request)
 
-	_, err := conn.ModifyReplicationSubnetGroup(request)
+	_, err := conn.ModifyReplicationSubnetGroupWithContext(ctx, request)
 	if err != nil {
-		return err
+		return create.DiagError(names.DMS, create.ErrActionUpdating, ResNameReplicationSubnetGroup, d.Id(), err)
 	}
 
-	return resourceReplicationSubnetGroupRead(d, meta)
+	return append(diags, resourceReplicationSubnetGroupRead(ctx, d, meta)...)
 }
 
-func resourceReplicationSubnetGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DMSConn
+func resourceReplicationSubnetGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DMSConn()
 
 	request := &dms.DeleteReplicationSubnetGroupInput{
 		ReplicationSubnetGroupIdentifier: aws.String(d.Get("replication_subnet_group_id").(string)),
@@ -200,22 +241,11 @@ func resourceReplicationSubnetGroupDelete(d *schema.ResourceData, meta interface
 
 	log.Printf("[DEBUG] DMS delete replication subnet group: %#v", request)
 
-	_, err := conn.DeleteReplicationSubnetGroup(request)
-	return err
-}
+	_, err := conn.DeleteReplicationSubnetGroupWithContext(ctx, request)
 
-func resourceReplicationSubnetGroupSetState(d *schema.ResourceData, group *dms.ReplicationSubnetGroup) error {
-	d.SetId(aws.StringValue(group.ReplicationSubnetGroupIdentifier))
-
-	subnet_ids := []string{}
-	for _, subnet := range group.Subnets {
-		subnet_ids = append(subnet_ids, aws.StringValue(subnet.SubnetIdentifier))
+	if err != nil {
+		return create.DiagError(names.DMS, create.ErrActionDeleting, ResNameReplicationSubnetGroup, d.Id(), err)
 	}
 
-	d.Set("replication_subnet_group_description", group.ReplicationSubnetGroupDescription)
-	d.Set("replication_subnet_group_id", group.ReplicationSubnetGroupIdentifier)
-	d.Set("subnet_ids", subnet_ids)
-	d.Set("vpc_id", group.VpcId)
-
-	return nil
+	return diags
 }

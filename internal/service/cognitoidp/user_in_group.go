@@ -1,21 +1,23 @@
 package cognitoidp
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func ResourceUserInGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceUserInGroupCreate,
-		Read:   resourceUserInGroupRead,
-		Delete: resourceUserInGroupDelete,
+		CreateWithoutTimeout: resourceUserInGroupCreate,
+		ReadWithoutTimeout:   resourceUserInGroupRead,
+		DeleteWithoutTimeout: resourceUserInGroupDelete,
 		Schema: map[string]*schema.Schema{
 			"group_name": {
 				Type:         schema.TypeString,
@@ -39,8 +41,9 @@ func ResourceUserInGroup() *schema.Resource {
 	}
 }
 
-func resourceUserInGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
+func resourceUserInGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CognitoIDPConn()
 
 	input := &cognitoidentityprovider.AdminAddUserToGroupInput{}
 
@@ -56,40 +59,42 @@ func resourceUserInGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		input.Username = aws.String(v.(string))
 	}
 
-	_, err := conn.AdminAddUserToGroup(input)
+	_, err := conn.AdminAddUserToGroupWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error adding user to group: %w", err)
+		return sdkdiag.AppendErrorf(diags, "adding user to group: %s", err)
 	}
 
 	//lintignore:R015 // Allow legacy unstable ID usage in managed resource
 	d.SetId(resource.UniqueId())
 
-	return resourceUserInGroupRead(d, meta)
+	return append(diags, resourceUserInGroupRead(ctx, d, meta)...)
 }
 
-func resourceUserInGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
+func resourceUserInGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CognitoIDPConn()
 
 	groupName := d.Get("group_name").(string)
 	userPoolId := d.Get("user_pool_id").(string)
 	username := d.Get("username").(string)
 
-	found, err := FindCognitoUserInGroup(conn, groupName, userPoolId, username)
+	found, err := FindCognitoUserInGroup(ctx, conn, groupName, userPoolId, username)
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading Cognito User Group Membership: %s", err)
 	}
 
 	if !found {
 		d.SetId("")
 	}
 
-	return nil
+	return diags
 }
 
-func resourceUserInGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
+func resourceUserInGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CognitoIDPConn()
 
 	groupName := d.Get("group_name").(string)
 	userPoolID := d.Get("user_pool_id").(string)
@@ -101,11 +106,11 @@ func resourceUserInGroupDelete(d *schema.ResourceData, meta interface{}) error {
 		Username:   aws.String(username),
 	}
 
-	_, err := conn.AdminRemoveUserFromGroup(input)
+	_, err := conn.AdminRemoveUserFromGroupWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error removing user from group: %w", err)
+		return sdkdiag.AppendErrorf(diags, "removing user from group: %s", err)
 	}
 
-	return nil
+	return diags
 }

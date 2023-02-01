@@ -1,6 +1,7 @@
 package batch
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -10,10 +11,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/private/protocol/json/jsonutil"
 	"github.com/aws/aws-sdk-go/service/batch"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -22,12 +25,12 @@ import (
 
 func ResourceJobDefinition() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceJobDefinitionCreate,
-		Read:   resourceJobDefinitionRead,
-		Update: resourceJobDefinitionUpdate,
-		Delete: resourceJobDefinitionDelete,
+		CreateWithoutTimeout: resourceJobDefinitionCreate,
+		ReadWithoutTimeout:   resourceJobDefinitionRead,
+		UpdateWithoutTimeout: resourceJobDefinitionUpdate,
+		DeleteWithoutTimeout: resourceJobDefinitionDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -174,8 +177,9 @@ func ResourceJobDefinition() *schema.Resource {
 	}
 }
 
-func resourceJobDefinitionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BatchConn
+func resourceJobDefinitionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).BatchConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 	name := d.Get("name").(string)
@@ -189,7 +193,7 @@ func resourceJobDefinitionCreate(d *schema.ResourceData, meta interface{}) error
 	if v, ok := d.GetOk("container_properties"); ok {
 		props, err := expandJobContainerProperties(v.(string))
 		if err != nil {
-			return err
+			return sdkdiag.AppendErrorf(diags, "creating Batch Job Definition (%s): %s", name, err)
 		}
 
 		input.ContainerProperties = props
@@ -215,32 +219,33 @@ func resourceJobDefinitionCreate(d *schema.ResourceData, meta interface{}) error
 		input.Timeout = expandJobTimeout(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	output, err := conn.RegisterJobDefinition(input)
+	output, err := conn.RegisterJobDefinitionWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating Batch Job Definition (%s): %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating Batch Job Definition (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.JobDefinitionArn))
 
-	return resourceJobDefinitionRead(d, meta)
+	return append(diags, resourceJobDefinitionRead(ctx, d, meta)...)
 }
 
-func resourceJobDefinitionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BatchConn
+func resourceJobDefinitionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).BatchConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	jobDefinition, err := FindJobDefinitionByARN(conn, d.Id())
+	jobDefinition, err := FindJobDefinitionByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Batch Job Definition (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Batch Job Definition (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Batch Job Definition (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", jobDefinition.JobDefinitionArn)
@@ -248,11 +253,11 @@ func resourceJobDefinitionRead(d *schema.ResourceData, meta interface{}) error {
 	containerProperties, err := flattenContainerProperties(jobDefinition.ContainerProperties)
 
 	if err != nil {
-		return fmt.Errorf("error converting Batch Container Properties to JSON: %w", err)
+		return sdkdiag.AppendErrorf(diags, "converting Batch Container Properties to JSON: %s", err)
 	}
 
 	if err := d.Set("container_properties", containerProperties); err != nil {
-		return fmt.Errorf("error setting container_properties: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting container_properties: %s", err)
 	}
 
 	d.Set("name", jobDefinition.JobDefinitionName)
@@ -262,7 +267,7 @@ func resourceJobDefinitionRead(d *schema.ResourceData, meta interface{}) error {
 
 	if jobDefinition.RetryStrategy != nil {
 		if err := d.Set("retry_strategy", []interface{}{flattenRetryStrategy(jobDefinition.RetryStrategy)}); err != nil {
-			return fmt.Errorf("error setting retry_strategy: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting retry_strategy: %s", err)
 		}
 	} else {
 		d.Set("retry_strategy", nil)
@@ -272,16 +277,16 @@ func resourceJobDefinitionRead(d *schema.ResourceData, meta interface{}) error {
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
 	if jobDefinition.Timeout != nil {
 		if err := d.Set("timeout", []interface{}{flattenJobTimeout(jobDefinition.Timeout)}); err != nil {
-			return fmt.Errorf("error setting timeout: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting timeout: %s", err)
 		}
 	} else {
 		d.Set("timeout", nil)
@@ -290,35 +295,38 @@ func resourceJobDefinitionRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("revision", jobDefinition.Revision)
 	d.Set("type", jobDefinition.Type)
 
-	return nil
+	return diags
 }
 
-func resourceJobDefinitionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BatchConn
+func resourceJobDefinitionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).BatchConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %w", err)
+		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
 		}
 	}
 
-	return nil
+	return diags
 }
 
-func resourceJobDefinitionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BatchConn
+func resourceJobDefinitionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).BatchConn()
 
-	_, err := conn.DeregisterJobDefinition(&batch.DeregisterJobDefinitionInput{
+	log.Printf("[DEBUG] Deleting Batch Job Definition: %s", d.Id())
+	_, err := conn.DeregisterJobDefinitionWithContext(ctx, &batch.DeregisterJobDefinitionInput{
 		JobDefinition: aws.String(d.Id()),
 	})
 
 	if err != nil {
-		return fmt.Errorf("error deleting Batch Job Definition (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Batch Job Definition (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func validJobContainerProperties(v interface{}, k string) (ws []string, errors []error) {
@@ -335,7 +343,7 @@ func expandJobContainerProperties(rawProps string) (*batch.ContainerProperties, 
 
 	err := json.Unmarshal([]byte(rawProps), &props)
 	if err != nil {
-		return nil, fmt.Errorf("Error decoding JSON: %s", err)
+		return nil, fmt.Errorf("decoding JSON: %s", err)
 	}
 
 	return props, nil

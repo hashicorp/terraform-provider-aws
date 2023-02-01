@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"context"
 	"os"
 	"strings"
 	"testing"
@@ -8,7 +9,23 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestExpandEndpoints(t *testing.T) {
+func TestProvider(t *testing.T) {
+	t.Parallel()
+
+	p, err := New(context.Background())
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = p.InternalValidate()
+
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestExpandEndpoints(t *testing.T) { //nolint:paralleltest
 	oldEnv := stashEnv()
 	defer popEnv(oldEnv)
 
@@ -32,7 +49,7 @@ func TestExpandEndpoints(t *testing.T) {
 	}
 }
 
-func TestEndpointMultipleKeys(t *testing.T) {
+func TestEndpointMultipleKeys(t *testing.T) { //nolint:paralleltest
 	testcases := []struct {
 		endpoints        map[string]string
 		expectedService  string
@@ -89,7 +106,7 @@ func TestEndpointMultipleKeys(t *testing.T) {
 	}
 }
 
-func TestEndpointEnvVarPrecedence(t *testing.T) {
+func TestEndpointEnvVarPrecedence(t *testing.T) { //nolint:paralleltest
 	testcases := []struct {
 		endpoints        map[string]string
 		envvars          map[string]string

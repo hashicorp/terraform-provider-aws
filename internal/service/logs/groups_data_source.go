@@ -38,7 +38,7 @@ func dataSourceGroups() *schema.Resource {
 }
 
 func dataSourceGroupsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LogsConn
+	conn := meta.(*conns.AWSClient).LogsConn()
 
 	input := &cloudwatchlogs.DescribeLogGroupsInput{}
 

@@ -1,6 +1,7 @@
 package emr_test
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"testing"
@@ -16,6 +17,7 @@ import (
 )
 
 func TestAccEMRStudioSessionMapping_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var studio emr.SessionMappingDetail
 	resourceName := "aws_emr_studio_session_mapping.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -29,12 +31,12 @@ func TestAccEMRStudioSessionMapping_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStudioSessionMappingDestroy,
+		CheckDestroy:             testAccCheckStudioSessionMappingDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStudioSessionMappingConfig_basic(rName, uName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStudioSessionMappingExists(resourceName, &studio),
+					testAccCheckStudioSessionMappingExists(ctx, resourceName, &studio),
 					resource.TestCheckResourceAttr(resourceName, "identity_id", uName),
 					resource.TestCheckResourceAttr(resourceName, "identity_type", "USER"),
 					resource.TestCheckResourceAttrPair(resourceName, "studio_id", "aws_emr_studio.test", "id"),
@@ -49,7 +51,7 @@ func TestAccEMRStudioSessionMapping_basic(t *testing.T) {
 			{
 				Config: testAccStudioSessionMappingConfig_updated(rName, uName, updatedName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStudioSessionMappingExists(resourceName, &studio),
+					testAccCheckStudioSessionMappingExists(ctx, resourceName, &studio),
 					resource.TestCheckResourceAttr(resourceName, "identity_id", uName),
 					resource.TestCheckResourceAttr(resourceName, "identity_type", "USER"),
 					resource.TestCheckResourceAttrPair(resourceName, "studio_id", "aws_emr_studio.test", "id"),
@@ -61,6 +63,7 @@ func TestAccEMRStudioSessionMapping_basic(t *testing.T) {
 }
 
 func TestAccEMRStudioSessionMapping_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var studio emr.SessionMappingDetail
 	resourceName := "aws_emr_studio_session_mapping.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -73,14 +76,14 @@ func TestAccEMRStudioSessionMapping_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStudioSessionMappingDestroy,
+		CheckDestroy:             testAccCheckStudioSessionMappingDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStudioSessionMappingConfig_basic(rName, uName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStudioSessionMappingExists(resourceName, &studio),
-					acctest.CheckResourceDisappears(acctest.Provider, tfemr.ResourceStudioSessionMapping(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfemr.ResourceStudioSessionMapping(), resourceName),
+					testAccCheckStudioSessionMappingExists(ctx, resourceName, &studio),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfemr.ResourceStudioSessionMapping(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfemr.ResourceStudioSessionMapping(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -88,16 +91,16 @@ func TestAccEMRStudioSessionMapping_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckStudioSessionMappingExists(resourceName string, studio *emr.SessionMappingDetail) resource.TestCheckFunc {
+func testAccCheckStudioSessionMappingExists(ctx context.Context, resourceName string, studio *emr.SessionMappingDetail) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn()
 
-		output, err := tfemr.FindStudioSessionMappingByID(conn, rs.Primary.ID)
+		output, err := tfemr.FindStudioSessionMappingByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -112,26 +115,28 @@ func testAccCheckStudioSessionMappingExists(resourceName string, studio *emr.Ses
 	}
 }
 
-func testAccCheckStudioSessionMappingDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn
+func testAccCheckStudioSessionMappingDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_emr_studio_session_mapping" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_emr_studio_session_mapping" {
+				continue
+			}
+
+			_, err := tfemr.FindStudioSessionMappingByID(ctx, conn, rs.Primary.ID)
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("EMR Studio %s still exists", rs.Primary.ID)
 		}
-
-		_, err := tfemr.FindStudioSessionMappingByID(conn, rs.Primary.ID)
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("EMR Studio %s still exists", rs.Primary.ID)
+		return nil
 	}
-	return nil
 }
 
 func testAccPreCheckUserID(t *testing.T) {

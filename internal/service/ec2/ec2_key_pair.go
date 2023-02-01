@@ -2,6 +2,7 @@ package ec2
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -9,11 +10,13 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -23,12 +26,12 @@ import (
 func ResourceKeyPair() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
-		Create: resourceKeyPairCreate,
-		Read:   resourceKeyPairRead,
-		Update: resourceKeyPairUpdate,
-		Delete: resourceKeyPairDelete,
+		CreateWithoutTimeout: resourceKeyPairCreate,
+		ReadWithoutTimeout:   resourceKeyPairRead,
+		UpdateWithoutTimeout: resourceKeyPairUpdate,
+		DeleteWithoutTimeout: resourceKeyPairDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -88,8 +91,9 @@ func ResourceKeyPair() *schema.Resource {
 	}
 }
 
-func resourceKeyPairCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceKeyPairCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -101,32 +105,33 @@ func resourceKeyPairCreate(d *schema.ResourceData, meta interface{}) error {
 		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeKeyPair),
 	}
 
-	output, err := conn.ImportKeyPair(input)
+	output, err := conn.ImportKeyPairWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error importing EC2 Key Pair (%s): %w", keyName, err)
+		return sdkdiag.AppendErrorf(diags, "importing EC2 Key Pair (%s): %s", keyName, err)
 	}
 
 	d.SetId(aws.StringValue(output.KeyName))
 
-	return resourceKeyPairRead(d, meta)
+	return append(diags, resourceKeyPairRead(ctx, d, meta)...)
 }
 
-func resourceKeyPairRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceKeyPairRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	keyPair, err := FindKeyPairByName(conn, d.Id())
+	keyPair, err := FindKeyPairByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Key Pair (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 Key Pair (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Key Pair (%s): %s", d.Id(), err)
 	}
 
 	arn := arn.ARN{
@@ -147,42 +152,44 @@ func resourceKeyPairRead(d *schema.ResourceData, meta interface{}) error {
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceKeyPairUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceKeyPairUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("key_pair_id").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %w", err)
+		if err := UpdateTags(ctx, conn, d.Get("key_pair_id").(string), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
 		}
 	}
 
-	return resourceKeyPairRead(d, meta)
+	return append(diags, resourceKeyPairRead(ctx, d, meta)...)
 }
 
-func resourceKeyPairDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceKeyPairDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	log.Printf("[DEBUG] Deleting EC2 Key Pair: %s", d.Id())
-	_, err := conn.DeleteKeyPair(&ec2.DeleteKeyPairInput{
+	_, err := conn.DeleteKeyPairWithContext(ctx, &ec2.DeleteKeyPairInput{
 		KeyName: aws.String(d.Id()),
 	})
 
 	if err != nil {
-		return fmt.Errorf("error deleting EC2 Key Pair (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting EC2 Key Pair (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 // OpenSSHPublicKeysEqual returns whether or not two OpenSSH public key format strings represent the same key.

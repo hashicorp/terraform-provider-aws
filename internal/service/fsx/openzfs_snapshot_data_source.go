@@ -1,21 +1,23 @@
 package fsx
 
 import (
-	"fmt"
+	"context"
 	"sort"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/fsx"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceOpenzfsSnapshot() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceOpenzfsSnapshotRead,
+		ReadWithoutTimeout: dataSourceOpenzfsSnapshotRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -54,8 +56,9 @@ func DataSourceOpenzfsSnapshot() *schema.Resource {
 	}
 }
 
-func dataSourceOpenzfsSnapshotRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FSxConn
+func dataSourceOpenzfsSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).FSxConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &fsx.DescribeSnapshotsInput{}
@@ -72,19 +75,19 @@ func dataSourceOpenzfsSnapshotRead(d *schema.ResourceData, meta interface{}) err
 		input.Filters = nil
 	}
 
-	snapshots, err := FindSnapshots(conn, input)
+	snapshots, err := FindSnapshots(ctx, conn, input)
 
 	if err != nil {
-		return fmt.Errorf("reading FSx Snapshots: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading FSx Snapshots: %s", err)
 	}
 
 	if len(snapshots) < 1 {
-		return fmt.Errorf("Your query returned no results. Please change your search criteria and try again.")
+		return sdkdiag.AppendErrorf(diags, "Your query returned no results. Please change your search criteria and try again.")
 	}
 
 	if len(snapshots) > 1 {
 		if !d.Get("most_recent").(bool) {
-			return fmt.Errorf("Your query returned more than one result. Please try a more " +
+			return sdkdiag.AppendErrorf(diags, "Your query returned more than one result. Please try a more "+
 				"specific search criteria, or set `most_recent` attribute to true.")
 		}
 
@@ -102,20 +105,20 @@ func dataSourceOpenzfsSnapshotRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("volume_id", snapshot.VolumeId)
 
 	if err := d.Set("creation_time", snapshot.CreationTime.Format(time.RFC3339)); err != nil {
-		return fmt.Errorf("error setting creation_time: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting creation_time: %s", err)
 	}
 
 	//Snapshot tags do not get returned with describe call so need to make a separate list tags call
-	tags, tagserr := ListTags(conn, *snapshot.ResourceARN)
+	tags, tagserr := ListTags(ctx, conn, *snapshot.ResourceARN)
 
 	if tagserr != nil {
-		return fmt.Errorf("error reading Tags for FSx OpenZFS Snapshot (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Tags for FSx OpenZFS Snapshot (%s): %s", d.Id(), err)
 	}
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

@@ -1,6 +1,7 @@
 package ram
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -9,20 +10,22 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ram"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourceResourceAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceResourceAssociationCreate,
-		Read:   resourceResourceAssociationRead,
-		Delete: resourceResourceAssociationDelete,
+		CreateWithoutTimeout: resourceResourceAssociationCreate,
+		ReadWithoutTimeout:   resourceResourceAssociationRead,
+		DeleteWithoutTimeout: resourceResourceAssociationDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -41,8 +44,9 @@ func ResourceResourceAssociation() *schema.Resource {
 	}
 }
 
-func resourceResourceAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RAMConn
+func resourceResourceAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RAMConn()
 	resourceARN := d.Get("resource_arn").(string)
 	resourceShareARN := d.Get("resource_share_arn").(string)
 
@@ -53,56 +57,58 @@ func resourceResourceAssociationCreate(d *schema.ResourceData, meta interface{})
 	}
 
 	log.Printf("[DEBUG] Associating RAM Resource Share: %s", input)
-	_, err := conn.AssociateResourceShare(input)
+	_, err := conn.AssociateResourceShareWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("error associating RAM Resource Share: %s", err)
+		return sdkdiag.AppendErrorf(diags, "associating RAM Resource Share: %s", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s,%s", resourceShareARN, resourceARN))
 
-	if err := waitForResourceShareResourceAssociation(conn, resourceShareARN, resourceARN); err != nil {
-		return fmt.Errorf("error waiting for RAM Resource Share (%s) Resource Association (%s): %s", resourceShareARN, resourceARN, err)
+	if err := waitForResourceShareResourceAssociation(ctx, conn, resourceShareARN, resourceARN); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for RAM Resource Share (%s) Resource Association (%s): %s", resourceShareARN, resourceARN, err)
 	}
 
-	return resourceResourceAssociationRead(d, meta)
+	return append(diags, resourceResourceAssociationRead(ctx, d, meta)...)
 }
 
-func resourceResourceAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RAMConn
+func resourceResourceAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RAMConn()
 
 	resourceShareARN, resourceARN, err := DecodeResourceAssociationID(d.Id())
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading RAM Resource Share Resource Association (%s): %s", d.Id(), err)
 	}
 
-	resourceShareAssociation, err := GetResourceShareAssociation(conn, resourceShareARN, resourceARN)
+	resourceShareAssociation, err := GetResourceShareAssociation(ctx, conn, resourceShareARN, resourceARN)
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] RAM Resource Share (%s) Resource Association (%s) not found, removing from state", resourceShareARN, resourceARN)
 		d.SetId("")
-		return nil
+		return diags
 	}
 	if err != nil {
-		return fmt.Errorf("error reading RAM Resource Share (%s) Resource Association (%s): %w", resourceShareARN, resourceARN, err)
+		return sdkdiag.AppendErrorf(diags, "reading RAM Resource Share Resource Association (%s): %s", d.Id(), err)
 	}
 
 	if !d.IsNewResource() && aws.StringValue(resourceShareAssociation.Status) != ram.ResourceShareAssociationStatusAssociated {
 		log.Printf("[WARN] RAM Resource Share (%s) Resource Association (%s) not associated, removing from state", resourceShareARN, resourceARN)
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	d.Set("resource_arn", resourceARN)
 	d.Set("resource_share_arn", resourceShareARN)
 
-	return nil
+	return diags
 }
 
-func resourceResourceAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RAMConn
+func resourceResourceAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RAMConn()
 
 	resourceShareARN, resourceARN, err := DecodeResourceAssociationID(d.Id())
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "deleting RAM Resource Share Resource Association (%s): %s", d.Id(), err)
 	}
 
 	input := &ram.DisassociateResourceShareInput{
@@ -111,21 +117,21 @@ func resourceResourceAssociationDelete(d *schema.ResourceData, meta interface{})
 	}
 
 	log.Printf("[DEBUG] Disassociating RAM Resource Share: %s", input)
-	_, err = conn.DisassociateResourceShare(input)
+	_, err = conn.DisassociateResourceShareWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, ram.ErrCodeUnknownResourceException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error disassociating RAM Resource Share (%s) Resource Association (%s): %s", resourceShareARN, resourceARN, err)
+		return sdkdiag.AppendErrorf(diags, "deleting RAM Resource Share Resource Association (%s): %s", d.Id(), err)
 	}
 
-	if err := WaitForResourceShareResourceDisassociation(conn, resourceShareARN, resourceARN); err != nil {
-		return fmt.Errorf("error waiting for RAM Resource Share (%s) Resource Association (%s) disassociation: %s", resourceShareARN, resourceARN, err)
+	if err := WaitForResourceShareResourceDisassociation(ctx, conn, resourceShareARN, resourceARN); err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting RAM Resource Share Resource Association (%s): waiting for completion: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func DecodeResourceAssociationID(id string) (string, string, error) {
@@ -139,14 +145,14 @@ func DecodeResourceAssociationID(id string) (string, string, error) {
 	return parts[0], parts[1], nil
 }
 
-func GetResourceShareAssociation(conn *ram.RAM, resourceShareARN, resourceARN string) (*ram.ResourceShareAssociation, error) {
+func GetResourceShareAssociation(ctx context.Context, conn *ram.RAM, resourceShareARN, resourceARN string) (*ram.ResourceShareAssociation, error) {
 	input := &ram.GetResourceShareAssociationsInput{
 		AssociationType:   aws.String(ram.ResourceShareAssociationTypeResource),
 		ResourceArn:       aws.String(resourceARN),
 		ResourceShareArns: aws.StringSlice([]string{resourceShareARN}),
 	}
 
-	output, err := conn.GetResourceShareAssociations(input)
+	output, err := conn.GetResourceShareAssociationsWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, ram.ErrCodeUnknownResourceException) {
 		return nil, &resource.NotFoundError{
@@ -169,9 +175,9 @@ func GetResourceShareAssociation(conn *ram.RAM, resourceShareARN, resourceARN st
 	}
 }
 
-func resourceAssociationStateRefreshFunc(conn *ram.RAM, resourceShareARN, resourceARN string) resource.StateRefreshFunc {
+func resourceAssociationStateRefreshFunc(ctx context.Context, conn *ram.RAM, resourceShareARN, resourceARN string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		resourceShareAssociation, err := GetResourceShareAssociation(conn, resourceShareARN, resourceARN)
+		resourceShareAssociation, err := GetResourceShareAssociation(ctx, conn, resourceShareARN, resourceARN)
 		if tfresource.NotFound(err) {
 			return nil, ram.ResourceShareAssociationStatusDisassociated, nil
 		}
@@ -188,28 +194,28 @@ func resourceAssociationStateRefreshFunc(conn *ram.RAM, resourceShareARN, resour
 	}
 }
 
-func waitForResourceShareResourceAssociation(conn *ram.RAM, resourceShareARN, resourceARN string) error {
+func waitForResourceShareResourceAssociation(ctx context.Context, conn *ram.RAM, resourceShareARN, resourceARN string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ram.ResourceShareAssociationStatusAssociating},
 		Target:  []string{ram.ResourceShareAssociationStatusAssociated},
-		Refresh: resourceAssociationStateRefreshFunc(conn, resourceShareARN, resourceARN),
+		Refresh: resourceAssociationStateRefreshFunc(ctx, conn, resourceShareARN, resourceARN),
 		Timeout: 5 * time.Minute,
 	}
 
-	_, err := stateConf.WaitForState()
+	_, err := stateConf.WaitForStateContext(ctx)
 
 	return err
 }
 
-func WaitForResourceShareResourceDisassociation(conn *ram.RAM, resourceShareARN, resourceARN string) error {
+func WaitForResourceShareResourceDisassociation(ctx context.Context, conn *ram.RAM, resourceShareARN, resourceARN string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ram.ResourceShareAssociationStatusAssociated, ram.ResourceShareAssociationStatusDisassociating},
 		Target:  []string{ram.ResourceShareAssociationStatusDisassociated},
-		Refresh: resourceAssociationStateRefreshFunc(conn, resourceShareARN, resourceARN),
+		Refresh: resourceAssociationStateRefreshFunc(ctx, conn, resourceShareARN, resourceARN),
 		Timeout: 5 * time.Minute,
 	}
 
-	_, err := stateConf.WaitForState()
+	_, err := stateConf.WaitForStateContext(ctx)
 
 	return err
 }

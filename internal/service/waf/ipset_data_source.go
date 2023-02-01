@@ -1,17 +1,19 @@
 package waf
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/waf"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func DataSourceIPSet() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceIPSetRead,
+		ReadWithoutTimeout: dataSourceIPSetRead,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -22,17 +24,18 @@ func DataSourceIPSet() *schema.Resource {
 	}
 }
 
-func dataSourceIPSetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFConn
+func dataSourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).WAFConn()
 	name := d.Get("name").(string)
 
 	ipsets := make([]*waf.IPSetSummary, 0)
 	// ListIPSetsInput does not have a name parameter for filtering or a paginator
 	input := &waf.ListIPSetsInput{}
 	for {
-		output, err := conn.ListIPSets(input)
+		output, err := conn.ListIPSetsWithContext(ctx, input)
 		if err != nil {
-			return fmt.Errorf("Error reading WAF IP sets: %w", err)
+			return sdkdiag.AppendErrorf(diags, "reading WAF IP sets: %s", err)
 		}
 		for _, ipset := range output.IPSets {
 			if aws.StringValue(ipset.Name) == name {
@@ -47,14 +50,14 @@ func dataSourceIPSetRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if len(ipsets) == 0 {
-		return fmt.Errorf("WAF IP Set not found for name: %s", name)
+		return sdkdiag.AppendErrorf(diags, "WAF IP Set not found for name: %s", name)
 	}
 	if len(ipsets) > 1 {
-		return fmt.Errorf("Multiple WAF IP Sets found for name: %s", name)
+		return sdkdiag.AppendErrorf(diags, "Multiple WAF IP Sets found for name: %s", name)
 	}
 
 	ipset := ipsets[0]
 	d.SetId(aws.StringValue(ipset.IPSetId))
 
-	return nil
+	return diags
 }

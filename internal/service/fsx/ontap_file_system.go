@@ -1,7 +1,7 @@
 package fsx
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"regexp"
 	"time"
@@ -9,10 +9,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/fsx"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -21,12 +23,12 @@ import (
 
 func ResourceOntapFileSystem() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceOntapFileSystemCreate,
-		Read:   resourceOntapFileSystemRead,
-		Update: resourceOntapFileSystemUpdate,
-		Delete: resourceOntapFileSystemDelete,
+		CreateWithoutTimeout: resourceOntapFileSystemCreate,
+		ReadWithoutTimeout:   resourceOntapFileSystemRead,
+		UpdateWithoutTimeout: resourceOntapFileSystemUpdate,
+		DeleteWithoutTimeout: resourceOntapFileSystemDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -226,8 +228,9 @@ func ResourceOntapFileSystem() *schema.Resource {
 	}
 }
 
-func resourceOntapFileSystemCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FSxConn
+func resourceOntapFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).FSxConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -282,41 +285,42 @@ func resourceOntapFileSystemCreate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	log.Printf("[DEBUG] Creating FSx ONTAP File System: %s", input)
-	result, err := conn.CreateFileSystem(input)
+	result, err := conn.CreateFileSystemWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating FSx ONTAP File System: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating FSx ONTAP File System: %s", err)
 	}
 
 	d.SetId(aws.StringValue(result.FileSystem.FileSystemId))
 
-	if _, err := waitFileSystemCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("error waiting for FSx ONTAP File System (%s) create: %w", d.Id(), err)
+	if _, err := waitFileSystemCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for FSx ONTAP File System (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceOntapFileSystemRead(d, meta)
+	return append(diags, resourceOntapFileSystemRead(ctx, d, meta)...)
 }
 
-func resourceOntapFileSystemRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FSxConn
+func resourceOntapFileSystemRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).FSxConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	filesystem, err := FindFileSystemByID(conn, d.Id())
+	filesystem, err := FindFileSystemByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] FSx ONTAP File System (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading FSx ONTAP File System (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading FSx ONTAP File System (%s): %s", d.Id(), err)
 	}
 
 	ontapConfig := filesystem.OntapConfiguration
 	if ontapConfig == nil {
-		return fmt.Errorf("error describing FSx ONTAP File System (%s): empty ONTAP configuration", d.Id())
+		return sdkdiag.AppendErrorf(diags, "describing FSx ONTAP File System (%s): empty ONTAP configuration", d.Id())
 	}
 
 	d.Set("arn", filesystem.ResourceARN)
@@ -333,53 +337,51 @@ func resourceOntapFileSystemRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("owner_id", filesystem.OwnerId)
 	d.Set("storage_capacity", filesystem.StorageCapacity)
 	d.Set("fsx_admin_password", d.Get("fsx_admin_password").(string))
-
-	if filesystem.KmsKeyId != nil {
-		d.Set("kms_key_id", filesystem.KmsKeyId)
-	}
+	d.Set("kms_key_id", filesystem.KmsKeyId)
 
 	if err := d.Set("network_interface_ids", aws.StringValueSlice(filesystem.NetworkInterfaceIds)); err != nil {
-		return fmt.Errorf("error setting network_interface_ids: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting network_interface_ids: %s", err)
 	}
 
 	if err := d.Set("subnet_ids", aws.StringValueSlice(filesystem.SubnetIds)); err != nil {
-		return fmt.Errorf("error setting subnet_ids: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting subnet_ids: %s", err)
 	}
 
 	if err := d.Set("route_table_ids", aws.StringValueSlice(ontapConfig.RouteTableIds)); err != nil {
-		return fmt.Errorf("error setting subnet_ids: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting subnet_ids: %s", err)
 	}
 
 	if err := d.Set("endpoints", flattenOntapFileSystemEndpoints(ontapConfig.Endpoints)); err != nil {
-		return fmt.Errorf("error setting endpoints: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting endpoints: %s", err)
 	}
 
 	if err := d.Set("disk_iops_configuration", flattenOntapFileDiskIopsConfiguration(ontapConfig.DiskIopsConfiguration)); err != nil {
-		return fmt.Errorf("error setting disk_iops_configuration: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting disk_iops_configuration: %s", err)
 	}
 
 	tags := KeyValueTags(filesystem.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceOntapFileSystemUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FSxConn
+func resourceOntapFileSystemUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).FSxConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating FSx ONTAP File System (%s) tags: %w", d.Get("arn").(string), err)
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating FSx ONTAP File System (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
 
@@ -418,45 +420,46 @@ func resourceOntapFileSystemUpdate(d *schema.ResourceData, meta interface{}) err
 			input.OntapConfiguration.DiskIopsConfiguration = expandOntapFileDiskIopsConfiguration(d.Get("disk_iops_configuration").([]interface{}))
 		}
 
-		_, err := conn.UpdateFileSystem(input)
+		_, err := conn.UpdateFileSystemWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error updating FSx ONTAP File System (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating FSx ONTAP File System (%s): %s", d.Id(), err)
 		}
 
-		if _, err := waitFileSystemUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return fmt.Errorf("error waiting for FSx ONTAP File System (%s) update: %w", d.Id(), err)
+		if _, err := waitFileSystemUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for FSx ONTAP File System (%s) update: %s", d.Id(), err)
 		}
 
-		if _, err := waitAdministrativeActionCompleted(conn, d.Id(), fsx.AdministrativeActionTypeFileSystemUpdate, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return fmt.Errorf("error waiting for FSx ONTAP File System (%s) update: %w", d.Id(), err)
+		if _, err := waitAdministrativeActionCompleted(ctx, conn, d.Id(), fsx.AdministrativeActionTypeFileSystemUpdate, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for FSx ONTAP File System (%s) update: %s", d.Id(), err)
 		}
 	}
 
-	return resourceOntapFileSystemRead(d, meta)
+	return append(diags, resourceOntapFileSystemRead(ctx, d, meta)...)
 }
 
-func resourceOntapFileSystemDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FSxConn
+func resourceOntapFileSystemDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).FSxConn()
 
 	log.Printf("[DEBUG] Deleting FSx ONTAP File System: %s", d.Id())
-	_, err := conn.DeleteFileSystem(&fsx.DeleteFileSystemInput{
+	_, err := conn.DeleteFileSystemWithContext(ctx, &fsx.DeleteFileSystemInput{
 		FileSystemId: aws.String(d.Id()),
 	})
 
 	if tfawserr.ErrCodeEquals(err, fsx.ErrCodeFileSystemNotFound) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting FSx ONTAP File System (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting FSx ONTAP File System (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitFileSystemDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("error waiting for FSx ONTAP File System (%s) delete: %w", d.Id(), err)
+	if _, err := waitFileSystemDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for FSx ONTAP File System (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandOntapFileDiskIopsConfiguration(cfg []interface{}) *fsx.DiskIopsConfiguration {

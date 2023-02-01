@@ -1,6 +1,7 @@
 package workspaces_test
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"testing"
@@ -17,6 +18,7 @@ import (
 )
 
 func testAccDirectory_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v workspaces.WorkspaceDirectory
 	rName := sdkacctest.RandString(8)
 
@@ -29,18 +31,18 @@ func testAccDirectory_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckDirectory(t)
+			testAccPreCheckDirectory(ctx, t)
 			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
 			acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole")
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, workspaces.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDirectoryDestroy,
+		CheckDestroy:             testAccCheckDirectoryDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDirectoryConfig_basic(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDirectoryExists(resourceName, &v),
+					testAccCheckDirectoryExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "alias", directoryResourceName, "alias"),
 					resource.TestCheckResourceAttrPair(resourceName, "directory_id", directoryResourceName, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "directory_name", directoryResourceName, "name"),
@@ -86,6 +88,7 @@ func testAccDirectory_basic(t *testing.T) {
 }
 
 func testAccDirectory_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v workspaces.WorkspaceDirectory
 	rName := sdkacctest.RandString(8)
 
@@ -96,19 +99,19 @@ func testAccDirectory_disappears(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckDirectory(t)
+			testAccPreCheckDirectory(ctx, t)
 			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
 			acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole")
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, workspaces.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDirectoryDestroy,
+		CheckDestroy:             testAccCheckDirectoryDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDirectoryConfig_basic(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDirectoryExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfworkspaces.ResourceDirectory(), resourceName),
+					testAccCheckDirectoryExists(ctx, resourceName, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfworkspaces.ResourceDirectory(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -117,6 +120,7 @@ func testAccDirectory_disappears(t *testing.T) {
 }
 
 func testAccDirectory_subnetIDs(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v workspaces.WorkspaceDirectory
 	rName := sdkacctest.RandString(8)
 
@@ -127,18 +131,18 @@ func testAccDirectory_subnetIDs(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckDirectory(t)
+			testAccPreCheckDirectory(ctx, t)
 			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
 			acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole")
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, workspaces.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDirectoryDestroy,
+		CheckDestroy:             testAccCheckDirectoryDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDirectoryConfig_subnetIDs(rName, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDirectoryExists(resourceName, &v),
+					testAccCheckDirectoryExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
 				),
 			},
@@ -152,6 +156,7 @@ func testAccDirectory_subnetIDs(t *testing.T) {
 }
 
 func testAccDirectory_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v workspaces.WorkspaceDirectory
 	rName := sdkacctest.RandString(8)
 
@@ -162,18 +167,18 @@ func testAccDirectory_tags(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckDirectory(t)
+			testAccPreCheckDirectory(ctx, t)
 			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
 			acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole")
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, workspaces.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDirectoryDestroy,
+		CheckDestroy:             testAccCheckDirectoryDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDirectoryConfig_tags1(rName, domain, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDirectoryExists(resourceName, &v),
+					testAccCheckDirectoryExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -186,7 +191,7 @@ func testAccDirectory_tags(t *testing.T) {
 			{
 				Config: testAccDirectoryConfig_tags2(rName, domain, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDirectoryExists(resourceName, &v),
+					testAccCheckDirectoryExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -195,7 +200,7 @@ func testAccDirectory_tags(t *testing.T) {
 			{
 				Config: testAccDirectoryConfig_tags1(rName, domain, "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDirectoryExists(resourceName, &v),
+					testAccCheckDirectoryExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -205,6 +210,7 @@ func testAccDirectory_tags(t *testing.T) {
 }
 
 func testAccDirectory_selfServicePermissions(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v workspaces.WorkspaceDirectory
 	rName := sdkacctest.RandString(8)
 
@@ -215,18 +221,18 @@ func testAccDirectory_selfServicePermissions(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckDirectory(t)
+			testAccPreCheckDirectory(ctx, t)
 			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
 			acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole")
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, workspaces.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDirectoryDestroy,
+		CheckDestroy:             testAccCheckDirectoryDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDirectoryConfig_selfServicePermissions(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDirectoryExists(resourceName, &v),
+					testAccCheckDirectoryExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.0.change_compute_type", "false"),
 					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.0.increase_volume_size", "true"),
@@ -240,6 +246,7 @@ func testAccDirectory_selfServicePermissions(t *testing.T) {
 }
 
 func testAccDirectory_workspaceAccessProperties(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v workspaces.WorkspaceDirectory
 	rName := sdkacctest.RandString(8)
 
@@ -250,18 +257,18 @@ func testAccDirectory_workspaceAccessProperties(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckDirectory(t)
+			testAccPreCheckDirectory(ctx, t)
 			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
 			acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole")
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, workspaces.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDirectoryDestroy,
+		CheckDestroy:             testAccCheckDirectoryDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDirectoryConfig_workspaceAccessProperties(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDirectoryExists(resourceName, &v),
+					testAccCheckDirectoryExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.0.device_type_android", "ALLOW"),
 					resource.TestCheckResourceAttr(resourceName, "workspace_access_properties.0.device_type_chromeos", "ALLOW"),
@@ -278,6 +285,7 @@ func testAccDirectory_workspaceAccessProperties(t *testing.T) {
 }
 
 func testAccDirectory_workspaceCreationProperties(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v workspaces.WorkspaceDirectory
 	rName := sdkacctest.RandString(8)
 
@@ -289,18 +297,18 @@ func testAccDirectory_workspaceCreationProperties(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckDirectory(t)
+			testAccPreCheckDirectory(ctx, t)
 			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
 			acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole")
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, workspaces.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDirectoryDestroy,
+		CheckDestroy:             testAccCheckDirectoryDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDirectoryConfig_workspaceCreationProperties(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDirectoryExists(resourceName, &v),
+					testAccCheckDirectoryExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "workspace_creation_properties.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "workspace_creation_properties.0.custom_security_group_id", resourceSecurityGroup, "id"),
 					resource.TestCheckResourceAttr(resourceName, "workspace_creation_properties.0.default_ou", "OU=AWS,DC=Workgroup,DC=Example,DC=com"),
@@ -314,6 +322,7 @@ func testAccDirectory_workspaceCreationProperties(t *testing.T) {
 }
 
 func testAccDirectory_workspaceCreationProperties_customSecurityGroupId_defaultOu(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v workspaces.WorkspaceDirectory
 	rName := sdkacctest.RandString(8)
 
@@ -325,18 +334,18 @@ func testAccDirectory_workspaceCreationProperties_customSecurityGroupId_defaultO
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			testAccPreCheckDirectory(t)
+			testAccPreCheckDirectory(ctx, t)
 			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
 			acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole")
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, workspaces.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDirectoryDestroy,
+		CheckDestroy:             testAccCheckDirectoryDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDirectoryConfig_creationPropertiesCustomSecurityGroupIdDefaultOUAbsent(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDirectoryExists(resourceName, &v),
+					testAccCheckDirectoryExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "workspace_creation_properties.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "workspace_creation_properties.0.custom_security_group_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "workspace_creation_properties.0.default_ou", ""),
@@ -345,7 +354,7 @@ func testAccDirectory_workspaceCreationProperties_customSecurityGroupId_defaultO
 			{
 				Config: testAccDirectoryConfig_creationPropertiesCustomSecurityGroupIdDefaultOUPresent(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDirectoryExists(resourceName, &v),
+					testAccCheckDirectoryExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "workspace_creation_properties.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "workspace_creation_properties.0.custom_security_group_id", resourceSecurityGroup, "id"),
 					resource.TestCheckResourceAttr(resourceName, "workspace_creation_properties.0.default_ou", "OU=AWS,DC=Workgroup,DC=Example,DC=com"),
@@ -354,7 +363,7 @@ func testAccDirectory_workspaceCreationProperties_customSecurityGroupId_defaultO
 			{
 				Config: testAccDirectoryConfig_creationPropertiesCustomSecurityGroupIdDefaultOUAbsent(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDirectoryExists(resourceName, &v),
+					testAccCheckDirectoryExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "workspace_creation_properties.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "workspace_creation_properties.0.custom_security_group_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "workspace_creation_properties.0.default_ou"),
@@ -366,6 +375,7 @@ func testAccDirectory_workspaceCreationProperties_customSecurityGroupId_defaultO
 }
 
 func testAccDirectory_ipGroupIDs(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v workspaces.WorkspaceDirectory
 	rName := sdkacctest.RandString(8)
 
@@ -377,12 +387,12 @@ func testAccDirectory_ipGroupIDs(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole") },
 		ErrorCheck:               acctest.ErrorCheck(t, workspaces.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDirectoryDestroy,
+		CheckDestroy:             testAccCheckDirectoryDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDirectoryConfig_ipGroupIdsCreate(rName, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDirectoryExists(resourceName, &v),
+					testAccCheckDirectoryExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "ip_group_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "ip_group_ids.*", "aws_workspaces_ip_group.test_alpha", "id"),
 				),
@@ -395,7 +405,7 @@ func testAccDirectory_ipGroupIDs(t *testing.T) {
 			{
 				Config: testAccDirectoryConfig_ipGroupIdsUpdate(rName, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDirectoryExists(resourceName, &v),
+					testAccCheckDirectoryExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "ip_group_ids.#", "2"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "ip_group_ids.*", "aws_workspaces_ip_group.test_beta", "id"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "ip_group_ids.*", "aws_workspaces_ip_group.test_gamma", "id"),
@@ -411,6 +421,8 @@ func testAccDirectory_ipGroupIDs(t *testing.T) {
 }
 
 func TestExpandSelfServicePermissions(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		input    []interface{}
 		expected *workspaces.SelfservicePermissions
@@ -450,6 +462,8 @@ func TestExpandSelfServicePermissions(t *testing.T) {
 }
 
 func TestFlattenSelfServicePermissions(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		input    *workspaces.SelfservicePermissions
 		expected []interface{}
@@ -489,6 +503,8 @@ func TestFlattenSelfServicePermissions(t *testing.T) {
 }
 
 func TestExpandWorkspaceAccessProperties(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		input    []interface{}
 		expected *workspaces.WorkspaceAccessProperties
@@ -534,6 +550,8 @@ func TestExpandWorkspaceAccessProperties(t *testing.T) {
 }
 
 func TestFlattenWorkspaceAccessProperties(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		input    *workspaces.WorkspaceAccessProperties
 		expected []interface{}
@@ -579,6 +597,8 @@ func TestFlattenWorkspaceAccessProperties(t *testing.T) {
 }
 
 func TestExpandWorkspaceCreationProperties(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		input    []interface{}
 		expected *workspaces.WorkspaceCreationProperties
@@ -637,6 +657,8 @@ func TestExpandWorkspaceCreationProperties(t *testing.T) {
 }
 
 func TestFlattenWorkspaceCreationProperties(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		input    *workspaces.DefaultWorkspaceCreationProperties
 		expected []interface{}
@@ -675,31 +697,33 @@ func TestFlattenWorkspaceCreationProperties(t *testing.T) {
 	}
 }
 
-func testAccCheckDirectoryDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesConn
+func testAccCheckDirectoryDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_workspaces_directory" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_workspaces_directory" {
+				continue
+			}
+
+			_, err := tfworkspaces.FindDirectoryByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("WorkSpaces Directory %s still exists", rs.Primary.ID)
 		}
 
-		_, err := tfworkspaces.FindDirectoryByID(conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("WorkSpaces Directory %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckDirectoryExists(n string, v *workspaces.WorkspaceDirectory) resource.TestCheckFunc {
+func testAccCheckDirectoryExists(ctx context.Context, n string, v *workspaces.WorkspaceDirectory) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -710,9 +734,9 @@ func testAccCheckDirectoryExists(n string, v *workspaces.WorkspaceDirectory) res
 			return fmt.Errorf("No WorkSpaces Directory ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesConn()
 
-		output, err := tfworkspaces.FindDirectoryByID(conn, rs.Primary.ID)
+		output, err := tfworkspaces.FindDirectoryByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -724,12 +748,12 @@ func testAccCheckDirectoryExists(n string, v *workspaces.WorkspaceDirectory) res
 	}
 }
 
-func testAccPreCheckDirectory(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesConn
+func testAccPreCheckDirectory(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesConn()
 
 	input := &workspaces.DescribeWorkspaceDirectoriesInput{}
 
-	_, err := conn.DescribeWorkspaceDirectories(input)
+	_, err := conn.DescribeWorkspaceDirectoriesWithContext(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

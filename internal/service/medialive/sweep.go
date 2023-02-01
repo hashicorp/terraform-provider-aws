@@ -4,7 +4,6 @@
 package medialive
 
 import (
-	"context"
 	"fmt"
 	"log"
 
@@ -42,13 +41,13 @@ func init() {
 }
 
 func sweepChannels(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		fmt.Errorf("error getting client: %s", err)
 	}
 
-	ctx := context.Background()
-	conn := client.(*conns.AWSClient).MediaLiveClient
+	conn := client.(*conns.AWSClient).MediaLiveClient()
 	sweepResources := make([]sweep.Sweepable, 0)
 	in := &medialive.ListChannelsInput{}
 	var errs *multierror.Error
@@ -79,7 +78,7 @@ func sweepChannels(region string) error {
 		}
 	}
 
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping MediaLive Channels for %s: %w", region, err))
 	}
 
@@ -92,13 +91,13 @@ func sweepChannels(region string) error {
 }
 
 func sweepInputs(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		fmt.Errorf("error getting client: %s", err)
 	}
 
-	ctx := context.Background()
-	conn := client.(*conns.AWSClient).MediaLiveClient
+	conn := client.(*conns.AWSClient).MediaLiveClient()
 	sweepResources := make([]sweep.Sweepable, 0)
 	in := &medialive.ListInputsInput{}
 	var errs *multierror.Error
@@ -129,7 +128,7 @@ func sweepInputs(region string) error {
 		}
 	}
 
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping MediaLive Inputs for %s: %w", region, err))
 	}
 
@@ -142,13 +141,13 @@ func sweepInputs(region string) error {
 }
 
 func sweepInputSecurityGroups(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		fmt.Errorf("error getting client: %s", err)
 	}
 
-	ctx := context.Background()
-	conn := client.(*conns.AWSClient).MediaLiveClient
+	conn := client.(*conns.AWSClient).MediaLiveClient()
 	sweepResources := make([]sweep.Sweepable, 0)
 	in := &medialive.ListInputSecurityGroupsInput{}
 	var errs *multierror.Error
@@ -179,7 +178,7 @@ func sweepInputSecurityGroups(region string) error {
 		}
 	}
 
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping MediaLive Input Security Groups for %s: %w", region, err))
 	}
 
@@ -192,13 +191,13 @@ func sweepInputSecurityGroups(region string) error {
 }
 
 func sweepMultiplexes(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		fmt.Errorf("error getting client: %s", err)
 	}
 
-	ctx := context.Background()
-	conn := client.(*conns.AWSClient).MediaLiveClient
+	conn := client.(*conns.AWSClient).MediaLiveClient()
 	sweepResources := make([]sweep.Sweepable, 0)
 	in := &medialive.ListMultiplexesInput{}
 	var errs *multierror.Error
@@ -229,7 +228,7 @@ func sweepMultiplexes(region string) error {
 		}
 	}
 
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping MediaLive Multiplexes for %s: %w", region, err))
 	}
 

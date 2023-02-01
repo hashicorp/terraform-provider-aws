@@ -7,6 +7,8 @@ import (
 )
 
 func TestSortEndpointsString(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		TestName string
 		Input    string
@@ -30,7 +32,10 @@ func TestSortEndpointsString(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.TestName, func(t *testing.T) {
+			t.Parallel()
+
 			got := tfkafka.SortEndpointsString(testCase.Input)
 
 			if got != testCase.Expected {

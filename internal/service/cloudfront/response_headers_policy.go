@@ -1,27 +1,29 @@
 package cloudfront
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourceResponseHeadersPolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceResponseHeadersPolicyCreate,
-		Read:   resourceResponseHeadersPolicyRead,
-		Update: resourceResponseHeadersPolicyUpdate,
-		Delete: resourceResponseHeadersPolicyDelete,
+		CreateWithoutTimeout: resourceResponseHeadersPolicyCreate,
+		ReadWithoutTimeout:   resourceResponseHeadersPolicyRead,
+		UpdateWithoutTimeout: resourceResponseHeadersPolicyUpdate,
+		DeleteWithoutTimeout: resourceResponseHeadersPolicyDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"comment": {
@@ -294,8 +296,9 @@ func ResourceResponseHeadersPolicy() *schema.Resource {
 	}
 }
 
-func resourceResponseHeadersPolicyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+func resourceResponseHeadersPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 
 	name := d.Get("name").(string)
 	apiObject := &cloudfront.ResponseHeadersPolicyConfig{
@@ -327,44 +330,45 @@ func resourceResponseHeadersPolicyCreate(d *schema.ResourceData, meta interface{
 	}
 
 	log.Printf("[DEBUG] Creating CloudFront Response Headers Policy: (%s)", input)
-	output, err := conn.CreateResponseHeadersPolicy(input)
+	output, err := conn.CreateResponseHeadersPolicyWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating CloudFront Response Headers Policy (%s): %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating CloudFront Response Headers Policy (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.ResponseHeadersPolicy.Id))
 
-	return resourceResponseHeadersPolicyRead(d, meta)
+	return append(diags, resourceResponseHeadersPolicyRead(ctx, d, meta)...)
 }
 
-func resourceResponseHeadersPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+func resourceResponseHeadersPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 
-	output, err := FindResponseHeadersPolicyByID(conn, d.Id())
+	output, err := FindResponseHeadersPolicyByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudFront Response Headers Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading CloudFront Response Headers Policy (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading CloudFront Response Headers Policy (%s): %s", d.Id(), err)
 	}
 
 	apiObject := output.ResponseHeadersPolicy.ResponseHeadersPolicyConfig
 	d.Set("comment", apiObject.Comment)
 	if apiObject.CorsConfig != nil {
 		if err := d.Set("cors_config", []interface{}{flattenResponseHeadersPolicyCorsConfig(apiObject.CorsConfig)}); err != nil {
-			return fmt.Errorf("error setting cors_config: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting cors_config: %s", err)
 		}
 	} else {
 		d.Set("cors_config", nil)
 	}
 	if apiObject.CustomHeadersConfig != nil {
 		if err := d.Set("custom_headers_config", []interface{}{flattenResponseHeadersPolicyCustomHeadersConfig(apiObject.CustomHeadersConfig)}); err != nil {
-			return fmt.Errorf("error setting custom_headers_config: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting custom_headers_config: %s", err)
 		}
 	} else {
 		d.Set("custom_headers_config", nil)
@@ -373,7 +377,7 @@ func resourceResponseHeadersPolicyRead(d *schema.ResourceData, meta interface{})
 	d.Set("name", apiObject.Name)
 	if apiObject.SecurityHeadersConfig != nil {
 		if err := d.Set("security_headers_config", []interface{}{flattenResponseHeadersPolicySecurityHeadersConfig(apiObject.SecurityHeadersConfig)}); err != nil {
-			return fmt.Errorf("error setting security_headers_config: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting security_headers_config: %s", err)
 		}
 	} else {
 		d.Set("security_headers_config", nil)
@@ -381,17 +385,18 @@ func resourceResponseHeadersPolicyRead(d *schema.ResourceData, meta interface{})
 
 	if apiObject.ServerTimingHeadersConfig != nil {
 		if err := d.Set("server_timing_headers_config", []interface{}{flattenResponseHeadersPolicyServerTimingHeadersConfig(apiObject.ServerTimingHeadersConfig)}); err != nil {
-			return fmt.Errorf("error setting server_timing_headers_config: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting server_timing_headers_config: %s", err)
 		}
 	} else {
 		d.Set("server_timing_headers_config", nil)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceResponseHeadersPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+func resourceResponseHeadersPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 
 	//
 	// https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_UpdateResponseHeadersPolicy.html:
@@ -428,33 +433,34 @@ func resourceResponseHeadersPolicyUpdate(d *schema.ResourceData, meta interface{
 	}
 
 	log.Printf("[DEBUG] Updating CloudFront Response Headers Policy: (%s)", input)
-	_, err := conn.UpdateResponseHeadersPolicy(input)
+	_, err := conn.UpdateResponseHeadersPolicyWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error updating CloudFront Response Headers Policy (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating CloudFront Response Headers Policy (%s): %s", d.Id(), err)
 	}
 
-	return resourceResponseHeadersPolicyRead(d, meta)
+	return append(diags, resourceResponseHeadersPolicyRead(ctx, d, meta)...)
 }
 
-func resourceResponseHeadersPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+func resourceResponseHeadersPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 
 	log.Printf("[DEBUG] Deleting CloudFront Response Headers Policy: (%s)", d.Id())
-	_, err := conn.DeleteResponseHeadersPolicy(&cloudfront.DeleteResponseHeadersPolicyInput{
+	_, err := conn.DeleteResponseHeadersPolicyWithContext(ctx, &cloudfront.DeleteResponseHeadersPolicyInput{
 		Id:      aws.String(d.Id()),
 		IfMatch: aws.String(d.Get("etag").(string)),
 	})
 
 	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchResponseHeadersPolicy) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting CloudFront Response Headers Policy (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting CloudFront Response Headers Policy (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 //

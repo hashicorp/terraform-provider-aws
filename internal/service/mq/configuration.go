@@ -28,7 +28,7 @@ func ResourceConfiguration() *schema.Resource {
 		DeleteWithoutTimeout: schema.NoopContext, // Delete is not available in the API
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -61,9 +61,10 @@ func ResourceConfiguration() *schema.Resource {
 				ValidateFunc: validation.StringInSlice(mq.AuthenticationStrategy_Values(), true),
 			},
 			"data": {
-				Type:             schema.TypeString,
-				Required:         true,
-				DiffSuppressFunc: suppressXMLEquivalentConfig,
+				Type:                  schema.TypeString,
+				Required:              true,
+				DiffSuppressFunc:      suppressXMLEquivalentConfig,
+				DiffSuppressOnRefresh: true,
 			},
 			"description": {
 				Type:     schema.TypeString,
@@ -96,7 +97,7 @@ func ResourceConfiguration() *schema.Resource {
 }
 
 func resourceConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MQConn
+	conn := meta.(*conns.AWSClient).MQConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -144,7 +145,7 @@ func resourceConfigurationCreate(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MQConn
+	conn := meta.(*conns.AWSClient).MQConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -201,7 +202,7 @@ func resourceConfigurationRead(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MQConn
+	conn := meta.(*conns.AWSClient).MQConn()
 
 	if d.HasChanges("data", "description") {
 		input := &mq.UpdateConfigurationRequest{
@@ -223,7 +224,7 @@ func resourceConfigurationUpdate(ctx context.Context, d *schema.ResourceData, me
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTagsWithContext(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.Errorf("updating MQ Configuration (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}

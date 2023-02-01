@@ -172,7 +172,7 @@ func ResourceMetricStream() *schema.Resource {
 }
 
 func resourceMetricStreamCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CloudWatchConn
+	conn := meta.(*conns.AWSClient).CloudWatchConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -222,7 +222,7 @@ func resourceMetricStreamCreate(ctx context.Context, d *schema.ResourceData, met
 
 	// Some partitions (i.e., ISO) may not support tag-on-create, attempt tag after create
 	if input.Tags == nil && len(tags) > 0 {
-		err := UpdateTagsWithContext(ctx, conn, aws.StringValue(output.Arn), nil, tags)
+		err := UpdateTags(ctx, conn, aws.StringValue(output.Arn), nil, tags)
 
 		// If default tags only, log and continue. Otherwise, error.
 		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.ErrorISOUnsupported(conn.PartitionID, err) {
@@ -239,7 +239,7 @@ func resourceMetricStreamCreate(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceMetricStreamRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CloudWatchConn
+	conn := meta.(*conns.AWSClient).CloudWatchConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -283,7 +283,7 @@ func resourceMetricStreamRead(ctx context.Context, d *schema.ResourceData, meta 
 		}
 	}
 
-	tags, err := ListTagsWithContext(ctx, conn, aws.StringValue(output.Arn))
+	tags, err := ListTags(ctx, conn, aws.StringValue(output.Arn))
 
 	// Some partitions (i.e., ISO) may not support tagging, giving error
 	if verify.ErrorISOUnsupported(conn.PartitionID, err) {
@@ -310,7 +310,7 @@ func resourceMetricStreamRead(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceMetricStreamUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CloudWatchConn
+	conn := meta.(*conns.AWSClient).CloudWatchConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &cloudwatch.PutMetricStreamInput{
@@ -346,7 +346,7 @@ func resourceMetricStreamUpdate(ctx context.Context, d *schema.ResourceData, met
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			log.Printf("[WARN] failed updating tags for CloudWatch Metric Stream (%s): %s", d.Id(), err)
 		}
 	}
@@ -355,7 +355,7 @@ func resourceMetricStreamUpdate(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceMetricStreamDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CloudWatchConn
+	conn := meta.(*conns.AWSClient).CloudWatchConn()
 
 	log.Printf("[INFO] Deleting CloudWatch Metric Stream: %s", d.Id())
 	_, err := conn.DeleteMetricStreamWithContext(ctx, &cloudwatch.DeleteMetricStreamInput{

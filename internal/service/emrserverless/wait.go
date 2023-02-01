@@ -1,6 +1,7 @@
 package emrserverless
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -20,17 +21,17 @@ const (
 	ApplicationDeletedDelay      = 30 * time.Second
 )
 
-func waitApplicationCreated(conn *emrserverless.EMRServerless, id string) (*emrserverless.Application, error) {
+func waitApplicationCreated(ctx context.Context, conn *emrserverless.EMRServerless, id string) (*emrserverless.Application, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{emrserverless.ApplicationStateCreating},
 		Target:     []string{emrserverless.ApplicationStateCreated},
-		Refresh:    statusApplication(conn, id),
+		Refresh:    statusApplication(ctx, conn, id),
 		Timeout:    ApplicationCreatedTimeout,
 		MinTimeout: ApplicationCreatedMinTimeout,
 		Delay:      ApplicationCreatedDelay,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*emrserverless.Application); ok {
 		if stateChangeReason := output.StateDetails; stateChangeReason != nil {
@@ -43,17 +44,17 @@ func waitApplicationCreated(conn *emrserverless.EMRServerless, id string) (*emrs
 	return nil, err
 }
 
-func waitApplicationTerminated(conn *emrserverless.EMRServerless, id string) (*emrserverless.Application, error) {
+func waitApplicationTerminated(ctx context.Context, conn *emrserverless.EMRServerless, id string) (*emrserverless.Application, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:    emrserverless.ApplicationState_Values(),
 		Target:     []string{},
-		Refresh:    statusApplication(conn, id),
+		Refresh:    statusApplication(ctx, conn, id),
 		Timeout:    ApplicationDeletedTimeout,
 		MinTimeout: ApplicationDeletedMinTimeout,
 		Delay:      ApplicationDeletedDelay,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*emrserverless.Application); ok {
 		if stateChangeReason := output.StateDetails; stateChangeReason != nil {

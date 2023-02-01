@@ -1,6 +1,7 @@
 package apigateway
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -8,21 +9,23 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceModel() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceModelCreate,
-		Read:   resourceModelRead,
-		Update: resourceModelUpdate,
-		Delete: resourceModelDelete,
+		CreateWithoutTimeout: resourceModelCreate,
+		ReadWithoutTimeout:   resourceModelRead,
+		UpdateWithoutTimeout: resourceModelUpdate,
+		DeleteWithoutTimeout: resourceModelDelete,
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "/")
 				if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
 					return nil, fmt.Errorf("Unexpected format of ID (%q), expected REST-API-ID/NAME", d.Id())
@@ -32,9 +35,9 @@ func ResourceModel() *schema.Resource {
 				d.Set("name", name)
 				d.Set("rest_api_id", restApiID)
 
-				conn := meta.(*conns.AWSClient).APIGatewayConn
+				conn := meta.(*conns.AWSClient).APIGatewayConn()
 
-				output, err := conn.GetModel(&apigateway.GetModelInput{
+				output, err := conn.GetModelWithContext(ctx, &apigateway.GetModelInput{
 					ModelName: aws.String(name),
 					RestApiId: aws.String(restApiID),
 				})
@@ -87,8 +90,9 @@ func ResourceModel() *schema.Resource {
 	}
 }
 
-func resourceModelCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+func resourceModelCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 	log.Printf("[DEBUG] Creating API Gateway Model")
 
 	var description *string
@@ -101,7 +105,7 @@ func resourceModelCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	var err error
-	model, err := conn.CreateModel(&apigateway.CreateModelInput{
+	model, err := conn.CreateModelWithContext(ctx, &apigateway.CreateModelInput{
 		Name:        aws.String(d.Get("name").(string)),
 		RestApiId:   aws.String(d.Get("rest_api_id").(string)),
 		ContentType: aws.String(d.Get("content_type").(string)),
@@ -111,19 +115,20 @@ func resourceModelCreate(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if err != nil {
-		return fmt.Errorf("Error creating API Gateway Model: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating API Gateway Model: %s", err)
 	}
 
 	d.SetId(aws.StringValue(model.Id))
 
-	return nil
+	return diags
 }
 
-func resourceModelRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+func resourceModelRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 
 	log.Printf("[DEBUG] Reading API Gateway Model %s", d.Id())
-	out, err := conn.GetModel(&apigateway.GetModelInput{
+	out, err := conn.GetModelWithContext(ctx, &apigateway.GetModelInput{
 		ModelName: aws.String(d.Get("name").(string)),
 		RestApiId: aws.String(d.Get("rest_api_id").(string)),
 	})
@@ -131,21 +136,21 @@ func resourceModelRead(d *schema.ResourceData, meta interface{}) error {
 		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
 			log.Printf("[WARN] API Gateway Model (%s) not found, removing from state", d.Id())
 			d.SetId("")
-			return nil
+			return diags
 		}
-		return fmt.Errorf("error reading API Gateway Model (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading API Gateway Model (%s): %s", d.Id(), err)
 	}
-	log.Printf("[DEBUG] Received API Gateway Model: %s", out)
 
 	d.Set("content_type", out.ContentType)
 	d.Set("description", out.Description)
 	d.Set("schema", out.Schema)
 
-	return nil
+	return diags
 }
 
-func resourceModelUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+func resourceModelUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 
 	log.Printf("[DEBUG] Reading API Gateway Model %s", d.Id())
 	operations := make([]*apigateway.PatchOperation, 0)
@@ -164,21 +169,21 @@ func resourceModelUpdate(d *schema.ResourceData, meta interface{}) error {
 		})
 	}
 
-	out, err := conn.UpdateModel(&apigateway.UpdateModelInput{
+	_, err := conn.UpdateModelWithContext(ctx, &apigateway.UpdateModelInput{
 		ModelName:       aws.String(d.Get("name").(string)),
 		RestApiId:       aws.String(d.Get("rest_api_id").(string)),
 		PatchOperations: operations,
 	})
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "updating API Gateway Model (%s): %s", d.Id(), err)
 	}
-	log.Printf("[DEBUG] Received API Gateway Model: %s", out)
 
-	return resourceModelRead(d, meta)
+	return append(diags, resourceModelRead(ctx, d, meta)...)
 }
 
-func resourceModelDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+func resourceModelDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 	log.Printf("[DEBUG] Deleting API Gateway Model: %s", d.Id())
 	input := &apigateway.DeleteModelInput{
 		ModelName: aws.String(d.Get("name").(string)),
@@ -186,14 +191,14 @@ func resourceModelDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] schema is %#v", d)
-	_, err := conn.DeleteModel(input)
+	_, err := conn.DeleteModelWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error deleting API gateway model: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting API Gateway Model (%s): %s", d.Id(), err)
 	}
-	return nil
+	return diags
 }

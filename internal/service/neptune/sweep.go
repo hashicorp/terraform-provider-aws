@@ -24,14 +24,15 @@ func init() {
 }
 
 func sweepEventSubscriptions(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).NeptuneConn
+	conn := client.(*conns.AWSClient).NeptuneConn()
 	var sweeperErrs *multierror.Error
 
-	err = conn.DescribeEventSubscriptionsPages(&neptune.DescribeEventSubscriptionsInput{}, func(page *neptune.DescribeEventSubscriptionsOutput, lastPage bool) bool {
+	err = conn.DescribeEventSubscriptionsPagesWithContext(ctx, &neptune.DescribeEventSubscriptionsInput{}, func(page *neptune.DescribeEventSubscriptionsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -40,7 +41,7 @@ func sweepEventSubscriptions(region string) error {
 			name := aws.StringValue(eventSubscription.CustSubscriptionId)
 
 			log.Printf("[INFO] Deleting Neptune Event Subscription: %s", name)
-			_, err = conn.DeleteEventSubscription(&neptune.DeleteEventSubscriptionInput{
+			_, err = conn.DeleteEventSubscriptionWithContext(ctx, &neptune.DeleteEventSubscriptionInput{
 				SubscriptionName: aws.String(name),
 			})
 			if tfawserr.ErrCodeEquals(err, neptune.ErrCodeSubscriptionNotFoundFault) {
@@ -53,7 +54,7 @@ func sweepEventSubscriptions(region string) error {
 				continue
 			}
 
-			_, err = WaitEventSubscriptionDeleted(conn, name)
+			_, err = WaitEventSubscriptionDeleted(ctx, conn, name)
 			if tfawserr.ErrCodeEquals(err, neptune.ErrCodeSubscriptionNotFoundFault) {
 				continue
 			}

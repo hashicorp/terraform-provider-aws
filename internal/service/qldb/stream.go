@@ -96,7 +96,7 @@ func ResourceStream() *schema.Resource {
 }
 
 func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QLDBConn
+	conn := meta.(*conns.AWSClient).QLDBConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -140,7 +140,7 @@ func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceStreamRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QLDBConn
+	conn := meta.(*conns.AWSClient).QLDBConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -179,7 +179,7 @@ func resourceStreamRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("role_arn", stream.RoleArn)
 	d.Set("stream_name", stream.StreamName)
 
-	tags, err := ListTags(conn, d.Get("arn").(string))
+	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
 
 	if err != nil {
 		return diag.Errorf("listing tags for QLDB Stream (%s): %s", d.Id(), err)
@@ -200,12 +200,12 @@ func resourceStreamRead(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceStreamUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QLDBConn
+	conn := meta.(*conns.AWSClient).QLDBConn()
 
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.Errorf("updating tags: %s", err)
 		}
 	}
@@ -214,7 +214,7 @@ func resourceStreamUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceStreamDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QLDBConn
+	conn := meta.(*conns.AWSClient).QLDBConn()
 
 	ledgerName := d.Get("ledger_name").(string)
 	input := &qldb.CancelJournalKinesisStreamInput{
@@ -223,7 +223,7 @@ func resourceStreamDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	log.Printf("[INFO] Deleting QLDB Stream: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, 5*time.Minute,
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 5*time.Minute,
 		func() (interface{}, error) {
 			return conn.CancelJournalKinesisStreamWithContext(ctx, input)
 		}, qldb.ErrCodeResourceInUseException)

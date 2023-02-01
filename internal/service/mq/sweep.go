@@ -22,15 +22,16 @@ func init() {
 }
 
 func sweepBrokers(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	input := &mq.ListBrokersInput{MaxResults: aws.Int64(100)}
-	conn := client.(*conns.AWSClient).MQConn
+	conn := client.(*conns.AWSClient).MQConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListBrokersPages(input, func(page *mq.ListBrokersResponse, lastPage bool) bool {
+	err = conn.ListBrokersPagesWithContext(ctx, input, func(page *mq.ListBrokersResponse, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -55,7 +56,7 @@ func sweepBrokers(region string) error {
 		return fmt.Errorf("error listing MQ Brokers (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping MQ Brokers (%s): %w", region, err)

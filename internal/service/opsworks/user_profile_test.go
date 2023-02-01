@@ -1,6 +1,7 @@
 package opsworks_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -15,6 +16,7 @@ import (
 )
 
 func TestAccOpsWorksUserProfile_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opsworks_user_profile.test"
@@ -22,12 +24,12 @@ func TestAccOpsWorksUserProfile_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserProfileDestroy,
+		CheckDestroy:             testAccCheckUserProfileDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserProfileConfig_create(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserProfileExists(resourceName, rName),
+					testAccCheckUserProfileExists(ctx, resourceName, rName),
 					resource.TestCheckResourceAttr(resourceName, "ssh_public_key", ""),
 					resource.TestCheckResourceAttr(resourceName, "ssh_username", rName),
 					resource.TestCheckResourceAttr(resourceName, "allow_self_management", "false"),
@@ -36,7 +38,7 @@ func TestAccOpsWorksUserProfile_basic(t *testing.T) {
 			{
 				Config: testAccUserProfileConfig_update(rName, rName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserProfileExists(resourceName, rName2),
+					testAccCheckUserProfileExists(ctx, resourceName, rName2),
 					resource.TestCheckResourceAttr(resourceName, "ssh_public_key", ""),
 					resource.TestCheckResourceAttr(resourceName, "ssh_username", rName2),
 					resource.TestCheckResourceAttr(resourceName, "allow_self_management", "false"),
@@ -46,7 +48,7 @@ func TestAccOpsWorksUserProfile_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckUserProfileExists(
+func testAccCheckUserProfileExists(ctx context.Context,
 	n, username string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -62,12 +64,12 @@ func testAccCheckUserProfileExists(
 			return fmt.Errorf("User Profile user arn is missing, should be set.")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn()
 
 		params := &opsworks.DescribeUserProfilesInput{
 			IamUserArns: []*string{aws.String(rs.Primary.Attributes["user_arn"])},
 		}
-		resp, err := conn.DescribeUserProfiles(params)
+		resp, err := conn.DescribeUserProfilesWithContext(ctx, params)
 
 		if err != nil {
 			return err
@@ -92,32 +94,34 @@ func testAccCheckUserProfileExists(
 	}
 }
 
-func testAccCheckUserProfileDestroy(s *terraform.State) error {
-	client := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn
+func testAccCheckUserProfileDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_opsworks_user_profile" {
-			continue
-		}
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_opsworks_user_profile" {
+				continue
+			}
 
-		req := &opsworks.DescribeUserProfilesInput{
-			IamUserArns: []*string{aws.String(rs.Primary.Attributes["user_arn"])},
-		}
-		resp, err := client.DescribeUserProfiles(req)
+			req := &opsworks.DescribeUserProfilesInput{
+				IamUserArns: []*string{aws.String(rs.Primary.Attributes["user_arn"])},
+			}
+			resp, err := client.DescribeUserProfilesWithContext(ctx, req)
 
-		if err == nil {
-			if len(resp.UserProfiles) > 0 {
-				return fmt.Errorf("OpsWorks User Profiles still exist.")
+			if err == nil {
+				if len(resp.UserProfiles) > 0 {
+					return fmt.Errorf("OpsWorks User Profiles still exist.")
+				}
+			}
+
+			if awserr, ok := err.(awserr.Error); ok {
+				if awserr.Code() != "ResourceNotFoundException" {
+					return err
+				}
 			}
 		}
-
-		if awserr, ok := err.(awserr.Error); ok {
-			if awserr.Code() != "ResourceNotFoundException" {
-				return err
-			}
-		}
+		return nil
 	}
-	return nil
 }
 
 func testAccUserProfileConfig_create(rName string) string {

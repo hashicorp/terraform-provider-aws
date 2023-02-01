@@ -161,7 +161,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/rum"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/s3"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/s3control"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/s3outposts"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/scheduler"
@@ -655,6 +654,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			"aws_alb_listener":      elbv2.DataSourceListener(),
 			"aws_alb_target_group":  elbv2.DataSourceTargetGroup(),
 			"aws_lb":                elbv2.DataSourceLoadBalancer(),
+			"aws_lbs":               elbv2.DataSourceLoadBalancers(),
 			"aws_lb_hosted_zone_id": elbv2.DataSourceHostedZoneID(),
 			"aws_lb_listener":       elbv2.DataSourceListener(),
 			"aws_lb_target_group":   elbv2.DataSourceTargetGroup(),
@@ -869,8 +869,6 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			"aws_s3_bucket_object":  s3.DataSourceBucketObject(),  // DEPRECATED: use aws_s3_object instead
 			"aws_s3_bucket_objects": s3.DataSourceBucketObjects(), // DEPRECATED: use aws_s3_objects instead
 			"aws_s3_bucket_policy":  s3.DataSourceBucketPolicy(),
-
-			"aws_s3_account_public_access_block": s3control.DataSourceAccountPublicAccessBlock(),
 
 			"aws_sagemaker_prebuilt_ecr_image": sagemaker.DataSourcePrebuiltECRImage(),
 
@@ -1251,6 +1249,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			"aws_datasync_location_fsx_windows_file_system": datasync.ResourceLocationFSxWindowsFileSystem(),
 			"aws_datasync_location_hdfs":                    datasync.ResourceLocationHDFS(),
 			"aws_datasync_location_nfs":                     datasync.ResourceLocationNFS(),
+			"aws_datasync_location_object_storage":          datasync.ResourceLocationObjectStorage(),
 			"aws_datasync_location_s3":                      datasync.ResourceLocationS3(),
 			"aws_datasync_location_smb":                     datasync.ResourceLocationSMB(),
 			"aws_datasync_task":                             datasync.ResourceTask(),
@@ -1350,6 +1349,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			"aws_ec2_client_vpn_route":                             ec2.ResourceClientVPNRoute(),
 			"aws_ec2_fleet":                                        ec2.ResourceFleet(),
 			"aws_ec2_host":                                         ec2.ResourceHost(),
+			"aws_ec2_instance_state":                               ec2.ResourceInstanceState(),
 			"aws_ec2_local_gateway_route":                          ec2.ResourceLocalGatewayRoute(),
 			"aws_ec2_local_gateway_route_table_vpc_association":    ec2.ResourceLocalGatewayRouteTableVPCAssociation(),
 			"aws_ec2_managed_prefix_list":                          ec2.ResourceManagedPrefixList(),
@@ -1601,7 +1601,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			"aws_guardduty_organization_admin_account": guardduty.ResourceOrganizationAdminAccount(),
 			"aws_guardduty_organization_configuration": guardduty.ResourceOrganizationConfiguration(),
 			"aws_guardduty_publishing_destination":     guardduty.ResourcePublishingDestination(),
-			"aws_guardduty_threatintelset":             guardduty.ResourceThreatintelset(),
+			"aws_guardduty_threatintelset":             guardduty.ResourceThreatIntelSet(),
 
 			"aws_iam_access_key":                  iam.ResourceAccessKey(),
 			"aws_iam_account_alias":               iam.ResourceAccountAlias(),
@@ -1736,6 +1736,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			"aws_licensemanager_association":           licensemanager.ResourceAssociation(),
 			"aws_licensemanager_license_configuration": licensemanager.ResourceLicenseConfiguration(),
 
+			"aws_lightsail_bucket":                               lightsail.ResourceBucket(),
 			"aws_lightsail_certificate":                          lightsail.ResourceCertificate(),
 			"aws_lightsail_container_service":                    lightsail.ResourceContainerService(),
 			"aws_lightsail_container_service_deployment_version": lightsail.ResourceContainerServiceDeploymentVersion(),
@@ -2005,18 +2006,6 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			"aws_s3_object_copy":                                 s3.ResourceObjectCopy(),
 			"aws_s3_bucket_object":                               s3.ResourceBucketObject(), // DEPRECATED: use aws_s3_object instead
 
-			"aws_s3_access_point":                             s3control.ResourceAccessPoint(),
-			"aws_s3control_access_point_policy":               s3control.ResourceAccessPointPolicy(),
-			"aws_s3_account_public_access_block":              s3control.ResourceAccountPublicAccessBlock(),
-			"aws_s3control_bucket":                            s3control.ResourceBucket(),
-			"aws_s3control_bucket_lifecycle_configuration":    s3control.ResourceBucketLifecycleConfiguration(),
-			"aws_s3control_bucket_policy":                     s3control.ResourceBucketPolicy(),
-			"aws_s3control_multi_region_access_point":         s3control.ResourceMultiRegionAccessPoint(),
-			"aws_s3control_multi_region_access_point_policy":  s3control.ResourceMultiRegionAccessPointPolicy(),
-			"aws_s3control_object_lambda_access_point":        s3control.ResourceObjectLambdaAccessPoint(),
-			"aws_s3control_object_lambda_access_point_policy": s3control.ResourceObjectLambdaAccessPointPolicy(),
-			"aws_s3control_storage_lens_configuration":        s3control.ResourceStorageLensConfiguration(),
-
 			"aws_s3outposts_endpoint": s3outposts.ResourceEndpoint(),
 
 			"aws_sagemaker_app":                                       sagemaker.ResourceApp(),
@@ -2045,7 +2034,6 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			"aws_sagemaker_workforce":                                 sagemaker.ResourceWorkforce(),
 			"aws_sagemaker_workteam":                                  sagemaker.ResourceWorkteam(),
 
-			"aws_scheduler_schedule":       scheduler.ResourceSchedule(),
 			"aws_scheduler_schedule_group": scheduler.ResourceScheduleGroup(),
 
 			"aws_schemas_discoverer":      schemas.ResourceDiscoverer(),
@@ -2110,6 +2098,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			"aws_ses_template":                     ses.ResourceTemplate(),
 
 			"aws_sesv2_configuration_set":                   sesv2.ResourceConfigurationSet(),
+			"aws_sesv2_configuration_set_event_destination": sesv2.ResourceConfigurationSetEventDestination(),
 			"aws_sesv2_dedicated_ip_assignment":             sesv2.ResourceDedicatedIPAssignment(),
 			"aws_sesv2_dedicated_ip_pool":                   sesv2.ResourceDedicatedIPPool(),
 			"aws_sesv2_email_identity":                      sesv2.ResourceEmailIdentity(),
@@ -2153,6 +2142,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 
 			"aws_ssoadmin_account_assignment":                 ssoadmin.ResourceAccountAssignment(),
 			"aws_ssoadmin_customer_managed_policy_attachment": ssoadmin.ResourceCustomerManagedPolicyAttachment(),
+			"aws_ssoadmin_instance_access_control_attributes": ssoadmin.ResourceAccessControlAttributes(),
 			"aws_ssoadmin_managed_policy_attachment":          ssoadmin.ResourceManagedPolicyAttachment(),
 			"aws_ssoadmin_permission_set":                     ssoadmin.ResourcePermissionSet(),
 			"aws_ssoadmin_permission_set_inline_policy":       ssoadmin.ResourcePermissionSetInlinePolicy(),
@@ -2307,9 +2297,14 @@ func New(ctx context.Context) (*schema.Provider, error) {
 	// Set the provider Meta (instance data) here.
 	// It will be overwritten by the result of the call to ConfigureContextFunc,
 	// but can be used pre-configuration by other (non-primary) provider servers.
-	provider.SetMeta(&conns.AWSClient{
-		ServicePackages: servicePackages,
-	})
+	var meta *conns.AWSClient
+	if v, ok := provider.Meta().(*conns.AWSClient); ok {
+		meta = v
+	} else {
+		meta = new(conns.AWSClient)
+	}
+	meta.ServicePackages = servicePackages
+	provider.SetMeta(meta)
 
 	return provider, nil
 }
@@ -2405,7 +2400,13 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 		}
 	}
 
-	meta, diags := config.ConfigureProvider(ctx, provider.Meta().(*conns.AWSClient))
+	var meta *conns.AWSClient
+	if v, ok := provider.Meta().(*conns.AWSClient); ok {
+		meta = v
+	} else {
+		meta = new(conns.AWSClient)
+	}
+	meta, diags := config.ConfigureProvider(ctx, meta)
 
 	if diags.HasError() {
 		return nil, diags

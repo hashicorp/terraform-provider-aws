@@ -1,17 +1,19 @@
 package elasticbeanstalk
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func DataSourceApplication() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceApplicationRead,
+		ReadWithoutTimeout: dataSourceApplicationRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -54,21 +56,22 @@ func DataSourceApplication() *schema.Resource {
 	}
 }
 
-func dataSourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn
+func dataSourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn()
 
 	// Get the name and description
 	name := d.Get("name").(string)
 
-	resp, err := conn.DescribeApplications(&elasticbeanstalk.DescribeApplicationsInput{
+	resp, err := conn.DescribeApplicationsWithContext(ctx, &elasticbeanstalk.DescribeApplicationsInput{
 		ApplicationNames: []*string{aws.String(name)},
 	})
 	if err != nil {
-		return fmt.Errorf("Error describing Applications (%s): %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "describing Applications (%s): %s", name, err)
 	}
 
 	if len(resp.Applications) > 1 || len(resp.Applications) < 1 {
-		return fmt.Errorf("Error %d Applications matched, expected 1", len(resp.Applications))
+		return sdkdiag.AppendErrorf(diags, "%d Applications matched, expected 1", len(resp.Applications))
 	}
 
 	app := resp.Applications[0]
@@ -82,5 +85,5 @@ func dataSourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("appversion_lifecycle", flattenResourceLifecycleConfig(app.ResourceLifecycleConfig))
 	}
 
-	return nil
+	return diags
 }

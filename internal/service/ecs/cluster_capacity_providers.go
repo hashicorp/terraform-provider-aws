@@ -73,7 +73,7 @@ func ResourceClusterCapacityProviders() *schema.Resource {
 }
 
 func resourceClusterCapacityProvidersPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ECSConn
+	conn := meta.(*conns.AWSClient).ECSConn()
 
 	clusterName := d.Get("cluster_name").(string)
 
@@ -101,7 +101,7 @@ func resourceClusterCapacityProvidersPut(ctx context.Context, d *schema.Resource
 }
 
 func resourceClusterCapacityProvidersRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ECSConn
+	conn := meta.(*conns.AWSClient).ECSConn()
 
 	cluster, err := FindClusterByNameOrARN(ctx, conn, d.Id())
 
@@ -136,7 +136,7 @@ func resourceClusterCapacityProvidersRead(ctx context.Context, d *schema.Resourc
 }
 
 func resourceClusterCapacityProvidersDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ECSConn
+	conn := meta.(*conns.AWSClient).ECSConn()
 
 	input := &ecs.PutClusterCapacityProvidersInput{
 		Cluster:                         aws.String(d.Id()),

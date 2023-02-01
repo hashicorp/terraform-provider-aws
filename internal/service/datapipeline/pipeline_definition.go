@@ -129,7 +129,7 @@ func ResourcePipelineDefinition() *schema.Resource {
 }
 
 func resourcePipelineDefinitionPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DataPipelineConn
+	conn := meta.(*conns.AWSClient).DataPipelineConn()
 
 	pipelineID := d.Get("pipeline_id").(string)
 	input := &datapipeline.PutPipelineDefinitionInput{
@@ -194,7 +194,7 @@ func resourcePipelineDefinitionPut(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourcePipelineDefinitionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DataPipelineConn
+	conn := meta.(*conns.AWSClient).DataPipelineConn()
 	input := &datapipeline.GetPipelineDefinitionInput{
 		PipelineId: aws.String(d.Id()),
 	}

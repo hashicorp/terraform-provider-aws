@@ -55,7 +55,7 @@ func ResourceVoiceConnectorStreaming() *schema.Resource {
 }
 
 func resourceVoiceConnectorStreamingCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeConn
+	conn := meta.(*conns.AWSClient).ChimeConn()
 
 	vcId := d.Get("voice_connector_id").(string)
 	input := &chime.PutVoiceConnectorStreamingConfigurationInput{
@@ -83,7 +83,7 @@ func resourceVoiceConnectorStreamingCreate(ctx context.Context, d *schema.Resour
 }
 
 func resourceVoiceConnectorStreamingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeConn
+	conn := meta.(*conns.AWSClient).ChimeConn()
 
 	input := &chime.GetVoiceConnectorStreamingConfigurationInput{
 		VoiceConnectorId: aws.String(d.Id()),
@@ -116,7 +116,7 @@ func resourceVoiceConnectorStreamingRead(ctx context.Context, d *schema.Resource
 }
 
 func resourceVoiceConnectorStreamingUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeConn
+	conn := meta.(*conns.AWSClient).ChimeConn()
 
 	vcId := d.Get("voice_connector_id").(string)
 
@@ -145,7 +145,7 @@ func resourceVoiceConnectorStreamingUpdate(ctx context.Context, d *schema.Resour
 }
 
 func resourceVoiceConnectorStreamingDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ChimeConn
+	conn := meta.(*conns.AWSClient).ChimeConn()
 
 	input := &chime.DeleteVoiceConnectorStreamingConfigurationInput{
 		VoiceConnectorId: aws.String(d.Id()),

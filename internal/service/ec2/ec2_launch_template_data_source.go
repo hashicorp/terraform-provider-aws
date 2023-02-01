@@ -1,6 +1,7 @@
 package ec2
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"time"
@@ -8,15 +9,17 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func DataSourceLaunchTemplate() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceLaunchTemplateRead,
+		ReadWithoutTimeout: dataSourceLaunchTemplateRead,
 
 		Timeouts: &schema.ResourceTimeout{
 			Read: schema.DefaultTimeout(20 * time.Minute),
@@ -746,8 +749,9 @@ func DataSourceLaunchTemplate() *schema.Resource {
 	}
 }
 
-func dataSourceLaunchTemplateRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func dataSourceLaunchTemplateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeLaunchTemplatesInput{}
@@ -772,19 +776,19 @@ func dataSourceLaunchTemplateRead(d *schema.ResourceData, meta interface{}) erro
 		input.Filters = nil
 	}
 
-	lt, err := FindLaunchTemplate(conn, input)
+	lt, err := FindLaunchTemplate(ctx, conn, input)
 
 	if err != nil {
-		return tfresource.SingularDataSourceFindError("EC2 Launch Template", err)
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Launch Template", err))
 	}
 
 	d.SetId(aws.StringValue(lt.LaunchTemplateId))
 
 	version := strconv.FormatInt(aws.Int64Value(lt.LatestVersionNumber), 10)
-	ltv, err := FindLaunchTemplateVersionByTwoPartKey(conn, d.Id(), version)
+	ltv, err := FindLaunchTemplateVersionByTwoPartKey(ctx, conn, d.Id(), version)
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 Launch Template (%s) Version (%s): %w", d.Id(), version, err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Launch Template (%s) Version (%s): %s", d.Id(), version, err)
 	}
 
 	arn := arn.ARN{
@@ -800,13 +804,13 @@ func dataSourceLaunchTemplateRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("latest_version", lt.LatestVersionNumber)
 	d.Set("name", lt.LaunchTemplateName)
 
-	if err := flattenResponseLaunchTemplateData(conn, d, ltv.LaunchTemplateData); err != nil {
-		return err
+	if err := flattenResponseLaunchTemplateData(ctx, conn, d, ltv.LaunchTemplateData); err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Launch Template (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("tags", KeyValueTags(lt.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Launch Template (%s): setting tags: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

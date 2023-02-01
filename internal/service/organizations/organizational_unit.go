@@ -1,7 +1,7 @@
 package organizations
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"regexp"
 	"time"
@@ -9,10 +9,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -20,12 +22,12 @@ import (
 
 func ResourceOrganizationalUnit() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceOrganizationalUnitCreate,
-		Read:   resourceOrganizationalUnitRead,
-		Update: resourceOrganizationalUnitUpdate,
-		Delete: resourceOrganizationalUnitDelete,
+		CreateWithoutTimeout: resourceOrganizationalUnitCreate,
+		ReadWithoutTimeout:   resourceOrganizationalUnitRead,
+		UpdateWithoutTimeout: resourceOrganizationalUnitUpdate,
+		DeleteWithoutTimeout: resourceOrganizationalUnitDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -76,8 +78,9 @@ func ResourceOrganizationalUnit() *schema.Resource {
 	}
 }
 
-func resourceOrganizationalUnitCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OrganizationsConn
+func resourceOrganizationalUnitCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).OrganizationsConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -90,8 +93,8 @@ func resourceOrganizationalUnitCreate(d *schema.ResourceData, meta interface{}) 
 
 	var err error
 	var resp *organizations.CreateOrganizationalUnitOutput
-	err = resource.Retry(4*time.Minute, func() *resource.RetryError {
-		resp, err = conn.CreateOrganizationalUnit(createOpts)
+	err = resource.RetryContext(ctx, 4*time.Minute, func() *resource.RetryError {
+		resp, err = conn.CreateOrganizationalUnitWithContext(ctx, createOpts)
 
 		if tfawserr.ErrCodeEquals(err, organizations.ErrCodeFinalizingOrganizationException) {
 			return resource.RetryableError(err)
@@ -104,58 +107,59 @@ func resourceOrganizationalUnitCreate(d *schema.ResourceData, meta interface{}) 
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		resp, err = conn.CreateOrganizationalUnit(createOpts)
+		resp, err = conn.CreateOrganizationalUnitWithContext(ctx, createOpts)
 	}
 
 	if err != nil {
-		return fmt.Errorf("error creating Organizations Organizational Unit: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating Organizations Organizational Unit: %s", err)
 	}
 
 	// Store the ID
 	d.SetId(aws.StringValue(resp.OrganizationalUnit.Id))
 
-	return resourceOrganizationalUnitRead(d, meta)
+	return append(diags, resourceOrganizationalUnitRead(ctx, d, meta)...)
 }
 
-func resourceOrganizationalUnitRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OrganizationsConn
+func resourceOrganizationalUnitRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).OrganizationsConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	describeOpts := &organizations.DescribeOrganizationalUnitInput{
 		OrganizationalUnitId: aws.String(d.Id()),
 	}
-	resp, err := conn.DescribeOrganizationalUnit(describeOpts)
+	resp, err := conn.DescribeOrganizationalUnitWithContext(ctx, describeOpts)
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, organizations.ErrCodeOrganizationalUnitNotFoundException) {
 		log.Printf("[WARN] Organizations Organizational Unit (%s) does not exist, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Organizations Organizational Unit (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Organizations Organizational Unit (%s): %s", d.Id(), err)
 	}
 
 	if resp == nil {
-		return fmt.Errorf("error reading Organizations Organizational Unit (%s): empty response", d.Id())
+		return sdkdiag.AppendErrorf(diags, "reading Organizations Organizational Unit (%s): empty response", d.Id())
 	}
 
 	ou := resp.OrganizationalUnit
 	if ou == nil {
 		if d.IsNewResource() {
-			return fmt.Errorf("error reading Organizations Organizational Unit (%s): not found after creation", d.Id())
+			return sdkdiag.AppendErrorf(diags, "reading Organizations Organizational Unit (%s): not found after creation", d.Id())
 		}
 
 		log.Printf("[WARN] Organizations Organizational Unit (%s) does not exist, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
-	parentId, err := resourceOrganizationalUnitGetParentID(conn, d.Id())
+	parentId, err := resourceOrganizationalUnitGetParentID(ctx, conn, d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error listing Organizations Organizational Unit (%s) parents: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing Organizations Organizational Unit (%s) parents: %s", d.Id(), err)
 	}
 
 	var accounts []*organizations.Account
@@ -163,46 +167,47 @@ func resourceOrganizationalUnitRead(d *schema.ResourceData, meta interface{}) er
 		ParentId: aws.String(d.Id()),
 	}
 
-	err = conn.ListAccountsForParentPages(input, func(page *organizations.ListAccountsForParentOutput, lastPage bool) bool {
+	err = conn.ListAccountsForParentPagesWithContext(ctx, input, func(page *organizations.ListAccountsForParentOutput, lastPage bool) bool {
 		accounts = append(accounts, page.Accounts...)
 
 		return !lastPage
 	})
 
 	if err != nil {
-		return fmt.Errorf("error listing Organizations Organizational Unit (%s) accounts: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing Organizations Organizational Unit (%s) accounts: %s", d.Id(), err)
 	}
 
 	if err := d.Set("accounts", flattenOrganizationalUnitAccounts(accounts)); err != nil {
-		return fmt.Errorf("error setting accounts: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting accounts: %s", err)
 	}
 
 	d.Set("arn", ou.Arn)
 	d.Set("name", ou.Name)
 	d.Set("parent_id", parentId)
 
-	tags, err := ListTags(conn, d.Id())
+	tags, err := ListTags(ctx, conn, d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for Organizations Organizational Unit (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for Organizations Organizational Unit (%s): %s", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceOrganizationalUnitUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OrganizationsConn
+func resourceOrganizationalUnitUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).OrganizationsConn()
 
 	if d.HasChange("name") {
 		updateOpts := &organizations.UpdateOrganizationalUnitInput{
@@ -210,50 +215,51 @@ func resourceOrganizationalUnitUpdate(d *schema.ResourceData, meta interface{}) 
 			OrganizationalUnitId: aws.String(d.Id()),
 		}
 
-		_, err := conn.UpdateOrganizationalUnit(updateOpts)
+		_, err := conn.UpdateOrganizationalUnitWithContext(ctx, updateOpts)
 		if err != nil {
-			return fmt.Errorf("error updating Organizations Organizational Unit (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Organizations Organizational Unit (%s): %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating Organizations Organizational Unit (%s) tags: %w", d.Id(), err)
+		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Organizations Organizational Unit (%s) tags: %s", d.Id(), err)
 		}
 	}
 
-	return nil
+	return diags
 }
 
-func resourceOrganizationalUnitDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OrganizationsConn
+func resourceOrganizationalUnitDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).OrganizationsConn()
 
 	input := &organizations.DeleteOrganizationalUnitInput{
 		OrganizationalUnitId: aws.String(d.Id()),
 	}
 
-	_, err := conn.DeleteOrganizationalUnit(input)
+	_, err := conn.DeleteOrganizationalUnitWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, organizations.ErrCodeOrganizationalUnitNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Organizations Organizational Unit (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Organizations Organizational Unit (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceOrganizationalUnitGetParentID(conn *organizations.Organizations, childId string) (string, error) {
+func resourceOrganizationalUnitGetParentID(ctx context.Context, conn *organizations.Organizations, childId string) (string, error) {
 	input := &organizations.ListParentsInput{
 		ChildId: aws.String(childId),
 	}
 	var parents []*organizations.Parent
 
-	err := conn.ListParentsPages(input, func(page *organizations.ListParentsOutput, lastPage bool) bool {
+	err := conn.ListParentsPagesWithContext(ctx, input, func(page *organizations.ListParentsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}

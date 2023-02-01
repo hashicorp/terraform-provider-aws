@@ -18,7 +18,10 @@ func init() {
 
 // newDataSourceARN instantiates a new DataSource for the aws_arn data source.
 func newDataSourceARN(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceARN{}, nil
+	d := &dataSourceARN{}
+	d.SetMigratedFromPluginSDK(true)
+
+	return d, nil
 }
 
 type dataSourceARN struct {

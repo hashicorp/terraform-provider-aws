@@ -1,19 +1,21 @@
 package codestarconnections
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codestarconnections"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func DataSourceConnection() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceConnectionRead,
+		ReadWithoutTimeout: dataSourceConnectionRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -46,8 +48,9 @@ func DataSourceConnection() *schema.Resource {
 	}
 }
 
-func dataSourceConnectionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeStarConnectionsConn
+func dataSourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CodeStarConnectionsConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	var connection *codestarconnections.Connection
@@ -55,15 +58,15 @@ func dataSourceConnectionRead(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("arn"); ok {
 		arn := v.(string)
-		connection, err = FindConnectionByARN(conn, arn)
+		connection, err = FindConnectionByARN(ctx, conn, arn)
 
 		if err != nil {
-			return fmt.Errorf("reading CodeStar Connections Connection (%s): %w", arn, err)
+			return sdkdiag.AppendErrorf(diags, "reading CodeStar Connections Connection (%s): %s", arn, err)
 		}
 	} else if v, ok := d.GetOk("name"); ok {
 		name := v.(string)
 
-		err = conn.ListConnectionsPages(&codestarconnections.ListConnectionsInput{}, func(page *codestarconnections.ListConnectionsOutput, lastPage bool) bool {
+		err = conn.ListConnectionsPagesWithContext(ctx, &codestarconnections.ListConnectionsInput{}, func(page *codestarconnections.ListConnectionsOutput, lastPage bool) bool {
 			if page == nil {
 				return !lastPage
 			}
@@ -80,11 +83,11 @@ func dataSourceConnectionRead(d *schema.ResourceData, meta interface{}) error {
 		})
 
 		if err != nil {
-			return fmt.Errorf("listing CodeStar Connections Connections: %w", err)
+			return sdkdiag.AppendErrorf(diags, "listing CodeStar Connections Connections: %s", err)
 		}
 
 		if connection == nil {
-			return fmt.Errorf("CodeStar Connections Connection (%s): not found", name)
+			return sdkdiag.AppendErrorf(diags, "CodeStar Connections Connection (%s): not found", name)
 		}
 	}
 
@@ -96,15 +99,15 @@ func dataSourceConnectionRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", connection.ConnectionName)
 	d.Set("provider_type", connection.ProviderType)
 
-	tags, err := ListTags(conn, arn)
+	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("listing tags for CodeStar Connections Connection (%s): %w", arn, err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for CodeStar Connections Connection (%s): %s", arn, err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

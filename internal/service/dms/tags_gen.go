@@ -14,11 +14,7 @@ import (
 // ListTags lists dms service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn databasemigrationserviceiface.DatabaseMigrationServiceAPI, identifier string) (tftags.KeyValueTags, error) {
-	return ListTagsWithContext(context.Background(), conn, identifier)
-}
-
-func ListTagsWithContext(ctx context.Context, conn databasemigrationserviceiface.DatabaseMigrationServiceAPI, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(ctx context.Context, conn databasemigrationserviceiface.DatabaseMigrationServiceAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &databasemigrationservice.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
@@ -64,10 +60,7 @@ func KeyValueTags(tags []*databasemigrationservice.Tag) tftags.KeyValueTags {
 // UpdateTags updates dms service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn databasemigrationserviceiface.DatabaseMigrationServiceAPI, identifier string, oldTags interface{}, newTags interface{}) error {
-	return UpdateTagsWithContext(context.Background(), conn, identifier, oldTags, newTags)
-}
-func UpdateTagsWithContext(ctx context.Context, conn databasemigrationserviceiface.DatabaseMigrationServiceAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(ctx context.Context, conn databasemigrationserviceiface.DatabaseMigrationServiceAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 

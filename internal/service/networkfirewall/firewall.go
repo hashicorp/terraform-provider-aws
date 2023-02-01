@@ -133,7 +133,7 @@ func ResourceFirewall() *schema.Resource {
 }
 
 func resourceFirewallCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkFirewallConn
+	conn := meta.(*conns.AWSClient).NetworkFirewallConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 	name := d.Get("name").(string)
@@ -184,7 +184,7 @@ func resourceFirewallCreate(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceFirewallRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkFirewallConn
+	conn := meta.(*conns.AWSClient).NetworkFirewallConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -241,7 +241,7 @@ func resourceFirewallRead(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceFirewallUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkFirewallConn
+	conn := meta.(*conns.AWSClient).NetworkFirewallConn()
 	arn := d.Id()
 	updateToken := aws.String(d.Get("update_token").(string))
 
@@ -302,7 +302,7 @@ func resourceFirewallUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			FirewallPolicyChangeProtection: aws.Bool(d.Get("firewall_policy_change_protection").(bool)),
 			UpdateToken:                    updateToken,
 		}
-		resp, err := conn.UpdateFirewallPolicyChangeProtection(input)
+		resp, err := conn.UpdateFirewallPolicyChangeProtectionWithContext(ctx, input)
 		if err != nil {
 			return diag.FromErr(fmt.Errorf("error updating NetworkFirewall Firewall (%s) firewall_policy_change_protection: %w", arn, err))
 		}
@@ -318,7 +318,7 @@ func resourceFirewallUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			FirewallPolicyArn: aws.String(d.Get("firewall_policy_arn").(string)),
 			UpdateToken:       updateToken,
 		}
-		resp, err := conn.AssociateFirewallPolicy(input)
+		resp, err := conn.AssociateFirewallPolicyWithContext(ctx, input)
 		if err != nil {
 			return diag.FromErr(fmt.Errorf("error updating NetworkFirewall Firewall (%s) firewall_policy_arn: %w", arn, err))
 		}
@@ -334,7 +334,7 @@ func resourceFirewallUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			SubnetChangeProtection: aws.Bool(d.Get("subnet_change_protection").(bool)),
 			UpdateToken:            updateToken,
 		}
-		resp, err := conn.UpdateSubnetChangeProtection(input)
+		resp, err := conn.UpdateSubnetChangeProtectionWithContext(ctx, input)
 		if err != nil {
 			return diag.FromErr(fmt.Errorf("error updating NetworkFirewall Firewall (%s) subnet_change_protection: %w", arn, err))
 		}
@@ -391,7 +391,7 @@ func resourceFirewallUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, arn, o, n); err != nil {
+		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
 			return diag.FromErr(fmt.Errorf("error updating NetworkFirewall Firewall (%s) tags: %w", arn, err))
 		}
 	}
@@ -400,7 +400,7 @@ func resourceFirewallUpdate(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceFirewallDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkFirewallConn
+	conn := meta.(*conns.AWSClient).NetworkFirewallConn()
 
 	log.Printf("[DEBUG] Deleting NetworkFirewall Firewall: %s", d.Id())
 	input := &networkfirewall.DeleteFirewallInput{

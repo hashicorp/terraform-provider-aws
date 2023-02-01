@@ -1,6 +1,7 @@
 package ec2_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -15,6 +16,7 @@ import (
 )
 
 func TestAccVPCEndpointConnectionAccepter_crossAccount(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_endpoint_connection_accepter.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -25,7 +27,7 @@ func TestAccVPCEndpointConnectionAccepter_crossAccount(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
-		CheckDestroy:             testAccCheckVPCEndpointConnectionAccepterDestroy,
+		CheckDestroy:             testAccCheckVPCEndpointConnectionAccepterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCEndpointConnectionAccepterConfig_crossAccount(rName),
@@ -43,34 +45,36 @@ func TestAccVPCEndpointConnectionAccepter_crossAccount(t *testing.T) {
 	})
 }
 
-func testAccCheckVPCEndpointConnectionAccepterDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+func testAccCheckVPCEndpointConnectionAccepterDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_vpc_endpoint_connection_accepter" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_vpc_endpoint_connection_accepter" {
+				continue
+			}
+
+			serviceID, vpcEndpointID, err := tfec2.VPCEndpointConnectionAccepterParseResourceID(rs.Primary.ID)
+
+			if err != nil {
+				return err
+			}
+
+			_, err = tfec2.FindVPCEndpointConnectionByServiceIDAndVPCEndpointID(ctx, conn, serviceID, vpcEndpointID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("VPC Endpoint Connection %s still exists", rs.Primary.ID)
 		}
 
-		serviceID, vpcEndpointID, err := tfec2.VPCEndpointConnectionAccepterParseResourceID(rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		_, err = tfec2.FindVPCEndpointConnectionByServiceIDAndVPCEndpointID(conn, serviceID, vpcEndpointID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("VPC Endpoint Connection %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
 func testAccVPCEndpointConnectionAccepterConfig_crossAccount(rName string) string {

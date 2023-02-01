@@ -1,18 +1,20 @@
 package neptune
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/neptune"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func DataSourceOrderableDBInstance() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceOrderableDBInstanceRead,
+		ReadWithoutTimeout: dataSourceOrderableDBInstanceRead,
 		Schema: map[string]*schema.Schema{
 			"availability_zones": {
 				Type:     schema.TypeList,
@@ -131,8 +133,9 @@ func DataSourceOrderableDBInstance() *schema.Resource {
 	}
 }
 
-func dataSourceOrderableDBInstanceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).NeptuneConn
+func dataSourceOrderableDBInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).NeptuneConn()
 
 	input := &neptune.DescribeOrderableDBInstanceOptionsInput{}
 
@@ -159,7 +162,7 @@ func dataSourceOrderableDBInstanceRead(d *schema.ResourceData, meta interface{})
 	log.Printf("[DEBUG] Reading Neptune Orderable DB Instance Options: %v", input)
 
 	var instanceClassResults []*neptune.OrderableDBInstanceOption
-	err := conn.DescribeOrderableDBInstanceOptionsPages(input, func(resp *neptune.DescribeOrderableDBInstanceOptionsOutput, lastPage bool) bool {
+	err := conn.DescribeOrderableDBInstanceOptionsPagesWithContext(ctx, input, func(resp *neptune.DescribeOrderableDBInstanceOptionsOutput, lastPage bool) bool {
 		for _, instanceOption := range resp.OrderableDBInstanceOptions {
 			if instanceOption == nil {
 				continue
@@ -171,11 +174,11 @@ func dataSourceOrderableDBInstanceRead(d *schema.ResourceData, meta interface{})
 	})
 
 	if err != nil {
-		return fmt.Errorf("reading Neptune orderable DB instance options: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading Neptune orderable DB instance options: %s", err)
 	}
 
 	if len(instanceClassResults) == 0 {
-		return fmt.Errorf("no Neptune Orderable DB Instance options found matching criteria; try different search")
+		return sdkdiag.AppendErrorf(diags, "no Neptune Orderable DB Instance options found matching criteria; try different search")
 	}
 
 	// preferred classes
@@ -202,7 +205,7 @@ func dataSourceOrderableDBInstanceRead(d *schema.ResourceData, meta interface{})
 	}
 
 	if found == nil && len(instanceClassResults) > 1 {
-		return fmt.Errorf("multiple Neptune DB Instance Classes (%v) match the criteria; try a different search", instanceClassResults)
+		return sdkdiag.AppendErrorf(diags, "multiple Neptune DB Instance Classes (%v) match the criteria; try a different search", instanceClassResults)
 	}
 
 	if found == nil && len(instanceClassResults) == 1 {
@@ -210,7 +213,7 @@ func dataSourceOrderableDBInstanceRead(d *schema.ResourceData, meta interface{})
 	}
 
 	if found == nil {
-		return fmt.Errorf("no Neptune DB Instance Classes match the criteria; try a different search")
+		return sdkdiag.AppendErrorf(diags, "no Neptune DB Instance Classes match the criteria; try a different search")
 	}
 
 	d.SetId(aws.StringValue(found.DBInstanceClass))
@@ -242,5 +245,5 @@ func dataSourceOrderableDBInstanceRead(d *schema.ResourceData, meta interface{})
 	d.Set("supports_storage_encryption", found.SupportsStorageEncryption)
 	d.Set("vpc", found.Vpc)
 
-	return nil
+	return diags
 }

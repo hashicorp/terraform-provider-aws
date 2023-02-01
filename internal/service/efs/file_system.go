@@ -28,7 +28,7 @@ func ResourceFileSystem() *schema.Resource {
 		DeleteWithoutTimeout: resourceFileSystemDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -144,7 +144,7 @@ func ResourceFileSystem() *schema.Resource {
 }
 
 func resourceFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EFSConn
+	conn := meta.(*conns.AWSClient).EFSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -216,7 +216,7 @@ func resourceFileSystemCreate(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EFSConn
+	conn := meta.(*conns.AWSClient).EFSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -276,7 +276,7 @@ func resourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceFileSystemUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EFSConn
+	conn := meta.(*conns.AWSClient).EFSConn()
 
 	if d.HasChanges("provisioned_throughput_in_mibps", "throughput_mode") {
 		throughputMode := d.Get("throughput_mode").(string)
@@ -324,7 +324,7 @@ func resourceFileSystemUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTagsWithContext(ctx, conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
 			return diag.Errorf("updating EFS file system (%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -333,7 +333,7 @@ func resourceFileSystemUpdate(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceFileSystemDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EFSConn
+	conn := meta.(*conns.AWSClient).EFSConn()
 
 	log.Printf("[DEBUG] Deleting EFS file system: %s", d.Id())
 	_, err := conn.DeleteFileSystemWithContext(ctx, &efs.DeleteFileSystemInput{

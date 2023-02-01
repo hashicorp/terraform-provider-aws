@@ -125,7 +125,7 @@ func ResourceIdentityProviderConfig() *schema.Resource {
 }
 
 func resourceIdentityProviderConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EKSConn
+	conn := meta.(*conns.AWSClient).EKSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -143,7 +143,7 @@ func resourceIdentityProviderConfigCreate(ctx context.Context, d *schema.Resourc
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	_, err := conn.AssociateIdentityProviderConfig(input)
+	_, err := conn.AssociateIdentityProviderConfigWithContext(ctx, input)
 
 	if err != nil {
 		return diag.Errorf("error associating EKS Identity Provider Config (%s): %s", id, err)
@@ -161,7 +161,7 @@ func resourceIdentityProviderConfigCreate(ctx context.Context, d *schema.Resourc
 }
 
 func resourceIdentityProviderConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EKSConn
+	conn := meta.(*conns.AWSClient).EKSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -207,11 +207,11 @@ func resourceIdentityProviderConfigRead(ctx context.Context, d *schema.ResourceD
 }
 
 func resourceIdentityProviderConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EKSConn
+	conn := meta.(*conns.AWSClient).EKSConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.Errorf("error updating tags: %s", err)
 		}
 	}
@@ -220,7 +220,7 @@ func resourceIdentityProviderConfigUpdate(ctx context.Context, d *schema.Resourc
 }
 
 func resourceIdentityProviderConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EKSConn
+	conn := meta.(*conns.AWSClient).EKSConn()
 
 	clusterName, configName, err := IdentityProviderConfigParseResourceID(d.Id())
 

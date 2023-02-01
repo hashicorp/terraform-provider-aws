@@ -1,24 +1,26 @@
 package iam
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func ResourceAccountPasswordPolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAccountPasswordPolicyUpdate,
-		Read:   resourceAccountPasswordPolicyRead,
-		Update: resourceAccountPasswordPolicyUpdate,
-		Delete: resourceAccountPasswordPolicyDelete,
+		CreateWithoutTimeout: resourceAccountPasswordPolicyUpdate,
+		ReadWithoutTimeout:   resourceAccountPasswordPolicyRead,
+		UpdateWithoutTimeout: resourceAccountPasswordPolicyUpdate,
+		DeleteWithoutTimeout: resourceAccountPasswordPolicyDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -75,8 +77,9 @@ func ResourceAccountPasswordPolicy() *schema.Resource {
 	}
 }
 
-func resourceAccountPasswordPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+func resourceAccountPasswordPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	input := &iam.UpdateAccountPasswordPolicyInput{}
 
@@ -108,29 +111,30 @@ func resourceAccountPasswordPolicyUpdate(d *schema.ResourceData, meta interface{
 		input.RequireUppercaseCharacters = aws.Bool(v.(bool))
 	}
 
-	_, err := conn.UpdateAccountPasswordPolicy(input)
+	_, err := conn.UpdateAccountPasswordPolicyWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("Error updating IAM Password Policy: %w", err)
+		return sdkdiag.AppendErrorf(diags, "updating IAM Password Policy: %s", err)
 	}
 	log.Println("[DEBUG] IAM account password policy updated")
 
 	d.SetId("iam-account-password-policy")
 
-	return resourceAccountPasswordPolicyRead(d, meta)
+	return append(diags, resourceAccountPasswordPolicyRead(ctx, d, meta)...)
 }
 
-func resourceAccountPasswordPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+func resourceAccountPasswordPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	input := &iam.GetAccountPasswordPolicyInput{}
-	resp, err := conn.GetAccountPasswordPolicy(input)
+	resp, err := conn.GetAccountPasswordPolicyWithContext(ctx, input)
 	if err != nil {
 		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 			log.Printf("[WARN] IAM Account Password Policy not found, removing from state")
 			d.SetId("")
-			return nil
+			return diags
 		}
-		return fmt.Errorf("Error reading IAM account password policy: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading IAM account password policy: %s", err)
 	}
 
 	policy := resp.PasswordPolicy
@@ -146,18 +150,19 @@ func resourceAccountPasswordPolicyRead(d *schema.ResourceData, meta interface{})
 	d.Set("require_symbols", policy.RequireSymbols)
 	d.Set("require_uppercase_characters", policy.RequireUppercaseCharacters)
 
-	return nil
+	return diags
 }
 
-func resourceAccountPasswordPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+func resourceAccountPasswordPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	log.Println("[DEBUG] Deleting IAM account password policy")
 	input := &iam.DeleteAccountPasswordPolicyInput{}
-	if _, err := conn.DeleteAccountPasswordPolicy(input); err != nil {
-		return fmt.Errorf("Error deleting IAM Password Policy: %w", err)
+	if _, err := conn.DeleteAccountPasswordPolicyWithContext(ctx, input); err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting IAM Password Policy: %s", err)
 	}
 	log.Println("[DEBUG] Deleted IAM account password policy")
 
-	return nil
+	return diags
 }

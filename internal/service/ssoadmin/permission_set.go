@@ -1,6 +1,7 @@
 package ssoadmin
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"regexp"
@@ -10,10 +11,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -21,12 +24,12 @@ import (
 
 func ResourcePermissionSet() *schema.Resource {
 	return &schema.Resource{
-		Create: resourcePermissionSetCreate,
-		Read:   resourcePermissionSetRead,
-		Update: resourcePermissionSetUpdate,
-		Delete: resourcePermissionSetDelete,
+		CreateWithoutTimeout: resourcePermissionSetCreate,
+		ReadWithoutTimeout:   resourcePermissionSetRead,
+		UpdateWithoutTimeout: resourcePermissionSetUpdate,
+		DeleteWithoutTimeout: resourcePermissionSetDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -89,8 +92,9 @@ func ResourcePermissionSet() *schema.Resource {
 	}
 }
 
-func resourcePermissionSetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSOAdminConn
+func resourcePermissionSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SSOAdminConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -118,31 +122,32 @@ func resourcePermissionSetCreate(d *schema.ResourceData, meta interface{}) error
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	output, err := conn.CreatePermissionSet(input)
+	output, err := conn.CreatePermissionSetWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("error creating SSO Permission Set (%s): %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating SSO Permission Set (%s): %s", name, err)
 	}
 
 	if output == nil || output.PermissionSet == nil {
-		return fmt.Errorf("error creating SSO Permission Set (%s): empty output", name)
+		return sdkdiag.AppendErrorf(diags, "creating SSO Permission Set (%s): empty output", name)
 	}
 
 	d.SetId(fmt.Sprintf("%s,%s", aws.StringValue(output.PermissionSet.PermissionSetArn), instanceArn))
 
-	return resourcePermissionSetRead(d, meta)
+	return append(diags, resourcePermissionSetRead(ctx, d, meta)...)
 }
 
-func resourcePermissionSetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSOAdminConn
+func resourcePermissionSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SSOAdminConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	arn, instanceArn, err := ParseResourceID(d.Id())
 	if err != nil {
-		return fmt.Errorf("error parsing SSO Permission Set ID: %w", err)
+		return sdkdiag.AppendErrorf(diags, "parsing SSO Permission Set ID: %s", err)
 	}
 
-	output, err := conn.DescribePermissionSet(&ssoadmin.DescribePermissionSetInput{
+	output, err := conn.DescribePermissionSetWithContext(ctx, &ssoadmin.DescribePermissionSetInput{
 		InstanceArn:      aws.String(instanceArn),
 		PermissionSetArn: aws.String(arn),
 	})
@@ -150,15 +155,15 @@ func resourcePermissionSetRead(d *schema.ResourceData, meta interface{}) error {
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ssoadmin.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] SSO Permission Set (%s) not found, removing from state", arn)
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading SSO Permission Set: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading SSO Permission Set: %s", err)
 	}
 
 	if output == nil || output.PermissionSet == nil {
-		return fmt.Errorf("error reading SSO Permission Set (%s): empty output", arn)
+		return sdkdiag.AppendErrorf(diags, "reading SSO Permission Set (%s): empty output", arn)
 	}
 
 	permissionSet := output.PermissionSet
@@ -171,31 +176,32 @@ func resourcePermissionSetRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("relay_state", permissionSet.RelayState)
 	d.Set("session_duration", permissionSet.SessionDuration)
 
-	tags, err := ListTags(conn, arn, instanceArn)
+	tags, err := ListTags(ctx, conn, arn, instanceArn)
 	if err != nil {
-		return fmt.Errorf("error listing tags for SSO Permission Set (%s): %w", arn, err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for SSO Permission Set (%s): %s", arn, err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourcePermissionSetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSOAdminConn
+func resourcePermissionSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SSOAdminConn()
 
 	arn, instanceArn, err := ParseResourceID(d.Id())
 	if err != nil {
-		return fmt.Errorf("error parsing SSO Permission Set ID: %w", err)
+		return sdkdiag.AppendErrorf(diags, "parsing SSO Permission Set ID: %s", err)
 	}
 
 	if d.HasChanges("description", "relay_state", "session_duration") {
@@ -221,33 +227,34 @@ func resourcePermissionSetUpdate(d *schema.ResourceData, meta interface{}) error
 			input.SessionDuration = aws.String(v.(string))
 		}
 
-		_, err := conn.UpdatePermissionSet(input)
+		_, err := conn.UpdatePermissionSetWithContext(ctx, input)
 		if err != nil {
-			return fmt.Errorf("error updating SSO Permission Set (%s): %w", arn, err)
+			return sdkdiag.AppendErrorf(diags, "updating SSO Permission Set (%s): %s", arn, err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, arn, instanceArn, o, n); err != nil {
-			return fmt.Errorf("error updating tags: %w", err)
+		if err := UpdateTags(ctx, conn, arn, instanceArn, o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
 		}
 	}
 
 	// Re-provision ALL accounts after making the above changes
-	if err := provisionPermissionSet(conn, arn, instanceArn); err != nil {
-		return err
+	if err := provisionPermissionSet(ctx, conn, arn, instanceArn); err != nil {
+		return sdkdiag.AppendErrorf(diags, "provisioning SSO Permission Set (%s): %s", arn, err)
 	}
 
-	return resourcePermissionSetRead(d, meta)
+	return append(diags, resourcePermissionSetRead(ctx, d, meta)...)
 }
 
-func resourcePermissionSetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSOAdminConn
+func resourcePermissionSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SSOAdminConn()
 
 	arn, instanceArn, err := ParseResourceID(d.Id())
 	if err != nil {
-		return fmt.Errorf("error parsing SSO Permission Set ID: %w", err)
+		return sdkdiag.AppendErrorf(diags, "parsing SSO Permission Set ID: %s", err)
 	}
 
 	input := &ssoadmin.DeletePermissionSetInput{
@@ -255,15 +262,15 @@ func resourcePermissionSetDelete(d *schema.ResourceData, meta interface{}) error
 		PermissionSetArn: aws.String(arn),
 	}
 
-	_, err = conn.DeletePermissionSet(input)
+	_, err = conn.DeletePermissionSetWithContext(ctx, input)
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, ssoadmin.ErrCodeResourceNotFoundException) {
-			return nil
+			return diags
 		}
-		return fmt.Errorf("error deleting SSO Permission Set (%s): %w", arn, err)
+		return sdkdiag.AppendErrorf(diags, "deleting SSO Permission Set (%s): %s", arn, err)
 	}
 
-	return nil
+	return diags
 }
 
 func ParseResourceID(id string) (string, string, error) {
@@ -274,7 +281,7 @@ func ParseResourceID(id string) (string, string, error) {
 	return idParts[0], idParts[1], nil
 }
 
-func provisionPermissionSet(conn *ssoadmin.SSOAdmin, arn, instanceArn string) error {
+func provisionPermissionSet(ctx context.Context, conn *ssoadmin.SSOAdmin, arn, instanceArn string) error {
 	input := &ssoadmin.ProvisionPermissionSetInput{
 		InstanceArn:      aws.String(instanceArn),
 		PermissionSetArn: aws.String(arn),
@@ -282,9 +289,9 @@ func provisionPermissionSet(conn *ssoadmin.SSOAdmin, arn, instanceArn string) er
 	}
 
 	var output *ssoadmin.ProvisionPermissionSetOutput
-	err := resource.Retry(permissionSetProvisionTimeout, func() *resource.RetryError {
+	err := resource.RetryContext(ctx, permissionSetProvisionTimeout, func() *resource.RetryError {
 		var err error
-		output, err = conn.ProvisionPermissionSet(input)
+		output, err = conn.ProvisionPermissionSetWithContext(ctx, input)
 
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, ssoadmin.ErrCodeConflictException) {
@@ -300,7 +307,7 @@ func provisionPermissionSet(conn *ssoadmin.SSOAdmin, arn, instanceArn string) er
 	})
 
 	if tfresource.TimedOut(err) {
-		output, err = conn.ProvisionPermissionSet(input)
+		output, err = conn.ProvisionPermissionSetWithContext(ctx, input)
 	}
 
 	if err != nil {
@@ -311,7 +318,7 @@ func provisionPermissionSet(conn *ssoadmin.SSOAdmin, arn, instanceArn string) er
 		return fmt.Errorf("error provisioning SSO Permission Set (%s): empty output", arn)
 	}
 
-	_, err = waitPermissionSetProvisioned(conn, instanceArn, aws.StringValue(output.PermissionSetProvisioningStatus.RequestId))
+	_, err = waitPermissionSetProvisioned(ctx, conn, instanceArn, aws.StringValue(output.PermissionSetProvisioningStatus.RequestId))
 	if err != nil {
 		return fmt.Errorf("error waiting for SSO Permission Set (%s) to provision: %w", arn, err)
 	}

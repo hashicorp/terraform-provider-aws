@@ -11,6 +11,7 @@ import (
 )
 
 func testAccPermissionsDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lakeformation_permissions.test"
 	dataSourceName := "data.aws_lakeformation_permissions.test"
@@ -19,7 +20,7 @@ func testAccPermissionsDataSource_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lakeformation.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, lakeformation.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPermissionsDestroy,
+		CheckDestroy:             testAccCheckPermissionsDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionsDataSourceConfig_basic(rName),
@@ -35,6 +36,7 @@ func testAccPermissionsDataSource_basic(t *testing.T) {
 }
 
 func testAccPermissionsDataSource_dataLocation(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lakeformation_permissions.test"
 	dataSourceName := "data.aws_lakeformation_permissions.test"
@@ -43,7 +45,7 @@ func testAccPermissionsDataSource_dataLocation(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lakeformation.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, lakeformation.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPermissionsDestroy,
+		CheckDestroy:             testAccCheckPermissionsDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionsDataSourceConfig_dataLocation(rName),
@@ -60,6 +62,7 @@ func testAccPermissionsDataSource_dataLocation(t *testing.T) {
 }
 
 func testAccPermissionsDataSource_database(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lakeformation_permissions.test"
 	dataSourceName := "data.aws_lakeformation_permissions.test"
@@ -68,7 +71,7 @@ func testAccPermissionsDataSource_database(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lakeformation.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, lakeformation.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPermissionsDestroy,
+		CheckDestroy:             testAccCheckPermissionsDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionsDataSourceConfig_database(rName),
@@ -89,6 +92,7 @@ func testAccPermissionsDataSource_database(t *testing.T) {
 }
 
 func testAccPermissionsDataSource_lfTag(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lakeformation_permissions.test"
 	dataSourceName := "data.aws_lakeformation_permissions.test"
@@ -97,7 +101,7 @@ func testAccPermissionsDataSource_lfTag(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lakeformation.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, lakeformation.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPermissionsDestroy,
+		CheckDestroy:             testAccCheckPermissionsDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionsDataSourceConfig_lfTag(rName),
@@ -119,6 +123,7 @@ func testAccPermissionsDataSource_lfTag(t *testing.T) {
 }
 
 func testAccPermissionsDataSource_lfTagPolicy(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lakeformation_permissions.test"
 	dataSourceName := "data.aws_lakeformation_permissions.test"
@@ -127,7 +132,7 @@ func testAccPermissionsDataSource_lfTagPolicy(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lakeformation.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, lakeformation.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPermissionsDestroy,
+		CheckDestroy:             testAccCheckPermissionsDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionsDataSourceConfig_lfTagPolicy(rName),
@@ -151,6 +156,7 @@ func testAccPermissionsDataSource_lfTagPolicy(t *testing.T) {
 }
 
 func testAccPermissionsDataSource_table(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lakeformation_permissions.test"
 	dataSourceName := "data.aws_lakeformation_permissions.test"
@@ -159,7 +165,7 @@ func testAccPermissionsDataSource_table(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lakeformation.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, lakeformation.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPermissionsDestroy,
+		CheckDestroy:             testAccCheckPermissionsDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionsDataSourceConfig_table(rName),
@@ -177,6 +183,7 @@ func testAccPermissionsDataSource_table(t *testing.T) {
 }
 
 func testAccPermissionsDataSource_tableWithColumns(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lakeformation_permissions.test"
 	dataSourceName := "data.aws_lakeformation_permissions.test"
@@ -185,7 +192,7 @@ func testAccPermissionsDataSource_tableWithColumns(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(lakeformation.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, lakeformation.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPermissionsDestroy,
+		CheckDestroy:             testAccCheckPermissionsDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPermissionsDataSourceConfig_tableWithColumns(rName),

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -137,11 +138,12 @@ var (
 			Computed: true,
 		},
 		"policy": {
-			Type:             schema.TypeString,
-			Optional:         true,
-			Computed:         true,
-			ValidateFunc:     validation.StringIsJSON,
-			DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+			Type:                  schema.TypeString,
+			Optional:              true,
+			Computed:              true,
+			ValidateFunc:          validation.StringIsJSON,
+			DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+			DiffSuppressOnRefresh: true,
 			StateFunc: func(v interface{}) string {
 				json, _ := structure.NormalizeJsonString(v)
 				return json
@@ -201,7 +203,7 @@ func ResourceTopic() *schema.Resource {
 		DeleteWithoutTimeout: resourceTopicDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -214,7 +216,7 @@ func ResourceTopic() *schema.Resource {
 }
 
 func resourceTopicCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SNSConn
+	conn := meta.(*conns.AWSClient).SNSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -272,7 +274,7 @@ func resourceTopicCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	// Post-create tagging supported in some partitions
 	if input.Tags == nil && len(tags) > 0 {
-		err := UpdateTagsWithContext(ctx, conn, d.Id(), nil, tags)
+		err := UpdateTags(ctx, conn, d.Id(), nil, tags)
 
 		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.ErrorISOUnsupported(conn.PartitionID, err) {
 			// if default tags only, log and continue (i.e., should error if explicitly setting tags and they can't be)
@@ -289,7 +291,7 @@ func resourceTopicCreate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceTopicRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SNSConn
+	conn := meta.(*conns.AWSClient).SNSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -325,7 +327,7 @@ func resourceTopicRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		d.Set("name_prefix", create.NamePrefixFromName(name))
 	}
 
-	tags, err := ListTagsWithContext(ctx, conn, d.Id())
+	tags, err := ListTags(ctx, conn, d.Id())
 
 	if verify.ErrorISOUnsupported(conn.PartitionID, err) {
 		// ISO partitions may not support tagging, giving error
@@ -352,7 +354,7 @@ func resourceTopicRead(ctx context.Context, d *schema.ResourceData, meta interfa
 }
 
 func resourceTopicUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SNSConn
+	conn := meta.(*conns.AWSClient).SNSConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		attributes, err := topicAttributeMap.ResourceDataToAPIAttributesUpdate(d)
@@ -371,7 +373,7 @@ func resourceTopicUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		err := UpdateTagsWithContext(ctx, conn, d.Id(), o, n)
+		err := UpdateTags(ctx, conn, d.Id(), o, n)
 
 		if verify.ErrorISOUnsupported(conn.PartitionID, err) {
 			// ISO partitions may not support tagging, giving error
@@ -388,7 +390,7 @@ func resourceTopicUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceTopicDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SNSConn
+	conn := meta.(*conns.AWSClient).SNSConn()
 
 	log.Printf("[DEBUG] Deleting SNS Topic: %s", d.Id())
 	_, err := conn.DeleteTopicWithContext(ctx, &sns.DeleteTopicInput{
@@ -459,13 +461,16 @@ func putTopicAttributes(ctx context.Context, conn *sns.SNS, arn string, attribut
 }
 
 func putTopicAttribute(ctx context.Context, conn *sns.SNS, arn string, name, value string) error {
+	const (
+		topicPutAttributeTimeout = 2 * time.Minute
+	)
 	input := &sns.SetTopicAttributesInput{
 		AttributeName:  aws.String(name),
 		AttributeValue: aws.String(value),
 		TopicArn:       aws.String(arn),
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, topicPutAttributeTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, topicPutAttributeTimeout, func() (interface{}, error) {
 		return conn.SetTopicAttributesWithContext(ctx, input)
 	}, sns.ErrCodeInvalidParameterException)
 

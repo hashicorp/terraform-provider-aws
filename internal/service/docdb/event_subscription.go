@@ -93,7 +93,7 @@ func ResourceEventSubscription() *schema.Resource {
 }
 
 func resourceEventSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DocDBConn
+	conn := meta.(*conns.AWSClient).DocDBConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -118,7 +118,7 @@ func resourceEventSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 	}
 
 	log.Println("[DEBUG] Creating DocDB Event Subscription:", input)
-	output, err := conn.CreateEventSubscription(input)
+	output, err := conn.CreateEventSubscriptionWithContext(ctx, input)
 
 	if err != nil {
 		return diag.Errorf("creating DocDB Event Subscription (%s): %s", name, err)
@@ -134,7 +134,7 @@ func resourceEventSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceEventSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DocDBConn
+	conn := meta.(*conns.AWSClient).DocDBConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -160,7 +160,7 @@ func resourceEventSubscriptionRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("source_ids", aws.StringValueSlice(output.SourceIdsList))
 	d.Set("source_type", output.SourceType)
 
-	tags, err := ListTags(conn, d.Get("arn").(string))
+	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
 
 	if err != nil {
 		return diag.Errorf("listing tags for DocDB Event Subscription (%s): %s", d.Get("arn").(string), err)
@@ -181,7 +181,7 @@ func resourceEventSubscriptionRead(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceEventSubscriptionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DocDBConn
+	conn := meta.(*conns.AWSClient).DocDBConn()
 
 	if d.HasChangesExcept("tags", "tags_all", "source_ids") {
 		input := &docdb.ModifyEventSubscriptionInput{
@@ -206,7 +206,7 @@ func resourceEventSubscriptionUpdate(ctx context.Context, d *schema.ResourceData
 		}
 
 		log.Printf("[DEBUG] Updating DocDB Event Subscription: %s", input)
-		_, err := conn.ModifyEventSubscription(input)
+		_, err := conn.ModifyEventSubscriptionWithContext(ctx, input)
 
 		if err != nil {
 			return diag.Errorf("updating DocDB Event Subscription (%s): %s", d.Id(), err)
@@ -220,7 +220,7 @@ func resourceEventSubscriptionUpdate(ctx context.Context, d *schema.ResourceData
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.Errorf("updating DocDB Cluster Event Subscription (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
@@ -241,7 +241,7 @@ func resourceEventSubscriptionUpdate(ctx context.Context, d *schema.ResourceData
 
 		if len(remove) > 0 {
 			for _, v := range remove {
-				_, err := conn.RemoveSourceIdentifierFromSubscription(&docdb.RemoveSourceIdentifierFromSubscriptionInput{
+				_, err := conn.RemoveSourceIdentifierFromSubscriptionWithContext(ctx, &docdb.RemoveSourceIdentifierFromSubscriptionInput{
 					SourceIdentifier: v,
 					SubscriptionName: aws.String(d.Id()),
 				})
@@ -254,7 +254,7 @@ func resourceEventSubscriptionUpdate(ctx context.Context, d *schema.ResourceData
 
 		if len(add) > 0 {
 			for _, v := range add {
-				_, err := conn.AddSourceIdentifierToSubscription(&docdb.AddSourceIdentifierToSubscriptionInput{
+				_, err := conn.AddSourceIdentifierToSubscriptionWithContext(ctx, &docdb.AddSourceIdentifierToSubscriptionInput{
 					SourceIdentifier: v,
 					SubscriptionName: aws.String(d.Id()),
 				})
@@ -270,10 +270,10 @@ func resourceEventSubscriptionUpdate(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceEventSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DocDBConn
+	conn := meta.(*conns.AWSClient).DocDBConn()
 
 	log.Printf("[DEBUG] Deleting DocDB Event Subscription: %s", d.Id())
-	_, err := conn.DeleteEventSubscription(&docdb.DeleteEventSubscriptionInput{
+	_, err := conn.DeleteEventSubscriptionWithContext(ctx, &docdb.DeleteEventSubscriptionInput{
 		SubscriptionName: aws.String(d.Id()),
 	})
 

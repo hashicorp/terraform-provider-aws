@@ -107,15 +107,16 @@ func init() {
 }
 
 func sweepClusterParameterGroups(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).RDSConn
+	conn := client.(*conns.AWSClient).RDSConn()
 	input := &rds.DescribeDBClusterParameterGroupsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeDBClusterParameterGroupsPages(input, func(page *rds.DescribeDBClusterParameterGroupsOutput, lastPage bool) bool {
+	err = conn.DescribeDBClusterParameterGroupsPagesWithContext(ctx, input, func(page *rds.DescribeDBClusterParameterGroupsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -146,7 +147,7 @@ func sweepClusterParameterGroups(region string) error {
 		return fmt.Errorf("error listing RDS Cluster Parameter Groups (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping RDS Cluster Parameter Groups (%s): %w", region, err)
@@ -156,11 +157,12 @@ func sweepClusterParameterGroups(region string) error {
 }
 
 func sweepClusterSnapshots(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).RDSConn
+	conn := client.(*conns.AWSClient).RDSConn()
 	input := &rds.DescribeDBClusterSnapshotsInput{
 		// "InvalidDBClusterSnapshotStateFault: Only manual snapshots may be deleted."
 		Filters: []*rds.Filter{{
@@ -170,7 +172,7 @@ func sweepClusterSnapshots(region string) error {
 	}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeDBClusterSnapshotsPages(input, func(page *rds.DescribeDBClusterSnapshotsOutput, lastPage bool) bool {
+	err = conn.DescribeDBClusterSnapshotsPagesWithContext(ctx, input, func(page *rds.DescribeDBClusterSnapshotsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -195,7 +197,7 @@ func sweepClusterSnapshots(region string) error {
 		return fmt.Errorf("error listing RDS DB Cluster Snapshots (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping RDS DB Cluster Snapshots (%s): %w", region, err)
@@ -205,15 +207,16 @@ func sweepClusterSnapshots(region string) error {
 }
 
 func sweepClusters(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	input := &rds.DescribeDBClustersInput{}
-	conn := client.(*conns.AWSClient).RDSConn
+	conn := client.(*conns.AWSClient).RDSConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeDBClustersPages(input, func(page *rds.DescribeDBClustersOutput, lastPage bool) bool {
+	err = conn.DescribeDBClustersPagesWithContext(ctx, input, func(page *rds.DescribeDBClustersOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -230,7 +233,7 @@ func sweepClusters(region string) error {
 			d.Set("skip_final_snapshot", true)
 
 			if engineMode := aws.StringValue(v.EngineMode); engineMode == EngineModeGlobal || engineMode == EngineModeProvisioned {
-				globalCluster, err := DescribeGlobalClusterFromClusterARN(conn, arn)
+				globalCluster, err := DescribeGlobalClusterFromClusterARN(ctx, conn, arn)
 
 				if err != nil {
 					log.Printf("[ERROR] reading RDS Global Cluster information for DB Cluster (%s): %s", id, err)
@@ -256,7 +259,7 @@ func sweepClusters(region string) error {
 		return fmt.Errorf("error listing RDS Clusters (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping RDS Clusters (%s): %w", region, err)
@@ -266,15 +269,16 @@ func sweepClusters(region string) error {
 }
 
 func sweepEventSubscriptions(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).RDSConn
+	conn := client.(*conns.AWSClient).RDSConn()
 	input := &rds.DescribeEventSubscriptionsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeEventSubscriptionsPages(input, func(page *rds.DescribeEventSubscriptionsOutput, lastPage bool) bool {
+	err = conn.DescribeEventSubscriptionsPagesWithContext(ctx, input, func(page *rds.DescribeEventSubscriptionsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -299,7 +303,7 @@ func sweepEventSubscriptions(region string) error {
 		return fmt.Errorf("error listing RDS Event Subscriptions (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping RDS Event Subscriptions (%s): %w", region, err)
@@ -309,15 +313,16 @@ func sweepEventSubscriptions(region string) error {
 }
 
 func sweepGlobalClusters(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).RDSConn
+	conn := client.(*conns.AWSClient).RDSConn()
 	input := &rds.DescribeGlobalClustersInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeGlobalClustersPages(input, func(page *rds.DescribeGlobalClustersOutput, lastPage bool) bool {
+	err = conn.DescribeGlobalClustersPagesWithContext(ctx, input, func(page *rds.DescribeGlobalClustersOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -342,7 +347,7 @@ func sweepGlobalClusters(region string) error {
 		return fmt.Errorf("error listing RDS Global Clusters (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping RDS Global Clusters (%s): %w", region, err)
@@ -352,15 +357,16 @@ func sweepGlobalClusters(region string) error {
 }
 
 func sweepInstances(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	input := &rds.DescribeDBInstancesInput{}
-	conn := client.(*conns.AWSClient).RDSConn
+	conn := client.(*conns.AWSClient).RDSConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeDBInstancesPages(input, func(page *rds.DescribeDBInstancesOutput, lastPage bool) bool {
+	err = conn.DescribeDBInstancesPagesWithContext(ctx, input, func(page *rds.DescribeDBInstancesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -389,7 +395,7 @@ func sweepInstances(region string) error {
 		return fmt.Errorf("error listing RDS DB Instances (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping RDS DB Instances (%s): %w", region, err)
@@ -399,15 +405,16 @@ func sweepInstances(region string) error {
 }
 
 func sweepOptionGroups(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	input := &rds.DescribeOptionGroupsInput{}
-	conn := client.(*conns.AWSClient).RDSConn
+	conn := client.(*conns.AWSClient).RDSConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeOptionGroupsPages(input, func(page *rds.DescribeOptionGroupsOutput, lastPage bool) bool {
+	err = conn.DescribeOptionGroupsPagesWithContext(ctx, input, func(page *rds.DescribeOptionGroupsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -438,7 +445,7 @@ func sweepOptionGroups(region string) error {
 		return fmt.Errorf("error listing RDS Option Groups (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping RDS Option Groups (%s): %w", region, err)
@@ -448,15 +455,16 @@ func sweepOptionGroups(region string) error {
 }
 
 func sweepParameterGroups(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	input := &rds.DescribeDBParameterGroupsInput{}
-	conn := client.(*conns.AWSClient).RDSConn
+	conn := client.(*conns.AWSClient).RDSConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeDBParameterGroupsPages(input, func(page *rds.DescribeDBParameterGroupsOutput, lastPage bool) bool {
+	err = conn.DescribeDBParameterGroupsPagesWithContext(ctx, input, func(page *rds.DescribeDBParameterGroupsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -487,7 +495,7 @@ func sweepParameterGroups(region string) error {
 		return fmt.Errorf("error listing RDS DB Parameter Groups (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping RDS DB Parameter Groups (%s): %w", region, err)
@@ -497,15 +505,16 @@ func sweepParameterGroups(region string) error {
 }
 
 func sweepProxies(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("Error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).RDSConn
+	conn := client.(*conns.AWSClient).RDSConn()
 	input := &rds.DescribeDBProxiesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeDBProxiesPages(input, func(page *rds.DescribeDBProxiesOutput, lastPage bool) bool {
+	err = conn.DescribeDBProxiesPagesWithContext(ctx, input, func(page *rds.DescribeDBProxiesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -530,7 +539,7 @@ func sweepProxies(region string) error {
 		return fmt.Errorf("error listing RDS DB Proxies (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping RDS DB Proxies (%s): %w", region, err)
@@ -540,15 +549,16 @@ func sweepProxies(region string) error {
 }
 
 func sweepSnapshots(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).RDSConn
+	conn := client.(*conns.AWSClient).RDSConn()
 	input := &rds.DescribeDBSnapshotsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeDBSnapshotsPages(input, func(page *rds.DescribeDBSnapshotsOutput, lastPage bool) bool {
+	err = conn.DescribeDBSnapshotsPagesWithContext(ctx, input, func(page *rds.DescribeDBSnapshotsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -579,7 +589,7 @@ func sweepSnapshots(region string) error {
 		return fmt.Errorf("error listing RDS DB Snapshots (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping RDS DB Snapshots (%s): %w", region, err)
@@ -589,15 +599,16 @@ func sweepSnapshots(region string) error {
 }
 
 func sweepSubnetGroups(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).RDSConn
+	conn := client.(*conns.AWSClient).RDSConn()
 	input := &rds.DescribeDBSubnetGroupsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeDBSubnetGroupsPages(input, func(page *rds.DescribeDBSubnetGroupsOutput, lastPage bool) bool {
+	err = conn.DescribeDBSubnetGroupsPagesWithContext(ctx, input, func(page *rds.DescribeDBSubnetGroupsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -622,7 +633,7 @@ func sweepSubnetGroups(region string) error {
 		return fmt.Errorf("error listing RDS DB Subnet Groups (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping RDS DB Subnet Groups (%s): %w", region, err)
@@ -632,16 +643,17 @@ func sweepSubnetGroups(region string) error {
 }
 
 func sweepInstanceAutomatedBackups(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).RDSConn
+	conn := client.(*conns.AWSClient).RDSConn()
 	input := &rds.DescribeDBInstanceAutomatedBackupsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 	var backupARNs []string
 
-	err = conn.DescribeDBInstanceAutomatedBackupsPages(input, func(page *rds.DescribeDBInstanceAutomatedBackupsOutput, lastPage bool) bool {
+	err = conn.DescribeDBInstanceAutomatedBackupsPagesWithContext(ctx, input, func(page *rds.DescribeDBInstanceAutomatedBackupsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -669,7 +681,7 @@ func sweepInstanceAutomatedBackups(region string) error {
 		return fmt.Errorf("error listing RDS Instance Automated Backups (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping RDS Instance Automated Backups (%s): %w", region, err)
@@ -678,7 +690,7 @@ func sweepInstanceAutomatedBackups(region string) error {
 	// Since there is no resource for automated backups themselves, they are swept here.
 	for _, v := range backupARNs {
 		log.Printf("[DEBUG] Deleting RDS Instance Automated Backup: %s", v)
-		_, err = conn.DeleteDBInstanceAutomatedBackup(&rds.DeleteDBInstanceAutomatedBackupInput{
+		_, err = conn.DeleteDBInstanceAutomatedBackupWithContext(ctx, &rds.DeleteDBInstanceAutomatedBackupInput{
 			DBInstanceAutomatedBackupsArn: aws.String(v),
 		})
 

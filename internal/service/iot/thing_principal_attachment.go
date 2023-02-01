@@ -1,21 +1,24 @@
 package iot
 
 import (
+	"context"
 	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iot"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func ResourceThingPrincipalAttachment() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceThingPrincipalAttachmentCreate,
-		Read:   resourceThingPrincipalAttachmentRead,
-		Delete: resourceThingPrincipalAttachmentDelete,
+		CreateWithoutTimeout: resourceThingPrincipalAttachmentCreate,
+		ReadWithoutTimeout:   resourceThingPrincipalAttachmentRead,
+		DeleteWithoutTimeout: resourceThingPrincipalAttachmentDelete,
 
 		Schema: map[string]*schema.Schema{
 			"principal": {
@@ -32,27 +35,28 @@ func ResourceThingPrincipalAttachment() *schema.Resource {
 	}
 }
 
-func resourceThingPrincipalAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
+func resourceThingPrincipalAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IoTConn()
 
 	principal := d.Get("principal").(string)
 	thing := d.Get("thing").(string)
 
-	_, err := conn.AttachThingPrincipal(&iot.AttachThingPrincipalInput{
+	_, err := conn.AttachThingPrincipalWithContext(ctx, &iot.AttachThingPrincipalInput{
 		Principal: aws.String(principal),
 		ThingName: aws.String(thing),
 	})
 
 	if err != nil {
-		return fmt.Errorf("error attaching principal %s to thing %s: %s", principal, thing, err)
+		return sdkdiag.AppendErrorf(diags, "attaching principal %s to thing %s: %s", principal, thing, err)
 	}
 
 	d.SetId(fmt.Sprintf("%s|%s", thing, principal))
-	return resourceThingPrincipalAttachmentRead(d, meta)
+	return append(diags, resourceThingPrincipalAttachmentRead(ctx, d, meta)...)
 }
 
-func GetThingPricipalAttachment(conn *iot.IoT, thing, principal string) (bool, error) {
-	out, err := conn.ListThingPrincipals(&iot.ListThingPrincipalsInput{
+func GetThingPricipalAttachment(ctx context.Context, conn *iot.IoT, thing, principal string) (bool, error) {
+	out, err := conn.ListThingPrincipalsWithContext(ctx, &iot.ListThingPrincipalsInput{
 		ThingName: aws.String(thing),
 	})
 	if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
@@ -70,16 +74,17 @@ func GetThingPricipalAttachment(conn *iot.IoT, thing, principal string) (bool, e
 	return found, nil
 }
 
-func resourceThingPrincipalAttachmentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
+func resourceThingPrincipalAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IoTConn()
 
 	principal := d.Get("principal").(string)
 	thing := d.Get("thing").(string)
 
-	found, err := GetThingPricipalAttachment(conn, thing, principal)
+	found, err := GetThingPricipalAttachment(ctx, conn, thing, principal)
 
 	if err != nil {
-		return fmt.Errorf("error listing principals for thing %s: %s", thing, err)
+		return sdkdiag.AppendErrorf(diags, "listing principals for thing %s: %s", thing, err)
 	}
 
 	if !found {
@@ -87,16 +92,17 @@ func resourceThingPrincipalAttachmentRead(d *schema.ResourceData, meta interface
 		d.SetId("")
 	}
 
-	return nil
+	return diags
 }
 
-func resourceThingPrincipalAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
+func resourceThingPrincipalAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IoTConn()
 
 	principal := d.Get("principal").(string)
 	thing := d.Get("thing").(string)
 
-	_, err := conn.DetachThingPrincipal(&iot.DetachThingPrincipalInput{
+	_, err := conn.DetachThingPrincipalWithContext(ctx, &iot.DetachThingPrincipalInput{
 		Principal: aws.String(principal),
 		ThingName: aws.String(thing),
 	})
@@ -104,8 +110,8 @@ func resourceThingPrincipalAttachmentDelete(d *schema.ResourceData, meta interfa
 	if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] IoT Principal %s or Thing %s not found, removing from state", principal, thing)
 	} else if err != nil {
-		return fmt.Errorf("error detaching principal %s from thing %s: %s", principal, thing, err)
+		return sdkdiag.AppendErrorf(diags, "detaching principal %s from thing %s: %s", principal, thing, err)
 	}
 
-	return nil
+	return diags
 }

@@ -1,6 +1,7 @@
 package redshift_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -16,6 +17,7 @@ import (
 )
 
 func TestAccRedshiftHSMConfiguration_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_redshift_hsm_configuration.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -23,12 +25,12 @@ func TestAccRedshiftHSMConfiguration_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, redshift.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckHSMConfigurationDestroy,
+		CheckDestroy:             testAccCheckHSMConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHSMConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckHSMConfigurationExists(resourceName),
+					testAccCheckHSMConfigurationExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "redshift", regexp.MustCompile(`hsmconfiguration:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "hsm_configuration_identifier", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -45,6 +47,7 @@ func TestAccRedshiftHSMConfiguration_basic(t *testing.T) {
 }
 
 func TestAccRedshiftHSMConfiguration_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_redshift_hsm_configuration.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -52,12 +55,12 @@ func TestAccRedshiftHSMConfiguration_tags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, redshift.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckHSMConfigurationDestroy,
+		CheckDestroy:             testAccCheckHSMConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHSMConfigurationConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckHSMConfigurationExists(resourceName),
+					testAccCheckHSMConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -71,7 +74,7 @@ func TestAccRedshiftHSMConfiguration_tags(t *testing.T) {
 			{
 				Config: testAccHSMConfigurationConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckHSMConfigurationExists(resourceName),
+					testAccCheckHSMConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -79,7 +82,7 @@ func TestAccRedshiftHSMConfiguration_tags(t *testing.T) {
 			}, {
 				Config: testAccHSMConfigurationConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckHSMConfigurationExists(resourceName),
+					testAccCheckHSMConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -89,6 +92,7 @@ func TestAccRedshiftHSMConfiguration_tags(t *testing.T) {
 }
 
 func TestAccRedshiftHSMConfiguration_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_redshift_hsm_configuration.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -96,13 +100,13 @@ func TestAccRedshiftHSMConfiguration_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, redshift.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckHSMConfigurationDestroy,
+		CheckDestroy:             testAccCheckHSMConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHSMConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckHSMConfigurationExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfredshift.ResourceHSMConfiguration(), resourceName),
+					testAccCheckHSMConfigurationExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfredshift.ResourceHSMConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -110,31 +114,33 @@ func TestAccRedshiftHSMConfiguration_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckHSMConfigurationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn
+func testAccCheckHSMConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_redshift_hsm_configuration" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_redshift_hsm_configuration" {
+				continue
+			}
+
+			_, err := tfredshift.FindHSMConfigurationByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Redshift Hsm Configuration %s still exists", rs.Primary.ID)
 		}
 
-		_, err := tfredshift.FindHSMConfigurationByID(conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("Redshift Hsm Configuration %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckHSMConfigurationExists(name string) resource.TestCheckFunc {
+func testAccCheckHSMConfigurationExists(ctx context.Context, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -145,9 +151,9 @@ func testAccCheckHSMConfigurationExists(name string) resource.TestCheckFunc {
 			return fmt.Errorf("Redshift Hsm Configuration is not set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn()
 
-		_, err := tfredshift.FindHSMConfigurationByID(conn, rs.Primary.ID)
+		_, err := tfredshift.FindHSMConfigurationByID(ctx, conn, rs.Primary.ID)
 
 		return err
 	}

@@ -1,6 +1,7 @@
 package appsync_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -16,6 +17,7 @@ import (
 )
 
 func testAccType_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var typ appsync.Type
 	resourceName := "aws_appsync_type.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -24,12 +26,12 @@ func testAccType_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, appsync.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTypeDestroy,
+		CheckDestroy:             testAccCheckTypeDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTypeConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTypeResourceExists(resourceName, &typ),
+					testAccCheckTypeResourceExists(ctx, resourceName, &typ),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "appsync", regexp.MustCompile("apis/.+/types/.+")),
 					resource.TestCheckResourceAttrPair(resourceName, "api_id", "aws_appsync_graphql_api.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "format", "SDL"),
@@ -46,6 +48,7 @@ func testAccType_basic(t *testing.T) {
 }
 
 func testAccType_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var typ appsync.Type
 	resourceName := "aws_appsync_type.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -54,13 +57,13 @@ func testAccType_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, appsync.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTypeDestroy,
+		CheckDestroy:             testAccCheckTypeDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTypeConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTypeResourceExists(resourceName, &typ),
-					acctest.CheckResourceDisappears(acctest.Provider, tfappsync.ResourceType(), resourceName),
+					testAccCheckTypeResourceExists(ctx, resourceName, &typ),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappsync.ResourceType(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -68,32 +71,35 @@ func testAccType_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckTypeDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_appsync_type" {
-			continue
-		}
+func testAccCheckTypeDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn()
 
-		apiID, format, name, err := tfappsync.DecodeTypeID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
-		_, err = tfappsync.FindTypeByID(conn, apiID, format, name)
-		if err == nil {
-			if tfresource.NotFound(err) {
-				return nil
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_appsync_type" {
+				continue
 			}
-			return err
-		}
 
+			apiID, format, name, err := tfappsync.DecodeTypeID(rs.Primary.ID)
+			if err != nil {
+				return err
+			}
+
+			_, err = tfappsync.FindTypeByID(ctx, conn, apiID, format, name)
+			if err == nil {
+				if tfresource.NotFound(err) {
+					return nil
+				}
+				return err
+			}
+
+			return nil
+		}
 		return nil
 	}
-	return nil
 }
 
-func testAccCheckTypeResourceExists(resourceName string, typ *appsync.Type) resource.TestCheckFunc {
+func testAccCheckTypeResourceExists(ctx context.Context, resourceName string, typ *appsync.Type) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -105,8 +111,8 @@ func testAccCheckTypeResourceExists(resourceName string, typ *appsync.Type) reso
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn
-		out, err := tfappsync.FindTypeByID(conn, apiID, format, name)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn()
+		out, err := tfappsync.FindTypeByID(ctx, conn, apiID, format, name)
 		if err != nil {
 			return err
 		}
