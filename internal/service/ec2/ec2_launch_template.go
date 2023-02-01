@@ -1776,6 +1776,7 @@ func expandNetworkBandwidthGbpsRequest(tfMap map[string]interface{}) *ec2.Networ
 
 	var min float64
 	if v, ok := tfMap["min"].(float64); ok {
+		min = v
 		apiObject.Min = aws.Float64(float64(v))
 	}
 
@@ -2787,15 +2788,19 @@ func flattenNetworkBandwidthGbps(apiObject *ec2.NetworkBandwidthGbps) map[string
 
 	tfMap := map[string]interface{}{}
 
-	if v := apiObject.Max; v != nil {
-		tfMap["max"] = aws.Float64Value(v)
-	}
+	var min float64
 
 	if v := apiObject.Min; v != nil {
+		min = aws.Float64Value(v)
 		tfMap["min"] = aws.Float64Value(v)
 	}
 
+	if v := apiObject.Max; v != nil && aws.Float64Value(v) >= min {
+		tfMap["max"] = aws.Float64Value(v)
+	}
+
 	return tfMap
+
 }
 
 func flattenNetworkInterfaceCount(apiObject *ec2.NetworkInterfaceCount) map[string]interface{} {
