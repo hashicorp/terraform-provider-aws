@@ -138,7 +138,7 @@ func TestAccProvider_endpoints(t *testing.T) {
 			{
 				Config: testAccProviderConfig_endpoints(endpoints.String()),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEndpoints(t, &provider),
+					testAccCheckEndpoints(&provider),
 				),
 			},
 		},
@@ -737,29 +737,24 @@ func testAccCheckProviderDefaultTags_Tags(t *testing.T, p **schema.Provider, exp
 	}
 }
 
-func testAccCheckEndpoints(t *testing.T, p **schema.Provider) resource.TestCheckFunc { //nolint:unparam
+func testAccCheckEndpoints(p **schema.Provider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if p == nil || *p == nil || (*p).Meta() == nil || (*p).Meta().(*conns.AWSClient) == nil {
 			return fmt.Errorf("provider not initialized")
 		}
 
-		// Match conns.AWSClient struct field names to endpoint configuration names
-		endpointFieldNameF := func(key string) func(string) bool {
-			return func(name string) bool {
-				serviceUpper := ""
-				var err error
-				if serviceUpper, err = names.ProviderNameUpper(key); err != nil {
-					return false
-				}
-
-				return name == fmt.Sprintf("%sConn", serviceUpper)
-			}
-		}
-
 		providerClient := (*p).Meta().(*conns.AWSClient)
 
 		for _, serviceKey := range names.ProviderPackages() {
-			providerClientField := reflect.Indirect(reflect.ValueOf(providerClient)).FieldByNameFunc(endpointFieldNameF(serviceKey))
+			method := reflect.ValueOf(providerClient).MethodByName(serviceConn(serviceKey))
+			if !method.IsValid() {
+				continue
+			}
+			result := method.Call([]reflect.Value{})
+			if l := len(result); l != 1 {
+				return fmt.Errorf("expected 1 result, got %d", l)
+			}
+			providerClientField := result[0]
 
 			if !providerClientField.IsValid() {
 				return fmt.Errorf("unable to match conns.AWSClient struct field name for endpoint name: %s", serviceKey)
