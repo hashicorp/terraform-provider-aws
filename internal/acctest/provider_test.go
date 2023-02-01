@@ -165,12 +165,18 @@ func TestAccProvider_fipsEndpoint(t *testing.T) {
 	})
 }
 
+type unusualEndpoint struct {
+	fieldName string
+	thing     string
+	url       string
+}
+
 func TestAccProvider_unusualEndpoints(t *testing.T) {
 	var provider *schema.Provider
 
-	unusual1 := []string{"es", "elasticsearch", "http://notarealendpoint"}
-	unusual2 := []string{"databasemigration", "dms", "http://alsonotarealendpoint"}
-	unusual3 := []string{"lexmodelbuildingservice", "lexmodels", "http://kingofspain"}
+	unusual1 := unusualEndpoint{"es", "elasticsearch", "http://notarealendpoint"}
+	unusual2 := unusualEndpoint{"databasemigration", "dms", "http://alsonotarealendpoint"}
+	unusual3 := unusualEndpoint{"lexmodelbuildingservice", "lexmodels", "http://kingofspain"}
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -776,7 +782,7 @@ func testAccCheckEndpoints(p **schema.Provider) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckUnusualEndpoints(p **schema.Provider, unusual []string) resource.TestCheckFunc {
+func testAccCheckUnusualEndpoints(p **schema.Provider, unusual unusualEndpoint) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if p == nil || *p == nil || (*p).Meta() == nil || (*p).Meta().(*conns.AWSClient) == nil {
 			return fmt.Errorf("provider not initialized")
@@ -784,21 +790,21 @@ func testAccCheckUnusualEndpoints(p **schema.Provider, unusual []string) resourc
 
 		providerClient := (*p).Meta().(*conns.AWSClient)
 
-		result := reflect.ValueOf(providerClient).MethodByName(serviceConn(unusual[1])).Call([]reflect.Value{})
+		result := reflect.ValueOf(providerClient).MethodByName(serviceConn(unusual.thing)).Call([]reflect.Value{})
 		if l := len(result); l != 1 {
 			return fmt.Errorf("expected 1 result, got %d", l)
 		}
 		providerClientField := result[0]
 
 		if !providerClientField.IsValid() {
-			return fmt.Errorf("unable to match conns.AWSClient struct field name for endpoint name: %s", unusual[1])
+			return fmt.Errorf("unable to match conns.AWSClient struct field name for endpoint name: %s", unusual.thing)
 		}
 
 		actualEndpoint := reflect.Indirect(reflect.Indirect(providerClientField).FieldByName("Config").FieldByName("Endpoint")).String()
-		expectedEndpoint := unusual[2]
+		expectedEndpoint := unusual.url
 
 		if actualEndpoint != expectedEndpoint {
-			return fmt.Errorf("expected endpoint (%s) value (%s), got: %s", unusual[1], expectedEndpoint, actualEndpoint)
+			return fmt.Errorf("expected endpoint (%s) value (%s), got: %s", unusual.thing, expectedEndpoint, actualEndpoint)
 		}
 
 		return nil
@@ -871,7 +877,7 @@ resource "aws_s3_bucket_acl" "test" {
 `, endpoint, rName))
 }
 
-func testAccProviderConfig_unusualEndpoints(unusual1, unusual2, unusual3 []string) string {
+func testAccProviderConfig_unusualEndpoints(unusual1, unusual2, unusual3 unusualEndpoint) string {
 	//lintignore:AT004
 	return acctest.ConfigCompose(testAccProviderConfig_base, fmt.Sprintf(`
 provider "aws" {
@@ -886,7 +892,7 @@ provider "aws" {
     %[5]s = %[6]q
   }
 }
-`, unusual1[0], unusual1[2], unusual2[0], unusual2[2], unusual3[0], unusual3[2]))
+`, unusual1.fieldName, unusual1.url, unusual2.fieldName, unusual2.url, unusual3.fieldName, unusual3.url))
 }
 
 func testAccProviderConfig_ignoreTagsKeys0() string {
