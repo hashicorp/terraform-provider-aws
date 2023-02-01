@@ -681,7 +681,7 @@ func ResourceEndpoint() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.All(
-			requireEnginerSettingsCustomizeDiff,
+			requireEngineSettingsCustomizeDiff,
 			validateKMSKeyEngineCustomizeDiff,
 			validateS3SSEKMSKeyCustomizeDiff,
 			verify.SetTagsDiff,
@@ -1318,7 +1318,7 @@ func resourceEndpointDelete(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func requireEnginerSettingsCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+func requireEngineSettingsCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 	switch engineName := diff.Get("engine_name").(string); engineName {
 	case engineNameElasticsearch, engineNameOpenSearch:
 		if v, ok := diff.GetOk("elasticsearch_settings"); !ok || len(v.([]interface{})) == 0 || v.([]interface{})[0] == nil {

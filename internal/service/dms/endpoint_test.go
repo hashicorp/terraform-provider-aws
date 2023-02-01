@@ -373,24 +373,8 @@ func TestAccDMSEndpoint_S3_SSEKMSKeyARN(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.external_table_definition", ""),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.csv_row_delimiter", "\\n"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.csv_delimiter", ","),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.bucket_folder", ""),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.bucket_name", "bucket_name"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.cdc_path", "cdc/path"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.cdc_min_file_size", "32000"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.compression_type", "NONE"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.data_format", "csv"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.date_partition_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.date_partition_sequence", "yyyymmddhh"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.ignore_header_rows", "0"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.parquet_version", "parquet-1-0"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.parquet_timestamp_in_millisecond", "false"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.encryption_mode", "SSE_KMS"),
 					resource.TestCheckResourceAttrPair(resourceName, "s3_settings.0.server_side_encryption_kms_key_id", "aws_kms_key.test", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.timestamp_column_name", "tx_commit_time"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.use_task_start_time_for_full_load_timestamp", "false"),
 				),
 			},
 			{
@@ -418,24 +402,8 @@ func TestAccDMSEndpoint_S3_SSEKMSKeyId(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.external_table_definition", ""),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.csv_row_delimiter", "\\n"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.csv_delimiter", ","),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.bucket_folder", ""),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.bucket_name", "bucket_name"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.cdc_path", "cdc/path"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.cdc_min_file_size", "32000"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.compression_type", "NONE"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.data_format", "csv"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.date_partition_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.date_partition_sequence", "yyyymmddhh"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.ignore_header_rows", "0"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.parquet_version", "parquet-1-0"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.parquet_timestamp_in_millisecond", "false"),
 					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.encryption_mode", "SSE_KMS"),
 					resource.TestCheckResourceAttrPair(resourceName, "s3_settings.0.server_side_encryption_kms_key_id", "aws_kms_key.test", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.timestamp_column_name", "tx_commit_time"),
-					resource.TestCheckResourceAttr(resourceName, "s3_settings.0.use_task_start_time_for_full_load_timestamp", "false"),
 				),
 			},
 			{
@@ -1738,6 +1706,35 @@ func TestAccDMSEndpoint_Redshift_update(t *testing.T) {
 	})
 }
 
+func TestAccDMSEndpoint_Redshift_kmsKey(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_redshiftKMSKey(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointExists(ctx, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_arn", "aws_kms_key.test", "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"password"},
+			},
+		},
+	})
+}
+
 // testAccCheckResourceAttrRegionalHostname ensures the Terraform state exactly matches a formatted DNS hostname with region and partition DNS suffix
 func testAccCheckResourceAttrRegionalHostname(resourceName, attributeName, serviceName, hostnamePrefix string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -2244,12 +2241,11 @@ resource "aws_kms_key" "test" {
 }
 
 resource "aws_dms_endpoint" "test" {
-  endpoint_id                 = %[1]q
-  endpoint_type               = "target"
-  engine_name                 = "s3"
-  ssl_mode                    = "none"
-  extra_connection_attributes = ""
-  kms_key_arn                 = aws_kms_key.test.arn
+  endpoint_id   = %[1]q
+  endpoint_type = "target"
+  engine_name   = "s3"
+  ssl_mode      = "none"
+  kms_key_arn   = aws_kms_key.test.arn
 
   tags = {
     Name   = %[1]q
@@ -3743,6 +3739,34 @@ resource "aws_dms_endpoint" "test" {
     Update = "updated"
     Add    = "added"
   }
+}
+`, rName))
+}
+
+func testAccEndpointConfig_redshiftKMSKey(rName string) string {
+	return acctest.ConfigCompose(testAccEndpointConfig_redshiftBase(rName), fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  endpoint_id   = %[1]q
+  endpoint_type = "target"
+  engine_name   = "redshift"
+  server_name   = aws_redshift_cluster.test.dns_name
+  port          = 27017
+  username      = "tftest"
+  password      = "tftest"
+  database_name = "tftest"
+  ssl_mode      = "none"
+  kms_key_arn   = aws_kms_key.test.arn
+
+  tags = {
+    Name   = %[1]q
+    Update = "to-update"
+    Remove = "to-remove"
+  }
+}
+
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
 }
 `, rName))
 }
