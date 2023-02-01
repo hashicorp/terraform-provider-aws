@@ -521,24 +521,28 @@ func (r *resourceCluster) Schema(ctx context.Context, request resource.SchemaReq
 					Attributes: map[string]schema.Attribute{
 						"auto_pause": schema.BoolAttribute{
 							Optional: true,
+							Computed: true,
 							PlanModifiers: []planmodifier.Bool{
 								fwboolplanmodifier.DefaultValue(true),
 							},
 						},
 						"max_capacity": schema.Int64Attribute{
 							Optional: true,
+							Computed: true,
 							PlanModifiers: []planmodifier.Int64{
 								fwint64planmodifier.DefaultValue(clusterScalingConfiguration_DefaultMaxCapacity),
 							},
 						},
 						"min_capacity": schema.Int64Attribute{
 							Optional: true,
+							Computed: true,
 							PlanModifiers: []planmodifier.Int64{
 								fwint64planmodifier.DefaultValue(clusterScalingConfiguration_DefaultMinCapacity),
 							},
 						},
 						"seconds_until_auto_pause": schema.Int64Attribute{
 							Optional: true,
+							Computed: true,
 							PlanModifiers: []planmodifier.Int64{
 								fwint64planmodifier.DefaultValue(300),
 							},
@@ -548,6 +552,7 @@ func (r *resourceCluster) Schema(ctx context.Context, request resource.SchemaReq
 						},
 						"timeout_action": schema.StringAttribute{
 							Optional: true,
+							Computed: true,
 							PlanModifiers: []planmodifier.String{
 								fwstringplanmodifier.DefaultValue(TimeoutActionRollbackCapacityChange),
 							},
@@ -737,7 +742,7 @@ func (r *resourceCluster) Create(ctx context.Context, request resource.CreateReq
 		}
 	} else if !data.S3Import.IsNull() && len(data.S3Import.Elements()) > 0 {
 		var s3Import []s3Import
-		response.Diagnostics.Append(data.ScalingConfiguration.ElementsAs(ctx, &s3Import, false)...)
+		response.Diagnostics.Append(data.S3Import.ElementsAs(ctx, &s3Import, false)...)
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -854,7 +859,7 @@ func (r *resourceCluster) Create(ctx context.Context, request resource.CreateReq
 		}
 	} else if !data.RestoreToPointInTime.IsNull() && len(data.RestoreToPointInTime.Elements()) > 0 {
 		var restoreToPointInTime []restoreToPointInTime
-		response.Diagnostics.Append(data.ScalingConfiguration.ElementsAs(ctx, &restoreToPointInTime, false)...)
+		response.Diagnostics.Append(data.RestoreToPointInTime.ElementsAs(ctx, &restoreToPointInTime, false)...)
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -1019,7 +1024,11 @@ func (r *resourceCluster) Create(ctx context.Context, request resource.CreateReq
 
 		if !data.GlobalClusterIdentifier.IsUnknown() && !data.GlobalClusterIdentifier.IsNull() {
 			input.GlobalClusterIdentifier = aws.String(data.GlobalClusterIdentifier.ValueString())
-			input.EnableGlobalWriteForwarding = aws.Bool(data.EnableGlobalWriteForwarding.ValueBool())
+
+			if data.EnableGlobalWriteForwarding.ValueBool() {
+				input.EnableGlobalWriteForwarding = aws.Bool(data.EnableGlobalWriteForwarding.ValueBool())
+			}
+
 		}
 
 		if !data.IamDatabaseAuthenticationEnabled.IsUnknown() && !data.IamDatabaseAuthenticationEnabled.IsNull() {
@@ -1403,6 +1412,22 @@ func (r *resourceCluster) Update(ctx context.Context, request resource.UpdateReq
 
 	// can only be removed.
 	if !plan.GlobalClusterIdentifier.Equal(state.GlobalClusterIdentifier) {
+		if state.GlobalClusterIdentifier.IsNull() || state.GlobalClusterIdentifier.ValueString() == "" {
+			response.Diagnostics.AddError(
+				"existing RDS Clusters cannot be added to an existing RDS Global Cluster",
+				"existing RDS Clusters cannot be added to an existing RDS Global Cluster",
+			)
+			return
+		}
+
+		if !plan.GlobalClusterIdentifier.IsNull() || plan.GlobalClusterIdentifier.ValueString() != "" {
+			response.Diagnostics.AddError(
+				"existing RDS Clusters cannot be migrated between existing RDS Global Clusters",
+				"existing RDS Clusters cannot be migrated between existing RDS Global Clusters",
+			)
+			return
+		}
+
 		in := &rds.RemoveFromGlobalClusterInput{
 			DbClusterIdentifier:     aws.String(state.ARN.ValueString()),
 			GlobalClusterIdentifier: aws.String(state.GlobalClusterIdentifier.ValueString()),
@@ -1508,7 +1533,11 @@ func (r *resourceCluster) Delete(ctx context.Context, request resource.DeleteReq
 		SkipFinalSnapshot:   aws.Bool(data.SkipFinalSnapshot.ValueBool()),
 	}
 
-	if !data.SkipFinalSnapshot.ValueBool() {
+	if data.SkipFinalSnapshot.IsNull() {
+		input.SkipFinalSnapshot = aws.Bool(true)
+	}
+
+	if !data.SkipFinalSnapshot.IsNull() && !data.SkipFinalSnapshot.ValueBool() {
 		if !data.FinalSnapshotIdentifier.IsNull() {
 			input.FinalDBSnapshotIdentifier = aws.String(data.FinalSnapshotIdentifier.ValueString())
 		} else {
@@ -1531,7 +1560,7 @@ func (r *resourceCluster) Delete(ctx context.Context, request resource.DeleteReq
 		},
 		func(err error) (bool, error) {
 			if tfawserr.ErrMessageContains(err, "InvalidParameterCombination", "disable deletion pro") {
-				if (data.DeletionProtection.IsNull() || !data.DeletionProtection.ValueBool()) && data.ApplyImmediately.ValueBool() {
+				if (data.DeletionProtection.IsNull() || !data.DeletionProtection.ValueBool()) && (!data.ApplyImmediately.IsNull() || data.ApplyImmediately.ValueBool()) {
 					_, err := tfresource.RetryWhen(ctx, deleteTimeout,
 						func() (interface{}, error) {
 							return conn.ModifyDBClusterWithContext(ctx, &rds.ModifyDBClusterInput{
@@ -1649,33 +1678,33 @@ func (r *resourceCluster) ModifyPlan(ctx context.Context, request resource.Modif
 		)
 	}
 
-	var planGlobalClusterIdentifier, stateGlobalClusterIdentifier types.String
-
-	response.Diagnostics.Append(request.Plan.GetAttribute(ctx, path.Root("global_cluster_identifier"), &planGlobalClusterIdentifier)...)
-	response.Diagnostics.Append(request.State.GetAttribute(ctx, path.Root("global_cluster_identifier"), &stateGlobalClusterIdentifier)...)
-
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	if !stateGlobalClusterIdentifier.IsUnknown() && !planGlobalClusterIdentifier.IsUnknown() {
-		if stateGlobalClusterIdentifier.ValueString() == "" && planGlobalClusterIdentifier.ValueString() != "" {
-			response.Diagnostics.AddAttributeError(
-				path.Root("global_cluster_identifier"),
-				"Cluster exists",
-				"existing RDS Clusters cannot be added to an existing RDS Global Cluster",
-			)
-			return
-		}
-		if !stateGlobalClusterIdentifier.Equal(planGlobalClusterIdentifier) || planGlobalClusterIdentifier.ValueString() != "" {
-			response.Diagnostics.AddAttributeError(
-				path.Root("global_cluster_identifier"),
-				"Cluster exists",
-				"existing RDS Clusters cannot be migrated between existing RDS Global Clusters",
-			)
-			return
-		}
-	}
+	//var planGlobalClusterIdentifier, stateGlobalClusterIdentifier types.String
+	//
+	//response.Diagnostics.Append(request.Plan.GetAttribute(ctx, path.Root("global_cluster_identifier"), &planGlobalClusterIdentifier)...)
+	//response.Diagnostics.Append(request.State.GetAttribute(ctx, path.Root("global_cluster_identifier"), &stateGlobalClusterIdentifier)...)
+	//
+	//if response.Diagnostics.HasError() {
+	//	return
+	//}
+	//
+	//if (!stateGlobalClusterIdentifier.IsUnknown() && !stateGlobalClusterIdentifier.IsNull()) && (!planGlobalClusterIdentifier.IsUnknown() && !planGlobalClusterIdentifier.IsNull()) {
+	//	if stateGlobalClusterIdentifier.ValueString() == "" && planGlobalClusterIdentifier.ValueString() != "" {
+	//		response.Diagnostics.AddAttributeError(
+	//			path.Root("global_cluster_identifier"),
+	//			"existing RDS Clusters cannot be added to an existing RDS Global Cluster",
+	//			"existing RDS Clusters cannot be added to an existing RDS Global Cluster",
+	//		)
+	//		return
+	//	}
+	//	if !stateGlobalClusterIdentifier.Equal(planGlobalClusterIdentifier) {
+	//		response.Diagnostics.AddAttributeError(
+	//			path.Root("global_cluster_identifier"),
+	//			"existing RDS Clusters cannot be migrated between existing RDS Global Clusters",
+	//			"existing RDS Clusters cannot be migrated between existing RDS Global Clusters",
+	//		)
+	//		return
+	//	}
+	//}
 
 	r.SetTagsAll(ctx, request, response)
 }
