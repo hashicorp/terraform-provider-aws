@@ -1848,14 +1848,14 @@ EOF
 func testAccEndpointConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_dms_endpoint" "test" {
-  database_name               = "tf-test-dms-db"
-  endpoint_id                 = %[1]q
-  endpoint_type               = "source"
-  engine_name                 = "aurora"
-  password                    = "tftest"
-  port                        = 3306
-  server_name                 = "tftest"
-  ssl_mode                    = "none"
+  database_name = "tf-test-dms-db"
+  endpoint_id   = %[1]q
+  endpoint_type = "source"
+  engine_name   = "aurora"
+  password      = "tftest"
+  port          = 3306
+  server_name   = "tftest"
+  ssl_mode      = "none"
 
   tags = {
     Name   = %[1]q
