@@ -181,7 +181,9 @@ func TestAccProvider_unusualEndpoints(t *testing.T) {
 			{
 				Config: testAccProviderConfig_unusualEndpoints(unusual1, unusual2, unusual3),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUnusualEndpoints(t, &provider, unusual1, unusual2, unusual3),
+					testAccCheckUnusualEndpoints(&provider, unusual1),
+					testAccCheckUnusualEndpoints(&provider, unusual2),
+					testAccCheckUnusualEndpoints(&provider, unusual3),
 				),
 			},
 		},
@@ -779,73 +781,43 @@ func testAccCheckEndpoints(t *testing.T, p **schema.Provider) resource.TestCheck
 	}
 }
 
-func testAccCheckUnusualEndpoints(t *testing.T, p **schema.Provider, unusual1, unusual2, unusual3 []string) resource.TestCheckFunc { //nolint:unparam
+func testAccCheckUnusualEndpoints(p **schema.Provider, unusual []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if p == nil || *p == nil || (*p).Meta() == nil || (*p).Meta().(*conns.AWSClient) == nil {
 			return fmt.Errorf("provider not initialized")
 		}
 
-		// Match conns.AWSClient struct field names to endpoint configuration names
-		endpointFieldNameF := func(key string) func(string) bool {
-			return func(name string) bool {
-				serviceUpper := ""
-				var err error
-				if serviceUpper, err = names.ProviderNameUpper(key); err != nil {
-					return false
-				}
-
-				// exception to dropping "service" because Config collides with various other "Config"s
-				if name == "ConfigServiceConn" && fmt.Sprintf("%sConn", serviceUpper) == "ConfigServiceConn" {
-					return true
-				}
-
-				return name == fmt.Sprintf("%sConn", serviceUpper)
-			}
-		}
-
 		providerClient := (*p).Meta().(*conns.AWSClient)
 
-		providerClientField := reflect.Indirect(reflect.ValueOf(providerClient)).FieldByNameFunc(endpointFieldNameF(unusual1[1]))
+		result := reflect.ValueOf(providerClient).MethodByName(serviceConn(unusual[1])).Call([]reflect.Value{})
+		if l := len(result); l != 1 {
+			return fmt.Errorf("expected 1 result, got %d", l)
+		}
+		providerClientField := result[0]
 
 		if !providerClientField.IsValid() {
-			return fmt.Errorf("unable to match conns.AWSClient struct field name for endpoint name: %s", unusual1[1])
+			return fmt.Errorf("unable to match conns.AWSClient struct field name for endpoint name: %s", unusual[1])
 		}
 
 		actualEndpoint := reflect.Indirect(reflect.Indirect(providerClientField).FieldByName("Config").FieldByName("Endpoint")).String()
-		expectedEndpoint := unusual1[2]
+		expectedEndpoint := unusual[2]
 
 		if actualEndpoint != expectedEndpoint {
-			return fmt.Errorf("expected endpoint (%s) value (%s), got: %s", unusual1[1], expectedEndpoint, actualEndpoint)
-		}
-
-		providerClientField = reflect.Indirect(reflect.ValueOf(providerClient)).FieldByNameFunc(endpointFieldNameF(unusual2[1]))
-
-		if !providerClientField.IsValid() {
-			return fmt.Errorf("unable to match conns.AWSClient struct field name for endpoint name: %s", unusual2[1])
-		}
-
-		actualEndpoint = reflect.Indirect(reflect.Indirect(providerClientField).FieldByName("Config").FieldByName("Endpoint")).String()
-		expectedEndpoint = unusual2[2]
-
-		if actualEndpoint != expectedEndpoint {
-			return fmt.Errorf("expected endpoint (%s) value (%s), got: %s", unusual2[1], expectedEndpoint, actualEndpoint)
-		}
-
-		providerClientField = reflect.Indirect(reflect.ValueOf(providerClient)).FieldByNameFunc(endpointFieldNameF(unusual3[1]))
-
-		if !providerClientField.IsValid() {
-			return fmt.Errorf("unable to match conns.AWSClient struct field name for endpoint name: %s", unusual3[1])
-		}
-
-		actualEndpoint = reflect.Indirect(reflect.Indirect(providerClientField).FieldByName("Config").FieldByName("Endpoint")).String()
-		expectedEndpoint = unusual3[2]
-
-		if actualEndpoint != expectedEndpoint {
-			return fmt.Errorf("expected endpoint (%s) value (%s), got: %s", unusual3[1], expectedEndpoint, actualEndpoint)
+			return fmt.Errorf("expected endpoint (%s) value (%s), got: %s", unusual[1], expectedEndpoint, actualEndpoint)
 		}
 
 		return nil
 	}
+}
+
+func serviceConn(key string) string {
+	serviceUpper := ""
+	var err error
+	if serviceUpper, err = names.ProviderNameUpper(key); err != nil {
+		return ""
+	}
+
+	return fmt.Sprintf("%sConn", serviceUpper)
 }
 
 const testAccProviderConfig_assumeRoleEmpty = `
