@@ -100,6 +100,7 @@ func (r *resourceCluster) Schema(ctx context.Context, request resource.SchemaReq
 				Computed:    true,
 				PlanModifiers: []planmodifier.Set{
 					setplanmodifier.RequiresReplace(),
+					setplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"backtrack_window": schema.Int64Attribute{
@@ -170,8 +171,8 @@ func (r *resourceCluster) Schema(ctx context.Context, request resource.SchemaReq
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
 					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			"db_cluster_instance_class": schema.StringAttribute{
@@ -333,6 +334,12 @@ func (r *resourceCluster) Schema(ctx context.Context, request resource.SchemaReq
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"master_username_actual": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
@@ -1211,6 +1218,7 @@ func (r *resourceCluster) Read(ctx context.Context, request resource.ReadRequest
 	}
 
 	response.Diagnostics.Append(data.refreshFromOutput(ctx, r.Meta(), out)...)
+	data.MasterUsername = flex.StringToFrameworkLegacy(ctx, out.MasterUsername) // overwrite master username because it may have changed
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
@@ -1560,7 +1568,7 @@ func (r *resourceCluster) Delete(ctx context.Context, request resource.DeleteReq
 		},
 		func(err error) (bool, error) {
 			if tfawserr.ErrMessageContains(err, "InvalidParameterCombination", "disable deletion pro") {
-				if (data.DeletionProtection.IsNull() || !data.DeletionProtection.ValueBool()) && (!data.ApplyImmediately.IsNull() || data.ApplyImmediately.ValueBool()) {
+				if (data.DeletionProtection.IsNull() || !data.DeletionProtection.ValueBool()) && (data.ApplyImmediately.IsNull() || data.ApplyImmediately.ValueBool()) {
 					_, err := tfresource.RetryWhen(ctx, deleteTimeout,
 						func() (interface{}, error) {
 							return conn.ModifyDBClusterWithContext(ctx, &rds.ModifyDBClusterInput{
@@ -1678,34 +1686,6 @@ func (r *resourceCluster) ModifyPlan(ctx context.Context, request resource.Modif
 		)
 	}
 
-	//var planGlobalClusterIdentifier, stateGlobalClusterIdentifier types.String
-	//
-	//response.Diagnostics.Append(request.Plan.GetAttribute(ctx, path.Root("global_cluster_identifier"), &planGlobalClusterIdentifier)...)
-	//response.Diagnostics.Append(request.State.GetAttribute(ctx, path.Root("global_cluster_identifier"), &stateGlobalClusterIdentifier)...)
-	//
-	//if response.Diagnostics.HasError() {
-	//	return
-	//}
-	//
-	//if (!stateGlobalClusterIdentifier.IsUnknown() && !stateGlobalClusterIdentifier.IsNull()) && (!planGlobalClusterIdentifier.IsUnknown() && !planGlobalClusterIdentifier.IsNull()) {
-	//	if stateGlobalClusterIdentifier.ValueString() == "" && planGlobalClusterIdentifier.ValueString() != "" {
-	//		response.Diagnostics.AddAttributeError(
-	//			path.Root("global_cluster_identifier"),
-	//			"existing RDS Clusters cannot be added to an existing RDS Global Cluster",
-	//			"existing RDS Clusters cannot be added to an existing RDS Global Cluster",
-	//		)
-	//		return
-	//	}
-	//	if !stateGlobalClusterIdentifier.Equal(planGlobalClusterIdentifier) {
-	//		response.Diagnostics.AddAttributeError(
-	//			path.Root("global_cluster_identifier"),
-	//			"existing RDS Clusters cannot be migrated between existing RDS Global Clusters",
-	//			"existing RDS Clusters cannot be migrated between existing RDS Global Clusters",
-	//		)
-	//		return
-	//	}
-	//}
-
 	r.SetTagsAll(ctx, request, response)
 }
 
@@ -1801,6 +1781,7 @@ type resourceClusterData struct {
 	KmsKeyID                         types.String `tfsdk:"kms_key_id"`
 	MasterPassword                   types.String `tfsdk:"master_password"`
 	MasterUsername                   types.String `tfsdk:"master_username"`
+	MasterUsernameActual             types.String `tfsdk:"master_username_actual"`
 	NetworkType                      types.String `tfsdk:"network_type"`
 	OptionGroupName                  types.String `tfsdk:"option_group_name"`
 	Port                             types.Int64  `tfsdk:"port"`
@@ -1895,13 +1876,13 @@ func (r *resourceClusterData) refreshFromOutput(ctx context.Context, meta *conns
 	if out.DatabaseName != nil {
 		r.DatabaseName = flex.StringToFrameworkLegacy(ctx, out.DatabaseName)
 	} else {
-		r.DatabaseName = types.StringNull()
+		r.DatabaseName = types.StringValue("")
 	}
 	r.DbClusterInstanceClass = flex.StringToFrameworkLegacy(ctx, out.DBClusterInstanceClass)
 	r.DbClusterParameterGroupName = flex.StringToFrameworkLegacy(ctx, out.DBClusterParameterGroup)
 	r.DbSubnetGroupName = flex.StringToFrameworkLegacy(ctx, out.DBSubnetGroup)
 	r.DeletionProtection = flex.BoolToFramework(ctx, out.DeletionProtection)
-	r.EnabledCloudwatchLogsExports = flex.FlattenFrameworkStringValueSet(ctx, aws.StringValueSlice(out.EnabledCloudwatchLogsExports))
+	r.EnabledCloudwatchLogsExports = flex.FlattenFrameworkStringValueSetLegacy(ctx, aws.StringValueSlice(out.EnabledCloudwatchLogsExports))
 	r.EnableHttpEndpoint = flex.BoolToFrameworkLegacy(ctx, out.HttpEndpointEnabled)
 	r.Endpoint = flex.StringToFrameworkLegacy(ctx, out.Endpoint)
 	r.Engine = flex.StringToFrameworkLegacy(ctx, out.Engine)
@@ -1936,7 +1917,15 @@ func (r *resourceClusterData) refreshFromOutput(ctx context.Context, meta *conns
 	r.IamRoles = flex.FlattenFrameworkStringValueSetLegacy(ctx, iamRoleARNs)
 	r.Iops = flex.Int64ToFrameworkLegacy(ctx, out.Iops)
 	r.KmsKeyID = flex.StringToFrameworkLegacy(ctx, out.KmsKeyId)
-	r.MasterUsername = flex.StringToFrameworkLegacy(ctx, out.MasterUsername)
+
+	if !r.SnapshotIdentifier.IsNull() && (r.MasterUsername.ValueString() != aws.StringValue(out.MasterUsername)) {
+		r.MasterUsername = flex.StringValueToFrameworkLegacy(ctx, r.MasterUsername.ValueString())
+	} else {
+		r.MasterUsername = flex.StringToFrameworkLegacy(ctx, out.MasterUsername)
+	}
+	// always set MasterUsernameActual
+	r.MasterUsernameActual = flex.StringToFrameworkLegacy(ctx, out.MasterUsername)
+
 	r.NetworkType = flex.StringToFrameworkLegacy(ctx, out.NetworkType)
 	r.Port = flex.Int64ToFrameworkLegacy(ctx, out.Port)
 	r.PreferredBackupWindow = flex.StringToFrameworkLegacy(ctx, out.PreferredBackupWindow)
