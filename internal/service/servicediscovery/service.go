@@ -27,7 +27,7 @@ func ResourceService() *schema.Resource {
 		DeleteWithoutTimeout: resourceServiceDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -134,6 +134,13 @@ func ResourceService() *schema.Resource {
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
+			"type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(servicediscovery.ServiceTypeOption_Values(), false),
+			},
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -171,11 +178,14 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.NamespaceId = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("type"); ok {
+		input.Type = aws.String(v.(string))
+	}
+
 	if len(tags) > 0 {
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	log.Printf("[DEBUG] Creating Service Discovery Service: %s", input)
 	output, err := conn.CreateServiceWithContext(ctx, input)
 
 	if err != nil {
@@ -201,7 +211,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if err != nil {
-		return diag.Errorf("error reading Service Discovery Service (%s): %s", d.Id(), err)
+		return diag.Errorf("reading Service Discovery Service (%s): %s", d.Id(), err)
 	}
 
 	arn := aws.StringValue(service.Arn)
@@ -230,8 +240,9 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	d.Set("name", service.Name)
 	d.Set("namespace_id", service.NamespaceId)
+	d.Set("type", service.Type)
 
-	tags, err := ListTagsWithContext(ctx, conn, arn)
+	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
 		return diag.Errorf("listing tags for Service Discovery Service (%s): %s", arn, err)
@@ -286,7 +297,7 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTagsWithContext(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.Errorf("updating Service Discovery Service (%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -298,11 +309,10 @@ func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn()
 
 	if d.Get("force_destroy").(bool) {
+		var deletionErrs *multierror.Error
 		input := &servicediscovery.ListInstancesInput{
 			ServiceId: aws.String(d.Id()),
 		}
-
-		var deletionErrs *multierror.Error
 
 		err := conn.ListInstancesPagesWithContext(ctx, input, func(page *servicediscovery.ListInstancesOutput, lastPage bool) bool {
 			if page == nil {

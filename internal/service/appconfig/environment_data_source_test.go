@@ -12,6 +12,7 @@ import (
 )
 
 func TestAccAppConfigEnvironmentDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	appName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	appResourceName := "aws_appconfig_application.test"
@@ -24,7 +25,7 @@ func TestAccAppConfigEnvironmentDataSource_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, appconfig.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEnvironmentDestroy,
+		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnvironmentDataSourceConfig_basic(appName, rName),

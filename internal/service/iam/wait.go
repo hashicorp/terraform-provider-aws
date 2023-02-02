@@ -1,6 +1,7 @@
 package iam
 
 import (
+	"context"
 	"strings"
 	"time"
 
@@ -24,17 +25,17 @@ const (
 	RoleStatusNotFound      = "notfound"
 )
 
-func waitRoleARNIsNotUniqueID(conn *iam.IAM, id string, role *iam.Role) (*iam.Role, error) {
+func waitRoleARNIsNotUniqueID(ctx context.Context, conn *iam.IAM, id string, role *iam.Role) (*iam.Role, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:                   []string{RoleStatusARNIsUniqueID, RoleStatusNotFound},
 		Target:                    []string{RoleStatusARNIsARN},
-		Refresh:                   statusRoleCreate(conn, id, role),
+		Refresh:                   statusRoleCreate(ctx, conn, id, role),
 		Timeout:                   propagationTimeout,
 		NotFoundChecks:            10,
 		ContinuousTargetOccurence: 5,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*iam.Role); ok {
 		return output, err
@@ -43,13 +44,13 @@ func waitRoleARNIsNotUniqueID(conn *iam.IAM, id string, role *iam.Role) (*iam.Ro
 	return nil, err
 }
 
-func statusRoleCreate(conn *iam.IAM, id string, role *iam.Role) resource.StateRefreshFunc {
+func statusRoleCreate(ctx context.Context, conn *iam.IAM, id string, role *iam.Role) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		if strings.HasPrefix(aws.StringValue(role.Arn), "arn:") {
 			return role, RoleStatusARNIsARN, nil
 		}
 
-		output, err := FindRoleByName(conn, id)
+		output, err := FindRoleByName(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, RoleStatusNotFound, nil
@@ -67,16 +68,16 @@ func statusRoleCreate(conn *iam.IAM, id string, role *iam.Role) resource.StateRe
 	}
 }
 
-func waitDeleteServiceLinkedRole(conn *iam.IAM, deletionTaskID string) error {
+func waitDeleteServiceLinkedRole(ctx context.Context, conn *iam.IAM, deletionTaskID string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{iam.DeletionTaskStatusTypeInProgress, iam.DeletionTaskStatusTypeNotStarted},
 		Target:  []string{iam.DeletionTaskStatusTypeSucceeded},
-		Refresh: statusDeleteServiceLinkedRole(conn, deletionTaskID),
+		Refresh: statusDeleteServiceLinkedRole(ctx, conn, deletionTaskID),
 		Timeout: 5 * time.Minute,
 		Delay:   10 * time.Second,
 	}
 
-	_, err := stateConf.WaitForState()
+	_, err := stateConf.WaitForStateContext(ctx)
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 			return nil
@@ -87,13 +88,13 @@ func waitDeleteServiceLinkedRole(conn *iam.IAM, deletionTaskID string) error {
 	return nil
 }
 
-func statusDeleteServiceLinkedRole(conn *iam.IAM, deletionTaskId string) resource.StateRefreshFunc {
+func statusDeleteServiceLinkedRole(ctx context.Context, conn *iam.IAM, deletionTaskId string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		params := &iam.GetServiceLinkedRoleDeletionStatusInput{
 			DeletionTaskId: aws.String(deletionTaskId),
 		}
 
-		resp, err := conn.GetServiceLinkedRoleDeletionStatus(params)
+		resp, err := conn.GetServiceLinkedRoleDeletionStatusWithContext(ctx, params)
 		if err != nil {
 			return nil, "", err
 		}

@@ -33,6 +33,7 @@ func init() {
 }
 
 func sweepClusters(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -41,7 +42,7 @@ func sweepClusters(region string) error {
 	conn := client.(*conns.AWSClient).KafkaConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListClustersV2Pages(input, func(page *kafka.ListClustersV2Output, lastPage bool) bool {
+	err = conn.ListClustersV2PagesWithContext(ctx, input, func(page *kafka.ListClustersV2Output, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -66,7 +67,7 @@ func sweepClusters(region string) error {
 		return fmt.Errorf("error listing MSK Clusters (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping MSK Clusters (%s): %w", region, err)
@@ -76,15 +77,17 @@ func sweepClusters(region string) error {
 }
 
 func sweepConfigurations(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	input := &kafka.ListConfigurationsInput{}
 	conn := client.(*conns.AWSClient).KafkaConn()
+
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListConfigurationsPages(input, func(page *kafka.ListConfigurationsOutput, lastPage bool) bool {
+	input := &kafka.ListConfigurationsInput{}
+	err = conn.ListConfigurationsPagesWithContext(ctx, input, func(page *kafka.ListConfigurationsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -104,12 +107,11 @@ func sweepConfigurations(region string) error {
 		log.Printf("[WARN] Skipping MSK Configuration sweep for %s: %s", region, err)
 		return nil
 	}
-
 	if err != nil {
 		return fmt.Errorf("error listing MSK Configurations (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping MSK Configurations (%s): %w", region, err)

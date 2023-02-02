@@ -51,7 +51,7 @@ func ResourceVPCConnector() *schema.Resource {
 				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags":     tftags.TagsSchemaComputed(),
+			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 			"vpc_connector_name": {
 				Type:         schema.TypeString,
@@ -124,7 +124,7 @@ func resourceVPCConnectorRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("vpc_connector_name", vpcConnector.VpcConnectorName)
 	d.Set("vpc_connector_revision", vpcConnector.VpcConnectorRevision)
 
-	tags, err := ListTagsWithContext(ctx, conn, arn)
+	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
 		return diag.Errorf("listing tags for App Runner VPC Connector (%s): %s", d.Id(), err)
@@ -137,7 +137,7 @@ func resourceVPCConnectorRead(ctx context.Context, d *schema.ResourceData, meta 
 		return diag.Errorf("setting tags: %s", err)
 	}
 
-	if err := d.Set("tags_all", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+	if err := d.Set("tags_all", tags.Map()); err != nil {
 		return diag.Errorf("setting tags_all: %s", err)
 	}
 
@@ -150,7 +150,7 @@ func resourceVPCConnectorUpdate(ctx context.Context, d *schema.ResourceData, met
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTagsWithContext(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.Errorf("updating App Runner VPC Connector (%s) tags: %s", d.Id(), err)
 		}
 	}

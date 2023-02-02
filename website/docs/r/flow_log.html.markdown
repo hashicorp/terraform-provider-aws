@@ -76,58 +76,75 @@ EOF
 
 ```terraform
 resource "aws_flow_log" "example" {
-  iam_role_arn    = aws_iam_role.example.arn
-  log_destination = aws_cloudwatch_log_group.example.arn
-  traffic_type    = "ALL"
-  vpc_id          = aws_vpc.example.id
+  log_destination      = aws_kinesis_firehose_delivery_stream.example.arn
+  log_destination_type = "kinesis-data-firehose"
+  traffic_type         = "ALL"
+  vpc_id               = aws_vpc.example.id
 }
 
-resource "aws_cloudwatch_log_group" "example" {
-  name = "example"
+resource "aws_kinesis_firehose_delivery_stream" "example" {
+  name        = "kinesis_firehose_test"
+  destination = "extended_s3"
+
+  extended_s3_configuration {
+    role_arn   = aws_iam_role.example.arn
+    bucket_arn = aws_s3_bucket.example.arn
+  }
+
+  tags = {
+    "LogDeliveryEnabled" = "true"
+  }
+}
+
+resource "aws_s3_bucket" "example" {
+  bucket = "example"
+}
+
+resource "aws_s3_bucket_acl" "example" {
+  bucket = aws_s3_bucket.example.id
+  acl    = "private"
 }
 
 resource "aws_iam_role" "example" {
-  name = "example"
-
+  name               = "firehose_test_role"
   assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "",
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "delivery.logs.amazonaws.com"
-      },
-      "Action": "sts:AssumeRole"
-    }
-  ]
-}
-EOF
+ {
+   "Version":"2012-10-17",
+   "Statement": [
+     {
+       "Action":"sts:AssumeRole",
+       "Principal":{
+         "Service":"firehose.amazonaws.com"
+       },
+       "Effect":"Allow",
+       "Sid":""
+     }
+   ]
+ }
+ EOF
 }
 
 resource "aws_iam_role_policy" "example" {
-  name = "example"
-  role = aws_iam_role.example.id
-
+  name   = "test"
+  role   = aws_iam_role.example.id
   policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": [
-        "logs:CreateLogDelivery",
-        "logs:DeleteLogDelivery",
-        "logs:ListLogDeliveries",
-        "logs:GetLogDelivery",
-        "firehose:TagDeliveryStream"
-      ],
-      "Effect": "Allow",
-      "Resource": "*"
-    }
-  ]
-}
-EOF
+ {
+   "Version":"2012-10-17",
+   "Statement":[
+     {
+       "Action": [
+         "logs:CreateLogDelivery",
+         "logs:DeleteLogDelivery",
+         "logs:ListLogDeliveries",
+         "logs:GetLogDelivery",
+         "firehose:TagDeliveryStream"
+       ],
+       "Effect":"Allow",
+       "Resource":"*"
+     }
+   ]
+ }
+ EOF
 }
 ```
 

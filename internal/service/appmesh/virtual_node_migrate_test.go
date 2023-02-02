@@ -8,6 +8,8 @@ import (
 )
 
 func TestVirtualNodeMigrateState(t *testing.T) {
+	t.Parallel()
+
 	cases := map[string]struct {
 		StateVersion int
 		Attributes   map[string]string

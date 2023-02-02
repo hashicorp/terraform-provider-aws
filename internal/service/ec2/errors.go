@@ -29,7 +29,7 @@ const (
 	errCodeInvalidClientVPNAuthorizationRuleNotFound      = "InvalidClientVpnEndpointAuthorizationRuleNotFound"
 	errCodeInvalidClientVPNEndpointIdNotFound             = "InvalidClientVpnEndpointId.NotFound"
 	errCodeInvalidClientVPNRouteNotFound                  = "InvalidClientVpnRouteNotFound"
-	ErrCodeInvalidConnectionNotification                  = "InvalidConnectionNotification"
+	errCodeInvalidConnectionNotification                  = "InvalidConnectionNotification"
 	errCodeInvalidConversionTaskIdMalformed               = "InvalidConversionTaskId.Malformed"
 	errCodeInvalidCustomerGatewayIDNotFound               = "InvalidCustomerGatewayID.NotFound"
 	errCodeInvalidDHCPOptionIDNotFound                    = "InvalidDhcpOptionID.NotFound"

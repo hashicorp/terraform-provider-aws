@@ -88,6 +88,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		EC2MetadataServiceEnableState: c.EC2MetadataServiceEnableState,
 		IamEndpoint:                   c.Endpoints[names.IAM],
 		Insecure:                      c.Insecure,
+		HTTPClient:                    client.HTTPClient(),
 		HTTPProxy:                     c.HTTPProxy,
 		MaxRetries:                    c.MaxRetries,
 		Profile:                       c.Profile,
@@ -185,6 +186,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	client.Partition = partition
 	client.Region = c.Region
 	client.ReverseDNSPrefix = ReverseDNS(DNSSuffix)
+	client.SetHTTPClient(sess.Config.HTTPClient) // Must be called while client.Session is nil.
 	client.Session = sess
 	client.TerraformVersion = c.TerraformVersion
 

@@ -1,6 +1,8 @@
 package rds
 
-import "time"
+import (
+	"time"
+)
 
 const (
 	ClusterRoleStatusActive  = "ACTIVE"

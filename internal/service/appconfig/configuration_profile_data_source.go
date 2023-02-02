@@ -116,7 +116,7 @@ func dataSourceConfigurationProfileRead(ctx context.Context, d *schema.ResourceD
 		return create.DiagError(names.AppConfig, create.ErrActionSetting, DSNameConfigurationProfile, ID, err)
 	}
 
-	tags, err := ListTags(conn, arn)
+	tags, err := ListTags(ctx, conn, arn)
 	if err != nil {
 		return create.DiagError(names.AppConfig, create.ErrActionReading, DSNameConfigurationProfile, ID, err)
 	}

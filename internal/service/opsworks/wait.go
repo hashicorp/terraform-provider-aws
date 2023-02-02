@@ -1,6 +1,7 @@
 package opsworks
 
 import (
+	"context"
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/opsworks"
@@ -11,42 +12,42 @@ const (
 	InstanceDeleteTimeout = 2 * time.Minute
 )
 
-func waitInstanceDeleted(conn *opsworks.OpsWorks, instanceId string) error {
+func waitInstanceDeleted(ctx context.Context, conn *opsworks.OpsWorks, instanceId string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{instanceStatusStopped, instanceStatusTerminating, instanceStatusTerminated},
 		Target:     []string{},
-		Refresh:    InstanceStatus(conn, instanceId),
+		Refresh:    InstanceStatus(ctx, conn, instanceId),
 		Timeout:    InstanceDeleteTimeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
 
-	_, err := stateConf.WaitForState()
+	_, err := stateConf.WaitForStateContext(ctx)
 	return err
 }
 
-func waitInstanceStarted(conn *opsworks.OpsWorks, instanceId string, timeout time.Duration) error {
+func waitInstanceStarted(ctx context.Context, conn *opsworks.OpsWorks, instanceId string, timeout time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{instanceStatusRequested, instanceStatusPending, instanceStatusBooting, instanceStatusRunningSetup},
 		Target:     []string{instanceStatusOnline},
-		Refresh:    InstanceStatus(conn, instanceId),
+		Refresh:    InstanceStatus(ctx, conn, instanceId),
 		Timeout:    timeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
-	_, err := stateConf.WaitForState()
+	_, err := stateConf.WaitForStateContext(ctx)
 	return err
 }
 
-func waitInstanceStopped(conn *opsworks.OpsWorks, instanceId string, timeout time.Duration) error {
+func waitInstanceStopped(ctx context.Context, conn *opsworks.OpsWorks, instanceId string, timeout time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{instanceStatusStopping, instanceStatusTerminating, instanceStatusShuttingDown, instanceStatusTerminated},
 		Target:     []string{instanceStatusStopped},
-		Refresh:    InstanceStatus(conn, instanceId),
+		Refresh:    InstanceStatus(ctx, conn, instanceId),
 		Timeout:    timeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
-	_, err := stateConf.WaitForState()
+	_, err := stateConf.WaitForStateContext(ctx)
 	return err
 }

@@ -26,7 +26,7 @@ func ResourceGlobalNetwork() *schema.Resource {
 		DeleteWithoutTimeout: resourceGlobalNetworkDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -142,7 +142,7 @@ func resourceGlobalNetworkUpdate(ctx context.Context, d *schema.ResourceData, me
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTagsWithContext(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.Errorf("error updating Network Manager Global Network (%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -166,7 +166,7 @@ func resourceGlobalNetworkDelete(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	log.Printf("[DEBUG] Deleting Network Manager Global Network: %s", d.Id())
-	_, err := tfresource.RetryWhenContext(ctx, globalNetworkValidationExceptionTimeout,
+	_, err := tfresource.RetryWhen(ctx, globalNetworkValidationExceptionTimeout,
 		func() (interface{}, error) {
 			return conn.DeleteGlobalNetworkWithContext(ctx, &networkmanager.DeleteGlobalNetworkInput{
 				GlobalNetworkId: aws.String(d.Id()),

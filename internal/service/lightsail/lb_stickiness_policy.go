@@ -81,7 +81,7 @@ func resourceLoadBalancerStickinessPolicyCreate(ctx context.Context, d *schema.R
 		}
 
 		op := out.Operations[0]
-		err = waitOperation(conn, op.Id)
+		err = waitOperation(ctx, conn, op.Id)
 
 		if err != nil {
 			return create.DiagError(names.Lightsail, lightsail.OperationTypeUpdateLoadBalancerAttribute, ResLoadBalancerStickinessPolicy, d.Get("lb_name").(string), errors.New("Error waiting for Update Load Balancer Attribute request operation"))
@@ -146,7 +146,7 @@ func resourceLoadBalancerStickinessPolicyUpdate(ctx context.Context, d *schema.R
 		}
 
 		op := out.Operations[0]
-		err = waitOperation(conn, op.Id)
+		err = waitOperation(ctx, conn, op.Id)
 
 		if err != nil {
 			return create.DiagError(names.Lightsail, lightsail.OperationTypeUpdateLoadBalancerAttribute, ResLoadBalancerStickinessPolicy, d.Get("lb_name").(string), errors.New("Error waiting for Update Load Balancer Attribute request operation"))
@@ -171,7 +171,7 @@ func resourceLoadBalancerStickinessPolicyUpdate(ctx context.Context, d *schema.R
 		}
 
 		op := out.Operations[0]
-		err = waitOperation(conn, op.Id)
+		err = waitOperation(ctx, conn, op.Id)
 
 		if err != nil {
 			return create.DiagError(names.Lightsail, lightsail.OperationTypeUpdateLoadBalancerAttribute, ResLoadBalancerStickinessPolicy, d.Get("lb_name").(string), errors.New("Error waiting for Update Load Balancer Attribute request operation"))
@@ -201,7 +201,7 @@ func resourceLoadBalancerStickinessPolicyDelete(ctx context.Context, d *schema.R
 	}
 
 	op := out.Operations[0]
-	err = waitOperation(conn, op.Id)
+	err = waitOperation(ctx, conn, op.Id)
 
 	if err != nil {
 		return create.DiagError(names.Lightsail, lightsail.OperationTypeUpdateLoadBalancerAttribute, ResLoadBalancerStickinessPolicy, d.Get("lb_name").(string), errors.New("Error waiting for Update Load Balancer Attribute request operation"))

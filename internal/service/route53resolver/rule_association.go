@@ -24,7 +24,7 @@ func ResourceRuleAssociation() *schema.Resource {
 		DeleteWithoutTimeout: resourceRuleAssociationDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{

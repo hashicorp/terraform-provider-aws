@@ -31,10 +31,11 @@ func ResourceRegistryPolicy() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"policy": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				Type:                  schema.TypeString,
+				Required:              true,
+				ValidateFunc:          validation.StringIsJSON,
+				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+				DiffSuppressOnRefresh: true,
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
@@ -58,7 +59,6 @@ func resourceRegistryPolicyCreate(ctx context.Context, d *schema.ResourceData, m
 
 	registryName := d.Get("registry_name").(string)
 	policy, err := structure.ExpandJsonFromString(d.Get("policy").(string))
-
 	if err != nil {
 		return create.DiagError(names.Schemas, create.ErrActionCreating, ResNameRegistryPolicy, registryName, err)
 	}
@@ -95,7 +95,11 @@ func resourceRegistryPolicyRead(ctx context.Context, d *schema.ResourceData, met
 		return create.DiagError(names.Schemas, create.ErrActionReading, ResNameRegistryPolicy, d.Id(), err)
 	}
 
-	policy, _ := structure.FlattenJsonToString(output.Policy)
+	policy, err := structure.FlattenJsonToString(output.Policy)
+	if err != nil {
+		return create.DiagError(names.Schemas, create.ErrActionReading, ResNameRegistryPolicy, d.Id(), err)
+	}
+
 	d.Set("policy", policy)
 	d.Set("registry_name", d.Id())
 
@@ -106,7 +110,6 @@ func resourceRegistryPolicyUpdate(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).SchemasConn()
 
 	policy, err := structure.ExpandJsonFromString(d.Get("policy").(string))
-
 	if err != nil {
 		return create.DiagError(names.Schemas, create.ErrActionUpdating, ResNameRegistryPolicy, d.Id(), err)
 	}

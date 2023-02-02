@@ -28,6 +28,7 @@ func init() {
 }
 
 func sweepProjects(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
@@ -40,7 +41,7 @@ func sweepProjects(region string) error {
 
 	input := &devicefarm.ListProjectsInput{}
 
-	err = conn.ListProjectsPages(input, func(page *devicefarm.ListProjectsOutput, lastPage bool) bool {
+	err = conn.ListProjectsPagesWithContext(ctx, input, func(page *devicefarm.ListProjectsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -69,7 +70,7 @@ func sweepProjects(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing DeviceFarm Project for %s: %w", region, err))
 	}
 
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping DeviceFarm Project for %s: %w", region, err))
 	}
 
@@ -82,6 +83,7 @@ func sweepProjects(region string) error {
 }
 
 func sweepTestGridProjects(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
@@ -94,7 +96,7 @@ func sweepTestGridProjects(region string) error {
 
 	input := &devicefarm.ListTestGridProjectsInput{}
 
-	err = conn.ListTestGridProjectsPages(input, func(page *devicefarm.ListTestGridProjectsOutput, lastPage bool) bool {
+	err = conn.ListTestGridProjectsPagesWithContext(ctx, input, func(page *devicefarm.ListTestGridProjectsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -123,7 +125,7 @@ func sweepTestGridProjects(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing DeviceFarm Test Grid Project for %s: %w", region, err))
 	}
 
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping DeviceFarm Test Grid Project for %s: %w", region, err))
 	}
 
