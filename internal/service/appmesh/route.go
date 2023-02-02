@@ -199,8 +199,8 @@ func ResourceRoute() *schema.Resource {
 												},
 
 												"method_name": {
-													Type:     schema.TypeString,
-													Optional: true,
+													Type:         schema.TypeString,
+													Optional:     true,
 													RequiredWith: []string{"spec.0.grpc_route.0.match.0.service_name"},
 												},
 
@@ -211,8 +211,8 @@ func ResourceRoute() *schema.Resource {
 												},
 
 												"service_name": {
-													Type:         schema.TypeString,
-													Optional:     true,
+													Type:     schema.TypeString,
+													Optional: true,
 												},
 
 												"port": {
