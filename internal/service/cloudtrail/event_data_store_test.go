@@ -57,6 +57,38 @@ func TestAccCloudTrailEventDataStore_basic(t *testing.T) {
 	})
 }
 
+func TestAccCloudTrailEventDataStore_kmsKeyId(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudtrail_event_data_store.test"
+	kmsKeyResourceName := "aws_kms_key.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cloudtrail.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEventDataStoreDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEventDataStoreConfig_kmsKeyId(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEventDataStoreExists(ctx, resourceName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "cloudtrail", regexp.MustCompile(`eventdatastore/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "multi_region_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "organization_enabled", "false"),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsKeyResourceName, "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccCloudTrailEventDataStore_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -306,6 +338,56 @@ func testAccEventDataStoreConfig_basic(rName string) string {
 resource "aws_cloudtrail_event_data_store" "test" {
   name = %[1]q
 
+  termination_protection_enabled = false # For ease of deletion.
+}
+`, rName)
+}
+
+func testAccEventDataStoreConfig_kmsKeyId(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  multi_region = true
+  policy = data.aws_iam_policy_document.test.json
+}
+
+data "aws_caller_identity" "current" {}
+
+data "aws_iam_policy_document" "test" {
+  statement {
+	actions = [
+	  "kms:*",
+	]
+	principals {
+	  identifiers = [
+        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root",
+	  ]
+	  type = "AWS"
+	}
+	resources = [
+	  "*",
+	]
+	sid = "Enable IAM User Permissions"
+  }
+
+  statement {
+	actions = [
+	  "kms:*",
+	]
+	principals {
+	  identifiers = [
+	    "cloudtrail.amazonaws.com",
+	  ]
+	  type = "Service"
+	}
+	resources = [
+	  "*",
+	]
+  }
+}
+
+resource "aws_cloudtrail_event_data_store" "test" {
+  name                           = %[1]q
+  kms_key_id                     = aws_kms_key.test.arn
   termination_protection_enabled = false # For ease of deletion.
 }
 `, rName)
