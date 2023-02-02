@@ -266,7 +266,7 @@ func (m *multiplexProgram) Read(ctx context.Context, req resource.ReadRequest, r
 	out, err := FindMultiplexProgramByID(ctx, conn, multiplexId, programName)
 
 	if tfresource.NotFound(err) {
-		diag.NewWarningDiagnostic(
+		resp.Diagnostics.AddWarning(
 			"AWS Resource Not Found During Refresh",
 			fmt.Sprintf("Automatically removing from Terraform State instead of returning the error, which may trigger resource recreation. Original Error: %s", err.Error()),
 		)
