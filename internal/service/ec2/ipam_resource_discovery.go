@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -96,14 +97,6 @@ func ResourceIPAMResourceDiscovery() *schema.Resource {
 	}
 }
 
-const (
-	invalidIPAMResourceDiscoveryIDNotFound = "InvalidIpamResourceDiscoveryId.NotFound"
-	ipamResourceDiscoveryCreateTimeout     = 3 * time.Minute
-	ipamResourceDiscoveryCreateDelay       = 5 * time.Second
-	IPAMResourceDiscoveryDeleteTimeout     = 3 * time.Minute
-	ipamResourceDiscoveryDeleteDelay       = 5 * time.Second
-)
-
 func ResourceIPAMResourceDiscoveryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
@@ -112,7 +105,7 @@ func ResourceIPAMResourceDiscoveryCreate(ctx context.Context, d *schema.Resource
 
 	input := &ec2.CreateIpamResourceDiscoveryInput{
 		ClientToken:       aws.String(resource.UniqueId()),
-		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, "ipam"),
+		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeIpamResourceDiscovery),
 		OperatingRegions:  expandIPAMOperatingRegions(d.Get("operating_regions").(*schema.Set).List()),
 	}
 
@@ -123,12 +116,12 @@ func ResourceIPAMResourceDiscoveryCreate(ctx context.Context, d *schema.Resource
 	output, err := conn.CreateIpamResourceDiscoveryWithContext(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating IPAM resource discovery: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating IPAM resource discovery: %s", err)
 	}
 	d.SetId(aws.StringValue(output.IpamResourceDiscovery.IpamResourceDiscoveryId))
 
-	if _, err = WaitIPAMResourceDiscoveryAvailable(conn, d.Id(), ipamResourceDiscoveryCreateTimeout); err != nil {
-		return sdkdiag.AppendErrorf(diags, "error waiting for IPAM Resource Discovery (%s) to be Available: %w", d.Id(), err)
+	if _, err = WaitIPAMResourceDiscoveryAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "error waiting for IPAM Resource Discovery (%s) to be Available: %s", d.Id(), err)
 	}
 
 	return append(diags, ResourceIPAMResourceDiscoveryRead(ctx, d, meta)...)
@@ -140,16 +133,12 @@ func ResourceIPAMResourceDiscoveryRead(ctx context.Context, d *schema.ResourceDa
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	rd, err := FindIPAMResourceDiscoveryById(conn, d.Id())
+	rd, err := FindIPAMResourceDiscoveryById(ctx, conn, d.Id())
 
-	if err != nil && !tfawserr.ErrCodeEquals(err, invalidIPAMResourceDiscoveryIDNotFound) {
-		return err
-	}
-
-	if !d.IsNewResource() && rd == nil {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] IPAM Resource Discovery (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	d.Set("arn", rd.IpamResourceDiscoveryArn)
@@ -163,27 +152,19 @@ func ResourceIPAMResourceDiscoveryRead(ctx context.Context, d *schema.ResourceDa
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
 func ResourceIPAMResourceDiscoveryUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating IPAMResourceDiscovery (%s) tags: %w", d.Id(), err)
-		}
-	}
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &ec2.ModifyIpamResourceDiscoveryInput{
@@ -220,108 +201,46 @@ func ResourceIPAMResourceDiscoveryUpdate(ctx context.Context, d *schema.Resource
 		_, err := conn.ModifyIpamResourceDiscovery(input)
 
 		if err != nil {
-			return fmt.Errorf("error modifying IPAMResourceDiscovery (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating IPAM Resource Discovery(%s): %s", d.Id(), err)
+		}
+
+		if _, err := WaitIPAMResourceDiscoveryUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for IPAM Resource Discovery(%s) update: %s", d.Id(), err)
 		}
 	}
 
-	return nil
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+
+		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating IPAM Resource Discovery (%s) tags: %s", d.Id(), err)
+		}
+	}
+
+	return diags
 }
 
 func ResourceIPAMResourceDiscoveryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
 
-	input := &ec2.DeleteIpamResourceDiscoveryInput{
-		IpamResourceDiscoveryId: aws.String(d.Id()),
-	}
-
 	log.Printf("[DEBUG] Deleting IPAMResourceDiscovery: %s", d.Id())
-	_, err := conn.DeleteIpamResourceDiscovery(input)
+	_, err := conn.DeleteIpamResourceDiscoveryWithContext(ctx, &ec2.DeleteIpamResourceDiscoveryInput{
+		IpamResourceDiscoveryId: aws.String(d.Id()),
+	})
 
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting IPAM Resource Discovery: (%s): %s", d.Id(), err)
-	}
-
-	if _, err = WaiterIPAMResourceDiscoveryDeleted(ctx, conn, d.Id(), IPAMResourceDiscoveryDeleteTimeout); err != nil {
-		if tfawserr.ErrCodeEquals(err, invalidIPAMResourceDiscoveryIDNotFound) {
+	if _, err = WaiterIPAMResourceDiscoveryDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidIPAMResourceDiscoveryIdNotFound) {
 			return diags
 		}
 		return sdkdiag.AppendErrorf(diags, "waiting for IPAM Resource Discovery(%s) delete: %s", d.Id(), err)
 	}
 
-	return diags
-}
-
-func FindIPAMResourceDiscoveryById(conn *ec2.EC2, id string) (*ec2.IpamResourceDiscovery, error) {
-	input := &ec2.DescribeIpamResourceDiscoveriesInput{
-		IpamResourceDiscoveryIds: aws.StringSlice([]string{id}),
-	}
-
-	output, err := conn.DescribeIpamResourceDiscoveries(input)
-
 	if err != nil {
-		return nil, err
+		return sdkdiag.AppendErrorf(diags, "deleting IPAM Resource Discovery: (%s): %s", d.Id(), err)
 	}
 
-	if output == nil || len(output.IpamResourceDiscoveries) == 0 || output.IpamResourceDiscoveries[0] == nil {
-		return nil, nil
-	}
-
-	return output.IpamResourceDiscoveries[0], nil
-}
-
-func WaitIPAMResourceDiscoveryAvailable(conn *ec2.EC2, rdId string, timeout time.Duration) (*ec2.Ipam, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{ec2.IpamResourceDiscoveryStateCreateInProgress},
-		Target:  []string{ec2.IpamResourceDiscoveryStateCreateComplete},
-		Refresh: statusIPAMResourceDiscoveryStatus(conn, rdId),
-		Timeout: timeout,
-		Delay:   ipamResourceDiscoveryCreateDelay,
-	}
-
-	outputRaw, err := stateConf.WaitForState()
-
-	if output, ok := outputRaw.(*ec2.Ipam); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func WaiterIPAMResourceDiscoveryDeleted(ctx context.Context, conn *ec2.EC2, rdId string, timeout time.Duration) (*ec2.Ipam, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{ec2.IpamResourceDiscoveryStateCreateComplete, ec2.IpamResourceDiscoveryStateModifyComplete, ec2.IpamResourceDiscoveryStateDeleteInProgress},
-		Target:  []string{invalidIPAMResourceDiscoveryIDNotFound},
-		Refresh: statusIPAMResourceDiscoveryStatus(conn, rdId),
-		Timeout: timeout,
-		Delay:   ipamResourceDiscoveryDeleteDelay,
-	}
-
-	outputRaw, err := stateConf.WaitForState()
-
-	if output, ok := outputRaw.(*ec2.Ipam); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func statusIPAMResourceDiscoveryStatus(conn *ec2.EC2, rdId string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-
-		output, err := FindIPAMResourceDiscoveryById(conn, rdId)
-
-		if tfawserr.ErrCodeEquals(err, invalidIPAMResourceDiscoveryIDNotFound) {
-			return output, invalidIPAMResourceDiscoveryIDNotFound, nil
-		}
-
-		// there was an unhandled error in the Finder
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, aws.StringValue(output.State), nil
-	}
+	return diags
 }
 
 func expandIPAMResourceDiscoveryOperatingRegions(operatingRegions []interface{}) []*ec2.AddIpamOperatingRegion {

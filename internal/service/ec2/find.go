@@ -5765,6 +5765,31 @@ func FindIPAMPoolCIDRByPoolCIDRId(ctx context.Context, conn *ec2.EC2, poolCidrId
 	return output, nil
 }
 
+func FindIPAMResourceDiscoveryById(ctx context.Context, conn *ec2.EC2, id string) (*ec2.IpamResourceDiscovery, error) {
+	input := &ec2.DescribeIpamResourceDiscoveriesInput{
+		IpamResourceDiscoveryIds: aws.StringSlice([]string{id}),
+	}
+
+	output, err := conn.DescribeIpamResourceDiscoveries(input)
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidIPAMResourceDiscoveryIdNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.IpamResourceDiscoveries) == 0 || output.IpamResourceDiscoveries[0] == nil {
+		return nil, nil
+	}
+
+	return output.IpamResourceDiscoveries[0], nil
+}
+
 func FindIPAMScope(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeIpamScopesInput) (*ec2.IpamScope, error) {
 	output, err := FindIPAMScopes(ctx, conn, input)
 

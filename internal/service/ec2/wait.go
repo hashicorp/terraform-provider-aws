@@ -2945,6 +2945,59 @@ func WaitIPAMPoolCIDRAllocationCreated(ctx context.Context, conn *ec2.EC2, alloc
 
 	return nil, err
 }
+func WaitIPAMResourceDiscoveryAvailable(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.Ipam, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.IpamResourceDiscoveryStateCreateInProgress},
+		Target:  []string{ec2.IpamResourceDiscoveryStateCreateComplete},
+		Refresh: StatusIPAMResourceDiscoveryState(ctx, conn, id),
+		Timeout: timeout,
+		Delay:   5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.Ipam); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaiterIPAMResourceDiscoveryDeleted(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.IpamResourceDiscovery, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.IpamResourceDiscoveryStateCreateComplete, ec2.IpamResourceDiscoveryStateModifyComplete, ec2.IpamResourceDiscoveryStateDeleteInProgress},
+		Target:  []string{}, //errCodeInvalidIPAMResourceDiscoveryIdNotFound
+		Refresh: StatusIPAMResourceDiscoveryState(ctx, conn, id),
+		Timeout: timeout,
+		Delay:   5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.IpamResourceDiscovery); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitIPAMResourceDiscoveryUpdated(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.IpamResourceDiscovery, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.IpamResourceDiscoveryStateModifyInProgress},
+		Target:  []string{ec2.IpamResourceDiscoveryStateModifyComplete},
+		Refresh: StatusIPAMResourceDiscoveryState(ctx, conn, id),
+		Timeout: timeout,
+		Delay:   5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*ec2.IpamResourceDiscovery); ok {
+		return output, err
+	}
+
+	return nil, err
+}
 
 func WaitIPAMScopeCreated(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.IpamScope, error) {
 	stateConf := &resource.StateChangeConf{

@@ -45,6 +45,7 @@ const (
 	errCodeInvalidIPAMIdNotFound                          = "InvalidIpamId.NotFound"
 	errCodeInvalidIPAMPoolAllocationIdNotFound            = "InvalidIpamPoolAllocationId.NotFound"
 	errCodeInvalidIPAMPoolIdNotFound                      = "InvalidIpamPoolId.NotFound"
+	errCodeInvalidIPAMResourceDiscoveryIdNotFound         = "InvalidIpamResourceDiscoveryId.NotFound"
 	errCodeInvalidIPAMScopeIdNotFound                     = "InvalidIpamScopeId.NotFound"
 	errCodeInvalidKeyPairNotFound                         = "InvalidKeyPair.NotFound"
 	errCodeInvalidLaunchTemplateIdMalformed               = "InvalidLaunchTemplateId.Malformed"
