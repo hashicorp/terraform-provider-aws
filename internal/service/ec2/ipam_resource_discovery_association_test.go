@@ -172,10 +172,10 @@ const testAccIPAMResourceDiscoveryAssociationConfig_base = `
 data "aws_region" "current" {}
 
 resource "aws_vpc_ipam" "test" {
-	description = "test ipam"
-	operating_regions {
-	  region_name = data.aws_region.current.name
-	}
+  description = "test ipam"
+  operating_regions {
+    region_name = data.aws_region.current.name
+  }
 }
 
 resource "aws_vpc_ipam_resource_discovery" "test" {

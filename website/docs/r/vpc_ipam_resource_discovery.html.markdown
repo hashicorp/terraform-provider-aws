@@ -10,34 +10,22 @@ description: |-
 
 Provides an IPAM Resource Discovery resource. IPAM Resource Discoveries are resources meant for multi-organization customers. If you wish to use a single IPAM across multiple orgs, a resource discovery can be created and shared from a subordinate organization to the management organizations IPAM delegated admin account. For a full deployment example, see `aws_vpc_ipam_resource_discovery_association` resource.
 
-
 ## Example Usage
-
 
 Basic usage:
 
 ```terraform
-resource "aws_vpc_ipam_resource_discovery" "main" {
-  description = "Subordinate Organiztion #1 IPAM Resource Discovery"
-
-  dynamic operating_regions {
-    for_each = local.all_ipam_regions
-    content {
-      region_name = operating_regions.value
-    }
-  }
-}
-
 data "aws_region" "current" {}
 
-variable "ipam_regions" {
-  type    = list
-  default = ["us-east-1", "us-west-2"]
-}
+resource "aws_vpc_ipam_resource_discovery" "main" {
+  description = "My IPAM Resource Discovery"
+  operating_regions {
+    region_name = data.aws_region.current.name
+  }
 
-locals {
-  # ensure current provider region is an operating_regions entry
-  all_ipam_regions = distinct(concat([data.aws_region.current.name], var.ipam_regions))
+  tags = {
+    Test = "Main"
+  }
 }
 ```
 
@@ -63,7 +51,6 @@ In addition to all arguments above, the following attributes are exported:
 * `owner_id` - The account ID for the account that manages the Resource Discovery
 * `ipam_resource_discovery_region` - The home region of the Resource Discovery
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
-
 
 ## Import
 
