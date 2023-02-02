@@ -1,4 +1,10 @@
 ## 4.53.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* provider: Adds structured fields in logging ([#29223](https://github.com/hashicorp/terraform-provider-aws/issues/29223))
+* provider: Masks authentication fields in HTTP header logging ([#29223](https://github.com/hashicorp/terraform-provider-aws/issues/29223))
+
 ## 4.52.0 (January 27, 2023)
 
 NOTES:
