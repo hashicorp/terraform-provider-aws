@@ -354,33 +354,33 @@ data "aws_caller_identity" "current" {}
 
 data "aws_iam_policy_document" "test" {
   statement {
-	actions = [
-	  "kms:*",
-	]
-	principals {
-	  identifiers = [
+    actions = [
+      "kms:*",
+    ]
+    principals {
+    identifiers = [
         "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root",
-	  ]
-	  type = "AWS"
-	}
-	resources = [
-	  "*",
-	]
-	sid = "Enable IAM User Permissions"
+      ]
+      type = "AWS"
+    }
+    resources = [
+      "*",
+    ]
+    sid = "Enable IAM User Permissions"
   }
 
   statement {
-	actions = [
-	  "kms:*",
-	]
-	principals {
-	  identifiers = [
-	    "cloudtrail.amazonaws.com",
-	  ]
-	  type = "Service"
-	}
-	resources = [
-	  "*",
+    actions = [
+      "kms:*",
+    ]
+    principals {
+      identifiers = [
+        "cloudtrail.amazonaws.com",
+      ]
+      type = "Service"
+    }
+    resources = [
+      "*",
     ]
   }
 }
