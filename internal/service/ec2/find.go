@@ -5790,6 +5790,40 @@ func FindIPAMResourceDiscoveryById(ctx context.Context, conn *ec2.EC2, id string
 	return output.IpamResourceDiscoveries[0], nil
 }
 
+func FindIPAMResourceDiscoveryAssociationById(ctx context.Context, conn *ec2.EC2, id string) (*ec2.IpamResourceDiscoveryAssociation, error) {
+	input := &ec2.DescribeIpamResourceDiscoveryAssociationsInput{
+		IpamResourceDiscoveryAssociationIds: aws.StringSlice([]string{id}),
+	}
+
+	output, err := conn.DescribeIpamResourceDiscoveryAssociations(input)
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidIPAMResourceDiscoveryAssociationIDNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.IpamResourceDiscoveryAssociations) == 0 || output.IpamResourceDiscoveryAssociations[0] == nil {
+		return nil, nil
+	}
+
+	rda := output.IpamResourceDiscoveryAssociations[0]
+
+	if state := aws.StringValue(rda.State); state == ec2.IpamResourceDiscoveryAssociationStateDisassociateComplete {
+		return nil, &resource.NotFoundError{
+			Message:     state,
+			LastRequest: input,
+		}
+	}
+
+	return output.IpamResourceDiscoveryAssociations[0], nil
+}
+
 func FindIPAMScope(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeIpamScopesInput) (*ec2.IpamScope, error) {
 	output, err := FindIPAMScopes(ctx, conn, input)
 

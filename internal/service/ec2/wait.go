@@ -2963,6 +2963,42 @@ func WaitIPAMResourceDiscoveryAvailable(ctx context.Context, conn *ec2.EC2, id s
 	return nil, err
 }
 
+func WaitIPAMResourceDiscoveryAssociationAvailable(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.IpamResourceDiscoveryAssociation, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.IpamResourceDiscoveryAssociationStateAssociateInProgress},
+		Target:  []string{ec2.IpamResourceDiscoveryAssociationStateAssociateComplete},
+		Refresh: StatusIPAMResourceDiscoveryAssociationStatus(ctx, conn, id),
+		Timeout: timeout,
+		Delay:   5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.IpamResourceDiscoveryAssociation); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaiterIPAMResourceDiscoveryAssociationDeleted(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.IpamResourceDiscoveryAssociation, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.IpamResourceDiscoveryAssociationStateAssociateComplete, ec2.IpamResourceDiscoveryAssociationStateDisassociateInProgress},
+		Target:  []string{},
+		Refresh: StatusIPAMResourceDiscoveryAssociationStatus(ctx, conn, id),
+		Timeout: timeout,
+		Delay:   5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.IpamResourceDiscoveryAssociation); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
 func WaiterIPAMResourceDiscoveryDeleted(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.IpamResourceDiscovery, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ec2.IpamResourceDiscoveryStateCreateComplete, ec2.IpamResourceDiscoveryStateModifyComplete, ec2.IpamResourceDiscoveryStateDeleteInProgress},

@@ -98,6 +98,30 @@ func TestAccIPAMResourceDiscovery_modify(t *testing.T) {
 	})
 }
 
+func TestAccIPAMResourceDiscovery_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var rd ec2.IpamResourceDiscovery
+
+	resourceName := "aws_vpc_ipam_resource_discovery.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIPAMResourceDiscoveryDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIPAMResourceDiscoveryConfig_base,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIPAMResourceDiscoveryExists(ctx, resourceName, &rd),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceIPAMResourceDiscovery(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccIPAMResourceDiscovery_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var rd ec2.IpamResourceDiscovery

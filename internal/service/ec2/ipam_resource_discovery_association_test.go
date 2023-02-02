@@ -93,6 +93,30 @@ func TestAccIPAMResourceDiscoveryAssociation_tags(t *testing.T) {
 	})
 }
 
+func TestAccIPAMResourceDiscoveryAssociation_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var rda ec2.IpamResourceDiscoveryAssociation
+
+	resourceName := "aws_vpc_ipam_resource_discovery_association.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIPAMResourceDiscoveryAssociationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIPAMResourceDiscoveryAssociationConfig_basic(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIPAMResourceDiscoveryAssociationExists(ctx, resourceName, &rda),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceIPAMResourceDiscoveryAssociation(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckIPAMResourceDiscoveryAssociationExists(ctx context.Context, n string, v *ec2.IpamResourceDiscoveryAssociation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
