@@ -358,7 +358,7 @@ data "aws_iam_policy_document" "test" {
       "kms:*",
     ]
     principals {
-    identifiers = [
+      identifiers = [
         "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root",
       ]
       type = "AWS"
