@@ -182,6 +182,11 @@ func TestSet_Difference(t *testing.T) {
 			new:      Set{"one", "two", "three"},
 			expected: Set{"four"},
 		},
+		"difference_remove": {
+			original: Set{"one", "two"},
+			new:      Set{"one"},
+			expected: Set{"two"},
+		},
 	}
 
 	for name, test := range tests {

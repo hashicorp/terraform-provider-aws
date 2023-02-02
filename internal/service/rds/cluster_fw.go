@@ -1086,7 +1086,6 @@ func (r *resourceCluster) Create(ctx context.Context, request resource.CreateReq
 		}
 
 		var scalingConfiguration []scalingConfiguration
-		//list := types.ListValueMust(types.ObjectType{AttrTypes: scalingConfigurationAttrTypes}, []attr.Value{})
 		response.Diagnostics.Append(data.ScalingConfiguration.ElementsAs(ctx, &scalingConfiguration, false)...)
 		if response.Diagnostics.HasError() {
 			return
