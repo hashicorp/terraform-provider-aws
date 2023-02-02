@@ -1,37 +1,57 @@
 package ec2
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceIPAMResourceDiscoveryAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create:        resourceIPAMResourceDiscoveryAssociationCreate,
-		Read:          resourceIPAMResourceDiscoveryAssociationRead,
-		Update:        resourceIPAMResourceDiscoveryAssociationUpdate,
-		Delete:        resourceIPAMResourceDiscoveryAssociationDelete,
+		CreateWithoutTimeout: ResourceIPAMResourceDiscoveryAssociationCreate,
+		ReadWithoutTimeout:   ResourceIPAMResourceDiscoveryAssociationRead,
+		UpdateWithoutTimeout: ResourceIPAMResourceDiscoveryAssociationUpdate,
+		DeleteWithoutTimeout: ResourceIPAMResourceDiscoveryAssociationDelete,
+
 		CustomizeDiff: customdiff.Sequence(verify.SetTagsDiff),
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(3 * time.Minute),
+			Update: schema.DefaultTimeout(3 * time.Minute),
+			Delete: schema.DefaultTimeout(3 * time.Minute),
+		},
+
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"ipam_arn": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
 			"ipam_id": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"ipam_region": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -47,7 +67,7 @@ func ResourceIPAMResourceDiscoveryAssociation() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status": {
+			"state": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -65,8 +85,9 @@ const (
 	ipamResourceDiscoveryAssociationDeleteDelay       = 5 * time.Second
 )
 
-func resourceIPAMResourceDiscoveryAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func ResourceIPAMResourceDiscoveryAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -80,72 +101,74 @@ func resourceIPAMResourceDiscoveryAssociationCreate(d *schema.ResourceData, meta
 	log.Printf("[DEBUG] Creating IPAM Resource Discovery Association: %s", input)
 	output, err := conn.AssociateIpamResourceDiscovery(input)
 	if err != nil {
-		return fmt.Errorf("Error associating ipam resource discovery: %w", err)
+		return sdkdiag.AppendErrorf(diags, "Error associating ipam resource discovery: %s", err)
 	}
 	d.SetId(aws.StringValue(output.IpamResourceDiscoveryAssociation.IpamResourceDiscoveryAssociationId))
 	log.Printf("[INFO] IPAM Resource Discovery Association ID: %s", d.Id())
 
-	if _, err = WaitIPAMResourceDiscoveryAssociationAvailable(conn, d.Id(), ipamResourceDiscoveryAssociationCreateTimeout); err != nil {
-		return fmt.Errorf("error waiting for IPAM Resource Discovery Association (%s) to be Available: %w", d.Id(), err)
+	if _, err = WaitIPAMResourceDiscoveryAssociationAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "error waiting for IPAM Resource Discovery Association (%s) to be Available: %s", d.Id(), err)
 	}
 
-	return resourceIPAMResourceDiscoveryAssociationRead(d, meta)
+	return append(diags, ResourceIPAMResourceDiscoveryAssociationRead(ctx, d, meta)...)
 }
 
-func resourceIPAMResourceDiscoveryAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func ResourceIPAMResourceDiscoveryAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
+
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	rd, err := findIPAMResourceDiscoveryAssociationById(conn, d.Id())
+	rda, err := FindIPAMResourceDiscoveryAssociationById(ctx, conn, d.Id())
 
-	if err != nil && !tfawserr.ErrCodeEquals(err, invalidIPAMResourceDiscoveryAssociationIDNotFound) {
-		return err
-	}
-
-	if !d.IsNewResource() && rd == nil {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] IPAM Resource Discovery Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
-	d.Set("arn", rd.IpamResourceDiscoveryAssociationArn)
-	d.Set("owner_id", rd.OwnerId)
-	d.Set("status", rd.Status)
-	d.Set("ipam_id", rd.IpamId)
-	d.Set("ipam_resource_discovery_id", rd.IpamResourceDiscoveryId)
-	d.Set("is_default", rd.IsDefault)
+	d.Set("arn", rda.IpamResourceDiscoveryAssociationArn)
+	d.Set("owner_id", rda.OwnerId)
+	d.Set("ipam_arn", rda.IpamArn)
+	d.Set("ipam_region", rda.IpamRegion)
+	d.Set("ipam_id", rda.IpamId)
+	d.Set("state", rda.State)
+	d.Set("ipam_resource_discovery_id", rda.IpamResourceDiscoveryId)
+	d.Set("is_default", rda.IsDefault)
 
-	tags := KeyValueTags(rd.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(rda.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "error setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "error setting tags_all: %s", err)
 	}
 
 	return nil
 }
 
-func resourceIPAMResourceDiscoveryAssociationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func ResourceIPAMResourceDiscoveryAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating IPAM ResourceDiscovery Association (%s) tags: %w", d.Id(), err)
+		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "error updating IPAM ResourceDiscovery Association (%s) tags: %s", d.Id(), err)
 		}
 	}
 
 	return nil
 }
 
-func resourceIPAMResourceDiscoveryAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func ResourceIPAMResourceDiscoveryAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	input := &ec2.DisassociateIpamResourceDiscoveryInput{
 		IpamResourceDiscoveryAssociationId: aws.String(d.Id()),
@@ -154,20 +177,20 @@ func resourceIPAMResourceDiscoveryAssociationDelete(d *schema.ResourceData, meta
 	log.Printf("[DEBUG] Disassociating IPAM Resource Discovery: %s", d.Id())
 	_, err := conn.DisassociateIpamResourceDiscovery(input)
 	if err != nil {
-		return fmt.Errorf("error disassociating IPAM Resource Discovery: (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "error disassociating IPAM Resource Discovery: (%s): %s", d.Id(), err)
 	}
 
-	if _, err = WaiterIPAMResourceDiscoveryAssociationDeleted(conn, d.Id(), IPAMResourceDiscoveryAssociationDeleteTimeout); err != nil {
+	if _, err = WaiterIPAMResourceDiscoveryAssociationDeleted(ctx, conn, d.Id(), IPAMResourceDiscoveryAssociationDeleteTimeout); err != nil {
 		if tfawserr.ErrCodeEquals(err, invalidIPAMResourceDiscoveryAssociationIDNotFound) {
 			return nil
 		}
-		return fmt.Errorf("error waiting for IPAM Resource Discovery Association (%s) to be dissociated: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "error waiting for IPAM Resource Discovery Association (%s) to be dissociated: %s", d.Id(), err)
 	}
 
 	return nil
 }
 
-func findIPAMResourceDiscoveryAssociationById(conn *ec2.EC2, id string) (*ec2.IpamResourceDiscoveryAssociation, error) {
+func FindIPAMResourceDiscoveryAssociationById(ctx context.Context, conn *ec2.EC2, id string) (*ec2.IpamResourceDiscoveryAssociation, error) {
 	input := &ec2.DescribeIpamResourceDiscoveryAssociationsInput{
 		IpamResourceDiscoveryAssociationIds: aws.StringSlice([]string{id}),
 	}
@@ -185,46 +208,46 @@ func findIPAMResourceDiscoveryAssociationById(conn *ec2.EC2, id string) (*ec2.Ip
 	return output.IpamResourceDiscoveryAssociations[0], nil
 }
 
-func WaitIPAMResourceDiscoveryAssociationAvailable(conn *ec2.EC2, rdId string, timeout time.Duration) (*ec2.Ipam, error) {
+func WaitIPAMResourceDiscoveryAssociationAvailable(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.IpamResourceDiscoveryAssociation, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ec2.IpamResourceDiscoveryAssociationStateAssociateInProgress},
 		Target:  []string{ec2.IpamResourceDiscoveryAssociationStateAssociateComplete},
-		Refresh: statusIPAMResourceDiscoveryAssociationStatus(conn, rdId),
+		Refresh: StatusIPAMResourceDiscoveryAssociationStatus(ctx, conn, id),
 		Timeout: timeout,
 		Delay:   ipamResourceDiscoveryAssociationCreateDelay,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
 
-	if output, ok := outputRaw.(*ec2.Ipam); ok {
+	if output, ok := outputRaw.(*ec2.IpamResourceDiscoveryAssociation); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func WaiterIPAMResourceDiscoveryAssociationDeleted(conn *ec2.EC2, rdId string, timeout time.Duration) (*ec2.Ipam, error) {
+func WaiterIPAMResourceDiscoveryAssociationDeleted(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.IpamResourceDiscoveryAssociation, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ec2.IpamResourceDiscoveryAssociationStateAssociateComplete, ec2.IpamResourceDiscoveryAssociationStateDisassociateInProgress},
 		Target:  []string{invalidIPAMResourceDiscoveryAssociationIDNotFound, ec2.IpamResourceDiscoveryAssociationStateDisassociateComplete},
-		Refresh: statusIPAMResourceDiscoveryAssociationStatus(conn, rdId),
+		Refresh: StatusIPAMResourceDiscoveryAssociationStatus(ctx, conn, id),
 		Timeout: timeout,
 		Delay:   ipamResourceDiscoveryAssociationDeleteDelay,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
 
-	if output, ok := outputRaw.(*ec2.Ipam); ok {
+	if output, ok := outputRaw.(*ec2.IpamResourceDiscoveryAssociation); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func statusIPAMResourceDiscoveryAssociationStatus(conn *ec2.EC2, rdId string) resource.StateRefreshFunc {
+func StatusIPAMResourceDiscoveryAssociationStatus(ctx context.Context, conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 
-		output, err := findIPAMResourceDiscoveryAssociationById(conn, rdId)
+		output, err := FindIPAMResourceDiscoveryAssociationById(ctx, conn, id)
 
 		if tfawserr.ErrCodeEquals(err, invalidIPAMResourceDiscoveryAssociationIDNotFound) {
 			return output, invalidIPAMResourceDiscoveryAssociationIDNotFound, nil
