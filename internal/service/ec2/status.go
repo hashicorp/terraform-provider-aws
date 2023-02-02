@@ -1385,7 +1385,6 @@ func StatusIPAMResourceDiscoveryState(ctx context.Context, conn *ec2.EC2, id str
 
 func StatusIPAMResourceDiscoveryAssociationStatus(ctx context.Context, conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-
 		output, err := FindIPAMResourceDiscoveryAssociationById(ctx, conn, id)
 
 		if tfresource.NotFound(err) {

@@ -229,6 +229,10 @@ func ResourceIPAMResourceDiscoveryDelete(ctx context.Context, d *schema.Resource
 		IpamResourceDiscoveryId: aws.String(d.Id()),
 	})
 
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting IPAM Resource Discovery: (%s): %s", d.Id(), err)
+	}
+
 	if _, err = WaiterIPAMResourceDiscoveryDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		if tfawserr.ErrCodeEquals(err, errCodeInvalidIPAMResourceDiscoveryIdNotFound) {
 			return diags
@@ -237,7 +241,7 @@ func ResourceIPAMResourceDiscoveryDelete(ctx context.Context, d *schema.Resource
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting IPAM Resource Discovery: (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "after waiting for delete of IPAM Resource Discovery: (%s): %s", d.Id(), err)
 	}
 
 	return diags
