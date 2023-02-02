@@ -243,23 +243,6 @@ func ResourceIPAMResourceDiscoveryDelete(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func expandIPAMResourceDiscoveryOperatingRegions(operatingRegions []interface{}) []*ec2.AddIpamOperatingRegion {
-	regions := make([]*ec2.AddIpamOperatingRegion, 0, len(operatingRegions))
-	for _, regionRaw := range operatingRegions {
-		region := regionRaw.(map[string]interface{})
-		regions = append(regions, expandIPAMResourceDiscoveryOperatingRegion(region))
-	}
-
-	return regions
-}
-
-func expandIPAMResourceDiscoveryOperatingRegion(operatingRegion map[string]interface{}) *ec2.AddIpamOperatingRegion {
-	region := &ec2.AddIpamOperatingRegion{
-		RegionName: aws.String(operatingRegion["region_name"].(string)),
-	}
-	return region
-}
-
 func flattenIPAMResourceDiscoveryOperatingRegions(operatingRegions []*ec2.IpamOperatingRegion) []interface{} {
 	regions := []interface{}{}
 	for _, operatingRegion := range operatingRegions {
@@ -304,14 +287,4 @@ func expandIPAMResourceDiscoveryOperatingRegionsUpdateDeleteRegion(operatingRegi
 		RegionName: aws.String(operatingRegion["region_name"].(string)),
 	}
 	return regionUpdate
-}
-
-func expandIPAMResourceDiscoveryOperatingRegionsContainsCurrentRegion(operatingRegions []interface{}, current_region string) bool {
-	for _, regionRaw := range operatingRegions {
-		region := regionRaw.(map[string]interface{})
-		if region["region_name"].(string) == current_region {
-			return true
-		}
-	}
-	return false
 }
