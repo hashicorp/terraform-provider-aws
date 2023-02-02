@@ -157,10 +157,10 @@ func ResourceEventDataStore() *schema.Resource {
 				),
 			},
 			"kms_key_id": {
-                Type:         schema.TypeString,
-                Optional:     true,
-                ForceNew:     true,
-            },
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 			"termination_protection_enabled": {
@@ -191,7 +191,7 @@ func resourceEventDataStoreCreate(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if _, ok := d.GetOk("kms_key_id"); ok {
-	    input.KmsKeyId = aws.String(v.(string))
+		input.KmsKeyId = aws.String(v.(string))
 	}
 
 	if len(tags) > 0 {
