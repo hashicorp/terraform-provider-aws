@@ -85,13 +85,13 @@ func ResourceIPAMResourceDiscoveryAssociationCreate(ctx context.Context, d *sche
 
 	input := &ec2.AssociateIpamResourceDiscoveryInput{
 		ClientToken:             aws.String(resource.UniqueId()),
-		TagSpecifications:       tagSpecificationsFromKeyValueTags(tags, "ipam-resource-discovery-association"),
+		TagSpecifications:       tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeIpamResourceDiscoveryAssociation),
 		IpamId:                  aws.String(d.Get("ipam_id").(string)),
 		IpamResourceDiscoveryId: aws.String(d.Get("ipam_resource_discovery_id").(string)),
 	}
 
 	log.Printf("[DEBUG] Creating IPAM Resource Discovery Association: %s", input)
-	output, err := conn.AssociateIpamResourceDiscovery(input)
+	output, err := conn.AssociateIpamResourceDiscoveryWithContext(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "Error associating ipam resource discovery: %s", err)
 	}
@@ -167,7 +167,7 @@ func ResourceIPAMResourceDiscoveryAssociationDelete(ctx context.Context, d *sche
 	}
 
 	log.Printf("[DEBUG] Disassociating IPAM Resource Discovery: %s", d.Id())
-	_, err := conn.DisassociateIpamResourceDiscovery(input)
+	_, err := conn.DisassociateIpamResourceDiscoveryWithContext(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "error disassociating IPAM Resource Discovery: (%s): %s", d.Id(), err)
 	}

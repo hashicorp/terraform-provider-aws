@@ -87,10 +87,8 @@ func ResourceIPAMResourceDiscovery() *schema.Resource {
 							return nil
 						}
 					}
-
 					return fmt.Errorf("`operating_regions` must include %s", currentRegion)
 				}
-
 				return nil
 			},
 		),
@@ -198,7 +196,7 @@ func ResourceIPAMResourceDiscoveryUpdate(ctx context.Context, d *schema.Resource
 			}
 		}
 
-		_, err := conn.ModifyIpamResourceDiscovery(input)
+		_, err := conn.ModifyIpamResourceDiscoveryWithContext(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating IPAM Resource Discovery(%s): %s", d.Id(), err)
