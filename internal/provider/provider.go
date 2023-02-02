@@ -846,6 +846,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			"aws_redshift_subnet_group":        redshift.DataSourceSubnetGroup(),
 
 			"aws_redshiftserverless_credentials": redshiftserverless.DataSourceCredentials(),
+			"aws_redshiftserverless_workgroup":   redshiftserverless.DataSourceWorkgroup(),
 
 			"aws_resourcegroupstaggingapi_resources": resourcegroupstaggingapi.DataSourceResources(),
 
