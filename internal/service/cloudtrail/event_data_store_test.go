@@ -347,7 +347,7 @@ func testAccEventDataStoreConfig_kmsKeyId(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   multi_region = true
-  policy = data.aws_iam_policy_document.test.json
+  policy       = data.aws_iam_policy_document.test.json
 }
 
 data "aws_caller_identity" "current" {}
