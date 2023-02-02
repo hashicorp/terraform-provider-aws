@@ -190,7 +190,7 @@ func resourceEventDataStoreCreate(ctx context.Context, d *schema.ResourceData, m
 		input.AdvancedEventSelectors = expandAdvancedEventSelector(d.Get("advanced_event_selector").([]interface{}))
 	}
 
-	if _, ok := d.GetOk("kms_key_id"); ok {
+	if v, ok := d.GetOk("kms_key_id"); ok {
 		input.KmsKeyId = aws.String(v.(string))
 	}
 
