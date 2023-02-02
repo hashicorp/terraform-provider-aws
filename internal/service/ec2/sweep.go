@@ -2474,9 +2474,9 @@ func sweepIPAMResourceDiscoveries(region string) error {
 			return !lastPage
 		}
 
-		for resourceDiscovery, v := range page.IpamResourceDiscoveries {
+		for _, v := range page.IpamResourceDiscoveries {
 			// do not attempt to delete default resource created by each ipam
-			if !resourceDiscovery.IsDefault {
+			if !v.isDefault {
 				r := ResourceIPAMResourceDiscovery()
 				d := r.Data(nil)
 				d.SetId(aws.StringValue(v.IpamResourceDiscoveryId))
