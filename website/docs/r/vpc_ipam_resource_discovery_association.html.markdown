@@ -45,6 +45,8 @@ In addition to all arguments above, the following attributes are exported:
 * `is_default` - A boolean to identify if the Resource Discovery is the accounts default resource discovery
 * `owner_id` - The account ID for the account that manages the Resource Discovery
 * `ipam_resource_discovery_region` - The home region of the Resource Discovery
+* `ipam_region` - The home region of the IPAM
+* `ipam_arn` - The arn of the IPAM
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
