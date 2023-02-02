@@ -192,12 +192,12 @@ func (r *resourceCluster) Schema(ctx context.Context, request resource.SchemaReq
 			"db_instance_parameter_group_name": schema.StringAttribute{
 				Optional: true,
 			},
-			"db_instance_parameter_group_name_actual": schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
+			//"db_cluster_parameter_group_name_actual": schema.StringAttribute{
+			//	Computed: true,
+			//	PlanModifiers: []planmodifier.String{
+			//		stringplanmodifier.UseStateForUnknown(),
+			//	},
+			//},
 			"db_subnet_group_name": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
@@ -1086,6 +1086,7 @@ func (r *resourceCluster) Create(ctx context.Context, request resource.CreateReq
 		}
 
 		var scalingConfiguration []scalingConfiguration
+		//list := types.ListValueMust(types.ObjectType{AttrTypes: scalingConfigurationAttrTypes}, []attr.Value{})
 		response.Diagnostics.Append(data.ScalingConfiguration.ElementsAs(ctx, &scalingConfiguration, false)...)
 		if response.Diagnostics.HasError() {
 			return
@@ -1689,6 +1690,13 @@ func (r *resourceCluster) ModifyPlan(ctx context.Context, request resource.Modif
 		)
 	}
 
+	var engineMode types.String
+	response.Diagnostics.Append(request.Plan.GetAttribute(ctx, path.Root("engine_mode"), &engineMode)...)
+
+	if engineMode.IsUnknown() {
+		response.Diagnostics.Append(response.Plan.SetAttribute(ctx, path.Root("db_cluster_parameter_group_name"), types.StringUnknown())...)
+	}
+
 	r.SetTagsAll(ctx, request, response)
 }
 
@@ -1748,64 +1756,64 @@ func (r *resourceCluster) ValidateConfig(ctx context.Context, request resource.V
 }
 
 type resourceClusterData struct {
-	AllocatedStorage                  types.Int64  `tfsdk:"allocated_storage"`
-	AllowMajorVersionUpgrade          types.Bool   `tfsdk:"allow_major_version_upgrade"`
-	ApplyImmediately                  types.Bool   `tfsdk:"apply_immediately"`
-	ARN                               types.String `tfsdk:"arn"`
-	AvailabilityZones                 types.Set    `tfsdk:"availability_zones"`
-	BacktrackWindow                   types.Int64  `tfsdk:"backtrack_window"`
-	BackupRetentionPeriod             types.Int64  `tfsdk:"backup_retention_period"`
-	ClusterIdentifier                 types.String `tfsdk:"cluster_identifier"`
-	ClusterIdentifierPrefix           types.String `tfsdk:"cluster_identifier_prefix"`
-	ClusterMembers                    types.Set    `tfsdk:"cluster_members"`
-	ClusterResourceID                 types.String `tfsdk:"cluster_resource_id"`
-	CopyTagsToSnapshot                types.Bool   `tfsdk:"copy_tags_to_snapshot"`
-	DatabaseName                      types.String `tfsdk:"database_name"`
-	DbClusterInstanceClass            types.String `tfsdk:"db_cluster_instance_class"`
-	DbClusterParameterGroupName       types.String `tfsdk:"db_cluster_parameter_group_name"`
-	DbClusterParameterGroupNameActual types.String `tfsdk:"db_cluster_parameter_group_name_actual"`
-	DbInstanceParameterGroupName      types.String `tfsdk:"db_instance_parameter_group_name"`
-	DbSubnetGroupName                 types.String `tfsdk:"db_subnet_group_name"`
-	DeletionProtection                types.Bool   `tfsdk:"deletion_protection"`
-	EnableGlobalWriteForwarding       types.Bool   `tfsdk:"enable_global_write_forwarding"`
-	EnableHttpEndpoint                types.Bool   `tfsdk:"enable_http_endpoint"`
-	EnabledCloudwatchLogsExports      types.Set    `tfsdk:"enabled_cloudwatch_logs_exports"`
-	Endpoint                          types.String `tfsdk:"endpoint"`
-	Engine                            types.String `tfsdk:"engine"`
-	EngineMode                        types.String `tfsdk:"engine_mode"`
-	EngineVersion                     types.String `tfsdk:"engine_version"`
-	EngineVersionActual               types.String `tfsdk:"engine_version_actual"`
-	FinalSnapshotIdentifier           types.String `tfsdk:"final_snapshot_identifier"`
-	GlobalClusterIdentifier           types.String `tfsdk:"global_cluster_identifier"`
-	HostedZoneID                      types.String `tfsdk:"hosted_zone_id"`
-	IamDatabaseAuthenticationEnabled  types.Bool   `tfsdk:"iam_database_authentication_enabled"`
-	IamRoles                          types.Set    `tfsdk:"iam_roles"`
-	ID                                types.String `tfsdk:"id"`
-	Iops                              types.Int64  `tfsdk:"iops"`
-	KmsKeyID                          types.String `tfsdk:"kms_key_id"`
-	MasterPassword                    types.String `tfsdk:"master_password"`
-	MasterUsername                    types.String `tfsdk:"master_username"`
-	MasterUsernameActual              types.String `tfsdk:"master_username_actual"`
-	NetworkType                       types.String `tfsdk:"network_type"`
-	OptionGroupName                   types.String `tfsdk:"option_group_name"`
-	Port                              types.Int64  `tfsdk:"port"`
-	PreferredBackupWindow             types.String `tfsdk:"preferred_backup_window"`
-	PreferredMaintenanceWindow        types.String `tfsdk:"preferred_maintenance_window"`
-	ReaderEndpoint                    types.String `tfsdk:"reader_endpoint"`
-	ReplicationSourceIdentifier       types.String `tfsdk:"replication_source_identifier"`
-	RestoreToPointInTime              types.List   `tfsdk:"restore_to_point_in_time"`
-	S3Import                          types.List   `tfsdk:"s3_import"`
-	ScalingConfiguration              types.List   `tfsdk:"scaling_configuration"`
-	ScalingConfigurationActual        types.List   `tfsdk:"scaling_configuration_actual"`
-	ServerlessV2ScalingConfiguration  types.List   `tfsdk:"serverlessv2_scaling_configuration"`
-	SkipFinalSnapshot                 types.Bool   `tfsdk:"skip_final_snapshot"`
-	SnapshotIdentifier                types.String `tfsdk:"snapshot_identifier"`
-	SourceRegion                      types.String `tfsdk:"source_region"`
-	StorageEncrypted                  types.Bool   `tfsdk:"storage_encrypted"`
-	StorageType                       types.String `tfsdk:"storage_type"`
-	Tags                              types.Map    `tfsdk:"tags"`
-	TagsAll                           types.Map    `tfsdk:"tags_all"`
-	VpcSecurityGroupIds               types.Set    `tfsdk:"vpc_security_group_ids"`
+	AllocatedStorage            types.Int64  `tfsdk:"allocated_storage"`
+	AllowMajorVersionUpgrade    types.Bool   `tfsdk:"allow_major_version_upgrade"`
+	ApplyImmediately            types.Bool   `tfsdk:"apply_immediately"`
+	ARN                         types.String `tfsdk:"arn"`
+	AvailabilityZones           types.Set    `tfsdk:"availability_zones"`
+	BacktrackWindow             types.Int64  `tfsdk:"backtrack_window"`
+	BackupRetentionPeriod       types.Int64  `tfsdk:"backup_retention_period"`
+	ClusterIdentifier           types.String `tfsdk:"cluster_identifier"`
+	ClusterIdentifierPrefix     types.String `tfsdk:"cluster_identifier_prefix"`
+	ClusterMembers              types.Set    `tfsdk:"cluster_members"`
+	ClusterResourceID           types.String `tfsdk:"cluster_resource_id"`
+	CopyTagsToSnapshot          types.Bool   `tfsdk:"copy_tags_to_snapshot"`
+	DatabaseName                types.String `tfsdk:"database_name"`
+	DbClusterInstanceClass      types.String `tfsdk:"db_cluster_instance_class"`
+	DbClusterParameterGroupName types.String `tfsdk:"db_cluster_parameter_group_name"`
+	// DbClusterParameterGroupNameActual types.String `tfsdk:"db_cluster_parameter_group_name_actual"`
+	DbInstanceParameterGroupName     types.String `tfsdk:"db_instance_parameter_group_name"`
+	DbSubnetGroupName                types.String `tfsdk:"db_subnet_group_name"`
+	DeletionProtection               types.Bool   `tfsdk:"deletion_protection"`
+	EnableGlobalWriteForwarding      types.Bool   `tfsdk:"enable_global_write_forwarding"`
+	EnableHttpEndpoint               types.Bool   `tfsdk:"enable_http_endpoint"`
+	EnabledCloudwatchLogsExports     types.Set    `tfsdk:"enabled_cloudwatch_logs_exports"`
+	Endpoint                         types.String `tfsdk:"endpoint"`
+	Engine                           types.String `tfsdk:"engine"`
+	EngineMode                       types.String `tfsdk:"engine_mode"`
+	EngineVersion                    types.String `tfsdk:"engine_version"`
+	EngineVersionActual              types.String `tfsdk:"engine_version_actual"`
+	FinalSnapshotIdentifier          types.String `tfsdk:"final_snapshot_identifier"`
+	GlobalClusterIdentifier          types.String `tfsdk:"global_cluster_identifier"`
+	HostedZoneID                     types.String `tfsdk:"hosted_zone_id"`
+	IamDatabaseAuthenticationEnabled types.Bool   `tfsdk:"iam_database_authentication_enabled"`
+	IamRoles                         types.Set    `tfsdk:"iam_roles"`
+	ID                               types.String `tfsdk:"id"`
+	Iops                             types.Int64  `tfsdk:"iops"`
+	KmsKeyID                         types.String `tfsdk:"kms_key_id"`
+	MasterPassword                   types.String `tfsdk:"master_password"`
+	MasterUsername                   types.String `tfsdk:"master_username"`
+	MasterUsernameActual             types.String `tfsdk:"master_username_actual"`
+	NetworkType                      types.String `tfsdk:"network_type"`
+	OptionGroupName                  types.String `tfsdk:"option_group_name"`
+	Port                             types.Int64  `tfsdk:"port"`
+	PreferredBackupWindow            types.String `tfsdk:"preferred_backup_window"`
+	PreferredMaintenanceWindow       types.String `tfsdk:"preferred_maintenance_window"`
+	ReaderEndpoint                   types.String `tfsdk:"reader_endpoint"`
+	ReplicationSourceIdentifier      types.String `tfsdk:"replication_source_identifier"`
+	RestoreToPointInTime             types.List   `tfsdk:"restore_to_point_in_time"`
+	S3Import                         types.List   `tfsdk:"s3_import"`
+	ScalingConfiguration             types.List   `tfsdk:"scaling_configuration"`
+	ScalingConfigurationActual       types.List   `tfsdk:"scaling_configuration_actual"`
+	ServerlessV2ScalingConfiguration types.List   `tfsdk:"serverlessv2_scaling_configuration"`
+	SkipFinalSnapshot                types.Bool   `tfsdk:"skip_final_snapshot"`
+	SnapshotIdentifier               types.String `tfsdk:"snapshot_identifier"`
+	SourceRegion                     types.String `tfsdk:"source_region"`
+	StorageEncrypted                 types.Bool   `tfsdk:"storage_encrypted"`
+	StorageType                      types.String `tfsdk:"storage_type"`
+	Tags                             types.Map    `tfsdk:"tags"`
+	TagsAll                          types.Map    `tfsdk:"tags_all"`
+	VpcSecurityGroupIds              types.Set    `tfsdk:"vpc_security_group_ids"`
 
 	Timeouts timeouts.Value `tfsdk:"timeouts"`
 }
@@ -1884,8 +1892,8 @@ func (r *resourceClusterData) refreshFromOutput(ctx context.Context, meta *conns
 		r.DatabaseName = types.StringValue("")
 	}
 	r.DbClusterInstanceClass = flex.StringToFrameworkLegacy(ctx, out.DBClusterInstanceClass)
-	r.DbClusterParameterGroupName = flex.StringValueToFrameworkLegacy(ctx, r.DbInstanceParameterGroupName.ValueString())
-	r.DbClusterParameterGroupNameActual = flex.StringToFrameworkLegacy(ctx, out.DBClusterParameterGroup)
+	r.DbClusterParameterGroupName = flex.StringToFrameworkLegacy(ctx, out.DBClusterParameterGroup)
+	// r.DbClusterParameterGroupNameActual = flex.StringToFrameworkLegacy(ctx, out.DBClusterParameterGroup)
 	r.DbSubnetGroupName = flex.StringToFrameworkLegacy(ctx, out.DBSubnetGroup)
 	r.DeletionProtection = flex.BoolToFramework(ctx, out.DeletionProtection)
 	r.EnabledCloudwatchLogsExports = flex.FlattenFrameworkStringValueSetLegacy(ctx, aws.StringValueSlice(out.EnabledCloudwatchLogsExports))
@@ -1939,6 +1947,7 @@ func (r *resourceClusterData) refreshFromOutput(ctx context.Context, meta *conns
 	r.PreferredMaintenanceWindow = flex.StringValueToFrameworkLegacy(ctx, pmw)
 	r.ReaderEndpoint = flex.StringToFrameworkLegacy(ctx, out.ReaderEndpoint)
 	r.ReplicationSourceIdentifier = flex.StringToFrameworkLegacy(ctx, out.ReplicationSourceIdentifier)
+	// r.ScalingConfiguration = flattenScalingConfigurationFramework(ctx, out.ScalingConfigurationInfo)
 	r.ScalingConfigurationActual = flattenScalingConfigurationFramework(ctx, out.ScalingConfigurationInfo)
 	r.ServerlessV2ScalingConfiguration = flattenServerlessV2ScalingConfigurationFramework(ctx, out.ServerlessV2ScalingConfiguration)
 	r.StorageEncrypted = flex.BoolToFramework(ctx, out.StorageEncrypted)

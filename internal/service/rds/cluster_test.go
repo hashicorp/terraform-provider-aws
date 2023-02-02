@@ -4219,6 +4219,7 @@ resource "aws_db_cluster_snapshot" "test" {
 resource "aws_rds_cluster" "test" {
   cluster_identifier  = %[1]q
   engine_mode         = %[2]q
+  engine_version      = "5.6.mysql_aurora.1.22.3" # version that works with parallelquery engine mode
   skip_final_snapshot = true
   snapshot_identifier = aws_db_cluster_snapshot.test.id
 }
