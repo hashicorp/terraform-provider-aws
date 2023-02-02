@@ -156,6 +156,11 @@ func ResourceEventDataStore() *schema.Resource {
 					validation.IntBetween(7, 2555),
 				),
 			},
+			"kms_key_id": {
+                Type:         schema.TypeString,
+                Optional:     true,
+                ForceNew:     true,
+            },
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 			"termination_protection_enabled": {
@@ -183,6 +188,10 @@ func resourceEventDataStoreCreate(ctx context.Context, d *schema.ResourceData, m
 
 	if _, ok := d.GetOk("advanced_event_selector"); ok {
 		input.AdvancedEventSelectors = expandAdvancedEventSelector(d.Get("advanced_event_selector").([]interface{}))
+	}
+
+	if _, ok := d.GetOk("kms_key_id"); ok {
+	    input.KmsKeyId = aws.String(v.(string))
 	}
 
 	if len(tags) > 0 {
@@ -231,6 +240,7 @@ func resourceEventDataStoreRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("organization_enabled", eventDataStore.OrganizationEnabled)
 	d.Set("retention_period", eventDataStore.RetentionPeriod)
 	d.Set("termination_protection_enabled", eventDataStore.TerminationProtectionEnabled)
+	d.Set("kms_key_id", eventDataStore.KmsKeyId)
 
 	tags, err := ListTags(ctx, conn, d.Id())
 
