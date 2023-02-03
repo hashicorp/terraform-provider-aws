@@ -150,7 +150,6 @@ func TestAccNetworkManagerCoreNetwork_description(t *testing.T) {
 
 func TestAccNetworkManagerCoreNetwork_policyDocument(t *testing.T) {
 	ctx := acctest.Context(t)
-	client := acctest.Provider.Meta().(*conns.AWSClient)
 	resourceName := "aws_networkmanager_core_network.test"
 	originalSegmentValue := "segmentValue1"
 	updatedSegmentValue := "segmentValue2"
@@ -165,15 +164,15 @@ func TestAccNetworkManagerCoreNetwork_policyDocument(t *testing.T) {
 				Config: testAccCoreNetworkConfig_policyDocument(originalSegmentValue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCoreNetworkExists(ctx, resourceName),
-					testAccCheckPolicyDocument(resourceName, originalSegmentValue),
+					resource.TestCheckResourceAttr(resourceName, "policy_document", fmt.Sprintf("{\"core-network-configuration\":{\"asn-ranges\":[\"65022-65534\"],\"edge-locations\":[{\"location\":\"%s\"}],\"vpn-ecmp-support\":true},\"segments\":[{\"isolate-attachments\":false,\"name\":\"%s\",\"require-attachment-acceptance\":true}],\"version\":\"2021.12\"}", acctest.Region(), originalSegmentValue)),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "edges.*", map[string]string{
 						"asn":                  "65022",
-						"edge_location":        client.Region,
+						"edge_location":        acctest.Region(),
 						"inside_cidr_blocks.#": "0",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "segments.*", map[string]string{
 						"edge_locations.#":  "1",
-						"edge_locations.0":  client.Region,
+						"edge_locations.0":  acctest.Region(),
 						"name":              originalSegmentValue,
 						"shared_segments.#": "0",
 					}),
@@ -188,15 +187,15 @@ func TestAccNetworkManagerCoreNetwork_policyDocument(t *testing.T) {
 				Config: testAccCoreNetworkConfig_policyDocument(updatedSegmentValue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCoreNetworkExists(ctx, resourceName),
-					testAccCheckPolicyDocument(resourceName, updatedSegmentValue),
+					resource.TestCheckResourceAttr(resourceName, "policy_document", fmt.Sprintf("{\"core-network-configuration\":{\"asn-ranges\":[\"65022-65534\"],\"edge-locations\":[{\"location\":\"%s\"}],\"vpn-ecmp-support\":true},\"segments\":[{\"isolate-attachments\":false,\"name\":\"%s\",\"require-attachment-acceptance\":true}],\"version\":\"2021.12\"}", acctest.Region(), updatedSegmentValue)),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "edges.*", map[string]string{
 						"asn":                  "65022",
-						"edge_location":        client.Region,
+						"edge_location":        acctest.Region(),
 						"inside_cidr_blocks.#": "0",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "segments.*", map[string]string{
 						"edge_locations.#":  "1",
-						"edge_locations.0":  client.Region,
+						"edge_locations.0":  acctest.Region(),
 						"name":              updatedSegmentValue,
 						"shared_segments.#": "0",
 					}),
@@ -204,24 +203,6 @@ func TestAccNetworkManagerCoreNetwork_policyDocument(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testAccCheckPolicyDocument(n, segmentValue string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-		client := acctest.Provider.Meta().(*conns.AWSClient)
-
-		policyDocumentTarget := fmt.Sprintf("{\"core-network-configuration\":{\"asn-ranges\":[\"65022-65534\"],\"edge-locations\":[{\"location\":\"%s\"}],\"vpn-ecmp-support\":true},\"segments\":[{\"isolate-attachments\":false,\"name\":\"%s\",\"require-attachment-acceptance\":true}],\"version\":\"2021.12\"}", client.Region, segmentValue)
-
-		if rs.Primary.Attributes["policy_document"] != policyDocumentTarget {
-			return fmt.Errorf("Expected policy_document: %s, given %s", policyDocumentTarget, rs.Primary.Attributes["policy_document"])
-		}
-
-		return nil
-	}
 }
 
 func testAccCheckCoreNetworkDestroy(ctx context.Context) resource.TestCheckFunc {
@@ -280,8 +261,6 @@ resource "aws_networkmanager_core_network" "test" {
 
 func testAccCoreNetworkConfig_tags1(tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
-data "aws_region" "current" {}
-
 resource "aws_networkmanager_global_network" "test" {}
 
 resource "aws_networkmanager_core_network" "test" {
@@ -296,8 +275,6 @@ resource "aws_networkmanager_core_network" "test" {
 
 func testAccCoreNetworkConfig_tags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
-data "aws_region" "current" {}
-
 resource "aws_networkmanager_global_network" "test" {}
 
 resource "aws_networkmanager_core_network" "test" {
@@ -313,8 +290,6 @@ resource "aws_networkmanager_core_network" "test" {
 
 func testAccCoreNetworkConfig_description(description string) string {
 	return fmt.Sprintf(`
-data "aws_region" "current" {}
-
 resource "aws_networkmanager_global_network" "test" {}
 
 resource "aws_networkmanager_core_network" "test" {
@@ -326,8 +301,6 @@ resource "aws_networkmanager_core_network" "test" {
 
 func testAccCoreNetworkConfig_policyDocument(segmentValue string) string {
 	return fmt.Sprintf(`
-data "aws_region" "current" {}
-
 resource "aws_networkmanager_global_network" "test" {}
 
 data "aws_networkmanager_core_network_policy_document" "test" {
@@ -335,7 +308,7 @@ data "aws_networkmanager_core_network_policy_document" "test" {
     asn_ranges = ["65022-65534"]
 
     edge_locations {
-      location = data.aws_region.current.name
+      location = %[2]q
     }
   }
 
@@ -348,5 +321,5 @@ resource "aws_networkmanager_core_network" "test" {
   global_network_id = aws_networkmanager_global_network.test.id
   policy_document   = data.aws_networkmanager_core_network_policy_document.test.json
 }
-`, segmentValue)
+`, segmentValue, acctest.Region())
 }

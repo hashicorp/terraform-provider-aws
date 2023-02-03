@@ -30,7 +30,7 @@ func TestAccNetworkManagerCoreNetworkPolicyAttachment_basic(t *testing.T) {
 				Config: testAccCoreNetworkPolicyAttachmentConfig_basic(originalSegmentValue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCoreNetworkPolicyAttachmentExists(ctx, resourceName),
-					testAccCheckPolicyDocument(resourceName, originalSegmentValue),
+					resource.TestCheckResourceAttr(resourceName, "policy_document", fmt.Sprintf("{\"core-network-configuration\":{\"asn-ranges\":[\"65022-65534\"],\"edge-locations\":[{\"location\":\"%s\"}],\"vpn-ecmp-support\":true},\"segments\":[{\"isolate-attachments\":false,\"name\":\"%s\",\"require-attachment-acceptance\":true}],\"version\":\"2021.12\"}", acctest.Region(), originalSegmentValue)),
 					resource.TestCheckResourceAttrPair(resourceName, "core_network_id", "aws_networkmanager_core_network.test", "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "id", "aws_networkmanager_core_network.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "state", networkmanager.CoreNetworkStateAvailable),
@@ -45,7 +45,7 @@ func TestAccNetworkManagerCoreNetworkPolicyAttachment_basic(t *testing.T) {
 				Config: testAccCoreNetworkPolicyAttachmentConfig_basic(updatedSegmentValue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCoreNetworkPolicyAttachmentExists(ctx, resourceName),
-					testAccCheckPolicyDocument(resourceName, updatedSegmentValue),
+					resource.TestCheckResourceAttr(resourceName, "policy_document", fmt.Sprintf("{\"core-network-configuration\":{\"asn-ranges\":[\"65022-65534\"],\"edge-locations\":[{\"location\":\"%s\"}],\"vpn-ecmp-support\":true},\"segments\":[{\"isolate-attachments\":false,\"name\":\"%s\",\"require-attachment-acceptance\":true}],\"version\":\"2021.12\"}", acctest.Region(), updatedSegmentValue)),
 					resource.TestCheckResourceAttrPair(resourceName, "core_network_id", "aws_networkmanager_core_network.test", "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "id", "aws_networkmanager_core_network.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "state", networkmanager.CoreNetworkStateAvailable),
@@ -81,8 +81,6 @@ func testAccCheckCoreNetworkPolicyAttachmentExists(ctx context.Context, n string
 
 func testAccCoreNetworkPolicyAttachmentConfig_basic(segmentValue string) string {
 	return fmt.Sprintf(`
-data "aws_region" "current" {}
-
 resource "aws_networkmanager_global_network" "test" {}
 
 data "aws_networkmanager_core_network_policy_document" "test" {
@@ -90,7 +88,7 @@ data "aws_networkmanager_core_network_policy_document" "test" {
     asn_ranges = ["65022-65534"]
 
     edge_locations {
-      location = data.aws_region.current.name
+      location = %[2]q
     }
   }
 
@@ -111,5 +109,5 @@ resource "aws_networkmanager_core_network_policy_attachment" "test" {
   core_network_id = aws_networkmanager_core_network.test.id
   policy_document = data.aws_networkmanager_core_network_policy_document.test.json
 }
-`, segmentValue)
+`, segmentValue, acctest.Region())
 }
