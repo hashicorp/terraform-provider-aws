@@ -42,7 +42,7 @@ func TestAccKMSKeyDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "origin", "AWS_KMS"),
 					resource.TestCheckResourceAttr(dataSourceName, "pending_deletion_window_in_days", "0"),
 					resource.TestCheckNoResourceAttr(dataSourceName, "valid_to"),
-					resource.TestCheckResourceAttr(dataSourceName, "xks_key_configuration", ""),
+					resource.TestCheckResourceAttr(dataSourceName, "xks_key_configuration.#", "0"),
 				),
 			},
 		},
