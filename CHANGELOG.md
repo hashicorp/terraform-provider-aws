@@ -3,6 +3,7 @@
 BUG FIXES:
 
 * resource/aws_prometheus_workspace: Create a logging configuration on resource update if none existed previously ([#27472](https://github.com/hashicorp/terraform-provider-aws/issues/27472))
+* resource/aws_s3_bucket: Fix crash when `logging` is empty ([#29243](https://github.com/hashicorp/terraform-provider-aws/issues/29243))
 
 ## 4.53.0 (February  3, 2023)
 
