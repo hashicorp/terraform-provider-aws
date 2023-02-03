@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -52,7 +53,7 @@ func TestAccIAMRolePolicyAttachment_basic(t *testing.T) {
 
 					rs := s[0]
 
-					if !strings.HasPrefix(rs.Attributes["policy_arn"], "arn:") {
+					if !arn.IsARN(rs.Attributes["policy_arn"]) {
 						return fmt.Errorf("expected policy_arn attribute to be set and begin with arn:, received: %s", rs.Attributes["policy_arn"])
 					}
 
