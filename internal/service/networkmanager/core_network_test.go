@@ -33,6 +33,7 @@ func TestAccNetworkManagerCoreNetwork_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestMatchResourceAttr(resourceName, "id", regexp.MustCompile(`core-network-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "policy_document", ""),
 					resource.TestCheckResourceAttr(resourceName, "state", networkmanager.CoreNetworkStateAvailable),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
