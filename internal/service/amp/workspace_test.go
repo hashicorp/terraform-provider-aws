@@ -47,43 +47,6 @@ func TestAccAMPWorkspace_basic(t *testing.T) {
 	})
 }
 
-func TestAccAMPWorkspace_addLoggingConfig(t *testing.T) {
-	ctx := acctest.Context(t)
-	var v prometheusservice.WorkspaceDescription
-	resourceName := "aws_prometheus_workspace.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(prometheusservice.EndpointsID, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, prometheusservice.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccWorkspaceConfig_basic(),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "alias", ""),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, "prometheus_endpoint"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-				),
-			},
-			{
-				Config: testAccWorkspaceConfig_loggingConfiguration(resourceName, 0),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "alias", ""),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
-					resource.TestCheckResourceAttrSet(resourceName, "prometheus_endpoint"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-				),
-			},
-		},
-	})
-}
-
 func TestAccAMPWorkspace_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v prometheusservice.WorkspaceDescription
@@ -243,6 +206,14 @@ func TestAccAMPWorkspace_loggingConfiguration(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkspaceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "0"),
+				),
+			},
+			{
+				Config: testAccWorkspaceConfig_loggingConfiguration(rName, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkspaceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "logging_configuration.0.log_group_arn"),
 				),
 			},
 		},
