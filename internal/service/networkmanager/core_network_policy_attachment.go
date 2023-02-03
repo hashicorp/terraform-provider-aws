@@ -6,12 +6,8 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/private/protocol"
-	"github.com/aws/aws-sdk-go/service/networkmanager"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -113,43 +109,10 @@ func resourceCoreNetworkPolicyAttachmentUpdate(ctx context.Context, d *schema.Re
 	conn := meta.(*conns.AWSClient).NetworkManagerConn()
 
 	if d.HasChange("policy_document") {
-		v, err := protocol.DecodeJSONValue(d.Get("policy_document").(string), protocol.NoEscape)
+		err := PutAndExecuteCoreNetworkPolicy(ctx, conn, d.Id(), d.Get("policy_document").(string))
 
 		if err != nil {
-			return diag.Errorf("decoding Network Manager Core Network (%s) policy document: %s", d.Id(), err)
-		}
-
-		output, err := conn.PutCoreNetworkPolicyWithContext(ctx, &networkmanager.PutCoreNetworkPolicyInput{
-			ClientToken:    aws.String(resource.UniqueId()),
-			CoreNetworkId:  aws.String(d.Id()),
-			PolicyDocument: v,
-		})
-
-		if err != nil {
-			return diag.Errorf("putting Network Manager Core Network (%s) policy: %s", d.Id(), err)
-		}
-
-		policyVersionID := aws.Int64Value(output.CoreNetworkPolicy.PolicyVersionId)
-
-		// new policy documents goes from Pending generation to Ready to execute
-		_, err = tfresource.RetryWhen(ctx, 4*time.Minute,
-			func() (interface{}, error) {
-				return conn.ExecuteCoreNetworkChangeSetWithContext(ctx, &networkmanager.ExecuteCoreNetworkChangeSetInput{
-					CoreNetworkId:   aws.String(d.Id()),
-					PolicyVersionId: aws.Int64(policyVersionID),
-				})
-			},
-			func(err error) (bool, error) {
-				if tfawserr.ErrMessageContains(err, networkmanager.ErrCodeValidationException, "Incorrect input") {
-					return true, err
-				}
-
-				return false, err
-			},
-		)
-
-		if err != nil {
-			return diag.Errorf("executing Network Manager Core Network (%s) change set (%d): %s", d.Id(), policyVersionID, err)
+			return diag.FromErr(err)
 		}
 
 		if _, err := waitCoreNetworkUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {

@@ -2,6 +2,7 @@ package networkmanager
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
@@ -259,43 +260,10 @@ func resourceCoreNetworkUpdate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if d.HasChange("policy_document") {
-		v, err := protocol.DecodeJSONValue(d.Get("policy_document").(string), protocol.NoEscape)
+		err := PutAndExecuteCoreNetworkPolicy(ctx, conn, d.Id(), d.Get("policy_document").(string))
 
 		if err != nil {
-			return diag.Errorf("decoding Network Manager Core Network (%s) policy document: %s", d.Id(), err)
-		}
-
-		output, err := conn.PutCoreNetworkPolicyWithContext(ctx, &networkmanager.PutCoreNetworkPolicyInput{
-			ClientToken:    aws.String(resource.UniqueId()),
-			CoreNetworkId:  aws.String(d.Id()),
-			PolicyDocument: v,
-		})
-
-		if err != nil {
-			return diag.Errorf("putting Network Manager Core Network (%s) policy: %s", d.Id(), err)
-		}
-
-		policyVersionID := aws.Int64Value(output.CoreNetworkPolicy.PolicyVersionId)
-
-		// new policy documents goes from Pending generation to Ready to execute
-		_, err = tfresource.RetryWhen(ctx, 4*time.Minute,
-			func() (interface{}, error) {
-				return conn.ExecuteCoreNetworkChangeSetWithContext(ctx, &networkmanager.ExecuteCoreNetworkChangeSetInput{
-					CoreNetworkId:   aws.String(d.Id()),
-					PolicyVersionId: aws.Int64(policyVersionID),
-				})
-			},
-			func(err error) (bool, error) {
-				if tfawserr.ErrMessageContains(err, networkmanager.ErrCodeValidationException, "Incorrect input") {
-					return true, err
-				}
-
-				return false, err
-			},
-		)
-
-		if err != nil {
-			return diag.Errorf("executing Network Manager Core Network (%s) change set (%d): %s", d.Id(), policyVersionID, err)
+			return diag.FromErr(err)
 		}
 
 		if _, err := waitCoreNetworkUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
@@ -543,4 +511,47 @@ func flattenCoreNetworkSegments(apiObjects []*networkmanager.CoreNetworkSegment)
 	}
 
 	return tfList
+}
+
+func PutAndExecuteCoreNetworkPolicy(ctx context.Context, conn *networkmanager.NetworkManager, coreNetworkId, policyDocument string) error {
+	v, err := protocol.DecodeJSONValue(policyDocument, protocol.NoEscape)
+
+	if err != nil {
+		return fmt.Errorf("decoding Network Manager Core Network (%s) policy document: %s", coreNetworkId, err)
+	}
+
+	output, err := conn.PutCoreNetworkPolicyWithContext(ctx, &networkmanager.PutCoreNetworkPolicyInput{
+		ClientToken:    aws.String(resource.UniqueId()),
+		CoreNetworkId:  aws.String(coreNetworkId),
+		PolicyDocument: v,
+	})
+
+	if err != nil {
+		return fmt.Errorf("putting Network Manager Core Network (%s) policy: %s", coreNetworkId, err)
+	}
+
+	policyVersionID := aws.Int64Value(output.CoreNetworkPolicy.PolicyVersionId)
+
+	// new policy documents goes from Pending generation to Ready to execute
+	_, err = tfresource.RetryWhen(ctx, 4*time.Minute,
+		func() (interface{}, error) {
+			return conn.ExecuteCoreNetworkChangeSetWithContext(ctx, &networkmanager.ExecuteCoreNetworkChangeSetInput{
+				CoreNetworkId:   aws.String(coreNetworkId),
+				PolicyVersionId: aws.Int64(policyVersionID),
+			})
+		},
+		func(err error) (bool, error) {
+			if tfawserr.ErrMessageContains(err, networkmanager.ErrCodeValidationException, "Incorrect input") {
+				return true, err
+			}
+
+			return false, err
+		},
+	)
+
+	if err != nil {
+		return fmt.Errorf("executing Network Manager Core Network (%s) change set (%d): %s", coreNetworkId, policyVersionID, err)
+	}
+
+	return nil
 }
