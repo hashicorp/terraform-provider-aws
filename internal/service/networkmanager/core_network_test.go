@@ -39,9 +39,10 @@ func TestAccNetworkManagerCoreNetwork_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"create_base_policy"},
 			},
 		},
 	})
@@ -88,9 +89,10 @@ func TestAccNetworkManagerCoreNetwork_tags(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"create_base_policy"},
 			},
 			{
 				Config: testAccCoreNetworkConfig_tags2("key1", "value1updated", "key2", "value2"),
@@ -133,9 +135,10 @@ func TestAccNetworkManagerCoreNetwork_description(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"create_base_policy"},
 			},
 			{
 				Config: testAccCoreNetworkConfig_description(updatedDescription),
@@ -179,9 +182,10 @@ func TestAccNetworkManagerCoreNetwork_policyDocument(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"create_base_policy"},
 			},
 			{
 				Config: testAccCoreNetworkConfig_policyDocument(updatedSegmentValue),

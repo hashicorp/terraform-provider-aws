@@ -56,6 +56,17 @@ func ResourceCoreNetwork() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"base_policy_region": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: verify.ValidRegionName,
+			},
+			"create_base_policy": {
+				Type:          schema.TypeBool,
+				Optional:      true,
+				Default:       false,
+				ConflictsWith: []string{"policy_document"},
+			},
 			"created_at": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -95,6 +106,7 @@ func ResourceCoreNetwork() *schema.Resource {
 			"policy_document": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(0, 10000000),
 					validation.StringIsJSON,
@@ -104,6 +116,7 @@ func ResourceCoreNetwork() *schema.Resource {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
+				ConflictsWith: []string{"create_base_policy"},
 			},
 			"segments": {
 				Type:     schema.TypeList,
@@ -155,6 +168,23 @@ func resourceCoreNetworkCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	if v, ok := d.GetOk("policy_document"); ok {
 		input.PolicyDocument = aws.String(v.(string))
+	}
+
+	// check if the user wants to create a base policy document
+	// this creates the core network with a starting policy document set to LIVE
+	// this is required for the first terraform apply if there attachments to the core network
+	// and the core network is created without the policy_document argument set
+	if _, ok := d.GetOk("create_base_policy"); ok {
+		var region string
+		// if user supplies a region use it in the base policy, otherwise use current region
+		if v, ok := d.GetOk("base_policy_region"); ok {
+			region = v.(string)
+		} else {
+			region = meta.(*conns.AWSClient).Region
+		}
+
+		policyDocumentTarget := fmt.Sprintf("{\"core-network-configuration\":{\"asn-ranges\":[\"64512-65534\"],\"edge-locations\":[{\"location\":\"%s\"}]},\"segments\":[{\"name\":\"segment\",\"description\":\"base-policy\"}],\"version\":\"2021.12\"}", region)
+		input.PolicyDocument = aws.String(policyDocumentTarget)
 	}
 
 	if len(tags) > 0 {
@@ -268,6 +298,29 @@ func resourceCoreNetworkUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 		if _, err := waitCoreNetworkUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return diag.Errorf("waiting for Network Manager Core Network (%s) update: %s", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("create_base_policy") {
+		if _, ok := d.GetOk("create_base_policy"); ok {
+			var region string
+			// if user supplies a region use it in the base policy, otherwise use current region
+			if v, ok := d.GetOk("base_policy_region"); ok {
+				region = v.(string)
+			} else {
+				region = meta.(*conns.AWSClient).Region
+			}
+
+			policyDocumentTarget := fmt.Sprintf("{\"core-network-configuration\":{\"asn-ranges\":[\"64512-65534\"],\"edge-locations\":[{\"location\":\"%s\"}]},\"segments\":[{\"name\":\"segment\",\"description\":\"base-policy\"}],\"version\":\"2021.12\"}", region)
+			err := PutAndExecuteCoreNetworkPolicy(ctx, conn, d.Id(), policyDocumentTarget)
+
+			if err != nil {
+				return diag.FromErr(err)
+			}
+
+			if _, err := waitCoreNetworkUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return diag.Errorf("waiting for Network Manager Core Network (%s) update: %s", d.Id(), err)
+			}
 		}
 	}
 

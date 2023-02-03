@@ -99,10 +99,6 @@ data "aws_networkmanager_core_network_policy_document" "test" {
 
 resource "aws_networkmanager_core_network" "test" {
   global_network_id = aws_networkmanager_global_network.test.id
-
-  lifecycle {
-    ignore_changes = [policy_document]
-  }
 }
 
 resource "aws_networkmanager_core_network_policy_attachment" "test" {
