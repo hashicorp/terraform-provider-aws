@@ -193,27 +193,18 @@ func resourceWorkspaceUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		if v, ok := d.GetOk("logging_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			tfMap := v.([]interface{})[0].(map[string]interface{})
 
-			// use describe logging configuration to check if the configuration exists
-			describeLoggingInput := &prometheusservice.DescribeLoggingConfigurationInput{
-				WorkspaceId: aws.String(d.Id()),
-			}
-			_, err := conn.DescribeLoggingConfigurationWithContext(ctx, describeLoggingInput)
-			if err != nil {
-				if _, ok := err.(*prometheusservice.ResourceNotFoundException); ok {
-					input := &prometheusservice.CreateLoggingConfigurationInput{
-						LogGroupArn: aws.String(tfMap["log_group_arn"].(string)),
-						WorkspaceId: aws.String(d.Id()),
-					}
+			if o, _ := d.GetChange("logging_configuration"); o == nil || len(o.([]interface{})) == 0 || o.([]interface{})[0] == nil {
+				input := &prometheusservice.CreateLoggingConfigurationInput{
+					LogGroupArn: aws.String(tfMap["log_group_arn"].(string)),
+					WorkspaceId: aws.String(d.Id()),
+				}
 
-					if _, err := conn.CreateLoggingConfigurationWithContext(ctx, input); err != nil {
-						return diag.Errorf("describing Prometheus Workspace Logging configuration create (%s)", err)
-					}
+				if _, err := conn.CreateLoggingConfigurationWithContext(ctx, input); err != nil {
+					return diag.Errorf("creating Prometheus Workspace (%s) logging configuration: %s", d.Id(), err)
+				}
 
-					if _, err := waitLoggingConfigurationCreated(ctx, conn, d.Id()); err != nil {
-						return diag.Errorf("waiting for Prometheus Workspace (%s) logging configuration create: %s", d.Id(), err)
-					}
-				} else {
-					return diag.Errorf("describing Prometheus Workspace Logging configuration (%s)", err)
+				if _, err := waitLoggingConfigurationCreated(ctx, conn, d.Id()); err != nil {
+					return diag.Errorf("waiting for Prometheus Workspace (%s) logging configuration create: %s", d.Id(), err)
 				}
 			} else {
 				input := &prometheusservice.UpdateLoggingConfigurationInput{
