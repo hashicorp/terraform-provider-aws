@@ -47,7 +47,7 @@ func FindTopicAttributesByARN(ctx context.Context, conn *sns.SNS, arn string) (m
 			return resource.NonRetryableError(err)
 		}
 
-		valid, err := policyHasValidPrincipals(attributes[TopicAttributeNamePolicy])
+		valid, err := policyHasValidAWSPrincipals(attributes[TopicAttributeNamePolicy])
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}

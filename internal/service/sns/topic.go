@@ -3,7 +3,6 @@ package sns
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log"
 	"regexp"
@@ -357,11 +356,11 @@ func resourceTopicRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	return nil
 }
 
-// policyHasValidPrincipals validates that the Principals in an IAM Policy are valid
+// policyHasValidAWSPrincipals validates that the Principals in an IAM Policy are valid
 // Assumes that non-"AWS" Principals are valid
 // The value can be a single string or a slice of strings
 // Valid strings are either an ARN or an AWS account ID
-func policyHasValidPrincipals(policy string) (bool, error) {
+func policyHasValidAWSPrincipals(policy string) (bool, error) { // nosemgrep:ci.aws-in-func-name
 	var policyData any
 	err := json.Unmarshal([]byte(policy), &policyData)
 	if err != nil {
@@ -375,22 +374,18 @@ func policyHasValidPrincipals(policy string) (bool, error) {
 
 	principals, ok := result.([]any)
 	if !ok {
-		return false, errors.New("parsing policy: unexpected value")
-	}
-
-	if len(principals) == 0 {
-		return false, errors.New("parsing policy: empty result")
+		return false, fmt.Errorf(`parsing policy: unexpected result: (%[1]T) "%[1]v"`, result)
 	}
 
 	for _, principal := range principals {
 		switch x := principal.(type) {
 		case string:
-			if !isValidPrincipal(x) {
+			if !isValidAWSPrincipal(x) {
 				return false, nil
 			}
 		case []string:
 			for _, s := range x {
-				if !isValidPrincipal(s) {
+				if !isValidAWSPrincipal(s) {
 					return false, nil
 				}
 			}
@@ -400,15 +395,17 @@ func policyHasValidPrincipals(policy string) (bool, error) {
 	return true, nil
 }
 
-// isValidPrincipal returns true if a string is either an ARN or an AWS account ID
-func isValidPrincipal(principal string) bool {
+// isValidAWSPrincipal returns true if a string is either an ARN, an AWS account ID, or `*`
+func isValidAWSPrincipal(principal string) bool { // nosemgrep:ci.aws-in-func-name
+	if principal == "*" {
+		return true
+	}
 	if arn.IsARN(principal) {
 		return true
 	}
 	if regexp.MustCompile(`^\d{12}$`).MatchString(principal) {
 		return true
 	}
-	log.Printf("[DEBUG] invalid principal %q", principal)
 	return false
 }
 
