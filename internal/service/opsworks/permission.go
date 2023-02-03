@@ -82,7 +82,7 @@ func resourceSetPermission(ctx context.Context, d *schema.ResourceData, meta int
 		input.Level = aws.String(d.Get("level").(string))
 	}
 
-	_, err := tfresource.RetryWhenAWSErrMessageContainsContext(ctx, propagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
 		return conn.SetPermissionWithContext(ctx, input)
 	}, opsworks.ErrCodeResourceNotFoundException, "Unable to find user with ARN")
 

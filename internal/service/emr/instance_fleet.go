@@ -236,7 +236,7 @@ func resourceInstanceFleetCreate(ctx context.Context, d *schema.ResourceData, me
 	output, err := conn.AddInstanceFleetWithContext(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating EMR Instance Fleet: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating EMR Instance Fleet: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.InstanceFleetId))

@@ -278,7 +278,7 @@ func resourceCoreNetworkUpdate(ctx context.Context, d *schema.ResourceData, meta
 		policyVersionID := aws.Int64Value(output.CoreNetworkPolicy.PolicyVersionId)
 
 		// new policy documents goes from Pending generation to Ready to execute
-		_, err = tfresource.RetryWhenContext(ctx, 4*time.Minute,
+		_, err = tfresource.RetryWhen(ctx, 4*time.Minute,
 			func() (interface{}, error) {
 				return conn.ExecuteCoreNetworkChangeSetWithContext(ctx, &networkmanager.ExecuteCoreNetworkChangeSetInput{
 					CoreNetworkId:   aws.String(d.Id()),

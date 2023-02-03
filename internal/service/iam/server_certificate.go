@@ -238,7 +238,7 @@ func resourceServerCertificateDelete(ctx context.Context, d *schema.ResourceData
 	conn := meta.(*conns.AWSClient).IAMConn()
 
 	log.Printf("[DEBUG] Deleting IAM Server Certificate: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrMessageContainsContext(ctx, 15*time.Minute, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, 15*time.Minute, func() (interface{}, error) {
 		return conn.DeleteServerCertificateWithContext(ctx, &iam.DeleteServerCertificateInput{
 			ServerCertificateName: aws.String(d.Get("name").(string)),
 		})

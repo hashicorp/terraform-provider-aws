@@ -170,7 +170,7 @@ func resourceEIPCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	d.SetId(aws.StringValue(output.AllocationId))
 
-	_, err = tfresource.RetryWhenNotFoundContext(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
 		return FindEIPByAllocationID(ctx, conn, d.Id())
 	})
 
@@ -182,7 +182,7 @@ func resourceEIPCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	eniID := d.Get("network_interface").(string)
 
 	if instanceID != "" || eniID != "" {
-		_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, d.Timeout(schema.TimeoutCreate),
+		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate),
 			func() (interface{}, error) {
 				return nil, associateEIP(ctx, conn, d.Id(), instanceID, eniID, d.Get("associate_with_private_ip").(string))
 			}, errCodeInvalidAllocationIDNotFound)
@@ -372,7 +372,7 @@ func associateEIP(ctx context.Context, conn *ec2.EC2, id, instanceID, networkInt
 	}
 
 	if associationID := aws.StringValue(output.AssociationId); associationID != "" {
-		_, err := tfresource.RetryWhenContext(ctx, propagationTimeout,
+		_, err := tfresource.RetryWhen(ctx, propagationTimeout,
 			func() (interface{}, error) {
 				return FindEIPByAssociationID(ctx, conn, associationID)
 			},

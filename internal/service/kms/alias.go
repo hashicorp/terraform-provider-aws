@@ -82,7 +82,7 @@ func resourceAliasCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	// KMS is eventually consistent.
 	log.Printf("[DEBUG] Creating KMS Alias: %s", input)
 
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, KeyRotationUpdatedTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, KeyRotationUpdatedTimeout, func() (interface{}, error) {
 		return conn.CreateAliasWithContext(ctx, input)
 	}, kms.ErrCodeNotFoundException)
 
@@ -99,7 +99,7 @@ func resourceAliasRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSConn()
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFoundContext(ctx, PropagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, PropagationTimeout, func() (interface{}, error) {
 		return FindAliasByName(ctx, conn, d.Id())
 	}, d.IsNewResource())
 

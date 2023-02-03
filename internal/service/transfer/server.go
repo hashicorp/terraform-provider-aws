@@ -712,7 +712,7 @@ func resourceServerDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	log.Printf("[DEBUG] Deleting Transfer Server: (%s)", d.Id())
-	_, err := tfresource.RetryWhenAWSErrMessageContainsContext(ctx, 1*time.Minute,
+	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, 1*time.Minute,
 		func() (interface{}, error) {
 			return conn.DeleteServerWithContext(ctx, &transfer.DeleteServerInput{
 				ServerId: aws.String(d.Id()),

@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
@@ -51,6 +52,7 @@ func init() {
 		F:    sweepGlobalClusters,
 		Dependencies: []string{
 			"aws_rds_cluster",
+			"aws_neptune_cluster",
 		},
 	})
 
@@ -212,10 +214,12 @@ func sweepClusters(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	input := &rds.DescribeDBClustersInput{}
 	conn := client.(*conns.AWSClient).RDSConn()
+
+	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
 
+	input := &rds.DescribeDBClustersInput{}
 	err = conn.DescribeDBClustersPagesWithContext(ctx, input, func(page *rds.DescribeDBClustersOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
@@ -236,7 +240,8 @@ func sweepClusters(region string) error {
 				globalCluster, err := DescribeGlobalClusterFromClusterARN(ctx, conn, arn)
 
 				if err != nil {
-					log.Printf("[ERROR] reading RDS Global Cluster information for DB Cluster (%s): %s", id, err)
+					sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("reading RDS Global Cluster information for DB Cluster (%s): %s", id, err))
+					continue
 				}
 
 				if globalCluster != nil && globalCluster.GlobalClusterIdentifier != nil {
@@ -249,23 +254,20 @@ func sweepClusters(region string) error {
 
 		return !lastPage
 	})
-
 	if sweep.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping RDS Cluster sweep for %s: %s", region, err)
-		return nil
+		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
-
 	if err != nil {
-		return fmt.Errorf("error listing RDS Clusters (%s): %w", region, err)
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing RDS Clusters (%s): %w", region, err))
 	}
 
 	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
-
 	if err != nil {
-		return fmt.Errorf("error sweeping RDS Clusters (%s): %w", region, err)
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping RDS Clusters (%s): %w", region, err))
 	}
 
-	return nil
+	return sweeperErrs.ErrorOrNil()
 }
 
 func sweepEventSubscriptions(region string) error {

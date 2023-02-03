@@ -1012,7 +1012,7 @@ func testAccCheckBucketLifecycleConfigurationDestroy(ctx context.Context) resour
 				input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 			}
 
-			output, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, 2*time.Minute, func() (interface{}, error) {
+			output, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
 				return conn.GetBucketLifecycleConfigurationWithContext(ctx, input)
 			}, s3.ErrCodeNoSuchBucket)
 
@@ -1059,7 +1059,7 @@ func testAccCheckBucketLifecycleConfigurationExists(ctx context.Context, n strin
 			input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 		}
 
-		output, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, 2*time.Minute, func() (interface{}, error) {
+		output, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
 			return conn.GetBucketLifecycleConfigurationWithContext(ctx, input)
 		}, tfs3.ErrCodeNoSuchLifecycleConfiguration)
 

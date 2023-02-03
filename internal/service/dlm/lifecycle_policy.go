@@ -512,7 +512,7 @@ func resourceLifecyclePolicyCreate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	log.Printf("[INFO] Creating DLM lifecycle policy: %s", input)
-	out, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, 2*time.Minute, func() (interface{}, error) {
+	out, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
 		return conn.CreateLifecyclePolicyWithContext(ctx, &input)
 	}, dlm.ErrCodeInvalidRequestException)
 

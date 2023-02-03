@@ -100,7 +100,7 @@ func resourceBucketCorsConfigurationCreate(ctx context.Context, d *schema.Resour
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, 2*time.Minute, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
 		return conn.PutBucketCorsWithContext(ctx, input)
 	}, s3.ErrCodeNoSuchBucket)
 
@@ -129,7 +129,7 @@ func resourceBucketCorsConfigurationRead(ctx context.Context, d *schema.Resource
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	corsResponse, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, 2*time.Minute, func() (interface{}, error) {
+	corsResponse, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
 		return conn.GetBucketCorsWithContext(ctx, input)
 	}, ErrCodeNoSuchCORSConfiguration)
 

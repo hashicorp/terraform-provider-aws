@@ -109,7 +109,7 @@ func resourceMethodResponseCreate(ctx context.Context, d *schema.ResourceData, m
 	resourceMethodResponseMutex.Lock()
 	defer resourceMethodResponseMutex.Unlock()
 
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, 2*time.Minute, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
 		return conn.PutMethodResponseWithContext(ctx, &apigateway.PutMethodResponseInput{
 			HttpMethod:         aws.String(d.Get("http_method").(string)),
 			ResourceId:         aws.String(d.Get("resource_id").(string)),

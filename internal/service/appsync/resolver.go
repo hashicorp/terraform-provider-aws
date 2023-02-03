@@ -226,7 +226,7 @@ func resourceResolverCreate(ctx context.Context, d *schema.ResourceData, meta in
 	conns.GlobalMutexKV.Lock(mutexKey)
 	defer conns.GlobalMutexKV.Unlock(mutexKey)
 
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, 2*time.Minute, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
 		return conn.CreateResolverWithContext(ctx, input)
 	}, appsync.ErrCodeConcurrentModificationException)
 
@@ -352,7 +352,7 @@ func resourceResolverUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	conns.GlobalMutexKV.Lock(mutexKey)
 	defer conns.GlobalMutexKV.Unlock(mutexKey)
 
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, 2*time.Minute, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
 		return conn.UpdateResolverWithContext(ctx, input)
 	}, appsync.ErrCodeConcurrentModificationException)
 
@@ -383,7 +383,7 @@ func resourceResolverDelete(ctx context.Context, d *schema.ResourceData, meta in
 	conns.GlobalMutexKV.Lock(mutexKey)
 	defer conns.GlobalMutexKV.Unlock(mutexKey)
 
-	_, err = tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, 2*time.Minute, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
 		return conn.DeleteResolverWithContext(ctx, input)
 	}, appsync.ErrCodeConcurrentModificationException)
 
