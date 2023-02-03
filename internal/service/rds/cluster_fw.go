@@ -644,6 +644,7 @@ func (r *resourceCluster) Create(ctx context.Context, request resource.CreateReq
 		identifier = sdkresource.PrefixedUniqueId("tf-")
 	}
 
+	var output *rds.DBCluster
 	if !data.SnapshotIdentifier.IsUnknown() && !data.SnapshotIdentifier.IsNull() {
 		input := &rds.RestoreDBClusterFromSnapshotInput{
 			CopyTagsToSnapshot:  aws.Bool(data.CopyTagsToSnapshot.ValueBool()),
@@ -737,7 +738,7 @@ func (r *resourceCluster) Create(ctx context.Context, request resource.CreateReq
 			input.VpcSecurityGroupIds = flex.ExpandFrameworkStringSet(ctx, data.VpcSecurityGroupIds)
 		}
 
-		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
+		outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
 			func() (interface{}, error) {
 				return conn.RestoreDBClusterFromSnapshotWithContext(ctx, input)
 			},
@@ -750,6 +751,7 @@ func (r *resourceCluster) Create(ctx context.Context, request resource.CreateReq
 			)
 			return
 		}
+		output = outputRaw.(*rds.RestoreDBClusterFromSnapshotOutput).DBCluster
 	} else if !data.S3Import.IsNull() && len(data.S3Import.Elements()) > 0 {
 		var s3Import []s3Import
 		response.Diagnostics.Append(data.S3Import.ElementsAs(ctx, &s3Import, false)...)
@@ -837,7 +839,7 @@ func (r *resourceCluster) Create(ctx context.Context, request resource.CreateReq
 			input.VpcSecurityGroupIds = flex.ExpandFrameworkStringSet(ctx, data.VpcSecurityGroupIds)
 		}
 
-		_, err := tfresource.RetryWhen(ctx, propagationTimeout,
+		outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
 			func() (interface{}, error) {
 				return conn.RestoreDBClusterFromS3WithContext(ctx, input)
 			},
@@ -867,6 +869,7 @@ func (r *resourceCluster) Create(ctx context.Context, request resource.CreateReq
 			)
 			return
 		}
+		output = outputRaw.(*rds.RestoreDBClusterFromS3Output).DBCluster
 	} else if !data.RestoreToPointInTime.IsNull() && len(data.RestoreToPointInTime.Elements()) > 0 {
 		var restoreToPointInTime []restoreToPointInTime
 		response.Diagnostics.Append(data.RestoreToPointInTime.ElementsAs(ctx, &restoreToPointInTime, false)...)
@@ -969,7 +972,7 @@ func (r *resourceCluster) Create(ctx context.Context, request resource.CreateReq
 			input.VpcSecurityGroupIds = flex.ExpandFrameworkStringSet(ctx, data.VpcSecurityGroupIds)
 		}
 
-		_, err := conn.RestoreDBClusterToPointInTimeWithContext(ctx, input)
+		outputRaw, err := conn.RestoreDBClusterToPointInTimeWithContext(ctx, input)
 
 		if err != nil {
 			response.Diagnostics.AddError(
@@ -978,6 +981,7 @@ func (r *resourceCluster) Create(ctx context.Context, request resource.CreateReq
 			)
 			return
 		}
+		output = outputRaw.DBCluster
 	} else {
 		input := &rds.CreateDBClusterInput{
 			CopyTagsToSnapshot:  aws.Bool(data.CopyTagsToSnapshot.ValueBool()),
@@ -1132,13 +1136,17 @@ func (r *resourceCluster) Create(ctx context.Context, request resource.CreateReq
 
 	data.ID = types.StringValue(identifier)
 
-	if _, err := waitDBClusterCreated(ctx, conn, data.ID.ValueString(), createTimeout); err != nil {
+	outputRaw, err := waitDBClusterCreated(ctx, conn, data.ID.ValueString(), createTimeout)
+
+	if err != nil {
 		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.RDS, create.ErrActionWaitingForCreation, ResNameCluster, data.ID.ValueString(), err),
 			err.Error(),
 		)
 		return
 	}
+
+	output = outputRaw
 
 	if !data.IamRoles.IsUnknown() && !data.IamRoles.IsNull() {
 		roles := flex.ExpandFrameworkStringValueSet(ctx, data.IamRoles)
@@ -1156,7 +1164,7 @@ func (r *resourceCluster) Create(ctx context.Context, request resource.CreateReq
 	if requiresModifyDbCluster {
 		modifyDbClusterInput.DBClusterIdentifier = aws.String(data.ID.ValueString())
 
-		_, err := conn.ModifyDBClusterWithContext(ctx, modifyDbClusterInput)
+		out, err := conn.ModifyDBClusterWithContext(ctx, modifyDbClusterInput)
 		if err != nil {
 			response.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.RDS, create.ErrActionUpdating, ResNameCluster, data.ID.ValueString(), err),
@@ -1172,20 +1180,12 @@ func (r *resourceCluster) Create(ctx context.Context, request resource.CreateReq
 			)
 			return
 		}
-	}
 
-	out, err := FindDBClusterByID(ctx, conn, data.ID.ValueString())
-
-	if err != nil {
-		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.RDS, create.ErrActionWaitingForUpdate, ResNameCluster, data.ID.ValueString(), err),
-			err.Error(),
-		)
-		return
+		output = out.DBCluster
 	}
 
 	state := data
-	response.Diagnostics.Append(state.refreshFromOutput(ctx, r.Meta(), out)...)
+	response.Diagnostics.Append(state.refreshFromOutput(ctx, r.Meta(), output)...)
 	response.Diagnostics.Append(response.State.Set(ctx, &state)...)
 }
 
@@ -1244,6 +1244,7 @@ func (r *resourceCluster) Update(ctx context.Context, request resource.UpdateReq
 	}
 	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
 
+	var output *rds.DBCluster
 	var modifyCluster bool
 	input := &rds.ModifyDBClusterInput{
 		ApplyImmediately:    aws.Bool(plan.ApplyImmediately.ValueBool()),
@@ -1412,13 +1413,17 @@ func (r *resourceCluster) Update(ctx context.Context, request resource.UpdateReq
 			return
 		}
 
-		if _, err := waitDBClusterUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout); err != nil {
+		outputRaw, err := waitDBClusterUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout)
+
+		if err != nil {
 			response.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.RDS, create.ErrActionWaitingForUpdate, ResNameCluster, plan.ID.ValueString(), err),
 				err.Error(),
 			)
 			return
 		}
+
+		output = outputRaw
 	}
 
 	// can only be removed.
@@ -1490,17 +1495,17 @@ func (r *resourceCluster) Update(ctx context.Context, request resource.UpdateReq
 		}
 	}
 
-	out, err := FindDBClusterByID(ctx, conn, plan.ID.ValueString())
+	//out, err := FindDBClusterByID(ctx, conn, plan.ID.ValueString())
+	//
+	//if err != nil {
+	//	response.Diagnostics.AddError(
+	//		create.ProblemStandardMessage(names.RDS, create.ErrActionWaitingForUpdate, ResNameCluster, plan.ID.ValueString(), err),
+	//		err.Error(),
+	//	)
+	//	return
+	//}
 
-	if err != nil {
-		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.RDS, create.ErrActionWaitingForUpdate, ResNameCluster, plan.ID.ValueString(), err),
-			err.Error(),
-		)
-		return
-	}
-
-	response.Diagnostics.Append(plan.refreshFromOutput(ctx, r.Meta(), out)...)
+	response.Diagnostics.Append(plan.refreshFromOutput(ctx, r.Meta(), output)...)
 	response.Diagnostics.Append(response.State.Set(ctx, &plan)...)
 }
 
@@ -1690,11 +1695,18 @@ func (r *resourceCluster) ModifyPlan(ctx context.Context, request resource.Modif
 	}
 
 	var engineMode types.String
+	// var engineVersionPlan, engineVersionState types.String
 	response.Diagnostics.Append(request.Plan.GetAttribute(ctx, path.Root("engine_mode"), &engineMode)...)
+	// response.Diagnostics.Append(request.Plan.GetAttribute(ctx, path.Root("engine_version"), &engineVersionPlan)...)
+	// response.Diagnostics.Append(request.State.GetAttribute(ctx, path.Root("engine_version"), &engineVersionState)...)
 
 	if engineMode.IsUnknown() {
 		response.Diagnostics.Append(response.Plan.SetAttribute(ctx, path.Root("db_cluster_parameter_group_name"), types.StringUnknown())...)
 	}
+
+	//if !engineVersionPlan.Equal(engineVersionState) {
+	//	response.Diagnostics.Append(response.Plan.SetAttribute(ctx, path.Root("db_cluster_parameter_group_name"), types.StringUnknown())...)
+	//}
 
 	r.SetTagsAll(ctx, request, response)
 }
@@ -2060,11 +2072,12 @@ func waitDBClusterUpdated(ctx context.Context, conn *rds.RDS, id string, timeout
 			ClusterStatusResettingMasterCredentials,
 			ClusterStatusUpgrading,
 		},
-		Target:     []string{ClusterStatusAvailable},
-		Refresh:    statusDBCluster(ctx, conn, id),
-		Timeout:    timeout,
-		MinTimeout: 10 * time.Second,
-		Delay:      30 * time.Second,
+		Target:                    []string{ClusterStatusAvailable},
+		Refresh:                   statusDBCluster(ctx, conn, id),
+		Timeout:                   timeout,
+		MinTimeout:                10 * time.Second,
+		Delay:                     30 * time.Second,
+		ContinuousTargetOccurence: 3,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
