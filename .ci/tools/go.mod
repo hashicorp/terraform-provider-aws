@@ -9,7 +9,7 @@ require (
 	github.com/hashicorp/go-changelog v0.0.0-20201005170154-56335215ce3a
 	github.com/katbyte/terrafmt v0.5.2
 	github.com/pavius/impi v0.0.3
-	github.com/rhysd/actionlint v1.6.22
+	github.com/rhysd/actionlint v1.6.23
 	github.com/terraform-linters/tflint v0.44.1
 	mvdan.cc/gofumpt v0.4.0
 )
@@ -156,7 +156,7 @@ require (
 	github.com/matoous/godox v0.0.0-20210227103229-6504466cf951 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.17 // indirect
-	github.com/mattn/go-runewidth v0.0.13 // indirect
+	github.com/mattn/go-runewidth v0.0.14 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
 	github.com/mbilski/exhaustivestruct v1.2.0 // indirect
 	github.com/mgechev/revive v1.2.5 // indirect
@@ -190,7 +190,7 @@ require (
 	github.com/quasilyte/gogrep v0.0.0-20220828223005-86e4605de09f // indirect
 	github.com/quasilyte/regex/syntax v0.0.0-20200407221936-30656e2c4a95 // indirect
 	github.com/quasilyte/stdinfo v0.0.0-20220114132959-f7386bf02567 // indirect
-	github.com/rivo/uniseg v0.3.4 // indirect
+	github.com/rivo/uniseg v0.4.3 // indirect
 	github.com/robfig/cron v1.2.0 // indirect
 	github.com/ryancurrah/gomodguard v1.3.0 // indirect
 	github.com/ryanrolds/sqlclosecheck v0.3.0 // indirect
@@ -238,7 +238,7 @@ require (
 	github.com/xo/terminfo v0.0.0-20210125001918-ca9a967f8778 // indirect
 	github.com/yagipy/maintidx v1.0.0 // indirect
 	github.com/yeya24/promlinter v0.2.0 // indirect
-	github.com/yuin/goldmark v1.4.13 // indirect
+	github.com/yuin/goldmark v1.5.3 // indirect
 	github.com/yuin/goldmark-meta v0.0.0-20191126180153-f0638e958b60 // indirect
 	github.com/zclconf/go-cty v1.12.1 // indirect
 	github.com/zclconf/go-cty-yaml v1.0.3 // indirect
