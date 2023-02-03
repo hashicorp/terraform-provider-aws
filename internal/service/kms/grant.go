@@ -214,10 +214,10 @@ func resourceGrantRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return diags
 	}
 
-	if grant.GranteePrincipal != nil {
+	if grant.GranteePrincipal != nil { // nosemgrep:ci.helper-schema-ResourceData-Set-extraneous-nil-check
 		d.Set("grantee_principal", grant.GranteePrincipal)
 	}
-	if grant.RetiringPrincipal != nil {
+	if grant.RetiringPrincipal != nil { // nosemgrep:ci.helper-schema-ResourceData-Set-extraneous-nil-check
 		d.Set("retiring_principal", grant.RetiringPrincipal)
 	}
 
