@@ -1,6 +1,7 @@
 package imagebuilder
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -9,13 +10,13 @@ import (
 )
 
 // statusImage fetches the Image and its Status
-func statusImage(conn *imagebuilder.Imagebuilder, imageBuildVersionArn string) resource.StateRefreshFunc {
+func statusImage(ctx context.Context, conn *imagebuilder.Imagebuilder, imageBuildVersionArn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &imagebuilder.GetImageInput{
 			ImageBuildVersionArn: aws.String(imageBuildVersionArn),
 		}
 
-		output, err := conn.GetImage(input)
+		output, err := conn.GetImageWithContext(ctx, input)
 
 		if err != nil {
 			return nil, imagebuilder.ImageStatusPending, err

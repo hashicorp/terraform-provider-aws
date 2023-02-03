@@ -35,7 +35,7 @@ func ResourceSecurityGroup() *schema.Resource {
 		DeleteWithoutTimeout: resourceSecurityGroupDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -355,7 +355,7 @@ func resourceSecurityGroupUpdate(ctx context.Context, d *schema.ResourceData, me
 	if d.HasChange("tags_all") && !d.IsNewResource() {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTagsWithContext(ctx, conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
 			return diag.Errorf("updating Security Group (%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -380,7 +380,7 @@ func resourceSecurityGroupDelete(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	log.Printf("[DEBUG] Deleting Security Group: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(
 		ctx,
 		2*time.Minute, // short initial attempt followed by full length attempt
 		func() (interface{}, error) {
@@ -400,7 +400,7 @@ func resourceSecurityGroupDelete(ctx context.Context, d *schema.ResourceData, me
 			}
 		}
 
-		_, err = tfresource.RetryWhenAWSErrCodeEqualsContext(
+		_, err = tfresource.RetryWhenAWSErrCodeEquals(
 			ctx,
 			d.Timeout(schema.TimeoutDelete),
 			func() (interface{}, error) {
@@ -420,7 +420,7 @@ func resourceSecurityGroupDelete(ctx context.Context, d *schema.ResourceData, me
 		return diag.Errorf("deleting Security Group (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(propagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, propagationTimeout, func() (interface{}, error) {
 		return FindSecurityGroupByID(ctx, conn, d.Id())
 	})
 

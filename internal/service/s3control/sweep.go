@@ -42,6 +42,7 @@ func init() {
 }
 
 func sweepAccessPoints(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -54,7 +55,7 @@ func sweepAccessPoints(region string) error {
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
 
-	err = conn.ListAccessPointsPages(input, func(page *s3control.ListAccessPointsOutput, lastPage bool) bool {
+	err = conn.ListAccessPointsPagesWithContext(ctx, input, func(page *s3control.ListAccessPointsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -84,7 +85,7 @@ func sweepAccessPoints(region string) error {
 		return fmt.Errorf("error listing S3 Access Points (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping S3 Access Points (%s): %w", region, err))
@@ -94,6 +95,7 @@ func sweepAccessPoints(region string) error {
 }
 
 func sweepMultiRegionAccessPoints(region string) error {
+	ctx := sweep.Context(region)
 	if region != endpoints.UsWest2RegionID {
 		log.Printf("[WARN] Skipping S3 Multi-Region Access Point sweep for region: %s", region)
 		return nil
@@ -110,7 +112,7 @@ func sweepMultiRegionAccessPoints(region string) error {
 	}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListMultiRegionAccessPointsPages(input, func(page *s3control.ListMultiRegionAccessPointsOutput, lastPage bool) bool {
+	err = conn.ListMultiRegionAccessPointsPagesWithContext(ctx, input, func(page *s3control.ListMultiRegionAccessPointsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -135,7 +137,7 @@ func sweepMultiRegionAccessPoints(region string) error {
 		return fmt.Errorf("error listing S3 Multi-Region Access Points (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping S3 Multi-Region Access Points (%s): %w", region, err)
@@ -145,6 +147,7 @@ func sweepMultiRegionAccessPoints(region string) error {
 }
 
 func sweepObjectLambdaAccessPoints(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -156,7 +159,7 @@ func sweepObjectLambdaAccessPoints(region string) error {
 	}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	conn.ListAccessPointsForObjectLambdaPages(input, func(page *s3control.ListAccessPointsForObjectLambdaOutput, lastPage bool) bool {
+	conn.ListAccessPointsForObjectLambdaPagesWithContext(ctx, input, func(page *s3control.ListAccessPointsForObjectLambdaOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -181,7 +184,7 @@ func sweepObjectLambdaAccessPoints(region string) error {
 		return fmt.Errorf("error listing S3 Object Lambda Access Points (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping S3 Object Lambda Access Points (%s): %w", region, err)
@@ -191,6 +194,7 @@ func sweepObjectLambdaAccessPoints(region string) error {
 }
 
 func sweepStorageLensConfigurations(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -202,7 +206,7 @@ func sweepStorageLensConfigurations(region string) error {
 	}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	conn.ListStorageLensConfigurationsPages(input, func(page *s3control.ListStorageLensConfigurationsOutput, lastPage bool) bool {
+	conn.ListStorageLensConfigurationsPagesWithContext(ctx, input, func(page *s3control.ListStorageLensConfigurationsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -233,7 +237,7 @@ func sweepStorageLensConfigurations(region string) error {
 		return fmt.Errorf("error listing S3 Storage Lens Configurations (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping S3 Storage Lens Configurations (%s): %w", region, err)

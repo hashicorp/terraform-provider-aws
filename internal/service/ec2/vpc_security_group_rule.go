@@ -218,7 +218,7 @@ information and instructions for recovery. Error: %s`, securityGroupID, err)
 		return diag.Errorf("authorizing Security Group (%s) Rule (%s): %s", securityGroupID, id, err)
 	}
 
-	_, err = tfresource.RetryWhenNotFoundContext(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
 		sg, err := FindSecurityGroupByID(ctx, conn, securityGroupID)
 
 		if err != nil {

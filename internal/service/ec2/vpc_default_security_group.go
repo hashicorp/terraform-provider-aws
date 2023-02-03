@@ -21,7 +21,7 @@ func ResourceDefaultSecurityGroup() *schema.Resource {
 		DeleteWithoutTimeout: schema.NoopContext,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		SchemaVersion: 1, // Keep in sync with aws_security_group's schema version.
@@ -113,7 +113,7 @@ func resourceDefaultSecurityGroupCreate(ctx context.Context, d *schema.ResourceD
 	nTagsAll := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	if !nTagsAll.Equal(oTagsAll) {
-		if err := UpdateTagsWithContext(ctx, conn, d.Id(), oTagsAll.Map(), nTagsAll.Map()); err != nil {
+		if err := UpdateTags(ctx, conn, d.Id(), oTagsAll.Map(), nTagsAll.Map()); err != nil {
 			return diag.Errorf("updating Default Security Group (%s) tags: %s", d.Id(), err)
 		}
 	}

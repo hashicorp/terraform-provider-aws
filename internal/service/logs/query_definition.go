@@ -163,7 +163,7 @@ func FindQueryDefinitionByTwoPartKey(ctx context.Context, conn *cloudwatchlogs.C
 	}
 	var output *cloudwatchlogs.QueryDefinition
 
-	err := describeQueryDefinitionsPagesWithContext(ctx, conn, input, func(page *cloudwatchlogs.DescribeQueryDefinitionsOutput, lastPage bool) bool {
+	err := describeQueryDefinitionsPages(ctx, conn, input, func(page *cloudwatchlogs.DescribeQueryDefinitionsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}

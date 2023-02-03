@@ -1,6 +1,7 @@
 package configservice
 
 import (
+	"context"
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/configservice"
@@ -11,7 +12,7 @@ const (
 	ruleDeletedTimeout = 5 * time.Minute
 )
 
-func waitRuleDeleted(conn *configservice.ConfigService, name string) (*configservice.ConfigRule, error) {
+func waitRuleDeleted(ctx context.Context, conn *configservice.ConfigService, name string) (*configservice.ConfigRule, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			configservice.ConfigRuleStateActive,
@@ -20,11 +21,11 @@ func waitRuleDeleted(conn *configservice.ConfigService, name string) (*configser
 			configservice.ConfigRuleStateEvaluating,
 		},
 		Target:  []string{},
-		Refresh: statusRule(conn, name),
+		Refresh: statusRule(ctx, conn, name),
 		Timeout: ruleDeletedTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if v, ok := outputRaw.(*configservice.ConfigRule); ok {
 		return v, err

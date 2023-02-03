@@ -39,7 +39,7 @@ func DeleteFrameworkResource(factory func(context.Context) (fwresource.ResourceW
 	}
 
 	for name, v := range is.Attributes {
-		if strings.Contains(name, ".") {
+		if name == "%" || strings.Contains(name, ".") {
 			continue
 		}
 

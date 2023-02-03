@@ -57,7 +57,7 @@ func (r *resourceAssessment) Metadata(_ context.Context, request resource.Metada
 func (r *resourceAssessment) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": framework.ARNAttribute(),
+			"arn": framework.ARNAttributeComputedOnly(),
 			"description": schema.StringAttribute{
 				Optional: true,
 			},
@@ -201,7 +201,7 @@ func (r *resourceAssessment) Create(ctx context.Context, req resource.CreateRequ
 	defaultTagsConfig := r.Meta().DefaultTagsConfig
 	ignoreTagsConfig := r.Meta().IgnoreTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(plan.Tags))
-	plan.TagsAll = flex.FlattenFrameworkStringValueMap(ctx, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
+	plan.TagsAll = flex.FlattenFrameworkStringValueMapLegacy(ctx, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
 
 	if len(tags) > 0 {
 		in.Tags = Tags(tags.IgnoreAWS())
@@ -213,7 +213,7 @@ func (r *resourceAssessment) Create(ctx context.Context, req resource.CreateRequ
 	//   ResourceNotFoundException: The operation tried to access a nonexistent resource. The resource
 	//   might not be specified correctly, or its status might not be active. Check and try again.
 	var out *auditmanager.CreateAssessmentOutput
-	err := tfresource.RetryContext(ctx, iamPropagationTimeout, func() *sdkv2resource.RetryError {
+	err := tfresource.Retry(ctx, iamPropagationTimeout, func() *sdkv2resource.RetryError {
 		var err error
 		out, err = conn.CreateAssessment(ctx, &in)
 		if err != nil {
@@ -513,9 +513,9 @@ func (rd *resourceAssessmentData) refreshFromOutput(ctx context.Context, meta *c
 	if tags := tags.RemoveDefaultConfig(defaultTagsConfig).Map(); len(tags) == 0 {
 		rd.Tags = tftags.Null
 	} else {
-		rd.Tags = flex.FlattenFrameworkStringValueMap(ctx, tags)
+		rd.Tags = flex.FlattenFrameworkStringValueMapLegacy(ctx, tags)
 	}
-	rd.TagsAll = flex.FlattenFrameworkStringValueMap(ctx, tags.Map())
+	rd.TagsAll = flex.FlattenFrameworkStringValueMapLegacy(ctx, tags.Map())
 
 	return diags
 }

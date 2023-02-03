@@ -28,6 +28,7 @@ func init() {
 }
 
 func sweepClusters(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -38,7 +39,7 @@ func sweepClusters(region string) error {
 	}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListClustersPages(input, func(page *emr.ListClustersOutput, lastPage bool) bool {
+	err = conn.ListClustersPagesWithContext(ctx, input, func(page *emr.ListClustersOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -46,7 +47,7 @@ func sweepClusters(region string) error {
 		for _, v := range page.Clusters {
 			id := aws.StringValue(v.Id)
 
-			_, err := conn.SetTerminationProtection(&emr.SetTerminationProtectionInput{
+			_, err := conn.SetTerminationProtectionWithContext(ctx, &emr.SetTerminationProtectionInput{
 				JobFlowIds:           aws.StringSlice([]string{id}),
 				TerminationProtected: aws.Bool(false),
 			})
@@ -74,7 +75,7 @@ func sweepClusters(region string) error {
 		return fmt.Errorf("error listing EMR Clusters (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping EMR Clusters (%s): %w", region, err)
@@ -84,6 +85,7 @@ func sweepClusters(region string) error {
 }
 
 func sweepStudios(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
@@ -95,7 +97,7 @@ func sweepStudios(region string) error {
 	var sweeperErrs *multierror.Error
 	input := &emr.ListStudiosInput{}
 
-	err = conn.ListStudiosPages(input, func(page *emr.ListStudiosOutput, lastPage bool) bool {
+	err = conn.ListStudiosPagesWithContext(ctx, input, func(page *emr.ListStudiosOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -119,7 +121,7 @@ func sweepStudios(region string) error {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing EMR Studios for %s: %w", region, err))
 	}
 
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping EMR Studios for %s: %w", region, err))
 	}
 

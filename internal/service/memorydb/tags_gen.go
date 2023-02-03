@@ -14,11 +14,7 @@ import (
 // ListTags lists memorydb service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn memorydbiface.MemoryDBAPI, identifier string) (tftags.KeyValueTags, error) {
-	return ListTagsWithContext(context.Background(), conn, identifier)
-}
-
-func ListTagsWithContext(ctx context.Context, conn memorydbiface.MemoryDBAPI, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(ctx context.Context, conn memorydbiface.MemoryDBAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &memorydb.ListTagsInput{
 		ResourceArn: aws.String(identifier),
 	}
@@ -64,10 +60,7 @@ func KeyValueTags(tags []*memorydb.Tag) tftags.KeyValueTags {
 // UpdateTags updates memorydb service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn memorydbiface.MemoryDBAPI, identifier string, oldTags interface{}, newTags interface{}) error {
-	return UpdateTagsWithContext(context.Background(), conn, identifier, oldTags, newTags)
-}
-func UpdateTagsWithContext(ctx context.Context, conn memorydbiface.MemoryDBAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(ctx context.Context, conn memorydbiface.MemoryDBAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
