@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -164,11 +165,8 @@ func resourceGrantCreate(ctx context.Context, d *schema.ResourceData, meta inter
 			// Error Codes: https://docs.aws.amazon.com/sdk-for-go/api/service/kms/#KMS.CreateGrant
 			// Under some circumstances a newly created IAM Role doesn't show up and causes
 			// an InvalidArnException to be thrown.
-			if tfawserr.ErrCodeEquals(err, kms.ErrCodeDependencyTimeoutException) ||
-				tfawserr.ErrCodeEquals(err, kms.ErrCodeInternalException) ||
-				tfawserr.ErrCodeEquals(err, kms.ErrCodeInvalidArnException) {
-				return resource.RetryableError(
-					fmt.Errorf("creating KMS Grant for Key (%s), retrying: %w", keyId, err))
+			if tfawserr.ErrCodeEquals(err, kms.ErrCodeDependencyTimeoutException, kms.ErrCodeInternalException, kms.ErrCodeInvalidArnException) {
+				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
 		}
@@ -216,35 +214,22 @@ func resourceGrantRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return diags
 	}
 
-	// The grant sometimes contains principals that identified by their unique id: "AROAJYCVIVUZIMTXXXXX"
-	// instead of "arn:aws:...", in this case don't update the state file
-	if strings.HasPrefix(*grant.GranteePrincipal, "arn:aws") {
+	if grant.GranteePrincipal != nil {
 		d.Set("grantee_principal", grant.GranteePrincipal)
-	} else {
-		log.Printf(
-			"[WARN] Unable to update grantee principal state %s for grant id %s for key id %s.",
-			*grant.GranteePrincipal, grantId, keyId)
 	}
-
 	if grant.RetiringPrincipal != nil {
-		if strings.HasPrefix(*grant.RetiringPrincipal, "arn:aws") {
-			d.Set("retiring_principal", grant.RetiringPrincipal)
-		} else {
-			log.Printf(
-				"[WARN] Unable to update retiring principal state %s for grant id %s for key id %s",
-				*grant.RetiringPrincipal, grantId, keyId)
-		}
+		d.Set("retiring_principal", grant.RetiringPrincipal)
 	}
 
 	if err := d.Set("operations", aws.StringValueSlice(grant.Operations)); err != nil {
-		log.Printf("[DEBUG] Error setting operations for grant %s with error %s", grantId, err)
+		return sdkdiag.AppendErrorf(diags, "setting operations: %s", err)
 	}
 	if aws.StringValue(grant.Name) != "" {
 		d.Set("name", grant.Name)
 	}
 	if grant.Constraints != nil {
 		if err := d.Set("constraints", flattenGrantConstraints(grant.Constraints)); err != nil {
-			log.Printf("[DEBUG] Error setting constraints for grant %s with error %s", grantId, err)
+			return sdkdiag.AppendErrorf(diags, "setting constraints: %s", err)
 		}
 	}
 
@@ -322,6 +307,18 @@ func findGrantByIdRetry(ctx context.Context, conn *kms.KMS, keyId string, grantI
 
 		if err != nil {
 			return resource.NonRetryableError(err)
+		}
+
+		if principal := aws.StringValue(grant.GranteePrincipal); principal != "" {
+			if !arn.IsARN(principal) {
+				return resource.RetryableError(fmt.Errorf("grantee principal is invalid: %q", principal))
+			}
+		}
+
+		if principal := aws.StringValue(grant.RetiringPrincipal); principal != "" {
+			if !arn.IsARN(principal) {
+				return resource.RetryableError(fmt.Errorf("retiring principal is invalid: %q", principal))
+			}
 		}
 
 		return nil
@@ -523,7 +520,7 @@ func flattenGrantConstraints(constraint *kms.GrantConstraints) *schema.Set {
 }
 
 func decodeGrantID(id string) (string, string, error) {
-	if strings.HasPrefix(id, "arn:aws") {
+	if arn.IsARN(id) {
 		arnParts := strings.Split(id, "/")
 		if len(arnParts) != 2 {
 			return "", "", fmt.Errorf("unexpected format of ARN (%q), expected KeyID:GrantID", id)

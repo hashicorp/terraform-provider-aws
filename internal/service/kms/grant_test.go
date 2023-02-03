@@ -34,8 +34,8 @@ func TestAccKMSGrant_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "operations.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "operations.*", "Encrypt"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "operations.*", "Decrypt"),
-					resource.TestCheckResourceAttrSet(resourceName, "grantee_principal"),
-					resource.TestCheckResourceAttrSet(resourceName, "key_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "grantee_principal", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "key_id", "aws_kms_key.test", "key_id"),
 				),
 			},
 			{
@@ -112,7 +112,7 @@ func TestAccKMSGrant_withRetiringPrincipal(t *testing.T) {
 				Config: testAccGrantConfig_retiringPrincipal(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGrantExists(resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "retiring_principal"),
+					resource.TestCheckResourceAttrPair(resourceName, "retiring_principal", "aws_iam_role.test", "arn"),
 				),
 			},
 			{
@@ -174,8 +174,8 @@ func TestAccKMSGrant_arn(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "operations.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "operations.*", "Encrypt"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "operations.*", "Decrypt"),
-					resource.TestCheckResourceAttrSet(resourceName, "grantee_principal"),
-					resource.TestCheckResourceAttrSet(resourceName, "key_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "grantee_principal", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "key_id", "aws_kms_key.test", "arn"),
 				),
 			},
 			{
