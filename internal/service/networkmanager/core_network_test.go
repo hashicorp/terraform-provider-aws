@@ -249,6 +249,46 @@ func TestAccNetworkManagerCoreNetwork_createBasePolicyDocumentWithoutRegion(t *t
 	})
 }
 
+func TestAccNetworkManagerCoreNetwork_createBasePolicyDocumentWithRegion(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_networkmanager_core_network.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCoreNetworkDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCoreNetworkConfig_basePolicyDocumentWithRegion(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCoreNetworkExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "create_base_policy", "true"),
+					resource.TestCheckResourceAttr(resourceName, "policy_document", fmt.Sprintf("{\"core-network-configuration\":{\"asn-ranges\":[\"64512-65534\"],\"edge-locations\":[{\"location\":\"%s\"}]},\"segments\":[{\"description\":\"base-policy\",\"name\":\"segment\"}],\"version\":\"2021.12\"}", acctest.AlternateRegion())),
+					resource.TestCheckResourceAttr(resourceName, "base_policy_region", acctest.AlternateRegion()),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "edges.*", map[string]string{
+						"asn":                  "64512",
+						"edge_location":        acctest.AlternateRegion(),
+						"inside_cidr_blocks.#": "0",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "segments.*", map[string]string{
+						"edge_locations.#":  "1",
+						"edge_locations.0":  acctest.AlternateRegion(),
+						"name":              "segment",
+						"shared_segments.#": "0",
+					}),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"base_policy_region", "create_base_policy"},
+			},
+		},
+	})
+}
+
 func testAccCheckCoreNetworkDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn()
@@ -377,4 +417,16 @@ resource "aws_networkmanager_core_network" "test" {
   create_base_policy = true
 }
 `
+}
+
+func testAccCoreNetworkConfig_basePolicyDocumentWithRegion() string {
+	return fmt.Sprintf(`
+resource "aws_networkmanager_global_network" "test" {}
+
+resource "aws_networkmanager_core_network" "test" {
+  global_network_id  = aws_networkmanager_global_network.test.id
+  base_policy_region = %[1]q
+  create_base_policy = true
+}
+`, acctest.AlternateRegion())
 }
