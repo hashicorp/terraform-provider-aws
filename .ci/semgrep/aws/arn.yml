@@ -1,0 +1,7 @@
+rules:
+  - id: prefer-isarn-to-stringshasprefix
+    languages: [go]
+    message: Prefer `aws.IsARN` to `strings.HasPrefix`
+    patterns:
+      - pattern: strings.HasPrefix($STR, "arn:")
+    severity: WARNING
