@@ -10,6 +10,8 @@ description: |-
 
 Provides a core network resource.
 
+~> **NOTE on Core Networks and Policy Attachments:** For a given core network, this resource's `policy_document` argument is incompatible with using the [`aws_networkmanager_core_network_policy_attachment` resource](/docs/providers/aws/r/networkmanager_core_network_policy_attachment.html). When using this resource's `policy_document` argument and the `aws_networkmanager_core_network_policy_attachment` resource, both will attempt to manage the core network's policy document and Terraform will show a permanent difference.
+
 ## Example Usage
 
 ### Basic
@@ -50,13 +52,90 @@ resource "aws_networkmanager_core_network" "example" {
 }
 ```
 
+### With VPC Attachment
+
+```terraform
+resource "aws_networkmanager_global_network" "example" {}
+
+data "aws_networkmanager_core_network_policy_document" "example" {
+  core_network_configuration {
+    asn_ranges = ["65022-65534"]
+
+    edge_locations {
+      location = "us-west-2"
+    }
+  }
+
+  segments {
+    name = "segment"
+  }
+
+  segment_actions {
+    action  = "create-route"
+    segment = "segment"
+    destination_cidr_blocks = [
+      "0.0.0.0/0"
+    ]
+    destinations = [
+      aws_networkmanager_vpc_attachment.example.id,
+    ]
+  }
+}
+
+resource "aws_networkmanager_core_network" "example" {
+  global_network_id  = aws_networkmanager_global_network.example.id
+  create_base_policy = true
+}
+
+resource "aws_networkmanager_core_network_policy_attachment" "example" {
+  core_network_id = aws_networkmanager_core_network.example.id
+  policy_document = data.aws_networkmanager_core_network_policy_document.example.json
+}
+
+resource "aws_networkmanager_vpc_attachment" "example" {
+  core_network_id = aws_networkmanager_core_network.example.id
+  subnet_arns     = aws_subnet.example[*].arn
+  vpc_arn         = aws_vpc.example.arn
+}
+
+resource "aws_networkmanager_attachment_accepter" "example" {
+  attachment_id   = aws_networkmanager_vpc_attachment.example.id
+  attachment_type = aws_networkmanager_vpc_attachment.example.attachment_type
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
 
 * `description` - (Optional) Description of the Core Network.
+* `base_policy_region` - (Optional) The base policy created by setting the `create_base_policy` argument to `true` requires a region to be set in the `edge-locations` parameter. If `base_policy_region` is not specified, the region used in the base policy defaults to the region that is specified in the `provider` block.
+* `create_base_policy` - (Optional) Specifies whether to create a base policy when a core network is created or updated. A base policy is created and set to `LIVE` to allow attachments to the core network (e.g. VPC Attachments). Valid values are `true` or `false`. Conflicts with `policy_document`. An example of this Terraform snippet can be found [above](#with-vpc-attachment). An example of a base policy created is shown below. This base policy is overridden with the policy that you specify in the [`aws_networkmanager_core_network_policy_attachment` resource](/docs/providers/aws/r/networkmanager_core_network_policy_attachment.html).
+
+```json
+{
+  "version": "2021.12",
+  "core-network-configuration": {
+    "asn-ranges": [
+      "64512-65534"
+    ],
+    "edge-locations": [
+      {
+        "location": "us-east-1"
+      }
+    ]
+  },
+  "segments": [
+    {
+      "name": "segment",
+      "description": "base-policy"
+    }
+  ]
+}
+```
+
 * `global_network_id` - (Required) The ID of the global network that a core network will be a part of.
-* `policy_document` - (Optional) Policy document for creating a core network. Note that updating this argument will result in the new policy document version being set as the `LATEST` and `LIVE` policy document. Refer to the [Core network policies documentation](https://docs.aws.amazon.com/network-manager/latest/cloudwan/cloudwan-policy-change-sets.html) for more information.
+* `policy_document` - (Optional) Policy document for creating a core network. Note that updating this argument will result in the new policy document version being set as the `LATEST` and `LIVE` policy document. Refer to the [Core network policies documentation](https://docs.aws.amazon.com/network-manager/latest/cloudwan/cloudwan-policy-change-sets.html) for more information. Conflicts with `create_base_policy`.
 * `tags` - (Optional) Key-value tags for the Core Network. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Timeouts

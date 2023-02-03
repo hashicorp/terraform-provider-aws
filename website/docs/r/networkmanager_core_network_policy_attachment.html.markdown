@@ -10,7 +10,7 @@ description: |-
 
 Provides a Core Network Policy Attachment resource.
 
-~> **NOTE on Core Networks and Policy Attachments:** Terraform currently provides both a standalone [`aws_networkmanager_core_network_policy_attachment`](networkmanager_core_network_policy_attachment.html) resource, and an [`aws_networkmanager_core_network`](networkmanager_core_network.html) resource with `policy_document` defined in-line. These two methods are not mutually-exclusive. If `aws_networkmanager_core_network_policy_attachment` resources are used with inline `policy_document`, the `aws_networkmanager_core_network` resource must be configured to ignore changes to the `policy_document` argument within a [`lifecycle` configuration block](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html).
+~> **NOTE on Core Networks and Policy Attachments:** For a given policy attachment, this resource is incompatible with using the [`aws_networkmanager_core_network` resource](/docs/providers/aws/r/networkmanager_core_network.html) `policy_document` argument. When using that argument and this resource, both will attempt to manage the core network's policy document and Terraform will show a permanent difference.
 
 ## Example Usage
 
@@ -19,15 +19,63 @@ Provides a Core Network Policy Attachment resource.
 ```terraform
 resource "aws_networkmanager_core_network" "example" {
   global_network_id = aws_networkmanager_global_network.example.id
-
-  lifecycle {
-    ignore_changes = [policy_document]
-  }
 }
 
 resource "aws_networkmanager_core_network_policy_attachment" "example" {
   core_network_id = aws_networkmanager_core_network.example.id
   policy_document = data.aws_networkmanager_core_network_policy_document.example.json
+}
+```
+
+### With VPC Attachment
+
+```terraform
+resource "aws_networkmanager_global_network" "example" {}
+
+data "aws_networkmanager_core_network_policy_document" "example" {
+  core_network_configuration {
+    asn_ranges = ["65022-65534"]
+
+    edge_locations {
+      location = "us-west-2"
+    }
+  }
+
+  segments {
+    name = "segment"
+  }
+
+  segment_actions {
+    action  = "create-route"
+    segment = "segment"
+    destination_cidr_blocks = [
+      "0.0.0.0/0"
+    ]
+    destinations = [
+      aws_networkmanager_vpc_attachment.example.id,
+    ]
+  }
+}
+
+resource "aws_networkmanager_core_network" "example" {
+  global_network_id  = aws_networkmanager_global_network.example.id
+  create_base_policy = true
+}
+
+resource "aws_networkmanager_core_network_policy_attachment" "example" {
+  core_network_id = aws_networkmanager_core_network.example.id
+  policy_document = data.aws_networkmanager_core_network_policy_document.example.json
+}
+
+resource "aws_networkmanager_vpc_attachment" "example" {
+  core_network_id = aws_networkmanager_core_network.example.id
+  subnet_arns     = aws_subnet.example[*].arn
+  vpc_arn         = aws_vpc.example.arn
+}
+
+resource "aws_networkmanager_attachment_accepter" "example" {
+  attachment_id   = aws_networkmanager_vpc_attachment.example.id
+  attachment_type = aws_networkmanager_vpc_attachment.example.attachment_type
 }
 ```
 
