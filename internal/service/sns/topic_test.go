@@ -254,6 +254,7 @@ func TestAccSNSTopic_withIAMRole(t *testing.T) {
 				Config: testAccTopicConfig_iamRole(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTopicExists(ctx, resourceName, &attributes),
+					acctest.CheckResourceAttrJMESPair(resourceName, "policy", "Statement[0].Principal.AWS", "aws_iam_role.example", "arn"),
 				),
 			},
 			{
