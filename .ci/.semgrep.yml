@@ -841,10 +841,7 @@ rules:
     paths:
       include:
         - internal/
-    patterns:
-      - pattern-either:
-          - pattern: $AWSERR, $OK := $ORIGINALERR.(awserr.Error)
-          - pattern: var $AWSERR awserr.Error
+    pattern: $AWSERR, $OK := $ORIGINALERR.(awserr.Error)
     severity: WARNING
 
   - id: fmt-Errorf-awserr-Error-Code
