@@ -123,7 +123,7 @@ func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, m
 		}
 	}
 
-	return resourceParameterGroupRead(ctx, d, meta)
+	return append(diags, resourceParameterGroupRead(ctx, d, meta)...)
 }
 
 func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -137,7 +137,7 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Redshift Parameter Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
@@ -180,7 +180,7 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 
 	d.Set("parameter", flattenParameters(output.Parameters))
 
-	return nil
+	return diags
 }
 
 func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -221,7 +221,7 @@ func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, m
 		}
 	}
 
-	return resourceParameterGroupRead(ctx, d, meta)
+	return append(diags, resourceParameterGroupRead(ctx, d, meta)...)
 }
 
 func resourceParameterGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -234,14 +234,14 @@ func resourceParameterGroupDelete(ctx context.Context, d *schema.ResourceData, m
 	})
 
 	if tfawserr.ErrCodeEquals(err, redshift.ErrCodeClusterParameterGroupNotFoundFault) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Redshift Parameter Group (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func FindParameterGroupByName(ctx context.Context, conn *redshift.Redshift, name string) (*redshift.ClusterParameterGroup, error) {

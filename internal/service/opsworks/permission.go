@@ -94,7 +94,7 @@ func resourceSetPermission(ctx context.Context, d *schema.ResourceData, meta int
 		d.SetId(id)
 	}
 
-	return resourcePermissionRead(ctx, d, meta)
+	return append(diags, resourcePermissionRead(ctx, d, meta)...)
 }
 
 func resourcePermissionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -106,7 +106,7 @@ func resourcePermissionRead(ctx context.Context, d *schema.ResourceData, meta in
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] OpsWorks Permission %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
@@ -119,7 +119,7 @@ func resourcePermissionRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("stack_id", permission.StackId)
 	d.Set("user_arn", permission.IamUserArn)
 
-	return nil
+	return diags
 }
 
 func FindPermissionByTwoPartKey(ctx context.Context, conn *opsworks.OpsWorks, iamUserARN, stackID string) (*opsworks.Permission, error) {

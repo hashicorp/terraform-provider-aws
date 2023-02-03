@@ -122,7 +122,7 @@ func resourceClusterParameterGroupCreate(ctx context.Context, d *schema.Resource
 	// Set for update
 	d.Set("arn", output.DBClusterParameterGroup.DBClusterParameterGroupArn)
 
-	return resourceClusterParameterGroupUpdate(ctx, d, meta)
+	return append(diags, resourceClusterParameterGroupUpdate(ctx, d, meta)...)
 }
 
 func resourceClusterParameterGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -136,7 +136,7 @@ func resourceClusterParameterGroupRead(ctx context.Context, d *schema.ResourceDa
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] RDS DB Cluster Parameter Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
@@ -196,7 +196,7 @@ func resourceClusterParameterGroupRead(ctx context.Context, d *schema.ResourceDa
 		}
 	}
 
-	return nil
+	return diags
 }
 
 func resourceClusterParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -233,7 +233,7 @@ func resourceClusterParameterGroupUpdate(ctx context.Context, d *schema.Resource
 					Parameters:                  paramsToModify,
 				}
 
-				_, err := conn.ModifyDBClusterParameterGroup(input)
+				_, err := conn.ModifyDBClusterParameterGroupWithContext(ctx, input)
 
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "modifying DB Cluster Parameter Group (%s): %s", d.Id(), err)
@@ -287,7 +287,7 @@ func resourceClusterParameterGroupUpdate(ctx context.Context, d *schema.Resource
 				})
 
 				if tfresource.TimedOut(err) {
-					_, err = conn.ResetDBClusterParameterGroup(input)
+					_, err = conn.ResetDBClusterParameterGroupWithContext(ctx, input)
 				}
 
 				if err != nil {
@@ -305,7 +305,7 @@ func resourceClusterParameterGroupUpdate(ctx context.Context, d *schema.Resource
 		}
 	}
 
-	return resourceClusterParameterGroupRead(ctx, d, meta)
+	return append(diags, resourceClusterParameterGroupRead(ctx, d, meta)...)
 }
 
 func resourceClusterParameterGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -332,10 +332,12 @@ func resourceClusterParameterGroupDelete(ctx context.Context, d *schema.Resource
 	if tfresource.TimedOut(err) {
 		_, err = conn.DeleteDBClusterParameterGroup(ctx, input)
 	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting RDS Cluster Parameter Group (%s): %s", d.Id(), err)
 	}
-	return nil
+
+	return diags
 }
 
 func FindDBClusterParameterGroupByName(ctx context.Context, conn *rds.RDS, name string) (*rds.DBClusterParameterGroup, error) {

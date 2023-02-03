@@ -148,7 +148,7 @@ func resourceServerCertificateCreate(ctx context.Context, d *schema.ResourceData
 		// If default tags only, log and continue. Otherwise, error.
 		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.ErrorISOUnsupported(conn.PartitionID, err) {
 			log.Printf("[WARN] failed adding tags after create for IAM Server Certificate (%s): %s", d.Id(), err)
-			return resourceServerCertificateRead(ctx, d, meta)
+			return append(diags, resourceServerCertificateRead(ctx, d, meta)...)
 		}
 
 		if err != nil {
@@ -156,7 +156,7 @@ func resourceServerCertificateCreate(ctx context.Context, d *schema.ResourceData
 		}
 	}
 
-	return resourceServerCertificateRead(ctx, d, meta)
+	return append(diags, resourceServerCertificateRead(ctx, d, meta)...)
 }
 
 func resourceServerCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -170,7 +170,7 @@ func resourceServerCertificateRead(ctx context.Context, d *schema.ResourceData, 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] IAM Server Certificate (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
@@ -207,7 +207,7 @@ func resourceServerCertificateRead(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceServerCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -222,7 +222,7 @@ func resourceServerCertificateUpdate(ctx context.Context, d *schema.ResourceData
 		// Some partitions (i.e., ISO) may not support tagging, giving error
 		if verify.ErrorISOUnsupported(conn.PartitionID, err) {
 			log.Printf("[WARN] failed updating tags for IAM Server Certificate (%s): %s", d.Id(), err)
-			return resourceServerCertificateRead(ctx, d, meta)
+			return append(diags, resourceServerCertificateRead(ctx, d, meta)...)
 		}
 
 		if err != nil {
@@ -230,7 +230,7 @@ func resourceServerCertificateUpdate(ctx context.Context, d *schema.ResourceData
 		}
 	}
 
-	return resourceServerCertificateRead(ctx, d, meta)
+	return append(diags, resourceServerCertificateRead(ctx, d, meta)...)
 }
 
 func resourceServerCertificateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -245,14 +245,14 @@ func resourceServerCertificateDelete(ctx context.Context, d *schema.ResourceData
 	}, iam.ErrCodeDeleteConflictException, "currently in use by arn")
 
 	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting IAM Server Certificate (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceServerCertificateImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {

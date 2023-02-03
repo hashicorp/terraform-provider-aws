@@ -99,7 +99,7 @@ func resourceSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 		log.Printf("[WARN] failed creating ElastiCache Subnet Group with tags: %s. Trying create without tags.", err)
 
 		input.Tags = nil
-		output, err = conn.CreateCacheSubnetGroup(input)
+		output, err = conn.CreateCacheSubnetGroupWithContext(ctx, input)
 	}
 
 	if err != nil {
@@ -126,7 +126,7 @@ func resourceSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 		}
 	}
 
-	return resourceSubnetGroupRead(ctx, d, meta)
+	return append(diags, resourceSubnetGroupRead(ctx, d, meta)...)
 }
 
 func resourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -140,7 +140,7 @@ func resourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ElastiCache Subnet Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
@@ -181,7 +181,7 @@ func resourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 		}
 	}
 
-	return nil
+	return diags
 }
 
 func resourceSubnetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -217,7 +217,7 @@ func resourceSubnetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 	}
 
-	return resourceSubnetGroupRead(ctx, d, meta)
+	return append(diags, resourceSubnetGroupRead(ctx, d, meta)...)
 }
 
 func resourceSubnetGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -232,12 +232,12 @@ func resourceSubnetGroupDelete(ctx context.Context, d *schema.ResourceData, meta
 	}, "DependencyViolation")
 
 	if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeCacheSubnetGroupNotFoundFault) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting ElastiCache Subnet Group (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

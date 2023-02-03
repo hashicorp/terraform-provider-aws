@@ -241,7 +241,7 @@ func resourceInstanceFleetCreate(ctx context.Context, d *schema.ResourceData, me
 
 	d.SetId(aws.StringValue(output.InstanceFleetId))
 
-	return resourceInstanceFleetRead(ctx, d, meta)
+	return append(diags, resourceInstanceFleetRead(ctx, d, meta)...)
 }
 
 func resourceInstanceFleetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -253,7 +253,7 @@ func resourceInstanceFleetRead(ctx context.Context, d *schema.ResourceData, meta
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EMR Instance Fleet (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
@@ -272,7 +272,7 @@ func resourceInstanceFleetRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("target_on_demand_capacity", fleet.TargetOnDemandCapacity)
 	d.Set("target_spot_capacity", fleet.TargetSpotCapacity)
 
-	return nil
+	return diags
 }
 
 func resourceInstanceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -310,7 +310,7 @@ func resourceInstanceFleetUpdate(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "waiting for EMR Instance Fleet (%s) update: %s", d.Id(), err)
 	}
 
-	return resourceInstanceFleetRead(ctx, d, meta)
+	return append(diags, resourceInstanceFleetRead(ctx, d, meta)...)
 }
 
 func resourceInstanceFleetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -329,14 +329,14 @@ func resourceInstanceFleetDelete(ctx context.Context, d *schema.ResourceData, me
 	})
 
 	if tfawserr.ErrMessageContains(err, emr.ErrCodeInvalidRequestException, "instance fleet may only be modified when the cluster is running or waiting") {
-		return nil
+		return diags
 	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting EMR Instance Fleet (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func FindInstanceFleetByTwoPartKey(ctx context.Context, conn *emr.EMR, clusterID, fleetID string) (*emr.InstanceFleet, error) {

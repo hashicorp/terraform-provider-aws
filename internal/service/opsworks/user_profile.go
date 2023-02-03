@@ -68,7 +68,7 @@ func resourceUserProfileCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	d.SetId(iamUserARN)
 
-	return resourceUserProfileUpdate(ctx, d, meta)
+	return append(diags, resourceUserProfileUpdate(ctx, d, meta)...)
 }
 
 func resourceUserProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -80,7 +80,7 @@ func resourceUserProfileRead(ctx context.Context, d *schema.ResourceData, meta i
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] OpsWorks User Profile %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
@@ -92,7 +92,7 @@ func resourceUserProfileRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("ssh_username", profile.SshUsername)
 	d.Set("user_arn", profile.IamUserArn)
 
-	return nil
+	return diags
 }
 
 func resourceUserProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -112,7 +112,7 @@ func resourceUserProfileUpdate(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "updating OpsWorks User Profile (%s): %s", d.Id(), err)
 	}
 
-	return resourceUserProfileRead(ctx, d, meta)
+	return append(diags, resourceUserProfileRead(ctx, d, meta)...)
 }
 
 func resourceUserProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -125,14 +125,14 @@ func resourceUserProfileDelete(ctx context.Context, d *schema.ResourceData, meta
 	})
 
 	if tfawserr.ErrCodeEquals(err, opsworks.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting OpsWorks User Profile (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func FindUserProfileByARN(ctx context.Context, conn *opsworks.OpsWorks, arn string) (*opsworks.UserProfile, error) {

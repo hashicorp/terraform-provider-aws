@@ -290,7 +290,7 @@ func resourceReceiptRuleCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	d.SetId(name)
 
-	return resourceReceiptRuleRead(ctx, d, meta)
+	return append(diags, resourceReceiptRuleRead(ctx, d, meta)...)
 }
 
 func resourceReceiptRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -303,7 +303,7 @@ func resourceReceiptRuleRead(ctx context.Context, d *schema.ResourceData, meta i
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SES Receipt Rule (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
@@ -471,7 +471,7 @@ func resourceReceiptRuleRead(ctx context.Context, d *schema.ResourceData, meta i
 	}.String()
 	d.Set("arn", arn)
 
-	return nil
+	return diags
 }
 
 func resourceReceiptRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -503,7 +503,7 @@ func resourceReceiptRuleUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 	}
 
-	return resourceReceiptRuleRead(ctx, d, meta)
+	return append(diags, resourceReceiptRuleRead(ctx, d, meta)...)
 }
 
 func resourceReceiptRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -520,7 +520,7 @@ func resourceReceiptRuleDelete(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "deleting SES Receipt Rule (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceReceiptRuleImport(_ context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
