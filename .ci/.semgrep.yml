@@ -835,15 +835,6 @@ rules:
     pattern: int(*$VALUE)
     severity: WARNING
 
-  - id: aws-go-sdk-error-code-helper
-    languages: [go]
-    message: 'Use `tfawserr` helpers for checking AWS Go SDK v1 errors (e.g. `tfawserr.ErrMessageContains(err, CODE, MESSAGE)`)'
-    paths:
-      include:
-        - internal/
-    pattern: $AWSERR, $OK := $ORIGINALERR.(awserr.Error)
-    severity: WARNING
-
   - id: fmt-Errorf-awserr-Error-Code
     languages: [go]
     message: Prefer `err` with `%w` format verb instead of `err.Code()` or `err.Message()`
