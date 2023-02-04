@@ -214,10 +214,5 @@ resource "aws_networkmanager_vpc_attachment" "test" {
   subnet_arns     = aws_subnet.test[*].arn
   vpc_arn         = aws_vpc.test.arn
 }
-
-resource "aws_networkmanager_attachment_accepter" "test" {
-  attachment_id   = aws_networkmanager_vpc_attachment.test.id
-  attachment_type = aws_networkmanager_vpc_attachment.test.attachment_type
-}
 `, acctest.Region()))
 }
