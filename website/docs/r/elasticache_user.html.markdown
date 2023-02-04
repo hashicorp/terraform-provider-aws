@@ -33,7 +33,7 @@ resource "aws_elasticache_user" "test" {
   engine        = "REDIS"
   
   authentication_mode {
-    type      = "iam"
+    type = "iam"
   }	
 }
 ```
