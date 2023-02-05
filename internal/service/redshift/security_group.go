@@ -8,8 +8,8 @@ import (
 	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/redshift"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -170,11 +170,11 @@ func resourceSecurityGroupDelete(ctx context.Context, d *schema.ResourceData, me
 
 	_, err := conn.DeleteClusterSecurityGroupWithContext(ctx, &opts)
 
+	if tfawserr.ErrCodeEquals(err, "InvalidRedshiftSecurityGroup.NotFound") {
+		return diags
+	}
+
 	if err != nil {
-		newerr, ok := err.(awserr.Error)
-		if ok && newerr.Code() == "InvalidRedshiftSecurityGroup.NotFound" {
-			return diags
-		}
 		return sdkdiag.AppendErrorf(diags, "deleting Redshift Security Group (%s): %s", d.Id(), err)
 	}
 
