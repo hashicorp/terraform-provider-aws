@@ -128,6 +128,46 @@ func TestAccVPCFlowLog_subnetID(t *testing.T) {
 	})
 }
 
+func TestAccVPCFlowLog_crossAccountRole(t *testing.T) {
+	ctx := acctest.Context(t)
+	var flowLog ec2.FlowLog
+	cloudwatchLogGroupResourceName := "aws_cloudwatch_log_group.test"
+	crossAccountIamRoleResourceName := "aws_iam_role.test_cross_account"
+	iamRoleResourceName := "aws_iam_role.test"
+	resourceName := "aws_flow_log.test"
+	subnetResourceName := "aws_subnet.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFlowLogDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCFlowLogConfig_crossAccountRole(rName, rName2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFlowLogExists(ctx, resourceName, &flowLog),
+					resource.TestCheckResourceAttrPair(resourceName, "cross_account_iam_role_arn", crossAccountIamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "iam_role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "log_destination", ""),
+					resource.TestCheckResourceAttr(resourceName, "log_destination_type", "cloud-watch-logs"),
+					resource.TestCheckResourceAttrPair(resourceName, "log_group_name", cloudwatchLogGroupResourceName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "max_aggregation_interval", "600"),
+					resource.TestCheckResourceAttrPair(resourceName, "subnet_id", subnetResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "traffic_type", "ALL"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccVPCFlowLog_transitGatewayID(t *testing.T) {
 	ctx := acctest.Context(t)
 	var flowLog ec2.FlowLog
@@ -857,6 +897,79 @@ resource "aws_flow_log" "test" {
   traffic_type   = "ALL"
 }
 `, rName))
+}
+
+func testAccVPCFlowLogConfig_crossAccountRole(rName string, rName2 string) string {
+	return acctest.ConfigCompose(testAccFlowLogConfigBase(rName), fmt.Sprintf(`
+resource "aws_subnet" "test" {
+  cidr_block = "10.0.1.0/24"
+  vpc_id     = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": [
+          "ec2.${data.aws_partition.current.dns_suffix}"
+        ]
+      },
+      "Action": [
+        "sts:AssumeRole"
+      ]
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role" "test_cross_account" {
+  name = %[2]q
+
+  assume_role_policy = <<EOF
+  {
+	"Version": "2012-10-17",
+	"Statement": [
+	  {
+		"Effect": "Allow",
+		"Principal": {
+		  "Service": [
+			"ec2.${data.aws_partition.current.dns_suffix}"
+		  ]
+		},
+		"Action": [
+		  "sts:AssumeRole"
+		]
+	  }
+	]
+  }
+  EOF
+}
+
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
+
+resource "aws_flow_log" "test" {
+  cross_account_iam_role_arn = aws_iam_role.test_cross_account.arn
+  iam_role_arn               = aws_iam_role.test.arn
+  log_group_name             = aws_cloudwatch_log_group.test.name
+  subnet_id                  = aws_subnet.test.id
+  traffic_type               = "ALL"
+}
+`, rName, rName2))
 }
 
 func testAccVPCFlowLogConfig_id(rName string) string {

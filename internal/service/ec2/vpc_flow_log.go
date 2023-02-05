@@ -37,6 +37,12 @@ func ResourceFlowLog() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"cross_account_iam_role_arn": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidARN,
+			},
 			"destination_options": {
 				Type:             schema.TypeList,
 				Optional:         true,
@@ -210,6 +216,10 @@ func resourceLogFlowCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.DestinationOptions = expandDestinationOptionsRequest(v.([]interface{})[0].(map[string]interface{}))
 	}
 
+	if v, ok := d.GetOk("cross_account_iam_role_arn"); ok {
+		input.DeliverCrossAccountRole = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("iam_role_arn"); ok {
 		input.DeliverLogsPermissionArn = aws.String(v.(string))
 	}
@@ -275,6 +285,7 @@ func resourceLogFlowRead(ctx context.Context, d *schema.ResourceData, meta inter
 		Resource:  fmt.Sprintf("vpc-flow-log/%s", d.Id()),
 	}.String()
 	d.Set("arn", arn)
+	d.Set("cross_account_iam_role_arn", fl.DeliverCrossAccountRole)
 	if fl.DestinationOptions != nil {
 		if err := d.Set("destination_options", []interface{}{flattenDestinationOptionsResponse(fl.DestinationOptions)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting destination_options: %s", err)
