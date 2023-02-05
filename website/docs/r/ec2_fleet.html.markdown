@@ -55,7 +55,7 @@ Describes a launch template and overrides.
 
 #### launch_template_specification
 
-The launch template to use. You must specify either the launch template ID or launch template name in the request. 
+The launch template to use. You must specify either the launch template ID or launch template name in the request.
 
 * `launch_template_id` - (Optional) The ID of the launch template.
 * `launch_template_name` - (Optional) The name of the launch template.
@@ -88,10 +88,10 @@ resource "aws_ec2_fleet" "example" {
 ```
 
 * `availability_zone` - (Optional) Availability Zone in which to launch the instances.
-* `instance_requirements` - (Optional)The attributes for the instance types. When you specify instance attributes, Amazon EC2 will identify instance types with those attributes. 
+* `instance_requirements` - (Optional)The attributes for the instance types. When you specify instance attributes, Amazon EC2 will identify instance types with those attributes.
     If you specify `InstanceRequirements`, you can't specify `InstanceType`.
-    
-* `instance_type` - (Optional) Instance type. 
+
+* `instance_type` - (Optional) Instance type.
     If you specify `InstanceType`, you can't specify `InstanceRequirements`.
 
 * `max_price` - (Optional) Maximum price per unit hour that you are willing to pay for a Spot Instance.
@@ -116,7 +116,7 @@ This configuration block supports the following:
     * `min` - (Optional) The minimum amount of accelerator memory, in MiB. To specify no minimum limit, omit this parameter.
     * `max` - (Optional) The maximum amount of accelerator memory, in MiB. To specify no maximum limit, omit this parameter.
 * `accelerator_types` - (Optional) The accelerator types that must be on the instance type. Default is any accelerator type.
-* `allowed_instance_types` - (Optional) The instance types to apply your specified attributes against. All other instance types are ignored, even if they match your specified attributes. You can use strings with one or more wild cards, represented by an asterisk (\*). The following are examples: `c5*`, `m5a.*`, `r*`, `*3*`. For example, if you specify `c5*`, you are excluding the entire C5 instance family, which includes all C5a and C5n instance types. If you specify `m5a.*`, you are excluding all the M5a instance types, but not the M5n instance types. Maximum of 400 entries in the list; each entry is limited to 30 characters. Default is no excluded instance types. Default is any instance type. 
+* `allowed_instance_types` - (Optional) The instance types to apply your specified attributes against. All other instance types are ignored, even if they match your specified attributes. You can use strings with one or more wild cards,represented by an asterisk (\*). The following are examples: `c5*`, `m5a.*`, `r*`, `*3*`. For example, if you specify `c5*`, you are excluding the entire C5 instance family, which includes all C5a and C5n instance types. If you specify `m5a.*`, you are excluding all the M5a instance types, but not the M5n instance types. Maximum of 400 entries in the list; each entry is limited to 30 characters. Default is no excluded instance types. Default is any instance type.
 
     If you specify `AllowedInstanceTypes`, you can't specify `ExcludedInstanceTypes`.
 
@@ -127,7 +127,7 @@ This configuration block supports the following:
 * `burstable_performance` - (Optional) Indicates whether burstable performance T instance types are `included`, `excluded`, or `required`. Default is `excluded`.
 * `cpu_manufacturers` (Optional) The CPU manufacturers to include. Default is any manufacturer.
     ~> **NOTE:** Don't confuse the CPU hardware manufacturer with the CPU hardware architecture. Instances will be launched with a compatible CPU architecture based on the Amazon Machine Image (AMI) that you specify in your launch template.
-* `excluded_instance_types` - (Optional) The instance types to exclude. You can use strings with one or more wild cards, represented by an asterisk (\*). The following are examples: `c5*`, `m5a.*`, `r*`, `*3*`. For example, if you specify `c5*`, you are excluding the entire C5 instance family, which includes all C5a and C5n instance types. If you specify `m5a.*`, you are excluding all the M5a instance types, but not the M5n instance types. Maximum of 400 entries in the list; each entry is limited to 30 characters. Default is no excluded instance types. 
+* `excluded_instance_types` - (Optional) The instance types to exclude. You can use strings with one or more wild cards, represented by an asterisk (\*). The following are examples: `c5*`, `m5a.*`, `r*`, `*3*`. For example, if you specify `c5*`, you are excluding the entire C5 instance family, which includes all C5a and C5n instance types. If you specify `m5a.*`, you are excluding all the M5a instance types, but not the M5n instance types. Maximum of 400 entries in the list; each entry is limited to 30 characters. Default is no excluded instance types.
 
     If you specify `AllowedInstanceTypes`, you can't specify `ExcludedInstanceTypes`.
 
@@ -146,7 +146,7 @@ This configuration block supports the following:
 * `network_interface_count` - (Optional) Block describing the minimum and maximum number of network interfaces. Default is no minimum or maximum.
     * `min` - (Optional) The minimum number of network interfaces. To specify no minimum limit, omit this parameter.
     * `max` - (Optional) The maximum number of network interfaces. To specify no maximum limit, omit this parameter.
-* `on_demand_max_price_percentage_over_lowest_price` - (Optional) The price protection threshold for On-Demand Instances. This is the maximum you’ll pay for an On-Demand Instance, expressed as a percentage higher than the cheapest M, C, or R instance type with your specified attributes. When Amazon EC2 Auto Scaling selects instance types with your attributes, we will exclude instance types whose price is higher than your threshold. The parameter accepts an integer, which Amazon EC2 Auto Scaling interprets as a percentage. To turn off price protection, specify a high value, such as 999999. Default is 20. 
+* `on_demand_max_price_percentage_over_lowest_price` - (Optional) The price protection threshold for On-Demand Instances. This is the maximum you’ll pay for an On-Demand Instance, expressed as a percentage higher than the cheapest M, C, or R instance type with your specified attributes. When Amazon EC2 Auto Scaling selects instance types with your attributes, we will exclude instance types whose price is higher than your threshold. The parameter accepts an integer, which Amazon EC2 Auto Scaling interprets as a percentage. To turn off price protection, specify a high value, such as 999999. Default is 20.
 
     If you set `target_capacity_unit_type` to `vcpu` or `memory-mib`, the price protection threshold is applied based on the per-vCPU or per-memory price instead of the per-instance price.
 
@@ -168,7 +168,7 @@ This configuration block supports the following:
 * `capacity_reservation_options` (Optional) The strategy for using unused Capacity Reservations for fulfilling On-Demand capacity. Supported only for fleets of type `instant`.
     * `usage_strategy` - (Optional) Indicates whether to use unused Capacity Reservations for fulfilling On-Demand capacity. Valid values: `use-capacity-reservations-first`.
 * `max_total_price` - (Optional) The maximum amount per hour for On-Demand Instances that you're willing to pay.
-* `min_target_capacity` - (Optional) The minimum target capacity for On-Demand Instances in the fleet. If the minimum target capacity is not reached, the fleet launches no instances. Supported only for fleets of type `instant`. 
+* `min_target_capacity` - (Optional) The minimum target capacity for On-Demand Instances in the fleet. If the minimum target capacity is not reached, the fleet launches no instances. Supported only for fleets of type `instant`.
     If you specify `min_target_capacity`, at least one of the following must be specified: `single_availability_zone` or `single_instance_type`.
 
 * `single_availability_zone` - (Optional) Indicates that the fleet launches all On-Demand Instances into a single Availability Zone. Supported only for fleets of type `instant`.
