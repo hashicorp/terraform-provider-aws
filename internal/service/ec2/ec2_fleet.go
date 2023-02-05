@@ -59,10 +59,7 @@ func ResourceFleet() *schema.Resource {
 				Default:      ec2.FleetExcessCapacityTerminationPolicyTermination,
 				ValidateFunc: validation.StringInSlice(ec2.FleetExcessCapacityTerminationPolicy_Values(), false),
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == "" {
-						return true
-					}
-					return false
+					return d.Get("type") != "maintain"
 				},
 				DiffSuppressOnRefresh: true,
 			},
@@ -84,376 +81,6 @@ func ResourceFleet() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
-						},
-						"launch_template_and_overrides": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"launch_template_specification": {
-										Type:     schema.TypeList,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"launch_template_id": {
-													Type:     schema.TypeString,
-													Optional: true,
-													Computed: true,
-												},
-												"launch_template_name": {
-													Type:     schema.TypeString,
-													Optional: true,
-													Computed: true,
-												},
-												"version": {
-													Type:     schema.TypeString,
-													Optional: true,
-													Computed: true,
-												},
-											},
-										},
-									},
-									"overrides": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Computed: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"availability_zone": {
-													Type:     schema.TypeString,
-													Optional: true,
-													Computed: true,
-												},
-												"image_id": {
-													Type:     schema.TypeString,
-													Optional: true,
-													Computed: true,
-												},
-												"instance_requirements": {
-													Type:     schema.TypeList,
-													Optional: true,
-													Computed: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"accelerator_count": {
-																Type:     schema.TypeList,
-																Optional: true,
-																Computed: true,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"max": {
-																			Type:     schema.TypeInt,
-																			Optional: true,
-																			Computed: true,
-																		},
-																		"min": {
-																			Type:     schema.TypeInt,
-																			Optional: true,
-																			Computed: true,
-																		},
-																	},
-																},
-															},
-															"accelerator_manufacturers": {
-																Type:     schema.TypeSet,
-																Optional: true,
-																Computed: true,
-																Elem: &schema.Schema{
-																	Type: schema.TypeString,
-																},
-															},
-															"accelerator_names": {
-																Type:     schema.TypeSet,
-																Optional: true,
-																Computed: true,
-																Elem: &schema.Schema{
-																	Type: schema.TypeString,
-																},
-															},
-															"accelerator_total_memory_mib": {
-																Type:     schema.TypeList,
-																Optional: true,
-																Computed: true,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"max": {
-																			Type:     schema.TypeInt,
-																			Optional: true,
-																			Computed: true,
-																		},
-																		"min": {
-																			Type:     schema.TypeInt,
-																			Optional: true,
-																			Computed: true,
-																		},
-																	},
-																},
-															},
-															"accelerator_types": {
-																Type:     schema.TypeSet,
-																Optional: true,
-																Computed: true,
-																Elem: &schema.Schema{
-																	Type: schema.TypeString,
-																},
-															},
-															"allowed_instance_types": {
-																Type:     schema.TypeSet,
-																Optional: true,
-																Computed: true,
-																Elem: &schema.Schema{
-																	Type: schema.TypeString,
-																},
-															},
-															"bare_metal": {
-																Type:     schema.TypeString,
-																Optional: true,
-																Computed: true,
-															},
-															"baseline_ebs_bandwidth_mbps": {
-																Type:     schema.TypeList,
-																Optional: true,
-																Computed: true,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"max": {
-																			Type:     schema.TypeInt,
-																			Optional: true,
-																			Computed: true,
-																		},
-																		"min": {
-																			Type:     schema.TypeInt,
-																			Optional: true,
-																			Computed: true,
-																		},
-																	},
-																},
-															},
-															"burstable_performance": {
-																Type:     schema.TypeString,
-																Optional: true,
-																Computed: true,
-															},
-															"cpu_manufacturers": {
-																Type:     schema.TypeSet,
-																Optional: true,
-																Computed: true,
-																Elem: &schema.Schema{
-																	Type: schema.TypeString,
-																},
-															},
-															"excluded_instance_types": {
-																Type:     schema.TypeSet,
-																Optional: true,
-																Computed: true,
-																Elem: &schema.Schema{
-																	Type: schema.TypeString,
-																},
-															},
-															"instance_generations": {
-																Type:     schema.TypeSet,
-																Optional: true,
-																Computed: true,
-																Elem: &schema.Schema{
-																	Type: schema.TypeString,
-																},
-															},
-															"local_storage": {
-																Type:     schema.TypeString,
-																Optional: true,
-																Computed: true,
-															},
-															"local_storage_types": {
-																Type:     schema.TypeSet,
-																Optional: true,
-																Computed: true,
-																Elem: &schema.Schema{
-																	Type: schema.TypeString,
-																},
-															},
-															"memory_gib_per_vcpu": {
-																Type:     schema.TypeList,
-																Optional: true,
-																Computed: true,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"max": {
-																			Type:     schema.TypeFloat,
-																			Optional: true,
-																			Computed: true,
-																		},
-																		"min": {
-																			Type:     schema.TypeFloat,
-																			Optional: true,
-																			Computed: true,
-																		},
-																	},
-																},
-															},
-															"memory_mib": {
-																Type:     schema.TypeList,
-																Computed: true,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"max": {
-																			Type:     schema.TypeInt,
-																			Optional: true,
-																			Computed: true,
-																		},
-																		"min": {
-																			Type:     schema.TypeInt,
-																			Computed: true,
-																		},
-																	},
-																},
-															},
-															"network_bandwidth_gbps": {
-																Type:     schema.TypeList,
-																Optional: true,
-																Computed: true,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"max": {
-																			Type:     schema.TypeFloat,
-																			Optional: true,
-																			Computed: true,
-																		},
-																		"min": {
-																			Type:     schema.TypeFloat,
-																			Optional: true,
-																			Computed: true,
-																		},
-																	},
-																},
-															},
-															"network_interface_count": {
-																Type:     schema.TypeList,
-																Optional: true,
-																Computed: true,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"max": {
-																			Type:     schema.TypeInt,
-																			Optional: true,
-																			Computed: true,
-																		},
-																		"min": {
-																			Type:     schema.TypeInt,
-																			Optional: true,
-																			Computed: true,
-																		},
-																	},
-																},
-															},
-															"on_demand_max_price_percentage_over_lowest_price": {
-																Type:     schema.TypeInt,
-																Optional: true,
-																Computed: true,
-															},
-															"require_hibernate_support": {
-																Type:     schema.TypeBool,
-																Optional: true,
-																Computed: true,
-															},
-															"spot_max_price_percentage_over_lowest_price": {
-																Type:     schema.TypeInt,
-																Optional: true,
-																Computed: true,
-															},
-															"total_local_storage_gb": {
-																Type:     schema.TypeList,
-																Optional: true,
-																Computed: true,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"max": {
-																			Type:     schema.TypeFloat,
-																			Optional: true,
-																			Computed: true,
-																		},
-																		"min": {
-																			Type:     schema.TypeFloat,
-																			Optional: true,
-																			Computed: true,
-																		},
-																	},
-																},
-															},
-															"vcpu_count": {
-																Type:     schema.TypeList,
-																Computed: true,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"max": {
-																			Type:     schema.TypeInt,
-																			Optional: true,
-																			Computed: true,
-																		},
-																		"min": {
-																			Type:     schema.TypeInt,
-																			Computed: true,
-																		},
-																	},
-																},
-															},
-														},
-													},
-												},
-												"instance_type": {
-													Type:     schema.TypeString,
-													Optional: true,
-													Computed: true,
-												},
-												"max_price": {
-													Type:     schema.TypeString,
-													Optional: true,
-													Computed: true,
-												},
-												"placement": {
-													Type:     schema.TypeList,
-													Optional: true,
-													Computed: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"group_id": {
-																Type:     schema.TypeString,
-																Optional: true,
-																Computed: true,
-															},
-															"group_name": {
-																Type:     schema.TypeString,
-																Optional: true,
-																Computed: true,
-															},
-															"spread_domain": {
-																Type:     schema.TypeString,
-																Optional: true,
-																Computed: true,
-															},
-														},
-													},
-												},
-												"priority": {
-													Type:     schema.TypeFloat,
-													Optional: true,
-													Computed: true,
-												},
-												"subnet_id": {
-													Type:     schema.TypeString,
-													Optional: true,
-													Computed: true,
-												},
-												"weighted_capacity": {
-													Type:     schema.TypeFloat,
-													Optional: true,
-													Computed: true,
-												},
-											},
-										},
-									},
-								},
-							},
 						},
 						"lifecycle": {
 							Type:     schema.TypeString,
@@ -486,13 +113,13 @@ func ResourceFleet() *schema.Resource {
 			"launch_template_config": {
 				Type:     schema.TypeList,
 				Required: true,
-				MinItems: 1,
+				MinItems: 0,
 				MaxItems: 50,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"launch_template_specification": {
 							Type:     schema.TypeList,
-							Required: true,
+							Optional: true,
 							MinItems: 1,
 							MaxItems: 1,
 							Elem: &schema.Resource{
@@ -511,7 +138,7 @@ func ResourceFleet() *schema.Resource {
 									},
 									"version": {
 										Type:     schema.TypeString,
-										Optional: true,
+										Required: true,
 									},
 								},
 							},
@@ -526,10 +153,11 @@ func ResourceFleet() *schema.Resource {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
-									"image_id": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
+									// Pending AWS to provide this attribute back in the `Describe` call
+									// "image_id": {
+									// 	Type:     schema.TypeString,
+									// 	Optional: true,
+									// },
 									"instance_requirements": {
 										Type:     schema.TypeList,
 										Optional: true,
@@ -821,19 +449,20 @@ func ResourceFleet() *schema.Resource {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
-									"placement": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"group_name": {
-													Type:     schema.TypeString,
-													Optional: true,
-												},
-											},
-										},
-									},
+									// Pending AWS to provide this attribute back in the `Describe` call
+									// "placement": {
+									// 	Type:     schema.TypeList,
+									// 	Optional: true,
+									// 	MaxItems: 1,
+									// 	Elem: &schema.Resource{
+									// 		Schema: map[string]*schema.Schema{
+									// 			"group_name": {
+									// 				Type:     schema.TypeString,
+									// 				Optional: true,
+									// 			},
+									// 		},
+									// 	},
+									// },
 									"priority": {
 										Type:     schema.TypeFloat,
 										Optional: true,
@@ -867,20 +496,21 @@ func ResourceFleet() *schema.Resource {
 							Default:      FleetOnDemandAllocationStrategyLowestPrice,
 							ValidateFunc: validation.StringInSlice(FleetOnDemandAllocationStrategy_Values(), false),
 						},
-						"capacity_reservation_options": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"usage_strategy": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringInSlice(ec2.FleetCapacityReservationUsageStrategy_Values(), false),
-									},
-								},
-							},
-						},
+						// Pending AWS to provide this attribute back in the `Describe` call
+						// "capacity_reservation_options": {
+						// 	Type:     schema.TypeList,
+						// 	Optional: true,
+						// 	MaxItems: 1,
+						// 	Elem: &schema.Resource{
+						// 		Schema: map[string]*schema.Schema{
+						// 			"usage_strategy": {
+						// 				Type:         schema.TypeString,
+						// 				Optional:     true,
+						// 				ValidateFunc: validation.StringInSlice(ec2.FleetCapacityReservationUsageStrategy_Values(), false),
+						// 			},
+						// 		},
+						// 	},
+						// },
 						"max_total_price": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -1102,6 +732,7 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	if v, ok := d.GetOk("context"); ok {
 		input.Context = aws.String(v.(string))
 	}
+
 	// this argument is only valid for fleet_type of `maintain`, but was defaulted in the schema above, hence the extra check
 	if v, ok := d.GetOk("excess_capacity_termination_policy"); ok && v != "" && fleetType == "maintain" {
 		input.ExcessCapacityTerminationPolicy = aws.String(v.(string))
@@ -1158,7 +789,6 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 		if _, err := WaitFleet(ctx, conn, d.Id(), []string{ec2.FleetStateCodeSubmitted}, targetStates, d.Timeout(schema.TimeoutCreate), 0); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for EC2 Fleet (%s) create: %s", d.Id(), err)
-
 		}
 	}
 
@@ -1257,7 +887,6 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
-
 		input := &ec2.ModifyFleetInput{
 			FleetId: aws.String(d.Id()),
 		}
@@ -1695,10 +1324,6 @@ func flattenFleetInstances(apiObject *ec2.DescribeFleetsInstances) map[string]in
 		tfMap["instance_type"] = aws.StringValue(v)
 	}
 
-	if v := apiObject.LaunchTemplateAndOverrides; v != nil {
-		tfMap["launch_template_and_overrides"] = []interface{}{flattenLaunchTemplatesAndOverridesResponse(v)}
-	}
-
 	if v := apiObject.Lifecycle; v != nil {
 		tfMap["lifecycle"] = aws.StringValue(v)
 	}
@@ -1786,23 +1411,25 @@ func flattenFleetLaunchTemplateSpecificationForFleet(apiObject *ec2.FleetLaunchT
 	return tfMap
 }
 
-func flattenLaunchTemplatesAndOverridesResponse(apiObject *ec2.LaunchTemplateAndOverridesResponse) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
+// Pending AWS to provide this attribute back in the `Describe` call
 
-	tfMap := map[string]interface{}{}
+// func flattenLaunchTemplatesAndOverridesResponse(apiObject *ec2.LaunchTemplateAndOverridesResponse) map[string]interface{} {
+// 	if apiObject == nil {
+// 		return nil
+// 	}
 
-	if v := apiObject.LaunchTemplateSpecification; v != nil {
-		tfMap["launch_template_specification"] = []interface{}{flattenFleetLaunchTemplateSpecificationForFleet(v)}
-	}
+// 	tfMap := map[string]interface{}{}
 
-	if v := apiObject.Overrides; v != nil {
-		tfMap["overrides"] = []interface{}{flattenFleetLaunchTemplateOverrides(v)}
-	}
+// 	if v := apiObject.LaunchTemplateSpecification; v != nil {
+// 		tfMap["launch_template_specification"] = []interface{}{flattenFleetLaunchTemplateSpecificationForFleet(v)}
+// 	}
 
-	return tfMap
-}
+// 	if v := apiObject.Overrides; v != nil {
+// 		tfMap["overrides"] = []interface{}{flattenFleetLaunchTemplateOverrides(v)}
+// 	}
+
+// 	return tfMap
+// }
 
 func flattenFleetLaunchTemplateOverrideses(apiObjects []*ec2.FleetLaunchTemplateOverrides) []interface{} {
 	if len(apiObjects) == 0 {
@@ -2021,63 +1648,5 @@ func resourceFleetCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v 
 			}
 		}
 	}
-
-	// // Launch template config validation:
-	// if v, ok := diff.GetOk("launch_template_config"); ok && len(v.([]interface{})) > 0 {
-	// 	input.LaunchTemplateConfigs = expandFleetLaunchTemplateConfigRequests(v.([]interface{}))
-	// 	for _, config := range input.LaunchTemplateConfigs {
-	// 		for _, override := range config.Overrides {
-	// 			// InvalidOverride:
-	// 			if override.InstanceRequirements != nil && override.InstanceType != nil {
-	// 				return errors.New("launch_template_configs.overrides can specify instance_requirements or instance_type, but not both")
-	// 			}
-	// 			// InvalidPlacementConfigs:
-	// 			if override.Placement.GroupId != nil && override.Placement.GroupName != nil {
-	// 				return errors.New("launch_template_configs.overrides.placement can specify a group_id or group_name, but not both")
-	// 			}
-	// 		}
-	// 	}
-	// }
-
-	// // Fleet type `instant` specific validation:
-	// if v, ok := diff.GetOk("type"); ok {
-	// 	if v == ec2.FleetTypeInstant {
-	// 		if v, ok := diff.GetOk("terminate_instances"); ok {
-	// 			if !v.(bool) {
-	// 				return errors.New(`EC2 Fleet of type instant must have terminate_instances set to true`)
-	// 			}
-	// 		}
-	// 		if v, ok := diff.GetOk("excess_capacity_termination_policy"); ok {
-	// 			if v.(string) != "" {
-	// 				return errors.New(`EC2 Fleet of type instant must not have excess_capacity_termination_policy set`)
-	// 			}
-	// 		}
-	// 	} else {
-	// 		if v, ok := diff.GetOk("on_demand_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-	// 			input.OnDemandOptions = expandOnDemandOptionsRequest(v.([]interface{})[0].(map[string]interface{}))
-	// 			if input.OnDemandOptions.CapacityReservationOptions != nil {
-	// 				return errors.New("on_demand_options.capacity_reservation_options can only be specified for fleets of type instant")
-	// 			}
-	// 			if input.OnDemandOptions.MinTargetCapacity != nil {
-	// 				return errors.New("on_demand_options.min_target_capacity can only be specified for fleets of type instant")
-	// 			}
-	// 			if input.OnDemandOptions.SingleAvailabilityZone != nil {
-	// 				return errors.New("on_demand_options.single_availability_zone can only be specified for fleets of type instant")
-	// 			}
-	// 			if input.OnDemandOptions.SingleInstanceType != nil {
-	// 				return errors.New("on_demand_options.single_instance_type can only be specified for fleets of type instant")
-	// 			}
-	// 			if input.SpotOptions.MinTargetCapacity != nil {
-	// 				return errors.New("spot_options.min_target_capacity can only be specified for fleets of type instant")
-	// 			}
-	// 			if input.SpotOptions.SingleAvailabilityZone != nil {
-	// 				return errors.New("spot_options.single_availability_zone can only be specified for fleets of type instant")
-	// 			}
-	// 			if input.SpotOptions.SingleInstanceType != nil {
-	// 				return errors.New("spot_options.single_instance_type can only be specified for fleets of type instant")
-	// 			}
-	// 		}
-	// 	}
-	// }
 	return nil
 }

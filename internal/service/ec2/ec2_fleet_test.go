@@ -39,7 +39,7 @@ func TestAccEC2Fleet_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`fleet/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "context", ""),
 					resource.TestCheckResourceAttr(resourceName, "excess_capacity_termination_policy", "termination"),
-					resource.TestCheckResourceAttr(resourceName, "fleetState", "active"),
+					resource.TestCheckResourceAttr(resourceName, "fleet_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "fulfilled_capacity", "0"),
 					resource.TestCheckResourceAttr(resourceName, "fulfilled_on_demand_capacity", "0"),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
@@ -364,31 +364,33 @@ func TestAccEC2Fleet_LaunchTemplateOverride_availabilityZone(t *testing.T) {
 	})
 }
 
-func TestAccEC2Fleet_LaunchTemplateOverride_imageId(t *testing.T) {
-	ctx := acctest.Context(t)
-	var fleet1 ec2.FleetData
-	awsAmiDataSourceName := "data.aws_ami.amz2"
-	resourceName := "aws_ec2_fleet.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+// Pending AWS to provide this attribute back in the `Describe` call
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckFleet(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFleetDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccFleetConfig_launchTemplateOverrideImageId(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFleetExists(ctx, resourceName, &fleet1),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "launch_template_config.0.override.0.image_id", awsAmiDataSourceName, "id"),
-				),
-			},
-		},
-	})
-}
+// func TestAccEC2Fleet_LaunchTemplateOverride_imageId(t *testing.T) {
+// 	ctx := acctest.Context(t)
+// 	var fleet1 ec2.FleetData
+// 	awsAmiDataSourceName := "data.aws_ami.amz2"
+// 	resourceName := "aws_ec2_fleet.test"
+// 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+// 	resource.ParallelTest(t, resource.TestCase{
+// 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckFleet(ctx, t) },
+// 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+// 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+// 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
+// 		Steps: []resource.TestStep{
+// 			{
+// 				Config: testAccFleetConfig_launchTemplateOverrideImageId(rName),
+// 				Check: resource.ComposeTestCheckFunc(
+// 					testAccCheckFleetExists(ctx, resourceName, &fleet1),
+// 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
+// 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
+// 					resource.TestCheckResourceAttrPair(resourceName, "launch_template_config.0.override.0.image_id", awsAmiDataSourceName, "id"),
+// 				),
+// 			},
+// 		},
+// 	})
+// }
 
 func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_memoryMiBAndVCPUCount(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -1806,31 +1808,33 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_onDemandMaxPric
 	})
 }
 
-func TestAccEC2Fleet_LaunchTemplateOverride_placement(t *testing.T) {
-	ctx := acctest.Context(t)
-	var fleet1 ec2.FleetData
-	resourceName := "aws_ec2_fleet.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+// Pending AWS to provide this attribute back in the `Describe` call
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckFleet(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFleetDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccFleetConfig_launchTemplateOverridePlacement(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFleetExists(ctx, resourceName, &fleet1),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.placement", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.placement.group_name", rName),
-				),
-			},
-		},
-	})
-}
+// func TestAccEC2Fleet_LaunchTemplateOverride_placement(t *testing.T) {
+// 	ctx := acctest.Context(t)
+// 	var fleet1 ec2.FleetData
+// 	resourceName := "aws_ec2_fleet.test"
+// 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+// 	resource.ParallelTest(t, resource.TestCase{
+// 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckFleet(ctx, t) },
+// 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+// 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+// 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
+// 		Steps: []resource.TestStep{
+// 			{
+// 				Config: testAccFleetConfig_launchTemplateOverridePlacement(rName),
+// 				Check: resource.ComposeTestCheckFunc(
+// 					testAccCheckFleetExists(ctx, resourceName, &fleet1),
+// 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
+// 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.#", "1"),
+// 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.placement", "1"),
+// 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.placement.group_name", rName),
+// 				),
+// 			},
+// 		},
+// 	})
+// }
 
 func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_requireHibernateSupport(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -2364,30 +2368,32 @@ func TestAccEC2Fleet_OnDemandOptions_allocationStrategy(t *testing.T) {
 	})
 }
 
-func TestAccEC2Fleet_OnDemandOptions_CapacityReservationOptions(t *testing.T) {
-	ctx := acctest.Context(t)
-	var fleet1 ec2.FleetData
-	resourceName := "aws_ec2_fleet.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+// Pending AWS to provide this attribute back in the `Describe` call
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckFleet(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFleetDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccFleetConfig_onDemandOptionsCapacityReservationOptions(rName, "use-capacity-reservations-first"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFleetExists(ctx, resourceName, &fleet1),
-					resource.TestCheckResourceAttr(resourceName, "on_demand_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "on_demand_options.0.capacity_reservation_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "on_demand_options.0.capacity_reservation_options.0.usage_strategy", "use-capacity-reservations-first"),
-				),
-			},
-		},
-	})
-}
+// func TestAccEC2Fleet_OnDemandOptions_CapacityReservationOptions(t *testing.T) {
+// 	ctx := acctest.Context(t)
+// 	var fleet1 ec2.FleetData
+// 	resourceName := "aws_ec2_fleet.test"
+// 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+// 	resource.ParallelTest(t, resource.TestCase{
+// 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckFleet(ctx, t) },
+// 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+// 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+// 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
+// 		Steps: []resource.TestStep{
+// 			{
+// 				Config: testAccFleetConfig_onDemandOptionsCapacityReservationOptions(rName, "use-capacity-reservations-first"),
+// 				Check: resource.ComposeTestCheckFunc(
+// 					testAccCheckFleetExists(ctx, resourceName, &fleet1),
+// 					resource.TestCheckResourceAttr(resourceName, "on_demand_options.#", "1"),
+// 					resource.TestCheckResourceAttr(resourceName, "on_demand_options.0.capacity_reservation_options.#", "1"),
+// 					resource.TestCheckResourceAttr(resourceName, "on_demand_options.0.capacity_reservation_options.0.usage_strategy", "use-capacity-reservations-first"),
+// 				),
+// 			},
+// 		},
+// 	})
+// }
 
 func TestAccEC2Fleet_OnDemandOptions_MaxTotalPrice(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -2938,8 +2944,8 @@ func TestAccEC2Fleet_type_instant(t *testing.T) {
 	var fleet1 ec2.FleetData
 	resourceName := "aws_ec2_fleet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	excessCapacityTerminationPolicy := ""
 	fleetType := "instant"
+	totalTargetCapacity := "2"
 	terminateInstances := true
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckFleet(ctx, t) },
@@ -2948,11 +2954,15 @@ func TestAccEC2Fleet_type_instant(t *testing.T) {
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetConfig_type(rName, fleetType, excessCapacityTerminationPolicy, terminateInstances),
+				Config: testAccFleetConfig_type_instant(rName, fleetType, terminateInstances, totalTargetCapacity),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleet1),
 					resource.TestCheckResourceAttr(resourceName, "type", fleetType),
-					resource.TestCheckResourceAttrSet(resourceName, "fleet_instance_set"),
+					resource.TestCheckResourceAttr(resourceName, "fleet_instance_set.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fleet_instance_set.0.instance_ids.#", totalTargetCapacity),
+					resource.TestCheckResourceAttrSet(resourceName, "fleet_instance_set.0.instance_ids.0"),
+					resource.TestCheckResourceAttrSet(resourceName, "fleet_instance_set.0.instance_type"),
+					resource.TestCheckResourceAttrSet(resourceName, "fleet_instance_set.0.lifecycle"),
 				),
 			},
 			{
@@ -3476,44 +3486,46 @@ resource "aws_ec2_fleet" "test" {
 `, rName, availabilityZoneIndex))
 }
 
-func testAccFleetConfig_launchTemplateOverrideImageId(rName string) string {
-	return acctest.ConfigCompose(
-		testAccFleetConfig_BaseLaunchTemplate(rName),
-		acctest.ConfigAvailableAZsNoOptIn(),
-		fmt.Sprintf(`
-resource "aws_ec2_fleet" "test" {
-  launch_template_config {
-    launch_template_specification {
-      launch_template_id = aws_launch_template.test.id
-      version            = aws_launch_template.test.latest_version
-    }
+// Pending AWS to provide this attribute back in the `Describe` call
 
-    override {
-      image_id = data.aws_ami.amz2.id
-    }
-  }
+// func testAccFleetConfig_launchTemplateOverrideImageId(rName string) string {
+// 	return acctest.ConfigCompose(
+// 		testAccFleetConfig_BaseLaunchTemplate(rName),
+// 		acctest.ConfigAvailableAZsNoOptIn(),
+// 		fmt.Sprintf(`
+// resource "aws_ec2_fleet" "test" {
+//   launch_template_config {
+//     launch_template_specification {
+//       launch_template_id = aws_launch_template.test.id
+//       version            = aws_launch_template.test.latest_version
+//     }
 
-  target_capacity_specification {
-    default_target_capacity_type = "spot"
-    total_target_capacity        = 0
-  }
+//     override {
+//       image_id = data.aws_ami.amz2.id
+//     }
+//   }
 
-  tags = {
-    Name = %[1]q
-  }
-}
+//   target_capacity_specification {
+//     default_target_capacity_type = "spot"
+//     total_target_capacity        = 0
+//   }
 
-data "aws_ami" "amz2" {
-	most_recent = true
-  
-	filter {
-	  name   = "name"
-	  values = ["amzn2-ami-hvm-*-x86_64-ebs"]
-	}
-	owners = ["amazon"]
-}
-`, rName))
-}
+//   tags = {
+//     Name = %[1]q
+//   }
+// }
+
+// data "aws_ami" "amz2" {
+// 	most_recent = true
+
+// 	filter {
+// 	  name   = "name"
+// 	  values = ["amzn2-ami-hvm-*-x86_64-ebs"]
+// 	}
+// 	owners = ["amazon"]
+// }
+// `, rName))
+// }
 
 func testAccFleetConfig_launchTemplateOverrideInstanceRequirements(rName, instanceRequirements string) string {
 	return acctest.ConfigCompose(testAccFleetConfig_BaseLaunchTemplate(rName), fmt.Sprintf(`
@@ -3595,41 +3607,43 @@ resource "aws_ec2_fleet" "test" {
 `, rName, maxPrice))
 }
 
-func testAccFleetConfig_launchTemplateOverridePlacement(rName string) string {
-	return acctest.ConfigCompose(
-		testAccFleetConfig_BaseLaunchTemplate(rName),
-		acctest.ConfigAvailableAZsNoOptIn(),
-		fmt.Sprintf(`
-resource "aws_ec2_fleet" "test" {
-  launch_template_config {
-    launch_template_specification {
-      launch_template_id = aws_launch_template.test.id
-      version            = aws_launch_template.test.latest_version
-    }
+// Pending AWS to provide this attribute back in the `Describe` call
 
-    override {
-		placement {
-			group_name = aws_launch_template.test.name
-		}
-    }
-  }
+// func testAccFleetConfig_launchTemplateOverridePlacement(rName string) string {
+// 	return acctest.ConfigCompose(
+// 		testAccFleetConfig_BaseLaunchTemplate(rName),
+// 		acctest.ConfigAvailableAZsNoOptIn(),
+// 		fmt.Sprintf(`
+// resource "aws_ec2_fleet" "test" {
+//   launch_template_config {
+//     launch_template_specification {
+//       launch_template_id = aws_launch_template.test.id
+//       version            = aws_launch_template.test.latest_version
+//     }
 
-  target_capacity_specification {
-    default_target_capacity_type = "spot"
-    total_target_capacity        = 0
-  }
+//     override {
+// 		placement {
+// 			group_name = aws_launch_template.test.name
+// 		}
+//     }
+//   }
 
-  tags = {
-    Name = %[1]q
-  }
-}
+//   target_capacity_specification {
+//     default_target_capacity_type = "spot"
+//     total_target_capacity        = 0
+//   }
 
-resource "aws_placement_group" "test" {
-	name     = %[1]q
-	strategy = "cluster"
-  }
-`, rName))
-}
+//   tags = {
+//     Name = %[1]q
+//   }
+// }
+
+// resource "aws_placement_group" "test" {
+// 	name     = %[1]q
+// 	strategy = "cluster"
+//   }
+// `, rName))
+// }
 
 func testAccFleetConfig_launchTemplateOverridePriority(rName string, priority int) string {
 	return acctest.ConfigCompose(testAccFleetConfig_BaseLaunchTemplate(rName), fmt.Sprintf(`
@@ -3818,35 +3832,37 @@ resource "aws_ec2_fleet" "test" {
 `, rName, allocationStrategy))
 }
 
-func testAccFleetConfig_onDemandOptionsCapacityReservationOptions(rName, usageStrategy string) string {
-	return acctest.ConfigCompose(testAccFleetConfig_BaseLaunchTemplate(rName), fmt.Sprintf(`
-resource "aws_ec2_fleet" "test" {
-  launch_template_config {
-    launch_template_specification {
-      launch_template_id = aws_launch_template.test.id
-      version            = aws_launch_template.test.latest_version
-    }
-  }
+// Pending AWS to provide this attribute back in the `Describe` call
 
-  on_demand_options {
-    capacity_reservation_options {
-      usage_strategy = %[2]q
-    }
-  }
+// func testAccFleetConfig_onDemandOptionsCapacityReservationOptions(rName, usageStrategy string) string {
+// 	return acctest.ConfigCompose(testAccFleetConfig_BaseLaunchTemplate(rName), fmt.Sprintf(`
+// resource "aws_ec2_fleet" "test" {
+//   launch_template_config {
+//     launch_template_specification {
+//       launch_template_id = aws_launch_template.test.id
+//       version            = aws_launch_template.test.latest_version
+//     }
+//   }
 
-  target_capacity_specification {
-    default_target_capacity_type = "on-demand"
-    total_target_capacity        = 0
-  }
-  terminate_instances = true
-  type = "instant"
+//   on_demand_options {
+//     capacity_reservation_options {
+//       usage_strategy = %[2]q
+//     }
+//   }
 
-  tags = {
-    Name = %[1]q
-  }
-}
-`, rName, usageStrategy))
-}
+//   target_capacity_specification {
+//     default_target_capacity_type = "on-demand"
+//     total_target_capacity        = 0
+//   }
+//   terminate_instances = true
+//   type = "instant"
+
+//   tags = {
+//     Name = %[1]q
+//   }
+// }
+// `, rName, usageStrategy))
+// }
 
 func testAccFleetConfig_onDemandOptionsMaxTotalPrice(rName, maxTotalPrice string) string {
 	return acctest.ConfigCompose(testAccFleetConfig_BaseLaunchTemplate(rName), fmt.Sprintf(`
@@ -4276,6 +4292,31 @@ resource "aws_ec2_fleet" "test" {
   }
 }
 `, rName, terminateInstancesWithExpiration))
+}
+
+func testAccFleetConfig_type_instant(rName, fleetType string, terminateInstance bool, totalTargetCapacity string) string {
+	return acctest.ConfigCompose(testAccFleetConfig_BaseLaunchTemplate(rName), fmt.Sprintf(`
+resource "aws_ec2_fleet" "test" {
+  type = %[2]q
+
+  launch_template_config {
+    launch_template_specification {
+      launch_template_id = aws_launch_template.test.id
+      version            = aws_launch_template.test.latest_version
+    }
+  }
+
+  target_capacity_specification {
+    default_target_capacity_type = "spot"
+    total_target_capacity        = %[4]q
+  }
+
+  terminate_instances = %[3]t
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, fleetType, terminateInstance, totalTargetCapacity))
 }
 
 func testAccFleetConfig_type(rName, fleetType string, excessCapacityTerminationPolicy string, terminateInstance bool) string {
