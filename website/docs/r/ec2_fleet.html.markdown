@@ -32,14 +32,14 @@ resource "aws_ec2_fleet" "example" {
 
 The following arguments are supported:
 
-* `launch_template_config` - (Required) Nested argument containing EC2 Launch Template configurations. Defined below.
-* `target_capacity_specification` - (Required) Nested argument containing target capacity configurations. Defined below.
 * `context` - (Optional) Reserved.
 * `excess_capacity_termination_policy` - (Optional) Whether running instances should be terminated if the total target capacity of the EC2 Fleet is decreased below the current size of the EC2. Valid values: `no-termination`, `termination`. Defaults to `termination`.
+* `launch_template_config` - (Required) Nested argument containing EC2 Launch Template configurations. Defined below.
 * `on_demand_options` - (Optional) Nested argument containing On-Demand configurations. Defined below.
 * `replace_unhealthy_instances` - (Optional) Whether EC2 Fleet should replace unhealthy instances. Defaults to `false`.
 * `spot_options` - (Optional) Nested argument containing Spot configurations. Defined below.
 * `tags` - (Optional) Map of Fleet tags. To tag instances at launch, specify the tags in the Launch Template. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `target_capacity_specification` - (Required) Nested argument containing target capacity configurations. Defined below.
 * `terminate_instances` - (Optional) Whether to terminate instances for an EC2 Fleet if it is deleted successfully. Defaults to `false`.
 * `terminate_instances_with_expiration` - (Optional) Whether running instances should be terminated when the EC2 Fleet expires. Defaults to `false`.
 * `type` - (Optional) The type of request. Indicates whether the EC2 Fleet only requests the target capacity, or also attempts to maintain it. Valid values: `maintain`, `request`. Defaults to `maintain`.
@@ -53,9 +53,9 @@ The following arguments are supported:
 
 ~> *NOTE:* Either `launch_template_id` or `launch_template_name` must be specified.
 
-* `version` - (Required) Version number of the launch template.
 * `launch_template_id` - (Optional) ID of the launch template.
 * `launch_template_name` - (Optional) Name of the launch template.
+* `version` - (Required) Version number of the launch template.
 
 #### override
 
@@ -212,10 +212,10 @@ This configuration block supports the following:
 ### target_capacity_specification
 
 * `default_target_capacity_type` - (Required) Default target capacity type. Valid values: `on-demand`, `spot`.
-* `total_target_capacity` - (Required) The number of units to request, filled using `default_target_capacity_type`.
 * `on_demand_target_capacity` - (Optional) The number of On-Demand units to request.
 * `spot_target_capacity` - (Optional) The number of Spot units to request.
 * `target_capacity_unit_type` - (Optional) The unit for the target capacity. This can only be done with `instance_requirements` defined
+* `total_target_capacity` - (Required) The number of units to request, filled using `default_target_capacity_type`.
 
 ## Attributes Reference
 
