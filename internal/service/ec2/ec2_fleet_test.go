@@ -3901,8 +3901,8 @@ resource "aws_ec2_fleet" "test" {
   }
 
   on_demand_options {
-    min_target_capacity = %[2]s
-	single_availability_zone = true
+    min_target_capacity      = %[2]s
+    single_availability_zone = true
   }
 
   target_capacity_specification {
@@ -3910,7 +3910,7 @@ resource "aws_ec2_fleet" "test" {
     total_target_capacity        = 0
   }
   terminate_instances = true
-  type = "instant"
+  type                = "instant"
 
   tags = {
     Name = %[1]q
@@ -3930,7 +3930,7 @@ resource "aws_ec2_fleet" "test" {
   }
 
   on_demand_options {
-	single_availability_zone = %[2]t
+    single_availability_zone = %[2]t
   }
 
   target_capacity_specification {
@@ -3938,7 +3938,7 @@ resource "aws_ec2_fleet" "test" {
     total_target_capacity        = 0
   }
   terminate_instances = true
-  type = "instant"
+  type                = "instant"
 
   tags = {
     Name = %[1]q
@@ -3958,7 +3958,7 @@ resource "aws_ec2_fleet" "test" {
   }
 
   on_demand_options {
-	single_instance_type = %[2]t
+    single_instance_type = %[2]t
   }
 
   target_capacity_specification {
@@ -3966,7 +3966,7 @@ resource "aws_ec2_fleet" "test" {
     total_target_capacity        = 0
   }
   terminate_instances = true
-  type = "instant"
+  type                = "instant"
 
   tags = {
     Name = %[1]q
@@ -4040,7 +4040,7 @@ resource "aws_ec2_fleet" "test" {
     maintenance_strategies {
       capacity_rebalance {
         replacement_strategy = %[3]q
-		termination_delay = %[4]s
+        termination_delay    = %[4]s
       }
     }
   }
@@ -4349,7 +4349,7 @@ resource "aws_ec2_fleet" "test" {
 func testAccFleetConfig_validFrom(rName, validFrom string) string {
 	return acctest.ConfigCompose(testAccFleetConfig_BaseLaunchTemplate(rName), fmt.Sprintf(`
 resource "aws_ec2_fleet" "test" {
-  
+
 
   launch_template_config {
     launch_template_specification {
@@ -4375,7 +4375,7 @@ resource "aws_ec2_fleet" "test" {
 func testAccFleetConfig_validUntil(rName, validUntil string) string {
 	return acctest.ConfigCompose(testAccFleetConfig_BaseLaunchTemplate(rName), fmt.Sprintf(`
 resource "aws_ec2_fleet" "test" {
-  
+
 
   launch_template_config {
     launch_template_specification {
