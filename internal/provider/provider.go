@@ -676,6 +676,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 
 			"aws_guardduty_detector": guardduty.DataSourceDetector(),
 
+			"aws_iam_access_keys":             iam.DataSourceAccessKeys(),
 			"aws_iam_account_alias":           iam.DataSourceAccountAlias(),
 			"aws_iam_group":                   iam.DataSourceGroup(),
 			"aws_iam_instance_profile":        iam.DataSourceInstanceProfile(),
