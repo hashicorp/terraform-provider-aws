@@ -347,42 +347,19 @@ func testAccEventDataStoreConfig_kmsKeyId(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   multi_region = true
-  policy       = data.aws_iam_policy_document.test.json
-}
-
-data "aws_caller_identity" "current" {}
-
-data "aws_iam_policy_document" "test" {
-  statement {
-    actions = [
-      "kms:*",
-    ]
-    principals {
-      identifiers = [
-        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root",
-      ]
-      type = "AWS"
-    }
-    resources = [
-      "*",
-    ]
-    sid = "Enable IAM User Permissions"
-  }
-
-  statement {
-    actions = [
-      "kms:*",
-    ]
-    principals {
-      identifiers = [
-        "cloudtrail.amazonaws.com",
-      ]
-      type = "Service"
-    }
-    resources = [
-      "*",
-    ]
-  }
+  policy       = jsonencode({
+    Id = %[1]q
+    Statement = [{
+      Sid    = "Enable IAM User Permissions"
+      Effect = "Allow"
+      Principal = {
+        AWS = "*"
+      }
+      Action   = "kms:*"
+      Resource = "*"
+    }]
+    Version = "2012-10-17"
+  })
 }
 
 resource "aws_cloudtrail_event_data_store" "test" {
