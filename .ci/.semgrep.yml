@@ -226,8 +226,6 @@ rules:
     paths:
       include:
         - internal/
-      exclude:
-        - internal/service/apigateway/integration.go
     patterns:
       - pattern-either:
           - pattern: |
