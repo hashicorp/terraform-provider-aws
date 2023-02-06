@@ -252,8 +252,9 @@ func TestAccSNSTopic_withIAMRole(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicConfig_iamRole(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTopicExists(ctx, resourceName, &attributes),
+					acctest.CheckResourceAttrJMESPair(resourceName, "policy", "Statement[0].Principal.AWS", "aws_iam_role.example", "arn"),
 				),
 			},
 			{
@@ -561,7 +562,7 @@ func testAccCheckTopicHasPolicy(ctx context.Context, n string, expectedPolicyTex
 		equivalent, err := awspolicy.PoliciesAreEquivalent(actualPolicyText, expectedPolicyText)
 
 		if err != nil {
-			return fmt.Errorf("Error testing policy equivalence: %s", err)
+			return fmt.Errorf("testing policy equivalence: %s", err)
 		}
 
 		if !equivalent {
@@ -618,7 +619,7 @@ func testAccCheckTopicDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tfsns.FindTopicAttributesByARN(ctx, conn, rs.Primary.ID)
+			_, err := tfsns.GetTopicAttributesByARN(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -648,7 +649,7 @@ func testAccCheckTopicExists(ctx context.Context, n string, v *map[string]string
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn()
 
-		output, err := tfsns.FindTopicAttributesByARN(ctx, conn, rs.Primary.ID)
+		output, err := tfsns.GetTopicAttributesByARN(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -739,6 +740,28 @@ func testAccTopicConfig_iamRole(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
+resource "aws_sns_topic" "test" {
+  name = %[1]q
+
+  policy = <<EOF
+{
+  "Statement": [
+    {
+      "Sid": "Stmt1445931846145",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "${aws_iam_role.example.arn}"
+      },
+      "Action": "sns:Publish",
+      "Resource": "arn:${data.aws_partition.current.partition}:sns:${data.aws_region.current.name}::example"
+    }
+  ],
+  "Version": "2012-10-17",
+  "Id": "Policy1445931846145"
+}
+EOF
+}
+
 resource "aws_iam_role" "example" {
   name = %[1]q
   path = "/test/"
@@ -761,28 +784,6 @@ EOF
 }
 
 data "aws_region" "current" {}
-
-resource "aws_sns_topic" "test" {
-  name = %[1]q
-
-  policy = <<EOF
-{
-  "Statement": [
-    {
-      "Sid": "Stmt1445931846145",
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "${aws_iam_role.example.arn}"
-      },
-      "Action": "sns:Publish",
-      "Resource": "arn:${data.aws_partition.current.partition}:sns:${data.aws_region.current.name}::example"
-    }
-  ],
-  "Version": "2012-10-17",
-  "Id": "Policy1445931846145"
-}
-EOF
-}
 `, rName)
 }
 
