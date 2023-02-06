@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func FindEndpointByID(conn *neptune.Neptune, id string) (*neptune.DBClusterEndpoint, error) {
+func FindEndpointByID(ctx context.Context, conn *neptune.Neptune, id string) (*neptune.DBClusterEndpoint, error) {
 	clusterId, endpointId, err := readClusterEndpointID(id)
 	if err != nil {
 		return nil, err
@@ -21,7 +21,7 @@ func FindEndpointByID(conn *neptune.Neptune, id string) (*neptune.DBClusterEndpo
 		DBClusterEndpointIdentifier: aws.String(endpointId),
 	}
 
-	output, err := conn.DescribeDBClusterEndpoints(input)
+	output, err := conn.DescribeDBClusterEndpointsWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBClusterEndpointNotFoundFault) ||
 		tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBClusterNotFoundFault) {

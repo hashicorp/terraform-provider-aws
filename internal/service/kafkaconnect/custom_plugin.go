@@ -23,7 +23,7 @@ func ResourceCustomPlugin() *schema.Resource {
 		DeleteWithoutTimeout: resourceCustomPluginDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{

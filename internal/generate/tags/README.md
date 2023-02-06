@@ -27,6 +27,7 @@ Some flags control generation a certain section of code, such as whether the gen
 | `ServiceTagsMap` |  | Whether to generate map service tags (use this or `ServiceTagsSlice`, not both) | `-ServiceTagsMap` |
 | `ServiceTagsSlice` |  | Whether to generate slice service tags (use this or `ServiceTagsMap`, not both) | `-ServiceTagsSlice` |
 | `UpdateTags` |  | Whether to generate UpdateTags | `-UpdateTags` |
+| `ContextOnly` |  | Whether to generator only Context-aware functions | `-ContextOnly` |
 | `ListTagsInFiltIDName` |  | List tags input filter identifier name | `-ListTagsInFiltIDName=resource-id` |
 | `ListTagsInIDElem` | `ResourceArn` | List tags input identifier element | `-ListTagsInIDElem=ResourceARN` |
 | `ListTagsInIDNeedSlice` |  | Whether list tags input identifier needs a slice | `-ListTagsInIDNeedSlice=yes` |

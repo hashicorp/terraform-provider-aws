@@ -54,6 +54,7 @@ func init() {
 }
 
 func sweepGroups(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
@@ -62,7 +63,7 @@ func sweepGroups(region string) error {
 	conn := client.(*conns.AWSClient).LogsConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeLogGroupsPages(input, func(page *cloudwatchlogs.DescribeLogGroupsOutput, lastPage bool) bool {
+	err = conn.DescribeLogGroupsPagesWithContext(ctx, input, func(page *cloudwatchlogs.DescribeLogGroupsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -87,7 +88,7 @@ func sweepGroups(region string) error {
 		return fmt.Errorf("error listing CloudWatch Logs Log Groups (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping CloudWatch Logs Log Groups (%s): %w", region, err)
@@ -97,6 +98,7 @@ func sweepGroups(region string) error {
 }
 
 func sweeplogQueryDefinitions(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
@@ -105,7 +107,7 @@ func sweeplogQueryDefinitions(region string) error {
 	conn := client.(*conns.AWSClient).LogsConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = describeQueryDefinitionsPages(conn, input, func(page *cloudwatchlogs.DescribeQueryDefinitionsOutput, lastPage bool) bool {
+	err = describeQueryDefinitionsPages(ctx, conn, input, func(page *cloudwatchlogs.DescribeQueryDefinitionsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -130,7 +132,7 @@ func sweeplogQueryDefinitions(region string) error {
 		return fmt.Errorf("error listing CloudWatch Logs Query Definitions (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping CloudWatch Logs Query Definitions (%s): %w", region, err)
@@ -140,6 +142,7 @@ func sweeplogQueryDefinitions(region string) error {
 }
 
 func sweepResourcePolicies(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
@@ -148,7 +151,7 @@ func sweepResourcePolicies(region string) error {
 	conn := client.(*conns.AWSClient).LogsConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = describeResourcePoliciesPages(conn, input, func(page *cloudwatchlogs.DescribeResourcePoliciesOutput, lastPage bool) bool {
+	err = describeResourcePoliciesPages(ctx, conn, input, func(page *cloudwatchlogs.DescribeResourcePoliciesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -173,7 +176,7 @@ func sweepResourcePolicies(region string) error {
 		return fmt.Errorf("error listing CloudWatch Logs Resource Policies (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping CloudWatch Logs Resource Policies (%s): %w", region, err)

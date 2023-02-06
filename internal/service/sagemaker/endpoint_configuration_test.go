@@ -1,6 +1,7 @@
 package sagemaker_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -15,6 +16,7 @@ import (
 )
 
 func TestAccSageMakerEndpointConfiguration_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_endpoint_configuration.test"
 
@@ -22,12 +24,12 @@ func TestAccSageMakerEndpointConfiguration_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEndpointConfigurationDestroy,
+		CheckDestroy:             testAccCheckEndpointConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEndpointConfigurationExists(resourceName),
+					testAccCheckEndpointConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "production_variants.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "production_variants.0.variant_name", "variant-1"),
@@ -52,6 +54,7 @@ func TestAccSageMakerEndpointConfiguration_basic(t *testing.T) {
 }
 
 func TestAccSageMakerEndpointConfiguration_shadowProductionVariants(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_endpoint_configuration.test"
 
@@ -59,12 +62,12 @@ func TestAccSageMakerEndpointConfiguration_shadowProductionVariants(t *testing.T
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEndpointConfigurationDestroy,
+		CheckDestroy:             testAccCheckEndpointConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfigurationConfig_shadowProductionVariants(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEndpointConfigurationExists(resourceName),
+					testAccCheckEndpointConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "production_variants.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "production_variants.0.variant_name", "variant-1"),
@@ -92,6 +95,7 @@ func TestAccSageMakerEndpointConfiguration_shadowProductionVariants(t *testing.T
 }
 
 func TestAccSageMakerEndpointConfiguration_ProductionVariants_serverless(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_endpoint_configuration.test"
 
@@ -99,12 +103,12 @@ func TestAccSageMakerEndpointConfiguration_ProductionVariants_serverless(t *test
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEndpointConfigurationDestroy,
+		CheckDestroy:             testAccCheckEndpointConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfigurationConfig_serverless(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEndpointConfigurationExists(resourceName),
+					testAccCheckEndpointConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "production_variants.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "production_variants.0.serverless_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "production_variants.0.serverless_config.0.max_concurrency", "1"),
@@ -121,6 +125,7 @@ func TestAccSageMakerEndpointConfiguration_ProductionVariants_serverless(t *test
 }
 
 func TestAccSageMakerEndpointConfiguration_ProductionVariants_initialVariantWeight(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_endpoint_configuration.test"
 
@@ -128,12 +133,12 @@ func TestAccSageMakerEndpointConfiguration_ProductionVariants_initialVariantWeig
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEndpointConfigurationDestroy,
+		CheckDestroy:             testAccCheckEndpointConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfigurationConfig_productionVariantsInitialVariantWeight(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEndpointConfigurationExists(resourceName),
+					testAccCheckEndpointConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(
 						resourceName, "production_variants.1.initial_variant_weight", "0.5"),
 				),
@@ -148,6 +153,7 @@ func TestAccSageMakerEndpointConfiguration_ProductionVariants_initialVariantWeig
 }
 
 func TestAccSageMakerEndpointConfiguration_ProductionVariants_acceleratorType(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_endpoint_configuration.test"
 
@@ -155,12 +161,12 @@ func TestAccSageMakerEndpointConfiguration_ProductionVariants_acceleratorType(t 
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEndpointConfigurationDestroy,
+		CheckDestroy:             testAccCheckEndpointConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfigurationConfig_productionVariantAcceleratorType(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEndpointConfigurationExists(resourceName),
+					testAccCheckEndpointConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "production_variants.0.accelerator_type", "ml.eia1.medium"),
 				),
 			},
@@ -174,6 +180,7 @@ func TestAccSageMakerEndpointConfiguration_ProductionVariants_acceleratorType(t 
 }
 
 func TestAccSageMakerEndpointConfiguration_kmsKeyID(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_endpoint_configuration.test"
 
@@ -181,12 +188,12 @@ func TestAccSageMakerEndpointConfiguration_kmsKeyID(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEndpointConfigurationDestroy,
+		CheckDestroy:             testAccCheckEndpointConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfigurationConfig_kmsKeyID(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEndpointConfigurationExists(resourceName),
+					testAccCheckEndpointConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "kms_key_arn", "aws_kms_key.test", "arn"),
 				),
 			},
@@ -200,6 +207,7 @@ func TestAccSageMakerEndpointConfiguration_kmsKeyID(t *testing.T) {
 }
 
 func TestAccSageMakerEndpointConfiguration_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_endpoint_configuration.test"
 
@@ -207,12 +215,12 @@ func TestAccSageMakerEndpointConfiguration_tags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEndpointConfigurationDestroy,
+		CheckDestroy:             testAccCheckEndpointConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfigurationConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEndpointConfigurationExists(resourceName),
+					testAccCheckEndpointConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -225,7 +233,7 @@ func TestAccSageMakerEndpointConfiguration_tags(t *testing.T) {
 			{
 				Config: testAccEndpointConfigurationConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEndpointConfigurationExists(resourceName),
+					testAccCheckEndpointConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -234,7 +242,7 @@ func TestAccSageMakerEndpointConfiguration_tags(t *testing.T) {
 			{
 				Config: testAccEndpointConfigurationConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEndpointConfigurationExists(resourceName),
+					testAccCheckEndpointConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -244,6 +252,7 @@ func TestAccSageMakerEndpointConfiguration_tags(t *testing.T) {
 }
 
 func TestAccSageMakerEndpointConfiguration_dataCapture(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_endpoint_configuration.test"
 
@@ -251,12 +260,12 @@ func TestAccSageMakerEndpointConfiguration_dataCapture(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEndpointConfigurationDestroy,
+		CheckDestroy:             testAccCheckEndpointConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfigurationConfig_dataCapture(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEndpointConfigurationExists(resourceName),
+					testAccCheckEndpointConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "data_capture_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.enable_capture", "true"),
 					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.initial_sampling_percentage", "50"),
@@ -277,6 +286,7 @@ func TestAccSageMakerEndpointConfiguration_dataCapture(t *testing.T) {
 }
 
 func TestAccSageMakerEndpointConfiguration_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_endpoint_configuration.test"
 
@@ -284,14 +294,14 @@ func TestAccSageMakerEndpointConfiguration_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEndpointConfigurationDestroy,
+		CheckDestroy:             testAccCheckEndpointConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEndpointConfigurationExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfsagemaker.ResourceEndpointConfiguration(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfsagemaker.ResourceEndpointConfiguration(), resourceName),
+					testAccCheckEndpointConfigurationExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceEndpointConfiguration(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceEndpointConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -300,6 +310,7 @@ func TestAccSageMakerEndpointConfiguration_disappears(t *testing.T) {
 }
 
 func TestAccSageMakerEndpointConfiguration_async(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_endpoint_configuration.test"
 
@@ -307,12 +318,12 @@ func TestAccSageMakerEndpointConfiguration_async(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEndpointConfigurationDestroy,
+		CheckDestroy:             testAccCheckEndpointConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfigurationConfig_async(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEndpointConfigurationExists(resourceName),
+					testAccCheckEndpointConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "async_inference_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "async_inference_config.0.client_config.#", "0"),
@@ -332,6 +343,7 @@ func TestAccSageMakerEndpointConfiguration_async(t *testing.T) {
 }
 
 func TestAccSageMakerEndpointConfiguration_async_kms(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_endpoint_configuration.test"
 
@@ -339,12 +351,12 @@ func TestAccSageMakerEndpointConfiguration_async_kms(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEndpointConfigurationDestroy,
+		CheckDestroy:             testAccCheckEndpointConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfigurationConfig_asyncKMS(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEndpointConfigurationExists(resourceName),
+					testAccCheckEndpointConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "async_inference_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "async_inference_config.0.client_config.#", "0"),
@@ -364,6 +376,7 @@ func TestAccSageMakerEndpointConfiguration_async_kms(t *testing.T) {
 }
 
 func TestAccSageMakerEndpointConfiguration_Async_notif(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_endpoint_configuration.test"
 
@@ -371,12 +384,12 @@ func TestAccSageMakerEndpointConfiguration_Async_notif(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEndpointConfigurationDestroy,
+		CheckDestroy:             testAccCheckEndpointConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfigurationConfig_asyncNotif(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEndpointConfigurationExists(resourceName),
+					testAccCheckEndpointConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "async_inference_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "async_inference_config.0.client_config.#", "0"),
@@ -397,6 +410,7 @@ func TestAccSageMakerEndpointConfiguration_Async_notif(t *testing.T) {
 }
 
 func TestAccSageMakerEndpointConfiguration_Async_client(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_endpoint_configuration.test"
 
@@ -404,12 +418,12 @@ func TestAccSageMakerEndpointConfiguration_Async_client(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEndpointConfigurationDestroy,
+		CheckDestroy:             testAccCheckEndpointConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEndpointConfigurationConfig_asyncClient(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEndpointConfigurationExists(resourceName),
+					testAccCheckEndpointConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "async_inference_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "async_inference_config.0.client_config.#", "1"),
@@ -427,31 +441,33 @@ func TestAccSageMakerEndpointConfiguration_Async_client(t *testing.T) {
 	})
 }
 
-func testAccCheckEndpointConfigurationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
+func testAccCheckEndpointConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_sagemaker_endpoint_configuration" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_sagemaker_endpoint_configuration" {
+				continue
+			}
+
+			_, err := tfsagemaker.FindEndpointConfigByName(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("SageMaker Endpoint Configuration %s still exists", rs.Primary.ID)
 		}
 
-		_, err := tfsagemaker.FindEndpointConfigByName(conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("SageMaker Endpoint Configuration %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckEndpointConfigurationExists(n string) resource.TestCheckFunc {
+func testAccCheckEndpointConfigurationExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -463,7 +479,7 @@ func testAccCheckEndpointConfigurationExists(n string) resource.TestCheckFunc {
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn()
-		_, err := tfsagemaker.FindEndpointConfigByName(conn, rs.Primary.ID)
+		_, err := tfsagemaker.FindEndpointConfigByName(ctx, conn, rs.Primary.ID)
 
 		return err
 	}

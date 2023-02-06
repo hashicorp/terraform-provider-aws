@@ -233,7 +233,7 @@ func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta in
 
 	log.Printf("[DEBUG] Deleting Connect Instance %s", d.Id())
 
-	_, err := conn.DeleteInstance(input)
+	_, err := conn.DeleteInstanceWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
 		return nil

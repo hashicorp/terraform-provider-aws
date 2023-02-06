@@ -170,7 +170,7 @@ func resourceAutoScalingConfigurationRead(ctx context.Context, d *schema.Resourc
 	d.Set("min_size", config.MinSize)
 	d.Set("status", config.Status)
 
-	tags, err := ListTags(conn, arn)
+	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error listing tags for App Runner AutoScaling Configuration Version (%s): %s", arn, err))
@@ -196,7 +196,7 @@ func resourceAutoScalingConfigurationUpdate(ctx context.Context, d *schema.Resou
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.FromErr(fmt.Errorf("error updating App Runner AutoScaling Configuration Version (%s) tags: %s", d.Get("arn").(string), err))
 		}
 	}

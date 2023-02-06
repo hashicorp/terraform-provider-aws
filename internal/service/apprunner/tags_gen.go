@@ -14,11 +14,7 @@ import (
 // ListTags lists apprunner service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn apprunneriface.AppRunnerAPI, identifier string) (tftags.KeyValueTags, error) {
-	return ListTagsWithContext(context.Background(), conn, identifier)
-}
-
-func ListTagsWithContext(ctx context.Context, conn apprunneriface.AppRunnerAPI, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(ctx context.Context, conn apprunneriface.AppRunnerAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &apprunner.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
@@ -64,10 +60,7 @@ func KeyValueTags(tags []*apprunner.Tag) tftags.KeyValueTags {
 // UpdateTags updates apprunner service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn apprunneriface.AppRunnerAPI, identifier string, oldTags interface{}, newTags interface{}) error {
-	return UpdateTagsWithContext(context.Background(), conn, identifier, oldTags, newTags)
-}
-func UpdateTagsWithContext(ctx context.Context, conn apprunneriface.AppRunnerAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(ctx context.Context, conn apprunneriface.AppRunnerAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 

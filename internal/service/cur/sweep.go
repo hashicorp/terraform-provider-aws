@@ -22,6 +22,7 @@ func init() {
 }
 
 func sweepReportDefinitions(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -30,15 +31,15 @@ func sweepReportDefinitions(region string) error {
 	input := &cur.DescribeReportDefinitionsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeReportDefinitionsPages(input, func(page *cur.DescribeReportDefinitionsOutput, lastPage bool) bool {
+	err = conn.DescribeReportDefinitionsPagesWithContext(ctx, input, func(page *cur.DescribeReportDefinitionsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, v := range page.ReportDefinitions {
+		for _, reportDefinition := range page.ReportDefinitions {
 			r := ResourceReportDefinition()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.ReportName))
+			d.SetId(aws.StringValue(reportDefinition.ReportName))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -50,12 +51,11 @@ func sweepReportDefinitions(region string) error {
 		log.Printf("[WARN] Skipping EC2 Cost And Usage Report Definition sweep for %s: %s", region, err)
 		return nil
 	}
-
 	if err != nil {
 		return fmt.Errorf("error listing Cost And Usage Report Definitions (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Cost And Usage Report Definitions (%s): %w", region, err)

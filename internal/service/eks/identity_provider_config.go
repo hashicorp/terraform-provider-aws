@@ -143,7 +143,7 @@ func resourceIdentityProviderConfigCreate(ctx context.Context, d *schema.Resourc
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	_, err := conn.AssociateIdentityProviderConfig(input)
+	_, err := conn.AssociateIdentityProviderConfigWithContext(ctx, input)
 
 	if err != nil {
 		return diag.Errorf("error associating EKS Identity Provider Config (%s): %s", id, err)
@@ -211,7 +211,7 @@ func resourceIdentityProviderConfigUpdate(ctx context.Context, d *schema.Resourc
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.Errorf("error updating tags: %s", err)
 		}
 	}

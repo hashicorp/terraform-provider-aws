@@ -1,6 +1,3 @@
-//go:build sweep
-// +build sweep
-
 package sweep
 
 import (
@@ -22,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -40,7 +38,7 @@ var SweeperClients map[string]interface{}
 // SharedRegionalSweepClient returns a common conns.AWSClient setup needed for the sweeper
 // functions for a given region
 func SharedRegionalSweepClient(region string) (interface{}, error) {
-	return SharedRegionalSweepClientWithContext(context.Background(), region)
+	return SharedRegionalSweepClientWithContext(Context(region), region)
 }
 
 func SharedRegionalSweepClientWithContext(ctx context.Context, region string) (interface{}, error) {
@@ -118,8 +116,8 @@ func NewSweepResource(resource *schema.Resource, d *schema.ResourceData, meta in
 }
 
 func (sr *SweepResource) Delete(ctx context.Context, timeout time.Duration, optFns ...tfresource.OptionsFunc) error {
-	err := tfresource.RetryContext(ctx, timeout, func() *resource.RetryError {
-		err := DeleteResource(sr.resource, sr.d, sr.meta)
+	err := tfresource.Retry(ctx, timeout, func() *resource.RetryError {
+		err := DeleteResource(ctx, sr.resource, sr.d, sr.meta)
 
 		if err != nil {
 			if strings.Contains(err.Error(), "Throttling") {
@@ -134,11 +132,10 @@ func (sr *SweepResource) Delete(ctx context.Context, timeout time.Duration, optF
 	}, optFns...)
 
 	if tfresource.TimedOut(err) {
-		err = DeleteResource(sr.resource, sr.d, sr.meta)
+		err = DeleteResource(ctx, sr.resource, sr.d, sr.meta)
 	}
 
 	return err
-
 }
 
 func SweepOrchestrator(sweepables []Sweepable) error {
@@ -235,26 +232,36 @@ func SkipSweepError(err error) bool {
 	return false
 }
 
-func DeleteResource(resource *schema.Resource, d *schema.ResourceData, meta interface{}) error {
+func DeleteResource(ctx context.Context, resource *schema.Resource, d *schema.ResourceData, meta any) error {
 	if resource.DeleteContext != nil || resource.DeleteWithoutTimeout != nil {
 		var diags diag.Diagnostics
 
 		if resource.DeleteContext != nil {
-			diags = resource.DeleteContext(context.Background(), d, meta)
+			diags = resource.DeleteContext(ctx, d, meta)
 		} else {
-			diags = resource.DeleteWithoutTimeout(context.Background(), d, meta)
+			diags = resource.DeleteWithoutTimeout(ctx, d, meta)
 		}
 
-		for i := range diags {
-			if diags[i].Severity == diag.Error {
-				return fmt.Errorf("deleting resource: %s", diags[i].Summary)
-			}
-		}
-
-		return nil
+		return sdkdiag.DiagnosticsError(diags)
 	}
 
 	return resource.Delete(d, meta)
+}
+
+func ReadResource(ctx context.Context, resource *schema.Resource, d *schema.ResourceData, meta any) error {
+	if resource.ReadContext != nil || resource.ReadWithoutTimeout != nil {
+		var diags diag.Diagnostics
+
+		if resource.ReadContext != nil {
+			diags = resource.ReadContext(ctx, d, meta)
+		} else {
+			diags = resource.ReadWithoutTimeout(ctx, d, meta)
+		}
+
+		return sdkdiag.DiagnosticsError(diags)
+	}
+
+	return resource.Read(d, meta)
 }
 
 func Partition(region string) string {

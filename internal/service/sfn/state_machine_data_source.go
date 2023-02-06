@@ -50,7 +50,7 @@ func dataSourceStateMachineRead(ctx context.Context, d *schema.ResourceData, met
 	name := d.Get("name").(string)
 	var arns []string
 
-	err := conn.ListStateMachinesPages(&sfn.ListStateMachinesInput{}, func(page *sfn.ListStateMachinesOutput, lastPage bool) bool {
+	err := conn.ListStateMachinesPagesWithContext(ctx, &sfn.ListStateMachinesInput{}, func(page *sfn.ListStateMachinesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}

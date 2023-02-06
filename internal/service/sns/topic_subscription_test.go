@@ -69,6 +69,7 @@ func TestSuppressEquivalentTopicSubscriptionDeliveryPolicy(t *testing.T) {
 }
 
 func TestAccSNSTopicSubscription_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var attributes map[string]string
 	resourceName := "aws_sns_topic_subscription.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -77,12 +78,12 @@ func TestAccSNSTopicSubscription_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTopicSubscriptionDestroy,
+		CheckDestroy:             testAccCheckTopicSubscriptionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicSubscriptionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicSubscriptionExists(resourceName, &attributes),
+					testAccCheckTopicSubscriptionExists(ctx, resourceName, &attributes),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", sns.ServiceName, regexp.MustCompile(fmt.Sprintf("%s:.+", rName))),
 					resource.TestCheckResourceAttr(resourceName, "confirmation_was_authenticated", "true"),
 					resource.TestCheckResourceAttr(resourceName, "delivery_policy", ""),
@@ -109,6 +110,7 @@ func TestAccSNSTopicSubscription_basic(t *testing.T) {
 }
 
 func TestAccSNSTopicSubscription_filterPolicy(t *testing.T) {
+	ctx := acctest.Context(t)
 	var attributes map[string]string
 	resourceName := "aws_sns_topic_subscription.test"
 	filterPolicy1 := `{"key1":["val1"],"key2":["val2"]}`
@@ -119,12 +121,12 @@ func TestAccSNSTopicSubscription_filterPolicy(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTopicSubscriptionDestroy,
+		CheckDestroy:             testAccCheckTopicSubscriptionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicSubscriptionConfig_filterPolicy(rName, strconv.Quote(filterPolicy1)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicSubscriptionExists(resourceName, &attributes),
+					testAccCheckTopicSubscriptionExists(ctx, resourceName, &attributes),
 					resource.TestCheckResourceAttr(resourceName, "filter_policy", filterPolicy1),
 					resource.TestCheckResourceAttr(resourceName, "filter_policy_scope", "MessageAttributes"),
 				),
@@ -142,7 +144,7 @@ func TestAccSNSTopicSubscription_filterPolicy(t *testing.T) {
 			{
 				Config: testAccTopicSubscriptionConfig_filterPolicy(rName, strconv.Quote(filterPolicy2)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicSubscriptionExists(resourceName, &attributes),
+					testAccCheckTopicSubscriptionExists(ctx, resourceName, &attributes),
 					resource.TestCheckResourceAttr(resourceName, "filter_policy", filterPolicy2),
 					resource.TestCheckResourceAttr(resourceName, "filter_policy_scope", "MessageAttributes"),
 				),
@@ -151,7 +153,7 @@ func TestAccSNSTopicSubscription_filterPolicy(t *testing.T) {
 			{
 				Config: testAccTopicSubscriptionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicSubscriptionExists(resourceName, &attributes),
+					testAccCheckTopicSubscriptionExists(ctx, resourceName, &attributes),
 					resource.TestCheckResourceAttr(resourceName, "filter_policy", ""),
 					resource.TestCheckResourceAttr(resourceName, "filter_policy_scope", ""),
 				),
@@ -161,6 +163,7 @@ func TestAccSNSTopicSubscription_filterPolicy(t *testing.T) {
 }
 
 func TestAccSNSTopicSubscription_filterPolicyScope(t *testing.T) {
+	ctx := acctest.Context(t)
 	var attributes map[string]string
 	resourceName := "aws_sns_topic_subscription.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -169,12 +172,12 @@ func TestAccSNSTopicSubscription_filterPolicyScope(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTopicSubscriptionDestroy,
+		CheckDestroy:             testAccCheckTopicSubscriptionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicSubscriptionConfig_filterPolicyScope(rName, strconv.Quote("MessageBody")),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicSubscriptionExists(resourceName, &attributes),
+					testAccCheckTopicSubscriptionExists(ctx, resourceName, &attributes),
 					resource.TestCheckResourceAttr(resourceName, "filter_policy_scope", "MessageBody"),
 				),
 			},
@@ -199,7 +202,7 @@ func TestAccSNSTopicSubscription_filterPolicyScope(t *testing.T) {
 			{
 				Config: testAccTopicSubscriptionConfig_filterPolicyScope(rName, strconv.Quote("MessageAttributes")),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicSubscriptionExists(resourceName, &attributes),
+					testAccCheckTopicSubscriptionExists(ctx, resourceName, &attributes),
 					resource.TestCheckResourceAttr(resourceName, "filter_policy_scope", "MessageAttributes"),
 				),
 			},
@@ -215,7 +218,7 @@ func TestAccSNSTopicSubscription_filterPolicyScope(t *testing.T) {
 			{
 				Config: testAccTopicSubscriptionConfig_filterPolicyScope(rName, strconv.Quote("MessageBody")),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicSubscriptionExists(resourceName, &attributes),
+					testAccCheckTopicSubscriptionExists(ctx, resourceName, &attributes),
 					resource.TestCheckResourceAttr(resourceName, "filter_policy_scope", "MessageBody"),
 				),
 			},
@@ -231,7 +234,7 @@ func TestAccSNSTopicSubscription_filterPolicyScope(t *testing.T) {
 			{
 				Config: testAccTopicSubscriptionConfig_filterPolicyScope(rName, "null"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicSubscriptionExists(resourceName, &attributes),
+					testAccCheckTopicSubscriptionExists(ctx, resourceName, &attributes),
 					resource.TestCheckResourceAttr(resourceName, "filter_policy_scope", "MessageAttributes"),
 				),
 			},
@@ -247,7 +250,7 @@ func TestAccSNSTopicSubscription_filterPolicyScope(t *testing.T) {
 			{
 				Config: testAccTopicSubscriptionConfig_filterPolicyScope(rName, strconv.Quote("MessageBody")),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicSubscriptionExists(resourceName, &attributes),
+					testAccCheckTopicSubscriptionExists(ctx, resourceName, &attributes),
 					resource.TestCheckResourceAttr(resourceName, "filter_policy_scope", "MessageBody"),
 				),
 			},
@@ -263,7 +266,7 @@ func TestAccSNSTopicSubscription_filterPolicyScope(t *testing.T) {
 			{
 				Config: testAccTopicSubscriptionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicSubscriptionExists(resourceName, &attributes),
+					testAccCheckTopicSubscriptionExists(ctx, resourceName, &attributes),
 					resource.TestCheckResourceAttr(resourceName, "filter_policy_scope", ""),
 				),
 			},
@@ -281,13 +284,14 @@ func TestAccSNSTopicSubscription_filterPolicyScope(t *testing.T) {
 }
 
 func TestAccSNSTopicSubscription_filterPolicyScope_policyNotSet(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTopicSubscriptionDestroy,
+		CheckDestroy:             testAccCheckTopicSubscriptionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccTopicSubscriptionConfig_filterPolicyScope_policyNotSet(rName),
@@ -298,6 +302,7 @@ func TestAccSNSTopicSubscription_filterPolicyScope_policyNotSet(t *testing.T) {
 }
 
 func TestAccSNSTopicSubscription_deliveryPolicy(t *testing.T) {
+	ctx := acctest.Context(t)
 	var attributes map[string]string
 	resourceName := "aws_sns_topic_subscription.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -306,12 +311,12 @@ func TestAccSNSTopicSubscription_deliveryPolicy(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTopicSubscriptionDestroy,
+		CheckDestroy:             testAccCheckTopicSubscriptionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicSubscriptionConfig_deliveryPolicy(rName, strconv.Quote(`{"healthyRetryPolicy":{"minDelayTarget":5,"maxDelayTarget":20,"numRetries": 5}}`)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicSubscriptionExists(resourceName, &attributes),
+					testAccCheckTopicSubscriptionExists(ctx, resourceName, &attributes),
 					testAccCheckTopicSubscriptionDeliveryPolicyAttribute(&attributes, &tfsns.TopicSubscriptionDeliveryPolicy{
 						HealthyRetryPolicy: &tfsns.TopicSubscriptionDeliveryPolicyHealthyRetryPolicy{
 							MaxDelayTarget: 20,
@@ -334,7 +339,7 @@ func TestAccSNSTopicSubscription_deliveryPolicy(t *testing.T) {
 			{
 				Config: testAccTopicSubscriptionConfig_deliveryPolicy(rName, strconv.Quote(`{"healthyRetryPolicy":{"minDelayTarget":3,"maxDelayTarget":78,"numRetries": 11}}`)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicSubscriptionExists(resourceName, &attributes),
+					testAccCheckTopicSubscriptionExists(ctx, resourceName, &attributes),
 					testAccCheckTopicSubscriptionDeliveryPolicyAttribute(&attributes, &tfsns.TopicSubscriptionDeliveryPolicy{
 						HealthyRetryPolicy: &tfsns.TopicSubscriptionDeliveryPolicyHealthyRetryPolicy{
 							MaxDelayTarget: 78,
@@ -348,7 +353,7 @@ func TestAccSNSTopicSubscription_deliveryPolicy(t *testing.T) {
 			{
 				Config: testAccTopicSubscriptionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicSubscriptionExists(resourceName, &attributes),
+					testAccCheckTopicSubscriptionExists(ctx, resourceName, &attributes),
 					resource.TestCheckResourceAttr(resourceName, "delivery_policy", ""),
 				),
 			},
@@ -357,6 +362,7 @@ func TestAccSNSTopicSubscription_deliveryPolicy(t *testing.T) {
 }
 
 func TestAccSNSTopicSubscription_redrivePolicy(t *testing.T) {
+	ctx := acctest.Context(t)
 	var attributes map[string]string
 	resourceName := "aws_sns_topic_subscription.test"
 	dlqName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -367,12 +373,12 @@ func TestAccSNSTopicSubscription_redrivePolicy(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTopicSubscriptionDestroy,
+		CheckDestroy:             testAccCheckTopicSubscriptionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicSubscriptionConfig_redrivePolicy(rName, dlqName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicSubscriptionExists(resourceName, &attributes),
+					testAccCheckTopicSubscriptionExists(ctx, resourceName, &attributes),
 					testAccCheckTopicSubscriptionRedrivePolicyAttribute(&attributes, dlqName),
 				),
 			},
@@ -389,7 +395,7 @@ func TestAccSNSTopicSubscription_redrivePolicy(t *testing.T) {
 			{
 				Config: testAccTopicSubscriptionConfig_redrivePolicy(rName, updatedDlqName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicSubscriptionExists(resourceName, &attributes),
+					testAccCheckTopicSubscriptionExists(ctx, resourceName, &attributes),
 					testAccCheckTopicSubscriptionRedrivePolicyAttribute(&attributes, updatedDlqName),
 				),
 			},
@@ -406,7 +412,7 @@ func TestAccSNSTopicSubscription_redrivePolicy(t *testing.T) {
 			{
 				Config: testAccTopicSubscriptionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicSubscriptionExists(resourceName, &attributes),
+					testAccCheckTopicSubscriptionExists(ctx, resourceName, &attributes),
 					resource.TestCheckResourceAttr(resourceName, "redrive_policy", ""),
 				),
 			},
@@ -415,6 +421,7 @@ func TestAccSNSTopicSubscription_redrivePolicy(t *testing.T) {
 }
 
 func TestAccSNSTopicSubscription_rawMessageDelivery(t *testing.T) {
+	ctx := acctest.Context(t)
 	var attributes map[string]string
 	resourceName := "aws_sns_topic_subscription.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -423,12 +430,12 @@ func TestAccSNSTopicSubscription_rawMessageDelivery(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTopicSubscriptionDestroy,
+		CheckDestroy:             testAccCheckTopicSubscriptionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicSubscriptionConfig_rawMessageDelivery(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicSubscriptionExists(resourceName, &attributes),
+					testAccCheckTopicSubscriptionExists(ctx, resourceName, &attributes),
 					resource.TestCheckResourceAttr(resourceName, "raw_message_delivery", "true"),
 				),
 			},
@@ -445,7 +452,7 @@ func TestAccSNSTopicSubscription_rawMessageDelivery(t *testing.T) {
 			{
 				Config: testAccTopicSubscriptionConfig_rawMessageDelivery(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicSubscriptionExists(resourceName, &attributes),
+					testAccCheckTopicSubscriptionExists(ctx, resourceName, &attributes),
 					resource.TestCheckResourceAttr(resourceName, "raw_message_delivery", "false"),
 				),
 			},
@@ -453,7 +460,7 @@ func TestAccSNSTopicSubscription_rawMessageDelivery(t *testing.T) {
 			{
 				Config: testAccTopicSubscriptionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicSubscriptionExists(resourceName, &attributes),
+					testAccCheckTopicSubscriptionExists(ctx, resourceName, &attributes),
 					resource.TestCheckResourceAttr(resourceName, "raw_message_delivery", "false"),
 				),
 			},
@@ -462,6 +469,7 @@ func TestAccSNSTopicSubscription_rawMessageDelivery(t *testing.T) {
 }
 
 func TestAccSNSTopicSubscription_autoConfirmingEndpoint(t *testing.T) {
+	ctx := acctest.Context(t)
 	var attributes map[string]string
 	resourceName := "aws_sns_topic_subscription.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -470,12 +478,12 @@ func TestAccSNSTopicSubscription_autoConfirmingEndpoint(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTopicSubscriptionDestroy,
+		CheckDestroy:             testAccCheckTopicSubscriptionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicSubscriptionConfig_autoConfirmingEndpoint(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicSubscriptionExists(resourceName, &attributes),
+					testAccCheckTopicSubscriptionExists(ctx, resourceName, &attributes),
 				),
 			},
 			{
@@ -492,6 +500,7 @@ func TestAccSNSTopicSubscription_autoConfirmingEndpoint(t *testing.T) {
 }
 
 func TestAccSNSTopicSubscription_autoConfirmingSecuredEndpoint(t *testing.T) {
+	ctx := acctest.Context(t)
 	var attributes map[string]string
 	resourceName := "aws_sns_topic_subscription.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -500,12 +509,12 @@ func TestAccSNSTopicSubscription_autoConfirmingSecuredEndpoint(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTopicSubscriptionDestroy,
+		CheckDestroy:             testAccCheckTopicSubscriptionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicSubscriptionConfig_autoConfirmingSecuredEndpoint(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicSubscriptionExists(resourceName, &attributes),
+					testAccCheckTopicSubscriptionExists(ctx, resourceName, &attributes),
 				),
 			},
 			{
@@ -522,6 +531,7 @@ func TestAccSNSTopicSubscription_autoConfirmingSecuredEndpoint(t *testing.T) {
 }
 
 func TestAccSNSTopicSubscription_email(t *testing.T) {
+	ctx := acctest.Context(t)
 	var attributes map[string]string
 	resourceName := "aws_sns_topic_subscription.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -530,12 +540,12 @@ func TestAccSNSTopicSubscription_email(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTopicSubscriptionDestroy,
+		CheckDestroy:             testAccCheckTopicSubscriptionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicSubscriptionConfig_email(rName, acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicSubscriptionExists(resourceName, &attributes),
+					testAccCheckTopicSubscriptionExists(ctx, resourceName, &attributes),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", sns.ServiceName, regexp.MustCompile(fmt.Sprintf("%s:.+", rName))),
 					resource.TestCheckResourceAttr(resourceName, "confirmation_was_authenticated", "false"),
 					resource.TestCheckResourceAttr(resourceName, "delivery_policy", ""),
@@ -552,6 +562,7 @@ func TestAccSNSTopicSubscription_email(t *testing.T) {
 }
 
 func TestAccSNSTopicSubscription_firehose(t *testing.T) {
+	ctx := acctest.Context(t)
 	var attributes map[string]string
 	resourceName := "aws_sns_topic_subscription.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -560,12 +571,12 @@ func TestAccSNSTopicSubscription_firehose(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTopicSubscriptionDestroy,
+		CheckDestroy:             testAccCheckTopicSubscriptionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicSubscriptionConfig_firehose(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicSubscriptionExists(resourceName, &attributes),
+					testAccCheckTopicSubscriptionExists(ctx, resourceName, &attributes),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", sns.ServiceName, regexp.MustCompile(fmt.Sprintf("%s:.+", rName))),
 					resource.TestCheckResourceAttr(resourceName, "delivery_policy", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "endpoint", "aws_kinesis_firehose_delivery_stream.test_stream", "arn"),
@@ -581,6 +592,7 @@ func TestAccSNSTopicSubscription_firehose(t *testing.T) {
 }
 
 func TestAccSNSTopicSubscription_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var attributes map[string]string
 	resourceName := "aws_sns_topic_subscription.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -589,13 +601,13 @@ func TestAccSNSTopicSubscription_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTopicSubscriptionDestroy,
+		CheckDestroy:             testAccCheckTopicSubscriptionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicSubscriptionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicSubscriptionExists(resourceName, &attributes),
-					acctest.CheckResourceDisappears(acctest.Provider, tfsns.ResourceTopicSubscription(), resourceName),
+					testAccCheckTopicSubscriptionExists(ctx, resourceName, &attributes),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsns.ResourceTopicSubscription(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -604,6 +616,7 @@ func TestAccSNSTopicSubscription_disappears(t *testing.T) {
 }
 
 func TestAccSNSTopicSubscription_Disappears_topic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var attributes map[string]string
 	resourceName := "aws_sns_topic_subscription.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -612,13 +625,13 @@ func TestAccSNSTopicSubscription_Disappears_topic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTopicSubscriptionDestroy,
+		CheckDestroy:             testAccCheckTopicSubscriptionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTopicSubscriptionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicSubscriptionExists(resourceName, &attributes),
-					acctest.CheckResourceDisappears(acctest.Provider, tfsns.ResourceTopic(), "aws_sns_topic.test"),
+					testAccCheckTopicSubscriptionExists(ctx, resourceName, &attributes),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsns.ResourceTopic(), "aws_sns_topic.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -626,35 +639,37 @@ func TestAccSNSTopicSubscription_Disappears_topic(t *testing.T) {
 	})
 }
 
-func testAccCheckTopicSubscriptionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn()
+func testAccCheckTopicSubscriptionDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_sns_topic_subscription" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_sns_topic_subscription" {
+				continue
+			}
+
+			output, err := tfsns.FindSubscriptionAttributesByARN(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			if output["Protocol"] == "email" {
+				continue
+			}
+
+			return fmt.Errorf("SNS Topic Subscription %s still exists", rs.Primary.ID)
 		}
 
-		output, err := tfsns.FindSubscriptionAttributesByARN(context.Background(), conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		if output["Protocol"] == "email" {
-			continue
-		}
-
-		return fmt.Errorf("SNS Topic Subscription %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckTopicSubscriptionExists(n string, v *map[string]string) resource.TestCheckFunc {
+func testAccCheckTopicSubscriptionExists(ctx context.Context, n string, v *map[string]string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -667,7 +682,7 @@ func testAccCheckTopicSubscriptionExists(n string, v *map[string]string) resourc
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SNSConn()
 
-		output, err := tfsns.FindSubscriptionAttributesByARN(context.Background(), conn, rs.Primary.ID)
+		output, err := tfsns.FindSubscriptionAttributesByARN(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

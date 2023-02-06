@@ -23,7 +23,7 @@ resource "aws_config_configuration_recorder_status" "foo" {
 
 resource "aws_iam_role_policy_attachment" "a" {
   role       = aws_iam_role.r.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSConfigRole"
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWS_ConfigRole"
 }
 
 resource "aws_s3_bucket" "b" {

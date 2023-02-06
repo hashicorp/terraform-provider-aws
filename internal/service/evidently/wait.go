@@ -8,15 +8,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func waitFeatureCreated(conn *cloudwatchevidently.CloudWatchEvidently, id string, timeout time.Duration) (*cloudwatchevidently.Feature, error) {
+func waitFeatureCreated(ctx context.Context, conn *cloudwatchevidently.CloudWatchEvidently, id string, timeout time.Duration) (*cloudwatchevidently.Feature, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{},
 		Target:  []string{cloudwatchevidently.FeatureStatusAvailable},
-		Refresh: statusFeature(conn, id),
+		Refresh: statusFeature(ctx, conn, id),
 		Timeout: timeout,
 	}
 
-	outputRaw, err := stateConf.WaitForStateContext(context.Background())
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*cloudwatchevidently.Feature); ok {
 		return output, err
@@ -25,15 +25,15 @@ func waitFeatureCreated(conn *cloudwatchevidently.CloudWatchEvidently, id string
 	return nil, err
 }
 
-func waitFeatureUpdated(conn *cloudwatchevidently.CloudWatchEvidently, id string, timeout time.Duration) (*cloudwatchevidently.Feature, error) {
+func waitFeatureUpdated(ctx context.Context, conn *cloudwatchevidently.CloudWatchEvidently, id string, timeout time.Duration) (*cloudwatchevidently.Feature, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{cloudwatchevidently.FeatureStatusUpdating},
 		Target:  []string{cloudwatchevidently.FeatureStatusAvailable},
-		Refresh: statusFeature(conn, id),
+		Refresh: statusFeature(ctx, conn, id),
 		Timeout: timeout,
 	}
 
-	outputRaw, err := stateConf.WaitForStateContext(context.Background())
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*cloudwatchevidently.Feature); ok {
 		return output, err
@@ -42,15 +42,15 @@ func waitFeatureUpdated(conn *cloudwatchevidently.CloudWatchEvidently, id string
 	return nil, err
 }
 
-func waitFeatureDeleted(conn *cloudwatchevidently.CloudWatchEvidently, id string, timeout time.Duration) (*cloudwatchevidently.Feature, error) {
+func waitFeatureDeleted(ctx context.Context, conn *cloudwatchevidently.CloudWatchEvidently, id string, timeout time.Duration) (*cloudwatchevidently.Feature, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{cloudwatchevidently.FeatureStatusAvailable},
 		Target:  []string{},
-		Refresh: statusFeature(conn, id),
+		Refresh: statusFeature(ctx, conn, id),
 		Timeout: timeout,
 	}
 
-	outputRaw, err := stateConf.WaitForStateContext(context.Background())
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*cloudwatchevidently.Feature); ok {
 		return output, err
@@ -59,15 +59,15 @@ func waitFeatureDeleted(conn *cloudwatchevidently.CloudWatchEvidently, id string
 	return nil, err
 }
 
-func waitProjectCreated(conn *cloudwatchevidently.CloudWatchEvidently, nameOrARN string, timeout time.Duration) (*cloudwatchevidently.Project, error) {
+func waitProjectCreated(ctx context.Context, conn *cloudwatchevidently.CloudWatchEvidently, nameOrARN string, timeout time.Duration) (*cloudwatchevidently.Project, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{},
 		Target:  []string{cloudwatchevidently.ProjectStatusAvailable},
-		Refresh: statusProject(conn, nameOrARN),
+		Refresh: statusProject(ctx, conn, nameOrARN),
 		Timeout: timeout,
 	}
 
-	outputRaw, err := stateConf.WaitForStateContext(context.Background())
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*cloudwatchevidently.Project); ok {
 		return output, err
@@ -76,15 +76,15 @@ func waitProjectCreated(conn *cloudwatchevidently.CloudWatchEvidently, nameOrARN
 	return nil, err
 }
 
-func waitProjectUpdated(conn *cloudwatchevidently.CloudWatchEvidently, nameOrARN string, timeout time.Duration) (*cloudwatchevidently.Project, error) { //nolint:unparam
+func waitProjectUpdated(ctx context.Context, conn *cloudwatchevidently.CloudWatchEvidently, nameOrARN string, timeout time.Duration) (*cloudwatchevidently.Project, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{cloudwatchevidently.ProjectStatusUpdating},
 		Target:  []string{cloudwatchevidently.ProjectStatusAvailable},
-		Refresh: statusProject(conn, nameOrARN),
+		Refresh: statusProject(ctx, conn, nameOrARN),
 		Timeout: timeout,
 	}
 
-	outputRaw, err := stateConf.WaitForStateContext(context.Background())
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*cloudwatchevidently.Project); ok {
 		return output, err
@@ -93,15 +93,15 @@ func waitProjectUpdated(conn *cloudwatchevidently.CloudWatchEvidently, nameOrARN
 	return nil, err
 }
 
-func waitProjectDeleted(conn *cloudwatchevidently.CloudWatchEvidently, nameOrARN string, timeout time.Duration) (*cloudwatchevidently.Project, error) {
+func waitProjectDeleted(ctx context.Context, conn *cloudwatchevidently.CloudWatchEvidently, nameOrARN string, timeout time.Duration) (*cloudwatchevidently.Project, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{cloudwatchevidently.ProjectStatusAvailable},
 		Target:  []string{},
-		Refresh: statusProject(conn, nameOrARN),
+		Refresh: statusProject(ctx, conn, nameOrARN),
 		Timeout: timeout,
 	}
 
-	outputRaw, err := stateConf.WaitForStateContext(context.Background())
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*cloudwatchevidently.Project); ok {
 		return output, err
