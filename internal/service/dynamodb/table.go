@@ -1298,7 +1298,12 @@ func updateReplica(ctx context.Context, d *schema.ResourceData, conn *dynamodb.D
 			ma := a.(map[string]interface{})
 			mr := r.(map[string]interface{})
 
+			if ma["region_name"].(string) == mr["region_name"].(string) {
+				fmt.Printf("ma: %+v\nmr: %+v\n", ma, mr)
+			}
+
 			if ma["region_name"].(string) == mr["region_name"].(string) && (ma["kms_key_arn"].(string) != "" || mr["kms_key_arn"].(string) != "") {
+				fmt.Printf("ma %s, mr %s\n", ma["kms_key_arn"].(string), mr["kms_key_arn"].(string))
 				removeFirst = append(removeFirst, removed[j])
 				removed = append(removed[:j], removed[j+1:]...)
 				continue

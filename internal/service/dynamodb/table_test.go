@@ -2327,6 +2327,43 @@ func testAccCheckTableNotRecreated(i, j *dynamodb.TableDescription) resource.Tes
 	}
 }
 
+func testAccCheckReplicaNotRecreated(ctx context.Context, n string, region string, arn string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("no DynamoDB table name specified!")
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn()
+		terraformVersion := acctest.Provider.Meta().(*conns.AWSClient).TerraformVersion
+
+		if aws.StringValue(conn.Config.Region) != region {
+			session, err := conns.NewSessionForRegion(&conn.Config, region, terraformVersion)
+			if err != nil {
+				return create.Error(names.DynamoDB, create.ErrActionChecking, tfdynamodb.ResNameTable, rs.Primary.ID, err)
+			}
+
+			conn = dynamodb.New(session)
+		}
+
+		newARN, err := tfdynamodb.ARNForNewRegion(rs.Primary.Attributes["arn"], region)
+
+		if err != nil {
+			return create.Error(names.DynamoDB, create.ErrActionChecking, tfdynamodb.ResNameTable, rs.Primary.ID, err)
+		}
+
+		if newARN != arn {
+			return create.Error(names.DynamoDB, create.ErrActionChecking, tfdynamodb.ResNameTable, rs.Primary.Attributes["arn"], fmt.Errorf("replica recreated, ARN before %s, after %s", arn, newARN))
+		}
+
+		return nil
+	}
+}
+
 func testAccCheckReplicaHasTags(ctx context.Context, n string, region string, count int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
