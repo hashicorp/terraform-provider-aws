@@ -46,6 +46,8 @@ func TestExpandStringListEmptyItems(t *testing.T) {
 }
 
 func TestExpandResourceId(t *testing.T) {
+	t.Parallel()
+
 	resourceId := "foo,bar,baz"
 	expandedId, _ := ExpandResourceId(resourceId, 3)
 	expected := []string{
@@ -63,6 +65,8 @@ func TestExpandResourceId(t *testing.T) {
 }
 
 func TestExpandResourceIdEmptyPart(t *testing.T) {
+	t.Parallel()
+
 	resourceId := "foo,,baz"
 	_, err := ExpandResourceId(resourceId, 3)
 
@@ -72,6 +76,8 @@ func TestExpandResourceIdEmptyPart(t *testing.T) {
 }
 
 func TestExpandResourceIdIncorrectPartCount(t *testing.T) {
+	t.Parallel()
+
 	resourceId := "foo,bar,baz"
 	_, err := ExpandResourceId(resourceId, 2)
 
@@ -81,6 +87,8 @@ func TestExpandResourceIdIncorrectPartCount(t *testing.T) {
 }
 
 func TestExpandResourceIdSinglePart(t *testing.T) {
+	t.Parallel()
+
 	resourceId := "foo"
 	_, err := ExpandResourceId(resourceId, 2)
 
@@ -90,6 +98,8 @@ func TestExpandResourceIdSinglePart(t *testing.T) {
 }
 
 func TestFlattenResourceId(t *testing.T) {
+	t.Parallel()
+
 	idParts := []string{"foo", "bar", "baz"}
 	flattenedId, _ := FlattenResourceId(idParts, 3)
 	expected := "foo,bar,baz"
@@ -103,6 +113,8 @@ func TestFlattenResourceId(t *testing.T) {
 }
 
 func TestFlattenResourceIdEmptyPart(t *testing.T) {
+	t.Parallel()
+
 	idParts := []string{"foo", "", "baz"}
 	_, err := FlattenResourceId(idParts, 3)
 
@@ -112,6 +124,8 @@ func TestFlattenResourceIdEmptyPart(t *testing.T) {
 }
 
 func TestFlattenResourceIdIncorrectPartCount(t *testing.T) {
+	t.Parallel()
+
 	idParts := []string{"foo", "bar", "baz"}
 	_, err := FlattenResourceId(idParts, 2)
 
@@ -121,6 +135,8 @@ func TestFlattenResourceIdIncorrectPartCount(t *testing.T) {
 }
 
 func TestFlattenResourceIdSinglePart(t *testing.T) {
+	t.Parallel()
+
 	idParts := []string{"foo"}
 	_, err := FlattenResourceId(idParts, 2)
 
