@@ -441,6 +441,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 
 			"aws_appmesh_mesh":            appmesh.DataSourceMesh(),
 			"aws_appmesh_virtual_service": appmesh.DataSourceVirtualService(),
+			"aws_appmesh_virtual_router":  appmesh.DataSourceVirtualRouter(),
 
 			"aws_autoscaling_group":    autoscaling.DataSourceGroup(),
 			"aws_autoscaling_groups":   autoscaling.DataSourceGroups(),
