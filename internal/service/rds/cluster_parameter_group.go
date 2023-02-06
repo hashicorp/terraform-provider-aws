@@ -354,6 +354,10 @@ func FindDBClusterParameterGroupByName(ctx context.Context, conn *rds.RDS, name 
 		}
 	}
 
+	if err != nil {
+		return nil, err
+	}
+
 	if output == nil || len(output.DBClusterParameterGroups) == 0 || output.DBClusterParameterGroups[0] == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}

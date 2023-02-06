@@ -207,6 +207,10 @@ func FindSubnetGroupByName(ctx context.Context, conn *neptune.Neptune, name stri
 		}
 	}
 
+	if err != nil {
+		return nil, err
+	}
+
 	if output == nil || len(output.DBSubnetGroups) == 0 || output.DBSubnetGroups[0] == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
