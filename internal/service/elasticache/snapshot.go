@@ -156,7 +156,7 @@ func resourceSnapshotCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(aws.StringValue(out.Snapshot.SnapshotName))
 
 	if _, err := waitSnapshotCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return err
+		return fmt.Errorf("Error waiting for AWS Elasticache Snapshot creation %s: %s", snapshotName, err)
 	}
 
 	return resourceSnapshotRead(d, meta)
@@ -174,7 +174,7 @@ func resourceSnapshotRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err != nil {
-		return err
+		return fmt.Errorf("Unable to read Elasticace Snapshot %s: %s", d.Id(), err)
 	}
 
 	arn := aws.StringValue(snapshot.ARN)
@@ -228,7 +228,6 @@ func resourceSnapshotUpdate(d *schema.ResourceData, meta interface{}) error {
 		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating Elasticache Snapshot (%s) tags: %s", d.Get("arn").(string), err)
 		}
-
 	}
 
 	return nil
@@ -252,7 +251,7 @@ func resourceSnapshotDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if _, err := waitSnapshotDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return err
+		return fmt.Errorf("Error while waiting for Elasticache Snapshot %s deletion: %s", d.Id(), err)
 	}
 
 	return nil

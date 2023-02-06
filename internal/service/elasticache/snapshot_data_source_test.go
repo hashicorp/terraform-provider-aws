@@ -58,8 +58,8 @@ resource "aws_elasticache_cluster" "test" {
 }
 
 resource "aws_elasticache_snapshot" "test" {
-  cluster_id = aws_elasticache_cluster.test.cluster_id
-  snapshot_name    = %[1]q
+  cluster_id    = aws_elasticache_cluster.test.cluster_id
+  snapshot_name = %[1]q
 }
 
 data "aws_elasticache_snapshot" "test" {

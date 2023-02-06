@@ -132,7 +132,7 @@ func dataSourceSnapshotRead(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Reading Elasticache Snapshot: %s", params)
 	resp, err := conn.DescribeSnapshots(params)
 	if err != nil {
-		return err
+		return fmt.Errorf("Error retrieving snapshot details: %s", err)
 	}
 
 	if len(resp.Snapshots) < 1 {
