@@ -61,6 +61,7 @@ var HostedZoneIdPerRegionNLBMap = map[string]string{
 	endpoints.ApSoutheast1RegionID: "ZKVM4W9LS7TM",
 	endpoints.ApSoutheast2RegionID: "ZCT6FZBF4DROD",
 	endpoints.ApSoutheast3RegionID: "Z01971771FYVNCOVWJU1G",
+	endpoints.ApSoutheast4RegionID: "Z01156963G8MIIL7X90IV",
 	endpoints.CaCentral1RegionID:   "Z2EPGBW3API2WT",
 	endpoints.CnNorth1RegionID:     "Z3QFB96KMJ7ED6",
 	endpoints.CnNorthwest1RegionID: "ZQEIKTCZ8352D",
