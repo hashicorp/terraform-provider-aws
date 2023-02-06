@@ -7,6 +7,7 @@ BUG FIXES:
 * resource/aws_s3_bucket: Fix crash when `logging` is empty ([#29243](https://github.com/hashicorp/terraform-provider-aws/issues/29243))
 * resource/aws_sns_topic: Fixes potential race condition when reading policy document. ([#29226](https://github.com/hashicorp/terraform-provider-aws/issues/29226))
 * resource/aws_sns_topic_policy: Fixes potential race condition when reading policy document. ([#29226](https://github.com/hashicorp/terraform-provider-aws/issues/29226))
+* provider: Support `eu-southeast-4` as a valid AWS Region ([#29231](https://github.com/hashicorp/terraform-provider-aws/issues/29231))
 
 ## 4.53.0 (February  3, 2023)
 
