@@ -1,6 +1,7 @@
 package emr_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -28,6 +29,7 @@ func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 }
 
 func TestAccEMRManagedScalingPolicy_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_emr_managed_scaling_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -35,13 +37,13 @@ func TestAccEMRManagedScalingPolicy_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckManagedScalingPolicyDestroy,
+		CheckDestroy:             testAccCheckManagedScalingPolicyDestroy(ctx),
 
 		Steps: []resource.TestStep{
 			{
 				Config: testAccManagedScalingPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckManagedScalingPolicyExists(resourceName),
+					testAccCheckManagedScalingPolicyExists(ctx, resourceName),
 				),
 			},
 			{
@@ -54,6 +56,7 @@ func TestAccEMRManagedScalingPolicy_basic(t *testing.T) {
 }
 
 func TestAccEMRManagedScalingPolicy_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_emr_managed_scaling_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -61,13 +64,13 @@ func TestAccEMRManagedScalingPolicy_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckManagedScalingPolicyDestroy,
+		CheckDestroy:             testAccCheckManagedScalingPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccManagedScalingPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckManagedScalingPolicyExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfemr.ResourceManagedScalingPolicy(), resourceName),
+					testAccCheckManagedScalingPolicyExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfemr.ResourceManagedScalingPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -76,6 +79,7 @@ func TestAccEMRManagedScalingPolicy_disappears(t *testing.T) {
 }
 
 func TestAccEMRManagedScalingPolicy_ComputeLimits_maximumCoreCapacityUnits(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_emr_managed_scaling_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -83,13 +87,13 @@ func TestAccEMRManagedScalingPolicy_ComputeLimits_maximumCoreCapacityUnits(t *te
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckManagedScalingPolicyDestroy,
+		CheckDestroy:             testAccCheckManagedScalingPolicyDestroy(ctx),
 
 		Steps: []resource.TestStep{
 			{
 				Config: testAccManagedScalingPolicyConfig_computeLimitsMaximumCoreCapacityUnits(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckManagedScalingPolicyExists(resourceName),
+					testAccCheckManagedScalingPolicyExists(ctx, resourceName),
 				),
 			},
 			{
@@ -102,6 +106,7 @@ func TestAccEMRManagedScalingPolicy_ComputeLimits_maximumCoreCapacityUnits(t *te
 }
 
 func TestAccEMRManagedScalingPolicy_ComputeLimits_maximumOnDemandCapacityUnits(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_emr_managed_scaling_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -109,13 +114,13 @@ func TestAccEMRManagedScalingPolicy_ComputeLimits_maximumOnDemandCapacityUnits(t
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckManagedScalingPolicyDestroy,
+		CheckDestroy:             testAccCheckManagedScalingPolicyDestroy(ctx),
 
 		Steps: []resource.TestStep{
 			{
 				Config: testAccManagedScalingPolicyConfig_computeLimitsMaximumOnDemandCapacityUnits(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckManagedScalingPolicyExists(resourceName),
+					testAccCheckManagedScalingPolicyExists(ctx, resourceName),
 				),
 			},
 			{
@@ -128,6 +133,7 @@ func TestAccEMRManagedScalingPolicy_ComputeLimits_maximumOnDemandCapacityUnits(t
 }
 
 func TestAccEMRManagedScalingPolicy_ComputeLimits_maximumOnDemandCapacityUnitsSpotOnly(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_emr_managed_scaling_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -135,13 +141,13 @@ func TestAccEMRManagedScalingPolicy_ComputeLimits_maximumOnDemandCapacityUnitsSp
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckManagedScalingPolicyDestroy,
+		CheckDestroy:             testAccCheckManagedScalingPolicyDestroy(ctx),
 
 		Steps: []resource.TestStep{
 			{
 				Config: testAccManagedScalingPolicyConfig_computeLimitsMaximumOnDemandCapacityUnits(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckManagedScalingPolicyExists(resourceName),
+					testAccCheckManagedScalingPolicyExists(ctx, resourceName),
 				),
 			},
 			{
@@ -153,7 +159,7 @@ func TestAccEMRManagedScalingPolicy_ComputeLimits_maximumOnDemandCapacityUnitsSp
 	})
 }
 
-func testAccCheckManagedScalingPolicyExists(n string) resource.TestCheckFunc {
+func testAccCheckManagedScalingPolicyExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -164,8 +170,8 @@ func testAccCheckManagedScalingPolicyExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No EMR Managed Scaling Policy ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn
-		resp, err := conn.GetManagedScalingPolicy(&emr.GetManagedScalingPolicyInput{
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn()
+		resp, err := conn.GetManagedScalingPolicyWithContext(ctx, &emr.GetManagedScalingPolicyInput{
 			ClusterId: aws.String(rs.Primary.ID),
 		})
 		if err != nil {
@@ -179,35 +185,37 @@ func testAccCheckManagedScalingPolicyExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckManagedScalingPolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_emr_managed_scaling_policy" {
-			continue
+func testAccCheckManagedScalingPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn()
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_emr_managed_scaling_policy" {
+				continue
+			}
+
+			resp, err := conn.GetManagedScalingPolicyWithContext(ctx, &emr.GetManagedScalingPolicyInput{
+				ClusterId: aws.String(rs.Primary.ID),
+			})
+
+			if tfawserr.ErrMessageContains(err, "InvalidRequestException", "does not exist") {
+				continue
+			}
+
+			if tfawserr.ErrMessageContains(err, "ValidationException", "A job flow that is shutting down, terminated, or finished may not be modified") {
+				continue
+			}
+
+			if err != nil {
+				return fmt.Errorf("error reading EMR Managed Scaling Policy (%s): %w", rs.Primary.ID, err)
+			}
+
+			if resp != nil && resp.ManagedScalingPolicy != nil {
+				return fmt.Errorf("EMR Managed Scaling Policy (%s) still exists", rs.Primary.ID)
+			}
 		}
 
-		resp, err := conn.GetManagedScalingPolicy(&emr.GetManagedScalingPolicyInput{
-			ClusterId: aws.String(rs.Primary.ID),
-		})
-
-		if tfawserr.ErrMessageContains(err, "InvalidRequestException", "does not exist") {
-			continue
-		}
-
-		if tfawserr.ErrMessageContains(err, "ValidationException", "A job flow that is shutting down, terminated, or finished may not be modified") {
-			continue
-		}
-
-		if err != nil {
-			return fmt.Errorf("error reading EMR Managed Scaling Policy (%s): %w", rs.Primary.ID, err)
-		}
-
-		if resp != nil && resp.ManagedScalingPolicy != nil {
-			return fmt.Errorf("EMR Managed Scaling Policy (%s) still exists", rs.Primary.ID)
-		}
+		return nil
 	}
-
-	return nil
 }
 
 func testAccManagedScalingPolicyConfig_base(rName string) string {

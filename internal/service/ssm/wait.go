@@ -1,6 +1,7 @@
 package ssm
 
 import (
+	"context"
 	"errors"
 	"time"
 
@@ -15,15 +16,15 @@ const (
 	documentActiveTimeout = 2 * time.Minute
 )
 
-func waitAssociationSuccess(conn *ssm.SSM, id string, timeout time.Duration) (*ssm.AssociationDescription, error) {
+func waitAssociationSuccess(ctx context.Context, conn *ssm.SSM, id string, timeout time.Duration) (*ssm.AssociationDescription, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ssm.AssociationStatusNamePending},
 		Target:  []string{ssm.AssociationStatusNameSuccess},
-		Refresh: statusAssociation(conn, id),
+		Refresh: statusAssociation(ctx, conn, id),
 		Timeout: timeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*ssm.AssociationDescription); ok && output.Overview != nil {
 		if status := aws.StringValue(output.Overview.Status); status == ssm.AssociationStatusNameFailed {
@@ -36,15 +37,15 @@ func waitAssociationSuccess(conn *ssm.SSM, id string, timeout time.Duration) (*s
 }
 
 // waitDocumentDeleted waits for an Document to return Deleted
-func waitDocumentDeleted(conn *ssm.SSM, name string) (*ssm.DocumentDescription, error) {
+func waitDocumentDeleted(ctx context.Context, conn *ssm.SSM, name string) (*ssm.DocumentDescription, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ssm.DocumentStatusDeleting},
 		Target:  []string{},
-		Refresh: statusDocument(conn, name),
+		Refresh: statusDocument(ctx, conn, name),
 		Timeout: documentDeleteTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*ssm.DocumentDescription); ok {
 		return output, err
@@ -54,15 +55,15 @@ func waitDocumentDeleted(conn *ssm.SSM, name string) (*ssm.DocumentDescription, 
 }
 
 // waitDocumentActive waits for an Document to return Active
-func waitDocumentActive(conn *ssm.SSM, name string) (*ssm.DocumentDescription, error) { //nolint:unparam
+func waitDocumentActive(ctx context.Context, conn *ssm.SSM, name string) (*ssm.DocumentDescription, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ssm.DocumentStatusCreating, ssm.DocumentStatusUpdating},
 		Target:  []string{ssm.DocumentStatusActive},
-		Refresh: statusDocument(conn, name),
+		Refresh: statusDocument(ctx, conn, name),
 		Timeout: documentActiveTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*ssm.DocumentDescription); ok {
 		return output, err
@@ -71,15 +72,15 @@ func waitDocumentActive(conn *ssm.SSM, name string) (*ssm.DocumentDescription, e
 	return nil, err
 }
 
-func waitServiceSettingUpdated(conn *ssm.SSM, arn string, timeout time.Duration) (*ssm.ServiceSetting, error) {
+func waitServiceSettingUpdated(ctx context.Context, conn *ssm.SSM, id string, timeout time.Duration) (*ssm.ServiceSetting, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"PendingUpdate", ""},
 		Target:  []string{"Customized", "Default"},
-		Refresh: statusServiceSetting(conn, arn),
+		Refresh: statusServiceSetting(ctx, conn, id),
 		Timeout: timeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*ssm.ServiceSetting); ok {
 		return output, err
@@ -88,15 +89,15 @@ func waitServiceSettingUpdated(conn *ssm.SSM, arn string, timeout time.Duration)
 	return nil, err
 }
 
-func waitServiceSettingReset(conn *ssm.SSM, arn string, timeout time.Duration) error {
+func waitServiceSettingReset(ctx context.Context, conn *ssm.SSM, id string, timeout time.Duration) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"Customized", "PendingUpdate", ""},
 		Target:  []string{"Default"},
-		Refresh: statusServiceSetting(conn, arn),
+		Refresh: statusServiceSetting(ctx, conn, id),
 		Timeout: timeout,
 	}
 
-	_, err := stateConf.WaitForState()
+	_, err := stateConf.WaitForStateContext(ctx)
 
 	return err
 }

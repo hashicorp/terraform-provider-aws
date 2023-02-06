@@ -26,7 +26,7 @@ func ResourceFlow() *schema.Resource {
 		UpdateWithoutTimeout: resourceFlowUpdate,
 		DeleteWithoutTimeout: resourceFlowDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -80,7 +80,7 @@ func ResourceFlow() *schema.Resource {
 												"custom_properties": {
 													Type:     schema.TypeMap,
 													Optional: true,
-													ValidateDiagFunc: allDiagFunc(
+													ValidateDiagFunc: verify.ValidAllDiag(
 														validation.MapKeyLenBetween(1, 128),
 														validation.MapKeyMatch(regexp.MustCompile(`[\w]+`), "must contain only alphanumeric and underscore (_) characters"),
 													),
@@ -743,7 +743,7 @@ func ResourceFlow() *schema.Resource {
 												"custom_properties": {
 													Type:     schema.TypeMap,
 													Optional: true,
-													ValidateDiagFunc: allDiagFunc(
+													ValidateDiagFunc: verify.ValidAllDiag(
 														validation.MapKeyLenBetween(1, 128),
 														validation.MapKeyMatch(regexp.MustCompile(`[\w]+`), "must contain only alphanumeric and underscore (_) characters"),
 													),
@@ -1205,7 +1205,7 @@ func ResourceFlow() *schema.Resource {
 }
 
 func resourceFlowCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppFlowConn
+	conn := meta.(*conns.AWSClient).AppFlowConn()
 
 	in := &appflow.CreateFlowInput{
 		FlowName:                  aws.String(d.Get("name").(string)),
@@ -1245,7 +1245,7 @@ func resourceFlowCreate(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceFlowRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppFlowConn
+	conn := meta.(*conns.AWSClient).AppFlowConn()
 
 	out, err := FindFlowByARN(ctx, conn, d.Id())
 
@@ -1299,7 +1299,7 @@ func resourceFlowRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		d.Set("trigger_config", nil)
 	}
 
-	tags, err := ListTags(conn, d.Id())
+	tags, err := ListTags(ctx, conn, d.Id())
 
 	if err != nil {
 		return diag.Errorf("listing tags for AppFlow Flow (%s): %s", d.Id(), err)
@@ -1322,7 +1322,7 @@ func resourceFlowRead(ctx context.Context, d *schema.ResourceData, meta interfac
 }
 
 func resourceFlowUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppFlowConn
+	conn := meta.(*conns.AWSClient).AppFlowConn()
 
 	in := &appflow.UpdateFlowInput{
 		FlowName:                  aws.String(d.Get("name").(string)),
@@ -1337,7 +1337,7 @@ func resourceFlowUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	log.Printf("[DEBUG] Updating AppFlow Flow (%s): %#v", d.Id(), in)
-	_, err := conn.UpdateFlow(in)
+	_, err := conn.UpdateFlowWithContext(ctx, in)
 
 	if err != nil {
 		return diag.Errorf("updating AppFlow Flow (%s): %s", d.Id(), err)
@@ -1347,7 +1347,7 @@ func resourceFlowUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, arn, o, n); err != nil {
+		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
 			return diag.Errorf("error updating tags: %s", err)
 		}
 	}
@@ -1356,7 +1356,7 @@ func resourceFlowUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceFlowDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppFlowConn
+	conn := meta.(*conns.AWSClient).AppFlowConn()
 
 	out, _ := FindFlowByARN(ctx, conn, d.Id())
 

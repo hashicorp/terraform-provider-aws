@@ -1,26 +1,32 @@
 package logs
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"regexp"
 	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func ResourceStream() *schema.Resource {
+func init() {
+	_sp.registerSDKResourceFactory("aws_cloudwatch_log_stream", resourceStream)
+}
+
+func resourceStream() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceStreamCreate,
-		Read:   resourceStreamRead,
-		Delete: resourceStreamDelete,
+		CreateWithoutTimeout: resourceStreamCreate,
+		ReadWithoutTimeout:   resourceStreamRead,
+		DeleteWithoutTimeout: resourceStreamDelete,
+
 		Importer: &schema.ResourceImporter{
 			State: resourceStreamImport,
 		},
@@ -30,76 +36,62 @@ func ResourceStream() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: ValidStreamName,
-			},
-
 			"log_group_name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
+			"name": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validStreamName,
+			},
 		},
 	}
 }
 
-func resourceStreamCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LogsConn
+func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).LogsConn()
 
-	log.Printf("[DEBUG] Creating CloudWatch Log Stream: %s", d.Get("name").(string))
-	_, err := conn.CreateLogStream(&cloudwatchlogs.CreateLogStreamInput{
+	name := d.Get("name").(string)
+	input := &cloudwatchlogs.CreateLogStreamInput{
 		LogGroupName:  aws.String(d.Get("log_group_name").(string)),
-		LogStreamName: aws.String(d.Get("name").(string)),
-	})
-	if err != nil {
-		return fmt.Errorf("Creating CloudWatch Log Stream failed: %s", err)
+		LogStreamName: aws.String(name),
 	}
 
-	d.SetId(d.Get("name").(string))
+	_, err := conn.CreateLogStreamWithContext(ctx, input)
 
-	return resourceStreamRead(d, meta)
+	if err != nil {
+		return diag.Errorf("creating CloudWatch Logs Log Stream (%s): %s", name, err)
+	}
+
+	d.SetId(name)
+
+	_, err = tfresource.RetryWhenNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+		return FindLogStreamByTwoPartKey(ctx, conn, d.Get("log_group_name").(string), d.Id())
+	})
+
+	if err != nil {
+		return diag.Errorf("waiting for CloudWatch Logs Log Stream (%s) create: %s", d.Id(), err)
+	}
+
+	return resourceStreamRead(ctx, d, meta)
 }
 
-func resourceStreamRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LogsConn
+func resourceStreamRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).LogsConn()
 
-	group := d.Get("log_group_name").(string)
+	ls, err := FindLogStreamByTwoPartKey(ctx, conn, d.Get("log_group_name").(string), d.Id())
 
-	var ls *cloudwatchlogs.LogStream
-	var exists bool
-
-	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
-		var err error
-		ls, exists, err = LookupStream(conn, d.Id(), group, nil)
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-		if d.IsNewResource() && !exists {
-			return resource.RetryableError(&resource.NotFoundError{})
-		}
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] CloudWatch Logs Log Stream (%s) not found, removing from state", d.Id())
+		d.SetId("")
 		return nil
-	})
-	if tfresource.TimedOut(err) {
-		ls, exists, err = LookupStream(conn, d.Id(), group, nil)
 	}
 
 	if err != nil {
-		if !tfawserr.ErrCodeEquals(err, cloudwatchlogs.ErrCodeResourceNotFoundException) {
-			return err
-		}
-
-		log.Printf("[DEBUG] container CloudWatch group %q Not Found.", group)
-		exists = false
-	}
-
-	if !exists {
-		log.Printf("[DEBUG] CloudWatch Stream %q Not Found. Removing from state", d.Id())
-		d.SetId("")
-		return nil
+		return diag.Errorf("reading CloudWatch Logs Log Stream (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", ls.Arn)
@@ -108,23 +100,21 @@ func resourceStreamRead(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceStreamDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LogsConn
+func resourceStreamDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).LogsConn()
 
-	log.Printf("[INFO] Deleting CloudWatch Log Stream: %s", d.Id())
-	params := &cloudwatchlogs.DeleteLogStreamInput{
+	log.Printf("[INFO] Deleting CloudWatch Logs Log Stream: %s", d.Id())
+	_, err := conn.DeleteLogStreamWithContext(ctx, &cloudwatchlogs.DeleteLogStreamInput{
 		LogGroupName:  aws.String(d.Get("log_group_name").(string)),
 		LogStreamName: aws.String(d.Id()),
-	}
-
-	_, err := conn.DeleteLogStream(params)
+	})
 
 	if tfawserr.ErrCodeEquals(err, cloudwatchlogs.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("deleting CloudWatch Log Stream (%s): %w", d.Id(), err)
+		return diag.Errorf("deleting CloudWatch Logs Log Stream (%s): %s", d.Id(), err)
 	}
 
 	return nil
@@ -145,32 +135,48 @@ func resourceStreamImport(d *schema.ResourceData, meta interface{}) ([]*schema.R
 	return []*schema.ResourceData{d}, nil
 }
 
-func LookupStream(conn *cloudwatchlogs.CloudWatchLogs,
-	name string, logStreamName string, nextToken *string) (*cloudwatchlogs.LogStream, bool, error) {
+func FindLogStreamByTwoPartKey(ctx context.Context, conn *cloudwatchlogs.CloudWatchLogs, logGroupName, name string) (*cloudwatchlogs.LogStream, error) { // nosemgrep:ci.logs-in-func-name
 	input := &cloudwatchlogs.DescribeLogStreamsInput{
+		LogGroupName:        aws.String(logGroupName),
 		LogStreamNamePrefix: aws.String(name),
-		LogGroupName:        aws.String(logStreamName),
-		NextToken:           nextToken,
 	}
-	resp, err := conn.DescribeLogStreams(input)
-	if err != nil {
-		return nil, true, err
-	}
+	var output *cloudwatchlogs.LogStream
 
-	for _, ls := range resp.LogStreams {
-		if aws.StringValue(ls.LogStreamName) == name {
-			return ls, true, nil
+	err := conn.DescribeLogStreamsPagesWithContext(ctx, input, func(page *cloudwatchlogs.DescribeLogStreamsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.LogStreams {
+			if aws.StringValue(v.LogStreamName) == name {
+				output = v
+
+				return false
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, cloudwatchlogs.ErrCodeResourceNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
 		}
 	}
 
-	if resp.NextToken != nil {
-		return LookupStream(conn, name, logStreamName, resp.NextToken)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, false, nil
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }
 
-func ValidStreamName(v interface{}, k string) (ws []string, errors []error) {
+func validStreamName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if regexp.MustCompile(`:`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
@@ -182,5 +188,4 @@ func ValidStreamName(v interface{}, k string) (ws []string, errors []error) {
 	}
 
 	return
-
 }

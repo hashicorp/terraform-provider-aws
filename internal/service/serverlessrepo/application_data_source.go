@@ -1,17 +1,20 @@
 package serverlessrepo
 
 import (
+	"context"
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func DataSourceApplication() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceApplicationRead,
+		ReadWithoutTimeout: dataSourceApplicationRead,
 
 		Schema: map[string]*schema.Schema{
 			"application_id": {
@@ -46,19 +49,20 @@ func DataSourceApplication() *schema.Resource {
 	}
 }
 
-func dataSourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServerlessRepoConn
+func dataSourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ServerlessRepoConn()
 
 	applicationID := d.Get("application_id").(string)
 	semanticVersion := d.Get("semantic_version").(string)
 
-	output, err := findApplication(conn, applicationID, semanticVersion)
+	output, err := findApplication(ctx, conn, applicationID, semanticVersion)
 	if err != nil {
 		descriptor := applicationID
 		if semanticVersion != "" {
 			descriptor += fmt.Sprintf(", version %s", semanticVersion)
 		}
-		return fmt.Errorf("error getting Serverless Application Repository application (%s): %w", descriptor, err)
+		return sdkdiag.AppendErrorf(diags, "getting Serverless Application Repository application (%s): %s", descriptor, err)
 	}
 
 	d.SetId(applicationID)
@@ -67,8 +71,8 @@ func dataSourceApplicationRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("source_code_url", output.Version.SourceCodeUrl)
 	d.Set("template_url", output.Version.TemplateUrl)
 	if err = d.Set("required_capabilities", flex.FlattenStringSet(output.Version.RequiredCapabilities)); err != nil {
-		return fmt.Errorf("failed to set required_capabilities: %w", err)
+		return sdkdiag.AppendErrorf(diags, "to set required_capabilities: %s", err)
 	}
 
-	return nil
+	return diags
 }

@@ -164,7 +164,7 @@ resource "aws_cloudtrail" "example" {
     field_selector {
       field = "resources.ARN"
 
-      not_equals = [
+      not_starts_with = [
         "${data.aws_s3_bucket.not-important-bucket-1.arn}/",
         "${data.aws_s3_bucket.not-important-bucket-2.arn}/"
       ]
@@ -301,12 +301,12 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `advanced_event_selector` - (Optional) Specifies an advanced event selector for enabling data event logging. Fields documented below. Conflicts with `event_selector`.
 * `cloud_watch_logs_group_arn` - (Optional) Log group name using an ARN that represents the log group to which CloudTrail logs will be delivered. Note that CloudTrail requires the Log Stream wildcard.
 * `cloud_watch_logs_role_arn` - (Optional) Role for the CloudWatch Logs endpoint to assume to write to a user’s log group.
 * `enable_log_file_validation` - (Optional) Whether log file integrity validation is enabled. Defaults to `false`.
 * `enable_logging` - (Optional) Enables logging for the trail. Defaults to `true`. Setting this to `false` will pause logging.
 * `event_selector` - (Optional) Specifies an event selector for enabling data event logging. Fields documented below. Please note the [CloudTrail limits](https://docs.aws.amazon.com/awscloudtrail/latest/userguide/WhatIsCloudTrail-Limits.html) when configuring these. Conflicts with `advanced_event_selector`.
-* `advanced_event_selector` - (Optional) Specifies an advanced event selector for enabling data event logging. Fields documented below. Conflicts with `event_selector`.
 * `include_global_service_events` - (Optional) Whether the trail is publishing events from global services such as IAM to the log files. Defaults to `true`.
 * `insight_selector` - (Optional) Configuration block for identifying unusual operational activity. See details below.
 * `is_multi_region_trail` - (Optional) Whether the trail is created in the current region or in all regions. Defaults to `false`.
@@ -318,8 +318,6 @@ The following arguments are optional:
 
 ### event_selector
 
-This configuration block supports the following attributes:
-
 * `data_resource` - (Optional) Configuration block for data events. See details below.
 * `exclude_management_event_sources` (Optional) -  A set of event sources to exclude. Valid values include: `kms.amazonaws.com` and `rdsdata.amazonaws.com`. `include_management_events` must be set to`true` to allow this.
 * `include_management_events` - (Optional) Whether to include management events for your trail. Defaults to `true`.
@@ -327,34 +325,27 @@ This configuration block supports the following attributes:
 
 #### data_resource
 
-This configuration block supports the following attributes:
-
 * `type` - (Required) Resource type in which you want to log data events. You can specify only the following value: "AWS::S3::Object", "AWS::Lambda::Function" and "AWS::DynamoDB::Table".
 * `values` - (Required) List of ARN strings or partial ARN strings to specify selectors for data audit events over data resources. ARN list is specific to single-valued `type`. For example, `arn:aws:s3:::<bucket name>/` for all objects in a bucket, `arn:aws:s3:::<bucket name>/key` for specific objects, `arn:aws:lambda` for all lambda events within an account, `arn:aws:lambda:<region>:<account number>:function:<function name>` for a specific Lambda function, `arn:aws:dynamodb` for all DDB events for all tables within an account, or `arn:aws:dynamodb:<region>:<account number>:table/<table name>` for a specific DynamoDB table.
 
-
 ### insight_selector
-
-This configuration block supports the following attributes:
 
 * `insight_type` - (Optional) Type of insights to log on a trail. Valid values are: `ApiCallRateInsight` and `ApiErrorRateInsight`.
 
 ### Advanced Event Selector Arguments
-For **advanced_event_selector** the following attributes are supported.
 
-* `name` (Optional) - Name of the advanced event selector.
 * `field_selector` (Required) - Specifies the selector statements in an advanced event selector. Fields documented below.
+* `name` (Optional) - Name of the advanced event selector.
 
 #### Field Selector Arguments
-For **field_selector** the following attributes are supported.
 
 * `field` (Required) - Field in an event record on which to filter events to be logged. You can specify only the following values: `readOnly`, `eventSource`, `eventName`, `eventCategory`, `resources.type`, `resources.ARN`.
-* `equals` (Optional) - A list of values that includes events that match the exact value of the event record field specified as the value of `field`. This is the only valid operator that you can use with the `readOnly`, `eventCategory`, and `resources.type` fields.
-* `not_equals` (Optional) - A list of values that excludes events that match the exact value of the event record field specified as the value of `field`.
-* `starts_with` (Optional) - A list of values that includes events that match the first few characters of the event record field specified as the value of `field`.
-* `not_starts_with` (Optional) - A list of values that excludes events that match the first few characters of the event record field specified as the value of `field`.
 * `ends_with` (Optional) - A list of values that includes events that match the last few characters of the event record field specified as the value of `field`.
+* `equals` (Optional) - A list of values that includes events that match the exact value of the event record field specified as the value of `field`. This is the only valid operator that you can use with the `readOnly`, `eventCategory`, and `resources.type` fields.
 * `not_ends_with` (Optional) - A list of values that excludes events that match the last few characters of the event record field specified as the value of `field`.
+* `not_equals` (Optional) - A list of values that excludes events that match the exact value of the event record field specified as the value of `field`.
+* `not_starts_with` (Optional) - A list of values that excludes events that match the first few characters of the event record field specified as the value of `field`.
+* `starts_with` (Optional) - A list of values that includes events that match the first few characters of the event record field specified as the value of `field`.
 
 ## Attributes Reference
 

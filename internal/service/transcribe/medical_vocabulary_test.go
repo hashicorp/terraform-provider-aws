@@ -17,6 +17,7 @@ import (
 )
 
 func TestAccTranscribeMedicalVocabulary_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -29,16 +30,16 @@ func TestAccTranscribeMedicalVocabulary_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(names.TranscribeEndpointID, t)
-			testAccMedicalVocabularyPreCheck(t)
+			testAccMedicalVocabularyPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TranscribeEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMedicalVocabularyDestroy,
+		CheckDestroy:             testAccCheckMedicalVocabularyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMedicalVocabularyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMedicalVocabularyExists(resourceName, &medicalVocabulary),
+					testAccCheckMedicalVocabularyExists(ctx, resourceName, &medicalVocabulary),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "download_uri"),
 					resource.TestCheckResourceAttr(resourceName, "language_code", "en-US"),
@@ -55,6 +56,7 @@ func TestAccTranscribeMedicalVocabulary_basic(t *testing.T) {
 }
 
 func TestAccTranscribeMedicalVocabulary_updateS3URI(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -69,16 +71,16 @@ func TestAccTranscribeMedicalVocabulary_updateS3URI(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(names.TranscribeEndpointID, t)
-			testAccMedicalVocabularyPreCheck(t)
+			testAccMedicalVocabularyPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TranscribeEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMedicalVocabularyDestroy,
+		CheckDestroy:             testAccCheckMedicalVocabularyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMedicalVocabularyConfig_updateFile(rName, file1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMedicalVocabularyExists(resourceName, &medicalVocabulary),
+					testAccCheckMedicalVocabularyExists(ctx, resourceName, &medicalVocabulary),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "vocabulary_file_uri", "s3://"+rName+"/transcribe/test1.txt"),
 				),
@@ -86,7 +88,7 @@ func TestAccTranscribeMedicalVocabulary_updateS3URI(t *testing.T) {
 			{
 				Config: testAccMedicalVocabularyConfig_updateFile(rName, file2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMedicalVocabularyExists(resourceName, &medicalVocabulary),
+					testAccCheckMedicalVocabularyExists(ctx, resourceName, &medicalVocabulary),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "vocabulary_file_uri", "s3://"+rName+"/transcribe/test2.txt"),
 				),
@@ -96,6 +98,7 @@ func TestAccTranscribeMedicalVocabulary_updateS3URI(t *testing.T) {
 }
 
 func TestAccTranscribeMedicalVocabulary_updateTags(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -108,16 +111,16 @@ func TestAccTranscribeMedicalVocabulary_updateTags(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(names.TranscribeEndpointID, t)
-			testAccMedicalVocabularyPreCheck(t)
+			testAccMedicalVocabularyPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TranscribeEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMedicalVocabularyDestroy,
+		CheckDestroy:             testAccCheckMedicalVocabularyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMedicalVocabularyConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMedicalVocabularyExists(resourceName, &medicalVocabulary),
+					testAccCheckMedicalVocabularyExists(ctx, resourceName, &medicalVocabulary),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -125,7 +128,7 @@ func TestAccTranscribeMedicalVocabulary_updateTags(t *testing.T) {
 			{
 				Config: testAccMedicalVocabularyConfig_tags2(rName, "key1", "value1", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMedicalVocabularyExists(resourceName, &medicalVocabulary),
+					testAccCheckMedicalVocabularyExists(ctx, resourceName, &medicalVocabulary),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -134,7 +137,7 @@ func TestAccTranscribeMedicalVocabulary_updateTags(t *testing.T) {
 			{
 				Config: testAccMedicalVocabularyConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMedicalVocabularyExists(resourceName, &medicalVocabulary),
+					testAccCheckMedicalVocabularyExists(ctx, resourceName, &medicalVocabulary),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -144,6 +147,7 @@ func TestAccTranscribeMedicalVocabulary_updateTags(t *testing.T) {
 }
 
 func TestAccTranscribeMedicalVocabulary_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -156,17 +160,17 @@ func TestAccTranscribeMedicalVocabulary_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(names.TranscribeEndpointID, t)
-			testAccMedicalVocabularyPreCheck(t)
+			testAccMedicalVocabularyPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.TranscribeEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMedicalVocabularyDestroy,
+		CheckDestroy:             testAccCheckMedicalVocabularyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMedicalVocabularyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMedicalVocabularyExists(resourceName, &medicalVocabulary),
-					acctest.CheckResourceDisappears(acctest.Provider, tftranscribe.ResourceMedicalVocabulary(), resourceName),
+					testAccCheckMedicalVocabularyExists(ctx, resourceName, &medicalVocabulary),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tftranscribe.ResourceMedicalVocabulary(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -174,31 +178,33 @@ func TestAccTranscribeMedicalVocabulary_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckMedicalVocabularyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeConn
+func testAccCheckMedicalVocabularyDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeClient()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_transcribe_medical_vocabulary" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_transcribe_medical_vocabulary" {
+				continue
+			}
+
+			_, err := tftranscribe.FindMedicalVocabularyByName(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Expected Transcribe MedicalVocabulary to be destroyed, %s found", rs.Primary.ID)
 		}
 
-		_, err := tftranscribe.FindMedicalVocabularyByName(context.Background(), conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("Expected Transcribe MedicalVocabulary to be destroyed, %s found", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckMedicalVocabularyExists(name string, medicalVocabulary *transcribe.GetMedicalVocabularyOutput) resource.TestCheckFunc {
+func testAccCheckMedicalVocabularyExists(ctx context.Context, name string, medicalVocabulary *transcribe.GetMedicalVocabularyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -209,8 +215,8 @@ func testAccCheckMedicalVocabularyExists(name string, medicalVocabulary *transcr
 			return fmt.Errorf("No Transcribe MedicalVocabulary is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeConn
-		resp, err := tftranscribe.FindMedicalVocabularyByName(context.Background(), conn, rs.Primary.ID)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeClient()
+		resp, err := tftranscribe.FindMedicalVocabularyByName(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return fmt.Errorf("Error describing Transcribe MedicalVocabulary: %s", err.Error())
@@ -222,12 +228,12 @@ func testAccCheckMedicalVocabularyExists(name string, medicalVocabulary *transcr
 	}
 }
 
-func testAccMedicalVocabularyPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeConn
+func testAccMedicalVocabularyPreCheck(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).TranscribeClient()
 
 	input := &transcribe.ListMedicalVocabulariesInput{}
 
-	_, err := conn.ListMedicalVocabularies(context.Background(), input)
+	_, err := conn.ListMedicalVocabularies(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

@@ -1,6 +1,8 @@
 package codepipeline
 
-import "time"
+import (
+	"time"
+)
 
 const (
 	ResNameWebhook  = "Webhook"

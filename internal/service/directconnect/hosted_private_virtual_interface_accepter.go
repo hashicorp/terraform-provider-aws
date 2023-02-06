@@ -1,6 +1,7 @@
 package directconnect
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"time"
@@ -8,20 +9,22 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/directconnect"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceHostedPrivateVirtualInterfaceAccepter() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceHostedPrivateVirtualInterfaceAccepterCreate,
-		Read:   resourceHostedPrivateVirtualInterfaceAccepterRead,
-		Update: resourceHostedPrivateVirtualInterfaceAccepterUpdate,
-		Delete: resourceHostedPrivateVirtualInterfaceAccepterDelete,
+		CreateWithoutTimeout: resourceHostedPrivateVirtualInterfaceAccepterCreate,
+		ReadWithoutTimeout:   resourceHostedPrivateVirtualInterfaceAccepterRead,
+		UpdateWithoutTimeout: resourceHostedPrivateVirtualInterfaceAccepterUpdate,
+		DeleteWithoutTimeout: resourceHostedPrivateVirtualInterfaceAccepterDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceHostedPrivateVirtualInterfaceAccepterImport,
+			StateContext: resourceHostedPrivateVirtualInterfaceAccepterImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -59,14 +62,14 @@ func ResourceHostedPrivateVirtualInterfaceAccepter() *schema.Resource {
 	}
 }
 
-func resourceHostedPrivateVirtualInterfaceAccepterCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+func resourceHostedPrivateVirtualInterfaceAccepterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
 	vgwIdRaw, vgwOk := d.GetOk("vpn_gateway_id")
 	dxgwIdRaw, dxgwOk := d.GetOk("dx_gateway_id")
 	if vgwOk == dxgwOk {
-		return fmt.Errorf(
-			"One of ['vpn_gateway_id', 'dx_gateway_id'] must be set to create a Direct Connect private virtual interface accepter")
+		return sdkdiag.AppendErrorf(diags, "One of ['vpn_gateway_id', 'dx_gateway_id'] must be set to create a Direct Connect private virtual interface accepter")
 	}
 
 	vifId := d.Get("virtual_interface_id").(string)
@@ -81,9 +84,9 @@ func resourceHostedPrivateVirtualInterfaceAccepterCreate(d *schema.ResourceData,
 	}
 
 	log.Printf("[DEBUG] Accepting Direct Connect hosted private virtual interface: %s", req)
-	_, err := conn.ConfirmPrivateVirtualInterface(req)
+	_, err := conn.ConfirmPrivateVirtualInterfaceWithContext(ctx, req)
 	if err != nil {
-		return fmt.Errorf("error accepting Direct Connect hosted private virtual interface: %s", err)
+		return sdkdiag.AppendErrorf(diags, "accepting Direct Connect hosted private virtual interface: %s", err)
 	}
 
 	d.SetId(vifId)
@@ -96,33 +99,34 @@ func resourceHostedPrivateVirtualInterfaceAccepterCreate(d *schema.ResourceData,
 	}.String()
 	d.Set("arn", arn)
 
-	if err := hostedPrivateVirtualInterfaceAccepterWaitUntilAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return err
+	if err := hostedPrivateVirtualInterfaceAccepterWaitUntilAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	return resourceHostedPrivateVirtualInterfaceAccepterUpdate(d, meta)
+	return append(diags, resourceHostedPrivateVirtualInterfaceAccepterUpdate(ctx, d, meta)...)
 }
 
-func resourceHostedPrivateVirtualInterfaceAccepterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+func resourceHostedPrivateVirtualInterfaceAccepterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	vif, err := virtualInterfaceRead(d.Id(), conn)
+	vif, err := virtualInterfaceRead(ctx, d.Id(), conn)
 	if err != nil {
-		return err
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 	if vif == nil {
 		log.Printf("[WARN] Direct Connect hosted private virtual interface (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 	vifState := aws.StringValue(vif.VirtualInterfaceState)
 	if vifState != directconnect.VirtualInterfaceStateAvailable &&
 		vifState != directconnect.VirtualInterfaceStateDown {
 		log.Printf("[WARN] Direct Connect hosted private virtual interface (%s) is '%s', removing from state", vifState, d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	d.Set("dx_gateway_id", vif.DirectConnectGatewayId)
@@ -130,43 +134,47 @@ func resourceHostedPrivateVirtualInterfaceAccepterRead(d *schema.ResourceData, m
 	d.Set("vpn_gateway_id", vif.VirtualGatewayId)
 
 	arn := d.Get("arn").(string)
-	tags, err := ListTags(conn, arn)
+	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for Direct Connect hosted private virtual interface (%s): %s", arn, err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for Direct Connect hosted private virtual interface (%s): %s", arn, err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceHostedPrivateVirtualInterfaceAccepterUpdate(d *schema.ResourceData, meta interface{}) error {
-	if err := virtualInterfaceUpdate(d, meta); err != nil {
-		return err
+func resourceHostedPrivateVirtualInterfaceAccepterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	diags = append(diags, virtualInterfaceUpdate(ctx, d, meta)...)
+	if diags.HasError() {
+		return diags
 	}
 
-	return resourceHostedPrivateVirtualInterfaceAccepterRead(d, meta)
+	return append(diags, resourceHostedPrivateVirtualInterfaceAccepterRead(ctx, d, meta)...)
 }
 
-func resourceHostedPrivateVirtualInterfaceAccepterDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceHostedPrivateVirtualInterfaceAccepterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	log.Printf("[WARN] Will not delete Direct Connect virtual interface. Terraform will remove this resource from the state file, however resources may remain.")
-	return nil
+	return diags
 }
 
-func resourceHostedPrivateVirtualInterfaceAccepterImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+func resourceHostedPrivateVirtualInterfaceAccepterImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
-	vif, err := virtualInterfaceRead(d.Id(), conn)
+	vif, err := virtualInterfaceRead(ctx, d.Id(), conn)
 	if err != nil {
 		return nil, err
 	}
@@ -190,9 +198,8 @@ func resourceHostedPrivateVirtualInterfaceAccepterImport(d *schema.ResourceData,
 	return []*schema.ResourceData{d}, nil
 }
 
-func hostedPrivateVirtualInterfaceAccepterWaitUntilAvailable(conn *directconnect.DirectConnect, vifId string, timeout time.Duration) error {
-	return virtualInterfaceWaitUntilAvailable(
-		conn,
+func hostedPrivateVirtualInterfaceAccepterWaitUntilAvailable(ctx context.Context, conn *directconnect.DirectConnect, vifId string, timeout time.Duration) error {
+	return virtualInterfaceWaitUntilAvailable(ctx, conn,
 		vifId,
 		timeout,
 		[]string{

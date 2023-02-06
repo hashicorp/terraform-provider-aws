@@ -1,20 +1,22 @@
 package kms
 
 import (
+	"context"
 	"encoding/base64"
 	"encoding/pem"
-	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kms"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
 func DataSourcePublicKey() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourcePublicKeyRead,
+		ReadWithoutTimeout: dataSourcePublicKeyRead,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -37,7 +39,7 @@ func DataSourcePublicKey() *schema.Resource {
 			"key_id": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validKey,
+				ValidateFunc: ValidateKeyOrAlias,
 			},
 			"key_usage": {
 				Type:     schema.TypeString,
@@ -60,8 +62,9 @@ func DataSourcePublicKey() *schema.Resource {
 	}
 }
 
-func dataSourcePublicKeyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KMSConn
+func dataSourcePublicKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).KMSConn()
 	keyId := d.Get("key_id").(string)
 
 	input := &kms.GetPublicKeyInput{
@@ -72,10 +75,10 @@ func dataSourcePublicKeyRead(d *schema.ResourceData, meta interface{}) error {
 		input.GrantTokens = aws.StringSlice(v.([]string))
 	}
 
-	output, err := conn.GetPublicKey(input)
+	output, err := conn.GetPublicKeyWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error while describing KMS public key (%s): %w", keyId, err)
+		return sdkdiag.AppendErrorf(diags, "while describing KMS public key (%s): %s", keyId, err)
 	}
 
 	d.SetId(aws.StringValue(output.KeyId))
@@ -90,12 +93,12 @@ func dataSourcePublicKeyRead(d *schema.ResourceData, meta interface{}) error {
 	})))
 
 	if err := d.Set("encryption_algorithms", flex.FlattenStringList(output.EncryptionAlgorithms)); err != nil {
-		return fmt.Errorf("error setting encryption_algorithms: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting encryption_algorithms: %s", err)
 	}
 
 	if err := d.Set("signing_algorithms", flex.FlattenStringList(output.SigningAlgorithms)); err != nil {
-		return fmt.Errorf("error setting signing_algorithms: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting signing_algorithms: %s", err)
 	}
 
-	return nil
+	return diags
 }

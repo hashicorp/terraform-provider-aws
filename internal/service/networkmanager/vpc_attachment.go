@@ -28,7 +28,7 @@ func ResourceVPCAttachment() *schema.Resource {
 		DeleteWithoutTimeout: resourceVPCAttachmentDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -71,9 +71,13 @@ func ResourceVPCAttachment() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"appliance_mode_support": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
 						"ipv6_support": {
 							Type:     schema.TypeBool,
-							Required: true,
+							Optional: true,
 						},
 					},
 				},
@@ -116,7 +120,7 @@ func ResourceVPCAttachment() *schema.Resource {
 }
 
 func resourceVPCAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn
+	conn := meta.(*conns.AWSClient).NetworkManagerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -153,7 +157,7 @@ func resourceVPCAttachmentCreate(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceVPCAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn
+	conn := meta.(*conns.AWSClient).NetworkManagerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -211,7 +215,7 @@ func resourceVPCAttachmentRead(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceVPCAttachmentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn
+	conn := meta.(*conns.AWSClient).NetworkManagerConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &networkmanager.UpdateVpcAttachmentInput{
@@ -258,7 +262,7 @@ func resourceVPCAttachmentUpdate(ctx context.Context, d *schema.ResourceData, me
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTagsWithContext(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.Errorf("updating Network Manager VPC Attachment (%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -267,7 +271,21 @@ func resourceVPCAttachmentUpdate(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceVPCAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn
+	conn := meta.(*conns.AWSClient).NetworkManagerConn()
+
+	// If ResourceAttachmentAccepter is used, then VPC Attachment state
+	// is not updated from StatePendingAttachmentAcceptance and the delete fails if deleted immediately after create
+	output, sErr := FindVPCAttachmentByID(ctx, conn, d.Id())
+
+	if tfawserr.ErrCodeEquals(sErr, networkmanager.ErrCodeResourceNotFoundException) {
+		return nil
+	}
+
+	if sErr != nil {
+		return diag.Errorf("reading Network Manager VPC Attachment (%s): %s", d.Id(), sErr)
+	}
+
+	d.Set("state", output.Attachment.State)
 
 	if state := d.Get("state").(string); state == networkmanager.AttachmentStatePendingAttachmentAcceptance || state == networkmanager.AttachmentStatePendingTagAcceptance {
 		return diag.Errorf("cannot delete Network Manager VPC Attachment (%s) in %s state", d.Id(), state)
@@ -393,6 +411,10 @@ func expandVpcOptions(tfMap map[string]interface{}) *networkmanager.VpcOptions {
 
 	apiObject := &networkmanager.VpcOptions{}
 
+	if v, ok := tfMap["appliance_mode_support"].(bool); ok {
+		apiObject.ApplianceModeSupport = aws.Bool(v)
+	}
+
 	if v, ok := tfMap["ipv6_support"].(bool); ok {
 		apiObject.Ipv6Support = aws.Bool(v)
 	}
@@ -406,6 +428,10 @@ func flattenVpcOptions(apiObject *networkmanager.VpcOptions) map[string]interfac
 	}
 
 	tfMap := map[string]interface{}{}
+
+	if v := apiObject.ApplianceModeSupport; v != nil {
+		tfMap["appliance_mode_support"] = aws.BoolValue(v)
+	}
 
 	if v := apiObject.Ipv6Support; v != nil {
 		tfMap["ipv6_support"] = aws.BoolValue(v)

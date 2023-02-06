@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccCloudFrontOriginRequestPolicyDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSource1Name := "data.aws_cloudfront_origin_request_policy.by_id"
 	dataSource2Name := "data.aws_cloudfront_origin_request_policy.by_name"
@@ -20,7 +21,7 @@ func TestAccCloudFrontOriginRequestPolicyDataSource_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPublicKeyDestroy,
+		CheckDestroy:             testAccCheckPublicKeyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOriginRequestPolicyDataSourceConfig_basic(rName),

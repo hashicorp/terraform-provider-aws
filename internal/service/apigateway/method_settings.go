@@ -1,6 +1,7 @@
 package apigateway
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -8,21 +9,23 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourceMethodSettings() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceMethodSettingsUpdate,
-		Read:   resourceMethodSettingsRead,
-		Update: resourceMethodSettingsUpdate,
-		Delete: resourceMethodSettingsDelete,
+		CreateWithoutTimeout: resourceMethodSettingsUpdate,
+		ReadWithoutTimeout:   resourceMethodSettingsRead,
+		UpdateWithoutTimeout: resourceMethodSettingsUpdate,
+		DeleteWithoutTimeout: resourceMethodSettingsDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: resourceMethodSettingsImport,
+			StateContext: resourceMethodSettingsImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -131,19 +134,20 @@ func flattenMethodSettings(settings *apigateway.MethodSetting) []interface{} {
 	}
 }
 
-func resourceMethodSettingsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+func resourceMethodSettingsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 
-	stage, err := FindStageByName(conn, d.Get("rest_api_id").(string), d.Get("stage_name").(string))
+	stage, err := FindStageByName(ctx, conn, d.Get("rest_api_id").(string), d.Get("stage_name").(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] API Gateway Stage Method Settings (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error getting API Gateway Stage Method Settings (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "getting API Gateway Stage Method Settings (%s): %s", d.Id(), err)
 	}
 
 	methodPath := d.Get("method_path").(string)
@@ -152,18 +156,19 @@ func resourceMethodSettingsRead(d *schema.ResourceData, meta interface{}) error 
 	if !d.IsNewResource() && !ok {
 		log.Printf("[WARN] API Gateway Stage Method Settings (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err := d.Set("settings", flattenMethodSettings(settings)); err != nil {
-		return fmt.Errorf("error setting settings: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting settings: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceMethodSettingsUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+func resourceMethodSettingsUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 
 	methodPath := d.Get("method_path").(string)
 	prefix := fmt.Sprintf("/%s/", methodPath)
@@ -252,19 +257,20 @@ func resourceMethodSettingsUpdate(d *schema.ResourceData, meta interface{}) erro
 	}
 	log.Printf("[DEBUG] Updating API Gateway Stage: %s", input)
 
-	_, err := conn.UpdateStage(&input)
+	_, err := conn.UpdateStageWithContext(ctx, &input)
 
 	if err != nil {
-		return fmt.Errorf("updating API Gateway Stage failed: %w", err)
+		return sdkdiag.AppendErrorf(diags, "updating API Gateway Stage failed: %s", err)
 	}
 
 	d.SetId(restApiId + "-" + stageName + "-" + methodPath)
 
-	return resourceMethodSettingsRead(d, meta)
+	return append(diags, resourceMethodSettingsRead(ctx, d, meta)...)
 }
 
-func resourceMethodSettingsDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+func resourceMethodSettingsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 
 	input := &apigateway.UpdateStageInput{
 		RestApiId: aws.String(d.Get("rest_api_id").(string)),
@@ -277,25 +283,25 @@ func resourceMethodSettingsDelete(d *schema.ResourceData, meta interface{}) erro
 		},
 	}
 
-	_, err := conn.UpdateStage(input)
+	_, err := conn.UpdateStageWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
-		return nil
+		return diags
 	}
 
 	// BadRequestException: Cannot remove method setting */* because there is no method setting for this method
 	if tfawserr.ErrMessageContains(err, apigateway.ErrCodeBadRequestException, "no method setting for this method") {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting API Gateway Stage Method Settings (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting API Gateway Stage Method Settings (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceMethodSettingsImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceMethodSettingsImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	idParts := strings.SplitN(d.Id(), "/", 3)
 	if len(idParts) != 3 || idParts[0] == "" || idParts[1] == "" || idParts[2] == "" {
 		return nil, fmt.Errorf("Unexpected format of ID (%q), expected REST-API-ID/STAGE-NAME/METHOD-PATH", d.Id())

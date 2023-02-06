@@ -1,6 +1,7 @@
 package elb_test
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"testing"
@@ -17,23 +18,24 @@ import (
 )
 
 func TestAccELBSSLNegotiationPolicy_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8)) // ELB name cannot be longer than 32 characters
 	elbResourceName := "aws_elb.test"
 	resourceName := "aws_lb_ssl_negotiation_policy.test"
 
-	key := acctest.TLSRSAPrivateKeyPEM(2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLBSSLNegotiationPolicyDestroy,
+		CheckDestroy:             testAccCheckLBSSLNegotiationPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLBSSLNegotiationPolicyConfig_basic(rName, key, certificate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLBSSLNegotiationPolicy(elbResourceName, resourceName),
+					testAccCheckLBSSLNegotiationPolicy(ctx, elbResourceName, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "attribute.#", "7"),
 				),
 			},
@@ -42,26 +44,27 @@ func TestAccELBSSLNegotiationPolicy_basic(t *testing.T) {
 }
 
 func TestAccELBSSLNegotiationPolicy_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var loadBalancer elb.LoadBalancerDescription
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8)) // ELB name cannot be longer than 32 characters
 	elbResourceName := "aws_elb.test"
 	resourceName := "aws_lb_ssl_negotiation_policy.test"
 
-	key := acctest.TLSRSAPrivateKeyPEM(2048)
-	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(key, "example.com")
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLBSSLNegotiationPolicyDestroy,
+		CheckDestroy:             testAccCheckLBSSLNegotiationPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLBSSLNegotiationPolicyConfig_basic(rName, key, certificate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLBSSLNegotiationPolicy(elbResourceName, resourceName),
-					testAccCheckLoadBalancerExists(elbResourceName, &loadBalancer),
-					testAccCheckLoadBalancerDisappears(&loadBalancer),
+					testAccCheckLBSSLNegotiationPolicy(ctx, elbResourceName, resourceName),
+					testAccCheckLoadBalancerExists(ctx, elbResourceName, &loadBalancer),
+					testAccCheckLoadBalancerDisappears(ctx, &loadBalancer),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -69,58 +72,60 @@ func TestAccELBSSLNegotiationPolicy_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckLBSSLNegotiationPolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn
+func testAccCheckLBSSLNegotiationPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_elb" && rs.Type != "aws_lb_ssl_negotiation_policy" {
-			continue
-		}
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_elb" && rs.Type != "aws_lb_ssl_negotiation_policy" {
+				continue
+			}
 
-		// Check that the ELB is destroyed
-		if rs.Type == "aws_elb" {
-			describe, err := conn.DescribeLoadBalancers(&elb.DescribeLoadBalancersInput{
-				LoadBalancerNames: []*string{aws.String(rs.Primary.ID)},
-			})
+			// Check that the ELB is destroyed
+			if rs.Type == "aws_elb" {
+				describe, err := conn.DescribeLoadBalancersWithContext(ctx, &elb.DescribeLoadBalancersInput{
+					LoadBalancerNames: []*string{aws.String(rs.Primary.ID)},
+				})
 
-			if err == nil {
-				if len(describe.LoadBalancerDescriptions) != 0 &&
-					*describe.LoadBalancerDescriptions[0].LoadBalancerName == rs.Primary.ID {
-					return fmt.Errorf("ELB still exists")
+				if err == nil {
+					if len(describe.LoadBalancerDescriptions) != 0 &&
+						*describe.LoadBalancerDescriptions[0].LoadBalancerName == rs.Primary.ID {
+						return fmt.Errorf("ELB still exists")
+					}
+				}
+
+				// Verify the error
+				providerErr, ok := err.(awserr.Error)
+				if !ok {
+					return err
+				}
+
+				if providerErr.Code() != "LoadBalancerNotFound" {
+					return fmt.Errorf("Unexpected error: %s", err)
+				}
+			} else {
+				// Check that the SSL Negotiation Policy is destroyed
+				elbName, _, policyName, err := tfelb.SSLNegotiationPolicyParseID(rs.Primary.ID)
+				if err != nil {
+					return err
+				}
+
+				_, err = conn.DescribeLoadBalancerPoliciesWithContext(ctx, &elb.DescribeLoadBalancerPoliciesInput{
+					LoadBalancerName: aws.String(elbName),
+					PolicyNames:      []*string{aws.String(policyName)},
+				})
+
+				if err == nil {
+					return fmt.Errorf("ELB SSL Negotiation Policy still exists")
 				}
 			}
-
-			// Verify the error
-			providerErr, ok := err.(awserr.Error)
-			if !ok {
-				return err
-			}
-
-			if providerErr.Code() != "LoadBalancerNotFound" {
-				return fmt.Errorf("Unexpected error: %s", err)
-			}
-		} else {
-			// Check that the SSL Negotiation Policy is destroyed
-			elbName, _, policyName, err := tfelb.SSLNegotiationPolicyParseID(rs.Primary.ID)
-			if err != nil {
-				return err
-			}
-
-			_, err = conn.DescribeLoadBalancerPolicies(&elb.DescribeLoadBalancerPoliciesInput{
-				LoadBalancerName: aws.String(elbName),
-				PolicyNames:      []*string{aws.String(policyName)},
-			})
-
-			if err == nil {
-				return fmt.Errorf("ELB SSL Negotiation Policy still exists")
-			}
 		}
-	}
 
-	return nil
+		return nil
+	}
 }
 
-func testAccCheckLBSSLNegotiationPolicy(elbResource string, policyResource string) resource.TestCheckFunc {
+func testAccCheckLBSSLNegotiationPolicy(ctx context.Context, elbResource string, policyResource string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[elbResource]
 		if !ok {
@@ -136,14 +141,14 @@ func testAccCheckLBSSLNegotiationPolicy(elbResource string, policyResource strin
 			return fmt.Errorf("Not found: %s", policyResource)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn()
 
 		elbName, _, policyName, err := tfelb.SSLNegotiationPolicyParseID(policy.Primary.ID)
 		if err != nil {
 			return err
 		}
 
-		resp, err := conn.DescribeLoadBalancerPolicies(&elb.DescribeLoadBalancerPoliciesInput{
+		resp, err := conn.DescribeLoadBalancerPoliciesWithContext(ctx, &elb.DescribeLoadBalancerPoliciesInput{
 			LoadBalancerName: aws.String(elbName),
 			PolicyNames:      []*string{aws.String(policyName)},
 		})

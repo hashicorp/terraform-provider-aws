@@ -1,26 +1,34 @@
 package apigateway
 
 import (
+	"context"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourceDeployment() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceDeploymentCreate,
-		Read:   resourceDeploymentRead,
-		Update: resourceDeploymentUpdate,
-		Delete: resourceDeploymentDelete,
+		CreateWithoutTimeout: resourceDeploymentCreate,
+		ReadWithoutTimeout:   resourceDeploymentRead,
+		UpdateWithoutTimeout: resourceDeploymentUpdate,
+		DeleteWithoutTimeout: resourceDeploymentDelete,
+
+		Importer: &schema.ResourceImporter{
+			StateContext: resourceDeploymentImport,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"rest_api_id": {
@@ -78,12 +86,13 @@ func ResourceDeployment() *schema.Resource {
 	}
 }
 
-func resourceDeploymentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+func resourceDeploymentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 	// Create the gateway
 	log.Printf("[DEBUG] Creating API Gateway Deployment")
 
-	deployment, err := conn.CreateDeployment(&apigateway.CreateDeploymentInput{
+	deployment, err := conn.CreateDeploymentWithContext(ctx, &apigateway.CreateDeploymentInput{
 		RestApiId:        aws.String(d.Get("rest_api_id").(string)),
 		StageName:        aws.String(d.Get("stage_name").(string)),
 		Description:      aws.String(d.Get("description").(string)),
@@ -91,21 +100,22 @@ func resourceDeploymentCreate(d *schema.ResourceData, meta interface{}) error {
 		Variables:        flex.ExpandStringMap(d.Get("variables").(map[string]interface{})),
 	})
 	if err != nil {
-		return fmt.Errorf("Error creating API Gateway Deployment: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating API Gateway Deployment: %s", err)
 	}
 
 	d.SetId(aws.StringValue(deployment.Id))
 	log.Printf("[DEBUG] API Gateway Deployment ID: %s", d.Id())
 
-	return resourceDeploymentRead(d, meta)
+	return append(diags, resourceDeploymentRead(ctx, d, meta)...)
 }
 
-func resourceDeploymentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+func resourceDeploymentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 
 	log.Printf("[DEBUG] Reading API Gateway Deployment %s", d.Id())
 	restApiId := d.Get("rest_api_id").(string)
-	out, err := conn.GetDeployment(&apigateway.GetDeploymentInput{
+	out, err := conn.GetDeploymentWithContext(ctx, &apigateway.GetDeploymentInput{
 		RestApiId:    aws.String(restApiId),
 		DeploymentId: aws.String(d.Id()),
 	})
@@ -113,9 +123,9 @@ func resourceDeploymentRead(d *schema.ResourceData, meta interface{}) error {
 		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
 			log.Printf("[WARN] API Gateway Deployment (%s) not found, removing from state", d.Id())
 			d.SetId("")
-			return nil
+			return diags
 		}
-		return fmt.Errorf("error reading API Gateway Deployment (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading API Gateway Deployment (%s): %s", d.Id(), err)
 	}
 	log.Printf("[DEBUG] Received API Gateway Deployment: %s", out)
 	d.Set("description", out.Description)
@@ -137,7 +147,7 @@ func resourceDeploymentRead(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[DEBUG] Error setting created_date: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceDeploymentUpdateOperations(d *schema.ResourceData) []*apigateway.PatchOperation {
@@ -154,25 +164,27 @@ func resourceDeploymentUpdateOperations(d *schema.ResourceData) []*apigateway.Pa
 	return operations
 }
 
-func resourceDeploymentUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+func resourceDeploymentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 
 	log.Printf("[DEBUG] Updating API Gateway API Key: %s", d.Id())
 
-	_, err := conn.UpdateDeployment(&apigateway.UpdateDeploymentInput{
+	_, err := conn.UpdateDeploymentWithContext(ctx, &apigateway.UpdateDeploymentInput{
 		DeploymentId:    aws.String(d.Id()),
 		RestApiId:       aws.String(d.Get("rest_api_id").(string)),
 		PatchOperations: resourceDeploymentUpdateOperations(d),
 	})
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "updating API Gateway Deployment (%s): %s", d.Id(), err)
 	}
 
-	return resourceDeploymentRead(d, meta)
+	return append(diags, resourceDeploymentRead(ctx, d, meta)...)
 }
 
-func resourceDeploymentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+func resourceDeploymentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 	log.Printf("[DEBUG] Deleting API Gateway Deployment: %s", d.Id())
 
 	// If the stage has been updated to point at a different deployment, then
@@ -186,10 +198,10 @@ func resourceDeploymentDelete(d *schema.ResourceData, meta interface{}) error {
 	stageName := d.Get("stage_name").(string)
 	restApiId := d.Get("rest_api_id").(string)
 	if stageName != "" {
-		stage, err := FindStageByName(conn, restApiId, stageName)
+		stage, err := FindStageByName(ctx, conn, restApiId, stageName)
 
 		if err != nil && !tfresource.NotFound(err) {
-			return fmt.Errorf("error getting referenced stage: %w", err)
+			return sdkdiag.AppendErrorf(diags, "getting referenced stage: %s", err)
 		}
 
 		if stage != nil && aws.StringValue(stage.DeploymentId) == d.Id() {
@@ -198,26 +210,41 @@ func resourceDeploymentDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if shouldDeleteStage {
-		if _, err := conn.DeleteStage(&apigateway.DeleteStageInput{
+		if _, err := conn.DeleteStageWithContext(ctx, &apigateway.DeleteStageInput{
 			StageName: aws.String(stageName),
 			RestApiId: aws.String(restApiId),
 		}); err == nil {
-			return nil
+			return diags
 		}
 	}
 
-	_, err := conn.DeleteDeployment(&apigateway.DeleteDeploymentInput{
+	_, err := conn.DeleteDeploymentWithContext(ctx, &apigateway.DeleteDeploymentInput{
 		DeploymentId: aws.String(d.Id()),
 		RestApiId:    aws.String(restApiId),
 	})
 
 	if tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting API Gateway Deployment (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting API Gateway Deployment (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
+}
+
+func resourceDeploymentImport(_ context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	idParts := strings.Split(d.Id(), "/")
+	if len(idParts) != 2 {
+		return nil, fmt.Errorf("Unexpected format of ID (%s), use: 'REST-API-ID/DEPLOYMENT-ID'", d.Id())
+	}
+
+	restApiID := idParts[0]
+	deploymentID := idParts[1]
+
+	d.SetId(deploymentID)
+	d.Set("rest_api_id", restApiID)
+
+	return []*schema.ResourceData{d}, nil
 }

@@ -1,12 +1,11 @@
-//go:build sweep
-// +build sweep
-
 package sweep
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
+	"net"
 	"os"
 	"strconv"
 	"strings"
@@ -19,11 +18,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 const (
-	SweepThrottlingRetryTimeout = 10 * time.Minute
+	ThrottlingRetryTimeout = 10 * time.Minute
 
 	ResourcePrefix = "tf-acc-test"
 )
@@ -37,7 +38,7 @@ var SweeperClients map[string]interface{}
 // SharedRegionalSweepClient returns a common conns.AWSClient setup needed for the sweeper
 // functions for a given region
 func SharedRegionalSweepClient(region string) (interface{}, error) {
-	return SharedRegionalSweepClientWithContext(context.Background(), region)
+	return SharedRegionalSweepClientWithContext(Context(region), region)
 }
 
 func SharedRegionalSweepClientWithContext(ctx context.Context, region string) (interface{}, error) {
@@ -45,13 +46,13 @@ func SharedRegionalSweepClientWithContext(ctx context.Context, region string) (i
 		return client, nil
 	}
 
-	_, _, err := conns.RequireOneOfEnvVar([]string{conns.EnvVarProfile, conns.EnvVarAccessKeyId, conns.EnvVarContainerCredentialsFullURI}, "credentials for running sweepers")
+	_, _, err := envvar.RequireOneOf([]string{envvar.Profile, envvar.AccessKeyId, envvar.ContainerCredentialsFullURI}, "credentials for running sweepers")
 	if err != nil {
 		return nil, err
 	}
 
-	if os.Getenv(conns.EnvVarAccessKeyId) != "" {
-		_, err := conns.RequireEnvVar(conns.EnvVarSecretAccessKey, "static credentials value when using "+conns.EnvVarAccessKeyId)
+	if os.Getenv(envvar.AccessKeyId) != "" {
+		_, err := envvar.Require(envvar.SecretAccessKey, "static credentials value when using "+envvar.AccessKeyId)
 		if err != nil {
 			return nil, err
 		}
@@ -63,23 +64,23 @@ func SharedRegionalSweepClientWithContext(ctx context.Context, region string) (i
 		SuppressDebugLog: true,
 	}
 
-	if role := os.Getenv(conns.EnvVarAssumeRoleARN); role != "" {
+	if role := os.Getenv(envvar.AssumeRoleARN); role != "" {
 		conf.AssumeRole.RoleARN = role
 
 		conf.AssumeRole.Duration = time.Duration(defaultSweeperAssumeRoleDurationSeconds) * time.Second
-		if v := os.Getenv(conns.EnvVarAssumeRoleDuration); v != "" {
+		if v := os.Getenv(envvar.AssumeRoleDuration); v != "" {
 			d, err := strconv.Atoi(v)
 			if err != nil {
-				return nil, fmt.Errorf("environment variable %s: %w", conns.EnvVarAssumeRoleDuration, err)
+				return nil, fmt.Errorf("environment variable %s: %w", envvar.AssumeRoleDuration, err)
 			}
 			conf.AssumeRole.Duration = time.Duration(d) * time.Second
 		}
 
-		if v := os.Getenv(conns.EnvVarAssumeRoleExternalID); v != "" {
+		if v := os.Getenv(envvar.AssumeRoleExternalID); v != "" {
 			conf.AssumeRole.ExternalID = v
 		}
 
-		if v := os.Getenv(conns.EnvVarAssumeRoleSessionName); v != "" {
+		if v := os.Getenv(envvar.AssumeRoleSessionName); v != "" {
 			conf.AssumeRole.SessionName = v
 		}
 	}
@@ -88,7 +89,7 @@ func SharedRegionalSweepClientWithContext(ctx context.Context, region string) (i
 	client, diags := conf.ConfigureProvider(ctx, &conns.AWSClient{})
 
 	if diags.HasError() {
-		return nil, fmt.Errorf("error getting AWS client: %#v", diags)
+		return nil, fmt.Errorf("getting AWS client: %#v", diags)
 	}
 
 	SweeperClients[region] = client
@@ -97,7 +98,7 @@ func SharedRegionalSweepClientWithContext(ctx context.Context, region string) (i
 }
 
 type Sweepable interface {
-	Delete(ctx context.Context, rc RetryConfig) error
+	Delete(ctx context.Context, timeout time.Duration, optFns ...tfresource.OptionsFunc) error
 }
 
 type SweepResource struct {
@@ -114,17 +115,9 @@ func NewSweepResource(resource *schema.Resource, d *schema.ResourceData, meta in
 	}
 }
 
-type RetryConfig struct {
-	Delay        time.Duration
-	DelayRand    time.Duration
-	MinTimeout   time.Duration
-	PollInterval time.Duration
-	Timeout      time.Duration
-}
-
-func (sr *SweepResource) Delete(ctx context.Context, rc RetryConfig) error {
-	err := tfresource.RetryConfigContext(ctx, rc.Delay, rc.DelayRand, rc.MinTimeout, rc.PollInterval, rc.Timeout, func() *resource.RetryError {
-		err := DeleteResource(sr.resource, sr.d, sr.meta)
+func (sr *SweepResource) Delete(ctx context.Context, timeout time.Duration, optFns ...tfresource.OptionsFunc) error {
+	err := tfresource.Retry(ctx, timeout, func() *resource.RetryError {
+		err := DeleteResource(ctx, sr.resource, sr.d, sr.meta)
 
 		if err != nil {
 			if strings.Contains(err.Error(), "Throttling") {
@@ -136,34 +129,27 @@ func (sr *SweepResource) Delete(ctx context.Context, rc RetryConfig) error {
 		}
 
 		return nil
-	})
+	}, optFns...)
 
 	if tfresource.TimedOut(err) {
-		err = DeleteResource(sr.resource, sr.d, sr.meta)
+		err = DeleteResource(ctx, sr.resource, sr.d, sr.meta)
 	}
 
 	return err
-
 }
 
 func SweepOrchestrator(sweepables []Sweepable) error {
-	return SweepOrchestratorWithContext(context.Background(), sweepables, 0*time.Millisecond, 0*time.Millisecond, 0*time.Millisecond, 0*time.Millisecond, SweepThrottlingRetryTimeout)
+	return SweepOrchestratorWithContext(context.Background(), sweepables)
 }
 
-func SweepOrchestratorWithContext(ctx context.Context, sweepables []Sweepable, delay time.Duration, delayRand time.Duration, minTimeout time.Duration, pollInterval time.Duration, timeout time.Duration) error {
+func SweepOrchestratorWithContext(ctx context.Context, sweepables []Sweepable, optFns ...tfresource.OptionsFunc) error {
 	var g multierror.Group
 
 	for _, sweepable := range sweepables {
 		sweepable := sweepable
 
 		g.Go(func() error {
-			return sweepable.Delete(ctx, RetryConfig{
-				Delay:        delay,
-				DelayRand:    delayRand,
-				MinTimeout:   minTimeout,
-				PollInterval: pollInterval,
-				Timeout:      timeout,
-			})
+			return sweepable.Delete(ctx, ThrottlingRetryTimeout, optFns...)
 		})
 	}
 
@@ -173,7 +159,7 @@ func SweepOrchestratorWithContext(ctx context.Context, sweepables []Sweepable, d
 // Check sweeper API call error for reasons to skip sweeping
 // These include missing API endpoints and unsupported API calls
 func SkipSweepError(err error) bool {
-	// Ignore missing API endpoints
+	// Ignore missing API endpoints for AWS SDK for Go v1
 	if tfawserr.ErrMessageContains(err, "RequestError", "send request failed") {
 		return true
 	}
@@ -225,6 +211,10 @@ func SkipSweepError(err error) bool {
 	if tfawserr.ErrMessageContains(err, "UnknownOperationException", "Operation is disabled in this region") {
 		return true
 	}
+	// For example from us-east-1 SageMaker
+	if tfawserr.ErrMessageContains(err, "UnknownOperationException", "The requested operation is not supported in the called region") {
+		return true
+	}
 	// For example from us-west-2 ECR public repository
 	if tfawserr.ErrMessageContains(err, "UnsupportedCommandException", "command is only supported in") {
 		return true
@@ -233,29 +223,45 @@ func SkipSweepError(err error) bool {
 	if tfawserr.ErrMessageContains(err, "ValidationException", "Account is not whitelisted to use this feature") {
 		return true
 	}
+
+	// Ignore missing API endpoints for AWS SDK for Go v2
+	var dnsErr *net.DNSError
+	if errors.As(err, &dnsErr) {
+		return dnsErr.IsNotFound
+	}
 	return false
 }
 
-func DeleteResource(resource *schema.Resource, d *schema.ResourceData, meta interface{}) error {
+func DeleteResource(ctx context.Context, resource *schema.Resource, d *schema.ResourceData, meta any) error {
 	if resource.DeleteContext != nil || resource.DeleteWithoutTimeout != nil {
 		var diags diag.Diagnostics
 
 		if resource.DeleteContext != nil {
-			diags = resource.DeleteContext(context.Background(), d, meta)
+			diags = resource.DeleteContext(ctx, d, meta)
 		} else {
-			diags = resource.DeleteWithoutTimeout(context.Background(), d, meta)
+			diags = resource.DeleteWithoutTimeout(ctx, d, meta)
 		}
 
-		for i := range diags {
-			if diags[i].Severity == diag.Error {
-				return fmt.Errorf("error deleting resource: %s", diags[i].Summary)
-			}
-		}
-
-		return nil
+		return sdkdiag.DiagnosticsError(diags)
 	}
 
 	return resource.Delete(d, meta)
+}
+
+func ReadResource(ctx context.Context, resource *schema.Resource, d *schema.ResourceData, meta any) error {
+	if resource.ReadContext != nil || resource.ReadWithoutTimeout != nil {
+		var diags diag.Diagnostics
+
+		if resource.ReadContext != nil {
+			diags = resource.ReadContext(ctx, d, meta)
+		} else {
+			diags = resource.ReadWithoutTimeout(ctx, d, meta)
+		}
+
+		return sdkdiag.DiagnosticsError(diags)
+	}
+
+	return resource.Read(d, meta)
 }
 
 func Partition(region string) string {

@@ -1,6 +1,7 @@
 package storagegateway
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -8,18 +9,20 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceCache() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceCacheCreate,
-		Read:   resourceCacheRead,
-		Delete: schema.Noop,
+		CreateWithoutTimeout: resourceCacheCreate,
+		ReadWithoutTimeout:   resourceCacheRead,
+		DeleteWithoutTimeout: schema.NoopContext,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -38,8 +41,9 @@ func ResourceCache() *schema.Resource {
 	}
 }
 
-func resourceCacheCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).StorageGatewayConn
+func resourceCacheCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).StorageGatewayConn()
 
 	diskID := d.Get("disk_id").(string)
 	gatewayARN := d.Get("gateway_arn").(string)
@@ -49,10 +53,9 @@ func resourceCacheCreate(d *schema.ResourceData, meta interface{}) error {
 		GatewayARN: aws.String(gatewayARN),
 	}
 
-	log.Printf("[DEBUG] Adding Storage Gateway cache: %s", input)
-	_, err := conn.AddCache(input)
+	_, err := conn.AddCacheWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("error adding Storage Gateway cache: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Storage Gateway Cache: %s", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", gatewayARN, diskID))
@@ -69,9 +72,9 @@ func resourceCacheCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Reading Storage Gateway Local Disk: %s", listLocalDisksInput)
-	output, err := conn.ListLocalDisks(listLocalDisksInput)
+	output, err := conn.ListLocalDisksWithContext(ctx, listLocalDisksInput)
 	if err != nil {
-		return fmt.Errorf("error reading Storage Gateway Local Disk: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading Storage Gateway Local Disk: %s", err)
 	}
 
 	if output != nil {
@@ -85,36 +88,36 @@ func resourceCacheCreate(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(fmt.Sprintf("%s:%s", gatewayARN, diskID))
 
-	return resourceCacheRead(d, meta)
+	return append(diags, resourceCacheRead(ctx, d, meta)...)
 }
 
-func resourceCacheRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).StorageGatewayConn
+func resourceCacheRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).StorageGatewayConn()
 
 	gatewayARN, diskID, err := DecodeCacheID(d.Id())
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading Storage Gateway Cache (%s): %s", d.Id(), err)
 	}
 
 	input := &storagegateway.DescribeCacheInput{
 		GatewayARN: aws.String(gatewayARN),
 	}
 
-	log.Printf("[DEBUG] Reading Storage Gateway cache: %s", input)
-	output, err := conn.DescribeCache(input)
+	output, err := conn.DescribeCacheWithContext(ctx, input)
 	if err != nil {
 		if IsErrGatewayNotFound(err) {
-			log.Printf("[WARN] Storage Gateway cache %q not found - removing from state", d.Id())
+			log.Printf("[WARN] Storage Gateway Cache (%s) not found, removing from state", d.Id())
 			d.SetId("")
-			return nil
+			return diags
 		}
-		return fmt.Errorf("error reading Storage Gateway cache: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading Storage Gateway Cache (%s): %s", d.Id(), err)
 	}
 
 	if output == nil || len(output.DiskIds) == 0 {
-		log.Printf("[WARN] Storage Gateway cache %q not found - removing from state", d.Id())
+		log.Printf("[WARN] Storage Gateway Cache (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	found := false
@@ -126,15 +129,15 @@ func resourceCacheRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if !found {
-		log.Printf("[WARN] Storage Gateway cache %q not found - removing from state", d.Id())
+		log.Printf("[WARN] Storage Gateway Cache (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	d.Set("disk_id", diskID)
 	d.Set("gateway_arn", gatewayARN)
 
-	return nil
+	return diags
 }
 
 func DecodeCacheID(id string) (string, string, error) {

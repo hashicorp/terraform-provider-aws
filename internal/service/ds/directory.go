@@ -1,6 +1,7 @@
 package ds
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"time"
@@ -8,9 +9,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directoryservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -23,13 +26,13 @@ const (
 
 func ResourceDirectory() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceDirectoryCreate,
-		Read:   resourceDirectoryRead,
-		Update: resourceDirectoryUpdate,
-		Delete: resourceDirectoryDelete,
+		CreateWithoutTimeout: resourceDirectoryCreate,
+		ReadWithoutTimeout:   resourceDirectoryRead,
+		UpdateWithoutTimeout: resourceDirectoryUpdate,
+		DeleteWithoutTimeout: resourceDirectoryDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -191,8 +194,9 @@ func ResourceDirectory() *schema.Resource {
 	}
 }
 
-func resourceDirectoryCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DSConn
+func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -224,11 +228,10 @@ func resourceDirectoryCreate(d *schema.ResourceData, meta interface{}) error {
 			input.ShortName = aws.String(v.(string))
 		}
 
-		log.Printf("[DEBUG] Creating Directory Service Directory: %s", input)
-		output, err := conn.ConnectDirectory(input)
+		output, err := conn.ConnectDirectoryWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("creating Directory Service %s Directory (%s): %w", directoryType, name, err)
+			return sdkdiag.AppendErrorf(diags, "creating Directory Service %s Directory (%s): %s", directoryType, name, err)
 		}
 
 		d.SetId(aws.StringValue(output.DirectoryId))
@@ -256,11 +259,10 @@ func resourceDirectoryCreate(d *schema.ResourceData, meta interface{}) error {
 			input.VpcSettings = expandDirectoryVpcSettings(v.([]interface{})[0].(map[string]interface{}))
 		}
 
-		log.Printf("[DEBUG] Creating Directory Service Directory: %s", input)
-		output, err := conn.CreateMicrosoftAD(input)
+		output, err := conn.CreateMicrosoftADWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("creating Directory Service %s Directory (%s): %w", directoryType, name, err)
+			return sdkdiag.AppendErrorf(diags, "creating Directory Service %s Directory (%s): %s", directoryType, name, err)
 		}
 
 		d.SetId(aws.StringValue(output.DirectoryId))
@@ -291,63 +293,63 @@ func resourceDirectoryCreate(d *schema.ResourceData, meta interface{}) error {
 			input.VpcSettings = expandDirectoryVpcSettings(v.([]interface{})[0].(map[string]interface{}))
 		}
 
-		log.Printf("[DEBUG] Creating Directory Service Directory: %s", input)
-		output, err := conn.CreateDirectory(input)
+		output, err := conn.CreateDirectoryWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("creating Directory Service %s Directory (%s): %w", directoryType, name, err)
+			return sdkdiag.AppendErrorf(diags, "creating Directory Service %s Directory (%s): %s", directoryType, name, err)
 		}
 
 		d.SetId(aws.StringValue(output.DirectoryId))
 	}
 
-	if _, err := waitDirectoryCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("waiting for Directory Service Directory (%s) create: %w", d.Id(), err)
+	if _, err := waitDirectoryCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Directory Service Directory (%s) create: %s", d.Id(), err)
 	}
 
 	if v, ok := d.GetOk("alias"); ok {
-		if err := createAlias(conn, d.Id(), v.(string)); err != nil {
-			return err
+		if err := createAlias(ctx, conn, d.Id(), v.(string)); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
 	if v, ok := d.GetOk("desired_number_of_domain_controllers"); ok {
-		if err := updateNumberOfDomainControllers(conn, d.Id(), v.(int), d.Timeout(schema.TimeoutCreate)); err != nil {
-			return err
+		if err := updateNumberOfDomainControllers(ctx, conn, d.Id(), v.(int), d.Timeout(schema.TimeoutCreate)); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
 	if _, ok := d.GetOk("enable_sso"); ok {
-		if err := enableSSO(conn, d.Id()); err != nil {
-			return err
+		if err := enableSSO(ctx, conn, d.Id()); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
-	return resourceDirectoryRead(d, meta)
+	return append(diags, resourceDirectoryRead(ctx, d, meta)...)
 }
 
-func resourceDirectoryRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DSConn
+func resourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	dir, err := FindDirectoryByID(conn, d.Id())
+	dir, err := FindDirectoryByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Directory Service Directory (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading Directory Service Directory (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Directory Service Directory (%s): %s", d.Id(), err)
 	}
 
 	d.Set("access_url", dir.AccessUrl)
 	d.Set("alias", dir.Alias)
 	if dir.ConnectSettings != nil {
 		if err := d.Set("connect_settings", []interface{}{flattenDirectoryConnectSettingsDescription(dir.ConnectSettings, dir.DnsIpAddrs)}); err != nil {
-			return fmt.Errorf("setting connect_settings: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting connect_settings: %s", err)
 		}
 	} else {
 		d.Set("connect_settings", nil)
@@ -372,49 +374,50 @@ func resourceDirectoryRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("type", dir.Type)
 	if dir.VpcSettings != nil {
 		if err := d.Set("vpc_settings", []interface{}{flattenDirectoryVpcSettingsDescription(dir.VpcSettings)}); err != nil {
-			return fmt.Errorf("setting vpc_settings: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting vpc_settings: %s", err)
 		}
 	} else {
 		d.Set("vpc_settings", nil)
 	}
 
-	tags, err := ListTags(conn, d.Id())
+	tags, err := ListTags(ctx, conn, d.Id())
 
 	if err != nil {
-		return fmt.Errorf("listing tags for Directory Service Directory (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for Directory Service Directory (%s): %s", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceDirectoryUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DSConn
+func resourceDirectoryUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DSConn()
 
 	if d.HasChange("desired_number_of_domain_controllers") {
-		if err := updateNumberOfDomainControllers(conn, d.Id(), d.Get("desired_number_of_domain_controllers").(int), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return err
+		if err := updateNumberOfDomainControllers(ctx, conn, d.Id(), d.Get("desired_number_of_domain_controllers").(int), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
 	if d.HasChange("enable_sso") {
 		if _, ok := d.GetOk("enable_sso"); ok {
-			if err := enableSSO(conn, d.Id()); err != nil {
-				return err
+			if err := enableSSO(ctx, conn, d.Id()); err != nil {
+				return sdkdiag.AppendFromErr(diags, err)
 			}
 		} else {
-			if err := disableSSO(conn, d.Id()); err != nil {
-				return err
+			if err := disableSSO(ctx, conn, d.Id()); err != nil {
+				return sdkdiag.AppendFromErr(diags, err)
 			}
 		}
 	}
@@ -422,46 +425,47 @@ func resourceDirectoryUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("updating Directory Service Directory (%s) tags: %w", d.Id(), err)
+		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Directory Service Directory (%s) tags: %s", d.Id(), err)
 		}
 	}
 
-	return resourceDirectoryRead(d, meta)
+	return append(diags, resourceDirectoryRead(ctx, d, meta)...)
 }
 
-func resourceDirectoryDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DSConn
+func resourceDirectoryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DSConn()
 
 	log.Printf("[DEBUG] Deleting Directory Service Directory: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrMessageContains(directoryApplicationDeauthorizedPropagationTimeout, func() (interface{}, error) {
-		return conn.DeleteDirectory(&directoryservice.DeleteDirectoryInput{
+	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, directoryApplicationDeauthorizedPropagationTimeout, func() (interface{}, error) {
+		return conn.DeleteDirectoryWithContext(ctx, &directoryservice.DeleteDirectoryInput{
 			DirectoryId: aws.String(d.Id()),
 		})
 	}, directoryservice.ErrCodeClientException, "authorized applications")
 
 	if tfawserr.ErrCodeEquals(err, directoryservice.ErrCodeEntityDoesNotExistException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("deleting Directory Service Directory (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Directory Service Directory (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitDirectoryDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("waiting for Directory Service Directory (%s) delete: %w", d.Id(), err)
+	if _, err := waitDirectoryDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Directory Service Directory (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func createAlias(conn *directoryservice.DirectoryService, directoryID, alias string) error {
+func createAlias(ctx context.Context, conn *directoryservice.DirectoryService, directoryID, alias string) error {
 	input := &directoryservice.CreateAliasInput{
 		Alias:       aws.String(alias),
 		DirectoryId: aws.String(directoryID),
 	}
 
-	_, err := conn.CreateAlias(input)
+	_, err := conn.CreateAliasWithContext(ctx, input)
 
 	if err != nil {
 		return fmt.Errorf("creating Directory Service Directory (%s) alias (%s): %w", directoryID, alias, err)
@@ -470,12 +474,12 @@ func createAlias(conn *directoryservice.DirectoryService, directoryID, alias str
 	return nil
 }
 
-func disableSSO(conn *directoryservice.DirectoryService, directoryID string) error {
+func disableSSO(ctx context.Context, conn *directoryservice.DirectoryService, directoryID string) error {
 	input := &directoryservice.DisableSsoInput{
 		DirectoryId: aws.String(directoryID),
 	}
 
-	_, err := conn.DisableSso(input)
+	_, err := conn.DisableSsoWithContext(ctx, input)
 
 	if err != nil {
 		return fmt.Errorf("disabling Directory Service Directory (%s) SSO: %w", directoryID, err)
@@ -484,12 +488,12 @@ func disableSSO(conn *directoryservice.DirectoryService, directoryID string) err
 	return nil
 }
 
-func enableSSO(conn *directoryservice.DirectoryService, directoryID string) error {
+func enableSSO(ctx context.Context, conn *directoryservice.DirectoryService, directoryID string) error {
 	input := &directoryservice.EnableSsoInput{
 		DirectoryId: aws.String(directoryID),
 	}
 
-	_, err := conn.EnableSso(input)
+	_, err := conn.EnableSsoWithContext(ctx, input)
 
 	if err != nil {
 		return fmt.Errorf("enabling Directory Service Directory (%s) SSO: %w", directoryID, err)
@@ -498,8 +502,8 @@ func enableSSO(conn *directoryservice.DirectoryService, directoryID string) erro
 	return nil
 }
 
-func updateNumberOfDomainControllers(conn *directoryservice.DirectoryService, directoryID string, desiredNumber int, timeout time.Duration) error {
-	oldDomainControllers, err := FindDomainControllers(conn, &directoryservice.DescribeDomainControllersInput{
+func updateNumberOfDomainControllers(ctx context.Context, conn *directoryservice.DirectoryService, directoryID string, desiredNumber int, timeout time.Duration) error {
+	oldDomainControllers, err := FindDomainControllers(ctx, conn, &directoryservice.DescribeDomainControllersInput{
 		DirectoryId: aws.String(directoryID),
 	})
 
@@ -512,13 +516,13 @@ func updateNumberOfDomainControllers(conn *directoryservice.DirectoryService, di
 		DirectoryId:   aws.String(directoryID),
 	}
 
-	_, err = conn.UpdateNumberOfDomainControllers(input)
+	_, err = conn.UpdateNumberOfDomainControllersWithContext(ctx, input)
 
 	if err != nil {
 		return fmt.Errorf("updating Directory Service Directory (%s) number of domain controllers (%d): %w", directoryID, desiredNumber, err)
 	}
 
-	newDomainControllers, err := FindDomainControllers(conn, &directoryservice.DescribeDomainControllersInput{
+	newDomainControllers, err := FindDomainControllers(ctx, conn, &directoryservice.DescribeDomainControllersInput{
 		DirectoryId: aws.String(directoryID),
 	})
 
@@ -549,11 +553,11 @@ func updateNumberOfDomainControllers(conn *directoryservice.DirectoryService, di
 
 	for _, v := range wait {
 		if len(newDomainControllers) > len(oldDomainControllers) {
-			if _, err = waitDomainControllerCreated(conn, directoryID, v, timeout); err != nil {
+			if _, err = waitDomainControllerCreated(ctx, conn, directoryID, v, timeout); err != nil {
 				return fmt.Errorf("waiting for Directory Service Directory (%s) Domain Controller (%s) create: %w", directoryID, v, err)
 			}
 		} else {
-			if _, err := waitDomainControllerDeleted(conn, directoryID, v, timeout); err != nil {
+			if _, err := waitDomainControllerDeleted(ctx, conn, directoryID, v, timeout); err != nil {
 				return fmt.Errorf("waiting for Directory Service Directory (%s) Domain Controller (%s) delete: %w", directoryID, v, err)
 			}
 		}

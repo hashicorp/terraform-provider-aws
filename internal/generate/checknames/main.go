@@ -107,15 +107,15 @@ func main() {
 			}
 		}
 
-		if l[names.ColSDKVersion] != "1" && l[names.ColSDKVersion] != "2" && l[names.ColExclude] == "" {
-			log.Fatalf("in names_data.csv, for service %s, SDKVersion must have a value if Exclude is blank", l[names.ColHumanFriendly])
+		if l[names.ColClientSDKV1] == "" && l[names.ColClientSDKV2] == "" && l[names.ColExclude] == "" {
+			log.Fatalf("in names_data.csv, for service %s, at least one of ClientSDKV1 or ClientSDKV2 must have a value if Exclude is blank", l[names.ColHumanFriendly])
 		}
 
-		if l[names.ColSDKVersion] == "1" && (l[names.ColGoV1Package] == "" || l[names.ColGoV1ClientTypeName] == "") {
+		if l[names.ColClientSDKV1] != "" && (l[names.ColGoV1Package] == "" || l[names.ColGoV1ClientTypeName] == "") {
 			log.Fatalf("in names_data.csv, for service %s, SDKVersion is set to 1 so neither GoV1Package nor GoV1ClientTypeName can be blank", l[names.ColHumanFriendly])
 		}
 
-		if l[names.ColSDKVersion] == "2" && l[names.ColGoV2Package] == "" {
+		if l[names.ColClientSDKV2] != "" && l[names.ColGoV2Package] == "" {
 			log.Fatalf("in names_data.csv, for service %s, SDKVersion is set to 2 so GoV2Package cannot be blank", l[names.ColHumanFriendly])
 		}
 

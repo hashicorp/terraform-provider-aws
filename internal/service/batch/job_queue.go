@@ -1,6 +1,7 @@
 package batch
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"sort"
@@ -8,23 +9,25 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/batch"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceJobQueue() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceJobQueueCreate,
-		Read:   resourceJobQueueRead,
-		Update: resourceJobQueueUpdate,
-		Delete: resourceJobQueueDelete,
+		CreateWithoutTimeout: resourceJobQueueCreate,
+		ReadWithoutTimeout:   resourceJobQueueRead,
+		UpdateWithoutTimeout: resourceJobQueueUpdate,
+		DeleteWithoutTimeout: resourceJobQueueDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				d.Set("arn", d.Id())
 				return []*schema.ResourceData{d}, nil
 			},
@@ -68,8 +71,9 @@ func ResourceJobQueue() *schema.Resource {
 	}
 }
 
-func resourceJobQueueCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BatchConn
+func resourceJobQueueCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).BatchConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 	input := batch.CreateJobQueueInput{
@@ -88,45 +92,46 @@ func resourceJobQueueCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	name := d.Get("name").(string)
-	out, err := conn.CreateJobQueue(&input)
+	out, err := conn.CreateJobQueueWithContext(ctx, &input)
 	if err != nil {
-		return fmt.Errorf("%s %q", err, name)
+		return sdkdiag.AppendErrorf(diags, "%s %q", err, name)
 	}
 
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{batch.JQStatusCreating, batch.JQStatusUpdating},
 		Target:     []string{batch.JQStatusValid},
-		Refresh:    jobQueueRefreshStatusFunc(conn, name),
+		Refresh:    jobQueueRefreshStatusFunc(ctx, conn, name),
 		Timeout:    10 * time.Minute,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
 
-	_, err = stateConf.WaitForState()
+	_, err = stateConf.WaitForStateContext(ctx)
 	if err != nil {
-		return fmt.Errorf("Error waiting for JobQueue state to be \"VALID\": %s", err)
+		return sdkdiag.AppendErrorf(diags, "Error waiting for JobQueue state to be \"VALID\": %s", err)
 	}
 
 	arn := aws.StringValue(out.JobQueueArn)
 	log.Printf("[DEBUG] JobQueue created: %s", arn)
 	d.SetId(arn)
 
-	return resourceJobQueueRead(d, meta)
+	return append(diags, resourceJobQueueRead(ctx, d, meta)...)
 }
 
-func resourceJobQueueRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BatchConn
+func resourceJobQueueRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).BatchConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	jq, err := GetJobQueue(conn, d.Id())
+	jq, err := GetJobQueue(ctx, conn, d.Id())
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading Batch Job Queue (%s): %s", d.Get("name").(string), err)
 	}
 	if jq == nil {
 		log.Printf("[WARN] Batch Job Queue (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	d.Set("arn", jq.JobQueueArn)
@@ -142,7 +147,7 @@ func resourceJobQueueRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err := d.Set("compute_environments", computeEnvironments); err != nil {
-		return fmt.Errorf("error setting compute_environments: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting compute_environments: %s", err)
 	}
 
 	d.Set("name", jq.JobQueueName)
@@ -154,18 +159,19 @@ func resourceJobQueueRead(d *schema.ResourceData, meta interface{}) error {
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceJobQueueUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BatchConn
+func resourceJobQueueUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).BatchConn()
 
 	if d.HasChanges("compute_environments", "priority", "scheduling_policy_arn", "state") {
 		name := d.Get("name").(string)
@@ -181,7 +187,7 @@ func resourceJobQueueUpdate(d *schema.ResourceData, meta interface{}) error {
 			if v, ok := d.GetOk("scheduling_policy_arn"); ok {
 				updateInput.SchedulingPolicyArn = aws.String(v.(string))
 			} else {
-				return fmt.Errorf("Cannot remove the fair share scheduling policy")
+				return sdkdiag.AppendErrorf(diags, "Cannot remove the fair share scheduling policy")
 			}
 		} else {
 			// if a queue is a FIFO queue, SchedulingPolicyArn should not be set. Error is "Only fairshare queue can have scheduling policy"
@@ -191,53 +197,54 @@ func resourceJobQueueUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 
-		_, err := conn.UpdateJobQueue(updateInput)
+		_, err := conn.UpdateJobQueueWithContext(ctx, updateInput)
 		if err != nil {
-			return err
+			return sdkdiag.AppendErrorf(diags, "updating Batch Job Queue (%s): %s", d.Get("name").(string), err)
 		}
 		stateConf := &resource.StateChangeConf{
 			Pending:    []string{batch.JQStatusUpdating},
 			Target:     []string{batch.JQStatusValid},
-			Refresh:    jobQueueRefreshStatusFunc(conn, name),
+			Refresh:    jobQueueRefreshStatusFunc(ctx, conn, name),
 			Timeout:    10 * time.Minute,
 			Delay:      10 * time.Second,
 			MinTimeout: 3 * time.Second,
 		}
 
-		_, err = stateConf.WaitForState()
+		_, err = stateConf.WaitForStateContext(ctx)
 		if err != nil {
-			return err
+			return sdkdiag.AppendErrorf(diags, "updating Batch Job Queue (%s): waiting for completion: %s", d.Get("name").(string), err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %s", err)
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
 		}
 	}
 
-	return resourceJobQueueRead(d, meta)
+	return append(diags, resourceJobQueueRead(ctx, d, meta)...)
 }
 
-func resourceJobQueueDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BatchConn
+func resourceJobQueueDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).BatchConn()
 	name := d.Get("name").(string)
 
-	log.Printf("[DEBUG] Disabling Batch Job Queue %s", name)
-	err := DisableJobQueue(name, conn)
+	log.Printf("[DEBUG] Disabling Batch Job Queue: %s", name)
+	err := DisableJobQueue(ctx, name, conn)
 	if err != nil {
-		return fmt.Errorf("error disabling Batch Job Queue (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "disabling Batch Job Queue (%s): %s", name, err)
 	}
 
-	log.Printf("[DEBUG] Deleting Batch Job Queue %s", name)
-	err = DeleteJobQueue(name, conn)
+	log.Printf("[DEBUG] Deleting Batch Job Queue: %s", name)
+	err = DeleteJobQueue(ctx, name, conn)
 	if err != nil {
-		return fmt.Errorf("error deleting Batch Job Queue (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "deleting Batch Job Queue (%s): %s", name, err)
 	}
 
-	return nil
+	return diags
 }
 
 func createComputeEnvironmentOrder(order []interface{}) (envs []*batch.ComputeEnvironmentOrder) {
@@ -250,8 +257,8 @@ func createComputeEnvironmentOrder(order []interface{}) (envs []*batch.ComputeEn
 	return
 }
 
-func DeleteJobQueue(jobQueue string, conn *batch.Batch) error {
-	_, err := conn.DeleteJobQueue(&batch.DeleteJobQueueInput{
+func DeleteJobQueue(ctx context.Context, jobQueue string, conn *batch.Batch) error {
+	_, err := conn.DeleteJobQueueWithContext(ctx, &batch.DeleteJobQueueInput{
 		JobQueue: aws.String(jobQueue),
 	})
 	if err != nil {
@@ -261,18 +268,18 @@ func DeleteJobQueue(jobQueue string, conn *batch.Batch) error {
 	stateChangeConf := &resource.StateChangeConf{
 		Pending:    []string{batch.JQStateDisabled, batch.JQStatusDeleting},
 		Target:     []string{batch.JQStatusDeleted},
-		Refresh:    jobQueueRefreshStatusFunc(conn, jobQueue),
+		Refresh:    jobQueueRefreshStatusFunc(ctx, conn, jobQueue),
 		Timeout:    10 * time.Minute,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
 
-	_, err = stateChangeConf.WaitForState()
+	_, err = stateChangeConf.WaitForStateContext(ctx)
 	return err
 }
 
-func DisableJobQueue(jobQueue string, conn *batch.Batch) error {
-	_, err := conn.UpdateJobQueue(&batch.UpdateJobQueueInput{
+func DisableJobQueue(ctx context.Context, jobQueue string, conn *batch.Batch) error {
+	_, err := conn.UpdateJobQueueWithContext(ctx, &batch.UpdateJobQueueInput{
 		JobQueue: aws.String(jobQueue),
 		State:    aws.String(batch.JQStateDisabled),
 	})
@@ -283,20 +290,20 @@ func DisableJobQueue(jobQueue string, conn *batch.Batch) error {
 	stateChangeConf := &resource.StateChangeConf{
 		Pending:    []string{batch.JQStatusUpdating},
 		Target:     []string{batch.JQStatusValid},
-		Refresh:    jobQueueRefreshStatusFunc(conn, jobQueue),
+		Refresh:    jobQueueRefreshStatusFunc(ctx, conn, jobQueue),
 		Timeout:    10 * time.Minute,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
-	_, err = stateChangeConf.WaitForState()
+	_, err = stateChangeConf.WaitForStateContext(ctx)
 	return err
 }
 
-func GetJobQueue(conn *batch.Batch, sn string) (*batch.JobQueueDetail, error) {
+func GetJobQueue(ctx context.Context, conn *batch.Batch, sn string) (*batch.JobQueueDetail, error) {
 	describeOpts := &batch.DescribeJobQueuesInput{
 		JobQueues: []*string{aws.String(sn)},
 	}
-	resp, err := conn.DescribeJobQueues(describeOpts)
+	resp, err := conn.DescribeJobQueuesWithContext(ctx, describeOpts)
 	if err != nil {
 		return nil, err
 	}
@@ -304,7 +311,6 @@ func GetJobQueue(conn *batch.Batch, sn string) (*batch.JobQueueDetail, error) {
 	numJobQueues := len(resp.JobQueues)
 	switch {
 	case numJobQueues == 0:
-		log.Printf("[DEBUG] Job Queue %q is already gone", sn)
 		return nil, nil
 	case numJobQueues == 1:
 		return resp.JobQueues[0], nil
@@ -314,9 +320,9 @@ func GetJobQueue(conn *batch.Batch, sn string) (*batch.JobQueueDetail, error) {
 	return nil, nil
 }
 
-func jobQueueRefreshStatusFunc(conn *batch.Batch, sn string) resource.StateRefreshFunc {
+func jobQueueRefreshStatusFunc(ctx context.Context, conn *batch.Batch, sn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		ce, err := GetJobQueue(conn, sn)
+		ce, err := GetJobQueue(ctx, conn, sn)
 		if err != nil {
 			return nil, "failed", err
 		}

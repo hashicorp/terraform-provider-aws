@@ -2,6 +2,7 @@ package autoscaling
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"log"
 	"strconv"
@@ -10,23 +11,25 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourcePolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourcePolicyCreate,
-		Read:   resourcePolicyRead,
-		Update: resourcePolicyUpdate,
-		Delete: resourcePolicyDelete,
+		CreateWithoutTimeout: resourcePolicyCreate,
+		ReadWithoutTimeout:   resourcePolicyRead,
+		UpdateWithoutTimeout: resourcePolicyUpdate,
+		DeleteWithoutTimeout: resourcePolicyDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourcePolicyImport,
+			StateContext: resourcePolicyImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -412,41 +415,43 @@ func customizedMetricDataQuerySchema() *schema.Schema {
 	}
 }
 
-func resourcePolicyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AutoScalingConn
+func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AutoScalingConn()
 
 	name := d.Get("name").(string)
 	input, err := getPutScalingPolicyInput(d)
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "creating Auto Scaling Policy (%s): %s", name, err)
 	}
 
 	log.Printf("[DEBUG] Creating Auto Scaling Policy: %s", input)
-	_, err = conn.PutScalingPolicy(input)
+	_, err = conn.PutScalingPolicyWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("creating Auto Scaling Policy (%s): %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating Auto Scaling Policy (%s): %s", name, err)
 	}
 
 	d.SetId(name)
 
-	return resourcePolicyRead(d, meta)
+	return append(diags, resourcePolicyRead(ctx, d, meta)...)
 }
 
-func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AutoScalingConn
+func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AutoScalingConn()
 
-	p, err := FindScalingPolicy(conn, d.Get("autoscaling_group_name").(string), d.Id())
+	p, err := FindScalingPolicy(ctx, conn, d.Get("autoscaling_group_name").(string), d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Auto Scaling Policy %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading Auto Scaling Policy (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Auto Scaling Policy (%s): %s", d.Id(), err)
 	}
 
 	d.Set("adjustment_type", p.AdjustmentType)
@@ -458,64 +463,64 @@ func resourcePolicyRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("metric_aggregation_type", p.MetricAggregationType)
 	d.Set("name", p.PolicyName)
 	d.Set("policy_type", p.PolicyType)
-	if p.MinAdjustmentMagnitude != nil {
-		d.Set("min_adjustment_magnitude", p.MinAdjustmentMagnitude)
-	}
+	d.Set("min_adjustment_magnitude", p.MinAdjustmentMagnitude)
 
 	d.Set("scaling_adjustment", p.ScalingAdjustment)
 	if err := d.Set("predictive_scaling_configuration", flattenPredictiveScalingConfig(p.PredictiveScalingConfiguration)); err != nil {
-		return fmt.Errorf("error setting predictive_scaling_configuration: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting predictive_scaling_configuration: %s", err)
 	}
 	if err := d.Set("step_adjustment", FlattenStepAdjustments(p.StepAdjustments)); err != nil {
-		return fmt.Errorf("error setting step_adjustment: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting step_adjustment: %s", err)
 	}
 	if err := d.Set("target_tracking_configuration", flattenTargetTrackingConfiguration(p.TargetTrackingConfiguration)); err != nil {
-		return fmt.Errorf("error setting target_tracking_configuration: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting target_tracking_configuration: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourcePolicyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AutoScalingConn
+func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AutoScalingConn()
 
 	input, err := getPutScalingPolicyInput(d)
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "updating Auto Scaling Policy (%s): %s", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Updating Auto Scaling Policy: %s", input)
-	_, err = conn.PutScalingPolicy(input)
+	_, err = conn.PutScalingPolicyWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("updating Auto Scaling Policy (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating Auto Scaling Policy (%s): %s", d.Id(), err)
 	}
 
-	return resourcePolicyRead(d, meta)
+	return append(diags, resourcePolicyRead(ctx, d, meta)...)
 }
 
-func resourcePolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AutoScalingConn
+func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AutoScalingConn()
 
 	log.Printf("[INFO] Deleting Auto Scaling Policy: %s", d.Id())
-	_, err := conn.DeletePolicy(&autoscaling.DeletePolicyInput{
+	_, err := conn.DeletePolicyWithContext(ctx, &autoscaling.DeletePolicyInput{
 		AutoScalingGroupName: aws.String(d.Get("autoscaling_group_name").(string)),
 		PolicyName:           aws.String(d.Id()),
 	})
 
 	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not found") {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("deleting Auto Scaling Policy (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Auto Scaling Policy (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourcePolicyImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourcePolicyImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	idParts := strings.SplitN(d.Id(), "/", 2)
 	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
 		return nil, fmt.Errorf("unexpected format (%q), expected <asg-name>/<policy-name>", d.Id())
@@ -531,14 +536,14 @@ func resourcePolicyImport(d *schema.ResourceData, meta interface{}) ([]*schema.R
 	return []*schema.ResourceData{d}, nil
 }
 
-func FindScalingPolicy(conn *autoscaling.AutoScaling, asgName, policyName string) (*autoscaling.ScalingPolicy, error) {
+func FindScalingPolicy(ctx context.Context, conn *autoscaling.AutoScaling, asgName, policyName string) (*autoscaling.ScalingPolicy, error) {
 	input := &autoscaling.DescribePoliciesInput{
 		AutoScalingGroupName: aws.String(asgName),
 		PolicyNames:          aws.StringSlice([]string{policyName}),
 	}
 	var output []*autoscaling.ScalingPolicy
 
-	err := conn.DescribePoliciesPages(input, func(page *autoscaling.DescribePoliciesOutput, lastPage bool) bool {
+	err := conn.DescribePoliciesPagesWithContext(ctx, input, func(page *autoscaling.DescribePoliciesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -847,7 +852,6 @@ func expandMetricDataQueries(metricDataQuerySlices []interface{}) []*autoscaling
 	metricDataQueries := make([]*autoscaling.MetricDataQuery, len(metricDataQuerySlices))
 
 	for i := range metricDataQueries {
-
 		metricDataQueryFlat := metricDataQuerySlices[i].(map[string]interface{})
 		metricDataQuery := &autoscaling.MetricDataQuery{
 			Id: aws.String(metricDataQueryFlat["id"].(string)),

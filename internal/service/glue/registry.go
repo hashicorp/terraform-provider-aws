@@ -1,28 +1,30 @@
 package glue
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceRegistry() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceRegistryCreate,
-		Read:   resourceRegistryRead,
-		Update: resourceRegistryUpdate,
-		Delete: resourceRegistryDelete,
+		CreateWithoutTimeout: resourceRegistryCreate,
+		ReadWithoutTimeout:   resourceRegistryRead,
+		UpdateWithoutTimeout: resourceRegistryUpdate,
+		DeleteWithoutTimeout: resourceRegistryDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -52,8 +54,9 @@ func ResourceRegistry() *schema.Resource {
 	}
 }
 
-func resourceRegistryCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+func resourceRegistryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlueConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -67,34 +70,35 @@ func resourceRegistryCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Creating Glue Registry: %s", input)
-	output, err := conn.CreateRegistry(input)
+	output, err := conn.CreateRegistryWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("error creating Glue Registry: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating Glue Registry: %s", err)
 	}
 	d.SetId(aws.StringValue(output.RegistryArn))
 
-	return resourceRegistryRead(d, meta)
+	return append(diags, resourceRegistryRead(ctx, d, meta)...)
 }
 
-func resourceRegistryRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+func resourceRegistryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlueConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	output, err := FindRegistryByID(conn, d.Id())
+	output, err := FindRegistryByID(ctx, conn, d.Id())
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 			log.Printf("[WARN] Glue Registry (%s) not found, removing from state", d.Id())
 			d.SetId("")
-			return nil
+			return diags
 		}
-		return fmt.Errorf("error reading Glue Registry (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Glue Registry (%s): %s", d.Id(), err)
 	}
 
 	if output == nil {
 		log.Printf("[WARN] Glue Registry (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	arn := aws.StringValue(output.RegistryArn)
@@ -102,28 +106,29 @@ func resourceRegistryRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("description", output.Description)
 	d.Set("registry_name", output.RegistryName)
 
-	tags, err := ListTags(conn, arn)
+	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for Glue Registry (%s): %w", arn, err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for Glue Registry (%s): %s", arn, err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceRegistryUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+func resourceRegistryUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlueConn()
 
 	if d.HasChanges("description") {
 		input := &glue.UpdateRegistryInput{
@@ -135,45 +140,46 @@ func resourceRegistryUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		log.Printf("[DEBUG] Updating Glue Registry: %#v", input)
-		_, err := conn.UpdateRegistry(input)
+		_, err := conn.UpdateRegistryWithContext(ctx, input)
 		if err != nil {
-			return fmt.Errorf("error updating Glue Registry (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Glue Registry (%s): %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %s", err)
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
 		}
 	}
 
-	return resourceRegistryRead(d, meta)
+	return append(diags, resourceRegistryRead(ctx, d, meta)...)
 }
 
-func resourceRegistryDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+func resourceRegistryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlueConn()
 
 	log.Printf("[DEBUG] Deleting Glue Registry: %s", d.Id())
 	input := &glue.DeleteRegistryInput{
 		RegistryId: createRegistryID(d.Id()),
 	}
 
-	_, err := conn.DeleteRegistry(input)
+	_, err := conn.DeleteRegistryWithContext(ctx, input)
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
-			return nil
+			return diags
 		}
-		return fmt.Errorf("error deleting Glue Registry (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Glue Registry (%s): %s", d.Id(), err)
 	}
 
-	_, err = waitRegistryDeleted(conn, d.Id())
+	_, err = waitRegistryDeleted(ctx, conn, d.Id())
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
-			return nil
+			return diags
 		}
-		return fmt.Errorf("error waiting for Glue Registry (%s) to be deleted: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Glue Registry (%s) to be deleted: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

@@ -1,6 +1,7 @@
 package autoscaling
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -9,9 +10,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -19,13 +22,13 @@ const ScheduleTimeLayout = "2006-01-02T15:04:05Z"
 
 func ResourceSchedule() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceSchedulePut,
-		Read:   resourceScheduleRead,
-		Update: resourceSchedulePut,
-		Delete: resourceScheduleDelete,
+		CreateWithoutTimeout: resourceSchedulePut,
+		ReadWithoutTimeout:   resourceScheduleRead,
+		UpdateWithoutTimeout: resourceSchedulePut,
+		DeleteWithoutTimeout: resourceScheduleDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: resourceScheduleImport,
+			StateContext: resourceScheduleImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -84,8 +87,9 @@ func ResourceSchedule() *schema.Resource {
 	}
 }
 
-func resourceSchedulePut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AutoScalingConn
+func resourceSchedulePut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AutoScalingConn()
 
 	name := d.Get("scheduled_action_name").(string)
 	input := &autoscaling.PutScheduledUpdateGroupActionInput{
@@ -133,30 +137,31 @@ func resourceSchedulePut(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[INFO] Putting Auto Scaling Scheduled Action: %s", input)
-	_, err := conn.PutScheduledUpdateGroupAction(input)
+	_, err := conn.PutScheduledUpdateGroupActionWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("creating Auto Scaling Scheduled Action (%s): %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating Auto Scaling Scheduled Action (%s): %s", name, err)
 	}
 
 	d.SetId(name)
 
-	return resourceScheduleRead(d, meta)
+	return append(diags, resourceScheduleRead(ctx, d, meta)...)
 }
 
-func resourceScheduleRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AutoScalingConn
+func resourceScheduleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AutoScalingConn()
 
-	sa, err := FindScheduledUpdateGroupAction(conn, d.Get("autoscaling_group_name").(string), d.Id())
+	sa, err := FindScheduledUpdateGroupAction(ctx, conn, d.Get("autoscaling_group_name").(string), d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Auto Scaling Scheduled Action %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading Auto Scaling Scheduled Action (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Auto Scaling Scheduled Action (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", sa.ScheduledActionARN)
@@ -183,34 +188,33 @@ func resourceScheduleRead(d *schema.ResourceData, meta interface{}) error {
 	if sa.StartTime != nil {
 		d.Set("start_time", sa.StartTime.Format(ScheduleTimeLayout))
 	}
-	if sa.TimeZone != nil {
-		d.Set("time_zone", sa.TimeZone)
-	}
+	d.Set("time_zone", sa.TimeZone)
 
-	return nil
+	return diags
 }
 
-func resourceScheduleDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AutoScalingConn
+func resourceScheduleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AutoScalingConn()
 
 	log.Printf("[INFO] Deleting Auto Scaling Scheduled Action: %s", d.Id())
-	_, err := conn.DeleteScheduledAction(&autoscaling.DeleteScheduledActionInput{
+	_, err := conn.DeleteScheduledActionWithContext(ctx, &autoscaling.DeleteScheduledActionInput{
 		AutoScalingGroupName: aws.String(d.Get("autoscaling_group_name").(string)),
 		ScheduledActionName:  aws.String(d.Id()),
 	})
 
 	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not found") {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("deleting Auto Scaling Scheduled Action (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Auto Scaling Scheduled Action (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceScheduleImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceScheduleImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	splitId := strings.Split(d.Id(), "/")
 	if len(splitId) != 2 {
 		return []*schema.ResourceData{}, fmt.Errorf("wrong format of import ID (%s), use: 'asg-name/action-name'", d.Id())
@@ -231,14 +235,14 @@ func resourceScheduleImport(d *schema.ResourceData, meta interface{}) ([]*schema
 	return []*schema.ResourceData{d}, nil
 }
 
-func FindScheduledUpdateGroupAction(conn *autoscaling.AutoScaling, asgName, actionName string) (*autoscaling.ScheduledUpdateGroupAction, error) {
+func FindScheduledUpdateGroupAction(ctx context.Context, conn *autoscaling.AutoScaling, asgName, actionName string) (*autoscaling.ScheduledUpdateGroupAction, error) {
 	input := &autoscaling.DescribeScheduledActionsInput{
 		AutoScalingGroupName: aws.String(asgName),
 		ScheduledActionNames: aws.StringSlice([]string{actionName}),
 	}
 	var output []*autoscaling.ScheduledUpdateGroupAction
 
-	err := conn.DescribeScheduledActionsPages(input, func(page *autoscaling.DescribeScheduledActionsOutput, lastPage bool) bool {
+	err := conn.DescribeScheduledActionsPagesWithContext(ctx, input, func(page *autoscaling.DescribeScheduledActionsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}

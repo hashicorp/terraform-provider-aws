@@ -1,18 +1,20 @@
 package workspaces
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/workspaces"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceWorkspace() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceWorkspaceRead,
+		ReadWithoutTimeout: dataSourceWorkspaceRead,
 
 		Schema: map[string]*schema.Schema{
 			"bundle_id": {
@@ -96,49 +98,50 @@ func DataSourceWorkspace() *schema.Resource {
 	}
 }
 
-func dataSourceWorkspaceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WorkSpacesConn
+func dataSourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).WorkSpacesConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	var workspace *workspaces.Workspace
 
 	if workspaceID, ok := d.GetOk("workspace_id"); ok {
-		resp, err := conn.DescribeWorkspaces(&workspaces.DescribeWorkspacesInput{
+		resp, err := conn.DescribeWorkspacesWithContext(ctx, &workspaces.DescribeWorkspacesInput{
 			WorkspaceIds: aws.StringSlice([]string{workspaceID.(string)}),
 		})
 		if err != nil {
-			return err
+			return sdkdiag.AppendErrorf(diags, "reading WorkSpaces Workspace (%s): %s", workspaceID, err)
 		}
 
 		if len(resp.Workspaces) != 1 {
-			return fmt.Errorf("expected 1 result for WorkSpace  %q, found %d", workspaceID, len(resp.Workspaces))
+			return sdkdiag.AppendErrorf(diags, "expected 1 result for WorkSpaces Workspace (%s), found %d", workspaceID, len(resp.Workspaces))
 		}
 
 		workspace = resp.Workspaces[0]
 
 		if workspace == nil {
-			return fmt.Errorf("no WorkSpace with ID %q found", workspaceID)
+			return sdkdiag.AppendErrorf(diags, "no WorkSpaces Workspace with ID %q found", workspaceID)
 		}
 	}
 
 	if directoryID, ok := d.GetOk("directory_id"); ok {
 		userName := d.Get("user_name").(string)
-		resp, err := conn.DescribeWorkspaces(&workspaces.DescribeWorkspacesInput{
+		resp, err := conn.DescribeWorkspacesWithContext(ctx, &workspaces.DescribeWorkspacesInput{
 			DirectoryId: aws.String(directoryID.(string)),
 			UserName:    aws.String(userName),
 		})
 		if err != nil {
-			return err
+			return sdkdiag.AppendErrorf(diags, "reading WorkSpaces Workspace (%s:%s): %s", directoryID, userName, err)
 		}
 
 		if len(resp.Workspaces) != 1 {
-			return fmt.Errorf("expected 1 result for %q WorkSpace in %q directory, found %d", userName, directoryID, len(resp.Workspaces))
+			return sdkdiag.AppendErrorf(diags, "expected 1 result for %q Workspace in %q directory, found %d", userName, directoryID, len(resp.Workspaces))
 		}
 
 		workspace = resp.Workspaces[0]
 
 		if workspace == nil {
-			return fmt.Errorf("no %q WorkSpace in %q directory found", userName, directoryID)
+			return sdkdiag.AppendErrorf(diags, "no %q Workspace in %q directory found", userName, directoryID)
 		}
 	}
 
@@ -153,17 +156,17 @@ func dataSourceWorkspaceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("user_volume_encryption_enabled", workspace.UserVolumeEncryptionEnabled)
 	d.Set("volume_encryption_key", workspace.VolumeEncryptionKey)
 	if err := d.Set("workspace_properties", FlattenWorkspaceProperties(workspace.WorkspaceProperties)); err != nil {
-		return fmt.Errorf("error setting workspace properties: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting workspace properties: %s", err)
 	}
 
-	tags, err := ListTags(conn, d.Id())
+	tags, err := ListTags(ctx, conn, d.Id())
 	if err != nil {
-		return fmt.Errorf("error listing tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "listing tags: %s", err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

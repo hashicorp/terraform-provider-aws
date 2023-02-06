@@ -1,21 +1,24 @@
 package iot
 
 import (
+	"context"
 	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iot"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func ResourcePolicyAttachment() *schema.Resource {
 	return &schema.Resource{
-		Create: resourcePolicyAttachmentCreate,
-		Read:   resourcePolicyAttachmentRead,
-		Delete: resourcePolicyAttachmentDelete,
+		CreateWithoutTimeout: resourcePolicyAttachmentCreate,
+		ReadWithoutTimeout:   resourcePolicyAttachmentRead,
+		DeleteWithoutTimeout: resourcePolicyAttachmentDelete,
 		Schema: map[string]*schema.Schema{
 			"policy": {
 				Type:     schema.TypeString,
@@ -31,29 +34,30 @@ func ResourcePolicyAttachment() *schema.Resource {
 	}
 }
 
-func resourcePolicyAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
+func resourcePolicyAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IoTConn()
 
 	policyName := d.Get("policy").(string)
 	target := d.Get("target").(string)
 
-	_, err := conn.AttachPolicy(&iot.AttachPolicyInput{
+	_, err := conn.AttachPolicyWithContext(ctx, &iot.AttachPolicyInput{
 		PolicyName: aws.String(policyName),
 		Target:     aws.String(target),
 	})
 
 	if err != nil {
-		return fmt.Errorf("error attaching policy %s to target %s: %s", policyName, target, err)
+		return sdkdiag.AppendErrorf(diags, "attaching policy %s to target %s: %s", policyName, target, err)
 	}
 
 	d.SetId(fmt.Sprintf("%s|%s", policyName, target))
-	return resourcePolicyAttachmentRead(d, meta)
+	return append(diags, resourcePolicyAttachmentRead(ctx, d, meta)...)
 }
 
-func ListPolicyAttachmentPages(conn *iot.IoT, input *iot.ListAttachedPoliciesInput,
+func ListPolicyAttachmentPages(ctx context.Context, conn *iot.IoT, input *iot.ListAttachedPoliciesInput,
 	fn func(out *iot.ListAttachedPoliciesOutput, lastPage bool) bool) error {
 	for {
-		page, err := conn.ListAttachedPolicies(input)
+		page, err := conn.ListAttachedPoliciesWithContext(ctx, input)
 		if err != nil {
 			return err
 		}
@@ -68,7 +72,7 @@ func ListPolicyAttachmentPages(conn *iot.IoT, input *iot.ListAttachedPoliciesInp
 	return nil
 }
 
-func GetPolicyAttachment(conn *iot.IoT, target, policyName string) (*iot.Policy, error) {
+func GetPolicyAttachment(ctx context.Context, conn *iot.IoT, target, policyName string) (*iot.Policy, error) {
 	var policy *iot.Policy
 
 	input := &iot.ListAttachedPoliciesInput{
@@ -77,7 +81,7 @@ func GetPolicyAttachment(conn *iot.IoT, target, policyName string) (*iot.Policy,
 		Target:    aws.String(target),
 	}
 
-	err := ListPolicyAttachmentPages(conn, input, func(out *iot.ListAttachedPoliciesOutput, lastPage bool) bool {
+	err := ListPolicyAttachmentPages(ctx, conn, input, func(out *iot.ListAttachedPoliciesOutput, lastPage bool) bool {
 		for _, att := range out.Policies {
 			if policyName == aws.StringValue(att.PolicyName) {
 				policy = att
@@ -90,36 +94,38 @@ func GetPolicyAttachment(conn *iot.IoT, target, policyName string) (*iot.Policy,
 	return policy, err
 }
 
-func resourcePolicyAttachmentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
+func resourcePolicyAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IoTConn()
 
 	policyName := d.Get("policy").(string)
 	target := d.Get("target").(string)
 
 	var policy *iot.Policy
 
-	policy, err := GetPolicyAttachment(conn, target, policyName)
+	policy, err := GetPolicyAttachment(ctx, conn, target, policyName)
 
 	if err != nil {
-		return fmt.Errorf("error listing policy attachments for target %s: %s", target, err)
+		return sdkdiag.AppendErrorf(diags, "listing policy attachments for target %s: %s", target, err)
 	}
 
 	if policy == nil {
 		log.Printf("[WARN] IOT Policy Attachment (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
-	return nil
+	return diags
 }
 
-func resourcePolicyAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
+func resourcePolicyAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IoTConn()
 
 	policyName := d.Get("policy").(string)
 	target := d.Get("target").(string)
 
-	_, err := conn.DetachPolicy(&iot.DetachPolicyInput{
+	_, err := conn.DetachPolicyWithContext(ctx, &iot.DetachPolicyInput{
 		PolicyName: aws.String(policyName),
 		Target:     aws.String(target),
 	})
@@ -128,12 +134,12 @@ func resourcePolicyAttachmentDelete(d *schema.ResourceData, meta interface{}) er
 	// but it returns an error if the Target is not found.
 	if tfawserr.ErrMessageContains(err, iot.ErrCodeInvalidRequestException, "Invalid Target") {
 		log.Printf("[WARN] IOT target (%s) not found, removing attachment to policy (%s) from state", target, policyName)
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error detaching policy %s from target %s: %s", policyName, target, err)
+		return sdkdiag.AppendErrorf(diags, "detaching policy %s from target %s: %s", policyName, target, err)
 	}
 
-	return nil
+	return diags
 }

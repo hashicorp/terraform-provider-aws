@@ -1,16 +1,18 @@
 package rds
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func DataSourceProxy() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceProxyRead,
+		ReadWithoutTimeout: dataSourceProxyRead,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -90,14 +92,15 @@ func DataSourceProxy() *schema.Resource {
 	}
 }
 
-func dataSourceProxyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+func dataSourceProxyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	name := d.Get("name").(string)
-	dbProxy, err := FindDBProxyByName(conn, name)
+	dbProxy, err := FindDBProxyByName(ctx, conn, name)
 
 	if err != nil {
-		return fmt.Errorf("error reading RDS DB Proxy (%s): %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "reading RDS DB Proxy (%s): %s", name, err)
 	}
 
 	d.SetId(name)
@@ -113,5 +116,5 @@ func dataSourceProxyRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("vpc_security_group_ids", aws.StringValueSlice(dbProxy.VpcSecurityGroupIds))
 	d.Set("vpc_subnet_ids", aws.StringValueSlice(dbProxy.VpcSubnetIds))
 
-	return nil
+	return diags
 }

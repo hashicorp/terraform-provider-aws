@@ -1,17 +1,19 @@
 package directconnect
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func DataSourceLocations() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceLocationsRead,
+		ReadWithoutTimeout: dataSourceLocationsRead,
 
 		Schema: map[string]*schema.Schema{
 			"location_codes": {
@@ -23,13 +25,14 @@ func DataSourceLocations() *schema.Resource {
 	}
 }
 
-func dataSourceLocationsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+func dataSourceLocationsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
-	locations, err := FindLocations(conn, &directconnect.DescribeLocationsInput{})
+	locations, err := FindLocations(ctx, conn, &directconnect.DescribeLocationsInput{})
 
 	if err != nil {
-		return fmt.Errorf("error reading Direct Connect locations: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading Direct Connect locations: %s", err)
 	}
 
 	var locationCodes []*string
@@ -41,5 +44,5 @@ func dataSourceLocationsRead(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(meta.(*conns.AWSClient).Region)
 	d.Set("location_codes", aws.StringValueSlice(locationCodes))
 
-	return nil
+	return diags
 }

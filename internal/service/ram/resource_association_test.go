@@ -1,6 +1,7 @@
 package ram_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -16,6 +17,7 @@ import (
 )
 
 func TestAccRAMResourceAssociation_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var resourceShareAssociation1 ram.ResourceShareAssociation
 	resourceName := "aws_ram_resource_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -24,12 +26,12 @@ func TestAccRAMResourceAssociation_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ram.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResourceAssociationDestroy,
+		CheckDestroy:             testAccCheckResourceAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceAssociationExists(resourceName, &resourceShareAssociation1),
+					testAccCheckResourceAssociationExists(ctx, resourceName, &resourceShareAssociation1),
 				),
 			},
 			{
@@ -42,6 +44,7 @@ func TestAccRAMResourceAssociation_basic(t *testing.T) {
 }
 
 func TestAccRAMResourceAssociation_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var resourceShareAssociation1 ram.ResourceShareAssociation
 	resourceName := "aws_ram_resource_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -50,13 +53,13 @@ func TestAccRAMResourceAssociation_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ram.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResourceAssociationDestroy,
+		CheckDestroy:             testAccCheckResourceAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceAssociationExists(resourceName, &resourceShareAssociation1),
-					testAccCheckResourceAssociationDisappears(&resourceShareAssociation1),
+					testAccCheckResourceAssociationExists(ctx, resourceName, &resourceShareAssociation1),
+					testAccCheckResourceAssociationDisappears(ctx, &resourceShareAssociation1),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -64,27 +67,27 @@ func TestAccRAMResourceAssociation_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckResourceAssociationDisappears(resourceShareAssociation *ram.ResourceShareAssociation) resource.TestCheckFunc {
+func testAccCheckResourceAssociationDisappears(ctx context.Context, resourceShareAssociation *ram.ResourceShareAssociation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RAMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RAMConn()
 
 		input := &ram.DisassociateResourceShareInput{
 			ResourceArns:     []*string{resourceShareAssociation.AssociatedEntity},
 			ResourceShareArn: resourceShareAssociation.ResourceShareArn,
 		}
 
-		_, err := conn.DisassociateResourceShare(input)
+		_, err := conn.DisassociateResourceShareWithContext(ctx, input)
 		if err != nil {
 			return err
 		}
 
-		return tfram.WaitForResourceShareResourceDisassociation(conn, aws.StringValue(resourceShareAssociation.ResourceShareArn), aws.StringValue(resourceShareAssociation.AssociatedEntity))
+		return tfram.WaitForResourceShareResourceDisassociation(ctx, conn, aws.StringValue(resourceShareAssociation.ResourceShareArn), aws.StringValue(resourceShareAssociation.AssociatedEntity))
 	}
 }
 
-func testAccCheckResourceAssociationExists(resourceName string, association *ram.ResourceShareAssociation) resource.TestCheckFunc {
+func testAccCheckResourceAssociationExists(ctx context.Context, resourceName string, association *ram.ResourceShareAssociation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RAMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RAMConn()
 
 		rs, ok := s.RootModule().Resources[resourceName]
 
@@ -98,7 +101,7 @@ func testAccCheckResourceAssociationExists(resourceName string, association *ram
 			return err
 		}
 
-		resourceShareAssociation, err := tfram.GetResourceShareAssociation(conn, resourceShareARN, resourceARN)
+		resourceShareAssociation, err := tfram.GetResourceShareAssociation(ctx, conn, resourceShareARN, resourceARN)
 		if tfresource.NotFound(err) {
 			return fmt.Errorf("RAM Resource Share (%s) Resource Association (%s) not found", resourceShareARN, resourceARN)
 		}
@@ -116,34 +119,36 @@ func testAccCheckResourceAssociationExists(resourceName string, association *ram
 	}
 }
 
-func testAccCheckResourceAssociationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RAMConn
+func testAccCheckResourceAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RAMConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_ram_resource_association" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_ram_resource_association" {
+				continue
+			}
+
+			resourceShareARN, resourceARN, err := tfram.DecodeResourceAssociationID(rs.Primary.ID)
+
+			if err != nil {
+				return err
+			}
+
+			resourceShareAssociation, err := tfram.GetResourceShareAssociation(ctx, conn, resourceShareARN, resourceARN)
+			if tfresource.NotFound(err) {
+				return nil
+			}
+			if err != nil {
+				return err
+			}
+
+			if resourceShareAssociation != nil && aws.StringValue(resourceShareAssociation.Status) != ram.ResourceShareAssociationStatusDisassociated {
+				return fmt.Errorf("RAM Resource Share (%s) Resource Association (%s) not disassociated: %s", resourceShareARN, resourceARN, aws.StringValue(resourceShareAssociation.Status))
+			}
 		}
 
-		resourceShareARN, resourceARN, err := tfram.DecodeResourceAssociationID(rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		resourceShareAssociation, err := tfram.GetResourceShareAssociation(conn, resourceShareARN, resourceARN)
-		if tfresource.NotFound(err) {
-			return nil
-		}
-		if err != nil {
-			return err
-		}
-
-		if resourceShareAssociation != nil && aws.StringValue(resourceShareAssociation.Status) != ram.ResourceShareAssociationStatusDisassociated {
-			return fmt.Errorf("RAM Resource Share (%s) Resource Association (%s) not disassociated: %s", resourceShareARN, resourceARN, aws.StringValue(resourceShareAssociation.Status))
-		}
+		return nil
 	}
-
-	return nil
 }
 
 func testAccResourceAssociationConfig_basic(rName string) string {

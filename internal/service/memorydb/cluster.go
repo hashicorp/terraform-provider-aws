@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strconv"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -23,10 +24,10 @@ import (
 
 func ResourceCluster() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceClusterCreate,
-		ReadContext:   resourceClusterRead,
-		UpdateContext: resourceClusterUpdate,
-		DeleteContext: resourceClusterDelete,
+		CreateWithoutTimeout: resourceClusterCreate,
+		ReadWithoutTimeout:   resourceClusterRead,
+		UpdateWithoutTimeout: resourceClusterUpdate,
+		DeleteWithoutTimeout: resourceClusterDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -56,6 +57,12 @@ func ResourceCluster() *schema.Resource {
 				ForceNew: true,
 			},
 			"cluster_endpoint": endpointSchema(),
+			"data_tiering": {
+				Type:     schema.TypeBool,
+				ForceNew: true,
+				Optional: true,
+				Default:  false,
+			},
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -188,7 +195,6 @@ func ResourceCluster() *schema.Resource {
 				Type:          schema.TypeList,
 				Optional:      true,
 				ForceNew:      true,
-				MaxItems:      1,
 				ConflictsWith: []string{"snapshot_name"},
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
@@ -259,7 +265,7 @@ func endpointSchema() *schema.Schema {
 }
 
 func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MemoryDBConn
+	conn := meta.(*conns.AWSClient).MemoryDBConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -273,6 +279,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		NumShards:               aws.Int64(int64(d.Get("num_shards").(int))),
 		Tags:                    Tags(tags.IgnoreAWS()),
 		TLSEnabled:              aws.Bool(d.Get("tls_enabled").(bool)),
+	}
+
+	if v, ok := d.GetOk("data_tiering"); ok {
+		input.DataTiering = aws.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -347,7 +357,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MemoryDBConn
+	conn := meta.(*conns.AWSClient).MemoryDBConn()
 
 	if d.HasChangesExcept("final_snapshot_name", "tags", "tags_all") {
 		waitParameterGroupInSync := false
@@ -456,7 +466,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.Errorf("error updating MemoryDB Cluster (%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -465,7 +475,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MemoryDBConn
+	conn := meta.(*conns.AWSClient).MemoryDBConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -488,6 +498,15 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if v := cluster.ClusterEndpoint; v != nil {
 		d.Set("cluster_endpoint", flattenEndpoint(v))
 		d.Set("port", v.Port)
+	}
+
+	if v := aws.StringValue(cluster.DataTiering); v != "" {
+		b, err := strconv.ParseBool(v)
+		if err != nil {
+			return diag.Errorf("error reading data_tiering for MemoryDB Cluster (%s): %s", d.Id(), err)
+		}
+
+		d.Set("data_tiering", b)
 	}
 
 	d.Set("description", cluster.Description)
@@ -530,7 +549,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("subnet_group_name", cluster.SubnetGroupName)
 	d.Set("tls_enabled", cluster.TLSEnabled)
 
-	tags, err := ListTags(conn, d.Get("arn").(string))
+	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
 
 	if err != nil {
 		return diag.Errorf("error listing tags for MemoryDB Cluster (%s): %s", d.Id(), err)
@@ -551,7 +570,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MemoryDBConn
+	conn := meta.(*conns.AWSClient).MemoryDBConn()
 
 	input := &memorydb.DeleteClusterInput{
 		ClusterName: aws.String(d.Id()),

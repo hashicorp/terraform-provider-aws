@@ -2,25 +2,27 @@ package ec2
 
 // ec2 has no action for Describe() to see if IPAM delegated admin has already been assigned
 import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/organizations"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceIPAMOrganizationAdminAccount() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceIPAMOrganizationAdminAccountCreate,
-		Read:   resourceIPAMOrganizationAdminAccountRead,
-		Delete: resourceIPAMOrganizationAdminAccountDelete,
+		CreateWithoutTimeout: resourceIPAMOrganizationAdminAccountCreate,
+		ReadWithoutTimeout:   resourceIPAMOrganizationAdminAccountRead,
+		DeleteWithoutTimeout: resourceIPAMOrganizationAdminAccountDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -54,8 +56,9 @@ const (
 	IPAMServicePrincipal = "ipam.amazonaws.com"
 )
 
-func resourceIPAMOrganizationAdminAccountCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceIPAMOrganizationAdminAccountCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	adminAccountID := d.Get("delegated_admin_account_id").(string)
 
@@ -63,37 +66,38 @@ func resourceIPAMOrganizationAdminAccountCreate(d *schema.ResourceData, meta int
 		DelegatedAdminAccountId: aws.String(adminAccountID),
 	}
 
-	output, err := conn.EnableIpamOrganizationAdminAccount(input)
+	output, err := conn.EnableIpamOrganizationAdminAccountWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error enabling IPAM Organization Admin Account (%s): %w", adminAccountID, err)
+		return sdkdiag.AppendErrorf(diags, "enabling IPAM Organization Admin Account (%s): %s", adminAccountID, err)
 	}
 	if !aws.BoolValue(output.Success) {
-		return fmt.Errorf("error enabling IPAM Organization Admin Account (%s): %w", adminAccountID, err)
+		return sdkdiag.AppendErrorf(diags, "enabling IPAM Organization Admin Account (%s): %s", adminAccountID, err)
 	}
 
 	d.SetId(adminAccountID)
 
-	return resourceIPAMOrganizationAdminAccountRead(d, meta)
+	return append(diags, resourceIPAMOrganizationAdminAccountRead(ctx, d, meta)...)
 }
 
-func resourceIPAMOrganizationAdminAccountRead(d *schema.ResourceData, meta interface{}) error {
-	org_conn := meta.(*conns.AWSClient).OrganizationsConn
+func resourceIPAMOrganizationAdminAccountRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	org_conn := meta.(*conns.AWSClient).OrganizationsConn()
 
 	input := &organizations.ListDelegatedAdministratorsInput{
 		ServicePrincipal: aws.String(IPAMServicePrincipal),
 	}
 
-	output, err := org_conn.ListDelegatedAdministrators(input)
+	output, err := org_conn.ListDelegatedAdministratorsWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error finding IPAM organization delegated account: (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "finding IPAM organization delegated account: (%s): %s", d.Id(), err)
 	}
 
 	if output == nil || len(output.DelegatedAdministrators) == 0 || output.DelegatedAdministrators[0] == nil {
 		log.Printf("[WARN] VPC Ipam Organization Admin Account (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	admin_account := output.DelegatedAdministrators[0]
@@ -104,23 +108,24 @@ func resourceIPAMOrganizationAdminAccountRead(d *schema.ResourceData, meta inter
 	d.Set("name", admin_account.Name)
 	d.Set("service_principal", IPAMServicePrincipal)
 
-	return nil
+	return diags
 }
 
-func resourceIPAMOrganizationAdminAccountDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceIPAMOrganizationAdminAccountDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	input := &ec2.DisableIpamOrganizationAdminAccountInput{
 		DelegatedAdminAccountId: aws.String(d.Id()),
 	}
 
-	output, err := conn.DisableIpamOrganizationAdminAccount(input)
+	output, err := conn.DisableIpamOrganizationAdminAccountWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error disabling IPAM Organization Admin Account (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "disabling IPAM Organization Admin Account (%s): %s", d.Id(), err)
 	}
 	if !aws.BoolValue(output.Success) {
-		return fmt.Errorf("error disabling IPAM Organization Admin Account (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "disabling IPAM Organization Admin Account (%s): %s", d.Id(), err)
 	}
-	return nil
+	return diags
 }

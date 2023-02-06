@@ -1,6 +1,12 @@
 issues:
   exclude-rules:
     - linters:
+        - paralleltest
+      text: "Function TestAcc"
+    - linters:
+        - tparallel
+      text: "TestAcc"
+    - linters:
         - unparam
       text: "always receives"
   max-per-linter: 0
@@ -9,9 +15,11 @@ issues:
 linters:
   disable-all: true
   enable:
-    - deadcode
+    - asciicheck
+    - durationcheck
     - errcheck
     - exportloopref
+    - gocritic
     - gofmt
     - gomnd
     - gosimple
@@ -21,17 +29,31 @@ linters:
     - nakedret
     - nilerr
     - nolintlint
+    - paralleltest
+    - predeclared
     - staticcheck
-    - structcheck
     - stylecheck
+    - tenv
+    - tparallel
+    - typecheck
     - unconvert
     - unparam
-    - varcheck
+    - unused
     - vet
+    - vetshadow
+    - whitespace
 
 linters-settings:
   errcheck:
     ignore: github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema:ForceNew|Set,fmt:.*,io:Close
+  gocritic:
+    enabled-tags:
+      - diagnostic
+    disabled-tags:
+      - style
+      - performance
+      - experimental
+      - opinionated
   gomnd:
     settings:
       mnd:
@@ -44,10 +66,19 @@ linters-settings:
           - request.WithWaiterMaxAttempts
           # AWS Provider
           - nullable.*
+          - tfresource.With*
           # Terraform Plugin SDK
           - resource.Retry
           - schema.DefaultTimeout
           - validation.*
+          # Terraform Plugin Framework
+          - int64validator.*
+          - listvalidator.*
+          - stringvalidator.*
+          - SetDefaultCreateTimeout
+          - SetDefaultReadTimeout
+          - SetDefaultUpdateTimeout
+          - SetDefaultDeleteTimeout
           # Go
           - make
           - strconv.FormatFloat
@@ -56,13 +87,17 @@ linters-settings:
           - strconv.ParseInt
           - strings.SplitN
   nolintlint:
-    allow-unused: true # Because of the disabled rules with Go 1.18
+    allow-unused: false
     allow-leading-space: false
     require-explanation: true
     require-specific: true
     allow-no-explanation:
-      - unparam
       - gomnd
+      - paralleltest
+      - tparallel
+      - unparam
+  predeclared:
+    ignore: cap,close,copy,delete,len,new
   staticcheck:
     checks: ["all", "-SA1019"]
   stylecheck:
@@ -71,6 +106,3 @@ linters-settings:
 
 run:
   timeout: 75m
-  go: 1.18
-  skip-dirs:
-    - .ci/providerlint/vendor

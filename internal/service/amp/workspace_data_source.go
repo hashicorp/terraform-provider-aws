@@ -1,9 +1,10 @@
 package amp
 
 import (
-	"fmt"
+	"context"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -11,7 +12,7 @@ import (
 
 func DataSourceWorkspace() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceWorkspaceRead,
+		ReadWithoutTimeout: dataSourceWorkspaceRead,
 
 		Schema: map[string]*schema.Schema{
 			"alias": {
@@ -43,15 +44,15 @@ func DataSourceWorkspace() *schema.Resource {
 	}
 }
 
-func dataSourceWorkspaceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AMPConn
+func dataSourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).AMPConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	workspaceID := d.Get("workspace_id").(string)
-	workspace, err := FindWorkspaceByID(conn, workspaceID)
+	workspace, err := FindWorkspaceByID(ctx, conn, workspaceID)
 
 	if err != nil {
-		return fmt.Errorf("reading AMP Workspace (%s): %w", workspaceID, err)
+		return diag.Errorf("reading AMP Workspace (%s): %s", workspaceID, err)
 	}
 
 	d.SetId(workspaceID)
@@ -63,7 +64,7 @@ func dataSourceWorkspaceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("status", workspace.Status.StatusCode)
 
 	if err := d.Set("tags", KeyValueTags(workspace.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
+		return diag.Errorf("setting tags: %s", err)
 	}
 
 	return nil

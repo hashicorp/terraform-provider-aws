@@ -1,19 +1,21 @@
 package imagebuilder
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/namevaluesfilters"
 )
 
 func DataSourceContainerRecipes() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceContainerRecipesRead,
+		ReadWithoutTimeout: dataSourceContainerRecipesRead,
 		Schema: map[string]*schema.Schema{
 			"arns": {
 				Type:     schema.TypeSet,
@@ -35,8 +37,9 @@ func DataSourceContainerRecipes() *schema.Resource {
 	}
 }
 
-func dataSourceContainerRecipesRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ImageBuilderConn
+func dataSourceContainerRecipesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ImageBuilderConn()
 
 	input := &imagebuilder.ListContainerRecipesInput{}
 
@@ -50,7 +53,7 @@ func dataSourceContainerRecipesRead(d *schema.ResourceData, meta interface{}) er
 
 	var results []*imagebuilder.ContainerRecipeSummary
 
-	err := conn.ListContainerRecipesPages(input, func(page *imagebuilder.ListContainerRecipesOutput, lastPage bool) bool {
+	err := conn.ListContainerRecipesPagesWithContext(ctx, input, func(page *imagebuilder.ListContainerRecipesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -67,7 +70,7 @@ func dataSourceContainerRecipesRead(d *schema.ResourceData, meta interface{}) er
 	})
 
 	if err != nil {
-		return fmt.Errorf("error reading Image Builder Container Recipes: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading Image Builder Container Recipes: %s", err)
 	}
 
 	var arns, names []string
@@ -81,5 +84,5 @@ func dataSourceContainerRecipesRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("arns", arns)
 	d.Set("names", names)
 
-	return nil
+	return diags
 }

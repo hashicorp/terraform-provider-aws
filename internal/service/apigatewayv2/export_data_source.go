@@ -1,18 +1,20 @@
 package apigatewayv2
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func DataSourceExport() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceExportRead,
+		ReadWithoutTimeout: dataSourceExportRead,
 
 		Schema: map[string]*schema.Schema{
 			"api_id": {
@@ -51,8 +53,9 @@ func DataSourceExport() *schema.Resource {
 	}
 }
 
-func dataSourceExportRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
+func dataSourceExportRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
 
 	apiId := d.Get("api_id").(string)
 
@@ -71,14 +74,14 @@ func dataSourceExportRead(d *schema.ResourceData, meta interface{}) error {
 		input.ExportVersion = aws.String(v.(string))
 	}
 
-	export, err := conn.ExportApi(input)
+	export, err := conn.ExportApiWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("error exporting Gateway v2 API (%s): %w", apiId, err)
+		return sdkdiag.AppendErrorf(diags, "exporting Gateway v2 API (%s): %s", apiId, err)
 	}
 
 	d.SetId(apiId)
 
 	d.Set("body", string(export.Body))
 
-	return nil
+	return diags
 }

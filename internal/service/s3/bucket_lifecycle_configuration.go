@@ -24,10 +24,10 @@ import (
 
 func ResourceBucketLifecycleConfiguration() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceBucketLifecycleConfigurationCreate,
-		ReadContext:   resourceBucketLifecycleConfigurationRead,
-		UpdateContext: resourceBucketLifecycleConfigurationUpdate,
-		DeleteContext: resourceBucketLifecycleConfigurationDelete,
+		CreateWithoutTimeout: resourceBucketLifecycleConfigurationCreate,
+		ReadWithoutTimeout:   resourceBucketLifecycleConfigurationRead,
+		UpdateWithoutTimeout: resourceBucketLifecycleConfigurationUpdate,
+		DeleteWithoutTimeout: resourceBucketLifecycleConfigurationDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -252,7 +252,7 @@ func ResourceBucketLifecycleConfiguration() *schema.Resource {
 }
 
 func resourceBucketLifecycleConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket := d.Get("bucket").(string)
 	expectedBucketOwner := d.Get("expected_bucket_owner").(string)
@@ -273,7 +273,7 @@ func resourceBucketLifecycleConfigurationCreate(ctx context.Context, d *schema.R
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	_, err = tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
 		return conn.PutBucketLifecycleConfigurationWithContext(ctx, input)
 	}, s3.ErrCodeNoSuchBucket)
 
@@ -291,7 +291,7 @@ func resourceBucketLifecycleConfigurationCreate(ctx context.Context, d *schema.R
 }
 
 func resourceBucketLifecycleConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
@@ -355,7 +355,7 @@ func resourceBucketLifecycleConfigurationRead(ctx context.Context, d *schema.Res
 }
 
 func resourceBucketLifecycleConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
@@ -378,7 +378,7 @@ func resourceBucketLifecycleConfigurationUpdate(ctx context.Context, d *schema.R
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	_, err = tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
 		return conn.PutBucketLifecycleConfigurationWithContext(ctx, input)
 	}, ErrCodeNoSuchLifecycleConfiguration)
 
@@ -394,7 +394,7 @@ func resourceBucketLifecycleConfigurationUpdate(ctx context.Context, d *schema.R
 }
 
 func resourceBucketLifecycleConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {

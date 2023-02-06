@@ -11,6 +11,7 @@ on:
       - .ci/scripts/providerlint.sh
       - .go-version
       - .ci/.golangci.yml
+      - .ci/tools/go.mod
       - .markdownlint.yml
       - internal/**
       - docs/index.md
@@ -21,7 +22,6 @@ on:
       - GNUmakefile
       - main.go
       - names/**
-      - tools/**
       - website/**
 
 env:
@@ -263,7 +263,7 @@ jobs:
           tfproviderdocs check \
             -allowed-resource-subcategories-file website/allowed-subcategories.txt \
             -enable-contents-check \
-            -ignore-file-missing-data-sources aws_alb,aws_alb_listener,aws_alb_target_group \
+            -ignore-file-missing-data-sources aws_alb,aws_alb_listener,aws_alb_target_group,aws_albs \
             -ignore-file-missing-resources aws_alb,aws_alb_listener,aws_alb_listener_certificate,aws_alb_listener_rule,aws_alb_target_group,aws_alb_target_group_attachment \
             -provider-source registry.terraform.io/hashicorp/aws \
             -providers-schema-json terraform-providers-schema/schema.json \

@@ -1,18 +1,20 @@
 package configservice
 
 import (
+	"context"
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/configservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -20,13 +22,13 @@ import (
 
 func ResourceDeliveryChannel() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceDeliveryChannelPut,
-		Read:   resourceDeliveryChannelRead,
-		Update: resourceDeliveryChannelPut,
-		Delete: resourceDeliveryChannelDelete,
+		CreateWithoutTimeout: resourceDeliveryChannelPut,
+		ReadWithoutTimeout:   resourceDeliveryChannelRead,
+		UpdateWithoutTimeout: resourceDeliveryChannelPut,
+		DeleteWithoutTimeout: resourceDeliveryChannelDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -73,8 +75,9 @@ func ResourceDeliveryChannel() *schema.Resource {
 	}
 }
 
-func resourceDeliveryChannelPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigServiceConn
+func resourceDeliveryChannelPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ConfigServiceConn()
 
 	name := d.Get("name").(string)
 	channel := configservice.DeliveryChannel{
@@ -105,8 +108,8 @@ func resourceDeliveryChannelPut(d *schema.ResourceData, meta interface{}) error 
 
 	input := configservice.PutDeliveryChannelInput{DeliveryChannel: &channel}
 
-	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
-		_, err := conn.PutDeliveryChannel(&input)
+	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+		_, err := conn.PutDeliveryChannelWithContext(ctx, &input)
 		if err == nil {
 			return nil
 		}
@@ -118,47 +121,48 @@ func resourceDeliveryChannelPut(d *schema.ResourceData, meta interface{}) error 
 		return resource.NonRetryableError(err)
 	})
 	if tfresource.TimedOut(err) {
-		_, err = conn.PutDeliveryChannel(&input)
+		_, err = conn.PutDeliveryChannelWithContext(ctx, &input)
 	}
 	if err != nil {
-		return fmt.Errorf("Creating Delivery Channel failed: %s", err)
+		return sdkdiag.AppendErrorf(diags, "Creating Delivery Channel failed: %s", err)
 	}
 
 	d.SetId(name)
 
-	return resourceDeliveryChannelRead(d, meta)
+	return append(diags, resourceDeliveryChannelRead(ctx, d, meta)...)
 }
 
-func resourceDeliveryChannelRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigServiceConn
+func resourceDeliveryChannelRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ConfigServiceConn()
 
 	input := configservice.DescribeDeliveryChannelsInput{
 		DeliveryChannelNames: []*string{aws.String(d.Id())},
 	}
 
-	out, err := conn.DescribeDeliveryChannels(&input)
+	out, err := conn.DescribeDeliveryChannelsWithContext(ctx, &input)
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchDeliveryChannelException) {
 		create.LogNotFoundRemoveState(names.ConfigService, create.ErrActionReading, ResNameDeliveryChannel, d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.Error(names.ConfigService, create.ErrActionReading, ResNameDeliveryChannel, d.Id(), err)
+		return create.DiagError(names.ConfigService, create.ErrActionReading, ResNameDeliveryChannel, d.Id(), err)
 	}
 
 	if !d.IsNewResource() && len(out.DeliveryChannels) < 1 {
 		create.LogNotFoundRemoveState(names.ConfigService, create.ErrActionReading, ResNameDeliveryChannel, d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if d.IsNewResource() && len(out.DeliveryChannels) < 1 {
-		return create.Error(names.ConfigService, create.ErrActionReading, ResNameDeliveryChannel, d.Id(), errors.New("not found after creation"))
+		return create.DiagError(names.ConfigService, create.ErrActionReading, ResNameDeliveryChannel, d.Id(), errors.New("not found after creation"))
 	}
 
 	if len(out.DeliveryChannels) > 1 {
-		return fmt.Errorf("Received %d delivery channels under %s (expected exactly 1): %s",
+		return sdkdiag.AppendErrorf(diags, "Received %d delivery channels under %s (expected exactly 1): %s",
 			len(out.DeliveryChannels), d.Id(), out.DeliveryChannels)
 	}
 
@@ -174,17 +178,18 @@ func resourceDeliveryChannelRead(d *schema.ResourceData, meta interface{}) error
 		d.Set("snapshot_delivery_properties", flattenSnapshotDeliveryProperties(channel.ConfigSnapshotDeliveryProperties))
 	}
 
-	return nil
+	return diags
 }
 
-func resourceDeliveryChannelDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ConfigServiceConn
+func resourceDeliveryChannelDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ConfigServiceConn()
 	input := configservice.DeleteDeliveryChannelInput{
 		DeliveryChannelName: aws.String(d.Id()),
 	}
 
-	err := resource.Retry(30*time.Second, func() *resource.RetryError {
-		_, err := conn.DeleteDeliveryChannel(&input)
+	err := resource.RetryContext(ctx, 30*time.Second, func() *resource.RetryError {
+		_, err := conn.DeleteDeliveryChannelWithContext(ctx, &input)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, configservice.ErrCodeLastDeliveryChannelDeleteFailedException, "there is a running configuration recorder") {
 				return resource.RetryableError(err)
@@ -195,11 +200,11 @@ func resourceDeliveryChannelDelete(d *schema.ResourceData, meta interface{}) err
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteDeliveryChannel(&input)
+		_, err = conn.DeleteDeliveryChannelWithContext(ctx, &input)
 	}
 	if err != nil {
-		return fmt.Errorf("Unable to delete delivery channel: %s", err)
+		return sdkdiag.AppendErrorf(diags, "Unable to delete delivery channel: %s", err)
 	}
 
-	return nil
+	return diags
 }

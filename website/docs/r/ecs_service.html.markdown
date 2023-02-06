@@ -72,6 +72,23 @@ resource "aws_ecs_service" "bar" {
 }
 ```
 
+### CloudWatch Deployment Alarms
+
+```terraform
+resource "aws_ecs_service" "example" {
+  name    = "example"
+  cluster = aws_ecs_cluster.example.id
+
+  alarms {
+    enable   = true
+    rollback = true
+    alarm_names = [
+      aws_cloudwatch_metric_alarm.example.alarm_name
+    ]
+  }
+}
+```
+
 ### External Deployment Controller
 
 ```terraform
@@ -85,6 +102,22 @@ resource "aws_ecs_service" "example" {
 }
 ```
 
+### Redeploy Service On Every Apply
+
+The key used with `triggers` is arbitrary.
+
+```terraform
+resource "aws_ecs_service" "example" {
+  # ... other configurations ...
+
+  force_new_deployment = true
+
+  triggers = {
+    redeployment = timestamp()
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -93,6 +126,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `alarms` - (Optional) Information about the CloudWatch alarms. [See below](#alarms).
 * `capacity_provider_strategy` - (Optional) Capacity provider strategies to use for the service. Can be one or more. These can be updated without destroying and recreating the service only if `force_new_deployment = true` and not changing from 0 `capacity_provider_strategy` blocks to greater than 0, or vice versa. See below.
 * `cluster` - (Optional) ARN of an ECS cluster.
 * `deployment_circuit_breaker` - (Optional) Configuration block for deployment circuit breaker. See below.
@@ -113,10 +147,20 @@ The following arguments are optional:
 * `platform_version` - (Optional) Platform version on which to run your service. Only applicable for `launch_type` set to `FARGATE`. Defaults to `LATEST`. More information about Fargate platform versions can be found in the [AWS ECS User Guide](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/platform_versions.html).
 * `propagate_tags` - (Optional) Specifies whether to propagate the tags from the task definition or the service to the tasks. The valid values are `SERVICE` and `TASK_DEFINITION`.
 * `scheduling_strategy` - (Optional) Scheduling strategy to use for the service. The valid values are `REPLICA` and `DAEMON`. Defaults to `REPLICA`. Note that [*Tasks using the Fargate launch type or the `CODE_DEPLOY` or `EXTERNAL` deployment controller types don't support the `DAEMON` scheduling strategy*](https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_CreateService.html).
+* `service_connect_configuration` - (Optional) The ECS Service Connect configuration for this service to discover and connect to services, and be discovered by, and connected from, other services within a namespace. See below.
 * `service_registries` - (Optional) Service discovery registries for the service. The maximum number of `service_registries` blocks is `1`. See below.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `task_definition` - (Optional) Family and revision (`family:revision`) or full ARN of the task definition that you want to run in your service. Required unless using the `EXTERNAL` deployment controller. If a revision is not specified, the latest `ACTIVE` revision is used.
+* `triggers` - (Optional) Map of arbitrary keys and values that, when changed, will trigger an in-place update (redeployment). Useful with `timestamp()`. See example above.
 * `wait_for_steady_state` - (Optional) If `true`, Terraform will wait for the service to reach a steady state (like [`aws ecs wait services-stable`](https://docs.aws.amazon.com/cli/latest/reference/ecs/wait/services-stable.html)) before continuing. Default `false`.
+
+### alarms
+
+The `alarms` configuration block supports the following:
+
+* `alarms_names` - (Required) One or more CloudWatch alarm names.
+* `enable` - (Required) Determines whether to use the CloudWatch alarm option in the service deployment process.
+* `rollback` - (Required) Determines whether to configure Amazon ECS to roll back the service if a service deployment fails. If rollback is used, when a service deployment fails, the service is rolled back to the last deployment that completed successfully.
 
 ### capacity_provider_strategy
 
@@ -188,6 +232,46 @@ For more information, see [Task Networking](https://docs.aws.amazon.com/AmazonEC
 * `container_port` - (Optional) Port value, already specified in the task definition, to be used for your service discovery service.
 * `container_name` - (Optional) Container name value, already specified in the task definition, to be used for your service discovery service.
 
+### service_connect_configuration
+
+`service_connect_configuration` supports the following:
+
+* `enabled` - (Required) Specifies whether to use Service Connect with this service.
+* `log_configuration` - (Optional) The log configuration for the container. See below.
+* `namespace` - (Optional) The namespace name or ARN of the [`aws_service_discovery_http_namespace`](/docs/providers/aws/r/service_discovery_http_namespace.html) for use with Service Connect.
+* `service` - (Optional) The list of Service Connect service objects. See below.
+
+### log_configuration
+
+`log_configuration` supports the following:
+
+* `log_driver` - (Optional) The log driver to use for the container.
+* `options` - (Optional) The configuration options to send to the log driver.
+* `secret_option` - (Optional) The secrets to pass to the log configuration. See below.
+
+### secret_option
+
+`secret_option` supports the following:
+
+* `name` - (Optional) The name of the secret.
+* `value_from` - (Optional) The secret to expose to the container. The supported values are either the full ARN of the AWS Secrets Manager secret or the full ARN of the parameter in the SSM Parameter Store.
+
+### service
+
+`service` supports the following:
+
+* `client_alias` - (Optional) The list of client aliases for this Service Connect service. You use these to assign names that can be used by client applications. The maximum number of client aliases that you can have in this list is 1. See below.
+* `discovery_name` - (Optional) The name of the new AWS Cloud Map service that Amazon ECS creates for this Amazon ECS service.
+* `ingress_port_override` - (Optional) The port number for the Service Connect proxy to listen on.
+* `port_name` - (Required) The name of one of the `portMappings` from all the containers in the task definition of this Amazon ECS service.
+
+### client_alias
+
+`client_alias` supports the following:
+
+* `dns_name` - (Optional) The name that you use in the applications of client tasks to connect to this service.
+* `port` - (Required) The listening port number for the Service Connect proxy. This port is available inside of all of the tasks within the same namespace.
+
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
@@ -201,7 +285,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `create` - (Default `20m`)
 - `update` - (Default `20m`)

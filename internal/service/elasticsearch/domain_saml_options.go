@@ -1,27 +1,29 @@
 package elasticsearch
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	elasticsearch "github.com/aws/aws-sdk-go/service/elasticsearchservice"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourceDomainSAMLOptions() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceDomainSAMLOptionsPut,
-		Read:   resourceDomainSAMLOptionsRead,
-		Update: resourceDomainSAMLOptionsPut,
-		Delete: resourceDomainSAMLOptionsDelete,
+		CreateWithoutTimeout: resourceDomainSAMLOptionsPut,
+		ReadWithoutTimeout:   resourceDomainSAMLOptionsRead,
+		UpdateWithoutTimeout: resourceDomainSAMLOptionsPut,
+		DeleteWithoutTimeout: resourceDomainSAMLOptionsDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				d.Set("domain_name", d.Id())
 				return []*schema.ResourceData{d}, nil
 			},
@@ -110,19 +112,20 @@ func domainSamlOptionsDiffSupress(k, old, new string, d *schema.ResourceData) bo
 	return false
 }
 
-func resourceDomainSAMLOptionsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticsearchConn
+func resourceDomainSAMLOptionsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ElasticsearchConn()
 
-	ds, err := FindDomainByName(conn, d.Get("domain_name").(string))
+	ds, err := FindDomainByName(ctx, conn, d.Get("domain_name").(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Elasticsearch Domain SAML Options (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Elasticsearch Domain SAML Options (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Elasticsearch Domain SAML Options (%s): %s", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Received Elasticsearch domain: %s", ds)
@@ -130,14 +133,15 @@ func resourceDomainSAMLOptionsRead(d *schema.ResourceData, meta interface{}) err
 	options := ds.AdvancedSecurityOptions.SAMLOptions
 
 	if err := d.Set("saml_options", flattenESSAMLOptions(d, options)); err != nil {
-		return fmt.Errorf("error setting saml_options for Elasticsearch Configuration: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting saml_options for Elasticsearch Configuration: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceDomainSAMLOptionsPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticsearchConn
+func resourceDomainSAMLOptionsPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ElasticsearchConn()
 
 	domainName := d.Get("domain_name").(string)
 	config := elasticsearch.AdvancedSecurityOptionsInput{}
@@ -145,44 +149,45 @@ func resourceDomainSAMLOptionsPut(d *schema.ResourceData, meta interface{}) erro
 
 	log.Printf("[DEBUG] Updating Elasticsearch domain SAML Options %s", config)
 
-	_, err := conn.UpdateElasticsearchDomainConfig(&elasticsearch.UpdateElasticsearchDomainConfigInput{
+	_, err := conn.UpdateElasticsearchDomainConfigWithContext(ctx, &elasticsearch.UpdateElasticsearchDomainConfigInput{
 		DomainName:              aws.String(domainName),
 		AdvancedSecurityOptions: &config,
 	})
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "setting Elasticsearch Domain SAML Options (%s): %s", d.Id(), err)
 	}
 
 	d.SetId(domainName)
 
-	if err := waitForDomainUpdate(conn, d.Get("domain_name").(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return fmt.Errorf("error waiting for Elasticsearch Domain SAML Options update (%s) to succeed: %w", d.Id(), err)
+	if err := waitForDomainUpdate(ctx, conn, d.Get("domain_name").(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting Elasticsearch Domain SAML Options (%s): waiting for completion: %s", d.Id(), err)
 	}
 
-	return resourceDomainSAMLOptionsRead(d, meta)
+	return append(diags, resourceDomainSAMLOptionsRead(ctx, d, meta)...)
 }
 
-func resourceDomainSAMLOptionsDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticsearchConn
+func resourceDomainSAMLOptionsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ElasticsearchConn()
 
 	domainName := d.Get("domain_name").(string)
 	config := elasticsearch.AdvancedSecurityOptionsInput{}
 	config.SetSAMLOptions(nil)
 
-	_, err := conn.UpdateElasticsearchDomainConfig(&elasticsearch.UpdateElasticsearchDomainConfigInput{
+	_, err := conn.UpdateElasticsearchDomainConfigWithContext(ctx, &elasticsearch.UpdateElasticsearchDomainConfigInput{
 		DomainName:              aws.String(domainName),
 		AdvancedSecurityOptions: &config,
 	})
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "deleting Elasticsearch Domain SAML Options (%s): %s", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Waiting for Elasticsearch domain SAML Options %q to be deleted", d.Get("domain_name").(string))
 
-	if err := waitForDomainUpdate(conn, d.Get("domain_name").(string), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("error waiting for Elasticsearch Domain SAML Options (%s) to be deleted: %w", d.Id(), err)
+	if err := waitForDomainUpdate(ctx, conn, d.Get("domain_name").(string), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting Elasticsearch Domain SAML Options (%s): waiting for completion: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

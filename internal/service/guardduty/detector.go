@@ -1,6 +1,7 @@
 package guardduty
 
 import (
+	"context"
 	"fmt"
 	"log"
 
@@ -8,9 +9,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/guardduty"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -18,13 +21,13 @@ import (
 
 func ResourceDetector() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceDetectorCreate,
-		Read:   resourceDetectorRead,
-		Update: resourceDetectorUpdate,
-		Delete: resourceDetectorDelete,
+		CreateWithoutTimeout: resourceDetectorCreate,
+		ReadWithoutTimeout:   resourceDetectorRead,
+		UpdateWithoutTimeout: resourceDetectorUpdate,
+		DeleteWithoutTimeout: resourceDetectorDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -140,8 +143,9 @@ func ResourceDetector() *schema.Resource {
 	}
 }
 
-func resourceDetectorCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GuardDutyConn
+func resourceDetectorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GuardDutyConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -162,17 +166,18 @@ func resourceDetectorCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Creating GuardDuty Detector: %s", input)
-	output, err := conn.CreateDetector(&input)
+	output, err := conn.CreateDetectorWithContext(ctx, &input)
 	if err != nil {
-		return fmt.Errorf("Creating GuardDuty Detector failed: %w", err)
+		return sdkdiag.AppendErrorf(diags, "Creating GuardDuty Detector failed: %s", err)
 	}
 	d.SetId(aws.StringValue(output.DetectorId))
 
-	return resourceDetectorRead(d, meta)
+	return append(diags, resourceDetectorRead(ctx, d, meta)...)
 }
 
-func resourceDetectorRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GuardDutyConn
+func resourceDetectorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GuardDutyConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -181,14 +186,14 @@ func resourceDetectorRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Reading GuardDuty Detector: %s", input)
-	gdo, err := conn.GetDetector(&input)
+	gdo, err := conn.GetDetectorWithContext(ctx, &input)
 	if err != nil {
 		if tfawserr.ErrMessageContains(err, guardduty.ErrCodeBadRequestException, "The request is rejected because the input detectorId is not owned by the current account.") {
 			log.Printf("[WARN] GuardDuty detector %q not found, removing from state", d.Id())
 			d.SetId("")
-			return nil
+			return diags
 		}
-		return fmt.Errorf("Reading GuardDuty Detector '%s' failed: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "Reading GuardDuty Detector '%s' failed: %s", d.Id(), err)
 	}
 
 	arn := arn.ARN{
@@ -204,7 +209,7 @@ func resourceDetectorRead(d *schema.ResourceData, meta interface{}) error {
 
 	if gdo.DataSources != nil {
 		if err := d.Set("datasources", []interface{}{flattenDataSourceConfigurationsResult(gdo.DataSources)}); err != nil {
-			return fmt.Errorf("error setting datasources: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting datasources: %s", err)
 		}
 	} else {
 		d.Set("datasources", nil)
@@ -217,18 +222,19 @@ func resourceDetectorRead(d *schema.ResourceData, meta interface{}) error {
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceDetectorUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GuardDutyConn
+func resourceDetectorUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GuardDutyConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := guardduty.UpdateDetectorInput{
@@ -242,32 +248,33 @@ func resourceDetectorUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		log.Printf("[DEBUG] Update GuardDuty Detector: %s", input)
-		_, err := conn.UpdateDetector(&input)
+		_, err := conn.UpdateDetectorWithContext(ctx, &input)
 		if err != nil {
-			return fmt.Errorf("Updating GuardDuty Detector '%s' failed: %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "Updating GuardDuty Detector '%s' failed: %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating GuardDuty Detector (%s) tags: %w", d.Get("arn").(string), err)
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating GuardDuty Detector (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
 
-	return resourceDetectorRead(d, meta)
+	return append(diags, resourceDetectorRead(ctx, d, meta)...)
 }
 
-func resourceDetectorDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GuardDutyConn
+func resourceDetectorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GuardDutyConn()
 
 	input := &guardduty.DeleteDetectorInput{
 		DetectorId: aws.String(d.Id()),
 	}
 
-	err := resource.Retry(membershipPropagationTimeout, func() *resource.RetryError {
-		_, err := conn.DeleteDetector(input)
+	err := resource.RetryContext(ctx, membershipPropagationTimeout, func() *resource.RetryError {
+		_, err := conn.DeleteDetectorWithContext(ctx, input)
 
 		if tfawserr.ErrMessageContains(err, guardduty.ErrCodeBadRequestException, "cannot delete detector while it has invited or associated members") {
 			return resource.RetryableError(err)
@@ -281,14 +288,14 @@ func resourceDetectorDelete(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteDetector(input)
+		_, err = conn.DeleteDetectorWithContext(ctx, input)
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting GuardDuty Detector (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting GuardDuty Detector (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandDataSourceConfigurations(tfMap map[string]interface{}) *guardduty.DataSourceConfigurations {

@@ -1,21 +1,24 @@
 package ec2
 
 import (
+	"context"
 	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func DataSourceKeyPair() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceKeyPairRead,
+		ReadWithoutTimeout: dataSourceKeyPairRead,
 
 		Timeouts: &schema.ResourceTimeout{
 			Read: schema.DefaultTimeout(20 * time.Minute),
@@ -61,8 +64,9 @@ func DataSourceKeyPair() *schema.Resource {
 	}
 }
 
-func dataSourceKeyPairRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func dataSourceKeyPairRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeKeyPairsInput{}
@@ -83,10 +87,10 @@ func dataSourceKeyPairRead(d *schema.ResourceData, meta interface{}) error {
 		input.IncludePublicKey = aws.Bool(v.(bool))
 	}
 
-	keyPair, err := FindKeyPair(conn, input)
+	keyPair, err := FindKeyPair(ctx, conn, input)
 
 	if err != nil {
-		return tfresource.SingularDataSourceFindError("EC2 Key Pair", err)
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Key Pair", err))
 	}
 
 	d.SetId(aws.StringValue(keyPair.KeyPairId))
@@ -109,8 +113,8 @@ func dataSourceKeyPairRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("public_key", keyPair.PublicKey)
 
 	if err := d.Set("tags", KeyValueTags(keyPair.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

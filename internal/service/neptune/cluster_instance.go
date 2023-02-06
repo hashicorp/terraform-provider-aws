@@ -1,6 +1,7 @@
 package neptune
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -9,9 +10,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/neptune"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -19,12 +22,12 @@ import (
 
 func ResourceClusterInstance() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceClusterInstanceCreate,
-		Read:   resourceClusterInstanceRead,
-		Update: resourceClusterInstanceUpdate,
-		Delete: resourceClusterInstanceDelete,
+		CreateWithoutTimeout: resourceClusterInstanceCreate,
+		ReadWithoutTimeout:   resourceClusterInstanceRead,
+		UpdateWithoutTimeout: resourceClusterInstanceUpdate,
+		DeleteWithoutTimeout: resourceClusterInstanceDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -193,8 +196,9 @@ func ResourceClusterInstance() *schema.Resource {
 	}
 }
 
-func resourceClusterInstanceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).NeptuneConn
+func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).NeptuneConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -242,12 +246,10 @@ func resourceClusterInstanceCreate(d *schema.ResourceData, meta interface{}) err
 		createOpts.PreferredMaintenanceWindow = aws.String(attr.(string))
 	}
 
-	log.Printf("[DEBUG] Creating Neptune Instance: %s", createOpts)
-
 	var resp *neptune.CreateDBInstanceOutput
-	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
+	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
 		var err error
-		resp, err = conn.CreateDBInstance(createOpts)
+		resp, err = conn.CreateDBInstanceWithContext(ctx, createOpts)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
 				return resource.RetryableError(err)
@@ -257,10 +259,10 @@ func resourceClusterInstanceCreate(d *schema.ResourceData, meta interface{}) err
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		resp, err = conn.CreateDBInstance(createOpts)
+		resp, err = conn.CreateDBInstanceWithContext(ctx, createOpts)
 	}
 	if err != nil {
-		return fmt.Errorf("creating Neptune Instance: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Neptune Cluster Instance: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resp.DBInstance.DBInstanceIdentifier))
@@ -268,42 +270,43 @@ func resourceClusterInstanceCreate(d *schema.ResourceData, meta interface{}) err
 	stateConf := &resource.StateChangeConf{
 		Pending:    resourceClusterInstanceCreateUpdatePendingStates,
 		Target:     []string{"available"},
-		Refresh:    resourceInstanceStateRefreshFunc(d.Id(), conn),
+		Refresh:    resourceInstanceStateRefreshFunc(ctx, d.Id(), conn),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
 	}
 
 	// Wait, catching any errors
-	_, err = stateConf.WaitForState()
+	_, err = stateConf.WaitForStateContext(ctx)
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "creating Neptune Cluster Instance: waiting for completion: %s", err)
 	}
 
-	return resourceClusterInstanceRead(d, meta)
+	return append(diags, resourceClusterInstanceRead(ctx, d, meta)...)
 }
 
-func resourceClusterInstanceRead(d *schema.ResourceData, meta interface{}) error {
-	db, err := resourceInstanceRetrieve(d.Id(), meta.(*conns.AWSClient).NeptuneConn)
+func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	db, err := resourceInstanceRetrieve(ctx, d.Id(), meta.(*conns.AWSClient).NeptuneConn())
 	if err != nil {
-		return fmt.Errorf("Error on retrieving Neptune Cluster Instance (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Neptune Cluster Instance (%s): %s", d.Id(), err)
 	}
 
 	if db == nil {
 		log.Printf("[WARN] Neptune Cluster Instance (%s): not found, removing from state.", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if db.DBClusterIdentifier == nil {
-		return fmt.Errorf("Cluster identifier is missing from instance (%s)", d.Id())
+		return sdkdiag.AppendErrorf(diags, "Cluster identifier is missing from instance (%s)", d.Id())
 	}
 
-	conn := meta.(*conns.AWSClient).NeptuneConn
+	conn := meta.(*conns.AWSClient).NeptuneConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	resp, err := conn.DescribeDBClusters(&neptune.DescribeDBClustersInput{
+	resp, err := conn.DescribeDBClustersWithContext(ctx, &neptune.DescribeDBClustersInput{
 		DBClusterIdentifier: db.DBClusterIdentifier,
 	})
 
@@ -314,7 +317,7 @@ func resourceClusterInstanceRead(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 	if dbc == nil {
-		return fmt.Errorf("Error finding Neptune Cluster (%s) for Cluster Instance (%s): %s",
+		return sdkdiag.AppendErrorf(diags, "finding Neptune Cluster (%s) for Cluster Instance (%s): %s",
 			aws.StringValue(db.DBClusterIdentifier), aws.StringValue(db.DBInstanceIdentifier), err)
 	}
 	for _, m := range dbc.DBClusterMembers {
@@ -359,28 +362,29 @@ func resourceClusterInstanceRead(d *schema.ResourceData, meta interface{}) error
 		d.Set("neptune_parameter_group_name", db.DBParameterGroups[0].DBParameterGroupName)
 	}
 
-	tags, err := ListTags(conn, d.Get("arn").(string))
+	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
 
 	if err != nil {
-		return fmt.Errorf("listing tags for Neptune Cluster Instance (%s): %s", d.Get("arn").(string), err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for Neptune Cluster Instance (%s): %s", d.Get("arn").(string), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceClusterInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).NeptuneConn
+func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).NeptuneConn()
 	requestUpdate := false
 
 	req := &neptune.ModifyDBInstanceInput{
@@ -418,11 +422,9 @@ func resourceClusterInstanceUpdate(d *schema.ResourceData, meta interface{}) err
 		requestUpdate = true
 	}
 
-	log.Printf("[DEBUG] Send Neptune Instance Modification request: %#v", requestUpdate)
 	if requestUpdate {
-		log.Printf("[DEBUG] Neptune Instance Modification request: %#v", req)
-		err := resource.Retry(propagationTimeout, func() *resource.RetryError {
-			_, err := conn.ModifyDBInstance(req)
+		err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+			_, err := conn.ModifyDBInstanceWithContext(ctx, req)
 			if err != nil {
 				if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
 					return resource.RetryableError(err)
@@ -432,68 +434,66 @@ func resourceClusterInstanceUpdate(d *schema.ResourceData, meta interface{}) err
 			return nil
 		})
 		if tfresource.TimedOut(err) {
-			_, err = conn.ModifyDBInstance(req)
+			_, err = conn.ModifyDBInstanceWithContext(ctx, req)
 		}
 		if err != nil {
-			return fmt.Errorf("Error modifying Neptune Instance %s: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Neptune Cluster Instance (%s): %s", d.Id(), err)
 		}
 
 		stateConf := &resource.StateChangeConf{
 			Pending:    resourceClusterInstanceCreateUpdatePendingStates,
 			Target:     []string{"available"},
-			Refresh:    resourceInstanceStateRefreshFunc(d.Id(), conn),
+			Refresh:    resourceInstanceStateRefreshFunc(ctx, d.Id(), conn),
 			Timeout:    d.Timeout(schema.TimeoutUpdate),
 			MinTimeout: 10 * time.Second,
 			Delay:      30 * time.Second,
 		}
 
 		// Wait, catching any errors
-		_, err = stateConf.WaitForState()
+		_, err = stateConf.WaitForStateContext(ctx)
 		if err != nil {
-			return err
+			return sdkdiag.AppendErrorf(diags, "updating Neptune Cluster Instance (%s): waiting for completion: %s", d.Id(), err)
 		}
-
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("updating Neptune Cluster Instance (%s) tags: %s", d.Get("arn").(string), err)
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Neptune Cluster Instance (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
 
-	return resourceClusterInstanceRead(d, meta)
+	return append(diags, resourceClusterInstanceRead(ctx, d, meta)...)
 }
 
-func resourceClusterInstanceDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).NeptuneConn
+func resourceClusterInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).NeptuneConn()
 
 	log.Printf("[DEBUG] Neptune Cluster Instance destroy: %v", d.Id())
 
 	opts := neptune.DeleteDBInstanceInput{DBInstanceIdentifier: aws.String(d.Id())}
 
-	log.Printf("[DEBUG] Neptune Cluster Instance destroy configuration: %s", opts)
-	if _, err := conn.DeleteDBInstance(&opts); err != nil {
+	if _, err := conn.DeleteDBInstanceWithContext(ctx, &opts); err != nil {
 		if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBInstanceNotFoundFault) {
-			return nil
+			return diags
 		}
-		return fmt.Errorf("deleting Neptune cluster instance %q: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Neptune Cluster Instance (%s): %s", d.Id(), err)
 	}
 
 	log.Println("[INFO] Waiting for Neptune Cluster Instance to be destroyed")
 	stateConf := &resource.StateChangeConf{
 		Pending:    resourceClusterInstanceDeletePendingStates,
 		Target:     []string{},
-		Refresh:    resourceInstanceStateRefreshFunc(d.Id(), conn),
+		Refresh:    resourceInstanceStateRefreshFunc(ctx, d.Id(), conn),
 		Timeout:    d.Timeout(schema.TimeoutDelete),
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
 	}
 
-	_, err := stateConf.WaitForState()
-	return err
-
+	_, err := stateConf.WaitForStateContext(ctx)
+	return sdkdiag.AppendErrorf(diags, "deleting Neptune Cluster Instance (%s): waiting for completion: %s", d.Id(), err)
 }
 
 var resourceClusterInstanceCreateUpdatePendingStates = []string{
@@ -517,12 +517,11 @@ var resourceClusterInstanceDeletePendingStates = []string{
 	"deleting",
 }
 
-func resourceInstanceStateRefreshFunc(id string, conn *neptune.Neptune) resource.StateRefreshFunc {
+func resourceInstanceStateRefreshFunc(ctx context.Context, id string, conn *neptune.Neptune) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		v, err := resourceInstanceRetrieve(id, conn)
+		v, err := resourceInstanceRetrieve(ctx, id, conn)
 
 		if err != nil {
-			log.Printf("Error on retrieving Neptune Instance when waiting: %s", err)
 			return nil, "", err
 		}
 
@@ -530,27 +529,21 @@ func resourceInstanceStateRefreshFunc(id string, conn *neptune.Neptune) resource
 			return nil, "", nil
 		}
 
-		if v.DBInstanceStatus != nil {
-			log.Printf("[DEBUG] Neptune Instance status for instance %s: %s", id, aws.StringValue(v.DBInstanceStatus))
-		}
-
 		return v, aws.StringValue(v.DBInstanceStatus), nil
 	}
 }
 
-func resourceInstanceRetrieve(id string, conn *neptune.Neptune) (*neptune.DBInstance, error) {
+func resourceInstanceRetrieve(ctx context.Context, id string, conn *neptune.Neptune) (*neptune.DBInstance, error) {
 	opts := neptune.DescribeDBInstancesInput{
 		DBInstanceIdentifier: aws.String(id),
 	}
 
-	log.Printf("[DEBUG] Neptune Instance describe configuration: %#v", opts)
-
-	resp, err := conn.DescribeDBInstances(&opts)
+	resp, err := conn.DescribeDBInstancesWithContext(ctx, &opts)
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBInstanceNotFoundFault) {
 			return nil, nil
 		}
-		return nil, fmt.Errorf("Error retrieving Neptune Instances: %s", err)
+		return nil, err
 	}
 
 	if len(resp.DBInstances) != 1 ||

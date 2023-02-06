@@ -1,6 +1,7 @@
 package ecr
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"time"
@@ -9,10 +10,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/ecr"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -20,12 +23,12 @@ import (
 
 func ResourceRepository() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceRepositoryCreate,
-		Read:   resourceRepositoryRead,
-		Update: resourceRepositoryUpdate,
-		Delete: resourceRepositoryDelete,
+		CreateWithoutTimeout: resourceRepositoryCreate,
+		ReadWithoutTimeout:   resourceRepositoryRead,
+		UpdateWithoutTimeout: resourceRepositoryUpdate,
+		DeleteWithoutTimeout: resourceRepositoryDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -111,8 +114,9 @@ func ResourceRepository() *schema.Resource {
 	}
 }
 
-func resourceRepositoryCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECRConn
+func resourceRepositoryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ECRConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -138,18 +142,18 @@ func resourceRepositoryCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Creating ECR repository: %#v", input)
-	out, err := conn.CreateRepository(&input)
+	out, err := conn.CreateRepositoryWithContext(ctx, &input)
 
 	// Some partitions (i.e., ISO) may not support tag-on-create
 	if input.Tags != nil && meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID && verify.ErrorISOUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] failed creating ECR Repository (%s) with tags: %s. Trying create without tags.", d.Get("name").(string), err)
 		input.Tags = nil
 
-		out, err = conn.CreateRepository(&input)
+		out, err = conn.CreateRepositoryWithContext(ctx, &input)
 	}
 
 	if err != nil {
-		return fmt.Errorf("failed creating ECR Repository (%s): %w", d.Get("name").(string), err)
+		return sdkdiag.AppendErrorf(diags, "creating ECR Repository (%s): %s", d.Get("name").(string), err)
 	}
 
 	repository := *out.Repository // nosemgrep:ci.prefer-aws-go-sdk-pointer-conversion-assignment // false positive
@@ -160,24 +164,25 @@ func resourceRepositoryCreate(d *schema.ResourceData, meta interface{}) error {
 
 	// Some partitions (i.e., ISO) may not support tag-on-create, attempt tag after create
 	if input.Tags == nil && len(tags) > 0 && meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID {
-		err := UpdateTags(conn, aws.StringValue(repository.RepositoryArn), nil, tags)
+		err := UpdateTags(ctx, conn, aws.StringValue(repository.RepositoryArn), nil, tags)
 
 		// If default tags only, log and continue. Otherwise, error.
 		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.ErrorISOUnsupported(conn.PartitionID, err) {
 			log.Printf("[WARN] failed adding tags after create for ECR Repository (%s): %s", d.Id(), err)
-			return resourceRepositoryRead(d, meta)
+			return append(diags, resourceRepositoryRead(ctx, d, meta)...)
 		}
 
 		if err != nil {
-			return fmt.Errorf("failed adding tags after create for ECR Repository (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "adding tags after create for ECR Repository (%s): %s", d.Id(), err)
 		}
 	}
 
-	return resourceRepositoryRead(d, meta)
+	return append(diags, resourceRepositoryRead(ctx, d, meta)...)
 }
 
-func resourceRepositoryRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECRConn
+func resourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ECRConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -187,10 +192,10 @@ func resourceRepositoryRead(d *schema.ResourceData, meta interface{}) error {
 		RepositoryNames: aws.StringSlice([]string{d.Id()}),
 	}
 
-	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
+	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
 		var err error
 
-		out, err = conn.DescribeRepositories(input)
+		out, err = conn.DescribeRepositoriesWithContext(ctx, input)
 
 		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, ecr.ErrCodeRepositoryNotFoundException) {
 			return resource.RetryableError(err)
@@ -204,21 +209,21 @@ func resourceRepositoryRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if tfresource.TimedOut(err) {
-		out, err = conn.DescribeRepositories(input)
+		out, err = conn.DescribeRepositoriesWithContext(ctx, input)
 	}
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ecr.ErrCodeRepositoryNotFoundException) {
 		log.Printf("[WARN] ECR Repository (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading ECR Repository (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading ECR Repository (%s): %s", d.Id(), err)
 	}
 
 	if out == nil || len(out.Repositories) == 0 || out.Repositories[0] == nil {
-		return fmt.Errorf("error reading ECR Repository (%s): empty response", d.Id())
+		return sdkdiag.AppendErrorf(diags, "reading ECR Repository (%s): empty response", d.Id())
 	}
 
 	repository := out.Repositories[0]
@@ -231,37 +236,37 @@ func resourceRepositoryRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("image_tag_mutability", repository.ImageTagMutability)
 
 	if err := d.Set("image_scanning_configuration", flattenImageScanningConfiguration(repository.ImageScanningConfiguration)); err != nil {
-		return fmt.Errorf("error setting image_scanning_configuration for ECR Repository (%s): %w", arn, err)
+		return sdkdiag.AppendErrorf(diags, "setting image_scanning_configuration for ECR Repository (%s): %s", arn, err)
 	}
 
 	if err := d.Set("encryption_configuration", flattenRepositoryEncryptionConfiguration(repository.EncryptionConfiguration)); err != nil {
-		return fmt.Errorf("error setting encryption_configuration for ECR Repository (%s): %w", arn, err)
+		return sdkdiag.AppendErrorf(diags, "setting encryption_configuration for ECR Repository (%s): %s", arn, err)
 	}
 
-	tags, err := ListTags(conn, arn)
+	tags, err := ListTags(ctx, conn, arn)
 
 	// Some partitions (i.e., ISO) may not support tagging, giving error
 	if meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID && verify.ErrorISOUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] failed listing tags for ECR Repository (%s): %s", d.Id(), err)
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("failed listing tags for ECR Repository (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for ECR Repository (%s): %s", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
 func flattenImageScanningConfiguration(isc *ecr.ImageScanningConfiguration) []map[string]interface{} {
@@ -309,65 +314,67 @@ func flattenRepositoryEncryptionConfiguration(ec *ecr.EncryptionConfiguration) [
 	}
 }
 
-func resourceRepositoryUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceRepositoryUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	arn := d.Get("arn").(string)
-	conn := meta.(*conns.AWSClient).ECRConn
+	conn := meta.(*conns.AWSClient).ECRConn()
 
 	if d.HasChange("image_tag_mutability") {
-		if err := resourceRepositoryUpdateImageTagMutability(conn, d); err != nil {
-			return err
+		if err := resourceRepositoryUpdateImageTagMutability(ctx, conn, d); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating ECR Repository (%s): %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("image_scanning_configuration") {
-		if err := resourceRepositoryUpdateImageScanningConfiguration(conn, d); err != nil {
-			return err
+		if err := resourceRepositoryUpdateImageScanningConfiguration(ctx, conn, d); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating ECR Repository (%s): %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		err := UpdateTags(conn, arn, o, n)
+		err := UpdateTags(ctx, conn, arn, o, n)
 
 		// Some partitions may not support tagging, giving error
 		if meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID && verify.ErrorISOUnsupported(conn.PartitionID, err) {
 			log.Printf("[WARN] failed updating tags for ECR Repository (%s): %s", d.Id(), err)
-			return resourceRepositoryRead(d, meta)
+			return append(diags, resourceRepositoryRead(ctx, d, meta)...)
 		}
 
 		if err != nil {
-			return fmt.Errorf("failed updating tags for ECR Repository (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating ECR Repository (%s): updating tags: %s", d.Id(), err)
 		}
 	}
 
-	return resourceRepositoryRead(d, meta)
+	return append(diags, resourceRepositoryRead(ctx, d, meta)...)
 }
 
-func resourceRepositoryDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECRConn
+func resourceRepositoryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ECRConn()
 
-	_, err := conn.DeleteRepository(&ecr.DeleteRepositoryInput{
+	_, err := conn.DeleteRepositoryWithContext(ctx, &ecr.DeleteRepositoryInput{
 		RepositoryName: aws.String(d.Id()),
 		RegistryId:     aws.String(d.Get("registry_id").(string)),
 		Force:          aws.Bool(d.Get("force_delete").(bool)),
 	})
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, ecr.ErrCodeRepositoryNotFoundException) {
-			return nil
+			return diags
 		}
 		if tfawserr.ErrCodeEquals(err, ecr.ErrCodeRepositoryNotEmptyException) {
-			return fmt.Errorf("ECR Repository (%s) not empty, consider using force_delete: %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "ECR Repository (%s) not empty, consider using force_delete: %s", d.Id(), err)
 		}
-		return fmt.Errorf("error deleting ECR Repository (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting ECR Repository (%s): %s", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Waiting for ECR Repository %q to be deleted", d.Id())
 	input := &ecr.DescribeRepositoriesInput{
 		RepositoryNames: aws.StringSlice([]string{d.Id()}),
 	}
-	err = resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
-		_, err = conn.DescribeRepositories(input)
+	err = resource.RetryContext(ctx, d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
+		_, err = conn.DescribeRepositoriesWithContext(ctx, input)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, ecr.ErrCodeRepositoryNotFoundException) {
 				return nil
@@ -378,38 +385,37 @@ func resourceRepositoryDelete(d *schema.ResourceData, meta interface{}) error {
 		return resource.RetryableError(fmt.Errorf("ECR Repository (%s) still exists", d.Id()))
 	})
 	if tfresource.TimedOut(err) {
-		_, err = conn.DescribeRepositories(input)
+		_, err = conn.DescribeRepositoriesWithContext(ctx, input)
 	}
 
 	if tfawserr.ErrCodeEquals(err, ecr.ErrCodeRepositoryNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting ECR repository: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting ECR repository: %s", err)
 	}
 
 	log.Printf("[DEBUG] repository %q deleted.", d.Get("name").(string))
 
-	return nil
+	return diags
 }
 
-func resourceRepositoryUpdateImageTagMutability(conn *ecr.ECR, d *schema.ResourceData) error {
+func resourceRepositoryUpdateImageTagMutability(ctx context.Context, conn *ecr.ECR, d *schema.ResourceData) error {
 	input := &ecr.PutImageTagMutabilityInput{
 		ImageTagMutability: aws.String(d.Get("image_tag_mutability").(string)),
 		RepositoryName:     aws.String(d.Id()),
 		RegistryId:         aws.String(d.Get("registry_id").(string)),
 	}
 
-	_, err := conn.PutImageTagMutability(input)
+	_, err := conn.PutImageTagMutabilityWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("Error setting image tag mutability: %s", err.Error())
+		return fmt.Errorf("setting image tag mutability: %s", err)
 	}
 
 	return nil
 }
-func resourceRepositoryUpdateImageScanningConfiguration(conn *ecr.ECR, d *schema.ResourceData) error {
-
+func resourceRepositoryUpdateImageScanningConfiguration(ctx context.Context, conn *ecr.ECR, d *schema.ResourceData) error {
 	var ecrImageScanningConfig ecr.ImageScanningConfiguration
 	imageScanningConfigs := d.Get("image_scanning_configuration").([]interface{})
 	if len(imageScanningConfigs) > 0 {
@@ -426,9 +432,9 @@ func resourceRepositoryUpdateImageScanningConfiguration(conn *ecr.ECR, d *schema
 		RegistryId:                 aws.String(d.Get("registry_id").(string)),
 	}
 
-	_, err := conn.PutImageScanningConfiguration(input)
+	_, err := conn.PutImageScanningConfigurationWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("Error setting image scanning configuration: %s", err.Error())
+		return fmt.Errorf("setting image scanning configuration: %s", err)
 	}
 
 	return nil

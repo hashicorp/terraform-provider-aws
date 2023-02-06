@@ -22,15 +22,16 @@ func init() {
 }
 
 func sweepScalingPlans(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).AutoScalingPlansConn
+	conn := client.(*conns.AWSClient).AutoScalingPlansConn()
 	input := &autoscalingplans.DescribeScalingPlansInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = describeScalingPlansPages(conn, input, func(page *autoscalingplans.DescribeScalingPlansOutput, lastPage bool) bool {
+	err = describeScalingPlansPages(ctx, conn, input, func(page *autoscalingplans.DescribeScalingPlansOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -41,7 +42,7 @@ func sweepScalingPlans(region string) error {
 
 			r := ResourceScalingPlan()
 			d := r.Data(nil)
-			d.SetId("????????????????") // ID not used in Delete.
+			d.SetId("unused")
 			d.Set("name", scalingPlanName)
 			d.Set("scaling_plan_version", scalingPlanVersion)
 
@@ -60,7 +61,7 @@ func sweepScalingPlans(region string) error {
 		return fmt.Errorf("error listing Auto Scaling Scaling Plans (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Auto Scaling Scaling Plans (%s): %w", region, err)

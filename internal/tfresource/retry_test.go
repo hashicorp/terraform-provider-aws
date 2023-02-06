@@ -1,7 +1,6 @@
 package tfresource_test
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"sync/atomic"
@@ -10,10 +9,15 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+//nolint:tparallel
 func TestRetryWhenAWSErrCodeEquals(t *testing.T) { // nosemgrep:ci.aws-in-func-name
+	ctx := acctest.Context(t)
+	t.Parallel()
+
 	var retryCount int32
 
 	testCases := []struct {
@@ -60,11 +64,12 @@ func TestRetryWhenAWSErrCodeEquals(t *testing.T) { // nosemgrep:ci.aws-in-func-n
 		},
 	}
 
-	for _, testCase := range testCases {
+	for _, testCase := range testCases { //nolint:paralleltest
+		testCase := testCase
 		t.Run(testCase.Name, func(t *testing.T) {
 			retryCount = 0
 
-			_, err := tfresource.RetryWhenAWSErrCodeEquals(5*time.Second, testCase.F, "TestCode1", "TestCode2")
+			_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 5*time.Second, testCase.F, "TestCode1", "TestCode2")
 
 			if testCase.ExpectError && err == nil {
 				t.Fatal("expected error")
@@ -75,7 +80,11 @@ func TestRetryWhenAWSErrCodeEquals(t *testing.T) { // nosemgrep:ci.aws-in-func-n
 	}
 }
 
+//nolint:tparallel
 func TestRetryWhenAWSErrMessageContains(t *testing.T) { // nosemgrep:ci.aws-in-func-name
+	ctx := acctest.Context(t)
+	t.Parallel()
+
 	var retryCount int32
 
 	testCases := []struct {
@@ -122,11 +131,12 @@ func TestRetryWhenAWSErrMessageContains(t *testing.T) { // nosemgrep:ci.aws-in-f
 		},
 	}
 
-	for _, testCase := range testCases {
+	for _, testCase := range testCases { //nolint:paralleltest
+		testCase := testCase
 		t.Run(testCase.Name, func(t *testing.T) {
 			retryCount = 0
 
-			_, err := tfresource.RetryWhenAWSErrMessageContains(5*time.Second, testCase.F, "TestCode1", "TestMessage1")
+			_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, 5*time.Second, testCase.F, "TestCode1", "TestMessage1")
 
 			if testCase.ExpectError && err == nil {
 				t.Fatal("expected error")
@@ -137,7 +147,10 @@ func TestRetryWhenAWSErrMessageContains(t *testing.T) { // nosemgrep:ci.aws-in-f
 	}
 }
 
-func TestRetryWhenNewResourceNotFound(t *testing.T) {
+func TestRetryWhenNewResourceNotFound(t *testing.T) { //nolint:tparallel
+	ctx := acctest.Context(t)
+	t.Parallel()
+
 	var retryCount int32
 
 	testCases := []struct {
@@ -209,11 +222,12 @@ func TestRetryWhenNewResourceNotFound(t *testing.T) {
 		},
 	}
 
-	for _, testCase := range testCases {
+	for _, testCase := range testCases { //nolint:paralleltest
+		testCase := testCase
 		t.Run(testCase.Name, func(t *testing.T) {
 			retryCount = 0
 
-			_, err := tfresource.RetryWhenNotFound(5*time.Second, testCase.F)
+			_, err := tfresource.RetryWhenNotFound(ctx, 5*time.Second, testCase.F)
 
 			if testCase.ExpectError && err == nil {
 				t.Fatal("expected error")
@@ -224,7 +238,10 @@ func TestRetryWhenNewResourceNotFound(t *testing.T) {
 	}
 }
 
-func TestRetryWhenNotFound(t *testing.T) {
+func TestRetryWhenNotFound(t *testing.T) { //nolint:tparallel
+	ctx := acctest.Context(t)
+	t.Parallel()
+
 	var retryCount int32
 
 	testCases := []struct {
@@ -271,11 +288,12 @@ func TestRetryWhenNotFound(t *testing.T) {
 		},
 	}
 
-	for _, testCase := range testCases {
+	for _, testCase := range testCases { //nolint:paralleltest
+		testCase := testCase
 		t.Run(testCase.Name, func(t *testing.T) {
 			retryCount = 0
 
-			_, err := tfresource.RetryWhenNotFound(5*time.Second, testCase.F)
+			_, err := tfresource.RetryWhenNotFound(ctx, 5*time.Second, testCase.F)
 
 			if testCase.ExpectError && err == nil {
 				t.Fatal("expected error")
@@ -286,7 +304,10 @@ func TestRetryWhenNotFound(t *testing.T) {
 	}
 }
 
-func TestRetryUntilNotFound(t *testing.T) {
+func TestRetryUntilNotFound(t *testing.T) { //nolint:tparallel
+	ctx := acctest.Context(t)
+	t.Parallel()
+
 	var retryCount int32
 
 	testCases := []struct {
@@ -333,11 +354,12 @@ func TestRetryUntilNotFound(t *testing.T) {
 		},
 	}
 
-	for _, testCase := range testCases {
+	for _, testCase := range testCases { //nolint:paralleltest
+		testCase := testCase
 		t.Run(testCase.Name, func(t *testing.T) {
 			retryCount = 0
 
-			_, err := tfresource.RetryUntilNotFound(5*time.Second, testCase.F)
+			_, err := tfresource.RetryUntilNotFound(ctx, 5*time.Second, testCase.F)
 
 			if testCase.ExpectError && err == nil {
 				t.Fatal("expected error")
@@ -348,7 +370,8 @@ func TestRetryUntilNotFound(t *testing.T) {
 	}
 }
 
-func TestRetryConfigContext_error(t *testing.T) {
+func TestRetryContext_error(t *testing.T) {
+	ctx := acctest.Context(t)
 	t.Parallel()
 
 	expected := fmt.Errorf("nope")
@@ -358,7 +381,7 @@ func TestRetryConfigContext_error(t *testing.T) {
 
 	errCh := make(chan error)
 	go func() {
-		errCh <- tfresource.RetryConfigContext(context.Background(), 0*time.Second, 0*time.Second, 0*time.Second, 0*time.Second, 1*time.Second, f)
+		errCh <- tfresource.Retry(ctx, 1*time.Second, f)
 	}()
 
 	select {
@@ -368,5 +391,86 @@ func TestRetryConfigContext_error(t *testing.T) {
 		}
 	case <-time.After(5 * time.Second):
 		t.Fatal("timeout")
+	}
+}
+
+func TestOptionsApply(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		options  tfresource.Options
+		expected resource.StateChangeConf
+	}{
+		"Nothing": {
+			options:  tfresource.Options{},
+			expected: resource.StateChangeConf{},
+		},
+		"Delay": {
+			options: tfresource.Options{
+				Delay: 1 * time.Minute,
+			},
+			expected: resource.StateChangeConf{
+				Delay: 1 * time.Minute,
+			},
+		},
+		"MinPollInterval": {
+			options: tfresource.Options{
+				MinPollInterval: 1 * time.Minute,
+			},
+			expected: resource.StateChangeConf{
+				MinTimeout: 1 * time.Minute,
+			},
+		},
+		"PollInterval": {
+			options: tfresource.Options{
+				PollInterval: 1 * time.Minute,
+			},
+			expected: resource.StateChangeConf{
+				PollInterval: 1 * time.Minute,
+			},
+		},
+		"NotFoundChecks": {
+			options: tfresource.Options{
+				NotFoundChecks: 10,
+			},
+			expected: resource.StateChangeConf{
+				NotFoundChecks: 10,
+			},
+		},
+		"ContinuousTargetOccurence": {
+			options: tfresource.Options{
+				ContinuousTargetOccurence: 3,
+			},
+			expected: resource.StateChangeConf{
+				ContinuousTargetOccurence: 3,
+			},
+		},
+	}
+
+	for name, testCase := range testCases {
+		testCase := testCase
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			conf := resource.StateChangeConf{}
+
+			testCase.options.Apply(&conf)
+
+			if a, e := conf.Delay, testCase.expected.Delay; a != e {
+				t.Errorf("Delay: expected %s, got %s", e, a)
+			}
+			if a, e := conf.MinTimeout, testCase.expected.MinTimeout; a != e {
+				t.Errorf("MinTimeout: expected %s, got %s", e, a)
+			}
+			if a, e := conf.PollInterval, testCase.expected.PollInterval; a != e {
+				t.Errorf("PollInterval: expected %s, got %s", e, a)
+			}
+			if a, e := conf.NotFoundChecks, testCase.expected.NotFoundChecks; a != e {
+				t.Errorf("NotFoundChecks: expected %d, got %d", e, a)
+			}
+			if a, e := conf.ContinuousTargetOccurence, testCase.expected.ContinuousTargetOccurence; a != e {
+				t.Errorf("ContinuousTargetOccurence: expected %d, got %d", e, a)
+			}
+		})
 	}
 }

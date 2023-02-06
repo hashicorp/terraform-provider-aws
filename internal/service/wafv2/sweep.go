@@ -10,7 +10,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/wafv2"
-	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
@@ -50,187 +49,171 @@ func init() {
 }
 
 func sweepIPSets(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).WAFV2Conn
-
-	var sweeperErrs *multierror.Error
-
+	conn := client.(*conns.AWSClient).WAFV2Conn()
 	input := &wafv2.ListIPSetsInput{
 		Scope: aws.String(wafv2.ScopeRegional),
 	}
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = listIPSetsPages(conn, input, func(page *wafv2.ListIPSetsOutput, lastPage bool) bool {
+	err = listIPSetsPages(ctx, conn, input, func(page *wafv2.ListIPSetsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, ipSet := range page.IPSets {
-			id := aws.StringValue(ipSet.Id)
-
+		for _, v := range page.IPSets {
 			r := ResourceIPSet()
 			d := r.Data(nil)
-			d.SetId(id)
-			d.Set("lock_token", ipSet.LockToken)
-			d.Set("name", ipSet.Name)
+			d.SetId(aws.StringValue(v.Id))
+			d.Set("lock_token", v.LockToken)
+			d.Set("name", v.Name)
 			d.Set("scope", input.Scope)
-			err := r.Delete(d, client)
 
-			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting WAFv2 IP Set (%s): %w", id, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-				continue
-			}
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
 		return !lastPage
 	})
 
 	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping WAFv2 IP Set sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+		log.Printf("[WARN] Skipping WAFv2 IPSet sweep for %s: %s", region, err)
+		return nil
 	}
 
 	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error describing WAFv2 IP Sets: %w", err))
+		return fmt.Errorf("error listing WAFv2 IPSets (%s): %w", region, err)
 	}
 
-	return sweeperErrs.ErrorOrNil()
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping WAFv2 IPSets (%s): %w", region, err)
+	}
+
+	return nil
 }
 
 func sweepRegexPatternSets(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).WAFV2Conn
-
-	var sweeperErrs *multierror.Error
-
+	conn := client.(*conns.AWSClient).WAFV2Conn()
 	input := &wafv2.ListRegexPatternSetsInput{
 		Scope: aws.String(wafv2.ScopeRegional),
 	}
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = listRegexPatternSetsPages(conn, input, func(page *wafv2.ListRegexPatternSetsOutput, lastPage bool) bool {
+	err = listRegexPatternSetsPages(ctx, conn, input, func(page *wafv2.ListRegexPatternSetsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, regexPatternSet := range page.RegexPatternSets {
-			id := aws.StringValue(regexPatternSet.Id)
-
+		for _, v := range page.RegexPatternSets {
 			r := ResourceRegexPatternSet()
 			d := r.Data(nil)
-			d.SetId(id)
-			d.Set("lock_token", regexPatternSet.LockToken)
-			d.Set("name", regexPatternSet.Name)
+			d.SetId(aws.StringValue(v.Id))
+			d.Set("lock_token", v.LockToken)
+			d.Set("name", v.Name)
 			d.Set("scope", input.Scope)
-			err := r.Delete(d, client)
 
-			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting WAFv2 Regex Pattern Set (%s): %w", id, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-				continue
-			}
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
 		return !lastPage
 	})
 
 	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping WAFv2 Regex Pattern Set sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+		log.Printf("[WARN] Skipping WAFv2 RegexPatternSet sweep for %s: %s", region, err)
+		return nil
 	}
 
 	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error describing WAFv2 Regex Pattern Sets: %w", err))
+		return fmt.Errorf("error listing WAFv2 RegexPatternSets (%s): %w", region, err)
 	}
 
-	return sweeperErrs.ErrorOrNil()
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping WAFv2 RegexPatternSets (%s): %w", region, err)
+	}
+
+	return nil
 }
 
 func sweepRuleGroups(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).WAFV2Conn
-
-	var sweeperErrs *multierror.Error
-
+	conn := client.(*conns.AWSClient).WAFV2Conn()
 	input := &wafv2.ListRuleGroupsInput{
 		Scope: aws.String(wafv2.ScopeRegional),
 	}
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = listRuleGroupsPages(conn, input, func(page *wafv2.ListRuleGroupsOutput, lastPage bool) bool {
+	err = listRuleGroupsPages(ctx, conn, input, func(page *wafv2.ListRuleGroupsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, ruleGroup := range page.RuleGroups {
-			id := aws.StringValue(ruleGroup.Id)
-
+		for _, v := range page.RuleGroups {
 			r := ResourceRuleGroup()
 			d := r.Data(nil)
-			d.SetId(id)
-			d.Set("lock_token", ruleGroup.LockToken)
-			d.Set("name", ruleGroup.Name)
+			d.SetId(aws.StringValue(v.Id))
+			d.Set("lock_token", v.LockToken)
+			d.Set("name", v.Name)
 			d.Set("scope", input.Scope)
-			err := r.Delete(d, client)
 
-			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting WAFv2 Rule Group (%s): %w", id, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-				continue
-			}
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 
 		return !lastPage
 	})
 
 	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping WAFv2 Rule Group sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+		log.Printf("[WARN] Skipping WAFv2 RuleGroup sweep for %s: %s", region, err)
+		return nil
 	}
 
 	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error describing WAFv2 Rule Groups: %w", err))
+		return fmt.Errorf("error listing WAFv2 RuleGroups (%s): %w", region, err)
 	}
 
-	return sweeperErrs.ErrorOrNil()
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping WAFv2 RuleGroups (%s): %w", region, err)
+	}
+
+	return nil
 }
 
 func sweepWebACLs(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
-
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-
-	conn := client.(*conns.AWSClient).WAFV2Conn
-	sweepResources := make([]sweep.Sweepable, 0)
-	var errs *multierror.Error
-
+	conn := client.(*conns.AWSClient).WAFV2Conn()
 	input := &wafv2.ListWebACLsInput{
 		Scope: aws.String(wafv2.ScopeRegional),
 	}
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = listWebACLsPages(conn, input, func(page *wafv2.ListWebACLsOutput, lastPage bool) bool {
+	err = listWebACLsPages(ctx, conn, input, func(page *wafv2.ListWebACLsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, webAcl := range page.WebACLs {
-			if webAcl == nil {
-				continue
-			}
-
-			name := aws.StringValue(webAcl.Name)
+		for _, v := range page.WebACLs {
+			name := aws.StringValue(v.Name)
 
 			// Exclude WebACLs managed by Firewall Manager as deletion returns AccessDeniedException.
 			// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/19149
@@ -240,12 +223,10 @@ func sweepWebACLs(region string) error {
 				continue
 			}
 
-			id := aws.StringValue(webAcl.Id)
-
 			r := ResourceWebACL()
 			d := r.Data(nil)
-			d.SetId(id)
-			d.Set("lock_token", webAcl.LockToken)
+			d.SetId(aws.StringValue(v.Id))
+			d.Set("lock_token", v.LockToken)
 			d.Set("name", name)
 			d.Set("scope", input.Scope)
 
@@ -255,18 +236,20 @@ func sweepWebACLs(region string) error {
 		return !lastPage
 	})
 
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error describing WAFv2 Web ACLs for %s: %w", region, err))
-	}
-
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping WAFv2 Web ACLs for %s: %w", region, err))
-	}
-
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping WAFv2 Web ACLs sweep for %s: %s", region, errs)
+	if sweep.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping WAFv2 WebACL sweep for %s: %s", region, err)
 		return nil
 	}
 
-	return errs.ErrorOrNil()
+	if err != nil {
+		return fmt.Errorf("error listing WAFv2 WebACLs (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping WAFv2 WebACLs (%s): %w", region, err)
+	}
+
+	return nil
 }

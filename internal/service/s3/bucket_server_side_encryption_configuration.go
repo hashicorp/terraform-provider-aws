@@ -18,10 +18,10 @@ import (
 
 func ResourceBucketServerSideEncryptionConfiguration() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceBucketServerSideEncryptionConfigurationCreate,
-		ReadContext:   resourceBucketServerSideEncryptionConfigurationRead,
-		UpdateContext: resourceBucketServerSideEncryptionConfigurationUpdate,
-		DeleteContext: resourceBucketServerSideEncryptionConfigurationDelete,
+		CreateWithoutTimeout: resourceBucketServerSideEncryptionConfigurationCreate,
+		ReadWithoutTimeout:   resourceBucketServerSideEncryptionConfigurationRead,
+		UpdateWithoutTimeout: resourceBucketServerSideEncryptionConfigurationUpdate,
+		DeleteWithoutTimeout: resourceBucketServerSideEncryptionConfigurationDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -74,7 +74,7 @@ func ResourceBucketServerSideEncryptionConfiguration() *schema.Resource {
 }
 
 func resourceBucketServerSideEncryptionConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket := d.Get("bucket").(string)
 	expectedBucketOwner := d.Get("expected_bucket_owner").(string)
@@ -90,8 +90,7 @@ func resourceBucketServerSideEncryptionConfigurationCreate(ctx context.Context, 
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(
-		propagationTimeout,
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout,
 		func() (interface{}, error) {
 			return conn.PutBucketEncryptionWithContext(ctx, input)
 		},
@@ -109,7 +108,7 @@ func resourceBucketServerSideEncryptionConfigurationCreate(ctx context.Context, 
 }
 
 func resourceBucketServerSideEncryptionConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
@@ -124,8 +123,7 @@ func resourceBucketServerSideEncryptionConfigurationRead(ctx context.Context, d 
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	resp, err := tfresource.RetryWhenAWSErrCodeEquals(
-		propagationTimeout,
+	resp, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout,
 		func() (interface{}, error) {
 			return conn.GetBucketEncryptionWithContext(ctx, input)
 		},
@@ -165,7 +163,7 @@ func resourceBucketServerSideEncryptionConfigurationRead(ctx context.Context, d 
 }
 
 func resourceBucketServerSideEncryptionConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
@@ -183,8 +181,7 @@ func resourceBucketServerSideEncryptionConfigurationUpdate(ctx context.Context, 
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	_, err = tfresource.RetryWhenAWSErrCodeEquals(
-		propagationTimeout,
+	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout,
 		func() (interface{}, error) {
 			return conn.PutBucketEncryptionWithContext(ctx, input)
 		},
@@ -200,7 +197,7 @@ func resourceBucketServerSideEncryptionConfigurationUpdate(ctx context.Context, 
 }
 
 func resourceBucketServerSideEncryptionConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {

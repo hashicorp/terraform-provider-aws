@@ -19,6 +19,7 @@ import (
 )
 
 func testAccMultiplex_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -31,16 +32,16 @@ func testAccMultiplex_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(names.MediaLiveEndpointID, t)
-			testAccMultiplexesPreCheck(t)
+			testAccMultiplexesPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMultiplexDestroy,
+		CheckDestroy:             testAccCheckMultiplexDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMultiplexConfig_basic(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMultiplexExists(resourceName, &multiplex),
+					testAccCheckMultiplexExists(ctx, resourceName, &multiplex),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "multiplex_settings.0.transport_stream_bitrate", "1000000"),
@@ -60,6 +61,7 @@ func testAccMultiplex_basic(t *testing.T) {
 }
 
 func testAccMultiplex_start(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -72,16 +74,16 @@ func testAccMultiplex_start(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(names.MediaLiveEndpointID, t)
-			testAccMultiplexesPreCheck(t)
+			testAccMultiplexesPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMultiplexDestroy,
+		CheckDestroy:             testAccCheckMultiplexDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMultiplexConfig_basic(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMultiplexExists(resourceName, &multiplex),
+					testAccCheckMultiplexExists(ctx, resourceName, &multiplex),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 				),
@@ -89,7 +91,7 @@ func testAccMultiplex_start(t *testing.T) {
 			{
 				Config: testAccMultiplexConfig_basic(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMultiplexExists(resourceName, &multiplex),
+					testAccCheckMultiplexExists(ctx, resourceName, &multiplex),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 				),
@@ -99,6 +101,7 @@ func testAccMultiplex_start(t *testing.T) {
 }
 
 func testAccMultiplex_update(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -111,16 +114,16 @@ func testAccMultiplex_update(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(names.MediaLiveEndpointID, t)
-			testAccMultiplexesPreCheck(t)
+			testAccMultiplexesPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMultiplexDestroy,
+		CheckDestroy:             testAccCheckMultiplexDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMultiplexConfig_basic(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMultiplexExists(resourceName, &multiplex),
+					testAccCheckMultiplexExists(ctx, resourceName, &multiplex),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "multiplex_settings.0.transport_stream_bitrate", "1000000"),
@@ -132,7 +135,7 @@ func testAccMultiplex_update(t *testing.T) {
 			{
 				Config: testAccMultiplexConfig_update(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMultiplexExists(resourceName, &multiplex),
+					testAccCheckMultiplexExists(ctx, resourceName, &multiplex),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "multiplex_settings.0.transport_stream_bitrate", "1000001"),
@@ -146,6 +149,7 @@ func testAccMultiplex_update(t *testing.T) {
 }
 
 func testAccMultiplex_updateTags(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -158,16 +162,16 @@ func testAccMultiplex_updateTags(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(names.MediaLiveEndpointID, t)
-			testAccMultiplexesPreCheck(t)
+			testAccMultiplexesPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMultiplexDestroy,
+		CheckDestroy:             testAccCheckMultiplexDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMultiplexConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMultiplexExists(resourceName, &multiplex),
+					testAccCheckMultiplexExists(ctx, resourceName, &multiplex),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -175,7 +179,7 @@ func testAccMultiplex_updateTags(t *testing.T) {
 			{
 				Config: testAccMultiplexConfig_tags2(rName, "key1", "value1", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMultiplexExists(resourceName, &multiplex),
+					testAccCheckMultiplexExists(ctx, resourceName, &multiplex),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -184,7 +188,7 @@ func testAccMultiplex_updateTags(t *testing.T) {
 			{
 				Config: testAccMultiplexConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMultiplexExists(resourceName, &multiplex),
+					testAccCheckMultiplexExists(ctx, resourceName, &multiplex),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -194,6 +198,7 @@ func testAccMultiplex_updateTags(t *testing.T) {
 }
 
 func testAccMultiplex_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -206,17 +211,17 @@ func testAccMultiplex_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(names.MediaLiveEndpointID, t)
-			testAccMultiplexesPreCheck(t)
+			testAccMultiplexesPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMultiplexDestroy,
+		CheckDestroy:             testAccCheckMultiplexDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMultiplexConfig_basic(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMultiplexExists(resourceName, &multiplex),
-					acctest.CheckResourceDisappears(acctest.Provider, tfmedialive.ResourceMultiplex(), resourceName),
+					testAccCheckMultiplexExists(ctx, resourceName, &multiplex),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfmedialive.ResourceMultiplex(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -224,30 +229,31 @@ func testAccMultiplex_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckMultiplexDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveConn
-	ctx := context.Background()
+func testAccCheckMultiplexDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveClient()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_medialive_multiplex" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_medialive_multiplex" {
+				continue
+			}
+
+			_, err := tfmedialive.FindInputSecurityGroupByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return create.Error(names.MediaLive, create.ErrActionCheckingDestroyed, tfmedialive.ResNameMultiplex, rs.Primary.ID, err)
+			}
 		}
 
-		_, err := tfmedialive.FindInputSecurityGroupByID(ctx, conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return create.Error(names.MediaLive, create.ErrActionCheckingDestroyed, tfmedialive.ResNameMultiplex, rs.Primary.ID, err)
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckMultiplexExists(name string, multiplex *medialive.DescribeMultiplexOutput) resource.TestCheckFunc {
+func testAccCheckMultiplexExists(ctx context.Context, name string, multiplex *medialive.DescribeMultiplexOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -258,8 +264,8 @@ func testAccCheckMultiplexExists(name string, multiplex *medialive.DescribeMulti
 			return create.Error(names.MediaLive, create.ErrActionCheckingExistence, tfmedialive.ResNameMultiplex, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveConn
-		ctx := context.Background()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveClient()
+
 		resp, err := tfmedialive.FindMultiplexByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
@@ -272,9 +278,8 @@ func testAccCheckMultiplexExists(name string, multiplex *medialive.DescribeMulti
 	}
 }
 
-func testAccMultiplexesPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveConn
-	ctx := context.Background()
+func testAccMultiplexesPreCheck(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).MediaLiveClient()
 
 	input := &medialive.ListMultiplexesInput{}
 	_, err := conn.ListMultiplexes(ctx, input)

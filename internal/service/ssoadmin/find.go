@@ -1,6 +1,8 @@
 package ssoadmin
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -10,7 +12,7 @@ import (
 
 // FindAccountAssignment returns the account assigned to a permission set within a specified SSO instance.
 // Returns an error if no account assignment is found.
-func FindAccountAssignment(conn *ssoadmin.SSOAdmin, principalId, principalType, accountId, permissionSetArn, instanceArn string) (*ssoadmin.AccountAssignment, error) {
+func FindAccountAssignment(ctx context.Context, conn *ssoadmin.SSOAdmin, principalId, principalType, accountId, permissionSetArn, instanceArn string) (*ssoadmin.AccountAssignment, error) {
 	input := &ssoadmin.ListAccountAssignmentsInput{
 		AccountId:        aws.String(accountId),
 		InstanceArn:      aws.String(instanceArn),
@@ -18,7 +20,7 @@ func FindAccountAssignment(conn *ssoadmin.SSOAdmin, principalId, principalType, 
 	}
 
 	var accountAssignment *ssoadmin.AccountAssignment
-	err := conn.ListAccountAssignmentsPages(input, func(page *ssoadmin.ListAccountAssignmentsOutput, lastPage bool) bool {
+	err := conn.ListAccountAssignmentsPagesWithContext(ctx, input, func(page *ssoadmin.ListAccountAssignmentsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -45,14 +47,14 @@ func FindAccountAssignment(conn *ssoadmin.SSOAdmin, principalId, principalType, 
 
 // FindManagedPolicy returns the managed policy attached to a permission set within a specified SSO instance.
 // Returns an error if no managed policy is found.
-func FindManagedPolicy(conn *ssoadmin.SSOAdmin, managedPolicyArn, permissionSetArn, instanceArn string) (*ssoadmin.AttachedManagedPolicy, error) {
+func FindManagedPolicy(ctx context.Context, conn *ssoadmin.SSOAdmin, managedPolicyArn, permissionSetArn, instanceArn string) (*ssoadmin.AttachedManagedPolicy, error) {
 	input := &ssoadmin.ListManagedPoliciesInPermissionSetInput{
 		PermissionSetArn: aws.String(permissionSetArn),
 		InstanceArn:      aws.String(instanceArn),
 	}
 
 	var attachedPolicy *ssoadmin.AttachedManagedPolicy
-	err := conn.ListManagedPoliciesInPermissionSetPages(input, func(page *ssoadmin.ListManagedPoliciesInPermissionSetOutput, lastPage bool) bool {
+	err := conn.ListManagedPoliciesInPermissionSetPagesWithContext(ctx, input, func(page *ssoadmin.ListManagedPoliciesInPermissionSetOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -75,14 +77,14 @@ func FindManagedPolicy(conn *ssoadmin.SSOAdmin, managedPolicyArn, permissionSetA
 
 // FindCustomerManagedPolicy returns the customer managed policy attached to a permission set within a specified SSO instance.
 // Returns an error if no customer managed policy is found.
-func FindCustomerManagedPolicy(conn *ssoadmin.SSOAdmin, policyName, policyPath, permissionSetArn, instanceArn string) (*ssoadmin.CustomerManagedPolicyReference, error) {
+func FindCustomerManagedPolicy(ctx context.Context, conn *ssoadmin.SSOAdmin, policyName, policyPath, permissionSetArn, instanceArn string) (*ssoadmin.CustomerManagedPolicyReference, error) {
 	input := &ssoadmin.ListCustomerManagedPolicyReferencesInPermissionSetInput{
 		PermissionSetArn: aws.String(permissionSetArn),
 		InstanceArn:      aws.String(instanceArn),
 	}
 
 	var attachedPolicy *ssoadmin.CustomerManagedPolicyReference
-	err := conn.ListCustomerManagedPolicyReferencesInPermissionSetPages(input, func(page *ssoadmin.ListCustomerManagedPolicyReferencesInPermissionSetOutput, lastPage bool) bool {
+	err := conn.ListCustomerManagedPolicyReferencesInPermissionSetPagesWithContext(ctx, input, func(page *ssoadmin.ListCustomerManagedPolicyReferencesInPermissionSetOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -116,4 +118,28 @@ func FindCustomerManagedPolicy(conn *ssoadmin.SSOAdmin, policyName, policyPath, 
 	}
 
 	return attachedPolicy, nil
+}
+
+// FindPermissionsBoundary returns the permissions boundary attached to a permission set within a specified SSO instance.
+// Returns an error if no permissions boundary is found.
+func FindPermissionsBoundary(ctx context.Context, conn *ssoadmin.SSOAdmin, permissionSetArn, instanceArn string) (*ssoadmin.PermissionsBoundary, error) {
+	input := &ssoadmin.GetPermissionsBoundaryForPermissionSetInput{
+		PermissionSetArn: aws.String(permissionSetArn),
+		InstanceArn:      aws.String(instanceArn),
+	}
+
+	output, err := conn.GetPermissionsBoundaryForPermissionSetWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, ssoadmin.ErrCodeResourceNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output.PermissionsBoundary, nil
 }

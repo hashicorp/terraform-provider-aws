@@ -14,5 +14,5 @@ func ResourceCustomLayer() *schema.Resource {
 		Attributes: map[string]*opsworksLayerTypeAttribute{},
 	}
 
-	return layerType.SchemaResource()
+	return layerType.resourceSchema()
 }

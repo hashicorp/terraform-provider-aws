@@ -59,6 +59,7 @@ The following arguments are supported:
 * `identity_management_type` - (Required) Specifies the identity management type attached to the instance. Allowed Values are: `SAML`, `CONNECT_MANAGED`, `EXISTING_DIRECTORY`.
 * `inbound_calls_enabled` - (Required) Specifies whether inbound calls are enabled.
 * `instance_alias` - (Optional) Specifies the name of the instance. Required if `directory_id` not specified.
+* `multi_party_conference_enabled` - (Optional) Specifies whether multi-party calls/conference is enabled. Defaults to `false`.
 * `outbound_calls_enabled` - (Required) Specifies whether outbound calls are enabled.
 <!-- * `use_custom_tts_voices` - (Optional) Whether use custom tts voices is enabled. Defaults to `false` -->
 
@@ -74,7 +75,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `5m`)
 * `delete` - (Default `5m`)

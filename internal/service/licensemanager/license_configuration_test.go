@@ -27,6 +27,7 @@ func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 }
 
 func TestAccLicenseManagerLicenseConfiguration_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var licenseConfiguration licensemanager.GetLicenseConfigurationOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_licensemanager_license_configuration.test"
@@ -35,12 +36,12 @@ func TestAccLicenseManagerLicenseConfiguration_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, licensemanager.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLicenseConfigurationDestroy,
+		CheckDestroy:             testAccCheckLicenseConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLicenseConfigurationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLicenseConfigurationExists(resourceName, &licenseConfiguration),
+					testAccCheckLicenseConfigurationExists(ctx, resourceName, &licenseConfiguration),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "license-manager", regexp.MustCompile(`license-configuration:lic-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "license_count", "0"),
@@ -62,6 +63,7 @@ func TestAccLicenseManagerLicenseConfiguration_basic(t *testing.T) {
 }
 
 func TestAccLicenseManagerLicenseConfiguration_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var licenseConfiguration licensemanager.GetLicenseConfigurationOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_licensemanager_license_configuration.test"
@@ -70,13 +72,13 @@ func TestAccLicenseManagerLicenseConfiguration_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, licensemanager.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLicenseConfigurationDestroy,
+		CheckDestroy:             testAccCheckLicenseConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLicenseConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLicenseConfigurationExists(resourceName, &licenseConfiguration),
-					acctest.CheckResourceDisappears(acctest.Provider, tflicensemanager.ResourceLicenseConfiguration(), resourceName),
+					testAccCheckLicenseConfigurationExists(ctx, resourceName, &licenseConfiguration),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflicensemanager.ResourceLicenseConfiguration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -85,6 +87,7 @@ func TestAccLicenseManagerLicenseConfiguration_disappears(t *testing.T) {
 }
 
 func TestAccLicenseManagerLicenseConfiguration_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var licenseConfiguration licensemanager.GetLicenseConfigurationOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_licensemanager_license_configuration.test"
@@ -93,12 +96,12 @@ func TestAccLicenseManagerLicenseConfiguration_tags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, licensemanager.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLicenseConfigurationDestroy,
+		CheckDestroy:             testAccCheckLicenseConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLicenseConfigurationConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLicenseConfigurationExists(resourceName, &licenseConfiguration),
+					testAccCheckLicenseConfigurationExists(ctx, resourceName, &licenseConfiguration),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -111,7 +114,7 @@ func TestAccLicenseManagerLicenseConfiguration_tags(t *testing.T) {
 			{
 				Config: testAccLicenseConfigurationConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLicenseConfigurationExists(resourceName, &licenseConfiguration),
+					testAccCheckLicenseConfigurationExists(ctx, resourceName, &licenseConfiguration),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -120,7 +123,7 @@ func TestAccLicenseManagerLicenseConfiguration_tags(t *testing.T) {
 			{
 				Config: testAccLicenseConfigurationConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLicenseConfigurationExists(resourceName, &licenseConfiguration),
+					testAccCheckLicenseConfigurationExists(ctx, resourceName, &licenseConfiguration),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -130,6 +133,7 @@ func TestAccLicenseManagerLicenseConfiguration_tags(t *testing.T) {
 }
 
 func TestAccLicenseManagerLicenseConfiguration_update(t *testing.T) {
+	ctx := acctest.Context(t)
 	var licenseConfiguration licensemanager.GetLicenseConfigurationOutput
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -139,12 +143,12 @@ func TestAccLicenseManagerLicenseConfiguration_update(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, licensemanager.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLicenseConfigurationDestroy,
+		CheckDestroy:             testAccCheckLicenseConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLicenseConfigurationConfig_allAttributes(rName1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLicenseConfigurationExists(resourceName, &licenseConfiguration),
+					testAccCheckLicenseConfigurationExists(ctx, resourceName, &licenseConfiguration),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "license-manager", regexp.MustCompile(`license-configuration:lic-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "description", "test1"),
 					resource.TestCheckResourceAttr(resourceName, "license_count", "10"),
@@ -165,7 +169,7 @@ func TestAccLicenseManagerLicenseConfiguration_update(t *testing.T) {
 			{
 				Config: testAccLicenseConfigurationConfig_allAttributesUpdated(rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLicenseConfigurationExists(resourceName, &licenseConfiguration),
+					testAccCheckLicenseConfigurationExists(ctx, resourceName, &licenseConfiguration),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "license-manager", regexp.MustCompile(`license-configuration:lic-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "description", "test2"),
 					resource.TestCheckResourceAttr(resourceName, "license_count", "99"),
@@ -182,7 +186,7 @@ func TestAccLicenseManagerLicenseConfiguration_update(t *testing.T) {
 	})
 }
 
-func testAccCheckLicenseConfigurationExists(n string, v *licensemanager.GetLicenseConfigurationOutput) resource.TestCheckFunc {
+func testAccCheckLicenseConfigurationExists(ctx context.Context, n string, v *licensemanager.GetLicenseConfigurationOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -193,9 +197,9 @@ func testAccCheckLicenseConfigurationExists(n string, v *licensemanager.GetLicen
 			return fmt.Errorf("No License Manager License Configuration ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LicenseManagerConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LicenseManagerConn()
 
-		output, err := tflicensemanager.FindLicenseConfigurationByARN(context.Background(), conn, rs.Primary.ID)
+		output, err := tflicensemanager.FindLicenseConfigurationByARN(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -207,29 +211,30 @@ func testAccCheckLicenseConfigurationExists(n string, v *licensemanager.GetLicen
 	}
 }
 
-func testAccCheckLicenseConfigurationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).LicenseManagerConn
+func testAccCheckLicenseConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LicenseManagerConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_licensemanager_license_configuration" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_licensemanager_license_configuration" {
+				continue
+			}
+
+			_, err := tflicensemanager.FindLicenseConfigurationByARN(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("License Manager License Configuration %s still exists", rs.Primary.ID)
 		}
 
-		_, err := tflicensemanager.FindLicenseConfigurationByARN(context.Background(), conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("License Manager License Configuration %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
-
 }
 
 func testAccLicenseConfigurationConfig_basic(rName string) string {

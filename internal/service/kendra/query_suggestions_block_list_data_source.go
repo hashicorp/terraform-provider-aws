@@ -17,7 +17,7 @@ import (
 
 func DataSourceQuerySuggestionsBlockList() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceQuerySuggestionsBlockListRead,
+		ReadWithoutTimeout: dataSourceQuerySuggestionsBlockListRead,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -97,7 +97,7 @@ func DataSourceQuerySuggestionsBlockList() *schema.Resource {
 }
 
 func dataSourceQuerySuggestionsBlockListRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraConn
+	conn := meta.(*conns.AWSClient).KendraClient()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	querySuggestionsBlockListID := d.Get("query_suggestions_block_list_id").(string)

@@ -76,7 +76,7 @@ const (
 )
 
 func resourceInputSecurityGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MediaLiveConn
+	conn := meta.(*conns.AWSClient).MediaLiveClient()
 
 	in := &medialive.CreateInputSecurityGroupInput{
 		WhitelistRules: expandWhitelistRules(d.Get("whitelist_rules").(*schema.Set).List()),
@@ -108,7 +108,7 @@ func resourceInputSecurityGroupCreate(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceInputSecurityGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MediaLiveConn
+	conn := meta.(*conns.AWSClient).MediaLiveClient()
 
 	out, err := FindInputSecurityGroupByID(ctx, conn, d.Id())
 
@@ -147,7 +147,7 @@ func resourceInputSecurityGroupRead(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceInputSecurityGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MediaLiveConn
+	conn := meta.(*conns.AWSClient).MediaLiveClient()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		in := &medialive.UpdateInputSecurityGroupInput{
@@ -181,7 +181,7 @@ func resourceInputSecurityGroupUpdate(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceInputSecurityGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MediaLiveConn
+	conn := meta.(*conns.AWSClient).MediaLiveClient()
 
 	log.Printf("[INFO] Deleting MediaLive InputSecurityGroup %s", d.Id())
 

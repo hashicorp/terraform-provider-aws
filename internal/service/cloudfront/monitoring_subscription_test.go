@@ -1,6 +1,7 @@
 package cloudfront_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -14,19 +15,20 @@ import (
 )
 
 func TestAccCloudFrontMonitoringSubscription_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v cloudfront.GetMonitoringSubscriptionOutput
 	resourceName := "aws_cloudfront_monitoring_subscription.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMonitoringSubscriptionDestroy,
+		CheckDestroy:             testAccCheckMonitoringSubscriptionDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMonitoringSubscriptionConfig_basic("Enabled"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMonitoringSubscriptionExists(resourceName, &v),
+					testAccCheckMonitoringSubscriptionExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "distribution_id"),
 					resource.TestCheckResourceAttr(resourceName, "monitoring_subscription.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "monitoring_subscription.0.realtime_metrics_subscription_config.#", "1"),
@@ -43,20 +45,21 @@ func TestAccCloudFrontMonitoringSubscription_basic(t *testing.T) {
 }
 
 func TestAccCloudFrontMonitoringSubscription_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v cloudfront.GetMonitoringSubscriptionOutput
 	resourceName := "aws_cloudfront_monitoring_subscription.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMonitoringSubscriptionDestroy,
+		CheckDestroy:             testAccCheckMonitoringSubscriptionDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMonitoringSubscriptionConfig_basic("Enabled"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMonitoringSubscriptionExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcloudfront.ResourceMonitoringSubscription(), resourceName),
+					testAccCheckMonitoringSubscriptionExists(ctx, resourceName, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudfront.ResourceMonitoringSubscription(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -65,19 +68,20 @@ func TestAccCloudFrontMonitoringSubscription_disappears(t *testing.T) {
 }
 
 func TestAccCloudFrontMonitoringSubscription_update(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v cloudfront.GetMonitoringSubscriptionOutput
 	resourceName := "aws_cloudfront_monitoring_subscription.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMonitoringSubscriptionDestroy,
+		CheckDestroy:             testAccCheckMonitoringSubscriptionDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMonitoringSubscriptionConfig_basic("Enabled"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMonitoringSubscriptionExists(resourceName, &v),
+					testAccCheckMonitoringSubscriptionExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "distribution_id"),
 					resource.TestCheckResourceAttr(resourceName, "monitoring_subscription.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "monitoring_subscription.0.realtime_metrics_subscription_config.#", "1"),
@@ -92,7 +96,7 @@ func TestAccCloudFrontMonitoringSubscription_update(t *testing.T) {
 			{
 				Config: testAccMonitoringSubscriptionConfig_basic("Disabled"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMonitoringSubscriptionExists(resourceName, &v),
+					testAccCheckMonitoringSubscriptionExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "distribution_id"),
 					resource.TestCheckResourceAttr(resourceName, "monitoring_subscription.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "monitoring_subscription.0.realtime_metrics_subscription_config.#", "1"),
@@ -103,31 +107,33 @@ func TestAccCloudFrontMonitoringSubscription_update(t *testing.T) {
 	})
 }
 
-func testAccCheckMonitoringSubscriptionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn
+func testAccCheckMonitoringSubscriptionDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_cloudfront_monitoring_subscription" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_cloudfront_monitoring_subscription" {
+				continue
+			}
+
+			_, err := tfcloudfront.FindMonitoringSubscriptionByDistributionID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("CloudFront Monitoring Subscription %s still exists", rs.Primary.ID)
 		}
 
-		_, err := tfcloudfront.FindMonitoringSubscriptionByDistributionID(conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("CloudFront Monitoring Subscription %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckMonitoringSubscriptionExists(n string, v *cloudfront.GetMonitoringSubscriptionOutput) resource.TestCheckFunc {
+func testAccCheckMonitoringSubscriptionExists(ctx context.Context, n string, v *cloudfront.GetMonitoringSubscriptionOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -138,9 +144,9 @@ func testAccCheckMonitoringSubscriptionExists(n string, v *cloudfront.GetMonitor
 			return fmt.Errorf("No CloudFront Monitoring Subscription ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn()
 
-		output, err := tfcloudfront.FindMonitoringSubscriptionByDistributionID(conn, rs.Primary.ID)
+		output, err := tfcloudfront.FindMonitoringSubscriptionByDistributionID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

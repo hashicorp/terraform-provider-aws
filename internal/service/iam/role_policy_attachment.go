@@ -1,6 +1,7 @@
 package iam
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -8,19 +9,21 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourceRolePolicyAttachment() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceRolePolicyAttachmentCreate,
-		Read:   resourceRolePolicyAttachmentRead,
-		Delete: resourceRolePolicyAttachmentDelete,
+		CreateWithoutTimeout: resourceRolePolicyAttachmentCreate,
+		ReadWithoutTimeout:   resourceRolePolicyAttachmentRead,
+		DeleteWithoutTimeout: resourceRolePolicyAttachmentDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceRolePolicyAttachmentImport,
+			StateContext: resourceRolePolicyAttachmentImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -38,25 +41,27 @@ func ResourceRolePolicyAttachment() *schema.Resource {
 	}
 }
 
-func resourceRolePolicyAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+func resourceRolePolicyAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	role := d.Get("role").(string)
 	arn := d.Get("policy_arn").(string)
 
-	err := attachPolicyToRole(conn, role, arn)
+	err := attachPolicyToRole(ctx, conn, role, arn)
 	if err != nil {
-		return fmt.Errorf("Error attaching policy %s to IAM Role %s: %v", arn, role, err)
+		return sdkdiag.AppendErrorf(diags, "attaching policy %s to IAM Role %s: %v", arn, role, err)
 	}
 
 	//lintignore:R016 // Allow legacy unstable ID usage in managed resource
 	d.SetId(resource.PrefixedUniqueId(fmt.Sprintf("%s-", role)))
 
-	return resourceRolePolicyAttachmentRead(d, meta)
+	return append(diags, resourceRolePolicyAttachmentRead(ctx, d, meta)...)
 }
 
-func resourceRolePolicyAttachmentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+func resourceRolePolicyAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IAMConn()
 	role := d.Get("role").(string)
 	policyARN := d.Get("policy_arn").(string)
 	// Human friendly ID for error messages since d.Id() is non-descriptive
@@ -64,10 +69,10 @@ func resourceRolePolicyAttachmentRead(d *schema.ResourceData, meta interface{}) 
 
 	var hasPolicyAttachment bool
 
-	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
+	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
 		var err error
 
-		hasPolicyAttachment, err = RoleHasPolicyARNAttachment(conn, role, policyARN)
+		hasPolicyAttachment, err = RoleHasPolicyARNAttachment(ctx, conn, role, policyARN)
 
 		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 			return resource.RetryableError(err)
@@ -87,49 +92,50 @@ func resourceRolePolicyAttachmentRead(d *schema.ResourceData, meta interface{}) 
 	})
 
 	if tfresource.TimedOut(err) {
-		hasPolicyAttachment, err = RoleHasPolicyARNAttachment(conn, role, policyARN)
+		hasPolicyAttachment, err = RoleHasPolicyARNAttachment(ctx, conn, role, policyARN)
 	}
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 		log.Printf("[WARN] IAM Role Managed Policy Attachment (%s) not found, removing from state", id)
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading IAM Role Managed Policy Attachment (%s): %w", id, err)
+		return sdkdiag.AppendErrorf(diags, "reading IAM Role Managed Policy Attachment (%s): %s", id, err)
 	}
 
 	if !d.IsNewResource() && !hasPolicyAttachment {
 		log.Printf("[WARN] IAM Role Managed Policy Attachment (%s) not found, removing from state", id)
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	d.Set("policy_arn", policyARN)
 	d.Set("role", role)
 
-	return nil
+	return diags
 }
 
-func resourceRolePolicyAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+func resourceRolePolicyAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IAMConn()
 	role := d.Get("role").(string)
 	arn := d.Get("policy_arn").(string)
 
-	err := DetachPolicyFromRole(conn, role, arn)
+	err := DetachPolicyFromRole(ctx, conn, role, arn)
 
 	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error removing policy %s from IAM Role %s: %v", arn, role, err)
+		return sdkdiag.AppendErrorf(diags, "removing policy %s from IAM Role %s: %v", arn, role, err)
 	}
-	return nil
+	return diags
 }
 
-func resourceRolePolicyAttachmentImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceRolePolicyAttachmentImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	idParts := strings.SplitN(d.Id(), "/", 2)
 	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
 		return nil, fmt.Errorf("unexpected format of ID (%q), expected <role-name>/<policy_arn>", d.Id())
@@ -145,29 +151,29 @@ func resourceRolePolicyAttachmentImport(d *schema.ResourceData, meta interface{}
 	return []*schema.ResourceData{d}, nil
 }
 
-func attachPolicyToRole(conn *iam.IAM, role string, arn string) error {
-	_, err := conn.AttachRolePolicy(&iam.AttachRolePolicyInput{
+func attachPolicyToRole(ctx context.Context, conn *iam.IAM, role string, arn string) error {
+	_, err := conn.AttachRolePolicyWithContext(ctx, &iam.AttachRolePolicyInput{
 		RoleName:  aws.String(role),
 		PolicyArn: aws.String(arn),
 	})
 	return err
 }
 
-func DetachPolicyFromRole(conn *iam.IAM, role string, arn string) error {
-	_, err := conn.DetachRolePolicy(&iam.DetachRolePolicyInput{
+func DetachPolicyFromRole(ctx context.Context, conn *iam.IAM, role string, arn string) error {
+	_, err := conn.DetachRolePolicyWithContext(ctx, &iam.DetachRolePolicyInput{
 		RoleName:  aws.String(role),
 		PolicyArn: aws.String(arn),
 	})
 	return err
 }
 
-func RoleHasPolicyARNAttachment(conn *iam.IAM, role string, policyARN string) (bool, error) {
+func RoleHasPolicyARNAttachment(ctx context.Context, conn *iam.IAM, role string, policyARN string) (bool, error) {
 	hasPolicyAttachment := false
 	input := &iam.ListAttachedRolePoliciesInput{
 		RoleName: aws.String(role),
 	}
 
-	err := conn.ListAttachedRolePoliciesPages(input, func(page *iam.ListAttachedRolePoliciesOutput, lastPage bool) bool {
+	err := conn.ListAttachedRolePoliciesPagesWithContext(ctx, input, func(page *iam.ListAttachedRolePoliciesOutput, lastPage bool) bool {
 		for _, p := range page.AttachedPolicies {
 			if aws.StringValue(p.PolicyArn) == policyARN {
 				hasPolicyAttachment = true

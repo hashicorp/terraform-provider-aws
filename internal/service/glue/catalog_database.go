@@ -1,6 +1,7 @@
 package glue
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"regexp"
@@ -10,20 +11,22 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
 func ResourceCatalogDatabase() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceCatalogDatabaseCreate,
-		Read:   resourceCatalogDatabaseRead,
-		Update: resourceCatalogDatabaseUpdate,
-		Delete: resourceCatalogDatabaseDelete,
+		CreateWithoutTimeout: resourceCatalogDatabaseCreate,
+		ReadWithoutTimeout:   resourceCatalogDatabaseRead,
+		UpdateWithoutTimeout: resourceCatalogDatabaseUpdate,
+		DeleteWithoutTimeout: resourceCatalogDatabaseDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -114,8 +117,9 @@ func ResourceCatalogDatabase() *schema.Resource {
 	}
 }
 
-func resourceCatalogDatabaseCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+func resourceCatalogDatabaseCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlueConn()
 	catalogID := createCatalogID(d, meta.(*conns.AWSClient).AccountID)
 	name := d.Get("name").(string)
 
@@ -148,22 +152,23 @@ func resourceCatalogDatabaseCreate(d *schema.ResourceData, meta interface{}) err
 		DatabaseInput: dbInput,
 	}
 
-	_, err := conn.CreateDatabase(input)
+	_, err := conn.CreateDatabaseWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("Error creating Catalog Database: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating Glue Catalog Database (%s): %s", name, err)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", catalogID, name))
 
-	return resourceCatalogDatabaseRead(d, meta)
+	return append(diags, resourceCatalogDatabaseRead(ctx, d, meta)...)
 }
 
-func resourceCatalogDatabaseUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+func resourceCatalogDatabaseUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlueConn()
 
 	catalogID, name, err := ReadCatalogID(d.Id())
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "updating Glue Catalog Database (%s): %s", d.Id(), err)
 	}
 
 	dbUpdateInput := &glue.UpdateDatabaseInput{
@@ -193,19 +198,20 @@ func resourceCatalogDatabaseUpdate(d *schema.ResourceData, meta interface{}) err
 
 	dbUpdateInput.DatabaseInput = dbInput
 
-	if _, err := conn.UpdateDatabase(dbUpdateInput); err != nil {
-		return err
+	if _, err := conn.UpdateDatabaseWithContext(ctx, dbUpdateInput); err != nil {
+		return sdkdiag.AppendErrorf(diags, "updating Glue Catalog Database (%s): %s", d.Id(), err)
 	}
 
-	return resourceCatalogDatabaseRead(d, meta)
+	return append(diags, resourceCatalogDatabaseRead(ctx, d, meta)...)
 }
 
-func resourceCatalogDatabaseRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+func resourceCatalogDatabaseRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlueConn()
 
 	catalogID, name, err := ReadCatalogID(d.Id())
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading Glue Catalog Database (%s): %s", d.Id(), err)
 	}
 
 	input := &glue.GetDatabaseInput{
@@ -213,16 +219,15 @@ func resourceCatalogDatabaseRead(d *schema.ResourceData, meta interface{}) error
 		Name:      aws.String(name),
 	}
 
-	out, err := conn.GetDatabase(input)
+	out, err := conn.GetDatabaseWithContext(ctx, input)
 	if err != nil {
-
 		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 			log.Printf("[WARN] Glue Catalog Database (%s) not found, removing from state", d.Id())
 			d.SetId("")
-			return nil
+			return diags
 		}
 
-		return fmt.Errorf("Error reading Glue Catalog Database: %s", err.Error())
+		return sdkdiag.AppendErrorf(diags, "reading Glue Catalog Database (%s): %s", d.Id(), err)
 	}
 
 	database := out.Database
@@ -242,31 +247,32 @@ func resourceCatalogDatabaseRead(d *schema.ResourceData, meta interface{}) error
 
 	if database.TargetDatabase != nil {
 		if err := d.Set("target_database", []interface{}{flattenDatabaseTargetDatabase(database.TargetDatabase)}); err != nil {
-			return fmt.Errorf("error setting target_database: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting target_database: %s", err)
 		}
 	} else {
 		d.Set("target_database", nil)
 	}
 
 	if err := d.Set("create_table_default_permission", flattenDatabasePrincipalPermissions(database.CreateTableDefaultPermissions)); err != nil {
-		return fmt.Errorf("error setting create_table_default_permission: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting create_table_default_permission: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceCatalogDatabaseDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+func resourceCatalogDatabaseDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlueConn()
 
 	log.Printf("[DEBUG] Glue Catalog Database: %s", d.Id())
-	_, err := conn.DeleteDatabase(&glue.DeleteDatabaseInput{
+	_, err := conn.DeleteDatabaseWithContext(ctx, &glue.DeleteDatabaseInput{
 		Name:      aws.String(d.Get("name").(string)),
 		CatalogId: aws.String(d.Get("catalog_id").(string)),
 	})
 	if err != nil {
-		return fmt.Errorf("Error deleting Glue Catalog Database: %w", err)
+		return sdkdiag.AppendErrorf(diags, "deleting Glue Catalog Database (%s): %s", d.Id(), err)
 	}
-	return nil
+	return diags
 }
 
 func ReadCatalogID(id string) (catalogID string, name string, err error) {

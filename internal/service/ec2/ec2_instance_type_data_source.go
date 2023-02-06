@@ -1,17 +1,20 @@
 package ec2
 
 import (
+	"context"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func DataSourceInstanceType() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceInstanceTypeRead,
+		ReadWithoutTimeout: dataSourceInstanceTypeRead,
 
 		Timeouts: &schema.ResourceTimeout{
 			Read: schema.DefaultTimeout(20 * time.Minute),
@@ -285,13 +288,14 @@ func DataSourceInstanceType() *schema.Resource {
 	}
 }
 
-func dataSourceInstanceTypeRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func dataSourceInstanceTypeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
-	v, err := FindInstanceTypeByName(conn, d.Get("instance_type").(string))
+	v, err := FindInstanceTypeByName(ctx, conn, d.Get("instance_type").(string))
 
 	if err != nil {
-		return tfresource.SingularDataSourceFindError("EC2 Instance Type", err)
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Instance Type", err))
 	}
 
 	d.SetId(aws.StringValue(v.InstanceType))
@@ -392,5 +396,5 @@ func dataSourceInstanceTypeRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("valid_cores", v.VCpuInfo.ValidCores)
 	d.Set("valid_threads_per_core", v.VCpuInfo.ValidThreadsPerCore)
 
-	return nil
+	return diags
 }

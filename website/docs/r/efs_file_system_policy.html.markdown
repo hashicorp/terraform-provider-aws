@@ -33,7 +33,7 @@ resource "aws_efs_file_system_policy" "policy" {
             "Principal": {
                 "AWS": "*"
             },
-            "Resource": "${aws_efs_file_system.test.arn}",
+            "Resource": "${aws_efs_file_system.fs.arn}",
             "Action": [
                 "elasticfilesystem:ClientMount",
                 "elasticfilesystem:ClientWrite"

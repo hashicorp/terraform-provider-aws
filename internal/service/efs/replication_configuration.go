@@ -1,27 +1,29 @@
 package efs
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/efs"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceReplicationConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceReplicationConfigurationCreate,
-		Read:   resourceReplicationConfigurationRead,
-		Delete: resourceReplicationConfigurationDelete,
+		CreateWithoutTimeout: resourceReplicationConfigurationCreate,
+		ReadWithoutTimeout:   resourceReplicationConfigurationRead,
+		DeleteWithoutTimeout: resourceReplicationConfigurationDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -92,8 +94,9 @@ func ResourceReplicationConfiguration() *schema.Resource {
 	}
 }
 
-func resourceReplicationConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EFSConn
+func resourceReplicationConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EFSConn()
 
 	fsID := d.Get("source_file_system_id").(string)
 	input := &efs.CreateReplicationConfigurationInput{
@@ -104,34 +107,35 @@ func resourceReplicationConfigurationCreate(d *schema.ResourceData, meta interfa
 		input.Destinations = expandDestinationsToCreate(v.([]interface{}))
 	}
 
-	_, err := conn.CreateReplicationConfiguration(input)
+	_, err := conn.CreateReplicationConfigurationWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("creating EFS Replication Configuration (%s): %w", fsID, err)
+		return sdkdiag.AppendErrorf(diags, "creating EFS Replication Configuration (%s): %s", fsID, err)
 	}
 
 	d.SetId(fsID)
 
-	if _, err := waitReplicationConfigurationCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("waiting for EFS Replication Configuration (%s) create: %w", d.Id(), err)
+	if _, err := waitReplicationConfigurationCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for EFS Replication Configuration (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceReplicationConfigurationRead(d, meta)
+	return append(diags, resourceReplicationConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceReplicationConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EFSConn
+func resourceReplicationConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EFSConn()
 
-	replication, err := FindReplicationConfigurationByID(conn, d.Id())
+	replication, err := FindReplicationConfigurationByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EFS Replication Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading EFS Replication Configuration (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading EFS Replication Configuration (%s): %s", d.Id(), err)
 	}
 
 	destinations := flattenDestinations(replication.Destinations)
@@ -148,18 +152,19 @@ func resourceReplicationConfigurationRead(d *schema.ResourceData, meta interface
 
 	d.Set("creation_time", aws.TimeValue(replication.CreationTime).String())
 	if err := d.Set("destination", destinations); err != nil {
-		return fmt.Errorf("setting destination: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting destination: %s", err)
 	}
 	d.Set("original_source_file_system_arn", replication.OriginalSourceFileSystemArn)
 	d.Set("source_file_system_arn", replication.SourceFileSystemArn)
 	d.Set("source_file_system_id", replication.SourceFileSystemId)
 	d.Set("source_file_system_region", replication.SourceFileSystemRegion)
 
-	return nil
+	return diags
 }
 
-func resourceReplicationConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EFSConn
+func resourceReplicationConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EFSConn()
 
 	// Deletion of the replication configuration must be done from the
 	// Region in which the destination file system is located.
@@ -167,29 +172,29 @@ func resourceReplicationConfigurationDelete(d *schema.ResourceData, meta interfa
 	session, err := conns.NewSessionForRegion(&conn.Config, aws.StringValue(destination.Region), meta.(*conns.AWSClient).TerraformVersion)
 
 	if err != nil {
-		return fmt.Errorf("creating AWS session: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating AWS session: %s", err)
 	}
 
 	deleteConn := efs.New(session)
 
 	log.Printf("[DEBUG] Deleting EFS Replication Configuration: %s", d.Id())
-	_, err = deleteConn.DeleteReplicationConfiguration(&efs.DeleteReplicationConfigurationInput{
+	_, err = deleteConn.DeleteReplicationConfigurationWithContext(ctx, &efs.DeleteReplicationConfigurationInput{
 		SourceFileSystemId: aws.String(d.Id()),
 	})
 
 	if tfawserr.ErrCodeEquals(err, efs.ErrCodeFileSystemNotFound, efs.ErrCodeReplicationNotFound) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("deleting EFS Replication Configuration (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting EFS Replication Configuration (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitReplicationConfigurationDeleted(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("waiting for EFS Replication Configuration (%s) delete: %w", d.Id(), err)
+	if _, err := waitReplicationConfigurationDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for EFS Replication Configuration (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandDestinationToCreate(tfMap map[string]interface{}) *efs.DestinationToCreate {

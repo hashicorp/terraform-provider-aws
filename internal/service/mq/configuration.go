@@ -3,29 +3,34 @@ package mq
 import (
 	"context"
 	"encoding/base64"
-	"fmt"
 	"log"
+	"strconv"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mq"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceConfigurationCreate,
-		Read:   resourceConfigurationRead,
-		Update: resourceConfigurationUpdate,
-		Delete: resourceConfigurationDelete,
+		CreateWithoutTimeout: resourceConfigurationCreate,
+		ReadWithoutTimeout:   resourceConfigurationRead,
+		UpdateWithoutTimeout: resourceConfigurationUpdate,
+		DeleteWithoutTimeout: schema.NoopContext, // Delete is not available in the API
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
+
 		CustomizeDiff: customdiff.Sequence(
 			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 				if diff.HasChange("description") {
@@ -56,9 +61,10 @@ func ResourceConfiguration() *schema.Resource {
 				ValidateFunc: validation.StringInSlice(mq.AuthenticationStrategy_Values(), true),
 			},
 			"data": {
-				Type:             schema.TypeString,
-				Required:         true,
-				DiffSuppressFunc: suppressXMLEquivalentConfig,
+				Type:                  schema.TypeString,
+				Required:              true,
+				DiffSuppressFunc:      suppressXMLEquivalentConfig,
+				DiffSuppressOnRefresh: true,
 			},
 			"description": {
 				Type:     schema.TypeString,
@@ -75,14 +81,14 @@ func ResourceConfiguration() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"latest_revision": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
-			},
-			"latest_revision": {
-				Type:     schema.TypeInt,
-				Computed: true,
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
@@ -90,128 +96,165 @@ func ResourceConfiguration() *schema.Resource {
 	}
 }
 
-func resourceConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).MQConn
+func resourceConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).MQConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
-	input := mq.CreateConfigurationRequest{
+	name := d.Get("name").(string)
+	input := &mq.CreateConfigurationRequest{
 		EngineType:    aws.String(d.Get("engine_type").(string)),
 		EngineVersion: aws.String(d.Get("engine_version").(string)),
-		Name:          aws.String(d.Get("name").(string)),
+		Name:          aws.String(name),
 	}
 
 	if v, ok := d.GetOk("authentication_strategy"); ok {
 		input.AuthenticationStrategy = aws.String(v.(string))
 	}
+
 	if len(tags) > 0 {
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	log.Printf("[INFO] Creating MQ Configuration: %s", input)
-	out, err := conn.CreateConfiguration(&input)
+	output, err := conn.CreateConfigurationWithContext(ctx, input)
+
 	if err != nil {
-		return err
+		return diag.Errorf("creating MQ Configuration (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(out.Id))
-	d.Set("arn", out.Arn)
+	d.SetId(aws.StringValue(output.Id))
 
-	return resourceConfigurationUpdate(d, meta)
+	if v, ok := d.GetOk("data"); ok {
+		input := &mq.UpdateConfigurationRequest{
+			ConfigurationId: aws.String(d.Id()),
+			Data:            aws.String(base64.StdEncoding.EncodeToString([]byte(v.(string)))),
+		}
+
+		if v, ok := d.GetOk("description"); ok {
+			input.Description = aws.String(v.(string))
+		}
+
+		_, err := conn.UpdateConfigurationWithContext(ctx, input)
+
+		if err != nil {
+			return diag.Errorf("updating MQ Configuration (%s): %s", d.Id(), err)
+		}
+	}
+
+	return resourceConfigurationRead(ctx, d, meta)
 }
 
-func resourceConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).MQConn
+func resourceConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).MQConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	log.Printf("[INFO] Reading MQ Configuration %s", d.Id())
-	out, err := conn.DescribeConfiguration(&mq.DescribeConfigurationInput{
-		ConfigurationId: aws.String(d.Id()),
-	})
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, mq.ErrCodeNotFoundException) {
-			log.Printf("[WARN] MQ Configuration %q not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return err
+	configuration, err := FindConfigurationByID(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] MQ Configuration (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
 
-	d.Set("arn", out.Arn)
-	d.Set("authentication_strategy", out.AuthenticationStrategy)
-	d.Set("description", out.LatestRevision.Description)
-	d.Set("engine_type", out.EngineType)
-	d.Set("engine_version", out.EngineVersion)
-	d.Set("latest_revision", out.LatestRevision.Revision)
-	d.Set("name", out.Name)
+	if err != nil {
+		return diag.Errorf("reading MQ Configuration (%s): %s", d.Id(), err)
+	}
 
-	rOut, err := conn.DescribeConfigurationRevision(&mq.DescribeConfigurationRevisionInput{
+	d.Set("arn", configuration.Arn)
+	d.Set("authentication_strategy", configuration.AuthenticationStrategy)
+	d.Set("description", configuration.LatestRevision.Description)
+	d.Set("engine_type", configuration.EngineType)
+	d.Set("engine_version", configuration.EngineVersion)
+	d.Set("latest_revision", configuration.LatestRevision.Revision)
+	d.Set("name", configuration.Name)
+
+	revision := strconv.FormatInt(aws.Int64Value(configuration.LatestRevision.Revision), 10)
+	configurationRevision, err := conn.DescribeConfigurationRevisionWithContext(ctx, &mq.DescribeConfigurationRevisionInput{
 		ConfigurationId:       aws.String(d.Id()),
-		ConfigurationRevision: aws.String(fmt.Sprintf("%d", *out.LatestRevision.Revision)),
+		ConfigurationRevision: aws.String(revision),
 	})
+
 	if err != nil {
-		return err
+		return diag.Errorf("reading MQ Configuration (%s) revision (%s): %s", d.Id(), revision, err)
 	}
 
-	b, err := base64.StdEncoding.DecodeString(*rOut.Data)
+	data, err := base64.StdEncoding.DecodeString(aws.StringValue(configurationRevision.Data))
+
 	if err != nil {
-		return err
+		return diag.Errorf("base64 decoding: %s", err)
 	}
 
-	d.Set("data", string(b))
+	d.Set("data", string(data))
 
-	tags := KeyValueTags(out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(configuration.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return diag.Errorf("setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return diag.Errorf("setting tags_all: %s", err)
 	}
 
 	return nil
 }
 
-func resourceConfigurationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).MQConn
+func resourceConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).MQConn()
 
 	if d.HasChanges("data", "description") {
-		rawData := d.Get("data").(string)
-		data := base64.StdEncoding.EncodeToString([]byte(rawData))
-
-		input := mq.UpdateConfigurationRequest{
+		input := &mq.UpdateConfigurationRequest{
 			ConfigurationId: aws.String(d.Id()),
-			Data:            aws.String(data),
+			Data:            aws.String(base64.StdEncoding.EncodeToString([]byte(d.Get("data").(string)))),
 		}
+
 		if v, ok := d.GetOk("description"); ok {
 			input.Description = aws.String(v.(string))
 		}
 
-		log.Printf("[INFO] Updating MQ Configuration %s: %s", d.Id(), input)
-		_, err := conn.UpdateConfiguration(&input)
+		_, err := conn.UpdateConfigurationWithContext(ctx, input)
+
 		if err != nil {
-			return err
+			return diag.Errorf("updating MQ Configuration (%s): %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating MQ Broker (%s) tags: %s", d.Get("arn").(string), err)
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+			return diag.Errorf("updating MQ Configuration (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
 
-	return resourceConfigurationRead(d, meta)
+	return resourceConfigurationRead(ctx, d, meta)
 }
 
-func resourceConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
-	// TODO: Delete is not available in the API
+func FindConfigurationByID(ctx context.Context, conn *mq.MQ, id string) (*mq.DescribeConfigurationOutput, error) {
+	input := &mq.DescribeConfigurationInput{
+		ConfigurationId: aws.String(id),
+	}
 
-	return nil
+	output, err := conn.DescribeConfigurationWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, mq.ErrCodeNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }
 
 func suppressXMLEquivalentConfig(k, old, new string, d *schema.ResourceData) bool {

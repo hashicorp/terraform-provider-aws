@@ -3,9 +3,15 @@ package conns
 import (
 	"context"
 	"fmt"
+	"net/http"
 
-	"github.com/hashicorp/terraform-provider-aws/internal/intf"
+	"github.com/aws/aws-sdk-go/service/s3"
 )
+
+// InitContext creates context.
+func (client *AWSClient) InitContext(ctx context.Context) context.Context {
+	return ctx
+}
 
 // PartitionHostname returns a hostname with the provider domain suffix for the partition
 // e.g. PREFIX.amazonaws.com
@@ -21,6 +27,19 @@ func (client *AWSClient) RegionalHostname(prefix string) string {
 	return fmt.Sprintf("%s.%s.%s", prefix, client.Region, client.DNSSuffix)
 }
 
-func (client *AWSClient) Services(_ context.Context) map[string]intf.ServiceData {
-	return client.ServiceMap
+func (client *AWSClient) S3ConnURICleaningDisabled() *s3.S3 {
+	return client.s3ConnURICleaningDisabled
+}
+
+// SetHTTPClient sets the http.Client used for AWS API calls.
+// To have effect it must be called before the AWS SDK v1 Session is created.
+func (client *AWSClient) SetHTTPClient(httpClient *http.Client) {
+	if client.Session == nil {
+		client.httpClient = httpClient
+	}
+}
+
+// HTTPClient returns the http.Client used for AWS API calls.
+func (client *AWSClient) HTTPClient() *http.Client {
+	return client.httpClient
 }

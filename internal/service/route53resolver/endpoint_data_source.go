@@ -1,19 +1,28 @@
 package route53resolver
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func DataSourceEndpoint() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceEndpointRead,
+		ReadWithoutTimeout: dataSourceEndpointRead,
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"direction": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"filter": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -32,27 +41,19 @@ func DataSourceEndpoint() *schema.Resource {
 					},
 				},
 			},
-
-			"direction": {
-				Type:     schema.TypeString,
+			"ip_addresses": {
+				Type:     schema.TypeSet,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
 			},
-
 			"name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
 			"resolver_endpoint_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-
 			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -61,101 +62,72 @@ func DataSourceEndpoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"ip_addresses": {
-				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Computed: true,
-				Set:      schema.HashString,
-			},
 		},
 	}
 }
 
-func dataSourceEndpointRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn
-	req := &route53resolver.ListResolverEndpointsInput{}
+func dataSourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).Route53ResolverConn()
 
-	resolvers := make([]*route53resolver.ResolverEndpoint, 0)
+	endpointID := d.Get("resolver_endpoint_id").(string)
+	input := &route53resolver.ListResolverEndpointsInput{}
 
-	rID, rIDOk := d.GetOk("resolver_endpoint_id")
-	filters, filtersOk := d.GetOk("filter")
-
-	if filtersOk {
-		req.Filters = buildR53ResolverTagFilters(filters.(*schema.Set))
+	if v, ok := d.GetOk("filter"); ok && v.(*schema.Set).Len() > 0 {
+		input.Filters = buildR53ResolverTagFilters(v.(*schema.Set))
 	}
 
-	for {
-		resp, err := conn.ListResolverEndpoints(req)
+	var endpoints []*route53resolver.ResolverEndpoint
 
-		if err != nil {
-			return fmt.Errorf("Error Reading Route53 Resolver Endpoints: %s", req)
+	err := conn.ListResolverEndpointsPagesWithContext(ctx, input, func(page *route53resolver.ListResolverEndpointsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
 
-		if len(resp.ResolverEndpoints) == 0 && filtersOk {
-			return fmt.Errorf("Your query returned no results. Please change your search criteria and try again")
-		}
-
-		if len(resp.ResolverEndpoints) > 1 && !rIDOk {
-			return fmt.Errorf("Your query returned more than one resolver. Please change your search criteria and try again")
-		}
-
-		if rIDOk {
-			for _, r := range resp.ResolverEndpoints {
-				if aws.StringValue(r.Id) == rID {
-					resolvers = append(resolvers, r)
-					break
+		for _, v := range page.ResolverEndpoints {
+			if endpointID != "" {
+				if aws.StringValue(v.Id) == endpointID {
+					endpoints = append(endpoints, v)
 				}
+			} else {
+				endpoints = append(endpoints, v)
 			}
-		} else {
-			resolvers = append(resolvers, resp.ResolverEndpoints[0])
 		}
 
-		if len(resolvers) == 0 {
-			return fmt.Errorf("The ID provided could not be found")
-		}
+		return !lastPage
+	})
 
-		resolver := resolvers[0]
-
-		d.SetId(aws.StringValue(resolver.Id))
-		d.Set("resolver_endpoint_id", resolver.Id)
-		d.Set("arn", resolver.Arn)
-		d.Set("status", resolver.Status)
-		d.Set("name", resolver.Name)
-		d.Set("vpc_id", resolver.HostVPCId)
-		d.Set("direction", resolver.Direction)
-
-		if resp.NextToken == nil {
-			break
-		}
-
-		req.NextToken = resp.NextToken
+	if err != nil {
+		return diag.Errorf("listing Route53 Resolver Endpoints: %s", err)
 	}
 
-	params := &route53resolver.ListResolverEndpointIpAddressesInput{
-		ResolverEndpointId: aws.String(d.Id()),
+	if n := len(endpoints); n == 0 {
+		return diag.Errorf("no Route53 Resolver Endpoint matched")
+	} else if n > 1 {
+		return diag.Errorf("%d Route53 Resolver Endpoints matched; use additional constraints to reduce matches to a single Endpoint", n)
 	}
 
-	ipAddresses := []interface{}{}
+	ep := endpoints[0]
+	d.SetId(aws.StringValue(ep.Id))
+	d.Set("arn", ep.Arn)
+	d.Set("direction", ep.Direction)
+	d.Set("name", ep.Name)
+	d.Set("resolver_endpoint_id", ep.Id)
+	d.Set("status", ep.Status)
+	d.Set("vpc_id", ep.HostVPCId)
 
-	for {
-		ip, err := conn.ListResolverEndpointIpAddresses(params)
+	ipAddresses, err := findResolverEndpointIPAddressesByID(ctx, conn, d.Id())
 
-		if err != nil {
-			return fmt.Errorf("error getting Route53 Resolver endpoint (%s) IP Addresses: %w", d.Id(), err)
-		}
-
-		for _, vIPAddresses := range ip.IpAddresses {
-			ipAddresses = append(ipAddresses, aws.StringValue(vIPAddresses.Ip))
-		}
-
-		d.Set("ip_addresses", ipAddresses)
-
-		if ip.NextToken == nil {
-			break
-		}
-
-		params.NextToken = ip.NextToken
+	if err != nil {
+		return diag.Errorf("listing Route53 Resolver Endpoint (%s) IP addresses: %s", d.Id(), err)
 	}
+
+	var ips []*string
+
+	for _, v := range ipAddresses {
+		ips = append(ips, v.Ip)
+	}
+
+	d.Set("ip_addresses", aws.StringValueSlice(ips))
 
 	return nil
 }

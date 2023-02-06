@@ -62,7 +62,7 @@ func DataSourceTransitGatewayConnectPeer() *schema.Resource {
 }
 
 func dataSourceTransitGatewayConnectPeerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeTransitGatewayConnectPeersInput{}
@@ -75,7 +75,7 @@ func dataSourceTransitGatewayConnectPeerRead(ctx context.Context, d *schema.Reso
 		d.Get("filter").(*schema.Set),
 	)...)
 
-	transitGatewayConnectPeer, err := FindTransitGatewayConnectPeer(conn, input)
+	transitGatewayConnectPeer, err := FindTransitGatewayConnectPeer(ctx, conn, input)
 
 	if err != nil {
 		return diag.FromErr(tfresource.SingularDataSourceFindError("EC2 Transit Gateway Connect Peer", err))

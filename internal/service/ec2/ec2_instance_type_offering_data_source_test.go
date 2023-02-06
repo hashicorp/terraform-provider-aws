@@ -9,10 +9,11 @@ import (
 )
 
 func TestAccEC2InstanceTypeOfferingDataSource_filter(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ec2_instance_type_offering.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckInstanceTypeOfferings(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckInstanceTypeOfferings(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
@@ -28,10 +29,11 @@ func TestAccEC2InstanceTypeOfferingDataSource_filter(t *testing.T) {
 }
 
 func TestAccEC2InstanceTypeOfferingDataSource_locationType(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ec2_instance_type_offering.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckInstanceTypeOfferings(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckInstanceTypeOfferings(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
@@ -47,10 +49,11 @@ func TestAccEC2InstanceTypeOfferingDataSource_locationType(t *testing.T) {
 }
 
 func TestAccEC2InstanceTypeOfferingDataSource_preferredInstanceTypes(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ec2_instance_type_offering.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckInstanceTypeOfferings(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckInstanceTypeOfferings(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,

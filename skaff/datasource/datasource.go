@@ -25,16 +25,17 @@ var datasourceTestTmpl string
 var websiteTmpl string
 
 type TemplateData struct {
-	DataSource          string
-	DataSourceLower     string
-	DataSourceSnake     string
-	IncludeComments     bool
-	ServicePackage      string
-	Service             string
-	ServiceLower        string
-	AWSServiceName      string
-	AWSGoSDKV2          bool
-	HumanDataSourceName string
+	DataSource           string
+	DataSourceLower      string
+	DataSourceSnake      string
+	IncludeComments      bool
+	HumanFriendlyService string
+	ServicePackage       string
+	Service              string
+	ServiceLower         string
+	AWSServiceName       string
+	AWSGoSDKV2           bool
+	HumanDataSourceName  string
 }
 
 func Create(dsName, snakeName string, comments, force, v2 bool) error {
@@ -69,17 +70,23 @@ func Create(dsName, snakeName string, comments, force, v2 bool) error {
 		return fmt.Errorf("error getting AWS service name: %w", err)
 	}
 
+	hf, err := names.HumanFriendly(servicePackage)
+	if err != nil {
+		return fmt.Errorf("error getting human-friendly name: %w", err)
+	}
+
 	templateData := TemplateData{
-		DataSource:          dsName,
-		DataSourceLower:     strings.ToLower(dsName),
-		DataSourceSnake:     snakeName,
-		IncludeComments:     comments,
-		ServicePackage:      servicePackage,
-		Service:             s,
-		ServiceLower:        strings.ToLower(s),
-		AWSServiceName:      sn,
-		AWSGoSDKV2:          v2,
-		HumanDataSourceName: fmt.Sprintf("%s Data Source", resource.HumanResName(dsName)),
+		DataSource:           dsName,
+		DataSourceLower:      strings.ToLower(dsName),
+		DataSourceSnake:      snakeName,
+		HumanFriendlyService: hf,
+		IncludeComments:      comments,
+		ServicePackage:       servicePackage,
+		Service:              s,
+		ServiceLower:         strings.ToLower(s),
+		AWSServiceName:       sn,
+		AWSGoSDKV2:           v2,
+		HumanDataSourceName:  resource.HumanResName(dsName),
 	}
 
 	f := fmt.Sprintf("%s_data_source.go", snakeName)

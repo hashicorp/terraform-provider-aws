@@ -1,18 +1,21 @@
 package cloudfront
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func DataSourceOriginAccessIdentity() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceOriginAccessIdentityRead,
+		ReadWithoutTimeout: dataSourceOriginAccessIdentityRead,
 
 		Schema: map[string]*schema.Schema{
 			"comment": {
@@ -48,16 +51,17 @@ func DataSourceOriginAccessIdentity() *schema.Resource {
 	}
 }
 
-func dataSourceOriginAccessIdentityRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+func dataSourceOriginAccessIdentityRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 	id := d.Get("id").(string)
 	params := &cloudfront.GetCloudFrontOriginAccessIdentityInput{
 		Id: aws.String(id),
 	}
 
-	resp, err := conn.GetCloudFrontOriginAccessIdentity(params)
+	resp, err := conn.GetCloudFrontOriginAccessIdentityWithContext(ctx, params)
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading CloudFront Origin Access Identity (%s): %s", id, err)
 	}
 
 	// Update attributes from DistributionConfig
@@ -74,5 +78,5 @@ func dataSourceOriginAccessIdentityRead(d *schema.ResourceData, meta interface{}
 		Resource:  fmt.Sprintf("user/CloudFront Origin Access Identity %s", *resp.CloudFrontOriginAccessIdentity.Id),
 	}.String()
 	d.Set("iam_arn", iamArn)
-	return nil
+	return diags
 }

@@ -1,6 +1,7 @@
 package apigateway
 
 import (
+	"context"
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/apigateway"
@@ -21,21 +22,21 @@ const (
 	stageCacheUpdateTimeout = 30 * time.Minute
 )
 
-func waitVPCLinkAvailable(conn *apigateway.APIGateway, vpcLinkId string) error {
+func waitVPCLinkAvailable(ctx context.Context, conn *apigateway.APIGateway, vpcLinkId string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{apigateway.VpcLinkStatusPending},
 		Target:     []string{apigateway.VpcLinkStatusAvailable},
-		Refresh:    vpcLinkStatus(conn, vpcLinkId),
+		Refresh:    vpcLinkStatus(ctx, conn, vpcLinkId),
 		Timeout:    vpcLinkAvailableTimeout,
 		MinTimeout: 3 * time.Second,
 	}
 
-	_, err := stateConf.WaitForState()
+	_, err := stateConf.WaitForStateContext(ctx)
 
 	return err
 }
 
-func waitVPCLinkDeleted(conn *apigateway.APIGateway, vpcLinkId string) error {
+func waitVPCLinkDeleted(ctx context.Context, conn *apigateway.APIGateway, vpcLinkId string) error {
 	stateConf := resource.StateChangeConf{
 		Pending: []string{
 			apigateway.VpcLinkStatusPending,
@@ -45,15 +46,15 @@ func waitVPCLinkDeleted(conn *apigateway.APIGateway, vpcLinkId string) error {
 		Target:     []string{},
 		Timeout:    vpcLinkDeleteTimeout,
 		MinTimeout: 1 * time.Second,
-		Refresh:    vpcLinkStatus(conn, vpcLinkId),
+		Refresh:    vpcLinkStatus(ctx, conn, vpcLinkId),
 	}
 
-	_, err := stateConf.WaitForState()
+	_, err := stateConf.WaitForStateContext(ctx)
 
 	return err
 }
 
-func waitStageCacheAvailable(conn *apigateway.APIGateway, restApiId, name string) (*apigateway.Stage, error) {
+func waitStageCacheAvailable(ctx context.Context, conn *apigateway.APIGateway, restApiId, name string) (*apigateway.Stage, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			apigateway.CacheClusterStatusCreateInProgress,
@@ -61,11 +62,11 @@ func waitStageCacheAvailable(conn *apigateway.APIGateway, restApiId, name string
 			apigateway.CacheClusterStatusFlushInProgress,
 		},
 		Target:  []string{apigateway.CacheClusterStatusAvailable},
-		Refresh: stageCacheStatus(conn, restApiId, name),
+		Refresh: stageCacheStatus(ctx, conn, restApiId, name),
 		Timeout: stageCacheAvailableTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*apigateway.Stage); ok {
 		return output, err
@@ -74,7 +75,7 @@ func waitStageCacheAvailable(conn *apigateway.APIGateway, restApiId, name string
 	return nil, err
 }
 
-func waitStageCacheUpdated(conn *apigateway.APIGateway, restApiId, name string) (*apigateway.Stage, error) {
+func waitStageCacheUpdated(ctx context.Context, conn *apigateway.APIGateway, restApiId, name string) (*apigateway.Stage, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			apigateway.CacheClusterStatusCreateInProgress,
@@ -86,11 +87,11 @@ func waitStageCacheUpdated(conn *apigateway.APIGateway, restApiId, name string) 
 			// which causes the stage to remain in deletion state forever
 			apigateway.CacheClusterStatusDeleteInProgress,
 		},
-		Refresh: stageCacheStatus(conn, restApiId, name),
+		Refresh: stageCacheStatus(ctx, conn, restApiId, name),
 		Timeout: stageCacheUpdateTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*apigateway.Stage); ok {
 		return output, err

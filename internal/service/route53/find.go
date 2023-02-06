@@ -11,12 +11,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindHealthCheckByID(conn *route53.Route53, id string) (*route53.HealthCheck, error) {
+func FindHealthCheckByID(ctx context.Context, conn *route53.Route53, id string) (*route53.HealthCheck, error) {
 	input := &route53.GetHealthCheckInput{
 		HealthCheckId: aws.String(id),
 	}
 
-	output, err := conn.GetHealthCheck(input)
+	output, err := conn.GetHealthCheckWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, route53.ErrCodeNoSuchHealthCheck) {
 		return nil, &resource.NotFoundError{
@@ -32,12 +32,33 @@ func FindHealthCheckByID(conn *route53.Route53, id string) (*route53.HealthCheck
 	return output.HealthCheck, nil
 }
 
-func FindHostedZoneDNSSEC(conn *route53.Route53, hostedZoneID string) (*route53.GetDNSSECOutput, error) {
+func FindHostedZoneByID(ctx context.Context, conn *route53.Route53, id string) (*route53.GetHostedZoneOutput, error) {
+	input := &route53.GetHostedZoneInput{
+		Id: aws.String(id),
+	}
+
+	output, err := conn.GetHostedZoneWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, route53.ErrCodeNoSuchHostedZone) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if output == nil || output.HostedZone == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func FindHostedZoneDNSSEC(ctx context.Context, conn *route53.Route53, hostedZoneID string) (*route53.GetDNSSECOutput, error) {
 	input := &route53.GetDNSSECInput{
 		HostedZoneId: aws.String(hostedZoneID),
 	}
 
-	output, err := conn.GetDNSSEC(input)
+	output, err := conn.GetDNSSECWithContext(ctx, input)
 
 	if err != nil {
 		return nil, err
@@ -46,14 +67,14 @@ func FindHostedZoneDNSSEC(conn *route53.Route53, hostedZoneID string) (*route53.
 	return output, nil
 }
 
-func FindKeySigningKey(conn *route53.Route53, hostedZoneID string, name string) (*route53.KeySigningKey, error) {
+func FindKeySigningKey(ctx context.Context, conn *route53.Route53, hostedZoneID string, name string) (*route53.KeySigningKey, error) {
 	input := &route53.GetDNSSECInput{
 		HostedZoneId: aws.String(hostedZoneID),
 	}
 
 	var result *route53.KeySigningKey
 
-	output, err := conn.GetDNSSEC(input)
+	output, err := conn.GetDNSSECWithContext(ctx, input)
 
 	if err != nil {
 		return nil, err
@@ -77,20 +98,41 @@ func FindKeySigningKey(conn *route53.Route53, hostedZoneID string, name string) 
 	return result, err
 }
 
-func FindKeySigningKeyByResourceID(conn *route53.Route53, resourceID string) (*route53.KeySigningKey, error) {
+func FindKeySigningKeyByResourceID(ctx context.Context, conn *route53.Route53, resourceID string) (*route53.KeySigningKey, error) {
 	hostedZoneID, name, err := KeySigningKeyParseResourceID(resourceID)
 
 	if err != nil {
 		return nil, fmt.Errorf("parsing Route 53 Key Signing Key (%s) identifier: %w", resourceID, err)
 	}
 
-	return FindKeySigningKey(conn, hostedZoneID, name)
+	return FindKeySigningKey(ctx, conn, hostedZoneID, name)
+}
+
+func FindQueryLoggingConfigByID(ctx context.Context, conn *route53.Route53, id string) (*route53.QueryLoggingConfig, error) {
+	input := &route53.GetQueryLoggingConfigInput{
+		Id: aws.String(id),
+	}
+
+	output, err := conn.GetQueryLoggingConfigWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, route53.ErrCodeNoSuchQueryLoggingConfig, route53.ErrCodeNoSuchHostedZone) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if output == nil || output.QueryLoggingConfig == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.QueryLoggingConfig, nil
 }
 
 func FindTrafficPolicyByID(ctx context.Context, conn *route53.Route53, id string) (*route53.TrafficPolicy, error) {
 	var latestVersion int64
 
-	err := listTrafficPoliciesPagesWithContext(ctx, conn, &route53.ListTrafficPoliciesInput{}, func(page *route53.ListTrafficPoliciesOutput, lastPage bool) bool {
+	err := listTrafficPoliciesPages(ctx, conn, &route53.ListTrafficPoliciesInput{}, func(page *route53.ListTrafficPoliciesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}

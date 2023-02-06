@@ -131,7 +131,6 @@ Other environment variables related to authorization are:
 * `AWS_CONFIG_FILE`
 * `AWS_SHARED_CREDENTIALS_FILE`
 
-
 ### Shared Configuration and Credentials Files
 
 The AWS Provider can source credentials and other settings from the [shared configuration and credentials files](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html).
@@ -197,7 +196,7 @@ Usage:
 
 ```terraform
 provider "aws" {
-  assume_role {
+  assume_role_with_web_identity {
     role_arn                = "arn:aws:iam::123456789012:role/ROLE_NAME"
     session_name            = "SESSION_NAME"
     web_identity_token_file = "/Users/tf_user/secrets/web-identity-token"
@@ -249,21 +248,19 @@ credential_process = custom-process --username jdoe
 Configuation for assuming an IAM role can be done using provider configuration or a named profile in shared configuration files.
 In the provider, all parameters for assuming an IAM role are set in the `assume_role` block.
 
-Environment variables are not supported for assuming IAM roles.
-
 See the [assume role documentation](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-role.html) for more information.
 
-|Setting|Provider|[Shared Config][config]|
-|-------|--------|-----------------------|
-|Role ARN|`role_arn`|`role_arn`|
-|Duration|`duration` or `duration_seconds`|`duration_seconds`|
-|External ID|`external_id`|`external_id`|
-|Policy|`policy`|N/A|
-|Policy ARNs|`policy_arns`|N/A|
-|Session Name|`session_name`|`role_session_name`|
-|Source Identity|`source_identity`|N/A|
-|Tags|`tags`|N/A|
-|Transitive Tag Keys|`transitive_tag_keys`|N/A|
+|Setting|Provider|[Environment Variable][envvars]|[Shared Config][config]|
+|-------|--------|--------|-----------------------|
+|Role ARN|`role_arn`|`AWS_ROLE_ARN`|`role_arn`|
+|Duration|`duration` or `duration_seconds`|N/A|`duration_seconds`|
+|External ID|`external_id`|N/A|`external_id`|
+|Policy|`policy`|N/A|N/A|
+|Policy ARNs|`policy_arns`|N/A|N/A|
+|Session Name|`session_name`|`AWS_ROLE_SESSION_NAME`|`role_session_name`|
+|Source Identity|`source_identity`|N/A|N/A|
+|Tags|`tags`|N/A|N/A|
+|Transitive Tag Keys|`transitive_tag_keys`|N/A|N/A|
 
 [envvars]: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html
 [config]: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html#cli-configure-files-settings
@@ -276,7 +273,7 @@ In the provider, all parameters for assuming an IAM role are set in the `assume_
 See the assume role documentation [section on web identities](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-role.html#cli-configure-role-oidc) for more information.
 
 |Setting|Provider|[Environment Variable][envvars]|[Shared Config][config]|
-|-------|--------|-----------------------|
+|-------|--------|--------|-----------------------|
 |Role ARN|`role_arn`|`AWS_ROLE_ARN`|`role_arn`|
 |Web Identity Token|`web_identity_token`|N/A|N/A|
 |Web Identity Token File|`web_identity_token_file`|`AWS_WEB_IDENTITY_TOKEN_FILE`|`web_identity_token_file`|
@@ -332,7 +329,7 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
 * `shared_credentials_file` - (Optional, **Deprecated**) Path to the shared credentials file. If not set and a profile is used, the default value is `~/.aws/credentials`. Can also be set with the `AWS_SHARED_CREDENTIALS_FILE` environment variable.
 * `shared_credentials_files` - (Optional) List of paths to the shared credentials file. If not set and a profile is used, the default value is `[~/.aws/credentials]`. A single value can also be set with the `AWS_SHARED_CREDENTIALS_FILE` environment variable.
 * `skip_credentials_validation` - (Optional) Whether to skip credentials validation via the STS API. This can be useful for testing and for AWS API implementations that do not have STS available.
-* `skip_get_ec2_platforms` - (Optional) Whether to skip getting the supported EC2 platforms. Can be used when you do not have `ec2:DescribeAccountAttributes` permissions.
+* `skip_get_ec2_platforms` - (Optional, **Deprecated**) Whether to skip getting the supported EC2 platforms. Can be used when you do not have `ec2:DescribeAccountAttributes` permissions.
 * `skip_metadata_api_check` - (Optional) Whether to skip the AWS Metadata API check.  Useful for AWS API implementations that do not have a metadata API endpoint.  Setting to `true` prevents Terraform from authenticating via the Metadata API. You may need to use other authentication methods like static credentials, configuration variables, or environment variables.
 * `skip_region_validation` - (Optional) Whether to skip validating the region. Useful for AWS-like implementations that use their own region names or to bypass the validation for regions that aren't publicly available yet.
 * `skip_requesting_account_id` - (Optional) Whether to skip requesting the account ID.  Useful for AWS API implementations that do not have the IAM, STS API, or metadata API.  When set to `true` and not determined previously, returns an empty account ID when manually constructing ARN attributes with the following:

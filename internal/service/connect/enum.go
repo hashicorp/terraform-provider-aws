@@ -1,6 +1,8 @@
 package connect
 
-import "github.com/aws/aws-sdk-go/service/connect"
+import (
+	"github.com/aws/aws-sdk-go/service/connect"
+)
 
 const (
 	ListInstancesMaxResults = 10
@@ -54,6 +56,7 @@ func InstanceAttributeMapping() map[string]string {
 		connect.InstanceAttributeTypeContactLens:           "contact_lens_enabled",
 		connect.InstanceAttributeTypeEarlyMedia:            "early_media_enabled",
 		connect.InstanceAttributeTypeInboundCalls:          "inbound_calls_enabled",
+		connect.InstanceAttributeTypeMultiPartyConference:  "multi_party_conference_enabled",
 		connect.InstanceAttributeTypeOutboundCalls:         "outbound_calls_enabled",
 		// Pre-release feature requiring allow-list from AWS. Removing all functionality until feature is GA
 		//connect.InstanceAttributeTypeUseCustomTtsVoices:    "use_custom_tts_voices_enabled",

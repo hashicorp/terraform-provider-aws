@@ -28,7 +28,7 @@ func ResourceLedger() *schema.Resource {
 		DeleteWithoutTimeout: resourceLedgerDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -74,7 +74,7 @@ func ResourceLedger() *schema.Resource {
 }
 
 func resourceLedgerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QLDBConn
+	conn := meta.(*conns.AWSClient).QLDBConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -107,7 +107,7 @@ func resourceLedgerCreate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceLedgerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QLDBConn
+	conn := meta.(*conns.AWSClient).QLDBConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -133,7 +133,7 @@ func resourceLedgerRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("name", ledger.Name)
 	d.Set("permissions_mode", ledger.PermissionsMode)
 
-	tags, err := ListTags(conn, d.Get("arn").(string))
+	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
 
 	if err != nil {
 		return diag.Errorf("listing tags for QLDB Ledger (%s): %s", d.Id(), err)
@@ -154,7 +154,7 @@ func resourceLedgerRead(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceLedgerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QLDBConn
+	conn := meta.(*conns.AWSClient).QLDBConn()
 
 	if d.HasChange("permissions_mode") {
 		input := &qldb.UpdateLedgerPermissionsModeInput{
@@ -187,7 +187,7 @@ func resourceLedgerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.Errorf("updating tags: %s", err)
 		}
 	}
@@ -196,14 +196,14 @@ func resourceLedgerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceLedgerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QLDBConn
+	conn := meta.(*conns.AWSClient).QLDBConn()
 
 	input := &qldb.DeleteLedgerInput{
 		Name: aws.String(d.Id()),
 	}
 
 	log.Printf("[INFO] Deleting QLDB Ledger: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, 5*time.Minute,
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 5*time.Minute,
 		func() (interface{}, error) {
 			return conn.DeleteLedgerWithContext(ctx, input)
 		}, qldb.ErrCodeResourceInUseException)

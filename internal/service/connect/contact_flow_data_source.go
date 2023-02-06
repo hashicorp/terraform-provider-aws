@@ -14,7 +14,7 @@ import (
 
 func DataSourceContactFlow() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceContactFlowRead,
+		ReadWithoutTimeout: dataSourceContactFlowRead,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -54,7 +54,7 @@ func DataSourceContactFlow() *schema.Resource {
 }
 
 func dataSourceContactFlowRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	instanceID := d.Get("instance_id").(string)
@@ -80,7 +80,7 @@ func dataSourceContactFlowRead(ctx context.Context, d *schema.ResourceData, meta
 		input.ContactFlowId = contactFlowSummary.Id
 	}
 
-	resp, err := conn.DescribeContactFlow(input)
+	resp, err := conn.DescribeContactFlowWithContext(ctx, input)
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error getting Connect Contact Flow: %w", err))

@@ -13,7 +13,7 @@ import (
 
 func DataSourceNodeGroup() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceNodeGroupRead,
+		ReadWithoutTimeout: dataSourceNodeGroupRead,
 
 		Schema: map[string]*schema.Schema{
 			"ami_type": {
@@ -160,13 +160,13 @@ func DataSourceNodeGroup() *schema.Resource {
 }
 
 func dataSourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EKSConn
+	conn := meta.(*conns.AWSClient).EKSConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	clusterName := d.Get("cluster_name").(string)
 	nodeGroupName := d.Get("node_group_name").(string)
 	id := NodeGroupCreateResourceID(clusterName, nodeGroupName)
-	nodeGroup, err := FindNodegroupByClusterNameAndNodegroupName(conn, clusterName, nodeGroupName)
+	nodeGroup, err := FindNodegroupByClusterNameAndNodegroupName(ctx, conn, clusterName, nodeGroupName)
 
 	if err != nil {
 		return diag.Errorf("error reading EKS Node Group (%s): %s", id, err)

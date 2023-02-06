@@ -1,6 +1,7 @@
 package elb_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -16,19 +17,19 @@ import (
 )
 
 func TestAccELBAppCookieStickinessPolicy_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	lbName := fmt.Sprintf("tf-test-lb-%s", sdkacctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAppCookieStickinessPolicyDestroy,
+		CheckDestroy:             testAccCheckAppCookieStickinessPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppCookieStickinessPolicyConfig_basic(lbName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppCookieStickinessPolicy(
-						"aws_elb.lb",
+					testAccCheckAppCookieStickinessPolicy(ctx, "aws_elb.lb",
 						"aws_app_cookie_stickiness_policy.foo",
 					),
 				),
@@ -41,8 +42,7 @@ func TestAccELBAppCookieStickinessPolicy_basic(t *testing.T) {
 			{
 				Config: testAccAppCookieStickinessPolicyConfig_update(lbName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppCookieStickinessPolicy(
-						"aws_elb.lb",
+					testAccCheckAppCookieStickinessPolicy(ctx, "aws_elb.lb",
 						"aws_app_cookie_stickiness_policy.foo",
 					),
 				),
@@ -52,6 +52,7 @@ func TestAccELBAppCookieStickinessPolicy_basic(t *testing.T) {
 }
 
 func TestAccELBAppCookieStickinessPolicy_Disappears_elb(t *testing.T) {
+	ctx := acctest.Context(t)
 	lbName := fmt.Sprintf("tf-test-lb-%s", sdkacctest.RandString(5))
 	elbResourceName := "aws_elb.lb"
 	resourceName := "aws_app_cookie_stickiness_policy.foo"
@@ -60,13 +61,13 @@ func TestAccELBAppCookieStickinessPolicy_Disappears_elb(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAppCookieStickinessPolicyDestroy,
+		CheckDestroy:             testAccCheckAppCookieStickinessPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppCookieStickinessPolicyConfig_basic(lbName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppCookieStickinessPolicy(elbResourceName, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfelb.ResourceLoadBalancer(), elbResourceName),
+					testAccCheckAppCookieStickinessPolicy(ctx, elbResourceName, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfelb.ResourceLoadBalancer(), elbResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -74,36 +75,37 @@ func TestAccELBAppCookieStickinessPolicy_Disappears_elb(t *testing.T) {
 	})
 }
 
-func testAccCheckAppCookieStickinessPolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn
+func testAccCheckAppCookieStickinessPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_app_cookie_stickiness_policy" {
-			continue
-		}
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_app_cookie_stickiness_policy" {
+				continue
+			}
 
-		lbName, _, policyName := tfelb.AppCookieStickinessPolicyParseID(
-			rs.Primary.ID)
-		out, err := conn.DescribeLoadBalancerPolicies(
-			&elb.DescribeLoadBalancerPoliciesInput{
+			lbName, _, policyName := tfelb.AppCookieStickinessPolicyParseID(
+				rs.Primary.ID)
+			out, err := conn.DescribeLoadBalancerPoliciesWithContext(ctx, &elb.DescribeLoadBalancerPoliciesInput{
 				LoadBalancerName: aws.String(lbName),
 				PolicyNames:      []*string{aws.String(policyName)},
 			})
-		if err != nil {
-			if ec2err, ok := err.(awserr.Error); ok && (ec2err.Code() == "PolicyNotFound" || ec2err.Code() == "LoadBalancerNotFound") {
-				continue
+			if err != nil {
+				if ec2err, ok := err.(awserr.Error); ok && (ec2err.Code() == "PolicyNotFound" || ec2err.Code() == "LoadBalancerNotFound") {
+					continue
+				}
+				return err
 			}
-			return err
-		}
 
-		if len(out.PolicyDescriptions) > 0 {
-			return fmt.Errorf("Policy still exists")
+			if len(out.PolicyDescriptions) > 0 {
+				return fmt.Errorf("Policy still exists")
+			}
 		}
+		return nil
 	}
-	return nil
 }
 
-func testAccCheckAppCookieStickinessPolicy(elbResource string, policyResource string) resource.TestCheckFunc {
+func testAccCheckAppCookieStickinessPolicy(ctx context.Context, elbResource string, policyResource string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[elbResource]
 		if !ok {
@@ -119,9 +121,9 @@ func testAccCheckAppCookieStickinessPolicy(elbResource string, policyResource st
 			return fmt.Errorf("Not found: %s", policyResource)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn()
 		elbName, _, policyName := tfelb.AppCookieStickinessPolicyParseID(policy.Primary.ID)
-		_, err := conn.DescribeLoadBalancerPolicies(&elb.DescribeLoadBalancerPoliciesInput{
+		_, err := conn.DescribeLoadBalancerPoliciesWithContext(ctx, &elb.DescribeLoadBalancerPoliciesInput{
 			LoadBalancerName: aws.String(elbName),
 			PolicyNames:      []*string{aws.String(policyName)},
 		})
@@ -131,6 +133,7 @@ func testAccCheckAppCookieStickinessPolicy(elbResource string, policyResource st
 }
 
 func TestAccELBAppCookieStickinessPolicy_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	lbName := fmt.Sprintf("tf-test-lb-%s", sdkacctest.RandString(5))
 	elbResourceName := "aws_elb.lb"
 	resourceName := "aws_app_cookie_stickiness_policy.foo"
@@ -139,13 +142,13 @@ func TestAccELBAppCookieStickinessPolicy_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAppCookieStickinessPolicyDestroy,
+		CheckDestroy:             testAccCheckAppCookieStickinessPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppCookieStickinessPolicyConfig_basic(lbName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppCookieStickinessPolicy(elbResourceName, resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfelb.ResourceAppCookieStickinessPolicy(), resourceName),
+					testAccCheckAppCookieStickinessPolicy(ctx, elbResourceName, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfelb.ResourceAppCookieStickinessPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

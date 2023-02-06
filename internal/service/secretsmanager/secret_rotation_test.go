@@ -1,6 +1,7 @@
 package secretsmanager_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -15,22 +16,23 @@ import (
 )
 
 func TestAccSecretsManagerSecretRotation_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var secret secretsmanager.DescribeSecretOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_secretsmanager_secret_rotation.test"
 	lambdaFunctionResourceName := "aws_lambda_function.test1"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, secretsmanager.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSecretRotationDestroy,
+		CheckDestroy:             testAccCheckSecretRotationDestroy(ctx),
 		Steps: []resource.TestStep{
 			// Test creating secret rotation resource
 			{
 				Config: testAccSecretRotationConfig_basic(rName, 7),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecretRotationExists(resourceName, &secret),
+					testAccCheckSecretRotationExists(ctx, resourceName, &secret),
 					resource.TestCheckResourceAttr(resourceName, "rotation_enabled", "true"),
 					resource.TestCheckResourceAttrPair(resourceName, "rotation_lambda_arn", lambdaFunctionResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "rotation_rules.#", "1"),
@@ -60,48 +62,50 @@ func TestAccSecretsManagerSecretRotation_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckSecretRotationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerConn
+func testAccCheckSecretRotationDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_secretsmanager_secret_rotation" {
-			continue
-		}
-
-		input := &secretsmanager.DescribeSecretInput{
-			SecretId: aws.String(rs.Primary.ID),
-		}
-
-		output, err := conn.DescribeSecret(input)
-
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, secretsmanager.ErrCodeResourceNotFoundException) {
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_secretsmanager_secret_rotation" {
 				continue
 			}
-			return err
+
+			input := &secretsmanager.DescribeSecretInput{
+				SecretId: aws.String(rs.Primary.ID),
+			}
+
+			output, err := conn.DescribeSecretWithContext(ctx, input)
+
+			if err != nil {
+				if tfawserr.ErrCodeEquals(err, secretsmanager.ErrCodeResourceNotFoundException) {
+					continue
+				}
+				return err
+			}
+
+			if output != nil && aws.BoolValue(output.RotationEnabled) {
+				return fmt.Errorf("Secret rotation for %q still enabled", rs.Primary.ID)
+			}
 		}
 
-		if output != nil && aws.BoolValue(output.RotationEnabled) {
-			return fmt.Errorf("Secret rotation for %q still enabled", rs.Primary.ID)
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckSecretRotationExists(resourceName string, secret *secretsmanager.DescribeSecretOutput) resource.TestCheckFunc {
+func testAccCheckSecretRotationExists(ctx context.Context, resourceName string, secret *secretsmanager.DescribeSecretOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerConn()
 		input := &secretsmanager.DescribeSecretInput{
 			SecretId: aws.String(rs.Primary.ID),
 		}
 
-		output, err := conn.DescribeSecret(input)
+		output, err := conn.DescribeSecretWithContext(ctx, input)
 
 		if err != nil {
 			return err
@@ -129,7 +133,7 @@ resource "aws_lambda_function" "test1" {
   function_name = "%[1]s-1"
   handler       = "exports.example"
   role          = aws_iam_role.iam_for_lambda.arn
-  runtime       = "nodejs12.x"
+  runtime       = "nodejs16.x"
 }
 
 resource "aws_lambda_permission" "test1" {
@@ -145,7 +149,7 @@ resource "aws_lambda_function" "test2" {
   function_name = "%[1]s-2"
   handler       = "exports.example"
   role          = aws_iam_role.iam_for_lambda.arn
-  runtime       = "nodejs12.x"
+  runtime       = "nodejs16.x"
 }
 
 resource "aws_lambda_permission" "test2" {

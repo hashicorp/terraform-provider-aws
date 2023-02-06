@@ -1,11 +1,13 @@
 package elb
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws/endpoints"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 // See http://docs.aws.amazon.com/general/latest/gr/rande.html#elb_region
@@ -18,6 +20,7 @@ var HostedZoneIdPerRegionMap = map[string]string{
 	endpoints.ApNortheast2RegionID: "ZWKZPGTI48KDX",
 	endpoints.ApNortheast3RegionID: "Z5LXEXXYW11ES",
 	endpoints.ApSouth1RegionID:     "ZP97RAFLXTNZK",
+	endpoints.ApSouth2RegionID:     "Z0173938T07WNTVAEPZN",
 	endpoints.ApSoutheast1RegionID: "Z1LMS91P8CMLE5",
 	endpoints.ApSoutheast2RegionID: "Z1GM3OXH4ZPM65",
 	endpoints.ApSoutheast3RegionID: "Z08888821HLRG5A9ZRTER",
@@ -25,8 +28,10 @@ var HostedZoneIdPerRegionMap = map[string]string{
 	endpoints.CnNorth1RegionID:     "Z1GDH35T77C1KE",
 	endpoints.CnNorthwest1RegionID: "ZM7IZAIOVVDZF",
 	endpoints.EuCentral1RegionID:   "Z215JYRZR1TBD5",
+	endpoints.EuCentral2RegionID:   "Z06391101F2ZOEP8P5EB3",
 	endpoints.EuNorth1RegionID:     "Z23TAZ6LKFMNIO",
 	endpoints.EuSouth1RegionID:     "Z3ULH7SSC9OV64",
+	endpoints.EuSouth2RegionID:     "Z0956581394HF5D5LXGAP",
 	endpoints.EuWest1RegionID:      "Z32O12XQLNTSW2",
 	endpoints.EuWest2RegionID:      "ZHURV8PSTC4K8",
 	endpoints.EuWest3RegionID:      "Z3Q77PNBQS71R4",
@@ -43,7 +48,7 @@ var HostedZoneIdPerRegionMap = map[string]string{
 
 func DataSourceHostedZoneID() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceHostedZoneIDRead,
+		ReadWithoutTimeout: dataSourceHostedZoneIDRead,
 
 		Schema: map[string]*schema.Schema{
 			"region": {
@@ -54,7 +59,8 @@ func DataSourceHostedZoneID() *schema.Resource {
 	}
 }
 
-func dataSourceHostedZoneIDRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceHostedZoneIDRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	region := meta.(*conns.AWSClient).Region
 	if v, ok := d.GetOk("region"); ok {
 		region = v.(string)
@@ -62,8 +68,8 @@ func dataSourceHostedZoneIDRead(d *schema.ResourceData, meta interface{}) error 
 
 	if zoneId, ok := HostedZoneIdPerRegionMap[region]; ok {
 		d.SetId(zoneId)
-		return nil
+		return diags
 	}
 
-	return fmt.Errorf("Unknown region (%q)", region)
+	return sdkdiag.AppendErrorf(diags, "Unknown region (%q)", region)
 }

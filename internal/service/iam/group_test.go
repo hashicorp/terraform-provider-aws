@@ -1,6 +1,7 @@
 package iam_test
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"testing"
@@ -16,6 +17,7 @@ import (
 )
 
 func TestAccIAMGroup_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf iam.GetGroupOutput
 	resourceName := "aws_iam_group.test"
 	resourceName2 := "aws_iam_group.test2"
@@ -27,12 +29,12 @@ func TestAccIAMGroup_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGroupDestroy,
+		CheckDestroy:             testAccCheckGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupConfig_basic(groupName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupExists(resourceName, &conf),
+					testAccCheckGroupExists(ctx, resourceName, &conf),
 					testAccCheckGroupAttributes(&conf, groupName, "/"),
 				),
 			},
@@ -44,7 +46,7 @@ func TestAccIAMGroup_basic(t *testing.T) {
 			{
 				Config: testAccGroupConfig_2(groupName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupExists(resourceName2, &conf),
+					testAccCheckGroupExists(ctx, resourceName2, &conf),
 					testAccCheckGroupAttributes(&conf, groupName2, "/funnypath/"),
 				),
 			},
@@ -53,6 +55,7 @@ func TestAccIAMGroup_basic(t *testing.T) {
 }
 
 func TestAccIAMGroup_nameChange(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf iam.GetGroupOutput
 	resourceName := "aws_iam_group.test"
 	rString := sdkacctest.RandString(8)
@@ -63,19 +66,19 @@ func TestAccIAMGroup_nameChange(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGroupDestroy,
+		CheckDestroy:             testAccCheckGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupConfig_basic(groupName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupExists(resourceName, &conf),
+					testAccCheckGroupExists(ctx, resourceName, &conf),
 					testAccCheckGroupAttributes(&conf, groupName, "/"),
 				),
 			},
 			{
 				Config: testAccGroupConfig_basic(groupName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGroupExists(resourceName, &conf),
+					testAccCheckGroupExists(ctx, resourceName, &conf),
 					testAccCheckGroupAttributes(&conf, groupName2, "/"),
 				),
 			},
@@ -83,36 +86,38 @@ func TestAccIAMGroup_nameChange(t *testing.T) {
 	})
 }
 
-func testAccCheckGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+func testAccCheckGroupDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_iam_group" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_iam_group" {
+				continue
+			}
+
+			// Try to get group
+			_, err := conn.GetGroupWithContext(ctx, &iam.GetGroupInput{
+				GroupName: aws.String(rs.Primary.ID),
+			})
+			if err == nil {
+				return errors.New("still exist.")
+			}
+
+			// Verify the error is what we want
+			ec2err, ok := err.(awserr.Error)
+			if !ok {
+				return err
+			}
+			if ec2err.Code() != "NoSuchEntity" {
+				return err
+			}
 		}
 
-		// Try to get group
-		_, err := conn.GetGroup(&iam.GetGroupInput{
-			GroupName: aws.String(rs.Primary.ID),
-		})
-		if err == nil {
-			return errors.New("still exist.")
-		}
-
-		// Verify the error is what we want
-		ec2err, ok := err.(awserr.Error)
-		if !ok {
-			return err
-		}
-		if ec2err.Code() != "NoSuchEntity" {
-			return err
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckGroupExists(n string, res *iam.GetGroupOutput) resource.TestCheckFunc {
+func testAccCheckGroupExists(ctx context.Context, n string, res *iam.GetGroupOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -123,9 +128,9 @@ func testAccCheckGroupExists(n string, res *iam.GetGroupOutput) resource.TestChe
 			return errors.New("No Group name is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 
-		resp, err := conn.GetGroup(&iam.GetGroupInput{
+		resp, err := conn.GetGroupWithContext(ctx, &iam.GetGroupInput{
 			GroupName: aws.String(rs.Primary.ID),
 		})
 		if err != nil {

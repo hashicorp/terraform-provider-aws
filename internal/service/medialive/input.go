@@ -180,7 +180,7 @@ const (
 )
 
 func resourceInputCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MediaLiveConn
+	conn := meta.(*conns.AWSClient).MediaLiveClient()
 
 	in := &medialive.CreateInputInput{
 		RequestId: aws.String(resource.UniqueId()),
@@ -224,7 +224,7 @@ func resourceInputCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	// IAM propagation
-	outputRaw, err := tfresource.RetryWhen(propagationTimeout,
+	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
 		func() (interface{}, error) {
 			return conn.CreateInput(ctx, in)
 		},
@@ -255,7 +255,7 @@ func resourceInputCreate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceInputRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MediaLiveConn
+	conn := meta.(*conns.AWSClient).MediaLiveClient()
 
 	out, err := FindInputByID(ctx, conn, d.Id())
 
@@ -303,7 +303,7 @@ func resourceInputRead(ctx context.Context, d *schema.ResourceData, meta interfa
 }
 
 func resourceInputUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MediaLiveConn
+	conn := meta.(*conns.AWSClient).MediaLiveClient()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		in := &medialive.UpdateInputInput{
@@ -334,11 +334,24 @@ func resourceInputUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			in.Sources = expandSources(d.Get("sources").(*schema.Set).List())
 		}
 
-		log.Printf("[DEBUG] Updating MediaLive Input (%s): %#v", d.Id(), in)
-		out, err := conn.UpdateInput(ctx, in)
+		rawOutput, err := tfresource.RetryWhen(ctx, 2*time.Minute,
+			func() (interface{}, error) {
+				return conn.UpdateInput(ctx, in)
+			},
+			func(err error) (bool, error) {
+				var bre *types.BadRequestException
+				if errors.As(err, &bre) {
+					return strings.Contains(bre.ErrorMessage(), "The first input attached to a channel cannot be a dynamic input"), err
+				}
+				return false, err
+			},
+		)
+
 		if err != nil {
 			return create.DiagError(names.MediaLive, create.ErrActionUpdating, ResNameInput, d.Id(), err)
 		}
+
+		out := rawOutput.(*medialive.UpdateInputOutput)
 
 		if _, err := waitInputUpdated(ctx, conn, aws.ToString(out.Input.Id), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return create.DiagError(names.MediaLive, create.ErrActionWaitingForUpdate, ResNameInput, d.Id(), err)
@@ -357,7 +370,7 @@ func resourceInputUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceInputDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MediaLiveConn
+	conn := meta.(*conns.AWSClient).MediaLiveClient()
 
 	log.Printf("[INFO] Deleting MediaLive Input %s", d.Id())
 

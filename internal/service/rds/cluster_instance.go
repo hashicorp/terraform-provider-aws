@@ -1,7 +1,7 @@
 package rds
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"strings"
 	"time"
@@ -9,10 +9,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -20,13 +22,13 @@ import (
 
 func ResourceClusterInstance() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceClusterInstanceCreate,
-		Read:   resourceClusterInstanceRead,
-		Update: resourceClusterInstanceUpdate,
-		Delete: resourceClusterInstanceDelete,
+		CreateWithoutTimeout: resourceClusterInstanceCreate,
+		ReadWithoutTimeout:   resourceClusterInstanceRead,
+		UpdateWithoutTimeout: resourceClusterInstanceUpdate,
+		DeleteWithoutTimeout: resourceClusterInstanceDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -219,8 +221,9 @@ func ResourceClusterInstance() *schema.Resource {
 	}
 }
 
-func resourceClusterInstanceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RDSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -292,22 +295,22 @@ func resourceClusterInstanceCreate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	log.Printf("[DEBUG] Creating RDS Cluster Instance: %s", input)
-	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(propagationTimeout,
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
 		func() (interface{}, error) {
-			return conn.CreateDBInstance(input)
+			return conn.CreateDBInstanceWithContext(ctx, input)
 		},
 		errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions")
 
 	if err != nil {
-		return fmt.Errorf("creating RDS Cluster (%s) Instance (%s): %w", clusterID, identifier, err)
+		return sdkdiag.AppendErrorf(diags, "creating RDS Cluster (%s) Instance (%s): %s", clusterID, identifier, err)
 	}
 
 	output := outputRaw.(*rds.CreateDBInstanceOutput)
 
 	d.SetId(aws.StringValue(output.DBInstance.DBInstanceIdentifier))
 
-	if _, err := waitDBClusterInstanceCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("waiting for RDS Cluster Instance (%s) create: %w", d.Id(), err)
+	if _, err := waitDBClusterInstanceCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for RDS Cluster Instance (%s) create: %s", d.Id(), err)
 	}
 
 	if v, ok := d.GetOk("ca_cert_identifier"); ok && v.(string) != aws.StringValue(output.DBInstance.CACertificateIdentifier) {
@@ -317,59 +320,55 @@ func resourceClusterInstanceCreate(d *schema.ResourceData, meta interface{}) err
 			DBInstanceIdentifier:    aws.String(d.Id()),
 		}
 
-		_, err := conn.ModifyDBInstance(input)
-
-		if err != nil {
-			return fmt.Errorf("updating RDS Cluster Instance (%s): %w", d.Id(), err)
+		if _, err := conn.ModifyDBInstanceWithContext(ctx, input); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating RDS Cluster Instance (%s): %s", d.Id(), err)
 		}
 
-		if _, err := waitDBInstanceUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return fmt.Errorf("waiting for RDS Cluster Instance (%s) update: %w", d.Id(), err)
+		if _, err := waitDBInstanceAvailableSDKv1(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for RDS Cluster Instance (%s) update: %s", d.Id(), err)
 		}
 
-		_, err = conn.RebootDBInstance(&rds.RebootDBInstanceInput{
+		_, err = conn.RebootDBInstanceWithContext(ctx, &rds.RebootDBInstanceInput{
 			DBInstanceIdentifier: aws.String(d.Id()),
 		})
-
 		if err != nil {
-			return fmt.Errorf("rebooting RDS Cluster Instance (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "rebooting RDS Cluster Instance (%s): %s", d.Id(), err)
 		}
 
-		if _, err := waitDBInstanceUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return fmt.Errorf("waiting for RDS Cluster Instance (%s) update: %w", d.Id(), err)
+		if _, err := waitDBInstanceAvailableSDKv1(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for RDS Cluster Instance (%s) update: %s", d.Id(), err)
 		}
 	}
 
-	return resourceClusterInstanceRead(d, meta)
+	return append(diags, resourceClusterInstanceRead(ctx, d, meta)...)
 }
 
-func resourceClusterInstanceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RDSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	db, err := FindDBInstanceByID(conn, d.Id())
-
+	db, err := findDBInstanceByIDSDKv1(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] RDS Cluster Instance (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
-
 	if err != nil {
-		return fmt.Errorf("reading RDS Cluster Instance (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading RDS Cluster Instance (%s): %s", d.Id(), err)
 	}
 
 	dbClusterID := aws.StringValue(db.DBClusterIdentifier)
 
 	if dbClusterID == "" {
-		return fmt.Errorf("DBClusterIdentifier is missing from RDS Cluster Instance (%s). The aws_db_instance resource should be used for non-Aurora instances", d.Id())
+		return sdkdiag.AppendErrorf(diags, "DBClusterIdentifier is missing from RDS Cluster Instance (%s). The aws_db_instance resource should be used for non-Aurora instances", d.Id())
 	}
 
-	dbc, err := FindDBClusterByID(conn, dbClusterID)
+	dbc, err := FindDBClusterByID(ctx, conn, dbClusterID)
 
 	if err != nil {
-		return fmt.Errorf("reading RDS Cluster (%s): %w", dbClusterID, err)
+		return sdkdiag.AppendErrorf(diags, "reading RDS Cluster (%s): %s", dbClusterID, err)
 	}
 
 	for _, m := range dbc.DBClusterMembers {
@@ -418,28 +417,28 @@ func resourceClusterInstanceRead(d *schema.ResourceData, meta interface{}) error
 
 	clusterSetResourceDataEngineVersionFromClusterInstance(d, db)
 
-	tags, err := ListTags(conn, aws.StringValue(db.DBInstanceArn))
+	tags, err := ListTags(ctx, conn, aws.StringValue(db.DBInstanceArn))
 
 	if err != nil {
-		return fmt.Errorf("listing tags for RDS Cluster Instance (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for RDS Cluster Instance (%s): %s", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
 	return nil
 }
 
-func resourceClusterInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) (diags diag.Diagnostics) {
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &rds.ModifyDBInstanceInput{
@@ -504,43 +503,44 @@ func resourceClusterInstanceUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 
 		log.Printf("[DEBUG] Updating RDS Cluster Instance: %s", input)
-		_, err := tfresource.RetryWhenAWSErrMessageContains(propagationTimeout,
+		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
 			func() (interface{}, error) {
-				return conn.ModifyDBInstance(input)
+				return conn.ModifyDBInstanceWithContext(ctx, input)
 			},
 			errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions")
 
 		if err != nil {
-			return fmt.Errorf("updating RDS Cluster Instance (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating RDS Cluster Instance (%s): %s", d.Id(), err)
 		}
 
-		if _, err := waitDBClusterInstanceUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return fmt.Errorf("waiting for RDS Cluster Instance (%s) update: %w", d.Id(), err)
+		if _, err := waitDBClusterInstanceUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for RDS Cluster Instance (%s) update: %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("updating RDS Cluster Instance (%s) tags: %w", d.Id(), err)
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating RDS Cluster Instance (%s) tags: %s", d.Id(), err)
 		}
 	}
 
-	return resourceClusterInstanceRead(d, meta)
+	return append(diags, resourceClusterInstanceRead(ctx, d, meta)...)
 }
 
-func resourceClusterInstanceDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+func resourceClusterInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	input := &rds.DeleteDBInstanceInput{
 		DBInstanceIdentifier: aws.String(d.Id()),
 	}
 
 	log.Printf("[DEBUG] Deleting RDS Cluster Instance: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrMessageContains(d.Timeout(schema.TimeoutDelete),
+	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, d.Timeout(schema.TimeoutDelete),
 		func() (interface{}, error) {
-			return conn.DeleteDBInstance(input)
+			return conn.DeleteDBInstanceWithContext(ctx, input)
 		},
 		rds.ErrCodeInvalidDBClusterStateFault, "Delete the replica cluster before deleting")
 
@@ -549,11 +549,11 @@ func resourceClusterInstanceDelete(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if err != nil && !tfawserr.ErrMessageContains(err, rds.ErrCodeInvalidDBInstanceStateFault, "is already being deleted") {
-		return fmt.Errorf("deleting RDS Cluster Instance (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting RDS Cluster Instance (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitDBClusterInstanceDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("waiting for RDS Cluster Instance (%s) delete: %w", d.Id(), err)
+	if _, err := waitDBClusterInstanceDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for RDS Cluster Instance (%s) delete: %s", d.Id(), err)
 	}
 
 	return nil

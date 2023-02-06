@@ -1,6 +1,7 @@
 package appsync_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -18,6 +19,7 @@ import (
 )
 
 func testAccGraphQLAPI_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var api1 appsync.GraphqlApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appsync_graphql_api.test"
@@ -26,12 +28,12 @@ func testAccGraphQLAPI_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, appsync.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGraphQLAPIDestroy,
+		CheckDestroy:             testAccCheckGraphQLAPIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGraphQLAPIConfig_authenticationType(rName, "API_KEY"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGraphQLAPIExists(resourceName, &api1),
+					testAccCheckGraphQLAPIExists(ctx, resourceName, &api1),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "appsync", regexp.MustCompile(`apis/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", "API_KEY"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -56,6 +58,7 @@ func testAccGraphQLAPI_basic(t *testing.T) {
 }
 
 func testAccGraphQLAPI_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var api1 appsync.GraphqlApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appsync_graphql_api.test"
@@ -64,13 +67,13 @@ func testAccGraphQLAPI_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, appsync.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGraphQLAPIDestroy,
+		CheckDestroy:             testAccCheckGraphQLAPIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGraphQLAPIConfig_authenticationType(rName, "API_KEY"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGraphQLAPIExists(resourceName, &api1),
-					acctest.CheckResourceDisappears(acctest.Provider, tfappsync.ResourceGraphQLAPI(), resourceName),
+					testAccCheckGraphQLAPIExists(ctx, resourceName, &api1),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappsync.ResourceGraphQLAPI(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -79,6 +82,7 @@ func testAccGraphQLAPI_disappears(t *testing.T) {
 }
 
 func testAccGraphQLAPI_schema(t *testing.T) {
+	ctx := acctest.Context(t)
 	var api1, api2 appsync.GraphqlApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appsync_graphql_api.test"
@@ -87,12 +91,12 @@ func testAccGraphQLAPI_schema(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, appsync.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGraphQLAPIDestroy,
+		CheckDestroy:             testAccCheckGraphQLAPIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGraphQLAPIConfig_schema(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGraphQLAPIExists(resourceName, &api1),
+					testAccCheckGraphQLAPIExists(ctx, resourceName, &api1),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "appsync", regexp.MustCompile(`apis/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", "API_KEY"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -104,7 +108,7 @@ func testAccGraphQLAPI_schema(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "schema"),
 					resource.TestCheckResourceAttrSet(resourceName, "uris.%"),
 					resource.TestCheckResourceAttrSet(resourceName, "uris.GRAPHQL"),
-					testAccCheckTypeExists(resourceName, "Post"),
+					testAccCheckTypeExists(ctx, resourceName, "Post"),
 				),
 			},
 			{
@@ -116,8 +120,8 @@ func testAccGraphQLAPI_schema(t *testing.T) {
 			{
 				Config: testAccGraphQLAPIConfig_schemaUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGraphQLAPIExists(resourceName, &api2),
-					testAccCheckTypeExists(resourceName, "PostV2"),
+					testAccCheckGraphQLAPIExists(ctx, resourceName, &api2),
+					testAccCheckTypeExists(ctx, resourceName, "PostV2"),
 				),
 			},
 		},
@@ -125,6 +129,7 @@ func testAccGraphQLAPI_schema(t *testing.T) {
 }
 
 func testAccGraphQLAPI_authenticationType(t *testing.T) {
+	ctx := acctest.Context(t)
 	var api1, api2 appsync.GraphqlApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appsync_graphql_api.test"
@@ -133,19 +138,19 @@ func testAccGraphQLAPI_authenticationType(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, appsync.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGraphQLAPIDestroy,
+		CheckDestroy:             testAccCheckGraphQLAPIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGraphQLAPIConfig_authenticationType(rName, "API_KEY"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGraphQLAPIExists(resourceName, &api1),
+					testAccCheckGraphQLAPIExists(ctx, resourceName, &api1),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", "API_KEY"),
 				),
 			},
 			{
 				Config: testAccGraphQLAPIConfig_authenticationType(rName, "AWS_IAM"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGraphQLAPIExists(resourceName, &api2),
+					testAccCheckGraphQLAPIExists(ctx, resourceName, &api2),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", "AWS_IAM"),
 				),
 			},
@@ -159,6 +164,7 @@ func testAccGraphQLAPI_authenticationType(t *testing.T) {
 }
 
 func testAccGraphQLAPI_AuthenticationType_apiKey(t *testing.T) {
+	ctx := acctest.Context(t)
 	var api1 appsync.GraphqlApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appsync_graphql_api.test"
@@ -167,12 +173,12 @@ func testAccGraphQLAPI_AuthenticationType_apiKey(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, appsync.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGraphQLAPIDestroy,
+		CheckDestroy:             testAccCheckGraphQLAPIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGraphQLAPIConfig_authenticationType(rName, "API_KEY"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGraphQLAPIExists(resourceName, &api1),
+					testAccCheckGraphQLAPIExists(ctx, resourceName, &api1),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "appsync", regexp.MustCompile(`apis/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", "API_KEY"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -188,6 +194,7 @@ func testAccGraphQLAPI_AuthenticationType_apiKey(t *testing.T) {
 }
 
 func testAccGraphQLAPI_AuthenticationType_iam(t *testing.T) {
+	ctx := acctest.Context(t)
 	var api1 appsync.GraphqlApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appsync_graphql_api.test"
@@ -196,12 +203,12 @@ func testAccGraphQLAPI_AuthenticationType_iam(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, appsync.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGraphQLAPIDestroy,
+		CheckDestroy:             testAccCheckGraphQLAPIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGraphQLAPIConfig_authenticationType(rName, "AWS_IAM"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGraphQLAPIExists(resourceName, &api1),
+					testAccCheckGraphQLAPIExists(ctx, resourceName, &api1),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "appsync", regexp.MustCompile(`apis/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", "AWS_IAM"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -217,6 +224,7 @@ func testAccGraphQLAPI_AuthenticationType_iam(t *testing.T) {
 }
 
 func testAccGraphQLAPI_AuthenticationType_amazonCognitoUserPools(t *testing.T) {
+	ctx := acctest.Context(t)
 	var api1 appsync.GraphqlApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	cognitoUserPoolResourceName := "aws_cognito_user_pool.test"
@@ -226,12 +234,12 @@ func testAccGraphQLAPI_AuthenticationType_amazonCognitoUserPools(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, appsync.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGraphQLAPIDestroy,
+		CheckDestroy:             testAccCheckGraphQLAPIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGraphQLAPIConfig_userPoolDefaultAction(rName, "ALLOW"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGraphQLAPIExists(resourceName, &api1),
+					testAccCheckGraphQLAPIExists(ctx, resourceName, &api1),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", "AMAZON_COGNITO_USER_POOLS"),
 					resource.TestCheckResourceAttr(resourceName, "user_pool_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "user_pool_config.0.aws_region", acctest.Region()),
@@ -249,6 +257,7 @@ func testAccGraphQLAPI_AuthenticationType_amazonCognitoUserPools(t *testing.T) {
 }
 
 func testAccGraphQLAPI_AuthenticationType_openIDConnect(t *testing.T) {
+	ctx := acctest.Context(t)
 	var api1 appsync.GraphqlApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appsync_graphql_api.test"
@@ -257,12 +266,12 @@ func testAccGraphQLAPI_AuthenticationType_openIDConnect(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, appsync.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGraphQLAPIDestroy,
+		CheckDestroy:             testAccCheckGraphQLAPIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGraphQLAPIConfig_openIDConnectIssuer(rName, "https://example.com"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGraphQLAPIExists(resourceName, &api1),
+					testAccCheckGraphQLAPIExists(ctx, resourceName, &api1),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", "OPENID_CONNECT"),
 					resource.TestCheckResourceAttr(resourceName, "openid_connect_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "openid_connect_config.0.issuer", "https://example.com"),
@@ -278,6 +287,7 @@ func testAccGraphQLAPI_AuthenticationType_openIDConnect(t *testing.T) {
 }
 
 func testAccGraphQLAPI_AuthenticationType_lambda(t *testing.T) {
+	ctx := acctest.Context(t)
 	var api1 appsync.GraphqlApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appsync_graphql_api.test"
@@ -287,12 +297,12 @@ func testAccGraphQLAPI_AuthenticationType_lambda(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, appsync.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGraphQLAPIDestroy,
+		CheckDestroy:             testAccCheckGraphQLAPIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGraphQLAPIConfig_lambdaAuthorizerAuthorizerURI(rName, "aws_lambda_function.test.arn"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGraphQLAPIExists(resourceName, &api1),
+					testAccCheckGraphQLAPIExists(ctx, resourceName, &api1),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", "AWS_LAMBDA"),
 					resource.TestCheckResourceAttr(resourceName, "lambda_authorizer_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "lambda_authorizer_config.0.authorizer_uri", lambdaAuthorizerResourceName, "arn"),
@@ -310,6 +320,7 @@ func testAccGraphQLAPI_AuthenticationType_lambda(t *testing.T) {
 }
 
 func testAccGraphQLAPI_log(t *testing.T) {
+	ctx := acctest.Context(t)
 	var api1 appsync.GraphqlApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	iamRoleResourceName := "aws_iam_role.test"
@@ -319,12 +330,12 @@ func testAccGraphQLAPI_log(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, appsync.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGraphQLAPIDestroy,
+		CheckDestroy:             testAccCheckGraphQLAPIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGraphQLAPIConfig_logFieldLogLevel(rName, "ALL"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGraphQLAPIExists(resourceName, &api1),
+					testAccCheckGraphQLAPIExists(ctx, resourceName, &api1),
 					resource.TestCheckResourceAttr(resourceName, "log_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "log_config.0.cloudwatch_logs_role_arn", iamRoleResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "log_config.0.field_log_level", "ALL"),
@@ -341,6 +352,7 @@ func testAccGraphQLAPI_log(t *testing.T) {
 }
 
 func testAccGraphQLAPI_Log_fieldLogLevel(t *testing.T) {
+	ctx := acctest.Context(t)
 	var api1, api2, api3 appsync.GraphqlApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	iamRoleResourceName := "aws_iam_role.test"
@@ -350,12 +362,12 @@ func testAccGraphQLAPI_Log_fieldLogLevel(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, appsync.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGraphQLAPIDestroy,
+		CheckDestroy:             testAccCheckGraphQLAPIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGraphQLAPIConfig_logFieldLogLevel(rName, "ALL"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGraphQLAPIExists(resourceName, &api1),
+					testAccCheckGraphQLAPIExists(ctx, resourceName, &api1),
 					resource.TestCheckResourceAttr(resourceName, "log_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "log_config.0.cloudwatch_logs_role_arn", iamRoleResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "log_config.0.field_log_level", "ALL"),
@@ -365,7 +377,7 @@ func testAccGraphQLAPI_Log_fieldLogLevel(t *testing.T) {
 			{
 				Config: testAccGraphQLAPIConfig_logFieldLogLevel(rName, "ERROR"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGraphQLAPIExists(resourceName, &api2),
+					testAccCheckGraphQLAPIExists(ctx, resourceName, &api2),
 					resource.TestCheckResourceAttr(resourceName, "log_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "log_config.0.cloudwatch_logs_role_arn", iamRoleResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "log_config.0.field_log_level", "ERROR"),
@@ -375,7 +387,7 @@ func testAccGraphQLAPI_Log_fieldLogLevel(t *testing.T) {
 			{
 				Config: testAccGraphQLAPIConfig_logFieldLogLevel(rName, "NONE"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGraphQLAPIExists(resourceName, &api3),
+					testAccCheckGraphQLAPIExists(ctx, resourceName, &api3),
 					resource.TestCheckResourceAttr(resourceName, "log_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "log_config.0.cloudwatch_logs_role_arn", iamRoleResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "log_config.0.field_log_level", "NONE"),
@@ -392,6 +404,7 @@ func testAccGraphQLAPI_Log_fieldLogLevel(t *testing.T) {
 }
 
 func testAccGraphQLAPI_Log_excludeVerboseContent(t *testing.T) {
+	ctx := acctest.Context(t)
 	var api1, api2 appsync.GraphqlApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	iamRoleResourceName := "aws_iam_role.test"
@@ -401,12 +414,12 @@ func testAccGraphQLAPI_Log_excludeVerboseContent(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, appsync.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGraphQLAPIDestroy,
+		CheckDestroy:             testAccCheckGraphQLAPIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGraphQLAPIConfig_logExcludeVerboseContent(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGraphQLAPIExists(resourceName, &api1),
+					testAccCheckGraphQLAPIExists(ctx, resourceName, &api1),
 					resource.TestCheckResourceAttr(resourceName, "log_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "log_config.0.cloudwatch_logs_role_arn", iamRoleResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "log_config.0.field_log_level", "ALL"),
@@ -416,7 +429,7 @@ func testAccGraphQLAPI_Log_excludeVerboseContent(t *testing.T) {
 			{
 				Config: testAccGraphQLAPIConfig_logExcludeVerboseContent(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGraphQLAPIExists(resourceName, &api2),
+					testAccCheckGraphQLAPIExists(ctx, resourceName, &api2),
 					resource.TestCheckResourceAttr(resourceName, "log_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "log_config.0.cloudwatch_logs_role_arn", iamRoleResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "log_config.0.field_log_level", "ALL"),
@@ -434,6 +447,7 @@ func testAccGraphQLAPI_Log_excludeVerboseContent(t *testing.T) {
 }
 
 func testAccGraphQLAPI_OpenIDConnect_authTTL(t *testing.T) {
+	ctx := acctest.Context(t)
 	var api1, api2 appsync.GraphqlApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appsync_graphql_api.test"
@@ -442,12 +456,12 @@ func testAccGraphQLAPI_OpenIDConnect_authTTL(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, appsync.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGraphQLAPIDestroy,
+		CheckDestroy:             testAccCheckGraphQLAPIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGraphQLAPIConfig_openIDConnectAuthTTL(rName, 1000),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGraphQLAPIExists(resourceName, &api1),
+					testAccCheckGraphQLAPIExists(ctx, resourceName, &api1),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", "OPENID_CONNECT"),
 					resource.TestCheckResourceAttr(resourceName, "openid_connect_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "openid_connect_config.0.auth_ttl", "1000"),
@@ -457,7 +471,7 @@ func testAccGraphQLAPI_OpenIDConnect_authTTL(t *testing.T) {
 			{
 				Config: testAccGraphQLAPIConfig_openIDConnectAuthTTL(rName, 2000),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGraphQLAPIExists(resourceName, &api2),
+					testAccCheckGraphQLAPIExists(ctx, resourceName, &api2),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", "OPENID_CONNECT"),
 					resource.TestCheckResourceAttr(resourceName, "openid_connect_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "openid_connect_config.0.auth_ttl", "2000"),
@@ -474,6 +488,7 @@ func testAccGraphQLAPI_OpenIDConnect_authTTL(t *testing.T) {
 }
 
 func testAccGraphQLAPI_OpenIDConnect_clientID(t *testing.T) {
+	ctx := acctest.Context(t)
 	var api1, api2 appsync.GraphqlApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appsync_graphql_api.test"
@@ -482,12 +497,12 @@ func testAccGraphQLAPI_OpenIDConnect_clientID(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, appsync.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGraphQLAPIDestroy,
+		CheckDestroy:             testAccCheckGraphQLAPIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGraphQLAPIConfig_openIDConnectClientID(rName, "ClientID1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGraphQLAPIExists(resourceName, &api1),
+					testAccCheckGraphQLAPIExists(ctx, resourceName, &api1),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", "OPENID_CONNECT"),
 					resource.TestCheckResourceAttr(resourceName, "openid_connect_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "openid_connect_config.0.client_id", "ClientID1"),
@@ -497,7 +512,7 @@ func testAccGraphQLAPI_OpenIDConnect_clientID(t *testing.T) {
 			{
 				Config: testAccGraphQLAPIConfig_openIDConnectClientID(rName, "ClientID2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGraphQLAPIExists(resourceName, &api2),
+					testAccCheckGraphQLAPIExists(ctx, resourceName, &api2),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", "OPENID_CONNECT"),
 					resource.TestCheckResourceAttr(resourceName, "openid_connect_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "openid_connect_config.0.client_id", "ClientID2"),
@@ -514,6 +529,7 @@ func testAccGraphQLAPI_OpenIDConnect_clientID(t *testing.T) {
 }
 
 func testAccGraphQLAPI_OpenIDConnect_iatTTL(t *testing.T) {
+	ctx := acctest.Context(t)
 	var api1, api2 appsync.GraphqlApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appsync_graphql_api.test"
@@ -522,12 +538,12 @@ func testAccGraphQLAPI_OpenIDConnect_iatTTL(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, appsync.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGraphQLAPIDestroy,
+		CheckDestroy:             testAccCheckGraphQLAPIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGraphQLAPIConfig_openIDConnectIatTTL(rName, 1000),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGraphQLAPIExists(resourceName, &api1),
+					testAccCheckGraphQLAPIExists(ctx, resourceName, &api1),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", "OPENID_CONNECT"),
 					resource.TestCheckResourceAttr(resourceName, "openid_connect_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "openid_connect_config.0.iat_ttl", "1000"),
@@ -537,7 +553,7 @@ func testAccGraphQLAPI_OpenIDConnect_iatTTL(t *testing.T) {
 			{
 				Config: testAccGraphQLAPIConfig_openIDConnectIatTTL(rName, 2000),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGraphQLAPIExists(resourceName, &api2),
+					testAccCheckGraphQLAPIExists(ctx, resourceName, &api2),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", "OPENID_CONNECT"),
 					resource.TestCheckResourceAttr(resourceName, "openid_connect_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "openid_connect_config.0.iat_ttl", "2000"),
@@ -554,6 +570,7 @@ func testAccGraphQLAPI_OpenIDConnect_iatTTL(t *testing.T) {
 }
 
 func testAccGraphQLAPI_OpenIDConnect_issuer(t *testing.T) {
+	ctx := acctest.Context(t)
 	var api1, api2 appsync.GraphqlApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appsync_graphql_api.test"
@@ -562,12 +579,12 @@ func testAccGraphQLAPI_OpenIDConnect_issuer(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, appsync.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGraphQLAPIDestroy,
+		CheckDestroy:             testAccCheckGraphQLAPIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGraphQLAPIConfig_openIDConnectIssuer(rName, "https://example.com"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGraphQLAPIExists(resourceName, &api1),
+					testAccCheckGraphQLAPIExists(ctx, resourceName, &api1),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", "OPENID_CONNECT"),
 					resource.TestCheckResourceAttr(resourceName, "openid_connect_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "openid_connect_config.0.issuer", "https://example.com"),
@@ -576,7 +593,7 @@ func testAccGraphQLAPI_OpenIDConnect_issuer(t *testing.T) {
 			{
 				Config: testAccGraphQLAPIConfig_openIDConnectIssuer(rName, "https://example.org"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGraphQLAPIExists(resourceName, &api2),
+					testAccCheckGraphQLAPIExists(ctx, resourceName, &api2),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", "OPENID_CONNECT"),
 					resource.TestCheckResourceAttr(resourceName, "openid_connect_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "openid_connect_config.0.issuer", "https://example.org"),
@@ -592,6 +609,7 @@ func testAccGraphQLAPI_OpenIDConnect_issuer(t *testing.T) {
 }
 
 func testAccGraphQLAPI_name(t *testing.T) {
+	ctx := acctest.Context(t)
 	var api1, api2 appsync.GraphqlApi
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -601,19 +619,19 @@ func testAccGraphQLAPI_name(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, appsync.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGraphQLAPIDestroy,
+		CheckDestroy:             testAccCheckGraphQLAPIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGraphQLAPIConfig_authenticationType(rName1, "API_KEY"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGraphQLAPIExists(resourceName, &api1),
+					testAccCheckGraphQLAPIExists(ctx, resourceName, &api1),
 					resource.TestCheckResourceAttr(resourceName, "name", rName1),
 				),
 			},
 			{
 				Config: testAccGraphQLAPIConfig_authenticationType(rName2, "API_KEY"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGraphQLAPIExists(resourceName, &api2),
+					testAccCheckGraphQLAPIExists(ctx, resourceName, &api2),
 					resource.TestCheckResourceAttr(resourceName, "name", rName2),
 				),
 			},
@@ -622,6 +640,7 @@ func testAccGraphQLAPI_name(t *testing.T) {
 }
 
 func testAccGraphQLAPI_UserPool_region(t *testing.T) {
+	ctx := acctest.Context(t)
 	var api1, api2 appsync.GraphqlApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	cognitoUserPoolResourceName := "aws_cognito_user_pool.test"
@@ -631,12 +650,12 @@ func testAccGraphQLAPI_UserPool_region(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, appsync.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGraphQLAPIDestroy,
+		CheckDestroy:             testAccCheckGraphQLAPIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGraphQLAPIConfig_userPoolRegion(rName, acctest.Region()),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGraphQLAPIExists(resourceName, &api1),
+					testAccCheckGraphQLAPIExists(ctx, resourceName, &api1),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", "AMAZON_COGNITO_USER_POOLS"),
 					resource.TestCheckResourceAttr(resourceName, "user_pool_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "user_pool_config.0.aws_region", acctest.Region()),
@@ -647,7 +666,7 @@ func testAccGraphQLAPI_UserPool_region(t *testing.T) {
 			{
 				Config: testAccGraphQLAPIConfig_userPoolDefaultAction(rName, "ALLOW"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGraphQLAPIExists(resourceName, &api2),
+					testAccCheckGraphQLAPIExists(ctx, resourceName, &api2),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", "AMAZON_COGNITO_USER_POOLS"),
 					resource.TestCheckResourceAttr(resourceName, "user_pool_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "user_pool_config.0.aws_region", acctest.Region()),
@@ -665,6 +684,7 @@ func testAccGraphQLAPI_UserPool_region(t *testing.T) {
 }
 
 func testAccGraphQLAPI_UserPool_defaultAction(t *testing.T) {
+	ctx := acctest.Context(t)
 	var api1, api2 appsync.GraphqlApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	cognitoUserPoolResourceName := "aws_cognito_user_pool.test"
@@ -674,12 +694,12 @@ func testAccGraphQLAPI_UserPool_defaultAction(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, appsync.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGraphQLAPIDestroy,
+		CheckDestroy:             testAccCheckGraphQLAPIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGraphQLAPIConfig_userPoolDefaultAction(rName, "ALLOW"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGraphQLAPIExists(resourceName, &api1),
+					testAccCheckGraphQLAPIExists(ctx, resourceName, &api1),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", "AMAZON_COGNITO_USER_POOLS"),
 					resource.TestCheckResourceAttr(resourceName, "user_pool_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "user_pool_config.0.aws_region", acctest.Region()),
@@ -690,7 +710,7 @@ func testAccGraphQLAPI_UserPool_defaultAction(t *testing.T) {
 			{
 				Config: testAccGraphQLAPIConfig_userPoolDefaultAction(rName, "DENY"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGraphQLAPIExists(resourceName, &api2),
+					testAccCheckGraphQLAPIExists(ctx, resourceName, &api2),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", "AMAZON_COGNITO_USER_POOLS"),
 					resource.TestCheckResourceAttr(resourceName, "user_pool_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "user_pool_config.0.aws_region", acctest.Region()),
@@ -708,6 +728,7 @@ func testAccGraphQLAPI_UserPool_defaultAction(t *testing.T) {
 }
 
 func testAccGraphQLAPI_LambdaAuthorizerConfig_authorizerURI(t *testing.T) {
+	ctx := acctest.Context(t)
 	var api1, api2 appsync.GraphqlApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appsync_graphql_api.test"
@@ -717,12 +738,12 @@ func testAccGraphQLAPI_LambdaAuthorizerConfig_authorizerURI(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, appsync.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGraphQLAPIDestroy,
+		CheckDestroy:             testAccCheckGraphQLAPIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGraphQLAPIConfig_lambdaAuthorizerAuthorizerURI(rName, "aws_lambda_function.test.arn"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGraphQLAPIExists(resourceName, &api1),
+					testAccCheckGraphQLAPIExists(ctx, resourceName, &api1),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", "AWS_LAMBDA"),
 					resource.TestCheckResourceAttr(resourceName, "lambda_authorizer_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "lambda_authorizer_config.0.authorizer_uri", lambdaAuthorizerResourceName, "arn"),
@@ -731,7 +752,7 @@ func testAccGraphQLAPI_LambdaAuthorizerConfig_authorizerURI(t *testing.T) {
 			{
 				Config: testAccGraphQLAPIConfig_lambdaAuthorizerAuthorizerURI(rName, "aws_lambda_function.test.qualified_arn"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGraphQLAPIExists(resourceName, &api2),
+					testAccCheckGraphQLAPIExists(ctx, resourceName, &api2),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", "AWS_LAMBDA"),
 					resource.TestCheckResourceAttr(resourceName, "lambda_authorizer_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "lambda_authorizer_config.0.authorizer_uri", lambdaAuthorizerResourceName, "qualified_arn"),
@@ -747,6 +768,7 @@ func testAccGraphQLAPI_LambdaAuthorizerConfig_authorizerURI(t *testing.T) {
 }
 
 func testAccGraphQLAPI_LambdaAuthorizerConfig_identityValidationExpression(t *testing.T) {
+	ctx := acctest.Context(t)
 	var api1, api2 appsync.GraphqlApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appsync_graphql_api.test"
@@ -756,12 +778,12 @@ func testAccGraphQLAPI_LambdaAuthorizerConfig_identityValidationExpression(t *te
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, appsync.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGraphQLAPIDestroy,
+		CheckDestroy:             testAccCheckGraphQLAPIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGraphQLAPIConfig_lambdaAuthorizerIdentityValidationExpression(rName, "^test1$"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGraphQLAPIExists(resourceName, &api1),
+					testAccCheckGraphQLAPIExists(ctx, resourceName, &api1),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", "AWS_LAMBDA"),
 					resource.TestCheckResourceAttr(resourceName, "lambda_authorizer_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "lambda_authorizer_config.0.authorizer_uri", lambdaAuthorizerResourceName, "arn"),
@@ -771,7 +793,7 @@ func testAccGraphQLAPI_LambdaAuthorizerConfig_identityValidationExpression(t *te
 			{
 				Config: testAccGraphQLAPIConfig_lambdaAuthorizerIdentityValidationExpression(rName, "^test2$"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGraphQLAPIExists(resourceName, &api2),
+					testAccCheckGraphQLAPIExists(ctx, resourceName, &api2),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", "AWS_LAMBDA"),
 					resource.TestCheckResourceAttr(resourceName, "lambda_authorizer_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "lambda_authorizer_config.0.authorizer_uri", lambdaAuthorizerResourceName, "arn"),
@@ -788,6 +810,7 @@ func testAccGraphQLAPI_LambdaAuthorizerConfig_identityValidationExpression(t *te
 }
 
 func testAccGraphQLAPI_LambdaAuthorizerConfig_authorizerResultTTLInSeconds(t *testing.T) {
+	ctx := acctest.Context(t)
 	var api1, api2, api3, api4 appsync.GraphqlApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appsync_graphql_api.test"
@@ -796,12 +819,12 @@ func testAccGraphQLAPI_LambdaAuthorizerConfig_authorizerResultTTLInSeconds(t *te
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, appsync.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGraphQLAPIDestroy,
+		CheckDestroy:             testAccCheckGraphQLAPIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGraphQLAPIConfig_lambdaAuthorizerAuthorizerURI(rName, "aws_lambda_function.test.arn"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGraphQLAPIExists(resourceName, &api1),
+					testAccCheckGraphQLAPIExists(ctx, resourceName, &api1),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", "AWS_LAMBDA"),
 					resource.TestCheckResourceAttr(resourceName, "lambda_authorizer_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "lambda_authorizer_config.0.authorizer_result_ttl_in_seconds", strconv.Itoa(tfappsync.DefaultAuthorizerResultTTLInSeconds)),
@@ -810,7 +833,7 @@ func testAccGraphQLAPI_LambdaAuthorizerConfig_authorizerResultTTLInSeconds(t *te
 			{
 				Config: testAccGraphQLAPIConfig_lambdaAuthorizerAuthorizerResultTTLInSeconds(rName, "123"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGraphQLAPIExists(resourceName, &api2),
+					testAccCheckGraphQLAPIExists(ctx, resourceName, &api2),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", "AWS_LAMBDA"),
 					resource.TestCheckResourceAttr(resourceName, "lambda_authorizer_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "lambda_authorizer_config.0.authorizer_result_ttl_in_seconds", "123"),
@@ -819,7 +842,7 @@ func testAccGraphQLAPI_LambdaAuthorizerConfig_authorizerResultTTLInSeconds(t *te
 			{
 				Config: testAccGraphQLAPIConfig_lambdaAuthorizerAuthorizerResultTTLInSeconds(rName, "0"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGraphQLAPIExists(resourceName, &api3),
+					testAccCheckGraphQLAPIExists(ctx, resourceName, &api3),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", "AWS_LAMBDA"),
 					resource.TestCheckResourceAttr(resourceName, "lambda_authorizer_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "lambda_authorizer_config.0.authorizer_result_ttl_in_seconds", "0"),
@@ -828,7 +851,7 @@ func testAccGraphQLAPI_LambdaAuthorizerConfig_authorizerResultTTLInSeconds(t *te
 			{
 				Config: testAccGraphQLAPIConfig_lambdaAuthorizerAuthorizerURI(rName, "aws_lambda_function.test.arn"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGraphQLAPIExists(resourceName, &api4),
+					testAccCheckGraphQLAPIExists(ctx, resourceName, &api4),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", "AWS_LAMBDA"),
 					resource.TestCheckResourceAttr(resourceName, "lambda_authorizer_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "lambda_authorizer_config.0.authorizer_result_ttl_in_seconds", strconv.Itoa(tfappsync.DefaultAuthorizerResultTTLInSeconds)),
@@ -844,6 +867,7 @@ func testAccGraphQLAPI_LambdaAuthorizerConfig_authorizerResultTTLInSeconds(t *te
 }
 
 func testAccGraphQLAPI_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var api1 appsync.GraphqlApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appsync_graphql_api.test"
@@ -852,12 +876,12 @@ func testAccGraphQLAPI_tags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, appsync.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGraphQLAPIDestroy,
+		CheckDestroy:             testAccCheckGraphQLAPIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGraphQLAPIConfig_tags(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGraphQLAPIExists(resourceName, &api1),
+					testAccCheckGraphQLAPIExists(ctx, resourceName, &api1),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", "API_KEY"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -873,7 +897,7 @@ func testAccGraphQLAPI_tags(t *testing.T) {
 			{
 				Config: testAccGraphQLAPIConfig_tagsModified(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGraphQLAPIExists(resourceName, &api1),
+					testAccCheckGraphQLAPIExists(ctx, resourceName, &api1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Value One Changed"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value Two"),
@@ -885,6 +909,7 @@ func testAccGraphQLAPI_tags(t *testing.T) {
 }
 
 func testAccGraphQLAPI_AdditionalAuthentication_apiKey(t *testing.T) {
+	ctx := acctest.Context(t)
 	var api1 appsync.GraphqlApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appsync_graphql_api.test"
@@ -893,12 +918,12 @@ func testAccGraphQLAPI_AdditionalAuthentication_apiKey(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, appsync.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGraphQLAPIDestroy,
+		CheckDestroy:             testAccCheckGraphQLAPIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGraphQLAPIConfig_additionalAuthAuthType(rName, "AWS_IAM", "API_KEY"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGraphQLAPIExists(resourceName, &api1),
+					testAccCheckGraphQLAPIExists(ctx, resourceName, &api1),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "appsync", regexp.MustCompile(`apis/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", "AWS_IAM"),
@@ -919,6 +944,7 @@ func testAccGraphQLAPI_AdditionalAuthentication_apiKey(t *testing.T) {
 }
 
 func testAccGraphQLAPI_AdditionalAuthentication_iam(t *testing.T) {
+	ctx := acctest.Context(t)
 	var api1 appsync.GraphqlApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appsync_graphql_api.test"
@@ -927,12 +953,12 @@ func testAccGraphQLAPI_AdditionalAuthentication_iam(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, appsync.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGraphQLAPIDestroy,
+		CheckDestroy:             testAccCheckGraphQLAPIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGraphQLAPIConfig_additionalAuthAuthType(rName, "API_KEY", "AWS_IAM"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGraphQLAPIExists(resourceName, &api1),
+					testAccCheckGraphQLAPIExists(ctx, resourceName, &api1),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "appsync", regexp.MustCompile(`apis/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", "API_KEY"),
@@ -953,6 +979,7 @@ func testAccGraphQLAPI_AdditionalAuthentication_iam(t *testing.T) {
 }
 
 func testAccGraphQLAPI_AdditionalAuthentication_cognitoUserPools(t *testing.T) {
+	ctx := acctest.Context(t)
 	var api1 appsync.GraphqlApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	cognitoUserPoolResourceName := "aws_cognito_user_pool.test"
@@ -962,12 +989,12 @@ func testAccGraphQLAPI_AdditionalAuthentication_cognitoUserPools(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, appsync.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGraphQLAPIDestroy,
+		CheckDestroy:             testAccCheckGraphQLAPIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGraphQLAPIConfig_additionalAuthUserPool(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGraphQLAPIExists(resourceName, &api1),
+					testAccCheckGraphQLAPIExists(ctx, resourceName, &api1),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "appsync", regexp.MustCompile(`apis/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", "API_KEY"),
@@ -989,6 +1016,7 @@ func testAccGraphQLAPI_AdditionalAuthentication_cognitoUserPools(t *testing.T) {
 }
 
 func testAccGraphQLAPI_AdditionalAuthentication_openIDConnect(t *testing.T) {
+	ctx := acctest.Context(t)
 	var api1 appsync.GraphqlApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appsync_graphql_api.test"
@@ -997,12 +1025,12 @@ func testAccGraphQLAPI_AdditionalAuthentication_openIDConnect(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, appsync.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGraphQLAPIDestroy,
+		CheckDestroy:             testAccCheckGraphQLAPIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGraphQLAPIConfig_additionalAuthOpenIdConnect(rName, "https://example.com"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGraphQLAPIExists(resourceName, &api1),
+					testAccCheckGraphQLAPIExists(ctx, resourceName, &api1),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "appsync", regexp.MustCompile(`apis/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", "API_KEY"),
@@ -1022,7 +1050,9 @@ func testAccGraphQLAPI_AdditionalAuthentication_openIDConnect(t *testing.T) {
 		},
 	})
 }
+
 func testAccGraphQLAPI_AdditionalAuthentication_lambda(t *testing.T) {
+	ctx := acctest.Context(t)
 	var api1 appsync.GraphqlApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appsync_graphql_api.test"
@@ -1032,12 +1062,12 @@ func testAccGraphQLAPI_AdditionalAuthentication_lambda(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, appsync.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGraphQLAPIDestroy,
+		CheckDestroy:             testAccCheckGraphQLAPIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGraphQLAPIConfig_additionalAuthLambda(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGraphQLAPIExists(resourceName, &api1),
+					testAccCheckGraphQLAPIExists(ctx, resourceName, &api1),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "appsync", regexp.MustCompile(`apis/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", "API_KEY"),
@@ -1061,6 +1091,7 @@ func testAccGraphQLAPI_AdditionalAuthentication_lambda(t *testing.T) {
 }
 
 func testAccGraphQLAPI_AdditionalAuthentication_multiple(t *testing.T) {
+	ctx := acctest.Context(t)
 	var api1 appsync.GraphqlApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	cognitoUserPoolResourceName := "aws_cognito_user_pool.test"
@@ -1071,12 +1102,12 @@ func testAccGraphQLAPI_AdditionalAuthentication_multiple(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, appsync.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGraphQLAPIDestroy,
+		CheckDestroy:             testAccCheckGraphQLAPIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGraphQLAPIConfig_additionalAuthMultiple(rName, "https://example.com"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGraphQLAPIExists(resourceName, &api1),
+					testAccCheckGraphQLAPIExists(ctx, resourceName, &api1),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "appsync", regexp.MustCompile(`apis/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", "API_KEY"),
@@ -1112,6 +1143,7 @@ func testAccGraphQLAPI_AdditionalAuthentication_multiple(t *testing.T) {
 }
 
 func testAccGraphQLAPI_xrayEnabled(t *testing.T) {
+	ctx := acctest.Context(t)
 	var api1, api2 appsync.GraphqlApi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appsync_graphql_api.test"
@@ -1120,19 +1152,19 @@ func testAccGraphQLAPI_xrayEnabled(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, appsync.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGraphQLAPIDestroy,
+		CheckDestroy:             testAccCheckGraphQLAPIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGraphQLAPIConfig_xrayEnabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGraphQLAPIExists(resourceName, &api1),
+					testAccCheckGraphQLAPIExists(ctx, resourceName, &api1),
 					resource.TestCheckResourceAttr(resourceName, "xray_enabled", "true"),
 				),
 			},
 			{
 				Config: testAccGraphQLAPIConfig_xrayEnabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGraphQLAPIExists(resourceName, &api2),
+					testAccCheckGraphQLAPIExists(ctx, resourceName, &api2),
 					resource.TestCheckResourceAttr(resourceName, "xray_enabled", "false"),
 				),
 			},
@@ -1140,42 +1172,44 @@ func testAccGraphQLAPI_xrayEnabled(t *testing.T) {
 	})
 }
 
-func testAccCheckGraphQLAPIDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_appsync_graphql_api" {
-			continue
-		}
-
-		input := &appsync.GetGraphqlApiInput{
-			ApiId: aws.String(rs.Primary.ID),
-		}
-
-		_, err := conn.GetGraphqlApi(input)
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, appsync.ErrCodeNotFoundException) {
-				return nil
+func testAccCheckGraphQLAPIDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn()
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_appsync_graphql_api" {
+				continue
 			}
-			return err
+
+			input := &appsync.GetGraphqlApiInput{
+				ApiId: aws.String(rs.Primary.ID),
+			}
+
+			_, err := conn.GetGraphqlApiWithContext(ctx, input)
+			if err != nil {
+				if tfawserr.ErrCodeEquals(err, appsync.ErrCodeNotFoundException) {
+					return nil
+				}
+				return err
+			}
 		}
+		return nil
 	}
-	return nil
 }
 
-func testAccCheckGraphQLAPIExists(name string, api *appsync.GraphqlApi) resource.TestCheckFunc {
+func testAccCheckGraphQLAPIExists(ctx context.Context, name string, api *appsync.GraphqlApi) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn()
 
 		input := &appsync.GetGraphqlApiInput{
 			ApiId: aws.String(rs.Primary.ID),
 		}
 
-		output, err := conn.GetGraphqlApi(input)
+		output, err := conn.GetGraphqlApiWithContext(ctx, input)
 
 		if err != nil {
 			return err
@@ -1187,14 +1221,14 @@ func testAccCheckGraphQLAPIExists(name string, api *appsync.GraphqlApi) resource
 	}
 }
 
-func testAccCheckTypeExists(name, typeName string) resource.TestCheckFunc {
+func testAccCheckTypeExists(ctx context.Context, name, typeName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn()
 
 		input := &appsync.GetTypeInput{
 			ApiId:    aws.String(rs.Primary.ID),
@@ -1202,7 +1236,7 @@ func testAccCheckTypeExists(name, typeName string) resource.TestCheckFunc {
 			Format:   aws.String(appsync.OutputTypeSdl),
 		}
 
-		_, err := conn.GetType(input)
+		_, err := conn.GetTypeWithContext(ctx, input)
 
 		return err
 	}

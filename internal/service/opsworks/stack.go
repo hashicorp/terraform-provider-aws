@@ -1,6 +1,7 @@
 package opsworks
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"time"
@@ -10,10 +11,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/opsworks"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -26,13 +29,13 @@ const (
 
 func ResourceStack() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceStackCreate,
-		Read:   resourceStackRead,
-		Update: resourceStackUpdate,
-		Delete: resourceStackDelete,
+		CreateWithoutTimeout: resourceStackCreate,
+		ReadWithoutTimeout:   resourceStackRead,
+		UpdateWithoutTimeout: resourceStackUpdate,
+		DeleteWithoutTimeout: resourceStackDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -193,8 +196,9 @@ func ResourceStack() *schema.Resource {
 	}
 }
 
-func resourceStackCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OpsWorksConn
+func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).OpsWorksConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -260,10 +264,9 @@ func resourceStackCreate(d *schema.ResourceData, meta interface{}) error {
 		input.VpcId = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating OpsWorks Stack: %s", input)
-	outputRaw, err := tfresource.RetryWhen(d.Timeout(schema.TimeoutCreate),
+	outputRaw, err := tfresource.RetryWhen(ctx, d.Timeout(schema.TimeoutCreate),
 		func() (interface{}, error) {
-			return conn.CreateStack(input)
+			return conn.CreateStackWithContext(ctx, input)
 		},
 		func(err error) (bool, error) {
 			// If Terraform is also managing the service IAM role, it may have just been created and not yet be
@@ -282,7 +285,7 @@ func resourceStackCreate(d *schema.ResourceData, meta interface{}) error {
 	)
 
 	if err != nil {
-		return fmt.Errorf("creating OpsWorks Stack (%s): %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating OpsWorks Stack (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(outputRaw.(*opsworks.CreateStackOutput).StackId))
@@ -296,8 +299,8 @@ func resourceStackCreate(d *schema.ResourceData, meta interface{}) error {
 			Resource:  fmt.Sprintf("stack/%s/", d.Id()),
 		}.String()
 
-		if err := UpdateTags(conn, arn, nil, tags); err != nil {
-			return fmt.Errorf("adding OpsWorks Stack (%s) tags: %w", arn, err)
+		if err := UpdateTags(ctx, conn, arn, nil, tags); err != nil {
+			return sdkdiag.AppendErrorf(diags, "adding OpsWorks Stack (%s) tags: %s", arn, err)
 		}
 	}
 
@@ -311,46 +314,48 @@ func resourceStackCreate(d *schema.ResourceData, meta interface{}) error {
 		time.Sleep(securityGroupsCreatedSleepTime)
 	}
 
-	return resourceStackRead(d, meta)
+	return append(diags, resourceStackRead(ctx, d, meta)...)
 }
 
-func resourceStackRead(d *schema.ResourceData, meta interface{}) error {
+func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	var err error
-	conn := meta.(*conns.AWSClient).OpsWorksConn
+	conn := meta.(*conns.AWSClient).OpsWorksConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	if v, ok := d.GetOk("stack_endpoint"); ok {
+		log.Printf(`[DEBUG] overriding region using "stack_endpoint": %s`, v)
 		conn, err = regionalConn(meta.(*conns.AWSClient), v.(string))
-
 		if err != nil {
-			return err
+			return sdkdiag.AppendErrorf(diags, `reading OpsWorks Stack (%s): creating client for "stack_endpoint" (%s): %s`, d.Id(), v, err)
 		}
 	}
 
-	stack, err := FindStackByID(conn, d.Id())
+	stack, err := FindStackByID(ctx, conn, d.Id())
 
 	if tfresource.NotFound(err) {
-		// If it's not found in the the default region we're in, we check us-east-1
+		// If it's not found in the default region we're in, we check us-east-1
 		// in the event this stack was created with Terraform before version 0.9.
 		// See https://github.com/hashicorp/terraform/issues/12842.
-		conn, err = regionalConn(meta.(*conns.AWSClient), endpoints.UsEast1RegionID)
-
+		v := endpoints.UsEast1RegionID
+		log.Printf(`[DEBUG] overriding region using legacy region: %s`, v)
+		conn, err = regionalConn(meta.(*conns.AWSClient), v)
 		if err != nil {
-			return err
+			return sdkdiag.AppendErrorf(diags, `reading OpsWorks Stack (%s): creating client for legacy region (%s): %s`, d.Id(), v, err)
 		}
 
-		stack, err = FindStackByID(conn, d.Id())
+		stack, err = FindStackByID(ctx, conn, d.Id())
 	}
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] OpsWorks Stack %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading OpsWorks Stack (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading OpsWorks Stack (%s): %s", d.Id(), err)
 	}
 
 	// If the stack was found, set the stack_endpoint.
@@ -389,14 +394,12 @@ func resourceStackRead(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if err := d.Set("custom_cookbooks_source", []interface{}{tfMap}); err != nil {
-			return fmt.Errorf("setting custom_cookbooks_source: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting custom_cookbooks_source: %s", err)
 		}
 	} else {
 		d.Set("custom_cookbooks_source", nil)
 	}
-	if stack.CustomJson != nil {
-		d.Set("custom_json", stack.CustomJson)
-	}
+	d.Set("custom_json", stack.CustomJson)
 	d.Set("default_availability_zone", stack.DefaultAvailabilityZone)
 	d.Set("default_instance_profile_arn", stack.DefaultInstanceProfileArn)
 	d.Set("default_os", stack.DefaultOs)
@@ -411,35 +414,35 @@ func resourceStackRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("use_opsworks_security_groups", stack.UseOpsworksSecurityGroups)
 	d.Set("vpc_id", stack.VpcId)
 
-	tags, err := ListTags(conn, arn)
+	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("listing tags for OpsWorks Stack (%s): %w", arn, err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for OpsWorks Stack (%s): %s", arn, err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceStackUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceStackUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	var err error
-	conn := meta.(*conns.AWSClient).OpsWorksConn
+	conn := meta.(*conns.AWSClient).OpsWorksConn()
 
 	if v, ok := d.GetOk("stack_endpoint"); ok {
 		conn, err = regionalConn(meta.(*conns.AWSClient), v.(string))
-
 		if err != nil {
-			return err
+			return sdkdiag.AppendErrorf(diags, `updating OpsWorks Stack (%s): creating client for "stack_endpoint" (%s): %s`, d.Id(), v, err)
 		}
 	}
 
@@ -529,48 +532,47 @@ func resourceStackUpdate(d *schema.ResourceData, meta interface{}) error {
 			input.UseOpsworksSecurityGroups = aws.Bool(d.Get("use_opsworks_security_groups").(bool))
 		}
 
-		log.Printf("[DEBUG] Updating OpsWorks Stack: %s", input)
-		_, err = conn.UpdateStack(input)
+		_, err = conn.UpdateStackWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("updating OpsWorks Stack (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating OpsWorks Stack (%s): %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("updating OpsWorks Stack (%s) tags: %s", d.Id(), err)
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating OpsWorks Stack (%s) tags: %s", d.Id(), err)
 		}
 	}
 
-	return resourceStackRead(d, meta)
+	return append(diags, resourceStackRead(ctx, d, meta)...)
 }
 
-func resourceStackDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceStackDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	var err error
-	conn := meta.(*conns.AWSClient).OpsWorksConn
+	conn := meta.(*conns.AWSClient).OpsWorksConn()
 
 	if v, ok := d.GetOk("stack_endpoint"); ok {
 		conn, err = regionalConn(meta.(*conns.AWSClient), v.(string))
-
 		if err != nil {
-			return err
+			return sdkdiag.AppendErrorf(diags, `deleting OpsWorks Stack (%s): creating client for "stack_endpoint" (%s): %s`, d.Id(), v, err)
 		}
 	}
 
 	log.Printf("[DEBUG] Deleting OpsWorks Stack: %s", d.Id())
-	_, err = conn.DeleteStack(&opsworks.DeleteStackInput{
+	_, err = conn.DeleteStackWithContext(ctx, &opsworks.DeleteStackInput{
 		StackId: aws.String(d.Id()),
 	})
 
 	if tfawserr.ErrCodeEquals(err, opsworks.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("deleting OpsWork Stack (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting OpsWork Stack (%s): %s", d.Id(), err)
 	}
 
 	// For a stack in a VPC, OpsWorks has created some default security groups
@@ -589,15 +591,15 @@ func resourceStackDelete(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	return nil
+	return diags
 }
 
-func FindStackByID(conn *opsworks.OpsWorks, id string) (*opsworks.Stack, error) {
+func FindStackByID(ctx context.Context, conn *opsworks.OpsWorks, id string) (*opsworks.Stack, error) {
 	input := &opsworks.DescribeStacksInput{
 		StackIds: aws.StringSlice([]string{id}),
 	}
 
-	output, err := conn.DescribeStacks(input)
+	output, err := conn.DescribeStacksWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, opsworks.ErrCodeResourceNotFoundException) {
 		return nil, &resource.NotFoundError{
@@ -697,7 +699,7 @@ func flattenSource(apiObject *opsworks.Source) map[string]interface{} {
 //   - https://github.com/hashicorp/terraform/pull/12688
 //   - https://github.com/hashicorp/terraform/issues/12842
 func regionalConn(client *conns.AWSClient, regionName string) (*opsworks.OpsWorks, error) {
-	conn := client.OpsWorksConn
+	conn := client.OpsWorksConn()
 
 	// Regions are the same, no need to reconfigure.
 	if aws.StringValue(conn.Config.Region) == regionName {

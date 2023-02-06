@@ -1,6 +1,7 @@
 package appautoscaling
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -9,20 +10,22 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/applicationautoscaling"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourceTarget() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceTargetPut,
-		Read:   resourceTargetRead,
-		Update: resourceTargetPut,
-		Delete: resourceTargetDelete,
+		CreateWithoutTimeout: resourceTargetPut,
+		ReadWithoutTimeout:   resourceTargetRead,
+		UpdateWithoutTimeout: resourceTargetPut,
+		DeleteWithoutTimeout: resourceTargetDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceTargetImport,
+			StateContext: resourceTargetImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -58,8 +61,9 @@ func ResourceTarget() *schema.Resource {
 	}
 }
 
-func resourceTargetPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppAutoScalingConn
+func resourceTargetPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppAutoScalingConn()
 
 	var targetOpts applicationautoscaling.RegisterScalableTargetInput
 
@@ -75,8 +79,8 @@ func resourceTargetPut(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Application autoscaling target create configuration %s", targetOpts)
 	var err error
-	err = resource.Retry(propagationTimeout, func() *resource.RetryError {
-		_, err = conn.RegisterScalableTarget(&targetOpts)
+	err = resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+		_, err = conn.RegisterScalableTargetWithContext(ctx, &targetOpts)
 
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, applicationautoscaling.ErrCodeValidationException, "Unable to assume IAM role") {
@@ -91,24 +95,25 @@ func resourceTargetPut(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		_, err = conn.RegisterScalableTarget(&targetOpts)
+		_, err = conn.RegisterScalableTargetWithContext(ctx, &targetOpts)
 	}
 
 	if err != nil {
-		return fmt.Errorf("creating Application AutoScaling Target: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating Application AutoScaling Target: %s", err)
 	}
 
 	d.SetId(d.Get("resource_id").(string))
 
-	return resourceTargetRead(d, meta)
+	return append(diags, resourceTargetRead(ctx, d, meta)...)
 }
 
-func resourceTargetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppAutoScalingConn
+func resourceTargetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppAutoScalingConn()
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(2*time.Minute,
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, 2*time.Minute,
 		func() (interface{}, error) {
-			return FindTargetByThreePartKey(conn, d.Id(), d.Get("service_namespace").(string), d.Get("scalable_dimension").(string))
+			return FindTargetByThreePartKey(ctx, conn, d.Id(), d.Get("service_namespace").(string), d.Get("scalable_dimension").(string))
 		},
 		d.IsNewResource(),
 	)
@@ -116,11 +121,11 @@ func resourceTargetRead(d *schema.ResourceData, meta interface{}) error {
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Application AutoScaling Target (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading Application AutoScaling Target (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Application AutoScaling Target (%s): %s", d.Id(), err)
 	}
 
 	t := outputRaw.(*applicationautoscaling.ScalableTarget)
@@ -132,11 +137,12 @@ func resourceTargetRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("scalable_dimension", t.ScalableDimension)
 	d.Set("service_namespace", t.ServiceNamespace)
 
-	return nil
+	return diags
 }
 
-func resourceTargetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppAutoScalingConn
+func resourceTargetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppAutoScalingConn()
 
 	input := &applicationautoscaling.DeregisterScalableTargetInput{
 		ResourceId:        aws.String(d.Id()),
@@ -145,28 +151,28 @@ func resourceTargetDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[INFO] Deleting Application AutoScaling Target: %s", d.Id())
-	_, err := conn.DeregisterScalableTarget(input)
+	_, err := conn.DeregisterScalableTargetWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, applicationautoscaling.ErrCodeObjectNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("deleting Application AutoScaling Target (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Application AutoScaling Target (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(5*time.Minute, func() (interface{}, error) {
-		return FindTargetByThreePartKey(conn, d.Id(), d.Get("service_namespace").(string), d.Get("scalable_dimension").(string))
+	_, err = tfresource.RetryUntilNotFound(ctx, 5*time.Minute, func() (interface{}, error) {
+		return FindTargetByThreePartKey(ctx, conn, d.Id(), d.Get("service_namespace").(string), d.Get("scalable_dimension").(string))
 	})
 
 	if err != nil {
-		return fmt.Errorf("waiting for Application AutoScaling Target (%s) delete: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Application AutoScaling Target (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func FindTargetByThreePartKey(conn *applicationautoscaling.ApplicationAutoScaling, resourceID, namespace, dimension string) (*applicationautoscaling.ScalableTarget, error) {
+func FindTargetByThreePartKey(ctx context.Context, conn *applicationautoscaling.ApplicationAutoScaling, resourceID, namespace, dimension string) (*applicationautoscaling.ScalableTarget, error) {
 	input := &applicationautoscaling.DescribeScalableTargetsInput{
 		ResourceIds:       aws.StringSlice([]string{resourceID}),
 		ScalableDimension: aws.String(dimension),
@@ -174,7 +180,7 @@ func FindTargetByThreePartKey(conn *applicationautoscaling.ApplicationAutoScalin
 	}
 	var output []*applicationautoscaling.ScalableTarget
 
-	err := conn.DescribeScalableTargetsPages(input, func(page *applicationautoscaling.DescribeScalableTargetsOutput, lastPage bool) bool {
+	err := conn.DescribeScalableTargetsPagesWithContext(ctx, input, func(page *applicationautoscaling.DescribeScalableTargetsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -211,7 +217,7 @@ func FindTargetByThreePartKey(conn *applicationautoscaling.ApplicationAutoScalin
 	return target, nil
 }
 
-func resourceTargetImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceTargetImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	idParts := strings.Split(d.Id(), "/")
 
 	if len(idParts) < 3 {

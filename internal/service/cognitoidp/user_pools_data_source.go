@@ -1,18 +1,21 @@
 package cognitoidp
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func DataSourceUserPools() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceUserPoolsRead,
+		ReadWithoutTimeout: dataSourceUserPoolsRead,
 
 		Schema: map[string]*schema.Schema{
 			"arns": {
@@ -33,13 +36,14 @@ func DataSourceUserPools() *schema.Resource {
 	}
 }
 
-func dataSourceUserPoolsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
+func dataSourceUserPoolsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CognitoIDPConn()
 
-	output, err := findUserPoolDescriptionTypes(conn)
+	output, err := findUserPoolDescriptionTypes(ctx, conn)
 
 	if err != nil {
-		return fmt.Errorf("error reading Cognito User Pools: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading Cognito User Pools: %s", err)
 	}
 
 	name := d.Get("name").(string)
@@ -67,16 +71,16 @@ func dataSourceUserPoolsRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("ids", userPoolIDs)
 	d.Set("arns", arns)
 
-	return nil
+	return diags
 }
 
-func findUserPoolDescriptionTypes(conn *cognitoidentityprovider.CognitoIdentityProvider) ([]*cognitoidentityprovider.UserPoolDescriptionType, error) {
+func findUserPoolDescriptionTypes(ctx context.Context, conn *cognitoidentityprovider.CognitoIdentityProvider) ([]*cognitoidentityprovider.UserPoolDescriptionType, error) {
 	input := &cognitoidentityprovider.ListUserPoolsInput{
 		MaxResults: aws.Int64(60),
 	}
 	var output []*cognitoidentityprovider.UserPoolDescriptionType
 
-	err := conn.ListUserPoolsPages(input, func(page *cognitoidentityprovider.ListUserPoolsOutput, lastPage bool) bool {
+	err := conn.ListUserPoolsPagesWithContext(ctx, input, func(page *cognitoidentityprovider.ListUserPoolsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}

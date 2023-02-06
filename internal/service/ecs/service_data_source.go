@@ -1,19 +1,21 @@
 package ecs
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecs"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceService() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceServiceRead,
+		ReadWithoutTimeout: dataSourceServiceRead,
 
 		Schema: map[string]*schema.Schema{
 			"service_name": {
@@ -49,8 +51,9 @@ func DataSourceService() *schema.Resource {
 	}
 }
 
-func dataSourceServiceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECSConn
+func dataSourceServiceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ECSConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	clusterArn := d.Get("cluster_arn").(string)
@@ -62,18 +65,18 @@ func dataSourceServiceRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Reading ECS Service: %s", params)
-	desc, err := conn.DescribeServices(params)
+	desc, err := conn.DescribeServicesWithContext(ctx, params)
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading ECS Service (%s): %s", serviceName, err)
 	}
 
 	if desc == nil || len(desc.Services) == 0 {
-		return fmt.Errorf("service with name %q in cluster %q not found", serviceName, clusterArn)
+		return sdkdiag.AppendErrorf(diags, "service with name %q in cluster %q not found", serviceName, clusterArn)
 	}
 
 	if len(desc.Services) > 1 {
-		return fmt.Errorf("multiple services with name %q found in cluster %q", serviceName, clusterArn)
+		return sdkdiag.AppendErrorf(diags, "multiple services with name %q found in cluster %q", serviceName, clusterArn)
 	}
 
 	service := desc.Services[0]
@@ -88,8 +91,8 @@ func dataSourceServiceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("task_definition", service.TaskDefinition)
 
 	if err := d.Set("tags", KeyValueTags(service.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

@@ -19,10 +19,10 @@ import (
 
 func ResourceResourcePolicy() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceResourcePolicyPut,
-		ReadContext:   resourceResourcePolicyRead,
-		UpdateContext: resourceResourcePolicyPut,
-		DeleteContext: resourceResourcePolicyDelete,
+		CreateWithoutTimeout: resourceResourcePolicyPut,
+		ReadWithoutTimeout:   resourceResourcePolicyRead,
+		UpdateWithoutTimeout: resourceResourcePolicyPut,
+		DeleteWithoutTimeout: resourceResourcePolicyDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -50,7 +50,7 @@ func ResourceResourcePolicy() *schema.Resource {
 }
 
 func resourceResourcePolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkFirewallConn
+	conn := meta.(*conns.AWSClient).NetworkFirewallConn()
 	resourceArn := d.Get("resource_arn").(string)
 
 	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
@@ -77,7 +77,7 @@ func resourceResourcePolicyPut(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkFirewallConn
+	conn := meta.(*conns.AWSClient).NetworkFirewallConn()
 	resourceArn := d.Id()
 
 	log.Printf("[DEBUG] Reading NetworkFirewall Resource Policy for resource: %s", resourceArn)
@@ -110,7 +110,7 @@ func resourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceResourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkFirewallConn
+	conn := meta.(*conns.AWSClient).NetworkFirewallConn()
 
 	log.Printf("[DEBUG] Deleting NetworkFirewall Resource Policy for resource: %s", d.Id())
 
@@ -118,7 +118,7 @@ func resourceResourcePolicyDelete(ctx context.Context, d *schema.ResourceData, m
 		ResourceArn: aws.String(d.Id()),
 	}
 
-	_, err := tfresource.RetryWhenContext(ctx, resourcePolicyDeleteTimeout,
+	_, err := tfresource.RetryWhen(ctx, resourcePolicyDeleteTimeout,
 		func() (interface{}, error) {
 			return conn.DeleteResourcePolicyWithContext(ctx, input)
 		},

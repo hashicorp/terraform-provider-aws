@@ -10,6 +10,8 @@ description: |-
 
 Terraform resource for managing an AWS MediaLive MultiplexProgram.
 
+~> **Note** Attribute `statemux_settings` has been deprecated and will be removed in a future major release. Please use `statmux_settings` instead.
+
 ## Example Usage
 
 ### Basic Usage
@@ -76,9 +78,15 @@ The following arguments are optional:
 
 ### Video Settings
 
-`constant_bitrate` - (Optional) Constant bitrate value.
-`statemux_settings` - (Optional) Statemux settings. See [Statemux Settings](#statemux-settings) for more details.
+* `constant_bitrate` - (Optional) Constant bitrate value.
+* `statemux_settings` - (Optional, **Deprecated**) Statemux settings. See [Statmux Settings](#statemux-settings) for more details. Settings from this attribute will apply to `statmux_settings`. Conflicts with `statmux_settings`.
+* `statmux_settings` - (Optional) Statmux settings. See [Statmux Settings](#statmux-settings) for more details Conflicts with `statemux_settings`.
 
+### Statmux Settings
+
+* `minimum_bitrate` - (Optional) Minimum bitrate.
+* `maximum_bitrate` - (Optional) Maximum bitrate.
+* `priority` - (Optional) Priority value.
 
 ### Statemux Settings
 

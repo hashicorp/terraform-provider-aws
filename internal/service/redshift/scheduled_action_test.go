@@ -1,6 +1,7 @@
 package redshift_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
@@ -16,6 +17,7 @@ import (
 )
 
 func TestAccRedshiftScheduledAction_basicPauseCluster(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v redshift.ScheduledAction
 	resourceName := "aws_redshift_scheduled_action.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -24,12 +26,12 @@ func TestAccRedshiftScheduledAction_basicPauseCluster(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, redshift.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckScheduledActionDestroy,
+		CheckDestroy:             testAccCheckScheduledActionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccScheduledActionConfig_pauseCluster(rName, "cron(00 23 * * ? *)"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScheduledActionExists(resourceName, &v),
+					testAccCheckScheduledActionExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "enable", "true"),
 					resource.TestCheckResourceAttr(resourceName, "end_time", ""),
@@ -51,7 +53,7 @@ func TestAccRedshiftScheduledAction_basicPauseCluster(t *testing.T) {
 			{
 				Config: testAccScheduledActionConfig_pauseCluster(rName, "at(2060-03-04T17:27:00)"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScheduledActionExists(resourceName, &v),
+					testAccCheckScheduledActionExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "enable", "true"),
 					resource.TestCheckResourceAttr(resourceName, "end_time", ""),
@@ -70,6 +72,7 @@ func TestAccRedshiftScheduledAction_basicPauseCluster(t *testing.T) {
 }
 
 func TestAccRedshiftScheduledAction_pauseClusterWithOptions(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v redshift.ScheduledAction
 	resourceName := "aws_redshift_scheduled_action.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -80,12 +83,12 @@ func TestAccRedshiftScheduledAction_pauseClusterWithOptions(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, redshift.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckScheduledActionDestroy,
+		CheckDestroy:             testAccCheckScheduledActionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccScheduledActionConfig_pauseClusterFullOptions(rName, "cron(00 * * * ? *)", "This is test action", true, startTime, endTime),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScheduledActionExists(resourceName, &v),
+					testAccCheckScheduledActionExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "description", "This is test action"),
 					resource.TestCheckResourceAttr(resourceName, "enable", "true"),
 					resource.TestCheckResourceAttr(resourceName, "end_time", endTime),
@@ -109,6 +112,7 @@ func TestAccRedshiftScheduledAction_pauseClusterWithOptions(t *testing.T) {
 }
 
 func TestAccRedshiftScheduledAction_basicResumeCluster(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v redshift.ScheduledAction
 	resourceName := "aws_redshift_scheduled_action.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -117,12 +121,12 @@ func TestAccRedshiftScheduledAction_basicResumeCluster(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, redshift.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckScheduledActionDestroy,
+		CheckDestroy:             testAccCheckScheduledActionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccScheduledActionConfig_resumeCluster(rName, "cron(00 23 * * ? *)"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScheduledActionExists(resourceName, &v),
+					testAccCheckScheduledActionExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "enable", "true"),
 					resource.TestCheckResourceAttr(resourceName, "end_time", ""),
@@ -144,7 +148,7 @@ func TestAccRedshiftScheduledAction_basicResumeCluster(t *testing.T) {
 			{
 				Config: testAccScheduledActionConfig_resumeCluster(rName, "at(2060-03-04T17:27:00)"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScheduledActionExists(resourceName, &v),
+					testAccCheckScheduledActionExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "enable", "true"),
 					resource.TestCheckResourceAttr(resourceName, "end_time", ""),
@@ -163,6 +167,7 @@ func TestAccRedshiftScheduledAction_basicResumeCluster(t *testing.T) {
 }
 
 func TestAccRedshiftScheduledAction_basicResizeCluster(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v redshift.ScheduledAction
 	resourceName := "aws_redshift_scheduled_action.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -171,12 +176,12 @@ func TestAccRedshiftScheduledAction_basicResizeCluster(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, redshift.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckScheduledActionDestroy,
+		CheckDestroy:             testAccCheckScheduledActionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccScheduledActionConfig_resizeClusterBasic(rName, "cron(00 23 * * ? *)"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScheduledActionExists(resourceName, &v),
+					testAccCheckScheduledActionExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "enable", "true"),
 					resource.TestCheckResourceAttr(resourceName, "end_time", ""),
@@ -198,7 +203,7 @@ func TestAccRedshiftScheduledAction_basicResizeCluster(t *testing.T) {
 			{
 				Config: testAccScheduledActionConfig_resizeClusterBasic(rName, "at(2060-03-04T17:27:00)"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScheduledActionExists(resourceName, &v),
+					testAccCheckScheduledActionExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "enable", "true"),
 					resource.TestCheckResourceAttr(resourceName, "end_time", ""),
@@ -217,6 +222,7 @@ func TestAccRedshiftScheduledAction_basicResizeCluster(t *testing.T) {
 }
 
 func TestAccRedshiftScheduledAction_resizeClusterWithOptions(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v redshift.ScheduledAction
 	resourceName := "aws_redshift_scheduled_action.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -225,12 +231,12 @@ func TestAccRedshiftScheduledAction_resizeClusterWithOptions(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, redshift.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckScheduledActionDestroy,
+		CheckDestroy:             testAccCheckScheduledActionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccScheduledActionConfig_resizeClusterFullOptions(rName, "cron(00 23 * * ? *)", true, "multi-node", "dc2.large", 2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScheduledActionExists(resourceName, &v),
+					testAccCheckScheduledActionExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "enable", "true"),
 					resource.TestCheckResourceAttr(resourceName, "end_time", ""),
@@ -258,6 +264,7 @@ func TestAccRedshiftScheduledAction_resizeClusterWithOptions(t *testing.T) {
 }
 
 func TestAccRedshiftScheduledAction_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v redshift.ScheduledAction
 	resourceName := "aws_redshift_scheduled_action.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -266,13 +273,13 @@ func TestAccRedshiftScheduledAction_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, redshift.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckScheduledActionDestroy,
+		CheckDestroy:             testAccCheckScheduledActionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccScheduledActionConfig_pauseCluster(rName, "cron(00 23 * * ? *)"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScheduledActionExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfredshift.ResourceScheduledAction(), resourceName),
+					testAccCheckScheduledActionExists(ctx, resourceName, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfredshift.ResourceScheduledAction(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -280,31 +287,33 @@ func TestAccRedshiftScheduledAction_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckScheduledActionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn
+func testAccCheckScheduledActionDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_redshift_scheduled_action" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_redshift_scheduled_action" {
+				continue
+			}
+
+			_, err := tfredshift.FindScheduledActionByName(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Redshift Scheduled Action %s still exists", rs.Primary.ID)
 		}
 
-		_, err := tfredshift.FindScheduledActionByName(conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("Redshift Scheduled Action %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckScheduledActionExists(n string, v *redshift.ScheduledAction) resource.TestCheckFunc {
+func testAccCheckScheduledActionExists(ctx context.Context, n string, v *redshift.ScheduledAction) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -315,9 +324,9 @@ func testAccCheckScheduledActionExists(n string, v *redshift.ScheduledAction) re
 			return fmt.Errorf("No Redshift Scheduled Action ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn()
 
-		output, err := tfredshift.FindScheduledActionByName(conn, rs.Primary.ID)
+		output, err := tfredshift.FindScheduledActionByName(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

@@ -1,27 +1,29 @@
 package xray
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/xray"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceGroupCreate,
-		Read:   resourceGroupRead,
-		Update: resourceGroupUpdate,
-		Delete: resourceGroupDelete,
+		CreateWithoutTimeout: resourceGroupCreate,
+		ReadWithoutTimeout:   resourceGroupRead,
+		UpdateWithoutTimeout: resourceGroupUpdate,
+		DeleteWithoutTimeout: resourceGroupDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -65,8 +67,9 @@ func ResourceGroup() *schema.Resource {
 	}
 }
 
-func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).XRayConn
+func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).XRayConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -81,19 +84,20 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		input.InsightsConfiguration = expandInsightsConfig(v.([]interface{}))
 	}
 
-	output, err := conn.CreateGroup(input)
+	output, err := conn.CreateGroupWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating XRay Group (%s): %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating XRay Group (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.Group.GroupARN))
 
-	return resourceGroupRead(d, meta)
+	return append(diags, resourceGroupRead(ctx, d, meta)...)
 }
 
-func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).XRayConn
+func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).XRayConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -101,16 +105,16 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 		GroupARN: aws.String(d.Id()),
 	}
 
-	group, err := conn.GetGroup(input)
+	group, err := conn.GetGroupWithContext(ctx, input)
 
 	if tfawserr.ErrMessageContains(err, xray.ErrCodeInvalidRequestException, "Group not found") {
 		log.Printf("[WARN] XRay Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading XRay Group (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading XRay Group (%s): %s", d.Id(), err)
 	}
 
 	arn := aws.StringValue(group.Group.GroupARN)
@@ -118,31 +122,32 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("group_name", group.Group.GroupName)
 	d.Set("filter_expression", group.Group.FilterExpression)
 	if err := d.Set("insights_configuration", flattenInsightsConfig(group.Group.InsightsConfiguration)); err != nil {
-		return fmt.Errorf("error setting insights_configuration: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting insights_configuration: %s", err)
 	}
 
-	tags, err := ListTags(conn, arn)
+	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for Xray Group (%q): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for Xray Group (%q): %s", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).XRayConn
+func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).XRayConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &xray.UpdateGroupInput{GroupARN: aws.String(d.Id())}
@@ -155,37 +160,38 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 			input.InsightsConfiguration = expandInsightsConfig(v.([]interface{}))
 		}
 
-		_, err := conn.UpdateGroup(input)
+		_, err := conn.UpdateGroupWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error updating XRay Group (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating XRay Group (%s): %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %w", err)
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
 		}
 	}
 
-	return resourceGroupRead(d, meta)
+	return append(diags, resourceGroupRead(ctx, d, meta)...)
 }
 
-func resourceGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).XRayConn
+func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).XRayConn()
 
 	log.Printf("[INFO] Deleting XRay Group: %s", d.Id())
-	_, err := conn.DeleteGroup(&xray.DeleteGroupInput{
+	_, err := conn.DeleteGroupWithContext(ctx, &xray.DeleteGroupInput{
 		GroupARN: aws.String(d.Id()),
 	})
 
 	if err != nil {
-		return fmt.Errorf("error deleting XRay Group (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting XRay Group (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandInsightsConfig(l []interface{}) *xray.InsightsConfiguration {

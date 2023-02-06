@@ -10,6 +10,8 @@ description: |-
 
 Provides a resource to create a new launch configuration, used for autoscaling groups.
 
+-> **Note** When using `aws_launch_configuration` with `aws_autoscaling_group`, it is recommended to use the `name_prefix` (Optional) instead of the `name` (Optional) attribute. This will allow Terraform lifecycles to detect changes to the launch configuration and update the autoscaling group correctly.
+
 ## Example Usage
 
 ```terraform
@@ -133,39 +135,34 @@ resource "aws_autoscaling_group" "bar" {
 
 ## Argument Reference
 
-The following arguments are supported:
+The following arguments are required:
 
-* `name` - (Optional) The name of the launch configuration. If you leave
-  this blank, Terraform will auto-generate a unique name. Conflicts with `name_prefix`.
-* `name_prefix` - (Optional) Creates a unique name beginning with the specified
-  prefix. Conflicts with `name`.
 * `image_id` - (Required) The EC2 image ID to launch.
 * `instance_type` - (Required) The size of instance to launch.
-* `iam_instance_profile` - (Optional) The name attribute of the IAM instance profile to associate
-     with launched instances.
+
+The following arguments are optional:
+
+* `associate_public_ip_address` - (Optional) Associate a public ip address with an instance in a VPC.
+* `ebs_block_device` - (Optional) Additional EBS block devices to attach to the instance. See [Block Devices](#block-devices) below for details.
+* `ebs_optimized` - (Optional) If true, the launched EC2 instance will be EBS-optimized.
+* `enable_monitoring` - (Optional) Enables/disables detailed monitoring. This is enabled by default.
+* `ephemeral_block_device` - (Optional) Customize Ephemeral (also known as "Instance Store") volumes on the instance. See [Block Devices](#block-devices) below for details.
+* `iam_instance_profile` - (Optional) The name attribute of the IAM instance profile to associate with launched instances.
 * `key_name` - (Optional) The key name that should be used for the instance.
 * `metadata_options` - The metadata options for the instance.
     * `http_endpoint` - The state of the metadata service: `enabled`, `disabled`.
     * `http_tokens` - If session tokens are required: `optional`, `required`.
     * `http_put_response_hop_limit` - The desired HTTP PUT response hop limit for instance metadata requests.
+* `name` - (Optional) The name of the launch configuration. If you leave this blank, Terraform will auto-generate a unique name. Conflicts with `name_prefix`.
+* `name_prefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `security_groups` - (Optional) A list of associated security group IDS.
-* `associate_public_ip_address` - (Optional) Associate a public ip address with an instance in a VPC.
-* `vpc_classic_link_id` - (Optional) The ID of a ClassicLink-enabled VPC. Only applies to EC2-Classic instances. (eg. `vpc-2730681a`)
-* `vpc_classic_link_security_groups` - (Optional) The IDs of one or more security groups for the specified ClassicLink-enabled VPC (eg. `sg-46ae3d11`).
+* `placement_tenancy` - (Optional) The tenancy of the instance. Valid values are `default` or `dedicated`, see [AWS's Create Launch Configuration](http://docs.aws.amazon.com/AutoScaling/latest/APIReference/API_CreateLaunchConfiguration.html) for more details.
+* `root_block_device` - (Optional) Customize details about the root block device of the instance. See [Block Devices](#block-devices) below for details.
+* `spot_price` - (Optional; Default: On-demand price) The maximum price to use for reserving spot instances.
 * `user_data` - (Optional) The user data to provide when launching the instance. Do not pass gzip-compressed data via this argument; see `user_data_base64` instead.
 * `user_data_base64` - (Optional) Can be used instead of `user_data` to pass base64-encoded binary data directly. Use this instead of `user_data` whenever the value is not a valid UTF-8 string. For example, gzip-encoded user data must be base64-encoded and passed via this argument to avoid corruption.
-* `enable_monitoring` - (Optional) Enables/disables detailed monitoring. This is enabled by default.
-* `ebs_optimized` - (Optional) If true, the launched EC2 instance will be EBS-optimized.
-* `root_block_device` - (Optional) Customize details about the root block
-  device of the instance. See [Block Devices](#block-devices) below for details.
-* `ebs_block_device` - (Optional) Additional EBS block devices to attach to the
-  instance.  See [Block Devices](#block-devices) below for details.
-* `ephemeral_block_device` - (Optional) Customize Ephemeral (also known as
-  "Instance Store") volumes on the instance. See [Block Devices](#block-devices) below for details.
-* `spot_price` - (Optional; Default: On-demand price) The maximum price to use for reserving spot instances.
-* `placement_tenancy` - (Optional) The tenancy of the instance. Valid values are
-  `"default"` or `"dedicated"`, see [AWS's Create Launch Configuration](http://docs.aws.amazon.com/AutoScaling/latest/APIReference/API_CreateLaunchConfiguration.html)
-  for more details
+* `vpc_classic_link_id` - (Optional) The ID of a ClassicLink-enabled VPC. Only applies to EC2-Classic instances. (eg. `vpc-2730681a`)
+* `vpc_classic_link_security_groups` - (Optional) The IDs of one or more security groups for the specified ClassicLink-enabled VPC (eg. `sg-46ae3d11`).
 
 ## Block devices
 
@@ -174,58 +171,50 @@ Launch Configuration's "Block Device Mapping". It's a good idea to familiarize y
 Mapping docs](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/block-device-mapping-concepts.html)
 to understand the implications of using these attributes.
 
-The `root_block_device` mapping supports the following:
-
-* `volume_type` - (Optional) The type of volume. Can be `"standard"`, `"gp2"`, `"gp3"`, `"st1"`, `"sc1"`
-  or `"io1"`. (Default: `"standard"`).
-* `volume_size` - (Optional) The size of the volume in gigabytes.
-* `iops` - (Optional) The amount of provisioned
-  [IOPS](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-io-characteristics.html).
-  This must be set with a `volume_type` of `"io1"`.
-* `throughput` - (Optional) The throughput (MiBps) to provision for a `gp3` volume.
-* `delete_on_termination` - (Optional) Whether the volume should be destroyed
-  on instance termination (Default: `true`).
-* `encrypted` - (Optional) Whether the volume should be encrypted or not. (Default: `false`).
-
-Modifying any of the `root_block_device` settings requires resource
-replacement.
-
-Each `ebs_block_device` supports the following:
-
-* `device_name` - (Required) The name of the device to mount.
-* `snapshot_id` - (Optional) The Snapshot ID to mount.
-* `volume_type` - (Optional) The type of volume. Can be `"standard"`, `"gp2"`, `"gp3"`, `"st1"`, `"sc1"`
-  or `"io1"`. (Default: `"standard"`).
-* `volume_size` - (Optional) The size of the volume in gigabytes.
-* `iops` - (Optional) The amount of provisioned
-  [IOPS](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-io-characteristics.html).
-  This must be set with a `volume_type` of `"io1"`.
-* `throughput` - (Optional) The throughput (MiBps) to provision for a `gp3` volume.
-* `delete_on_termination` - (Optional) Whether the volume should be destroyed
-  on instance termination (Default: `true`).
-* `encrypted` - (Optional) Whether the volume should be encrypted or not. Do not use this option if you are using `snapshot_id` as the encrypted flag will be determined by the snapshot. (Default: `false`).
-* `no_device` - (Optional) Whether the device in the block device mapping of the AMI is suppressed.
-
-Modifying any `ebs_block_device` currently requires resource replacement.
-
-Each `ephemeral_block_device` supports the following:
-
-* `device_name` - (Required) The name of the block device to mount on the instance.
-* `no_device` - (Optional) Whether the device in the block device mapping of the AMI is suppressed.
-* `virtual_name` - (Optional) The [Instance Store Device
-  Name](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/InstanceStorage.html#InstanceStoreDeviceNames)
-  (e.g., `"ephemeral0"`)
-
 Each AWS Instance type has a different set of Instance Store block devices
 available for attachment. AWS [publishes a
 list](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/InstanceStorage.html#StorageOnInstanceTypes)
 of which ephemeral devices are available on each type. The devices are always
-identified by the `virtual_name` in the format `"ephemeral{0..N}"`.
+identified by the `virtual_name` in the format `ephemeral{0..N}`.
 
 ~> **NOTE:** Changes to `*_block_device` configuration of _existing_ resources
 cannot currently be detected by Terraform. After updating to block device
 configuration, resource recreation can be manually triggered by using the
 [`taint` command](https://www.terraform.io/docs/commands/taint.html).
+  
+### ebs_block_device
+
+Modifying any of the `ebs_block_device` settings requires resource replacement.
+
+* `device_name` - (Required) The name of the device to mount.
+* `snapshot_id` - (Optional) The Snapshot ID to mount.
+* `volume_type` - (Optional) The type of volume. Can be `standard`, `gp2`, `gp3`, `st1`, `sc1` or `io1`.
+* `volume_size` - (Optional) The size of the volume in gigabytes.
+* `iops` - (Optional) The amount of provisioned
+  [IOPS](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-io-characteristics.html).
+  This must be set with a `volume_type` of `"io1"`.
+* `throughput` - (Optional) The throughput (MiBps) to provision for a `gp3` volume.
+* `delete_on_termination` - (Optional) Whether the volume should be destroyed
+  on instance termination (Default: `true`).
+* `encrypted` - (Optional) Whether the volume should be encrypted or not. Defaults to `false`.
+* `no_device` - (Optional) Whether the device in the block device mapping of the AMI is suppressed.
+
+### ephemeral_block_device
+
+* `device_name` - (Required) The name of the block device to mount on the instance.
+* `no_device` - (Optional) Whether the device in the block device mapping of the AMI is suppressed.
+* `virtual_name` - (Optional) The [Instance Store Device Name](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/InstanceStorage.html#InstanceStoreDeviceNames).
+
+### root_block_device
+
+-> Modifying any of the `root_block_device` settings requires resource replacement.
+
+* `delete_on_termination` - (Optional) Whether the volume should be destroyed on instance termination. Defaults to `true`.
+* `encrypted` - (Optional) Whether the volume should be encrypted or not. Defaults to `false`.
+* `iops` - (Optional) The amount of provisioned [IOPS](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-io-characteristics.html). This must be set with a `volume_type` of `io1`.
+* `throughput` - (Optional) The throughput (MiBps) to provision for a `gp3` volume.
+* `volume_size` - (Optional) The size of the volume in gigabytes.
+* `volume_type` - (Optional) The type of volume. Can be `standard`, `gp2`, `gp3`, `st1`, `sc1` or `io1`.
 
 ## Attributes Reference
 

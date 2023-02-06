@@ -15,6 +15,7 @@ import (
 )
 
 func TestAccKafkaConnectWorkerConfiguration_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mskconnect_worker_configuration.test"
 
@@ -27,7 +28,7 @@ func TestAccKafkaConnectWorkerConfiguration_basic(t *testing.T) {
 			{
 				Config: testAccWorkerConfigurationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkerConfigurationExists(resourceName),
+					testAccCheckWorkerConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "latest_revision"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -44,6 +45,7 @@ func TestAccKafkaConnectWorkerConfiguration_basic(t *testing.T) {
 }
 
 func TestAccKafkaConnectWorkerConfiguration_description(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mskconnect_worker_configuration.test"
 
@@ -56,7 +58,7 @@ func TestAccKafkaConnectWorkerConfiguration_description(t *testing.T) {
 			{
 				Config: testAccWorkerConfigurationConfig_description(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkerConfigurationExists(resourceName),
+					testAccCheckWorkerConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", "testing"),
 				),
 			},
@@ -69,7 +71,7 @@ func TestAccKafkaConnectWorkerConfiguration_description(t *testing.T) {
 	})
 }
 
-func testAccCheckWorkerConfigurationExists(n string) resource.TestCheckFunc {
+func testAccCheckWorkerConfigurationExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -80,9 +82,9 @@ func testAccCheckWorkerConfigurationExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No MSK Connect Worker Configuration ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConnectConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConnectConn()
 
-		_, err := tfkafkaconnect.FindWorkerConfigurationByARN(context.Background(), conn, rs.Primary.ID)
+		_, err := tfkafkaconnect.FindWorkerConfigurationByARN(ctx, conn, rs.Primary.ID)
 
 		return err
 	}

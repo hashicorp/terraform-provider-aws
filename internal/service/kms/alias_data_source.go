@@ -1,16 +1,18 @@
 package kms
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func DataSourceAlias() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAliasRead,
+		ReadWithoutTimeout: dataSourceAliasRead,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -33,15 +35,16 @@ func DataSourceAlias() *schema.Resource {
 	}
 }
 
-func dataSourceAliasRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KMSConn
+func dataSourceAliasRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).KMSConn()
 
 	target := d.Get("name").(string)
 
-	alias, err := FindAliasByName(conn, target)
+	alias, err := FindAliasByName(ctx, conn, target)
 
 	if err != nil {
-		return fmt.Errorf("error reading KMS Alias (%s): %w", target, err)
+		return sdkdiag.AppendErrorf(diags, "reading KMS Alias (%s): %s", target, err)
 	}
 
 	d.SetId(aws.StringValue(alias.AliasArn))
@@ -58,14 +61,14 @@ func dataSourceAliasRead(d *schema.ResourceData, meta interface{}) error {
 	//
 	// https://docs.aws.amazon.com/kms/latest/APIReference/API_ListAliases.html
 
-	keyMetadata, err := FindKeyByID(conn, target)
+	keyMetadata, err := FindKeyByID(ctx, conn, target)
 
 	if err != nil {
-		return fmt.Errorf("error reading KMS Key (%s): %w", target, err)
+		return sdkdiag.AppendErrorf(diags, "reading KMS Key (%s): %s", target, err)
 	}
 
 	d.Set("target_key_arn", keyMetadata.Arn)
 	d.Set("target_key_id", keyMetadata.KeyId)
 
-	return nil
+	return diags
 }

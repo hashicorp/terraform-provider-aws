@@ -57,7 +57,7 @@ The following arguments are supported:
 
 The `filter` metric configuration supports the following:
 
-~> **NOTE**: At least one of `prefix` or `tags` is required when specifying a `filter`
+~> **NOTE:** At least one of `prefix` or `tags` is required when specifying a `filter`
 
 * `prefix` - (Optional) Object prefix for filtering (singular).
 * `tags` - (Optional) Object tags for filtering (up to 10).

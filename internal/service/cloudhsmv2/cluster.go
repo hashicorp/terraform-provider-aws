@@ -1,15 +1,17 @@
 package cloudhsmv2
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudhsmv2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -17,12 +19,12 @@ import (
 
 func ResourceCluster() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceClusterCreate,
-		Read:   resourceClusterRead,
-		Update: resourceClusterUpdate,
-		Delete: resourceClusterDelete,
+		CreateWithoutTimeout: resourceClusterCreate,
+		ReadWithoutTimeout:   resourceClusterRead,
+		UpdateWithoutTimeout: resourceClusterUpdate,
+		DeleteWithoutTimeout: resourceClusterDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -110,8 +112,9 @@ func ResourceCluster() *schema.Resource {
 	}
 }
 
-func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudHSMV2Conn
+func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CloudHSMV2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -130,10 +133,10 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] CloudHSMv2 Cluster create %s", input)
 
-	output, err := conn.CreateCluster(input)
+	output, err := conn.CreateClusterWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating CloudHSMv2 Cluster: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating CloudHSMv2 Cluster: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.Cluster.ClusterId))
@@ -141,47 +144,48 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 	log.Println("[INFO] Waiting for CloudHSMv2 Cluster to be available")
 
 	if input.SourceBackupId != nil {
-		if _, err := waitClusterActive(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-			return fmt.Errorf("error waiting for CloudHSMv2 Cluster (%s) creation: %w", d.Id(), err)
+		if _, err := waitClusterActive(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for CloudHSMv2 Cluster (%s) creation: %s", d.Id(), err)
 		}
 	} else {
-		if _, err := waitClusterUninitialized(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-			return fmt.Errorf("error waiting for CloudHSMv2 Cluster (%s) creation: %w", d.Id(), err)
+		if _, err := waitClusterUninitialized(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for CloudHSMv2 Cluster (%s) creation: %s", d.Id(), err)
 		}
 	}
 
-	return resourceClusterRead(d, meta)
+	return append(diags, resourceClusterRead(ctx, d, meta)...)
 }
 
-func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudHSMV2Conn
+func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CloudHSMV2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	cluster, err := FindCluster(conn, d.Id())
+	cluster, err := FindCluster(ctx, conn, d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error reading CloudHSMv2 Cluster (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading CloudHSMv2 Cluster (%s): %s", d.Id(), err)
 	}
 
 	if cluster == nil {
 		if d.IsNewResource() {
-			return fmt.Errorf("error reading CloudHSMv2 Cluster (%s): not found after creation", d.Id())
+			return sdkdiag.AppendErrorf(diags, "reading CloudHSMv2 Cluster (%s): not found after creation", d.Id())
 		}
 
 		log.Printf("[WARN] CloudHSMv2 Cluster (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if aws.StringValue(cluster.State) == cloudhsmv2.ClusterStateDeleted {
 		if d.IsNewResource() {
-			return fmt.Errorf("error reading CloudHSMv2 Cluster (%s): %s after creation", d.Id(), aws.StringValue(cluster.State))
+			return sdkdiag.AppendErrorf(diags, "reading CloudHSMv2 Cluster (%s): %s after creation", d.Id(), aws.StringValue(cluster.State))
 		}
 
 		log.Printf("[WARN] CloudHSMv2 Cluster (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	log.Printf("[INFO] Reading CloudHSMv2 Cluster Information: %s", d.Id())
@@ -193,7 +197,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("source_backup_identifier", cluster.SourceBackupId)
 	d.Set("hsm_type", cluster.HsmType)
 	if err := d.Set("cluster_certificates", readClusterCertificates(cluster)); err != nil {
-		return fmt.Errorf("error setting cluster_certificates: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting cluster_certificates: %s", err)
 	}
 
 	var subnets []string
@@ -201,53 +205,55 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 		subnets = append(subnets, aws.StringValue(sn))
 	}
 	if err := d.Set("subnet_ids", subnets); err != nil {
-		return fmt.Errorf("Error saving Subnet IDs to state for CloudHSMv2 Cluster (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "Error saving Subnet IDs to state for CloudHSMv2 Cluster (%s): %s", d.Id(), err)
 	}
 
 	tags := KeyValueTags(cluster.TagList).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudHSMV2Conn
+func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CloudHSMV2Conn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %s", err)
+		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
 		}
 	}
 
-	return resourceClusterRead(d, meta)
+	return append(diags, resourceClusterRead(ctx, d, meta)...)
 }
 
-func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudHSMV2Conn
+func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CloudHSMV2Conn()
 	input := &cloudhsmv2.DeleteClusterInput{
 		ClusterId: aws.String(d.Id()),
 	}
 
-	_, err := conn.DeleteCluster(input)
+	_, err := conn.DeleteClusterWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error deleting CloudHSMv2 Cluster (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting CloudHSMv2 Cluster (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitClusterDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("error waiting for CloudHSMv2 Cluster (%s) deletion: %w", d.Id(), err)
+	if _, err := waitClusterDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for CloudHSMv2 Cluster (%s) deletion: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func readClusterCertificates(cluster *cloudhsmv2.Cluster) []map[string]interface{} {

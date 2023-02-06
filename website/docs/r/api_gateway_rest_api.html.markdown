@@ -71,7 +71,6 @@ resource "aws_api_gateway_stage" "example" {
 ### OpenAPI Specification with Private Endpoints
 Using `put_rest_api_mode` = `merge` when importing the OpenAPI Specification, the AWS control plane will not delete all existing literal properties that are not explicitly set in the OpenAPI definition. Impacted API Gateway properties: ApiKeySourceType, BinaryMediaTypes, Description, EndpointConfiguration, MinimumCompressionSize, Name, Policy).
 
-
 ```terraform
 data "aws_availability_zones" "available" {
   state = "available"
@@ -84,31 +83,31 @@ data "aws_availability_zones" "available" {
 
 data "aws_region" "current" {}
 
-resource "aws_vpc" "test" {
+resource "aws_vpc" "example" {
   cidr_block           = "10.0.0.0/16"
   enable_dns_support   = true
   enable_dns_hostnames = true
 }
 
-resource "aws_default_security_group" "test" {
-  vpc_id = aws_vpc.test.id
+resource "aws_default_security_group" "example" {
+  vpc_id = aws_vpc.example.id
 }
 
-resource "aws_subnet" "test" {
+resource "aws_subnet" "example" {
   availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, 0)
-  vpc_id            = aws_vpc.test.id
+  cidr_block        = cidrsubnet(aws_vpc.example.cidr_block, 8, 0)
+  vpc_id            = aws_vpc.example.id
 }
 
-resource "aws_vpc_endpoint" "test" {
+resource "aws_vpc_endpoint" "example" {
   count = 3
 
   private_dns_enabled = false
-  security_group_ids  = [aws_default_security_group.test.id]
+  security_group_ids  = [aws_default_security_group.example.id]
   service_name        = "com.amazonaws.${data.aws_region.current.name}.execute-api"
-  subnet_ids          = [aws_subnet.test.id]
+  subnet_ids          = [aws_subnet.example.id]
   vpc_endpoint_type   = "Interface"
-  vpc_id              = aws_vpc.test.id
+  vpc_id              = aws_vpc.example.id
 }
 
 resource "aws_api_gateway_rest_api" "example" {
@@ -137,7 +136,7 @@ resource "aws_api_gateway_rest_api" "example" {
 
   endpoint_configuration {
     types            = ["PRIVATE"]
-    vpc_endpoint_ids = [aws_vpc_endpoint.test.0.id, aws_vpc_endpoint.test.1.id, aws_vpc_endpoint.test.2.id]
+    vpc_endpoint_ids = [aws_vpc_endpoint.example[0].id, aws_vpc_endpoint.example[1].id, aws_vpc_endpoint.example[2].id]
   }
 }
 
@@ -234,7 +233,7 @@ The following arguments are supported:
 * `put_rest_api_mode` - (Optional) Mode of the PutRestApi operation when importing an OpenAPI specification via the `body` argument (create or update operation). Valid values are `merge` and `overwrite`. If unspecificed, defaults to `overwrite` (for backwards compatibility). This corresponds to the [`x-amazon-apigateway-put-integration-method` extension](https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-swagger-extensions-put-integration-method.html). If the argument value is provided and is different than the OpenAPI value, the argument value will override the OpenAPI value.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-__Note__: If the `body` argument is provided, the OpenAPI specification will be used to configure the resources, methods and integrations for the Rest API. If this argument is provided, the following resources should not be managed as separate ones, as updates may cause manual resource updates to be overwritten:
+**Note**: If the `body` argument is provided, the OpenAPI specification will be used to configure the resources, methods and integrations for the Rest API. If this argument is provided, the following resources should not be managed as separate ones, as updates may cause manual resource updates to be overwritten:
 
 * `aws_api_gateway_resource`
 * `aws_api_gateway_method`
@@ -247,7 +246,7 @@ __Note__: If the `body` argument is provided, the OpenAPI specification will be 
 
 ### endpoint_configuration
 
-* `types` - (Required) List of endpoint types. This resource currently only supports managing a single value. Valid values: `EDGE`, `REGIONAL` or `PRIVATE`. If unspecified, defaults to `EDGE`. Must be declared as `REGIONAL` in non-Commercial partitions. If set to `PRIVATE` recommend to set `put_rest_api_mode` = `merge` to not cause the endpoints and associated Route53 records to be deleted. Refer to the [documentation](https://docs.aws.amazon.com/apigateway/latest/developerguide/create-regional-api.html) for more information on the difference between edge-optimized and regional APIs.
+* `types` - (Required) List of endpoint types. This resource currently only supports managing a single value. Valid values: `EDGE`, `REGIONAL` or `PRIVATE`. If unspecified, defaults to `EDGE`. If set to `PRIVATE` recommend to set `put_rest_api_mode` = `merge` to not cause the endpoints and associated Route53 records to be deleted. Refer to the [documentation](https://docs.aws.amazon.com/apigateway/latest/developerguide/create-regional-api.html) for more information on the difference between edge-optimized and regional APIs.
 * `vpc_endpoint_ids` - (Optional) Set of VPC Endpoint identifiers. It is only supported for `PRIVATE` endpoint type. If importing an OpenAPI specification via the `body` argument, this corresponds to the [`x-amazon-apigateway-endpoint-configuration` extension `vpcEndpointIds` property](https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-swagger-extensions-endpoint-configuration.html). If the argument value is provided and is different than the OpenAPI value, **the argument value will override the OpenAPI value**.
 
 ## Attributes Reference

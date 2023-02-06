@@ -1,22 +1,25 @@
 package ec2
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourceInternetGatewayAttachment() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceInternetGatewayAttachmentCreate,
-		Read:   resourceInternetGatewayAttachmentRead,
-		Delete: resourceInternetGatewayAttachmentDelete,
+		CreateWithoutTimeout: resourceInternetGatewayAttachmentCreate,
+		ReadWithoutTimeout:   resourceInternetGatewayAttachmentRead,
+		DeleteWithoutTimeout: resourceInternetGatewayAttachmentDelete,
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(20 * time.Minute),
@@ -24,7 +27,7 @@ func ResourceInternetGatewayAttachment() *schema.Resource {
 		},
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -42,42 +45,44 @@ func ResourceInternetGatewayAttachment() *schema.Resource {
 	}
 }
 
-func resourceInternetGatewayAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceInternetGatewayAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	igwID := d.Get("internet_gateway_id").(string)
 	vpcID := d.Get("vpc_id").(string)
 
-	if err := attachInternetGateway(conn, igwID, vpcID, d.Timeout(schema.TimeoutCreate)); err != nil {
-		return err
+	if err := attachInternetGateway(ctx, conn, igwID, vpcID, d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "creating EC2 Internet Gateway Attachment: %s", err)
 	}
 
 	d.SetId(InternetGatewayAttachmentCreateResourceID(igwID, vpcID))
 
-	return resourceInternetGatewayAttachmentRead(d, meta)
+	return append(diags, resourceInternetGatewayAttachmentRead(ctx, d, meta)...)
 }
 
-func resourceInternetGatewayAttachmentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceInternetGatewayAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	igwID, vpcID, err := InternetGatewayAttachmentParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Internet Gateway Attachment (%s): %s", d.Id(), err)
 	}
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(propagationTimeout, func() (interface{}, error) {
-		return FindInternetGatewayAttachment(conn, igwID, vpcID)
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+		return FindInternetGatewayAttachment(ctx, conn, igwID, vpcID)
 	}, d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Internet Gateway Attachment %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 Internet Gateway Attachment (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Internet Gateway Attachment (%s): %s", d.Id(), err)
 	}
 
 	igw := outputRaw.(*ec2.InternetGatewayAttachment)
@@ -85,23 +90,23 @@ func resourceInternetGatewayAttachmentRead(d *schema.ResourceData, meta interfac
 	d.Set("internet_gateway_id", igwID)
 	d.Set("vpc_id", igw.VpcId)
 
-	return nil
+	return diags
 }
 
-func resourceInternetGatewayAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceInternetGatewayAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	igwID, vpcID, err := InternetGatewayAttachmentParseResourceID(d.Id())
-
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "deleting EC2 Internet Gateway Attachment (%s): %s", d.Id(), err)
 	}
 
-	if err := detachInternetGateway(conn, igwID, vpcID, d.Timeout(schema.TimeoutDelete)); err != nil {
-		return err
+	if err := detachInternetGateway(ctx, conn, igwID, vpcID, d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting EC2 Internet Gateway Attachment (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 const internetGatewayAttachmentIDSeparator = ":"

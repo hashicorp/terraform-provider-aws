@@ -1,7 +1,7 @@
 package ec2
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"strings"
 	"time"
@@ -9,11 +9,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -21,28 +22,27 @@ import (
 
 func ResourceIPAMPool() *schema.Resource {
 	return &schema.Resource{
-		Create:        ResourceIPAMPoolCreate,
-		Read:          ResourceIPAMPoolRead,
-		Update:        ResourceIPAMPoolUpdate,
-		Delete:        ResourceIPAMPoolDelete,
-		CustomizeDiff: customdiff.Sequence(verify.SetTagsDiff),
+		CreateWithoutTimeout: ResourceIPAMPoolCreate,
+		ReadWithoutTimeout:   ResourceIPAMPoolRead,
+		UpdateWithoutTimeout: ResourceIPAMPoolUpdate,
+		DeleteWithoutTimeout: ResourceIPAMPoolDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(3 * time.Minute),
+			Update: schema.DefaultTimeout(3 * time.Minute),
+			Delete: schema.DefaultTimeout(3 * time.Minute),
+		},
+
 		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"address_family": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(ec2.AddressFamily_Values(), false),
-			},
-			"publicly_advertisable": {
-				Type:     schema.TypeBool,
-				Optional: true,
 			},
 			"allocation_default_netmask_length": {
 				Type:         schema.TypeInt,
@@ -60,6 +60,10 @@ func ResourceIPAMPool() *schema.Resource {
 				ValidateFunc: validation.IntBetween(0, 128),
 			},
 			"allocation_resource_tags": tftags.TagsSchema(),
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"auto_import": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -98,6 +102,23 @@ func ResourceIPAMPool() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
+			"public_ip_source": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(ec2.IpamPoolPublicIpSource_Values(), false),
+				// default is byoip when AddressFamily = ipv6
+				DiffSuppressFunc: func(k, o, n string, d *schema.ResourceData) bool {
+					if o == "byoip" && n == "" {
+						return true
+					}
+					return false
+				},
+			},
+			"publicly_advertisable": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			"source_ipam_pool_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -110,32 +131,23 @@ func ResourceIPAMPool() *schema.Resource {
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 		},
+
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-const (
-	ipamPoolCreateTimeout     = 3 * time.Minute
-	InvalidIPAMPoolIDNotFound = "InvalidIpamPoolId.NotFound"
-	ipamPoolUpdateTimeout     = 3 * time.Minute
-	IPAMPoolDeleteTimeout     = 3 * time.Minute
-	ipamPoolAvailableDelay    = 5 * time.Second
-	ipamPoolDeleteDelay       = 5 * time.Second
-)
-
-func ResourceIPAMPoolCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func ResourceIPAMPoolCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
+	addressFamily := d.Get("address_family").(string)
 	input := &ec2.CreateIpamPoolInput{
-		AddressFamily:     aws.String(d.Get("address_family").(string)),
+		AddressFamily:     aws.String(addressFamily),
 		ClientToken:       aws.String(resource.UniqueId()),
 		IpamScopeId:       aws.String(d.Get("ipam_scope_id").(string)),
-		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, "ipam-pool"),
-	}
-
-	if v := d.Get("publicly_advertisable"); v != "" && d.Get("address_family") == ec2.AddressFamilyIpv6 {
-		input.PubliclyAdvertisable = aws.Bool(v.(bool))
+		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeIpamPool),
 	}
 
 	if v, ok := d.GetOk("allocation_default_netmask_length"); ok {
@@ -170,40 +182,53 @@ func ResourceIPAMPoolCreate(d *schema.ResourceData, meta interface{}) error {
 		input.AwsService = aws.String(v.(string))
 	}
 
+	var publicIpSource string
+	if v, ok := d.GetOk("public_ip_source"); ok {
+		publicIpSource = v.(string)
+		input.PublicIpSource = aws.String(publicIpSource)
+	}
+
+	// PubliclyAdvertisable must be set if if the AddressFamily is IPv6 and PublicIpSource is byoip.
+	// The request can only contain PubliclyAdvertisable if the AddressFamily is IPv6 and PublicIpSource is byoip.
+	if addressFamily == ec2.AddressFamilyIpv6 && publicIpSource != ec2.IpamPoolPublicIpSourceAmazon {
+		input.PubliclyAdvertisable = aws.Bool(d.Get("publicly_advertisable").(bool))
+	}
+
 	if v, ok := d.GetOk("source_ipam_pool_id"); ok {
 		input.SourceIpamPoolId = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating IPAM Pool: %s", input)
-	output, err := conn.CreateIpamPool(input)
+	output, err := conn.CreateIpamPoolWithContext(ctx, input)
+
 	if err != nil {
-		return fmt.Errorf("Error creating ipam pool in ipam scope (%s): %w", d.Get("ipam_scope_id").(string), err)
+		return sdkdiag.AppendErrorf(diags, "creating IPAM Pool: %s", err)
 	}
+
 	d.SetId(aws.StringValue(output.IpamPool.IpamPoolId))
-	log.Printf("[INFO] IPAM Pool ID: %s", d.Id())
 
-	if _, err = WaitIPAMPoolAvailable(conn, d.Id(), ipamPoolCreateTimeout); err != nil {
-		return fmt.Errorf("error waiting for IPAM Pool (%s) to be Available: %w", d.Id(), err)
+	if _, err := WaitIPAMPoolCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for IPAM Pool (%s) create: %s", d.Id(), err)
 	}
 
-	return ResourceIPAMPoolRead(d, meta)
+	return append(diags, ResourceIPAMPoolRead(ctx, d, meta)...)
 }
 
-func ResourceIPAMPoolRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func ResourceIPAMPoolRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	pool, err := FindIPAMPoolById(conn, d.Id())
+	pool, err := FindIPAMPoolByID(ctx, conn, d.Id())
 
-	if err != nil && !tfawserr.ErrCodeEquals(err, InvalidIPAMPoolIDNotFound) {
-		return err
-	}
-
-	if !d.IsNewResource() && pool == nil {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] IPAM Pool (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading IPAM Pool (%s): %s", d.Id(), err)
 	}
 
 	d.Set("address_family", pool.AddressFamily)
@@ -218,6 +243,7 @@ func ResourceIPAMPoolRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("locale", pool.Locale)
 	d.Set("pool_depth", pool.PoolDepth)
 	d.Set("publicly_advertisable", pool.PubliclyAdvertisable)
+	d.Set("public_ip_source", pool.PublicIpSource)
 	d.Set("source_ipam_pool_id", pool.SourceIpamPoolId)
 	d.Set("state", pool.State)
 
@@ -225,36 +251,27 @@ func ResourceIPAMPoolRead(d *schema.ResourceData, meta interface{}) error {
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func ResourceIPAMPoolUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func ResourceIPAMPoolUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %w", err)
+	if d.HasChangesExcept("tags", "tags_all") {
+		input := &ec2.ModifyIpamPoolInput{
+			IpamPoolId: aws.String(d.Id()),
 		}
-	}
-	input := &ec2.ModifyIpamPoolInput{
-		IpamPoolId: aws.String(d.Id()),
-	}
 
-	if d.HasChangesExcept("tags_all", "allocation_resource_tags") {
 		if v, ok := d.GetOk("allocation_default_netmask_length"); ok {
 			input.AllocationDefaultNetmaskLength = aws.Int64(int64(v.(int)))
-		}
-
-		if v, ok := d.GetOk("auto_import"); ok {
-			input.AutoImport = aws.Bool(v.(bool))
 		}
 
 		if v, ok := d.GetOk("allocation_max_netmask_length"); ok {
@@ -265,148 +282,72 @@ func ResourceIPAMPoolUpdate(d *schema.ResourceData, meta interface{}) error {
 			input.AllocationMinNetmaskLength = aws.Int64(int64(v.(int)))
 		}
 
+		if d.HasChange("allocation_resource_tags") {
+			o, n := d.GetChange("allocation_resource_tags")
+			oldTags := tftags.New(o)
+			newTags := tftags.New(n)
+
+			if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+				input.RemoveAllocationResourceTags = ipamResourceTags(removedTags.IgnoreAWS())
+			}
+
+			if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+				input.AddAllocationResourceTags = ipamResourceTags(updatedTags.IgnoreAWS())
+			}
+		}
+
+		if v, ok := d.GetOk("auto_import"); ok {
+			input.AutoImport = aws.Bool(v.(bool))
+		}
+
 		if v, ok := d.GetOk("description"); ok {
 			input.Description = aws.String(v.(string))
 		}
-	}
 
-	if d.HasChange("allocation_resource_tags") {
-		o, n := d.GetChange("allocation_resource_tags")
-		oldTags := tftags.New(o)
-		newTags := tftags.New(n)
+		_, err := conn.ModifyIpamPoolWithContext(ctx, input)
 
-		if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
-			input.RemoveAllocationResourceTags = ipamResourceTags(removedTags.IgnoreAWS())
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating IPAM Pool (%s): %s", d.Id(), err)
 		}
 
-		if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
-			input.AddAllocationResourceTags = ipamResourceTags(updatedTags.IgnoreAWS())
+		if _, err := WaitIPAMPoolUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for IPAM Pool (%s) update: %s", d.Id(), err)
 		}
 	}
 
-	log.Printf("[DEBUG] Updating IPAM pool: %s", input)
-	_, err := conn.ModifyIpamPool(input)
-	if err != nil {
-		return fmt.Errorf("error updating IPAM Pool (%s): %w", d.Id(), err)
+	if d.HasChange("tags_all") {
+		o, n := d.GetChange("tags_all")
+
+		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating IPAM Pool (%s) tags: %s", d.Id(), err)
+		}
 	}
 
-	if _, err = WaitIPAMPoolUpdate(conn, d.Id(), ipamPoolUpdateTimeout); err != nil {
-		return fmt.Errorf("error waiting for IPAM Pool (%s) to be Available: %w", d.Id(), err)
-	}
-
-	return ResourceIPAMPoolRead(d, meta)
+	return append(diags, ResourceIPAMPoolRead(ctx, d, meta)...)
 }
 
-func ResourceIPAMPoolDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func ResourceIPAMPoolDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	log.Printf("[DEBUG] Deleting IPAM Pool: %s", d.Id())
-	_, err := conn.DeleteIpamPool(&ec2.DeleteIpamPoolInput{
+	_, err := conn.DeleteIpamPoolWithContext(ctx, &ec2.DeleteIpamPoolInput{
 		IpamPoolId: aws.String(d.Id()),
 	})
 
-	if err != nil {
-		return fmt.Errorf("error deleting IPAM Pool: (%s): %w", d.Id(), err)
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidIPAMPoolIdNotFound) {
+		return diags
 	}
-
-	if _, err = WaitIPAMPoolDeleted(conn, d.Id(), IPAMPoolDeleteTimeout); err != nil {
-		if tfresource.NotFound(err) {
-			return nil
-		}
-		return fmt.Errorf("error waiting for IPAM Pool (%s) to be deleted: %w", d.Id(), err)
-	}
-
-	return nil
-}
-
-func FindIPAMPoolById(conn *ec2.EC2, id string) (*ec2.IpamPool, error) {
-	input := &ec2.DescribeIpamPoolsInput{
-		IpamPoolIds: aws.StringSlice([]string{id}),
-	}
-
-	output, err := conn.DescribeIpamPools(input)
 
 	if err != nil {
-		return nil, err
+		return sdkdiag.AppendErrorf(diags, "deleting IPAM Pool (%s): %s", d.Id(), err)
 	}
 
-	if output == nil || len(output.IpamPools) == 0 || output.IpamPools[0] == nil {
-		return nil, nil
+	if _, err = WaitIPAMPoolDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for IPAM Pool (%s) delete: %s", d.Id(), err)
 	}
 
-	return output.IpamPools[0], nil
-}
-
-func WaitIPAMPoolAvailable(conn *ec2.EC2, ipamPoolId string, timeout time.Duration) (*ec2.IpamPool, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{ec2.IpamPoolStateCreateInProgress},
-		Target:  []string{ec2.IpamPoolStateCreateComplete},
-		Refresh: statusIPAMPoolStatus(conn, ipamPoolId),
-		Timeout: timeout,
-		Delay:   ipamPoolAvailableDelay,
-	}
-
-	outputRaw, err := stateConf.WaitForState()
-
-	if output, ok := outputRaw.(*ec2.IpamPool); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func WaitIPAMPoolUpdate(conn *ec2.EC2, ipamPoolId string, timeout time.Duration) (*ec2.IpamPool, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{ec2.IpamPoolStateModifyInProgress},
-		Target:  []string{ec2.IpamPoolStateModifyComplete},
-		Refresh: statusIPAMPoolStatus(conn, ipamPoolId),
-		Timeout: timeout,
-		Delay:   ipamPoolAvailableDelay,
-	}
-
-	outputRaw, err := stateConf.WaitForState()
-
-	if output, ok := outputRaw.(*ec2.IpamPool); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func WaitIPAMPoolDeleted(conn *ec2.EC2, ipamPoolId string, timeout time.Duration) (*ec2.IpamPool, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{ec2.IpamPoolStateDeleteInProgress},
-		Target:  []string{InvalidIPAMPoolIDNotFound},
-		Refresh: statusIPAMPoolStatus(conn, ipamPoolId),
-		Timeout: timeout,
-		Delay:   ipamPoolDeleteDelay,
-	}
-
-	outputRaw, err := stateConf.WaitForState()
-
-	if output, ok := outputRaw.(*ec2.IpamPool); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func statusIPAMPoolStatus(conn *ec2.EC2, ipamPoolId string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-
-		output, err := FindIPAMPoolById(conn, ipamPoolId)
-
-		if tfawserr.ErrCodeEquals(err, InvalidIPAMPoolIDNotFound) {
-			return output, InvalidIPAMPoolIDNotFound, nil
-		}
-
-		// there was an unhandled error in the Finder
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, aws.StringValue(output.State), nil
-	}
+	return diags
 }
 
 func ipamResourceTags(tags tftags.KeyValueTags) []*ec2.RequestIpamResourceTag {

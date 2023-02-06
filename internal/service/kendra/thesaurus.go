@@ -96,7 +96,7 @@ func ResourceThesaurus() *schema.Resource {
 }
 
 func resourceThesaurusCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraConn
+	conn := meta.(*conns.AWSClient).KendraClient()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -116,8 +116,7 @@ func resourceThesaurusCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	outputRaw, err := tfresource.RetryWhen(
-		propagationTimeout,
+	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
 		func() (interface{}, error) {
 			return conn.CreateThesaurus(ctx, input)
 		},
@@ -155,7 +154,7 @@ func resourceThesaurusCreate(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceThesaurusRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraConn
+	conn := meta.(*conns.AWSClient).KendraClient()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -216,7 +215,7 @@ func resourceThesaurusRead(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceThesaurusUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraConn
+	conn := meta.(*conns.AWSClient).KendraClient()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		id, indexId, err := ThesaurusParseResourceID(d.Id())
@@ -247,8 +246,7 @@ func resourceThesaurusUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 		log.Printf("[DEBUG] Updating Kendra Thesaurus (%s): %#v", d.Id(), input)
 
-		_, err = tfresource.RetryWhen(
-			propagationTimeout,
+		_, err = tfresource.RetryWhen(ctx, propagationTimeout,
 			func() (interface{}, error) {
 				return conn.UpdateThesaurus(ctx, input)
 			},
@@ -284,7 +282,7 @@ func resourceThesaurusUpdate(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceThesaurusDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraConn
+	conn := meta.(*conns.AWSClient).KendraClient()
 
 	log.Printf("[INFO] Deleting Kendra Thesaurus %s", d.Id())
 

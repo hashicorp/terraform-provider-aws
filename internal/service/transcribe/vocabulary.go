@@ -88,7 +88,7 @@ const (
 )
 
 func resourceVocabularyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).TranscribeConn
+	conn := meta.(*conns.AWSClient).TranscribeClient()
 
 	in := &transcribe.CreateVocabularyInput{
 		VocabularyName: aws.String(d.Get("vocabulary_name").(string)),
@@ -129,7 +129,7 @@ func resourceVocabularyCreate(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceVocabularyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).TranscribeConn
+	conn := meta.(*conns.AWSClient).TranscribeClient()
 
 	out, err := FindVocabularyByName(ctx, conn, d.Id())
 
@@ -178,7 +178,7 @@ func resourceVocabularyRead(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceVocabularyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).TranscribeConn
+	conn := meta.(*conns.AWSClient).TranscribeClient()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		in := &transcribe.UpdateVocabularyInput{
@@ -217,7 +217,7 @@ func resourceVocabularyUpdate(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceVocabularyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).TranscribeConn
+	conn := meta.(*conns.AWSClient).TranscribeClient()
 
 	log.Printf("[INFO] Deleting Transcribe Vocabulary %s", d.Id())
 

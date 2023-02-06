@@ -1,18 +1,20 @@
 package lexmodels
 
 import (
-	"fmt"
+	"context"
 	"regexp"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func DataSourceSlotType() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceSlotTypeRead,
+		ReadWithoutTimeout: dataSourceSlotTypeRead,
 
 		Schema: map[string]*schema.Schema{
 			"checksum": {
@@ -75,15 +77,16 @@ func DataSourceSlotType() *schema.Resource {
 	}
 }
 
-func dataSourceSlotTypeRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LexModelsConn
+func dataSourceSlotTypeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).LexModelsConn()
 
 	name := d.Get("name").(string)
 	version := d.Get("version").(string)
-	output, err := FindSlotTypeVersionByName(conn, name, version)
+	output, err := FindSlotTypeVersionByName(ctx, conn, name, version)
 
 	if err != nil {
-		return fmt.Errorf("error reading Lex Slot Type (%s/%s): %w", name, version, err)
+		return sdkdiag.AppendErrorf(diags, "reading Lex Slot Type (%s/%s): %s", name, version, err)
 	}
 
 	d.SetId(name)
@@ -96,5 +99,5 @@ func dataSourceSlotTypeRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("value_selection_strategy", output.ValueSelectionStrategy)
 	d.Set("version", output.Version)
 
-	return nil
+	return diags
 }

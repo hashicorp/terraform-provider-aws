@@ -17,6 +17,7 @@ import (
 )
 
 func TestAccCloudTrailEventDataStore_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudtrail_event_data_store.test"
 
@@ -24,12 +25,12 @@ func TestAccCloudTrailEventDataStore_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloudtrail.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEventDataStoreDestroy,
+		CheckDestroy:             testAccCheckEventDataStoreDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventDataStoreConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEventDataStoreExists(resourceName),
+					testAccCheckEventDataStoreExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "advanced_event_selector.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "advanced_event_selector.0.field_selector.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "advanced_event_selector.0.field_selector.*", map[string]string{
@@ -57,6 +58,7 @@ func TestAccCloudTrailEventDataStore_basic(t *testing.T) {
 }
 
 func TestAccCloudTrailEventDataStore_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudtrail_event_data_store.test"
 
@@ -64,13 +66,13 @@ func TestAccCloudTrailEventDataStore_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloudtrail.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEventDataStoreDestroy,
+		CheckDestroy:             testAccCheckEventDataStoreDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventDataStoreConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventDataStoreExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcloudtrail.ResourceEventDataStore(), resourceName),
+					testAccCheckEventDataStoreExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudtrail.ResourceEventDataStore(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -79,6 +81,7 @@ func TestAccCloudTrailEventDataStore_disappears(t *testing.T) {
 }
 
 func TestAccCloudTrailEventDataStore_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudtrail_event_data_store.test"
 
@@ -86,12 +89,12 @@ func TestAccCloudTrailEventDataStore_tags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloudtrail.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEventDataStoreDestroy,
+		CheckDestroy:             testAccCheckEventDataStoreDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventDataStoreConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEventDataStoreExists(resourceName),
+					testAccCheckEventDataStoreExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -104,7 +107,7 @@ func TestAccCloudTrailEventDataStore_tags(t *testing.T) {
 			{
 				Config: testAccEventDataStoreConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEventDataStoreExists(resourceName),
+					testAccCheckEventDataStoreExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -113,7 +116,7 @@ func TestAccCloudTrailEventDataStore_tags(t *testing.T) {
 			{
 				Config: testAccEventDataStoreConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckEventDataStoreExists(resourceName),
+					testAccCheckEventDataStoreExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -123,19 +126,20 @@ func TestAccCloudTrailEventDataStore_tags(t *testing.T) {
 }
 
 func TestAccCloudTrailEventDataStore_options(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudtrail_event_data_store.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOrganizationManagementAccount(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOrganizationManagementAccount(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloudtrail.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEventDataStoreDestroy,
+		CheckDestroy:             testAccCheckEventDataStoreDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventDataStoreConfig_options(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventDataStoreExists(resourceName),
+					testAccCheckEventDataStoreExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "multi_region_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "organization_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "retention_period", "365"),
@@ -150,7 +154,7 @@ func TestAccCloudTrailEventDataStore_options(t *testing.T) {
 			{
 				Config: testAccEventDataStoreConfig_optionsUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventDataStoreExists(resourceName),
+					testAccCheckEventDataStoreExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "multi_region_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "organization_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "retention_period", "90"),
@@ -162,6 +166,7 @@ func TestAccCloudTrailEventDataStore_options(t *testing.T) {
 }
 
 func TestAccCloudTrailEventDataStore_advancedEventSelector(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudtrail_event_data_store.test"
 
@@ -169,7 +174,7 @@ func TestAccCloudTrailEventDataStore_advancedEventSelector(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloudtrail.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEventDataStoreDestroy,
+		CheckDestroy:             testAccCheckEventDataStoreDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventDataStoreConfig_advancedSelector(rName),
@@ -255,7 +260,7 @@ func TestAccCloudTrailEventDataStore_advancedEventSelector(t *testing.T) {
 	})
 }
 
-func testAccCheckEventDataStoreExists(n string) resource.TestCheckFunc {
+func testAccCheckEventDataStoreExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -266,32 +271,34 @@ func testAccCheckEventDataStoreExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No CloudTrail Event Data Store ARN is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudTrailConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudTrailConn()
 
-		_, err := tfcloudtrail.FindEventDataStoreByARN(context.Background(), conn, rs.Primary.ID)
+		_, err := tfcloudtrail.FindEventDataStoreByARN(ctx, conn, rs.Primary.ID)
 
 		return err
 	}
 }
 
-func testAccCheckEventDataStoreDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudTrailConn
+func testAccCheckEventDataStoreDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudTrailConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_cloudtrail_event_data_store" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_cloudtrail_event_data_store" {
+				continue
+			}
+
+			_, err := tfcloudtrail.FindEventDataStoreByARN(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			return fmt.Errorf("CloudTrail Event Data Store %s still exists", rs.Primary.ID)
 		}
 
-		_, err := tfcloudtrail.FindEventDataStoreByARN(context.Background(), conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		return fmt.Errorf("CloudTrail Event Data Store %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
 func testAccEventDataStoreConfig_basic(rName string) string {

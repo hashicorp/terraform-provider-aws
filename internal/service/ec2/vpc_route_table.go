@@ -2,6 +2,7 @@ package ec2
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -11,9 +12,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -41,12 +44,12 @@ var routeTableValidTargets = []string{
 
 func ResourceRouteTable() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceRouteTableCreate,
-		Read:   resourceRouteTableRead,
-		Update: resourceRouteTableUpdate,
-		Delete: resourceRouteTableDelete,
+		CreateWithoutTimeout: resourceRouteTableCreate,
+		ReadWithoutTimeout:   resourceRouteTableRead,
+		UpdateWithoutTimeout: resourceRouteTableUpdate,
+		DeleteWithoutTimeout: resourceRouteTableDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -166,8 +169,9 @@ func ResourceRouteTable() *schema.Resource {
 	}
 }
 
-func resourceRouteTableCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceRouteTableCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -177,24 +181,24 @@ func resourceRouteTableCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Creating Route Table: %s", input)
-	output, err := conn.CreateRouteTable(input)
+	output, err := conn.CreateRouteTableWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating Route Table: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating Route Table: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.RouteTable.RouteTableId))
 
-	if _, err := WaitRouteTableReady(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("error waiting for Route Table (%s) to become available: %w", d.Id(), err)
+	if _, err := WaitRouteTableReady(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Route Table (%s) to become available: %s", d.Id(), err)
 	}
 
 	if v, ok := d.GetOk("propagating_vgws"); ok && v.(*schema.Set).Len() > 0 {
 		for _, v := range v.(*schema.Set).List() {
 			v := v.(string)
 
-			if err := routeTableEnableVGWRoutePropagation(conn, d.Id(), v, d.Timeout(schema.TimeoutCreate)); err != nil {
-				return err
+			if err := routeTableEnableVGWRoutePropagation(ctx, conn, d.Id(), v, d.Timeout(schema.TimeoutCreate)); err != nil {
+				return sdkdiag.AppendFromErr(diags, err)
 			}
 		}
 	}
@@ -203,30 +207,31 @@ func resourceRouteTableCreate(d *schema.ResourceData, meta interface{}) error {
 		for _, v := range v.(*schema.Set).List() {
 			v := v.(map[string]interface{})
 
-			if err := routeTableAddRoute(conn, d.Id(), v, d.Timeout(schema.TimeoutCreate)); err != nil {
-				return err
+			if err := routeTableAddRoute(ctx, conn, d.Id(), v, d.Timeout(schema.TimeoutCreate)); err != nil {
+				return sdkdiag.AppendFromErr(diags, err)
 			}
 		}
 	}
 
-	return resourceRouteTableRead(d, meta)
+	return append(diags, resourceRouteTableRead(ctx, d, meta)...)
 }
 
-func resourceRouteTableRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceRouteTableRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	routeTable, err := FindRouteTableByID(conn, d.Id())
+	routeTable, err := FindRouteTableByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Route Table (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Route Table (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Route Table (%s): %s", d.Id(), err)
 	}
 
 	d.Set("vpc_id", routeTable.VpcId)
@@ -236,11 +241,11 @@ func resourceRouteTableRead(d *schema.ResourceData, meta interface{}) error {
 		propagatingVGWs = append(propagatingVGWs, aws.StringValue(v.GatewayId))
 	}
 	if err := d.Set("propagating_vgws", propagatingVGWs); err != nil {
-		return fmt.Errorf("error setting propagating_vgws: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting propagating_vgws: %s", err)
 	}
 
-	if err := d.Set("route", flattenRoutes(conn, routeTable.Routes)); err != nil {
-		return fmt.Errorf("error setting route: %w", err)
+	if err := d.Set("route", flattenRoutes(ctx, conn, routeTable.Routes)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting route: %s", err)
 	}
 
 	//Ignore the AmazonFSx service tag in addition to standard ignores
@@ -248,11 +253,11 @@ func resourceRouteTableRead(d *schema.ResourceData, meta interface{}) error {
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
 	ownerID := aws.StringValue(routeTable.OwnerId)
@@ -266,11 +271,12 @@ func resourceRouteTableRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", arn)
 	d.Set("owner_id", ownerID)
 
-	return nil
+	return diags
 }
 
-func resourceRouteTableUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceRouteTableUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	if d.HasChange("propagating_vgws") {
 		o, n := d.GetChange("propagating_vgws")
@@ -282,16 +288,16 @@ func resourceRouteTableUpdate(d *schema.ResourceData, meta interface{}) error {
 		for _, v := range del {
 			v := v.(string)
 
-			if err := routeTableDisableVGWRoutePropagation(conn, d.Id(), v); err != nil {
-				return err
+			if err := routeTableDisableVGWRoutePropagation(ctx, conn, d.Id(), v); err != nil {
+				return sdkdiag.AppendFromErr(diags, err)
 			}
 		}
 
 		for _, v := range add {
 			v := v.(string)
 
-			if err := routeTableEnableVGWRoutePropagation(conn, d.Id(), v, d.Timeout(schema.TimeoutCreate)); err != nil {
-				return err
+			if err := routeTableEnableVGWRoutePropagation(ctx, conn, d.Id(), v, d.Timeout(schema.TimeoutCreate)); err != nil {
+				return sdkdiag.AppendFromErr(diags, err)
 			}
 		}
 	}
@@ -317,16 +323,16 @@ func resourceRouteTableUpdate(d *schema.ResourceData, meta interface{}) error {
 					addRoute = false
 
 					if oldTarget != newTarget {
-						if err := routeTableUpdateRoute(conn, d.Id(), vNew, d.Timeout(schema.TimeoutUpdate)); err != nil {
-							return err
+						if err := routeTableUpdateRoute(ctx, conn, d.Id(), vNew, d.Timeout(schema.TimeoutUpdate)); err != nil {
+							return sdkdiag.AppendFromErr(diags, err)
 						}
 					}
 				}
 			}
 
 			if addRoute {
-				if err := routeTableAddRoute(conn, d.Id(), vNew, d.Timeout(schema.TimeoutUpdate)); err != nil {
-					return err
+				if err := routeTableAddRoute(ctx, conn, d.Id(), vNew, d.Timeout(schema.TimeoutUpdate)); err != nil {
+					return sdkdiag.AppendFromErr(diags, err)
 				}
 			}
 		}
@@ -349,8 +355,8 @@ func resourceRouteTableUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 
 			if delRoute {
-				if err := routeTableDeleteRoute(conn, d.Id(), vOld, d.Timeout(schema.TimeoutUpdate)); err != nil {
-					return err
+				if err := routeTableDeleteRoute(ctx, conn, d.Id(), vOld, d.Timeout(schema.TimeoutUpdate)); err != nil {
+					return sdkdiag.AppendFromErr(diags, err)
 				}
 			}
 		}
@@ -359,52 +365,53 @@ func resourceRouteTableUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") && !d.IsNewResource() {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating EC2 Route Table (%s) tags: %w", d.Id(), err)
+		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating EC2 Route Table (%s) tags: %s", d.Id(), err)
 		}
 	}
 
-	return resourceRouteTableRead(d, meta)
+	return append(diags, resourceRouteTableRead(ctx, d, meta)...)
 }
 
-func resourceRouteTableDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceRouteTableDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
-	routeTable, err := FindRouteTableByID(conn, d.Id())
+	routeTable, err := FindRouteTableByID(ctx, conn, d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error reading Route Table (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Route Table (%s): %s", d.Id(), err)
 	}
 
 	// Do all the disassociations
 	for _, v := range routeTable.Associations {
 		v := aws.StringValue(v.RouteTableAssociationId)
 
-		if err := routeTableAssociationDelete(conn, v); err != nil {
-			return err
+		if err := routeTableAssociationDelete(ctx, conn, v); err != nil {
+			return sdkdiag.AppendErrorf(diags, "deleting Route Table (%s): %s", d.Id(), err)
 		}
 	}
 
 	log.Printf("[INFO] Deleting Route Table: %s", d.Id())
-	_, err = conn.DeleteRouteTable(&ec2.DeleteRouteTableInput{
+	_, err = conn.DeleteRouteTableWithContext(ctx, &ec2.DeleteRouteTableInput{
 		RouteTableId: aws.String(d.Id()),
 	})
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteTableIDNotFound) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Route Table (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Route Table (%s): %s", d.Id(), err)
 	}
 
 	// Wait for the route table to really destroy
 	log.Printf("[DEBUG] Waiting for route table (%s) deletion", d.Id())
-	if _, err := WaitRouteTableDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("error waiting for Route Table (%s) deletion: %w", d.Id(), err)
+	if _, err := WaitRouteTableDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Route Table (%s) deletion: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceRouteTableHash(v interface{}) int {
@@ -478,12 +485,12 @@ func resourceRouteTableHash(v interface{}) int {
 }
 
 // routeTableAddRoute adds a route to the specified route table.
-func routeTableAddRoute(conn *ec2.EC2, routeTableID string, tfMap map[string]interface{}, timeout time.Duration) error {
+func routeTableAddRoute(ctx context.Context, conn *ec2.EC2, routeTableID string, tfMap map[string]interface{}, timeout time.Duration) error {
 	if err := validNestedExactlyOneOf(tfMap, routeTableValidDestinations); err != nil {
-		return fmt.Errorf("error creating route: %w", err)
+		return fmt.Errorf("creating route: %w", err)
 	}
 	if err := validNestedExactlyOneOf(tfMap, routeTableValidTargets); err != nil {
-		return fmt.Errorf("error creating route: %w", err)
+		return fmt.Errorf("creating route: %w", err)
 	}
 
 	destinationAttributeKey, destination := routeTableRouteDestinationAttribute(tfMap)
@@ -498,7 +505,7 @@ func routeTableAddRoute(conn *ec2.EC2, routeTableID string, tfMap map[string]int
 	case "destination_prefix_list_id":
 		routeFinder = FindRouteByPrefixListIDDestination
 	default:
-		return fmt.Errorf("error creating Route: unexpected route destination attribute: %q", destinationAttributeKey)
+		return fmt.Errorf("creating Route: unexpected route destination attribute: %q", destinationAttributeKey)
 	}
 
 	input := expandCreateRouteInput(tfMap)
@@ -510,30 +517,29 @@ func routeTableAddRoute(conn *ec2.EC2, routeTableID string, tfMap map[string]int
 	input.RouteTableId = aws.String(routeTableID)
 
 	log.Printf("[DEBUG] Creating Route: %s", input)
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(
-		timeout,
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout,
 		func() (interface{}, error) {
-			return conn.CreateRoute(input)
+			return conn.CreateRouteWithContext(ctx, input)
 		},
 		errCodeInvalidParameterException,
 		errCodeInvalidTransitGatewayIDNotFound,
 	)
 
 	if err != nil {
-		return fmt.Errorf("error creating Route in Route Table (%s) with destination (%s): %w", routeTableID, destination, err)
+		return fmt.Errorf("creating Route in Route Table (%s) with destination (%s): %w", routeTableID, destination, err)
 	}
 
-	_, err = WaitRouteReady(conn, routeFinder, routeTableID, destination, timeout)
+	_, err = WaitRouteReady(ctx, conn, routeFinder, routeTableID, destination, timeout)
 
 	if err != nil {
-		return fmt.Errorf("error waiting for Route in Route Table (%s) with destination (%s) to become available: %w", routeTableID, destination, err)
+		return fmt.Errorf("waiting for Route in Route Table (%s) with destination (%s) to become available: %w", routeTableID, destination, err)
 	}
 
 	return nil
 }
 
 // routeTableDeleteRoute deletes a route from the specified route table.
-func routeTableDeleteRoute(conn *ec2.EC2, routeTableID string, tfMap map[string]interface{}, timeout time.Duration) error {
+func routeTableDeleteRoute(ctx context.Context, conn *ec2.EC2, routeTableID string, tfMap map[string]interface{}, timeout time.Duration) error {
 	destinationAttributeKey, destination := routeTableRouteDestinationAttribute(tfMap)
 
 	input := &ec2.DeleteRouteInput{
@@ -553,36 +559,36 @@ func routeTableDeleteRoute(conn *ec2.EC2, routeTableID string, tfMap map[string]
 		input.DestinationPrefixListId = destination
 		routeFinder = FindRouteByPrefixListIDDestination
 	default:
-		return fmt.Errorf("error deleting Route: unexpected route destination attribute: %q", destinationAttributeKey)
+		return fmt.Errorf("deleting Route: unexpected route destination attribute: %q", destinationAttributeKey)
 	}
 
 	log.Printf("[DEBUG] Deleting Route: %s", input)
-	_, err := conn.DeleteRoute(input)
+	_, err := conn.DeleteRouteWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteNotFound) {
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Route in Route Table (%s) with destination (%s): %w", routeTableID, destination, err)
+		return fmt.Errorf("deleting Route in Route Table (%s) with destination (%s): %w", routeTableID, destination, err)
 	}
 
-	_, err = WaitRouteDeleted(conn, routeFinder, routeTableID, destination, timeout)
+	_, err = WaitRouteDeleted(ctx, conn, routeFinder, routeTableID, destination, timeout)
 
 	if err != nil {
-		return fmt.Errorf("error waiting for Route in Route Table (%s) with destination (%s) to delete: %w", routeTableID, destination, err)
+		return fmt.Errorf("waiting for Route in Route Table (%s) with destination (%s) to delete: %w", routeTableID, destination, err)
 	}
 
 	return nil
 }
 
 // routeTableUpdateRoute updates a route in the specified route table.
-func routeTableUpdateRoute(conn *ec2.EC2, routeTableID string, tfMap map[string]interface{}, timeout time.Duration) error {
+func routeTableUpdateRoute(ctx context.Context, conn *ec2.EC2, routeTableID string, tfMap map[string]interface{}, timeout time.Duration) error {
 	if err := validNestedExactlyOneOf(tfMap, routeTableValidDestinations); err != nil {
-		return fmt.Errorf("error updating route: %w", err)
+		return fmt.Errorf("updating route: %w", err)
 	}
 	if err := validNestedExactlyOneOf(tfMap, routeTableValidTargets); err != nil {
-		return fmt.Errorf("error updating route: %w", err)
+		return fmt.Errorf("updating route: %w", err)
 	}
 
 	destinationAttributeKey, destination := routeTableRouteDestinationAttribute(tfMap)
@@ -597,7 +603,7 @@ func routeTableUpdateRoute(conn *ec2.EC2, routeTableID string, tfMap map[string]
 	case "destination_prefix_list_id":
 		routeFinder = FindRouteByPrefixListIDDestination
 	default:
-		return fmt.Errorf("error creating Route: unexpected route destination attribute: %q", destinationAttributeKey)
+		return fmt.Errorf("creating Route: unexpected route destination attribute: %q", destinationAttributeKey)
 	}
 
 	input := expandReplaceRouteInput(tfMap)
@@ -609,16 +615,16 @@ func routeTableUpdateRoute(conn *ec2.EC2, routeTableID string, tfMap map[string]
 	input.RouteTableId = aws.String(routeTableID)
 
 	log.Printf("[DEBUG] Updating Route: %s", input)
-	_, err := conn.ReplaceRoute(input)
+	_, err := conn.ReplaceRouteWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error updating Route in Route Table (%s) with destination (%s): %w", routeTableID, destination, err)
+		return fmt.Errorf("updating Route in Route Table (%s) with destination (%s): %w", routeTableID, destination, err)
 	}
 
-	_, err = WaitRouteReady(conn, routeFinder, routeTableID, destination, timeout)
+	_, err = WaitRouteReady(ctx, conn, routeFinder, routeTableID, destination, timeout)
 
 	if err != nil {
-		return fmt.Errorf("error waiting for Route in Route Table (%s) with destination (%s) to become available: %w", routeTableID, destination, err)
+		return fmt.Errorf("waiting for Route in Route Table (%s) with destination (%s) to become available: %w", routeTableID, destination, err)
 	}
 
 	return nil
@@ -626,17 +632,17 @@ func routeTableUpdateRoute(conn *ec2.EC2, routeTableID string, tfMap map[string]
 
 // routeTableDisableVGWRoutePropagation attempts to disable VGW route propagation.
 // Any error is returned.
-func routeTableDisableVGWRoutePropagation(conn *ec2.EC2, routeTableID, gatewayID string) error {
+func routeTableDisableVGWRoutePropagation(ctx context.Context, conn *ec2.EC2, routeTableID, gatewayID string) error {
 	input := &ec2.DisableVgwRoutePropagationInput{
 		GatewayId:    aws.String(gatewayID),
 		RouteTableId: aws.String(routeTableID),
 	}
 
 	log.Printf("[DEBUG] Disabling Route Table (%s) VPN Gateway (%s) route propagation", routeTableID, gatewayID)
-	_, err := conn.DisableVgwRoutePropagation(input)
+	_, err := conn.DisableVgwRoutePropagationWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error disabling Route Table (%s) VPN Gateway (%s) route propagation: %w", routeTableID, gatewayID, err)
+		return fmt.Errorf("disabling Route Table (%s) VPN Gateway (%s) route propagation: %w", routeTableID, gatewayID, err)
 	}
 
 	return nil
@@ -645,23 +651,22 @@ func routeTableDisableVGWRoutePropagation(conn *ec2.EC2, routeTableID, gatewayID
 // routeTableEnableVGWRoutePropagation attempts to enable VGW route propagation.
 // The specified eventual consistency timeout is respected.
 // Any error is returned.
-func routeTableEnableVGWRoutePropagation(conn *ec2.EC2, routeTableID, gatewayID string, timeout time.Duration) error {
+func routeTableEnableVGWRoutePropagation(ctx context.Context, conn *ec2.EC2, routeTableID, gatewayID string, timeout time.Duration) error {
 	input := &ec2.EnableVgwRoutePropagationInput{
 		GatewayId:    aws.String(gatewayID),
 		RouteTableId: aws.String(routeTableID),
 	}
 
 	log.Printf("[DEBUG] Enabling Route Table (%s) VPN Gateway (%s) route propagation", routeTableID, gatewayID)
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(
-		timeout,
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout,
 		func() (interface{}, error) {
-			return conn.EnableVgwRoutePropagation(input)
+			return conn.EnableVgwRoutePropagationWithContext(ctx, input)
 		},
 		errCodeGatewayNotAttached,
 	)
 
 	if err != nil {
-		return fmt.Errorf("error enabling Route Table (%s) VPN Gateway (%s) route propagation: %w", routeTableID, gatewayID, err)
+		return fmt.Errorf("enabling Route Table (%s) VPN Gateway (%s) route propagation: %w", routeTableID, gatewayID, err)
 	}
 
 	return nil
@@ -865,7 +870,7 @@ func flattenRoute(apiObject *ec2.Route) map[string]interface{} {
 	return tfMap
 }
 
-func flattenRoutes(conn *ec2.EC2, apiObjects []*ec2.Route) []interface{} {
+func flattenRoutes(ctx context.Context, conn *ec2.EC2, apiObjects []*ec2.Route) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -893,7 +898,7 @@ func flattenRoutes(conn *ec2.EC2, apiObjects []*ec2.Route) []interface{} {
 
 		// Skip cross-account ENIs for AWS services.
 		if networkInterfaceID := aws.StringValue(apiObject.NetworkInterfaceId); networkInterfaceID != "" {
-			networkInterface, err := FindNetworkInterfaceByID(conn, networkInterfaceID)
+			networkInterface, err := FindNetworkInterfaceByID(ctx, conn, networkInterfaceID)
 
 			if err == nil && networkInterface.Attachment != nil {
 				if ownerID, instanceOwnerID := aws.StringValue(networkInterface.OwnerId), aws.StringValue(networkInterface.Attachment.InstanceOwnerId); ownerID != "" && instanceOwnerID != ownerID {

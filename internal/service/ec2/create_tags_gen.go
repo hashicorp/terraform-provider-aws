@@ -3,31 +3,33 @@
 package ec2
 
 import (
+	"context"
 	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-const EventualConsistencyTimeout = 5 * time.Minute
+const eventualConsistencyTimeout = 5 * time.Minute
 
 // CreateTags creates ec2 service tags for new resources.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func CreateTags(conn *ec2.EC2, identifier string, tagsMap interface{}) error {
+func CreateTags(ctx context.Context, conn ec2iface.EC2API, identifier string, tagsMap interface{}) error {
 	tags := tftags.New(tagsMap)
 	input := &ec2.CreateTagsInput{
 		Resources: aws.StringSlice([]string{identifier}),
 		Tags:      Tags(tags.IgnoreAWS()),
 	}
 
-	_, err := tfresource.RetryWhenNotFound(EventualConsistencyTimeout, func() (interface{}, error) {
-		output, err := conn.CreateTags(input)
+	_, err := tfresource.RetryWhenNotFound(ctx, eventualConsistencyTimeout, func() (interface{}, error) {
+		output, err := conn.CreateTagsWithContext(ctx, input)
 
 		if tfawserr.ErrCodeContains(err, ".NotFound") {
 			err = &resource.NotFoundError{
