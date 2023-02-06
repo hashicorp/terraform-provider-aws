@@ -1,4 +1,18 @@
-## 4.53.0 (Unreleased)
+## 4.54.0 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_kms_grant: Retries until valid principal ARNs are returned instead of not updating state ([#29245](https://github.com/hashicorp/terraform-provider-aws/issues/29245))
+* resource/aws_prometheus_workspace: Create a logging configuration on resource update if none existed previously ([#27472](https://github.com/hashicorp/terraform-provider-aws/issues/27472))
+* resource/aws_s3_bucket: Fix crash when `logging` is empty ([#29243](https://github.com/hashicorp/terraform-provider-aws/issues/29243))
+
+## 4.53.0 (February  3, 2023)
+
+ENHANCEMENTS:
+
+* provider: Adds structured fields in logging ([#29223](https://github.com/hashicorp/terraform-provider-aws/issues/29223))
+* provider: Masks authentication fields in HTTP header logging ([#29223](https://github.com/hashicorp/terraform-provider-aws/issues/29223))
+
 ## 4.52.0 (January 27, 2023)
 
 NOTES:

@@ -102,6 +102,19 @@ func ResourceIPAMPool() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
+			"public_ip_source": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(ec2.IpamPoolPublicIpSource_Values(), false),
+				// default is byoip when AddressFamily = ipv6
+				DiffSuppressFunc: func(k, o, n string, d *schema.ResourceData) bool {
+					if o == "byoip" && n == "" {
+						return true
+					}
+					return false
+				},
+			},
 			"publicly_advertisable": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -169,8 +182,16 @@ func ResourceIPAMPoolCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.AwsService = aws.String(v.(string))
 	}
 
-	if v := d.Get("publicly_advertisable"); v != "" && addressFamily == ec2.AddressFamilyIpv6 {
-		input.PubliclyAdvertisable = aws.Bool(v.(bool))
+	var publicIpSource string
+	if v, ok := d.GetOk("public_ip_source"); ok {
+		publicIpSource = v.(string)
+		input.PublicIpSource = aws.String(publicIpSource)
+	}
+
+	// PubliclyAdvertisable must be set if if the AddressFamily is IPv6 and PublicIpSource is byoip.
+	// The request can only contain PubliclyAdvertisable if the AddressFamily is IPv6 and PublicIpSource is byoip.
+	if addressFamily == ec2.AddressFamilyIpv6 && publicIpSource != ec2.IpamPoolPublicIpSourceAmazon {
+		input.PubliclyAdvertisable = aws.Bool(d.Get("publicly_advertisable").(bool))
 	}
 
 	if v, ok := d.GetOk("source_ipam_pool_id"); ok {
@@ -222,6 +243,7 @@ func ResourceIPAMPoolRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("locale", pool.Locale)
 	d.Set("pool_depth", pool.PoolDepth)
 	d.Set("publicly_advertisable", pool.PubliclyAdvertisable)
+	d.Set("public_ip_source", pool.PublicIpSource)
 	d.Set("source_ipam_pool_id", pool.SourceIpamPoolId)
 	d.Set("state", pool.State)
 
