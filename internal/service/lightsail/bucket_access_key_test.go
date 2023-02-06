@@ -20,6 +20,7 @@ import (
 )
 
 func TestAccLightsailBucketAccessKey_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_bucket_access_key.test"
 
@@ -27,7 +28,7 @@ func TestAccLightsailBucketAccessKey_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
-			testAccPreCheck(t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -54,6 +55,7 @@ func TestAccLightsailBucketAccessKey_basic(t *testing.T) {
 }
 
 func TestAccLightsailBucketAccessKey_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_bucket_access_key.test"
 
@@ -61,7 +63,7 @@ func TestAccLightsailBucketAccessKey_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
-			testAccPreCheck(t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -71,7 +73,7 @@ func TestAccLightsailBucketAccessKey_disappears(t *testing.T) {
 				Config: testAccBucketAccessKeyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketAccessKeyExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tflightsail.ResourceBucketAccessKey(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflightsail.ResourceBucketAccessKey(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

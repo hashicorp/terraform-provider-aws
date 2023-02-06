@@ -78,7 +78,7 @@ func resourceBucketAccessKeyCreate(ctx context.Context, d *schema.ResourceData, 
 
 	op := out.Operations[0]
 
-	err = waitOperation(conn, op.Id)
+	err = waitOperation(ctx, conn, op.Id)
 	if err != nil {
 		return create.DiagError(names.Lightsail, lightsail.OperationTypeCreateBucketAccessKey, ResBucketAccessKey, d.Get("bucket_name").(string), errors.New("Error waiting for request operation"))
 	}
@@ -142,7 +142,7 @@ func resourceBucketAccessKeyDelete(ctx context.Context, d *schema.ResourceData, 
 
 	op := out.Operations[0]
 
-	err = waitOperation(conn, op.Id)
+	err = waitOperation(ctx, conn, op.Id)
 
 	if err != nil {
 		return create.DiagError(names.Lightsail, lightsail.OperationTypeDeleteCertificate, ResBucketAccessKey, d.Id(), err)
