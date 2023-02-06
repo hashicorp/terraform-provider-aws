@@ -20,6 +20,7 @@ import (
 )
 
 func TestAccLightsailBucketAccessKey_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_bucket_access_key.test"
 
@@ -27,16 +28,16 @@ func TestAccLightsailBucketAccessKey_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
-			testAccPreCheck(t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketAccessKeyDestroy,
+		CheckDestroy:             testAccCheckBucketAccessKeyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketAccessKeyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketAccessKeyExists(resourceName),
+					testAccCheckBucketAccessKeyExists(ctx, resourceName),
 					resource.TestMatchResourceAttr(resourceName, "access_key_id", regexp.MustCompile(`((?:ASIA|AKIA|AROA|AIDA)([A-Z0-7]{16}))`)),
 					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
 					resource.TestMatchResourceAttr(resourceName, "secret_access_key", regexp.MustCompile(`([a-zA-Z0-9+/]{40})`)),
@@ -54,6 +55,7 @@ func TestAccLightsailBucketAccessKey_basic(t *testing.T) {
 }
 
 func TestAccLightsailBucketAccessKey_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_bucket_access_key.test"
 
@@ -61,17 +63,17 @@ func TestAccLightsailBucketAccessKey_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lightsail.EndpointsID, t)
-			testAccPreCheck(t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, lightsail.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketAccessKeyDestroy,
+		CheckDestroy:             testAccCheckBucketAccessKeyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketAccessKeyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketAccessKeyExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tflightsail.ResourceBucketAccessKey(), resourceName),
+					testAccCheckBucketAccessKeyExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflightsail.ResourceBucketAccessKey(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -79,7 +81,7 @@ func TestAccLightsailBucketAccessKey_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckBucketAccessKeyExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckBucketAccessKeyExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -92,7 +94,7 @@ func testAccCheckBucketAccessKeyExists(resourceName string) resource.TestCheckFu
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
 
-		out, err := tflightsail.FindBucketAccessKeyById(context.Background(), conn, rs.Primary.ID)
+		out, err := tflightsail.FindBucketAccessKeyById(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -106,31 +108,33 @@ func testAccCheckBucketAccessKeyExists(resourceName string) resource.TestCheckFu
 	}
 }
 
-func testAccCheckBucketAccessKeyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
+func testAccCheckBucketAccessKeyDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LightsailConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_lightsail_bucket_access_key" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_lightsail_bucket_access_key" {
+				continue
+			}
+
+			_, err := tflightsail.FindBucketAccessKeyById(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return create.Error(names.Lightsail, create.ErrActionCheckingDestroyed, tflightsail.ResBucketAccessKey, rs.Primary.ID, errors.New("still exists"))
 		}
 
-		_, err := tflightsail.FindBucketAccessKeyById(context.Background(), conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return create.Error(names.Lightsail, create.ErrActionCheckingDestroyed, tflightsail.ResBucketAccessKey, rs.Primary.ID, errors.New("still exists"))
+		return nil
 	}
-
-	return nil
 }
 
-func testAccBucketAccessKeyConfigBase(rName string) string {
+func testAccBucketAccessKeyConfig_base(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_bucket" "test" {
   name      = %[1]q
@@ -140,11 +144,9 @@ resource "aws_lightsail_bucket" "test" {
 }
 
 func testAccBucketAccessKeyConfig_basic(rName string) string {
-	return acctest.ConfigCompose(
-		testAccBucketAccessKeyConfigBase(rName), `
+	return acctest.ConfigCompose(testAccBucketAccessKeyConfig_base(rName), `
 resource "aws_lightsail_bucket_access_key" "test" {
   bucket_name = aws_lightsail_bucket.test.id
 }
-`,
-	)
+`)
 }
