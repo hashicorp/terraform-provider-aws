@@ -296,6 +296,22 @@ func StringToFrameworkWithTransform(_ context.Context, v *string, f func(string)
 	return types.StringValue(f(aws.ToString(v)))
 }
 
+// Float64ToFramework converts a float64 pointer to a Framework Float64 value.
+// A nil float64 pointer is converted to a null Float64.
+func Float64ToFramework(_ context.Context, v *float64) types.Float64 {
+	if v == nil {
+		return types.Float64Null()
+	}
+
+	return types.Float64Value(aws.ToFloat64(v))
+}
+
+// Float64ToFrameworkLegacy converts an int64 pointer to a Framework Float64 value.
+// A nil float64 pointer is converted to a zero float64.
+func Float64ToFrameworkLegacy(_ context.Context, v *float64) types.Float64 {
+	return types.Float64Value(aws.ToFloat64(v))
+}
+
 type Set[T comparable] []T
 
 // Difference find the elements in two sets that are not similar.
