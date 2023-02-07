@@ -1,0 +1,22 @@
+issues:
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - errname
+        - goconst
+  max-per-linter: 0
+  max-same-issues: 0
+
+linters:
+  disable-all: true
+  enable:
+    - dogsled
+    - errname
+    - goconst
+
+linters-settings:
+  dogsled:
+    max-blank-identifiers: 3
+
+run:
+  timeout: 75m
