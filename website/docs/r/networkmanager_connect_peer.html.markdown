@@ -32,9 +32,9 @@ resource "aws_networkmanager_connect_attachment" "example" {
 
 resource "aws_networkmanager_connect_peer" "example" {
   connect_attachment_id = aws_networkmanager_connect_attachment.example.id
-  peer_address = 127.0.0.1
+  peer_address          = "127.0.0.1"
   bgp_options {
-	  peer_asn = 65000
+    peer_asn = 65000
   }
   inside_cidr_blocks = ["172.16.0.0/16"]
 }
@@ -73,13 +73,13 @@ resource "aws_networkmanager_attachment_accepter" "example2" {
 
 resource "aws_networkmanager_connect_peer" "example" {
   connect_attachment_id = aws_networkmanager_connect_attachment.example.id
-  peer_address = "127.0.0.1"
+  peer_address          = "127.0.0.1"
   bgp_options {
-	  peer_asn = 65500
+    peer_asn = 65500
   }
   inside_cidr_blocks = ["172.16.0.0/16"]
   depends_on = [
-	  "aws_networkmanager_attachment_accepter.example2"
+    "aws_networkmanager_attachment_accepter.example2"
   ]
 }
 ```
