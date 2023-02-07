@@ -177,15 +177,13 @@ func resourceCoreNetworkCreate(ctx context.Context, d *schema.ResourceData, meta
 	// this is required for the first terraform apply if there attachments to the core network
 	// and the core network is created without the policy_document argument set
 	if _, ok := d.GetOk("create_base_policy"); ok {
-		var region string
 		// if user supplies a region use it in the base policy, otherwise use current region
+		region := meta.(*conns.AWSClient).Region
 		if v, ok := d.GetOk("base_policy_region"); ok {
 			region = v.(string)
-		} else {
-			region = meta.(*conns.AWSClient).Region
 		}
 
-		policyDocumentTarget := fmt.Sprintf("{\"core-network-configuration\":{\"asn-ranges\":[\"64512-65534\"],\"edge-locations\":[{\"location\":\"%s\"}]},\"segments\":[{\"name\":\"segment\",\"description\":\"base-policy\"}],\"version\":\"2021.12\"}", region)
+		policyDocumentTarget := buildCoreNetworkBasePolicyDocument(region)
 		input.PolicyDocument = aws.String(policyDocumentTarget)
 	}
 
@@ -305,15 +303,13 @@ func resourceCoreNetworkUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 	if d.HasChange("create_base_policy") {
 		if _, ok := d.GetOk("create_base_policy"); ok {
-			var region string
 			// if user supplies a region use it in the base policy, otherwise use current region
+			region := meta.(*conns.AWSClient).Region
 			if v, ok := d.GetOk("base_policy_region"); ok {
 				region = v.(string)
-			} else {
-				region = meta.(*conns.AWSClient).Region
 			}
 
-			policyDocumentTarget := fmt.Sprintf("{\"core-network-configuration\":{\"asn-ranges\":[\"64512-65534\"],\"edge-locations\":[{\"location\":\"%s\"}]},\"segments\":[{\"name\":\"segment\",\"description\":\"base-policy\"}],\"version\":\"2021.12\"}", region)
+			policyDocumentTarget := buildCoreNetworkBasePolicyDocument(region)
 			err := PutAndExecuteCoreNetworkPolicy(ctx, conn, d.Id(), policyDocumentTarget)
 
 			if err != nil {
@@ -609,4 +605,9 @@ func PutAndExecuteCoreNetworkPolicy(ctx context.Context, conn *networkmanager.Ne
 	}
 
 	return nil
+}
+
+// buildCoreNetworkBasePolicyDocument returns a base policy document
+func buildCoreNetworkBasePolicyDocument(region string) string {
+	return fmt.Sprintf("{\"core-network-configuration\":{\"asn-ranges\":[\"64512-65534\"],\"edge-locations\":[{\"location\":\"%s\"}]},\"segments\":[{\"name\":\"segment\",\"description\":\"base-policy\"}],\"version\":\"2021.12\"}", region)
 }
