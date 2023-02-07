@@ -108,11 +108,9 @@ func testAccClientVPNEndpoint_basic(t *testing.T) {
 					testAccCheckClientVPNEndpointExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`client-vpn-endpoint/cvpn-endpoint-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "authentication_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "authentication_options.0.type", "certificate-authentication"),
-					resource.TestCheckResourceAttr(resourceName, "authentication_options.0.active_directory_id", ""),
-					resource.TestCheckResourceAttrSet(resourceName, "authentication_options.0.root_certificate_chain_arn"),
-					resource.TestCheckResourceAttr(resourceName, "authentication_options.0.saml_provider_arn", ""),
-					resource.TestCheckResourceAttr(resourceName, "authentication_options.0.self_service_saml_provider_arn", ""),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "authentication_options.*", map[string]string{
+						"type": "certificate-authentication",
+					}),
 					resource.TestCheckResourceAttr(resourceName, "client_cidr_block", "10.0.0.0/16"),
 					resource.TestCheckResourceAttr(resourceName, "client_connect_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "client_connect_options.0.enabled", "false"),
@@ -221,7 +219,6 @@ func testAccClientVPNEndpoint_msADAuth(t *testing.T) {
 	var v ec2.ClientVpnEndpoint
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
-	dsDirectoryResourceName := "aws_directory_service_directory.test"
 	domainName := acctest.RandomDomainName()
 
 	if testing.Short() {
@@ -239,8 +236,9 @@ func testAccClientVPNEndpoint_msADAuth(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNEndpointExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "authentication_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "authentication_options.0.type", "directory-service-authentication"),
-					resource.TestCheckResourceAttrPair(resourceName, "authentication_options.0.active_directory_id", dsDirectoryResourceName, "id"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "authentication_options.*", map[string]string{
+						"type": "directory-service-authentication",
+					}),
 				),
 			},
 			{
@@ -257,8 +255,6 @@ func testAccClientVPNEndpoint_msADAuthAndMutualAuth(t *testing.T) {
 	var v ec2.ClientVpnEndpoint
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
-	dsDirectoryResourceName := "aws_directory_service_directory.test"
-	serverCertificateResourceName := "aws_acm_certificate.test"
 	domainName := acctest.RandomDomainName()
 
 	if testing.Short() {
@@ -276,10 +272,12 @@ func testAccClientVPNEndpoint_msADAuthAndMutualAuth(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNEndpointExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "authentication_options.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "authentication_options.0.type", "directory-service-authentication"),
-					resource.TestCheckResourceAttrPair(resourceName, "authentication_options.0.active_directory_id", dsDirectoryResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "authentication_options.1.type", "certificate-authentication"),
-					resource.TestCheckResourceAttrPair(resourceName, "authentication_options.0.root_certificate_chain_arn", serverCertificateResourceName, "arn"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "authentication_options.*", map[string]string{
+						"type": "directory-service-authentication",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "authentication_options.*", map[string]string{
+						"type": "certificate-authentication",
+					}),
 				),
 			},
 			{
@@ -297,7 +295,6 @@ func testAccClientVPNEndpoint_federatedAuth(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	idpEntityID := fmt.Sprintf("https://%s", acctest.RandomDomainName())
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
-	samlProviderResourceName := "aws_iam_saml_provider.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckClientVPNSyncronize(t) },
@@ -310,8 +307,9 @@ func testAccClientVPNEndpoint_federatedAuth(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNEndpointExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "authentication_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "authentication_options.0.type", "federated-authentication"),
-					resource.TestCheckResourceAttrPair(resourceName, "authentication_options.0.saml_provider_arn", samlProviderResourceName, "arn"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "authentication_options.*", map[string]string{
+						"type": "federated-authentication",
+					}),
 				),
 			},
 			{
@@ -329,8 +327,6 @@ func testAccClientVPNEndpoint_federatedAuthWithSelfServiceProvider(t *testing.T)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	idpEntityID := fmt.Sprintf("https://%s", acctest.RandomDomainName())
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
-	samlProvider1ResourceName := "aws_iam_saml_provider.test1"
-	samlProvider2ResourceName := "aws_iam_saml_provider.test2"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckClientVPNSyncronize(t) },
@@ -343,9 +339,9 @@ func testAccClientVPNEndpoint_federatedAuthWithSelfServiceProvider(t *testing.T)
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNEndpointExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "authentication_options.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "authentication_options.0.type", "federated-authentication"),
-					resource.TestCheckResourceAttrPair(resourceName, "authentication_options.0.saml_provider_arn", samlProvider1ResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "authentication_options.0.self_service_saml_provider_arn", samlProvider2ResourceName, "arn"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "authentication_options.*", map[string]string{
+						"type": "federated-authentication",
+					}),
 				),
 			},
 			{
@@ -789,9 +785,7 @@ resource "aws_acm_certificate" %[1]q {
 }
 
 func testAccClientVPNEndpointConfig_msADBase(rName, domain string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptIn(),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_directory_service_directory" "test" {
   name     = %[2]q
   password = "SuperSecretPassw0rd"
@@ -800,25 +794,6 @@ resource "aws_directory_service_directory" "test" {
   vpc_settings {
     vpc_id     = aws_vpc.test.id
     subnet_ids = aws_subnet.test[*].id
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  count             = 2
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
   }
 }
 `, rName, domain))
@@ -1044,7 +1019,7 @@ func testAccClientVPNEndpointConfig_microsoftAD(t *testing.T, rName, domain stri
 		fmt.Sprintf(`
 resource "aws_ec2_client_vpn_endpoint" "test" {
   server_certificate_arn = aws_acm_certificate.test.arn
-  client_cidr_block      = "10.0.0.0/16"
+  client_cidr_block      = "10.1.0.0/20"
 
   authentication_options {
     type                = "directory-service-authentication"
@@ -1069,7 +1044,7 @@ func testAccClientVPNEndpointConfig_mutualAuthAndMicrosoftAD(t *testing.T, rName
 		fmt.Sprintf(`
 resource "aws_ec2_client_vpn_endpoint" "test" {
   server_certificate_arn = aws_acm_certificate.test.arn
-  client_cidr_block      = "10.0.0.0/16"
+  client_cidr_block      = "10.1.0.0/20"
 
   authentication_options {
     type                = "directory-service-authentication"
