@@ -159,7 +159,7 @@ func ResourcePolicy() *schema.Resource {
 												},
 												"resource_label": {
 													Type:     schema.TypeString,
-													Required: true,
+													Required: false,
 												},
 											},
 										},
@@ -177,7 +177,7 @@ func ResourcePolicy() *schema.Resource {
 												},
 												"resource_label": {
 													Type:     schema.TypeString,
-													Required: true,
+													Required: false,
 												},
 											},
 										},
@@ -783,7 +783,9 @@ func expandPredefinedLoadMetricSpecification(predefinedLoadMetricSpecificationSl
 	predefinedLoadMetricSpecificationFlat := predefinedLoadMetricSpecificationSlice[0].(map[string]interface{})
 	predefinedLoadMetricSpecification := &autoscaling.PredictiveScalingPredefinedLoadMetric{
 		PredefinedMetricType: aws.String(predefinedLoadMetricSpecificationFlat["predefined_metric_type"].(string)),
-		ResourceLabel:        aws.String(predefinedLoadMetricSpecificationFlat["resource_label"].(string)),
+	}
+	if label, ok := predefinedLoadMetricSpecificationFlat["resource_label"]; ok {
+		predefinedLoadMetricSpecification.ResourceLabel = aws.String(label.(string))
 	}
 	return predefinedLoadMetricSpecification
 }
@@ -795,7 +797,9 @@ func expandPredefinedMetricPairSpecification(predefinedMetricPairSpecificationSl
 	predefinedMetricPairSpecificationFlat := predefinedMetricPairSpecificationSlice[0].(map[string]interface{})
 	predefinedMetricPairSpecification := &autoscaling.PredictiveScalingPredefinedMetricPair{
 		PredefinedMetricType: aws.String(predefinedMetricPairSpecificationFlat["predefined_metric_type"].(string)),
-		ResourceLabel:        aws.String(predefinedMetricPairSpecificationFlat["resource_label"].(string)),
+	}
+	if label, ok := predefinedMetricPairSpecificationFlat["resource_label"]; ok {
+		predefinedMetricPairSpecification.ResourceLabel = aws.String(label.(string))
 	}
 	return predefinedMetricPairSpecification
 }
@@ -807,7 +811,9 @@ func expandPredefinedScalingMetricSpecification(predefinedScalingMetricSpecifica
 	predefinedScalingMetricSpecificationFlat := predefinedScalingMetricSpecificationSlice[0].(map[string]interface{})
 	predefinedScalingMetricSpecification := &autoscaling.PredictiveScalingPredefinedScalingMetric{
 		PredefinedMetricType: aws.String(predefinedScalingMetricSpecificationFlat["predefined_metric_type"].(string)),
-		ResourceLabel:        aws.String(predefinedScalingMetricSpecificationFlat["resource_label"].(string)),
+	}
+	if label, ok := predefinedScalingMetricSpecificationFlat["resource_label"]; ok {
+		predefinedScalingMetricSpecification.ResourceLabel = aws.String(label.(string))
 	}
 	return predefinedScalingMetricSpecification
 }
