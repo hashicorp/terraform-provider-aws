@@ -1072,6 +1072,10 @@ func cycleStreamEnabled(ctx context.Context, conn *dynamodb.DynamoDB, id string,
 	return nil
 }
 
+const (
+	keySkipReplicaUpdate = "skip_replica_update"
+)
+
 func createReplicas(ctx context.Context, conn *dynamodb.DynamoDB, tableName string, tfList []interface{}, tfVersion string, create bool, timeout time.Duration) error {
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
@@ -1101,6 +1105,17 @@ func createReplicas(ctx context.Context, conn *dynamodb.DynamoDB, tableName stri
 
 		if !create {
 			var replicaInput = &dynamodb.UpdateReplicationGroupMemberAction{}
+
+			// An update that doesn't update returns ValidationException (in other words,
+			// attempting an update with same region and kms_key_arn as currently
+			// exists throws unhelpfully worded exception):
+			// ValidationException: One or more parameter values were invalid: KMSMasterKeyId must be specified for each replica.
+			if _, ok := tfMap[keySkipReplicaUpdate]; ok {
+				if err := updatePITR(ctx, conn, tableName, tfMap["point_in_time_recovery"].(bool), tfMap["region_name"].(string), tfVersion, timeout); err != nil {
+					return fmt.Errorf("updating replica (%s) point in time recovery: %w", tfMap["region_name"].(string), err)
+				}
+				continue
+			}
 
 			if v, ok := tfMap["region_name"].(string); ok && v != "" {
 				replicaInput.RegionName = aws.String(v)
@@ -1283,53 +1298,69 @@ func updateReplica(ctx context.Context, d *schema.ResourceData, conn *dynamodb.D
 	o := oRaw.(*schema.Set)
 	n := nRaw.(*schema.Set)
 
-	removed := o.Difference(n).List()
-	added := n.Difference(o).List()
+	toRemove := o.Difference(n).List()
+	toAdd := n.Difference(o).List()
 
 	// 1. changing replica kms keys requires recreation of the replica, like ForceNew, but we don't want to ForceNew the *table*
 	// 2. also, in order to update PITR if a replica is encrypted (has KMS key), it requires recreation (how'd u recover from a backup encrypted with a different key?)
 
 	var removeFirst []interface{} // replicas to delete before recreating (like ForceNew without recreating table)
+	var toUpdate []interface{}    // replicas to update without recreating
 
-	// For true updates, don't remove and add, just update (i.e., keep in added
-	// but remove from removed)
-	for _, a := range added {
-		for j, r := range removed {
+	// For true updates, don't remove and add, just update
+	for i, a := range toAdd {
+		for j, r := range toRemove {
 			ma := a.(map[string]interface{})
 			mr := r.(map[string]interface{})
 
-			if ma["region_name"].(string) == mr["region_name"].(string) {
-				fmt.Printf("ma: %+v\nmr: %+v\n", ma, mr)
-			}
-
-			if ma["region_name"].(string) == mr["region_name"].(string) && (ma["kms_key_arn"].(string) != "" || mr["kms_key_arn"].(string) != "") {
-				fmt.Printf("ma %s, mr %s\n", ma["kms_key_arn"].(string), mr["kms_key_arn"].(string))
-				removeFirst = append(removeFirst, removed[j])
-				removed = append(removed[:j], removed[j+1:]...)
+			// like "ForceNew" for the replica
+			if ma["region_name"].(string) == mr["region_name"].(string) && ma["kms_key_arn"].(string) != mr["kms_key_arn"].(string) {
+				removeFirst = append(removeFirst, toRemove[j])
+				toRemove = append(toRemove[:j], toRemove[j+1:]...) // doesn't need to be removed, already removed
 				continue
 			}
 
+			// update rather than remove/add
 			if ma["region_name"].(string) == mr["region_name"].(string) {
-				removed = append(removed[:j], removed[j+1:]...)
+				if ma["kms_key_arn"].(string) == mr["kms_key_arn"].(string) {
+					// An update that doesn't update returns a ValidationException (in other words,
+					// attempting an update with same region and kms_key_arn as currently
+					// exists throws unhelpfully worded exception):
+					// ValidationException: One or more parameter values were invalid: KMSMasterKeyId must be specified for each replica.
+					//
+					// Here, want to still update PITR, a separately called update
+					v := toAdd[i].(map[string]interface{})
+					v[keySkipReplicaUpdate] = true
+					toAdd[i] = v
+				}
+				toUpdate = append(toUpdate, toAdd[i])
+				toRemove = append(toRemove[:j], toRemove[j+1:]...)
+				toAdd = append(toAdd[:i], toAdd[i+1:]...)
 				continue
 			}
 		}
 	}
 
-	if len(removeFirst) > 0 { // like ForceNew but doesn't recreate the table
+	if len(removeFirst) > 0 { // mini ForceNew, recreates replica but doesn't recreate the table
 		if err := deleteReplicas(ctx, conn, d.Id(), removeFirst, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return fmt.Errorf("updating replicas, while deleting: %w", err)
 		}
 	}
 
-	if len(added) > 0 {
-		if err := createReplicas(ctx, conn, d.Id(), added, tfVersion, true, d.Timeout(schema.TimeoutUpdate)); err != nil {
+	if len(toAdd) > 0 {
+		if err := createReplicas(ctx, conn, d.Id(), toAdd, tfVersion, true, d.Timeout(schema.TimeoutCreate)); err != nil {
 			return fmt.Errorf("updating replicas, while creating: %w", err)
 		}
 	}
 
-	if len(removed) > 0 {
-		if err := deleteReplicas(ctx, conn, d.Id(), removed, d.Timeout(schema.TimeoutUpdate)); err != nil {
+	if len(toUpdate) > 0 {
+		if err := createReplicas(ctx, conn, d.Id(), toUpdate, tfVersion, false, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return fmt.Errorf("updating replicas, while updating: %w", err)
+		}
+	}
+
+	if len(toRemove) > 0 {
+		if err := deleteReplicas(ctx, conn, d.Id(), toRemove, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return fmt.Errorf("updating replicas, while deleting: %w", err)
 		}
 	}
