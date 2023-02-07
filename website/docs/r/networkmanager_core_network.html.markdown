@@ -31,15 +31,6 @@ resource "aws_networkmanager_core_network" "example" {
 }
 ```
 
-### With policy document
-
-```terraform
-resource "aws_networkmanager_core_network" "example" {
-  global_network_id = aws_networkmanager_global_network.example.id
-  policy_document   = data.aws_networkmanager_core_network_policy_document.example.json
-}
-```
-
 ### With tags
 
 ```terraform
@@ -132,7 +123,7 @@ The following arguments are supported:
 ```
 
 * `global_network_id` - (Required) The ID of the global network that a core network will be a part of.
-* `policy_document` - (Optional) Policy document for creating a core network. Note that updating this argument will result in the new policy document version being set as the `LATEST` and `LIVE` policy document. Refer to the [Core network policies documentation](https://docs.aws.amazon.com/network-manager/latest/cloudwan/cloudwan-policy-change-sets.html) for more information. Conflicts with `create_base_policy`.
+* `policy_document` - (Optional, **Deprecated** use the [`aws_networkmanager_core_network_policy_attachment`](networkmanager_core_network_policy_attachment.html) resource instead) Policy document for creating a core network. Note that updating this argument will result in the new policy document version being set as the `LATEST` and `LIVE` policy document. Refer to the [Core network policies documentation](https://docs.aws.amazon.com/network-manager/latest/cloudwan/cloudwan-policy-change-sets.html) for more information. Conflicts with `create_base_policy`.
 * `tags` - (Optional) Key-value tags for the Core Network. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Timeouts

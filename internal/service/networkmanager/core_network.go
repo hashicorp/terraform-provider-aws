@@ -104,6 +104,8 @@ func ResourceCoreNetwork() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(0, 50),
 			},
 			"policy_document": {
+				Deprecated: "Use the aws_networkmanager_core_network_policy_attachment resource instead. " +
+					"This attribute will be removed in the next major version of the provider.",
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
