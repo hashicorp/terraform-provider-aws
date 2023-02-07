@@ -844,7 +844,7 @@ resource "aws_security_group" "test" {
 }
 
 func testAccClientVPNEndpointConfig_basic(t *testing.T, rName string) string {
-	return acctest.ConfigCompose(testAccClientVPNEndpointConfig_acmCertificateBase(t, "test"), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccClientVPNEndpointConfig_acmCertificateBase(t, "test"), `
 resource "aws_ec2_client_vpn_endpoint" "test" {
   server_certificate_arn = aws_acm_certificate.test.arn
   client_cidr_block      = "10.0.0.0/16"
@@ -857,12 +857,8 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
   connection_log_options {
     enabled = false
   }
-
-  tags = {
-    Name = %[1]q
-  }
 }
-`, rName))
+`)
 }
 
 func testAccClientVPNEndpointConfig_clientConnectOptions(t *testing.T, rName string, enabled bool, lambdaFunctionIndex int) string {
