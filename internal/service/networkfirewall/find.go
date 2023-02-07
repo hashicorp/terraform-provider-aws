@@ -55,17 +55,3 @@ func FindResourcePolicy(ctx context.Context, conn *networkfirewall.NetworkFirewa
 	}
 	return output.Policy, nil
 }
-
-// FindRuleGroup returns the RuleGroupOutput from a call to DescribeRuleGroupWithContext
-// given the context and FindRuleGroup ARN.
-// Returns nil if the FindRuleGroup is not found.
-func FindRuleGroup(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string) (*networkfirewall.DescribeRuleGroupOutput, error) {
-	input := &networkfirewall.DescribeRuleGroupInput{
-		RuleGroupArn: aws.String(arn),
-	}
-	output, err := conn.DescribeRuleGroupWithContext(ctx, input)
-	if err != nil {
-		return nil, err
-	}
-	return output, nil
-}
