@@ -1299,7 +1299,7 @@ locals {
 
 resource "aws_ec2_client_vpn_endpoint" "test" {
   server_certificate_arn = aws_acm_certificate.test.arn
-  client_cidr_block      = "10.0.0.0/16"
+  client_cidr_block      = "10.1.0.0/22"
 
   authentication_options {
     type                       = "certificate-authentication"
