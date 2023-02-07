@@ -382,7 +382,7 @@ func resourceFirewallUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			_, err := conn.DisassociateSubnetsWithContext(ctx, input)
 
 			if err == nil {
-				updateToken, err = waitFirewallUpdated(ctx, conn, d.Id())
+				updateToken, err = waitFirewallUpdated(ctx, conn, d.Id()) //nolint:ineffassign // For completeness.
 
 				if err != nil {
 					return diag.Errorf("waiting for NetworkFirewall Firewall (%s) update: %s", d.Id(), err)
