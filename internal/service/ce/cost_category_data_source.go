@@ -24,6 +24,10 @@ func DataSourceCostCategory() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"default_value": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"effective_end": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -321,6 +325,7 @@ func dataSourceCostCategoryRead(ctx context.Context, d *schema.ResourceData, met
 		return create.DiagError(names.CE, create.ErrActionReading, ResNameCostCategory, d.Id(), err)
 	}
 
+	d.Set("default_value", costCategory.DefaultValue)
 	d.Set("effective_end", costCategory.EffectiveEnd)
 	d.Set("effective_start", costCategory.EffectiveStart)
 	d.Set("name", costCategory.Name)
