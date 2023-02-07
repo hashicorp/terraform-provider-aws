@@ -1,0 +1,3 @@
+``release-note:new-data-datasource
+aws_appmesh_virtual_router
+```
