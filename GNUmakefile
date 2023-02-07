@@ -6,6 +6,7 @@ SVC_DIR             ?= ./internal/service
 TEST_COUNT          ?= 1
 ACCTEST_TIMEOUT     ?= 180m
 ACCTEST_PARALLELISM ?= 20
+P                   ?= 20
 GO_VER              ?= go
 SWEEP_TIMEOUT       ?= 60m
 
@@ -55,6 +56,10 @@ endif
 ifeq ($(PKG_NAME), internal/service/wavelength)
 	PKG_NAME = internal/service/ec2
 	TEST = ./$(PKG_NAME)/...
+endif
+
+ifneq ($(P), 20)
+	ACCTEST_PARALLELISM = $(P)
 endif
 
 default: build
