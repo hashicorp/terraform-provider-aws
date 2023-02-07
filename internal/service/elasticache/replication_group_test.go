@@ -66,112 +66,6 @@ func TestAccElastiCacheReplicationGroup_basic(t *testing.T) {
 	})
 }
 
-func testCheckEngineStuffDefault(ctx context.Context, resourceName string) resource.TestCheckFunc {
-	var (
-		version        elasticache.CacheEngineVersion
-		parameterGroup elasticache.CacheParameterGroup
-	)
-
-	checks := []resource.TestCheckFunc{
-		testCheckRedisEngineVersionLatest(ctx, &version),
-		testCheckRedisParameterGroupDefault(ctx, &version, &parameterGroup),
-		func(s *terraform.State) error {
-			return resource.TestCheckResourceAttr(resourceName, "engine_version", *version.EngineVersion)(s)
-		},
-		func(s *terraform.State) error {
-			return resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexp.MustCompile(fmt.Sprintf(`^%s\.[[:digit:]]+$`, *version.EngineVersion)))(s)
-		},
-		func(s *terraform.State) error {
-			return resource.TestCheckResourceAttr(resourceName, "parameter_group_name", *parameterGroup.CacheParameterGroupName)(s)
-		},
-	}
-
-	return resource.ComposeAggregateTestCheckFunc(checks...)
-}
-
-func testCheckRedisEngineVersionLatest(ctx context.Context, v *elasticache.CacheEngineVersion) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn()
-
-		versions, err := conn.DescribeCacheEngineVersionsWithContext(ctx, &elasticache.DescribeCacheEngineVersionsInput{
-			Engine:      aws.String("redis"),
-			DefaultOnly: aws.Bool(true),
-		})
-		if err != nil {
-			return err
-		}
-		if versions == nil || len(versions.CacheEngineVersions) == 0 {
-			return errors.New("empty result")
-		}
-		if l := len(versions.CacheEngineVersions); l > 1 {
-			return fmt.Errorf("too many results: %d", l)
-		}
-
-		*v = *(versions.CacheEngineVersions[0])
-
-		return nil
-	}
-}
-
-func testCheckRedisParameterGroupDefault(ctx context.Context, version *elasticache.CacheEngineVersion, v *elasticache.CacheParameterGroup) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn()
-
-		parameterGroup, err := tfelasticache.FindParameterGroupByFilter(ctx, conn,
-			tfelasticache.FilterRedisParameterGroupFamily(aws.StringValue(version.CacheParameterGroupFamily)),
-			tfelasticache.FilterRedisParameterGroupNameDefault,
-		)
-		if err != nil {
-			return err
-		}
-
-		*v = *parameterGroup
-
-		return nil
-	}
-}
-
-func testCheckEngineStuffClusterEnabledDefault(ctx context.Context, resourceName string) resource.TestCheckFunc {
-	var (
-		version        elasticache.CacheEngineVersion
-		parameterGroup elasticache.CacheParameterGroup
-	)
-
-	checks := []resource.TestCheckFunc{
-		testCheckRedisEngineVersionLatest(ctx, &version),
-		testCheckRedisParameterGroupClusterEnabledDefault(ctx, &version, &parameterGroup),
-		func(s *terraform.State) error {
-			return resource.TestCheckResourceAttr(resourceName, "engine_version", *version.EngineVersion)(s)
-		},
-		func(s *terraform.State) error {
-			return resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexp.MustCompile(fmt.Sprintf(`^%s\.[[:digit:]]+$`, *version.EngineVersion)))(s)
-		},
-		func(s *terraform.State) error {
-			return resource.TestCheckResourceAttr(resourceName, "parameter_group_name", *parameterGroup.CacheParameterGroupName)(s)
-		},
-	}
-
-	return resource.ComposeAggregateTestCheckFunc(checks...)
-}
-
-func testCheckRedisParameterGroupClusterEnabledDefault(ctx context.Context, version *elasticache.CacheEngineVersion, v *elasticache.CacheParameterGroup) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn()
-
-		parameterGroup, err := tfelasticache.FindParameterGroupByFilter(ctx, conn,
-			tfelasticache.FilterRedisParameterGroupFamily(aws.StringValue(version.CacheParameterGroupFamily)),
-			tfelasticache.FilterRedisParameterGroupNameClusterEnabledDefault,
-		)
-		if err != nil {
-			return err
-		}
-
-		*v = *parameterGroup
-
-		return nil
-	}
-}
-
 func TestAccElastiCacheReplicationGroup_basic_v5(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -2747,6 +2641,112 @@ func testAccCheckReplicationGroupNotRecreated(i, j *elasticache.ReplicationGroup
 		if !aws.TimeValue(i.ReplicationGroupCreateTime).Equal(aws.TimeValue(j.ReplicationGroupCreateTime)) {
 			return errors.New("ElastiCache Replication Group recreated")
 		}
+
+		return nil
+	}
+}
+
+func testCheckEngineStuffDefault(ctx context.Context, resourceName string) resource.TestCheckFunc {
+	var (
+		version        elasticache.CacheEngineVersion
+		parameterGroup elasticache.CacheParameterGroup
+	)
+
+	checks := []resource.TestCheckFunc{
+		testCheckRedisEngineVersionLatest(ctx, &version),
+		testCheckRedisParameterGroupDefault(ctx, &version, &parameterGroup),
+		func(s *terraform.State) error {
+			return resource.TestCheckResourceAttr(resourceName, "engine_version", *version.EngineVersion)(s)
+		},
+		func(s *terraform.State) error {
+			return resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexp.MustCompile(fmt.Sprintf(`^%s\.[[:digit:]]+$`, *version.EngineVersion)))(s)
+		},
+		func(s *terraform.State) error {
+			return resource.TestCheckResourceAttr(resourceName, "parameter_group_name", *parameterGroup.CacheParameterGroupName)(s)
+		},
+	}
+
+	return resource.ComposeAggregateTestCheckFunc(checks...)
+}
+
+func testCheckRedisEngineVersionLatest(ctx context.Context, v *elasticache.CacheEngineVersion) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn()
+
+		versions, err := conn.DescribeCacheEngineVersionsWithContext(ctx, &elasticache.DescribeCacheEngineVersionsInput{
+			Engine:      aws.String("redis"),
+			DefaultOnly: aws.Bool(true),
+		})
+		if err != nil {
+			return err
+		}
+		if versions == nil || len(versions.CacheEngineVersions) == 0 {
+			return errors.New("empty result")
+		}
+		if l := len(versions.CacheEngineVersions); l > 1 {
+			return fmt.Errorf("too many results: %d", l)
+		}
+
+		*v = *(versions.CacheEngineVersions[0])
+
+		return nil
+	}
+}
+
+func testCheckRedisParameterGroupDefault(ctx context.Context, version *elasticache.CacheEngineVersion, v *elasticache.CacheParameterGroup) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn()
+
+		parameterGroup, err := tfelasticache.FindParameterGroupByFilter(ctx, conn,
+			tfelasticache.FilterRedisParameterGroupFamily(aws.StringValue(version.CacheParameterGroupFamily)),
+			tfelasticache.FilterRedisParameterGroupNameDefault,
+		)
+		if err != nil {
+			return err
+		}
+
+		*v = *parameterGroup
+
+		return nil
+	}
+}
+
+func testCheckEngineStuffClusterEnabledDefault(ctx context.Context, resourceName string) resource.TestCheckFunc {
+	var (
+		version        elasticache.CacheEngineVersion
+		parameterGroup elasticache.CacheParameterGroup
+	)
+
+	checks := []resource.TestCheckFunc{
+		testCheckRedisEngineVersionLatest(ctx, &version),
+		testCheckRedisParameterGroupClusterEnabledDefault(ctx, &version, &parameterGroup),
+		func(s *terraform.State) error {
+			return resource.TestCheckResourceAttr(resourceName, "engine_version", *version.EngineVersion)(s)
+		},
+		func(s *terraform.State) error {
+			return resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexp.MustCompile(fmt.Sprintf(`^%s\.[[:digit:]]+$`, *version.EngineVersion)))(s)
+		},
+		func(s *terraform.State) error {
+			return resource.TestCheckResourceAttr(resourceName, "parameter_group_name", *parameterGroup.CacheParameterGroupName)(s)
+		},
+	}
+
+	return resource.ComposeAggregateTestCheckFunc(checks...)
+}
+
+func testCheckRedisParameterGroupClusterEnabledDefault(ctx context.Context, version *elasticache.CacheEngineVersion, v *elasticache.CacheParameterGroup) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn()
+
+		parameterGroup, err := tfelasticache.FindParameterGroupByFilter(ctx, conn,
+			tfelasticache.FilterRedisParameterGroupFamily(aws.StringValue(version.CacheParameterGroupFamily)),
+			tfelasticache.FilterRedisParameterGroupNameClusterEnabledDefault,
+		)
+		if err != nil {
+			return err
+		}
+
+		*v = *parameterGroup
 
 		return nil
 	}
