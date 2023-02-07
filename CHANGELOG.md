@@ -1,8 +1,17 @@
 ## 4.54.0 (Unreleased)
 
+NOTES:
+
+* resource/aws_networkmanager_core_network: The `policy_document` attribute is being deprecated in favor of the new `aws_networkmanager_core_network_policy_attachment` resource. ([#29097](https://github.com/hashicorp/terraform-provider-aws/issues/29097))
+
 FEATURES:
 
 * **New Resource:** `aws_lightsail_bucket_access_key` ([#28699](https://github.com/hashicorp/terraform-provider-aws/issues/28699))
+* **New Resource:** `aws_networkmanager_core_network_policy_attachment` ([#29097](https://github.com/hashicorp/terraform-provider-aws/issues/29097))
+
+ENHANCEMENTS:
+
+* resource/aws_networkmanager_core_network: Add `base_policy_region` and `create_base_policy` arguments ([#29097](https://github.com/hashicorp/terraform-provider-aws/issues/29097))
 
 BUG FIXES:
 
