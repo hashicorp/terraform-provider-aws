@@ -21,20 +21,6 @@ func FindLoggingConfiguration(ctx context.Context, conn *networkfirewall.Network
 	return output, nil
 }
 
-// FindFirewall returns the FirewallOutput from a call to DescribeFirewallWithContext
-// given the context and FindFirewall ARN.
-// Returns nil if the FindFirewall is not found.
-func FindFirewall(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string) (*networkfirewall.DescribeFirewallOutput, error) {
-	input := &networkfirewall.DescribeFirewallInput{
-		FirewallArn: aws.String(arn),
-	}
-	output, err := conn.DescribeFirewallWithContext(ctx, input)
-	if err != nil {
-		return nil, err
-	}
-	return output, nil
-}
-
 // FindFirewallPolicyByNameAndARN returns the FirewallPolicyOutput from a call to DescribeFirewallPolicyWithContext
 // given the context and at least one of FirewallPolicyArn and FirewallPolicyName.
 func FindFirewallPolicyByNameAndARN(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string, name string) (*networkfirewall.DescribeFirewallPolicyOutput, error) {
