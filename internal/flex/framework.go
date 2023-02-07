@@ -52,7 +52,7 @@ func ExpandFrameworkStringSet(ctx context.Context, set types.Set) []*string {
 	return vs
 }
 
-func ExpandFrameworkStringValueSet(ctx context.Context, set types.Set) []string {
+func ExpandFrameworkStringValueSet(ctx context.Context, set types.Set) Set[string] {
 	if set.IsNull() || set.IsUnknown() {
 		return nil
 	}
@@ -294,4 +294,22 @@ func StringToFrameworkWithTransform(_ context.Context, v *string, f func(string)
 	}
 
 	return types.StringValue(f(aws.ToString(v)))
+}
+
+type Set[T comparable] []T
+
+// Difference find the elements in two sets that are not similar.
+func (s Set[T]) Difference(ns Set[T]) Set[T] {
+	m := make(map[T]struct{})
+	for _, v := range ns {
+		m[v] = struct{}{}
+	}
+
+	var result []T
+	for _, v := range s {
+		if _, ok := m[v]; !ok {
+			result = append(result, v)
+		}
+	}
+	return result
 }
