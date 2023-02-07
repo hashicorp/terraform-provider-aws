@@ -1821,6 +1821,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			"aws_networkmanager_connect_attachment":                       networkmanager.ResourceConnectAttachment(),
 			"aws_networkmanager_connection":                               networkmanager.ResourceConnection(),
 			"aws_networkmanager_core_network":                             networkmanager.ResourceCoreNetwork(),
+			"aws_networkmanager_core_network_policy_attachment":           networkmanager.ResourceCoreNetworkPolicyAttachment(),
 			"aws_networkmanager_customer_gateway_association":             networkmanager.ResourceCustomerGatewayAssociation(),
 			"aws_networkmanager_device":                                   networkmanager.ResourceDevice(),
 			"aws_networkmanager_global_network":                           networkmanager.ResourceGlobalNetwork(),
