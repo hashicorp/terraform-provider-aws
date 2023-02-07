@@ -97,14 +97,11 @@ func TestClusterIdentifierPrefixValidator(t *testing.T) {
 			expectError: true,
 		},
 		"contains uppercase": {
-			val: types.StringValue("Valid-identifier"),
+			val:         types.StringValue("InValid-identifier"),
+			expectError: true,
 		},
 		"contains consecutive hyphens": {
 			val:         types.StringValue("invalid--identifier"),
-			expectError: true,
-		},
-		"ends with hyphens": {
-			val:         types.StringValue("invalid-identifier--"),
 			expectError: true,
 		},
 	}
@@ -120,7 +117,7 @@ func TestClusterIdentifierPrefixValidator(t *testing.T) {
 				ConfigValue:    test.val,
 			}
 			response := validator.StringResponse{}
-			fwvalidators.ClusterFinalSnapshotIdentifier().ValidateString(context.Background(), request, &response)
+			fwvalidators.ClusterIdentifierPrefix().ValidateString(context.Background(), request, &response)
 
 			if !response.Diagnostics.HasError() && test.expectError {
 				t.Fatal("expected error, got no error")
@@ -152,19 +149,21 @@ func TestClusterFinalSnapshotIdentifierValidator(t *testing.T) {
 			val: types.StringValue("valid-cluster-identifier"),
 		},
 		"begins with number": {
-			val:         types.StringValue("11-not-valid"),
-			expectError: true,
+			val: types.StringValue("11-not-valid"),
 		},
 		"contains special character": {
 			val:         types.StringValue("not-valid!-identifier"),
 			expectError: true,
 		},
 		"contains uppercase": {
-			val:         types.StringValue("Invalid-identifier"),
-			expectError: true,
+			val: types.StringValue("Valid-identifier"),
 		},
 		"contains consecutive hyphens": {
 			val:         types.StringValue("invalid--identifier"),
+			expectError: true,
+		},
+		"ends with hyphens": {
+			val:         types.StringValue("invalid-identifier-"),
 			expectError: true,
 		},
 	}
@@ -180,7 +179,7 @@ func TestClusterFinalSnapshotIdentifierValidator(t *testing.T) {
 				ConfigValue:    test.val,
 			}
 			response := validator.StringResponse{}
-			fwvalidators.ClusterIdentifierPrefix().ValidateString(context.Background(), request, &response)
+			fwvalidators.ClusterFinalSnapshotIdentifier().ValidateString(context.Background(), request, &response)
 
 			if !response.Diagnostics.HasError() && test.expectError {
 				t.Fatal("expected error, got no error")

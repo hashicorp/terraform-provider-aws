@@ -41,7 +41,7 @@ func ClusterIdentifier() validator.String {
 type clusterIdentifierPrefixValidator struct{}
 
 func (validator clusterIdentifierPrefixValidator) Description(_ context.Context) string {
-	return "value must be a valid Cluster Identifier"
+	return "value must be a valid Cluster Identifier Prefix"
 }
 
 func (validator clusterIdentifierPrefixValidator) MarkdownDescription(ctx context.Context) string {
@@ -70,7 +70,7 @@ func ClusterIdentifierPrefix() validator.String {
 type clusterFinalSnapshotIdentifierValidator struct{}
 
 func (validator clusterFinalSnapshotIdentifierValidator) Description(_ context.Context) string {
-	return "value must be a valid Cluster Identifier"
+	return "value must be a valid Final Snapshot Identifier"
 }
 
 func (validator clusterFinalSnapshotIdentifierValidator) MarkdownDescription(ctx context.Context) string {
