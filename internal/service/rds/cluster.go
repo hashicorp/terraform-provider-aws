@@ -1504,36 +1504,6 @@ func resourceClusterImport(_ context.Context, d *schema.ResourceData, meta inter
 	return []*schema.ResourceData{d}, nil
 }
 
-func addIAMRoleToCluster(ctx context.Context, conn *rds.RDS, clusterID, roleARN string) error {
-	input := &rds.AddRoleToDBClusterInput{
-		DBClusterIdentifier: aws.String(clusterID),
-		RoleArn:             aws.String(roleARN),
-	}
-
-	_, err := conn.AddRoleToDBClusterWithContext(ctx, input)
-
-	if err != nil {
-		return fmt.Errorf("adding IAM Role (%s) to RDS Cluster (%s): %s", roleARN, clusterID, err)
-	}
-
-	return nil
-}
-
-func removeIAMRoleFromCluster(ctx context.Context, conn *rds.RDS, clusterID, roleARN string) error {
-	input := &rds.RemoveRoleFromDBClusterInput{
-		DBClusterIdentifier: aws.String(clusterID),
-		RoleArn:             aws.String(roleARN),
-	}
-
-	_, err := conn.RemoveRoleFromDBClusterWithContext(ctx, input)
-
-	if err != nil {
-		return fmt.Errorf("removing IAM Role (%s) from RDS Cluster (%s): %s", roleARN, clusterID, err)
-	}
-
-	return err
-}
-
 func clusterSetResourceDataEngineVersionFromCluster(d *schema.ResourceData, c *rds.DBCluster) {
 	oldVersion := d.Get("engine_version").(string)
 	newVersion := aws.StringValue(c.EngineVersion)
