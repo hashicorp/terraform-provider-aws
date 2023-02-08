@@ -1,6 +1,7 @@
 package devicefarm_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -17,6 +18,7 @@ import (
 )
 
 func TestAccDeviceFarmNetworkProfile_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var pool devicefarm.NetworkProfile
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rNameUpdated := sdkacctest.RandomWithPrefix("tf-acc-test-updated")
@@ -32,12 +34,12 @@ func TestAccDeviceFarmNetworkProfile_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, devicefarm.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNetworkProfileDestroy,
+		CheckDestroy:             testAccCheckNetworkProfileDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNetworkProfileConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNetworkProfileExists(resourceName, &pool),
+					testAccCheckNetworkProfileExists(ctx, resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "type", "PRIVATE"),
 					resource.TestCheckResourceAttr(resourceName, "downlink_bandwidth_bits", "104857600"),
@@ -55,7 +57,7 @@ func TestAccDeviceFarmNetworkProfile_basic(t *testing.T) {
 			{
 				Config: testAccNetworkProfileConfig_basic(rNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNetworkProfileExists(resourceName, &pool),
+					testAccCheckNetworkProfileExists(ctx, resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, "name", rNameUpdated),
 					resource.TestCheckResourceAttr(resourceName, "type", "PRIVATE"),
 					resource.TestCheckResourceAttr(resourceName, "downlink_bandwidth_bits", "104857600"),
@@ -70,6 +72,7 @@ func TestAccDeviceFarmNetworkProfile_basic(t *testing.T) {
 }
 
 func TestAccDeviceFarmNetworkProfile_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var pool devicefarm.NetworkProfile
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_devicefarm_network_profile.test"
@@ -84,12 +87,12 @@ func TestAccDeviceFarmNetworkProfile_tags(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, devicefarm.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNetworkProfileDestroy,
+		CheckDestroy:             testAccCheckNetworkProfileDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNetworkProfileConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNetworkProfileExists(resourceName, &pool),
+					testAccCheckNetworkProfileExists(ctx, resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -102,7 +105,7 @@ func TestAccDeviceFarmNetworkProfile_tags(t *testing.T) {
 			{
 				Config: testAccNetworkProfileConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNetworkProfileExists(resourceName, &pool),
+					testAccCheckNetworkProfileExists(ctx, resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -111,7 +114,7 @@ func TestAccDeviceFarmNetworkProfile_tags(t *testing.T) {
 			{
 				Config: testAccNetworkProfileConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNetworkProfileExists(resourceName, &pool),
+					testAccCheckNetworkProfileExists(ctx, resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -121,6 +124,7 @@ func TestAccDeviceFarmNetworkProfile_tags(t *testing.T) {
 }
 
 func TestAccDeviceFarmNetworkProfile_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var pool devicefarm.NetworkProfile
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_devicefarm_network_profile.test"
@@ -135,14 +139,14 @@ func TestAccDeviceFarmNetworkProfile_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, devicefarm.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNetworkProfileDestroy,
+		CheckDestroy:             testAccCheckNetworkProfileDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNetworkProfileConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNetworkProfileExists(resourceName, &pool),
-					acctest.CheckResourceDisappears(acctest.Provider, tfdevicefarm.ResourceNetworkProfile(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfdevicefarm.ResourceNetworkProfile(), resourceName),
+					testAccCheckNetworkProfileExists(ctx, resourceName, &pool),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdevicefarm.ResourceNetworkProfile(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdevicefarm.ResourceNetworkProfile(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -151,6 +155,7 @@ func TestAccDeviceFarmNetworkProfile_disappears(t *testing.T) {
 }
 
 func TestAccDeviceFarmNetworkProfile_disappears_project(t *testing.T) {
+	ctx := acctest.Context(t)
 	var pool devicefarm.NetworkProfile
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_devicefarm_network_profile.test"
@@ -165,14 +170,14 @@ func TestAccDeviceFarmNetworkProfile_disappears_project(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, devicefarm.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckNetworkProfileDestroy,
+		CheckDestroy:             testAccCheckNetworkProfileDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNetworkProfileConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNetworkProfileExists(resourceName, &pool),
-					acctest.CheckResourceDisappears(acctest.Provider, tfdevicefarm.ResourceProject(), "aws_devicefarm_project.test"),
-					acctest.CheckResourceDisappears(acctest.Provider, tfdevicefarm.ResourceNetworkProfile(), resourceName),
+					testAccCheckNetworkProfileExists(ctx, resourceName, &pool),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdevicefarm.ResourceProject(), "aws_devicefarm_project.test"),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdevicefarm.ResourceNetworkProfile(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -180,7 +185,7 @@ func TestAccDeviceFarmNetworkProfile_disappears_project(t *testing.T) {
 	})
 }
 
-func testAccCheckNetworkProfileExists(n string, v *devicefarm.NetworkProfile) resource.TestCheckFunc {
+func testAccCheckNetworkProfileExists(ctx context.Context, n string, v *devicefarm.NetworkProfile) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -191,8 +196,8 @@ func testAccCheckNetworkProfileExists(n string, v *devicefarm.NetworkProfile) re
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmConn
-		resp, err := tfdevicefarm.FindNetworkProfileByARN(conn, rs.Primary.ID)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmConn()
+		resp, err := tfdevicefarm.FindNetworkProfileByARN(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -206,28 +211,30 @@ func testAccCheckNetworkProfileExists(n string, v *devicefarm.NetworkProfile) re
 	}
 }
 
-func testAccCheckNetworkProfileDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmConn
+func testAccCheckNetworkProfileDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_devicefarm_network_profile" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_devicefarm_network_profile" {
+				continue
+			}
+
+			// Try to find the resource
+			_, err := tfdevicefarm.FindNetworkProfileByARN(ctx, conn, rs.Primary.ID)
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("DeviceFarm Network Profile %s still exists", rs.Primary.ID)
 		}
 
-		// Try to find the resource
-		_, err := tfdevicefarm.FindNetworkProfileByARN(conn, rs.Primary.ID)
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("DeviceFarm Network Profile %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
 func testAccNetworkProfileConfig_basic(rName string) string {

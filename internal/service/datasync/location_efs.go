@@ -1,16 +1,18 @@
 package datasync
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/datasync"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -18,12 +20,12 @@ import (
 
 func ResourceLocationEFS() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceLocationEFSCreate,
-		Read:   resourceLocationEFSRead,
-		Update: resourceLocationEFSUpdate,
-		Delete: resourceLocationEFSDelete,
+		CreateWithoutTimeout: resourceLocationEFSCreate,
+		ReadWithoutTimeout:   resourceLocationEFSRead,
+		UpdateWithoutTimeout: resourceLocationEFSUpdate,
+		DeleteWithoutTimeout: resourceLocationEFSDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -108,8 +110,9 @@ func ResourceLocationEFS() *schema.Resource {
 	}
 }
 
-func resourceLocationEFSCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataSyncConn
+func resourceLocationEFSCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DataSyncConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -133,18 +136,19 @@ func resourceLocationEFSCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Creating DataSync Location EFS: %s", input)
-	output, err := conn.CreateLocationEfs(input)
+	output, err := conn.CreateLocationEfsWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("error creating DataSync Location EFS: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating DataSync Location EFS: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.LocationArn))
 
-	return resourceLocationEFSRead(d, meta)
+	return append(diags, resourceLocationEFSRead(ctx, d, meta)...)
 }
 
-func resourceLocationEFSRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataSyncConn
+func resourceLocationEFSRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DataSyncConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -153,28 +157,28 @@ func resourceLocationEFSRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Reading DataSync Location EFS: %s", input)
-	output, err := conn.DescribeLocationEfs(input)
+	output, err := conn.DescribeLocationEfsWithContext(ctx, input)
 
 	if tfawserr.ErrMessageContains(err, "InvalidRequestException", "not found") {
 		log.Printf("[WARN] DataSync Location EFS %q not found - removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading DataSync Location EFS (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading DataSync Location EFS (%s): %s", d.Id(), err)
 	}
 
 	subdirectory, err := SubdirectoryFromLocationURI(aws.StringValue(output.LocationUri))
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading DataSync Location EFS (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", output.LocationArn)
 
 	if err := d.Set("ec2_config", flattenEC2Config(output.Ec2Config)); err != nil {
-		return fmt.Errorf("error setting ec2_config: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting ec2_config: %s", err)
 	}
 
 	d.Set("subdirectory", subdirectory)
@@ -183,59 +187,61 @@ func resourceLocationEFSRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("file_system_access_role_arn", output.FileSystemAccessRoleArn)
 	d.Set("in_transit_encryption", output.InTransitEncryption)
 
-	tags, err := ListTags(conn, d.Id())
+	tags, err := ListTags(ctx, conn, d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for DataSync Location EFS (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for DataSync Location EFS (%s): %s", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceLocationEFSUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataSyncConn
+func resourceLocationEFSUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DataSyncConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating DataSync Location EFS (%s) tags: %w", d.Id(), err)
+		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating DataSync Location EFS (%s) tags: %s", d.Id(), err)
 		}
 	}
 
-	return resourceLocationEFSRead(d, meta)
+	return append(diags, resourceLocationEFSRead(ctx, d, meta)...)
 }
 
-func resourceLocationEFSDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataSyncConn
+func resourceLocationEFSDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DataSyncConn()
 
 	input := &datasync.DeleteLocationInput{
 		LocationArn: aws.String(d.Id()),
 	}
 
 	log.Printf("[DEBUG] Deleting DataSync Location EFS: %s", input)
-	_, err := conn.DeleteLocation(input)
+	_, err := conn.DeleteLocationWithContext(ctx, input)
 
 	if tfawserr.ErrMessageContains(err, "InvalidRequestException", "not found") {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting DataSync Location EFS (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting DataSync Location EFS (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func flattenEC2Config(ec2Config *datasync.Ec2Config) []interface{} {

@@ -1,6 +1,7 @@
 package autoscaling_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -15,6 +16,7 @@ import (
 )
 
 func TestAccAutoScalingPolicy_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v autoscaling.ScalingPolicy
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceSimpleName := "aws_autoscaling_policy.test_simple"
@@ -25,12 +27,12 @@ func TestAccAutoScalingPolicy_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPolicyDestroy,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScalingPolicyExists(resourceSimpleName, &v),
+					testAccCheckScalingPolicyExists(ctx, resourceSimpleName, &v),
 					resource.TestCheckResourceAttr(resourceSimpleName, "adjustment_type", "ChangeInCapacity"),
 					resource.TestCheckResourceAttr(resourceSimpleName, "autoscaling_group_name", rName),
 					resource.TestCheckResourceAttr(resourceSimpleName, "cooldown", "300"),
@@ -39,7 +41,7 @@ func TestAccAutoScalingPolicy_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceSimpleName, "policy_type", "SimpleScaling"),
 					resource.TestCheckResourceAttr(resourceSimpleName, "scaling_adjustment", "2"),
 
-					testAccCheckScalingPolicyExists(resourceStepName, &v),
+					testAccCheckScalingPolicyExists(ctx, resourceStepName, &v),
 					resource.TestCheckResourceAttr(resourceStepName, "adjustment_type", "ChangeInCapacity"),
 					resource.TestCheckResourceAttr(resourceStepName, "autoscaling_group_name", rName),
 					resource.TestCheckResourceAttr(resourceStepName, "enabled", "false"),
@@ -51,7 +53,7 @@ func TestAccAutoScalingPolicy_basic(t *testing.T) {
 						"scaling_adjustment": "1",
 					}),
 
-					testAccCheckScalingPolicyExists(resourceTargetTrackingName, &v),
+					testAccCheckScalingPolicyExists(ctx, resourceTargetTrackingName, &v),
 					resource.TestCheckResourceAttr(resourceTargetTrackingName, "autoscaling_group_name", rName),
 					resource.TestCheckResourceAttr(resourceTargetTrackingName, "enabled", "true"),
 					resource.TestCheckResourceAttr(resourceTargetTrackingName, "name", rName+"-tracking"),
@@ -84,12 +86,12 @@ func TestAccAutoScalingPolicy_basic(t *testing.T) {
 			{
 				Config: testAccPolicyConfig_basicUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScalingPolicyExists(resourceSimpleName, &v),
+					testAccCheckScalingPolicyExists(ctx, resourceSimpleName, &v),
 					resource.TestCheckResourceAttr(resourceSimpleName, "cooldown", "30"),
 					resource.TestCheckResourceAttr(resourceSimpleName, "enabled", "true"),
 					resource.TestCheckResourceAttr(resourceSimpleName, "policy_type", "SimpleScaling"),
 
-					testAccCheckScalingPolicyExists(resourceStepName, &v),
+					testAccCheckScalingPolicyExists(ctx, resourceStepName, &v),
 					resource.TestCheckResourceAttr(resourceStepName, "enabled", "true"),
 					resource.TestCheckResourceAttr(resourceStepName, "estimated_instance_warmup", "20"),
 					resource.TestCheckResourceAttr(resourceStepName, "policy_type", "StepScaling"),
@@ -97,7 +99,7 @@ func TestAccAutoScalingPolicy_basic(t *testing.T) {
 						"scaling_adjustment": "10",
 					}),
 
-					testAccCheckScalingPolicyExists(resourceTargetTrackingName, &v),
+					testAccCheckScalingPolicyExists(ctx, resourceTargetTrackingName, &v),
 					resource.TestCheckResourceAttr(resourceTargetTrackingName, "enabled", "false"),
 					resource.TestCheckResourceAttr(resourceTargetTrackingName, "policy_type", "TargetTrackingScaling"),
 					resource.TestCheckResourceAttr(resourceTargetTrackingName, "target_tracking_configuration.#", "1"),
@@ -112,6 +114,7 @@ func TestAccAutoScalingPolicy_basic(t *testing.T) {
 }
 
 func TestAccAutoScalingPolicy_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v autoscaling.ScalingPolicy
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_policy.test_simple"
@@ -120,13 +123,13 @@ func TestAccAutoScalingPolicy_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPolicyDestroy,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScalingPolicyExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfautoscaling.ResourcePolicy(), resourceName),
+					testAccCheckScalingPolicyExists(ctx, resourceName, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfautoscaling.ResourcePolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -135,6 +138,7 @@ func TestAccAutoScalingPolicy_disappears(t *testing.T) {
 }
 
 func TestAccAutoScalingPolicy_predictiveScalingPredefined(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v autoscaling.ScalingPolicy
 	resourceSimpleName := "aws_autoscaling_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -143,12 +147,12 @@ func TestAccAutoScalingPolicy_predictiveScalingPredefined(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPolicyDestroy,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyConfig_predictiveScalingPredefined(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScalingPolicyExists(resourceSimpleName, &v),
+					testAccCheckScalingPolicyExists(ctx, resourceSimpleName, &v),
 					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.mode", "ForecastAndScale"),
 					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.scheduling_buffer_time", "10"),
 					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.max_capacity_breach_behavior", "IncreaseMaxCapacity"),
@@ -171,6 +175,7 @@ func TestAccAutoScalingPolicy_predictiveScalingPredefined(t *testing.T) {
 }
 
 func TestAccAutoScalingPolicy_predictiveScalingCustom(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v autoscaling.ScalingPolicy
 	resourceName := "aws_autoscaling_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -179,12 +184,12 @@ func TestAccAutoScalingPolicy_predictiveScalingCustom(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPolicyDestroy,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyConfig_predictiveScalingCustom(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScalingPolicyExists(resourceName, &v),
+					testAccCheckScalingPolicyExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "predictive_scaling_configuration.0.max_capacity_breach_behavior", "IncreaseMaxCapacity"),
 					resource.TestCheckResourceAttr(resourceName, "predictive_scaling_configuration.0.max_capacity_buffer", "0"),
 					resource.TestCheckResourceAttr(resourceName, "predictive_scaling_configuration.0.metric_specification.0.customized_capacity_metric_specification.0.metric_data_queries.0.id", "weighted_sum"),
@@ -223,6 +228,7 @@ func TestAccAutoScalingPolicy_predictiveScalingCustom(t *testing.T) {
 }
 
 func TestAccAutoScalingPolicy_predictiveScalingRemoved(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v autoscaling.ScalingPolicy
 	resourceName := "aws_autoscaling_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -231,19 +237,19 @@ func TestAccAutoScalingPolicy_predictiveScalingRemoved(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPolicyDestroy,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyConfig_predictiveScalingPredefined(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScalingPolicyExists(resourceName, &v),
+					testAccCheckScalingPolicyExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "predictive_scaling_configuration.#", "1"),
 				),
 			},
 			{
 				Config: testAccPolicyConfig_predictiveScalingRemoved(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScalingPolicyExists(resourceName, &v),
+					testAccCheckScalingPolicyExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "predictive_scaling_configuration.#", "0"),
 				),
 			},
@@ -258,6 +264,7 @@ func TestAccAutoScalingPolicy_predictiveScalingRemoved(t *testing.T) {
 }
 
 func TestAccAutoScalingPolicy_predictiveScalingUpdated(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v autoscaling.ScalingPolicy
 	resourceName := "aws_autoscaling_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -266,12 +273,12 @@ func TestAccAutoScalingPolicy_predictiveScalingUpdated(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPolicyDestroy,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyConfig_predictiveScalingPredefined(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScalingPolicyExists(resourceName, &v),
+					testAccCheckScalingPolicyExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "predictive_scaling_configuration.0.mode", "ForecastAndScale"),
 					resource.TestCheckResourceAttr(resourceName, "predictive_scaling_configuration.0.scheduling_buffer_time", "10"),
 					resource.TestCheckResourceAttr(resourceName, "predictive_scaling_configuration.0.max_capacity_breach_behavior", "IncreaseMaxCapacity"),
@@ -286,7 +293,7 @@ func TestAccAutoScalingPolicy_predictiveScalingUpdated(t *testing.T) {
 			{
 				Config: testAccPolicyConfig_predictiveScalingUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScalingPolicyExists(resourceName, &v),
+					testAccCheckScalingPolicyExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "predictive_scaling_configuration.0.mode", "ForecastOnly"),
 					resource.TestCheckResourceAttr(resourceName, "predictive_scaling_configuration.0.scheduling_buffer_time", ""),
 					resource.TestCheckResourceAttr(resourceName, "predictive_scaling_configuration.0.max_capacity_buffer", ""),
@@ -309,6 +316,7 @@ func TestAccAutoScalingPolicy_predictiveScalingUpdated(t *testing.T) {
 }
 
 func TestAccAutoScalingPolicy_simpleScalingStepAdjustment(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v autoscaling.ScalingPolicy
 	resourceName := "aws_autoscaling_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -317,12 +325,12 @@ func TestAccAutoScalingPolicy_simpleScalingStepAdjustment(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPolicyDestroy,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyConfig_simpleScalingStepAdjustment(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScalingPolicyExists(resourceName, &v),
+					testAccCheckScalingPolicyExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "adjustment_type", "ExactCapacity"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_adjustment", "0"),
 				),
@@ -338,6 +346,7 @@ func TestAccAutoScalingPolicy_simpleScalingStepAdjustment(t *testing.T) {
 }
 
 func TestAccAutoScalingPolicy_TargetTrack_predefined(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v autoscaling.ScalingPolicy
 	resourceName := "aws_autoscaling_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -346,12 +355,12 @@ func TestAccAutoScalingPolicy_TargetTrack_predefined(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPolicyDestroy,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyConfig_targetTrackingPredefined(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScalingPolicyExists(resourceName, &v),
+					testAccCheckScalingPolicyExists(ctx, resourceName, &v),
 				),
 			},
 			{
@@ -365,6 +374,7 @@ func TestAccAutoScalingPolicy_TargetTrack_predefined(t *testing.T) {
 }
 
 func TestAccAutoScalingPolicy_TargetTrack_custom(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v autoscaling.ScalingPolicy
 	resourceName := "aws_autoscaling_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -373,12 +383,12 @@ func TestAccAutoScalingPolicy_TargetTrack_custom(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPolicyDestroy,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyConfig_targetTrackingCustom(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScalingPolicyExists(resourceName, &v),
+					testAccCheckScalingPolicyExists(ctx, resourceName, &v),
 				),
 			},
 			{
@@ -392,6 +402,7 @@ func TestAccAutoScalingPolicy_TargetTrack_custom(t *testing.T) {
 }
 
 func TestAccAutoScalingPolicy_zeroValue(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v1, v2 autoscaling.ScalingPolicy
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceSimpleName := "aws_autoscaling_policy.test_simple"
@@ -401,13 +412,13 @@ func TestAccAutoScalingPolicy_zeroValue(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPolicyDestroy,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyConfig_zeroValue(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScalingPolicyExists(resourceSimpleName, &v1),
-					testAccCheckScalingPolicyExists(resourceStepName, &v2),
+					testAccCheckScalingPolicyExists(ctx, resourceSimpleName, &v1),
+					testAccCheckScalingPolicyExists(ctx, resourceStepName, &v2),
 					resource.TestCheckResourceAttr(resourceSimpleName, "cooldown", "0"),
 					resource.TestCheckResourceAttr(resourceSimpleName, "scaling_adjustment", "0"),
 					resource.TestCheckResourceAttr(resourceStepName, "min_adjustment_magnitude", "1"),
@@ -430,7 +441,7 @@ func TestAccAutoScalingPolicy_zeroValue(t *testing.T) {
 	})
 }
 
-func testAccCheckScalingPolicyExists(n string, v *autoscaling.ScalingPolicy) resource.TestCheckFunc {
+func testAccCheckScalingPolicyExists(ctx context.Context, n string, v *autoscaling.ScalingPolicy) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -441,9 +452,9 @@ func testAccCheckScalingPolicyExists(n string, v *autoscaling.ScalingPolicy) res
 			return fmt.Errorf("No Auto Scaling Policy ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn()
 
-		output, err := tfautoscaling.FindScalingPolicy(conn, rs.Primary.Attributes["autoscaling_group_name"], rs.Primary.ID)
+		output, err := tfautoscaling.FindScalingPolicy(ctx, conn, rs.Primary.Attributes["autoscaling_group_name"], rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -455,28 +466,30 @@ func testAccCheckScalingPolicyExists(n string, v *autoscaling.ScalingPolicy) res
 	}
 }
 
-func testAccCheckPolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn
+func testAccCheckPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_autoscaling_policy" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_autoscaling_policy" {
+				continue
+			}
+
+			_, err := tfautoscaling.FindScalingPolicy(ctx, conn, rs.Primary.Attributes["autoscaling_group_name"], rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Auto Scaling Policy %s still exists", rs.Primary.ID)
 		}
 
-		_, err := tfautoscaling.FindScalingPolicy(conn, rs.Primary.Attributes["autoscaling_group_name"], rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("Auto Scaling Policy %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
 func testAccPolicyImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {

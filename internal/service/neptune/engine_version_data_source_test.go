@@ -1,6 +1,7 @@
 package neptune_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -13,11 +14,12 @@ import (
 )
 
 func TestAccNeptuneEngineVersionDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_neptune_engine_version.test"
 	version := "1.0.2.1"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccEngineVersionPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccEngineVersionPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
@@ -42,10 +44,11 @@ func TestAccNeptuneEngineVersionDataSource_basic(t *testing.T) {
 }
 
 func TestAccNeptuneEngineVersionDataSource_preferred(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_neptune_engine_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccEngineVersionPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccEngineVersionPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
@@ -62,10 +65,11 @@ func TestAccNeptuneEngineVersionDataSource_preferred(t *testing.T) {
 }
 
 func TestAccNeptuneEngineVersionDataSource_defaultOnly(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_neptune_engine_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccEngineVersionPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccEngineVersionPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
@@ -81,15 +85,15 @@ func TestAccNeptuneEngineVersionDataSource_defaultOnly(t *testing.T) {
 	})
 }
 
-func testAccEngineVersionPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn
+func testAccEngineVersionPreCheck(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn()
 
 	input := &neptune.DescribeDBEngineVersionsInput{
 		Engine:      aws.String("neptune"),
 		DefaultOnly: aws.Bool(true),
 	}
 
-	_, err := conn.DescribeDBEngineVersions(input)
+	_, err := conn.DescribeDBEngineVersionsWithContext(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

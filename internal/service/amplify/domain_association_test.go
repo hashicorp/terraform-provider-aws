@@ -1,6 +1,7 @@
 package amplify_test
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"regexp"
@@ -17,6 +18,7 @@ import (
 )
 
 func testAccDomainAssociation_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	key := "AMPLIFY_DOMAIN_NAME"
 	domainName := os.Getenv(key)
 	if domainName == "" {
@@ -31,12 +33,12 @@ func testAccDomainAssociation_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, amplify.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainAssociationDestroy,
+		CheckDestroy:             testAccCheckDomainAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainAssociationConfig_basic(rName, domainName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainAssociationExists(resourceName, &domain),
+					testAccCheckDomainAssociationExists(ctx, resourceName, &domain),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "amplify", regexp.MustCompile(`apps/.+/domains/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", domainName),
 					resource.TestCheckResourceAttr(resourceName, "sub_domain.#", "1"),
@@ -58,6 +60,7 @@ func testAccDomainAssociation_basic(t *testing.T) {
 }
 
 func testAccDomainAssociation_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	key := "AMPLIFY_DOMAIN_NAME"
 	domainName := os.Getenv(key)
 	if domainName == "" {
@@ -72,13 +75,13 @@ func testAccDomainAssociation_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, amplify.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainAssociationDestroy,
+		CheckDestroy:             testAccCheckDomainAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainAssociationConfig_basic(rName, domainName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainAssociationExists(resourceName, &domain),
-					acctest.CheckResourceDisappears(acctest.Provider, tfamplify.ResourceDomainAssociation(), resourceName),
+					testAccCheckDomainAssociationExists(ctx, resourceName, &domain),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfamplify.ResourceDomainAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -87,6 +90,7 @@ func testAccDomainAssociation_disappears(t *testing.T) {
 }
 
 func testAccDomainAssociation_update(t *testing.T) {
+	ctx := acctest.Context(t)
 	key := "AMPLIFY_DOMAIN_NAME"
 	domainName := os.Getenv(key)
 	if domainName == "" {
@@ -101,12 +105,12 @@ func testAccDomainAssociation_update(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, amplify.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainAssociationDestroy,
+		CheckDestroy:             testAccCheckDomainAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainAssociationConfig_basic(rName, domainName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainAssociationExists(resourceName, &domain),
+					testAccCheckDomainAssociationExists(ctx, resourceName, &domain),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "amplify", regexp.MustCompile(`apps/.+/domains/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", domainName),
 					resource.TestCheckResourceAttr(resourceName, "sub_domain.#", "1"),
@@ -126,7 +130,7 @@ func testAccDomainAssociation_update(t *testing.T) {
 			{
 				Config: testAccDomainAssociationConfig_updated(rName, domainName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainAssociationExists(resourceName, &domain),
+					testAccCheckDomainAssociationExists(ctx, resourceName, &domain),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "amplify", regexp.MustCompile(`apps/.+/domains/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", domainName),
 					resource.TestCheckResourceAttr(resourceName, "sub_domain.#", "2"),
@@ -145,7 +149,7 @@ func testAccDomainAssociation_update(t *testing.T) {
 	})
 }
 
-func testAccCheckDomainAssociationExists(resourceName string, v *amplify.DomainAssociation) resource.TestCheckFunc {
+func testAccCheckDomainAssociationExists(ctx context.Context, resourceName string, v *amplify.DomainAssociation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -162,9 +166,9 @@ func testAccCheckDomainAssociationExists(resourceName string, v *amplify.DomainA
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AmplifyConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AmplifyConn()
 
-		domainAssociation, err := tfamplify.FindDomainAssociationByAppIDAndDomainName(conn, appID, domainName)
+		domainAssociation, err := tfamplify.FindDomainAssociationByAppIDAndDomainName(ctx, conn, appID, domainName)
 
 		if err != nil {
 			return err
@@ -176,34 +180,36 @@ func testAccCheckDomainAssociationExists(resourceName string, v *amplify.DomainA
 	}
 }
 
-func testAccCheckDomainAssociationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AmplifyConn
+func testAccCheckDomainAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AmplifyConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_amplify_domain_association" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_amplify_domain_association" {
+				continue
+			}
+
+			appID, domainName, err := tfamplify.DomainAssociationParseResourceID(rs.Primary.ID)
+
+			if err != nil {
+				return err
+			}
+
+			_, err = tfamplify.FindDomainAssociationByAppIDAndDomainName(ctx, conn, appID, domainName)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Amplify Domain Association %s still exists", rs.Primary.ID)
 		}
 
-		appID, domainName, err := tfamplify.DomainAssociationParseResourceID(rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		_, err = tfamplify.FindDomainAssociationByAppIDAndDomainName(conn, appID, domainName)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("Amplify Domain Association %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
 func testAccDomainAssociationConfig_basic(rName, domainName string, waitForVerification bool) string {

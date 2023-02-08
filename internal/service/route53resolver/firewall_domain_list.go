@@ -27,7 +27,7 @@ func ResourceFirewallDomainList() *schema.Resource {
 		DeleteWithoutTimeout: resourceFirewallDomainListDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -55,7 +55,7 @@ func ResourceFirewallDomainList() *schema.Resource {
 }
 
 func resourceFirewallDomainListCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn
+	conn := meta.(*conns.AWSClient).Route53ResolverConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -97,7 +97,7 @@ func resourceFirewallDomainListCreate(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceFirewallDomainListRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn
+	conn := meta.(*conns.AWSClient).Route53ResolverConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -138,7 +138,7 @@ func resourceFirewallDomainListRead(ctx context.Context, d *schema.ResourceData,
 
 	d.Set("domains", aws.StringValueSlice(output))
 
-	tags, err := ListTagsWithContext(ctx, conn, arn)
+	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
 		return diag.Errorf("listing tags for Route53 Resolver Firewall Domain List (%s): %s", arn, err)
@@ -159,7 +159,7 @@ func resourceFirewallDomainListRead(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceFirewallDomainListUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn
+	conn := meta.(*conns.AWSClient).Route53ResolverConn()
 
 	if d.HasChange("domains") {
 		o, n := d.GetChange("domains")
@@ -198,7 +198,7 @@ func resourceFirewallDomainListUpdate(ctx context.Context, d *schema.ResourceDat
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTagsWithContext(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.Errorf("updating Route53 Resolver Firewall Domain List (%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -207,7 +207,7 @@ func resourceFirewallDomainListUpdate(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceFirewallDomainListDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn
+	conn := meta.(*conns.AWSClient).Route53ResolverConn()
 
 	log.Printf("[DEBUG] Deleting Route53 Resolver Firewall Domain List: %s", d.Id())
 	_, err := conn.DeleteFirewallDomainListWithContext(ctx, &route53resolver.DeleteFirewallDomainListInput{

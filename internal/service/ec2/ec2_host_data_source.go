@@ -1,21 +1,24 @@
 package ec2
 
 import (
+	"context"
 	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func DataSourceHost() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceHostRead,
+		ReadWithoutTimeout: dataSourceHostRead,
 
 		Timeouts: &schema.ResourceTimeout{
 			Read: schema.DefaultTimeout(20 * time.Minute),
@@ -77,14 +80,15 @@ func DataSourceHost() *schema.Resource {
 	}
 }
 
-func dataSourceHostRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func dataSourceHostRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	host, err := FindHostByIDAndFilters(conn, d.Get("host_id").(string), BuildFiltersDataSource(d.Get("filter").(*schema.Set)))
+	host, err := FindHostByIDAndFilters(ctx, conn, d.Get("host_id").(string), BuildFiltersDataSource(d.Get("filter").(*schema.Set)))
 
 	if err != nil {
-		return tfresource.SingularDataSourceFindError("EC2 Host", err)
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Host", err))
 	}
 
 	d.SetId(aws.StringValue(host.HostId))
@@ -110,8 +114,8 @@ func dataSourceHostRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("total_vcpus", host.HostProperties.TotalVCpus)
 
 	if err := d.Set("tags", KeyValueTags(host.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

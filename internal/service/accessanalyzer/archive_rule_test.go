@@ -16,6 +16,7 @@ import (
 )
 
 func testAccAnalyzerArchiveRule_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var archiveRule accessanalyzer.ArchiveRuleSummary
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_accessanalyzer_archive_rule.test"
@@ -27,12 +28,12 @@ func testAccAnalyzerArchiveRule_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, accessanalyzer.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckArchiveRuleDestroy,
+		CheckDestroy:             testAccCheckArchiveRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccArchiveRuleConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckArchiveRuleExists(resourceName, &archiveRule),
+					testAccCheckArchiveRuleExists(ctx, resourceName, &archiveRule),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.criteria", "isPublic"),
 				),
 			},
@@ -46,6 +47,7 @@ func testAccAnalyzerArchiveRule_basic(t *testing.T) {
 }
 
 func testAccAnalyzerArchiveRule_updateFilters(t *testing.T) {
+	ctx := acctest.Context(t)
 	var archiveRule accessanalyzer.ArchiveRuleSummary
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_accessanalyzer_archive_rule.test"
@@ -82,12 +84,12 @@ filter {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, accessanalyzer.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckArchiveRuleDestroy,
+		CheckDestroy:             testAccCheckArchiveRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccArchiveRuleConfig_updateFilters(rName, filters),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckArchiveRuleExists(resourceName, &archiveRule),
+					testAccCheckArchiveRuleExists(ctx, resourceName, &archiveRule),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.criteria", "error"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.exists", "true"),
@@ -96,7 +98,7 @@ filter {
 			{
 				Config: testAccArchiveRuleConfig_updateFilters(rName, filtersUpdated),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckArchiveRuleExists(resourceName, &archiveRule),
+					testAccCheckArchiveRuleExists(ctx, resourceName, &archiveRule),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.criteria", "error"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.exists", "true"),
@@ -107,7 +109,7 @@ filter {
 			{
 				Config: testAccArchiveRuleConfig_updateFilters(rName, filtersRemoved),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckArchiveRuleExists(resourceName, &archiveRule),
+					testAccCheckArchiveRuleExists(ctx, resourceName, &archiveRule),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.criteria", "isPublic"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.eq.0", "true"),
@@ -118,6 +120,7 @@ filter {
 }
 
 func testAccAnalyzerArchiveRule_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var archiveRule accessanalyzer.ArchiveRuleSummary
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_accessanalyzer_archive_rule.test"
@@ -129,13 +132,13 @@ func testAccAnalyzerArchiveRule_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, accessanalyzer.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckArchiveRuleDestroy,
+		CheckDestroy:             testAccCheckArchiveRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccArchiveRuleConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckArchiveRuleExists(resourceName, &archiveRule),
-					acctest.CheckResourceDisappears(acctest.Provider, tfaccessanalyzer.ResourceArchiveRule(), resourceName),
+					testAccCheckArchiveRuleExists(ctx, resourceName, &archiveRule),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfaccessanalyzer.ResourceArchiveRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -143,36 +146,38 @@ func testAccAnalyzerArchiveRule_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckArchiveRuleDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AccessAnalyzerConn
+func testAccCheckArchiveRuleDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AccessAnalyzerConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_accessanalyzer_archive_rule" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_accessanalyzer_archive_rule" {
+				continue
+			}
+
+			analyzerName, ruleName, err := tfaccessanalyzer.DecodeRuleID(rs.Primary.ID)
+			if err != nil {
+				return fmt.Errorf("unable to decode AccessAnalyzer ArchiveRule ID (%s): %s", rs.Primary.ID, err)
+			}
+
+			_, err = tfaccessanalyzer.FindArchiveRule(ctx, conn, analyzerName, ruleName)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("expected AccessAnalyzer ArchiveRule to be destroyed, %s found", rs.Primary.ID)
 		}
 
-		analyzerName, ruleName, err := tfaccessanalyzer.DecodeRuleID(rs.Primary.ID)
-		if err != nil {
-			return fmt.Errorf("unable to decode AccessAnalyzer ArchiveRule ID (%s): %s", rs.Primary.ID, err)
-		}
-
-		_, err = tfaccessanalyzer.FindArchiveRule(context.Background(), conn, analyzerName, ruleName)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("expected AccessAnalyzer ArchiveRule to be destroyed, %s found", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckArchiveRuleExists(name string, archiveRule *accessanalyzer.ArchiveRuleSummary) resource.TestCheckFunc {
+func testAccCheckArchiveRuleExists(ctx context.Context, name string, archiveRule *accessanalyzer.ArchiveRuleSummary) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -183,13 +188,13 @@ func testAccCheckArchiveRuleExists(name string, archiveRule *accessanalyzer.Arch
 			return fmt.Errorf("No AccessAnalyzer ArchiveRule is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AccessAnalyzerConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AccessAnalyzerConn()
 		analyzerName, ruleName, err := tfaccessanalyzer.DecodeRuleID(rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("unable to decode AccessAnalyzer ArchiveRule ID (%s): %s", rs.Primary.ID, err)
 		}
 
-		resp, err := tfaccessanalyzer.FindArchiveRule(context.Background(), conn, analyzerName, ruleName)
+		resp, err := tfaccessanalyzer.FindArchiveRule(ctx, conn, analyzerName, ruleName)
 
 		if err != nil {
 			return fmt.Errorf("describing AccessAnalyzer ArchiveRule: %s", err.Error())

@@ -21,7 +21,7 @@ func ResourceWorkerConfiguration() *schema.Resource {
 		DeleteWithoutTimeout: schema.NoopContext,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -61,7 +61,7 @@ func ResourceWorkerConfiguration() *schema.Resource {
 }
 
 func resourceWorkerConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KafkaConnectConn
+	conn := meta.(*conns.AWSClient).KafkaConnectConn()
 
 	name := d.Get("name").(string)
 	input := &kafkaconnect.CreateWorkerConfigurationInput{
@@ -86,7 +86,7 @@ func resourceWorkerConfigurationCreate(ctx context.Context, d *schema.ResourceDa
 }
 
 func resourceWorkerConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KafkaConnectConn
+	conn := meta.(*conns.AWSClient).KafkaConnectConn()
 
 	config, err := FindWorkerConfigurationByARN(ctx, conn, d.Id())
 

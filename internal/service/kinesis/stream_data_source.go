@@ -1,18 +1,20 @@
 package kinesis
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kinesis"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceStream() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceStreamRead,
+		ReadWithoutTimeout: dataSourceStreamRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -67,15 +69,16 @@ func DataSourceStream() *schema.Resource {
 	}
 }
 
-func dataSourceStreamRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KinesisConn
+func dataSourceStreamRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).KinesisConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 	name := d.Get("name").(string)
 
-	stream, err := FindStreamByName(conn, name)
+	stream, err := FindStreamByName(ctx, conn, name)
 
 	if err != nil {
-		return fmt.Errorf("error reading Kinesis Stream (%s): %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "reading Kinesis Stream (%s): %s", name, err)
 	}
 
 	input := &kinesis.ListShardsInput{
@@ -84,10 +87,10 @@ func dataSourceStreamRead(d *schema.ResourceData, meta interface{}) error {
 	var shards []*kinesis.Shard
 
 	for {
-		output, err := conn.ListShards(input)
+		output, err := conn.ListShardsWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error listing Kinesis Stream (%s) shards: %w", name, err)
+			return sdkdiag.AppendErrorf(diags, "listing Kinesis Stream (%s) shards: %s", name, err)
 		}
 
 		if output == nil {
@@ -135,23 +138,23 @@ func dataSourceStreamRead(d *schema.ResourceData, meta interface{}) error {
 
 	if details := stream.StreamModeDetails; details != nil {
 		if err := d.Set("stream_mode_details", []interface{}{flattenStreamModeDetails(details)}); err != nil {
-			return fmt.Errorf("error setting stream_mode_details: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting stream_mode_details: %s", err)
 		}
 	} else {
 		d.Set("stream_mode_details", nil)
 	}
 
-	tags, err := ListTags(conn, name)
+	tags, err := ListTags(ctx, conn, name)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for Kinesis Stream (%s): %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for Kinesis Stream (%s): %s", name, err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
 // See http://docs.aws.amazon.com/kinesis/latest/dev/kinesis-using-sdk-java-resharding-merge.html

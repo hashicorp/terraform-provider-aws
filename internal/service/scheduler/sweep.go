@@ -4,7 +4,6 @@
 package scheduler
 
 import (
-	"context"
 	"fmt"
 	"log"
 
@@ -32,20 +31,21 @@ func init() {
 }
 
 func sweepScheduleGroups(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).SchedulerClient
+	conn := client.(*conns.AWSClient).SchedulerClient()
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	paginator := scheduler.NewListScheduleGroupsPaginator(conn, &scheduler.ListScheduleGroupsInput{})
 
 	for paginator.HasMorePages() {
-		page, err := paginator.NextPage(context.Background())
+		page, err := paginator.NextPage(ctx)
 
 		if err != nil {
 			errs = multierror.Append(errs, fmt.Errorf("listing Schedule Groups for %s: %w", region, err))
@@ -68,7 +68,7 @@ func sweepScheduleGroups(region string) error {
 		}
 	}
 
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("sweeping Schedule Group for %s: %w", region, err))
 	}
 
@@ -81,20 +81,21 @@ func sweepScheduleGroups(region string) error {
 }
 
 func sweepSchedules(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
 		return fmt.Errorf("getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).SchedulerClient
+	conn := client.(*conns.AWSClient).SchedulerClient()
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	paginator := scheduler.NewListSchedulesPaginator(conn, &scheduler.ListSchedulesInput{})
 
 	for paginator.HasMorePages() {
-		page, err := paginator.NextPage(context.Background())
+		page, err := paginator.NextPage(ctx)
 
 		if err != nil {
 			errs = multierror.Append(errs, fmt.Errorf("listing Schedules for %s: %w", region, err))
@@ -105,7 +106,7 @@ func sweepSchedules(region string) error {
 			groupName := aws.ToString(it.GroupName)
 			scheduleName := aws.ToString(it.Name)
 
-			r := ResourceSchedule()
+			r := resourceSchedule()
 			d := r.Data(nil)
 			d.SetId(fmt.Sprintf("%s/%s", groupName, scheduleName))
 
@@ -113,7 +114,7 @@ func sweepSchedules(region string) error {
 		}
 	}
 
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("sweeping Schedule for %s: %w", region, err))
 	}
 

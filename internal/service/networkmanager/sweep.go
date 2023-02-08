@@ -104,15 +104,16 @@ func init() {
 }
 
 func sweepGlobalNetworks(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).NetworkManagerConn
+	conn := client.(*conns.AWSClient).NetworkManagerConn()
 	input := &networkmanager.DescribeGlobalNetworksInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeGlobalNetworksPages(input, func(page *networkmanager.DescribeGlobalNetworksOutput, lastPage bool) bool {
+	err = conn.DescribeGlobalNetworksPagesWithContext(ctx, input, func(page *networkmanager.DescribeGlobalNetworksOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -137,7 +138,7 @@ func sweepGlobalNetworks(region string) error {
 		return fmt.Errorf("error listing Network Manager Global Networks (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Network Manager Global Networks (%s): %w", region, err)
@@ -147,15 +148,16 @@ func sweepGlobalNetworks(region string) error {
 }
 
 func sweepCoreNetworks(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).NetworkManagerConn
+	conn := client.(*conns.AWSClient).NetworkManagerConn()
 	input := &networkmanager.ListCoreNetworksInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListCoreNetworksPages(input, func(page *networkmanager.ListCoreNetworksOutput, lastPage bool) bool {
+	err = conn.ListCoreNetworksPagesWithContext(ctx, input, func(page *networkmanager.ListCoreNetworksOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -180,7 +182,7 @@ func sweepCoreNetworks(region string) error {
 		return fmt.Errorf("error listing Network Manager Core Networks (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Network Manager Core Networks (%s): %w", region, err)
@@ -190,17 +192,18 @@ func sweepCoreNetworks(region string) error {
 }
 
 func sweepConnectAttachments(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).NetworkManagerConn
+	conn := client.(*conns.AWSClient).NetworkManagerConn()
 	input := &networkmanager.ListAttachmentsInput{
 		AttachmentType: aws.String(networkmanager.AttachmentTypeConnect),
 	}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListAttachmentsPages(input, func(page *networkmanager.ListAttachmentsOutput, lastPage bool) bool {
+	err = conn.ListAttachmentsPagesWithContext(ctx, input, func(page *networkmanager.ListAttachmentsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -225,7 +228,7 @@ func sweepConnectAttachments(region string) error {
 		return fmt.Errorf("error listing Network Manager Connect Attachments (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Network Manager Connect Attachments (%s): %w", region, err)
@@ -235,17 +238,18 @@ func sweepConnectAttachments(region string) error {
 }
 
 func sweepSiteToSiteVPNAttachments(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).NetworkManagerConn
+	conn := client.(*conns.AWSClient).NetworkManagerConn()
 	input := &networkmanager.ListAttachmentsInput{
 		AttachmentType: aws.String(networkmanager.AttachmentTypeSiteToSiteVpn),
 	}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListAttachmentsPages(input, func(page *networkmanager.ListAttachmentsOutput, lastPage bool) bool {
+	err = conn.ListAttachmentsPagesWithContext(ctx, input, func(page *networkmanager.ListAttachmentsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -270,7 +274,7 @@ func sweepSiteToSiteVPNAttachments(region string) error {
 		return fmt.Errorf("error listing Network Manager Site To Site VPN Attachments (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Network Manager Site To Site VPN Attachments (%s): %w", region, err)
@@ -280,17 +284,18 @@ func sweepSiteToSiteVPNAttachments(region string) error {
 }
 
 func sweepTransitGatewayPeerings(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).NetworkManagerConn
+	conn := client.(*conns.AWSClient).NetworkManagerConn()
 	input := &networkmanager.ListPeeringsInput{
 		PeeringType: aws.String(networkmanager.PeeringTypeTransitGateway),
 	}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListPeeringsPages(input, func(page *networkmanager.ListPeeringsOutput, lastPage bool) bool {
+	err = conn.ListPeeringsPagesWithContext(ctx, input, func(page *networkmanager.ListPeeringsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -315,7 +320,7 @@ func sweepTransitGatewayPeerings(region string) error {
 		return fmt.Errorf("error listing Network Manager Transit Gateway Peerings (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Network Manager Transit Gateway Peerings (%s): %w", region, err)
@@ -325,17 +330,18 @@ func sweepTransitGatewayPeerings(region string) error {
 }
 
 func sweepTransitGatewayRouteTableAttachments(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).NetworkManagerConn
+	conn := client.(*conns.AWSClient).NetworkManagerConn()
 	input := &networkmanager.ListAttachmentsInput{
 		AttachmentType: aws.String(networkmanager.AttachmentTypeTransitGatewayRouteTable),
 	}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListAttachmentsPages(input, func(page *networkmanager.ListAttachmentsOutput, lastPage bool) bool {
+	err = conn.ListAttachmentsPagesWithContext(ctx, input, func(page *networkmanager.ListAttachmentsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -360,7 +366,7 @@ func sweepTransitGatewayRouteTableAttachments(region string) error {
 		return fmt.Errorf("error listing Network Manager Transit Gateway Route Table Attachments (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Network Manager Transit Gateway Route Table Attachments (%s): %w", region, err)
@@ -370,17 +376,18 @@ func sweepTransitGatewayRouteTableAttachments(region string) error {
 }
 
 func sweepVPCAttachments(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).NetworkManagerConn
+	conn := client.(*conns.AWSClient).NetworkManagerConn()
 	input := &networkmanager.ListAttachmentsInput{
 		AttachmentType: aws.String(networkmanager.AttachmentTypeVpc),
 	}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListAttachmentsPages(input, func(page *networkmanager.ListAttachmentsOutput, lastPage bool) bool {
+	err = conn.ListAttachmentsPagesWithContext(ctx, input, func(page *networkmanager.ListAttachmentsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -405,7 +412,7 @@ func sweepVPCAttachments(region string) error {
 		return fmt.Errorf("error listing Network Manager VPC Attachments (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Network Manager VPC Attachments (%s): %w", region, err)
@@ -415,16 +422,17 @@ func sweepVPCAttachments(region string) error {
 }
 
 func sweepSites(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).NetworkManagerConn
+	conn := client.(*conns.AWSClient).NetworkManagerConn()
 	input := &networkmanager.DescribeGlobalNetworksInput{}
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeGlobalNetworksPages(input, func(page *networkmanager.DescribeGlobalNetworksOutput, lastPage bool) bool {
+	err = conn.DescribeGlobalNetworksPagesWithContext(ctx, input, func(page *networkmanager.DescribeGlobalNetworksOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -434,7 +442,7 @@ func sweepSites(region string) error {
 				GlobalNetworkId: v.GlobalNetworkId,
 			}
 
-			err := conn.GetSitesPages(input, func(page *networkmanager.GetSitesOutput, lastPage bool) bool {
+			err := conn.GetSitesPagesWithContext(ctx, input, func(page *networkmanager.GetSitesOutput, lastPage bool) bool {
 				if page == nil {
 					return !lastPage
 				}
@@ -472,7 +480,7 @@ func sweepSites(region string) error {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Network Manager Global Networks (%s): %w", region, err))
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Network Manager Sites (%s): %w", region, err))
@@ -482,16 +490,17 @@ func sweepSites(region string) error {
 }
 
 func sweepDevices(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).NetworkManagerConn
+	conn := client.(*conns.AWSClient).NetworkManagerConn()
 	input := &networkmanager.DescribeGlobalNetworksInput{}
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeGlobalNetworksPages(input, func(page *networkmanager.DescribeGlobalNetworksOutput, lastPage bool) bool {
+	err = conn.DescribeGlobalNetworksPagesWithContext(ctx, input, func(page *networkmanager.DescribeGlobalNetworksOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -501,7 +510,7 @@ func sweepDevices(region string) error {
 				GlobalNetworkId: v.GlobalNetworkId,
 			}
 
-			err := conn.GetDevicesPages(input, func(page *networkmanager.GetDevicesOutput, lastPage bool) bool {
+			err := conn.GetDevicesPagesWithContext(ctx, input, func(page *networkmanager.GetDevicesOutput, lastPage bool) bool {
 				if page == nil {
 					return !lastPage
 				}
@@ -539,7 +548,7 @@ func sweepDevices(region string) error {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Network Manager Global Networks (%s): %w", region, err))
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Network Manager Devices (%s): %w", region, err))
@@ -549,16 +558,17 @@ func sweepDevices(region string) error {
 }
 
 func sweepLinks(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).NetworkManagerConn
+	conn := client.(*conns.AWSClient).NetworkManagerConn()
 	input := &networkmanager.DescribeGlobalNetworksInput{}
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeGlobalNetworksPages(input, func(page *networkmanager.DescribeGlobalNetworksOutput, lastPage bool) bool {
+	err = conn.DescribeGlobalNetworksPagesWithContext(ctx, input, func(page *networkmanager.DescribeGlobalNetworksOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -568,7 +578,7 @@ func sweepLinks(region string) error {
 				GlobalNetworkId: v.GlobalNetworkId,
 			}
 
-			err := conn.GetLinksPages(input, func(page *networkmanager.GetLinksOutput, lastPage bool) bool {
+			err := conn.GetLinksPagesWithContext(ctx, input, func(page *networkmanager.GetLinksOutput, lastPage bool) bool {
 				if page == nil {
 					return !lastPage
 				}
@@ -606,7 +616,7 @@ func sweepLinks(region string) error {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Network Manager Global Networks (%s): %w", region, err))
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Network Manager Links (%s): %w", region, err))
@@ -616,16 +626,17 @@ func sweepLinks(region string) error {
 }
 
 func sweepLinkAssociations(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).NetworkManagerConn
+	conn := client.(*conns.AWSClient).NetworkManagerConn()
 	input := &networkmanager.DescribeGlobalNetworksInput{}
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeGlobalNetworksPages(input, func(page *networkmanager.DescribeGlobalNetworksOutput, lastPage bool) bool {
+	err = conn.DescribeGlobalNetworksPagesWithContext(ctx, input, func(page *networkmanager.DescribeGlobalNetworksOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -635,7 +646,7 @@ func sweepLinkAssociations(region string) error {
 				GlobalNetworkId: v.GlobalNetworkId,
 			}
 
-			err := conn.GetLinkAssociationsPages(input, func(page *networkmanager.GetLinkAssociationsOutput, lastPage bool) bool {
+			err := conn.GetLinkAssociationsPagesWithContext(ctx, input, func(page *networkmanager.GetLinkAssociationsOutput, lastPage bool) bool {
 				if page == nil {
 					return !lastPage
 				}
@@ -672,7 +683,7 @@ func sweepLinkAssociations(region string) error {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Network Manager Global Networks (%s): %w", region, err))
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Network Manager Link Associations (%s): %w", region, err))
@@ -682,16 +693,17 @@ func sweepLinkAssociations(region string) error {
 }
 
 func sweepConnections(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).NetworkManagerConn
+	conn := client.(*conns.AWSClient).NetworkManagerConn()
 	input := &networkmanager.DescribeGlobalNetworksInput{}
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeGlobalNetworksPages(input, func(page *networkmanager.DescribeGlobalNetworksOutput, lastPage bool) bool {
+	err = conn.DescribeGlobalNetworksPagesWithContext(ctx, input, func(page *networkmanager.DescribeGlobalNetworksOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -701,7 +713,7 @@ func sweepConnections(region string) error {
 				GlobalNetworkId: v.GlobalNetworkId,
 			}
 
-			err := conn.GetConnectionsPages(input, func(page *networkmanager.GetConnectionsOutput, lastPage bool) bool {
+			err := conn.GetConnectionsPagesWithContext(ctx, input, func(page *networkmanager.GetConnectionsOutput, lastPage bool) bool {
 				if page == nil {
 					return !lastPage
 				}
@@ -739,7 +751,7 @@ func sweepConnections(region string) error {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Network Manager Global Networks (%s): %w", region, err))
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Network Manager Connections (%s): %w", region, err))

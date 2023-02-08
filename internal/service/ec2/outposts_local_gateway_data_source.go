@@ -1,20 +1,22 @@
 package ec2
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceLocalGateway() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceLocalGatewayRead,
+		ReadWithoutTimeout: dataSourceLocalGatewayRead,
 
 		Timeouts: &schema.ResourceTimeout{
 			Read: schema.DefaultTimeout(20 * time.Minute),
@@ -50,8 +52,9 @@ func DataSourceLocalGateway() *schema.Resource {
 	}
 }
 
-func dataSourceLocalGatewayRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func dataSourceLocalGatewayRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	req := &ec2.DescribeLocalGatewaysInput{}
@@ -81,15 +84,15 @@ func dataSourceLocalGatewayRead(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	log.Printf("[DEBUG] Reading AWS LOCAL GATEWAY: %s", req)
-	resp, err := conn.DescribeLocalGateways(req)
+	resp, err := conn.DescribeLocalGatewaysWithContext(ctx, req)
 	if err != nil {
-		return fmt.Errorf("error describing EC2 Local Gateways: %w", err)
+		return sdkdiag.AppendErrorf(diags, "describing EC2 Local Gateways: %s", err)
 	}
 	if resp == nil || len(resp.LocalGateways) == 0 {
-		return fmt.Errorf("no matching Local Gateway found")
+		return sdkdiag.AppendErrorf(diags, "no matching Local Gateway found")
 	}
 	if len(resp.LocalGateways) > 1 {
-		return fmt.Errorf("multiple Local Gateways matched; use additional constraints to reduce matches to a single Local Gateway")
+		return sdkdiag.AppendErrorf(diags, "multiple Local Gateways matched; use additional constraints to reduce matches to a single Local Gateway")
 	}
 
 	localGateway := resp.LocalGateways[0]
@@ -100,8 +103,8 @@ func dataSourceLocalGatewayRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("state", localGateway.State)
 
 	if err := d.Set("tags", KeyValueTags(localGateway.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

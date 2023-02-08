@@ -1,6 +1,7 @@
 package emr
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -20,17 +21,17 @@ const (
 	ClusterDeletedDelay      = 30 * time.Second
 )
 
-func waitClusterCreated(conn *emr.EMR, id string) (*emr.Cluster, error) {
+func waitClusterCreated(ctx context.Context, conn *emr.EMR, id string) (*emr.Cluster, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{emr.ClusterStateBootstrapping, emr.ClusterStateStarting},
 		Target:     []string{emr.ClusterStateRunning, emr.ClusterStateWaiting},
-		Refresh:    statusCluster(conn, id),
+		Refresh:    statusCluster(ctx, conn, id),
 		Timeout:    ClusterCreatedTimeout,
 		MinTimeout: ClusterCreatedMinTimeout,
 		Delay:      ClusterCreatedDelay,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*emr.Cluster); ok {
 		if stateChangeReason := output.Status.StateChangeReason; stateChangeReason != nil {
@@ -43,17 +44,17 @@ func waitClusterCreated(conn *emr.EMR, id string) (*emr.Cluster, error) {
 	return nil, err
 }
 
-func waitClusterDeleted(conn *emr.EMR, id string) (*emr.Cluster, error) {
+func waitClusterDeleted(ctx context.Context, conn *emr.EMR, id string) (*emr.Cluster, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{emr.ClusterStateTerminating},
 		Target:     []string{emr.ClusterStateTerminated, emr.ClusterStateTerminatedWithErrors},
-		Refresh:    statusCluster(conn, id),
+		Refresh:    statusCluster(ctx, conn, id),
 		Timeout:    ClusterDeletedTimeout,
 		MinTimeout: ClusterDeletedMinTimeout,
 		Delay:      ClusterDeletedDelay,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*emr.Cluster); ok {
 		if stateChangeReason := output.Status.StateChangeReason; stateChangeReason != nil {

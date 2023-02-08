@@ -1,6 +1,7 @@
 package elb
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"strings"
@@ -8,17 +9,19 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elb"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
 func ResourceListenerPolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceListenerPolicyCreate,
-		Read:   resourceListenerPolicyRead,
-		Update: resourceListenerPolicyCreate,
-		Delete: resourceListenerPolicyDelete,
+		CreateWithoutTimeout: resourceListenerPolicyCreate,
+		ReadWithoutTimeout:   resourceListenerPolicyRead,
+		UpdateWithoutTimeout: resourceListenerPolicyCreate,
+		DeleteWithoutTimeout: resourceListenerPolicyDelete,
 
 		Schema: map[string]*schema.Schema{
 			"load_balancer_name": {
@@ -41,8 +44,9 @@ func ResourceListenerPolicy() *schema.Resource {
 	}
 }
 
-func resourceListenerPolicyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBConn
+func resourceListenerPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ELBConn()
 
 	loadBalancerName := d.Get("load_balancer_name")
 
@@ -57,16 +61,17 @@ func resourceListenerPolicyCreate(d *schema.ResourceData, meta interface{}) erro
 		PolicyNames:      policyNames,
 	}
 
-	if _, err := conn.SetLoadBalancerPoliciesOfListener(setOpts); err != nil {
-		return fmt.Errorf("Error setting LoadBalancerPoliciesOfListener: %s", err)
+	if _, err := conn.SetLoadBalancerPoliciesOfListenerWithContext(ctx, setOpts); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting LoadBalancerPoliciesOfListener: %s", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", *setOpts.LoadBalancerName, strconv.FormatInt(*setOpts.LoadBalancerPort, 10)))
-	return resourceListenerPolicyRead(d, meta)
+	return append(diags, resourceListenerPolicyRead(ctx, d, meta)...)
 }
 
-func resourceListenerPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBConn
+func resourceListenerPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ELBConn()
 
 	loadBalancerName, loadBalancerPort := ListenerPoliciesParseID(d.Id())
 
@@ -74,20 +79,20 @@ func resourceListenerPolicyRead(d *schema.ResourceData, meta interface{}) error 
 		LoadBalancerNames: []*string{aws.String(loadBalancerName)},
 	}
 
-	describeResp, err := conn.DescribeLoadBalancers(describeElbOpts)
+	describeResp, err := conn.DescribeLoadBalancersWithContext(ctx, describeElbOpts)
 
 	if err != nil {
 		if ec2err, ok := err.(awserr.Error); ok {
 			if ec2err.Code() == "LoadBalancerNotFound" {
 				d.SetId("")
-				return fmt.Errorf("LoadBalancerNotFound: %s", err)
+				return sdkdiag.AppendErrorf(diags, "LoadBalancerNotFound: %s", err)
 			}
 		}
-		return fmt.Errorf("Error retrieving ELB description: %s", err)
+		return sdkdiag.AppendErrorf(diags, "retrieving ELB description: %s", err)
 	}
 
 	if len(describeResp.LoadBalancerDescriptions) != 1 {
-		return fmt.Errorf("Unable to find ELB: %#v", describeResp.LoadBalancerDescriptions)
+		return sdkdiag.AppendErrorf(diags, "Unable to find ELB: %#v", describeResp.LoadBalancerDescriptions)
 	}
 
 	lb := describeResp.LoadBalancerDescriptions[0]
@@ -104,22 +109,23 @@ func resourceListenerPolicyRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("load_balancer_name", loadBalancerName)
 	loadBalancerPortVal, err := strconv.ParseInt(loadBalancerPort, 10, 64)
 	if err != nil {
-		return fmt.Errorf("parsing load balancer port: %s", err)
+		return sdkdiag.AppendErrorf(diags, "parsing load balancer port: %s", err)
 	}
 	d.Set("load_balancer_port", loadBalancerPortVal)
 	d.Set("policy_names", flex.FlattenStringList(policyNames))
 
-	return nil
+	return diags
 }
 
-func resourceListenerPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBConn
+func resourceListenerPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ELBConn()
 
 	loadBalancerName, loadBalancerPort := ListenerPoliciesParseID(d.Id())
 
 	loadBalancerPortInt, err := strconv.ParseInt(loadBalancerPort, 10, 64)
 	if err != nil {
-		return fmt.Errorf("Error parsing loadBalancerPort as integer: %s", err)
+		return sdkdiag.AppendErrorf(diags, "parsing loadBalancerPort as integer: %s", err)
 	}
 
 	setOpts := &elb.SetLoadBalancerPoliciesOfListenerInput{
@@ -128,11 +134,11 @@ func resourceListenerPolicyDelete(d *schema.ResourceData, meta interface{}) erro
 		PolicyNames:      []*string{},
 	}
 
-	if _, err := conn.SetLoadBalancerPoliciesOfListener(setOpts); err != nil {
-		return fmt.Errorf("Error setting LoadBalancerPoliciesOfListener: %s", err)
+	if _, err := conn.SetLoadBalancerPoliciesOfListenerWithContext(ctx, setOpts); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting LoadBalancerPoliciesOfListener: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
 func ListenerPoliciesParseID(id string) (string, string) {

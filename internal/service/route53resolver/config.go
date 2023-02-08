@@ -23,7 +23,7 @@ func ResourceConfig() *schema.Resource {
 		DeleteWithoutTimeout: schema.NoopContext,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -46,7 +46,7 @@ func ResourceConfig() *schema.Resource {
 }
 
 func resourceConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn
+	conn := meta.(*conns.AWSClient).Route53ResolverConn()
 
 	autodefinedReverseFlag := d.Get("autodefined_reverse_flag").(string)
 	input := &route53resolver.UpdateResolverConfigInput{
@@ -70,7 +70,7 @@ func resourceConfigCreate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn
+	conn := meta.(*conns.AWSClient).Route53ResolverConn()
 
 	resolverConfig, err := FindResolverConfigByID(ctx, conn, d.Id())
 
@@ -98,7 +98,7 @@ func resourceConfigRead(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Route53ResolverConn
+	conn := meta.(*conns.AWSClient).Route53ResolverConn()
 
 	autodefinedReverseFlag := d.Get("autodefined_reverse_flag").(string)
 	input := &route53resolver.UpdateResolverConfigInput{

@@ -1,6 +1,7 @@
 package cloudfront_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -15,6 +16,7 @@ import (
 )
 
 func TestAccCloudFrontOriginRequestPolicy_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudfront_origin_request_policy.test"
 
@@ -22,12 +24,12 @@ func TestAccCloudFrontOriginRequestPolicy_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOriginRequestPolicyDestroy,
+		CheckDestroy:             testAccCheckOriginRequestPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOriginRequestPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOriginRequestPolicyExists(resourceName),
+					testAccCheckOriginRequestPolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "comment", ""),
 					resource.TestCheckResourceAttr(resourceName, "cookies_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cookies_config.0.cookie_behavior", "none"),
@@ -52,6 +54,7 @@ func TestAccCloudFrontOriginRequestPolicy_basic(t *testing.T) {
 }
 
 func TestAccCloudFrontOriginRequestPolicy_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudfront_origin_request_policy.test"
 
@@ -59,14 +62,14 @@ func TestAccCloudFrontOriginRequestPolicy_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOriginRequestPolicyDestroy,
+		CheckDestroy:             testAccCheckOriginRequestPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOriginRequestPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOriginRequestPolicyExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcloudfront.ResourceOriginRequestPolicy(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcloudfront.ResourceOriginRequestPolicy(), resourceName),
+					testAccCheckOriginRequestPolicyExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudfront.ResourceOriginRequestPolicy(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudfront.ResourceOriginRequestPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -75,6 +78,7 @@ func TestAccCloudFrontOriginRequestPolicy_disappears(t *testing.T) {
 }
 
 func TestAccCloudFrontOriginRequestPolicy_Items(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudfront_origin_request_policy.test"
 
@@ -82,12 +86,12 @@ func TestAccCloudFrontOriginRequestPolicy_Items(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(cloudfront.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOriginRequestPolicyDestroy,
+		CheckDestroy:             testAccCheckOriginRequestPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOriginRequestPolicyConfig_items(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOriginRequestPolicyExists(resourceName),
+					testAccCheckOriginRequestPolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "comment", "test comment"),
 					resource.TestCheckResourceAttr(resourceName, "cookies_config.0.cookie_behavior", "whitelist"),
 					resource.TestCheckResourceAttr(resourceName, "cookies_config.0.cookies.#", "1"),
@@ -116,7 +120,7 @@ func TestAccCloudFrontOriginRequestPolicy_Items(t *testing.T) {
 			{
 				Config: testAccOriginRequestPolicyConfig_itemsUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOriginRequestPolicyExists(resourceName),
+					testAccCheckOriginRequestPolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "comment", "test comment updated"),
 					resource.TestCheckResourceAttr(resourceName, "cookies_config.0.cookie_behavior", "whitelist"),
 					resource.TestCheckResourceAttr(resourceName, "cookies_config.0.cookies.#", "1"),
@@ -137,31 +141,33 @@ func TestAccCloudFrontOriginRequestPolicy_Items(t *testing.T) {
 	})
 }
 
-func testAccCheckOriginRequestPolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn
+func testAccCheckOriginRequestPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_cloudfront_origin_request_policy" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_cloudfront_origin_request_policy" {
+				continue
+			}
+
+			_, err := tfcloudfront.FindOriginRequestPolicyByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("CloudFront Origin Request Policy %s still exists", rs.Primary.ID)
 		}
 
-		_, err := tfcloudfront.FindOriginRequestPolicyByID(conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("CloudFront Origin Request Policy %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckOriginRequestPolicyExists(n string) resource.TestCheckFunc {
+func testAccCheckOriginRequestPolicyExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -172,9 +178,9 @@ func testAccCheckOriginRequestPolicyExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No CloudFront Origin Request Policy ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn()
 
-		_, err := tfcloudfront.FindOriginRequestPolicyByID(conn, rs.Primary.ID)
+		_, err := tfcloudfront.FindOriginRequestPolicyByID(ctx, conn, rs.Primary.ID)
 
 		return err
 	}

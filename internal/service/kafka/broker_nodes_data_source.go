@@ -1,19 +1,21 @@
 package kafka
 
 import (
-	"fmt"
+	"context"
 	"sort"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kafka"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func DataSourceBrokerNodes() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceBrokerNodesRead,
+		ReadWithoutTimeout: dataSourceBrokerNodesRead,
 
 		Schema: map[string]*schema.Schema{
 			"cluster_arn": {
@@ -59,8 +61,9 @@ func DataSourceBrokerNodes() *schema.Resource {
 	}
 }
 
-func dataSourceBrokerNodesRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KafkaConn
+func dataSourceBrokerNodesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).KafkaConn()
 
 	clusterARN := d.Get("cluster_arn").(string)
 	input := &kafka.ListNodesInput{
@@ -68,7 +71,7 @@ func dataSourceBrokerNodesRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	var nodeInfos []*kafka.NodeInfo
 
-	err := conn.ListNodesPages(input, func(page *kafka.ListNodesOutput, lastPage bool) bool {
+	err := conn.ListNodesPagesWithContext(ctx, input, func(page *kafka.ListNodesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -79,7 +82,7 @@ func dataSourceBrokerNodesRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if err != nil {
-		return fmt.Errorf("error listing MSK Cluster (%s) Broker Nodes: %w", clusterARN, err)
+		return sdkdiag.AppendErrorf(diags, "listing MSK Cluster (%s) Broker Nodes: %s", clusterARN, err)
 	}
 
 	// node list is returned unsorted sort on broker id
@@ -108,8 +111,8 @@ func dataSourceBrokerNodesRead(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(clusterARN)
 
 	if err := d.Set("node_info_list", tfList); err != nil {
-		return fmt.Errorf("error setting node_info_list: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting node_info_list: %s", err)
 	}
 
-	return nil
+	return diags
 }

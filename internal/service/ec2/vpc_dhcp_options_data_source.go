@@ -1,21 +1,24 @@
 package ec2
 
 import (
+	"context"
 	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func DataSourceVPCDHCPOptions() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceVPCDHCPOptionsRead,
+		ReadWithoutTimeout: dataSourceVPCDHCPOptionsRead,
 
 		Timeouts: &schema.ResourceTimeout{
 			Read: schema.DefaultTimeout(20 * time.Minute),
@@ -64,8 +67,9 @@ func DataSourceVPCDHCPOptions() *schema.Resource {
 	}
 }
 
-func dataSourceVPCDHCPOptionsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func dataSourceVPCDHCPOptionsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeDhcpOptionsInput{}
@@ -82,10 +86,10 @@ func dataSourceVPCDHCPOptionsRead(d *schema.ResourceData, meta interface{}) erro
 		input.Filters = nil
 	}
 
-	opts, err := FindDHCPOptions(conn, input)
+	opts, err := FindDHCPOptions(ctx, conn, input)
 
 	if err != nil {
-		return tfresource.SingularDataSourceFindError("EC2 DHCP Options Set", err)
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 DHCP Options Set", err))
 	}
 
 	d.SetId(aws.StringValue(opts.DhcpOptionsId))
@@ -105,12 +109,12 @@ func dataSourceVPCDHCPOptionsRead(d *schema.ResourceData, meta interface{}) erro
 	err = optionsMap.dhcpConfigurationsToResourceData(opts.DhcpConfigurations, d)
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading EC2 DHCP Options: %s", err)
 	}
 
 	if err := d.Set("tags", KeyValueTags(opts.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

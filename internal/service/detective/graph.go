@@ -18,10 +18,10 @@ import (
 
 func ResourceGraph() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceGraphCreate,
-		ReadContext:   resourceGraphRead,
-		UpdateContext: resourceGraphUpdate,
-		DeleteContext: resourceGraphDelete,
+		CreateWithoutTimeout: resourceGraphCreate,
+		ReadWithoutTimeout:   resourceGraphRead,
+		UpdateWithoutTimeout: resourceGraphUpdate,
+		DeleteWithoutTimeout: resourceGraphDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -42,7 +42,7 @@ func ResourceGraph() *schema.Resource {
 }
 
 func resourceGraphCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DetectiveConn
+	conn := meta.(*conns.AWSClient).DetectiveConn()
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
@@ -82,12 +82,12 @@ func resourceGraphCreate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceGraphRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DetectiveConn
+	conn := meta.(*conns.AWSClient).DetectiveConn()
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	resp, err := FindGraphByARN(conn, ctx, d.Id())
+	resp, err := FindGraphByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, detective.ErrCodeResourceNotFoundException) || resp == nil {
 		d.SetId("")
@@ -100,7 +100,7 @@ func resourceGraphRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("created_time", aws.TimeValue(resp.CreatedTime).Format(time.RFC3339))
 	d.Set("graph_arn", resp.Arn)
 
-	tags, err := ListTags(conn, aws.StringValue(resp.Arn))
+	tags, err := ListTags(ctx, conn, aws.StringValue(resp.Arn))
 
 	if err != nil {
 		return diag.Errorf("error listing tags for Detective Graph (%s): %s", d.Id(), err)
@@ -120,11 +120,11 @@ func resourceGraphRead(ctx context.Context, d *schema.ResourceData, meta interfa
 }
 
 func resourceGraphUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DetectiveConn
+	conn := meta.(*conns.AWSClient).DetectiveConn()
 
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
 			return diag.Errorf("error updating detective Graph tags (%s): %s", d.Id(), err)
 		}
 	}
@@ -133,7 +133,7 @@ func resourceGraphUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceGraphDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DetectiveConn
+	conn := meta.(*conns.AWSClient).DetectiveConn()
 
 	input := &detective.DeleteGraphInput{
 		GraphArn: aws.String(d.Id()),

@@ -1,20 +1,22 @@
 package elasticsearch
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticsearchservice"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceDomain() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceDomainRead,
+		ReadWithoutTimeout: dataSourceDomainRead,
 
 		Schema: map[string]*schema.Schema{
 			"access_policies": {
@@ -338,26 +340,27 @@ func DataSourceDomain() *schema.Resource {
 	}
 }
 
-func dataSourceDomainRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticsearchConn
+func dataSourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ElasticsearchConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	ds, err := FindDomainByName(conn, d.Get("domain_name").(string))
+	ds, err := FindDomainByName(ctx, conn, d.Get("domain_name").(string))
 	if err != nil {
-		return fmt.Errorf("your query returned no results")
+		return sdkdiag.AppendErrorf(diags, "your query returned no results")
 	}
 
 	reqDescribeDomainConfig := &elasticsearchservice.DescribeElasticsearchDomainConfigInput{
 		DomainName: aws.String(d.Get("domain_name").(string)),
 	}
 
-	respDescribeDomainConfig, err := conn.DescribeElasticsearchDomainConfig(reqDescribeDomainConfig)
+	respDescribeDomainConfig, err := conn.DescribeElasticsearchDomainConfigWithContext(ctx, reqDescribeDomainConfig)
 	if err != nil {
-		return fmt.Errorf("error querying config for elasticsearch_domain: %w", err)
+		return sdkdiag.AppendErrorf(diags, "querying config for elasticsearch_domain: %s", err)
 	}
 
 	if respDescribeDomainConfig.DomainConfig == nil {
-		return fmt.Errorf("your query returned no results")
+		return sdkdiag.AppendErrorf(diags, "your query returned no results")
 	}
 
 	dc := respDescribeDomainConfig.DomainConfig
@@ -367,13 +370,13 @@ func dataSourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 	if ds.AccessPolicies != nil && aws.StringValue(ds.AccessPolicies) != "" {
 		policies, err := structure.NormalizeJsonString(*ds.AccessPolicies)
 		if err != nil {
-			return fmt.Errorf("access policies contain an invalid JSON: %w", err)
+			return sdkdiag.AppendErrorf(diags, "access policies contain an invalid JSON: %s", err)
 		}
 		d.Set("access_policies", policies)
 	}
 
 	if err := d.Set("advanced_options", flex.PointersMapToStringList(ds.AdvancedOptions)); err != nil {
-		return fmt.Errorf("error setting advanced_options: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting advanced_options: %s", err)
 	}
 
 	d.Set("arn", ds.ARN)
@@ -382,47 +385,47 @@ func dataSourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("kibana_endpoint", getKibanaEndpoint(d))
 
 	if err := d.Set("advanced_security_options", flattenAdvancedSecurityOptions(ds.AdvancedSecurityOptions)); err != nil {
-		return fmt.Errorf("error setting advanced_security_options: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting advanced_security_options: %s", err)
 	}
 
 	if dc.AutoTuneOptions != nil {
 		if err := d.Set("auto_tune_options", []interface{}{flattenAutoTuneOptions(dc.AutoTuneOptions.Options)}); err != nil {
-			return fmt.Errorf("error setting auto_tune_options: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting auto_tune_options: %s", err)
 		}
 	}
 
 	if err := d.Set("ebs_options", flattenEBSOptions(ds.EBSOptions)); err != nil {
-		return fmt.Errorf("error setting ebs_options: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting ebs_options: %s", err)
 	}
 
 	if err := d.Set("encryption_at_rest", flattenEncryptAtRestOptions(ds.EncryptionAtRestOptions)); err != nil {
-		return fmt.Errorf("error setting encryption_at_rest: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting encryption_at_rest: %s", err)
 	}
 
 	if err := d.Set("node_to_node_encryption", flattenNodeToNodeEncryptionOptions(ds.NodeToNodeEncryptionOptions)); err != nil {
-		return fmt.Errorf("error setting node_to_node_encryption: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting node_to_node_encryption: %s", err)
 	}
 
 	if err := d.Set("cluster_config", flattenClusterConfig(ds.ElasticsearchClusterConfig)); err != nil {
-		return fmt.Errorf("error setting cluster_config: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting cluster_config: %s", err)
 	}
 
 	if err := d.Set("snapshot_options", flattenSnapshotOptions(ds.SnapshotOptions)); err != nil {
-		return fmt.Errorf("error setting snapshot_options: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting snapshot_options: %s", err)
 	}
 
 	if ds.VPCOptions != nil {
 		if err := d.Set("vpc_options", flattenVPCDerivedInfo(ds.VPCOptions)); err != nil {
-			return fmt.Errorf("error setting vpc_options: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting vpc_options: %s", err)
 		}
 
 		endpoints := flex.PointersMapToStringList(ds.Endpoints)
 		if err := d.Set("endpoint", endpoints["vpc"]); err != nil {
-			return fmt.Errorf("error setting endpoint: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting endpoint: %s", err)
 		}
 		d.Set("kibana_endpoint", getKibanaEndpoint(d))
 		if ds.Endpoint != nil {
-			return fmt.Errorf("%q: Elasticsearch domain in VPC expected to have null Endpoint value", d.Id())
+			return sdkdiag.AppendErrorf(diags, "%q: Elasticsearch domain in VPC expected to have null Endpoint value", d.Id())
 		}
 	} else {
 		if ds.Endpoint != nil {
@@ -430,18 +433,18 @@ func dataSourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 			d.Set("kibana_endpoint", getKibanaEndpoint(d))
 		}
 		if ds.Endpoints != nil {
-			return fmt.Errorf("%q: Elasticsearch domain not in VPC expected to have null Endpoints value", d.Id())
+			return sdkdiag.AppendErrorf(diags, "%q: Elasticsearch domain not in VPC expected to have null Endpoints value", d.Id())
 		}
 	}
 
 	if err := d.Set("log_publishing_options", flattenLogPublishingOptions(ds.LogPublishingOptions)); err != nil {
-		return fmt.Errorf("error setting log_publishing_options: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting log_publishing_options: %s", err)
 	}
 
 	d.Set("elasticsearch_version", ds.ElasticsearchVersion)
 
 	if err := d.Set("cognito_options", flattenCognitoOptions(ds.CognitoOptions)); err != nil {
-		return fmt.Errorf("error setting cognito_options: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting cognito_options: %s", err)
 	}
 
 	d.Set("created", ds.Created)
@@ -449,15 +452,15 @@ func dataSourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("processing", ds.Processing)
 
-	tags, err := ListTags(conn, d.Id())
+	tags, err := ListTags(ctx, conn, d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for Elasticsearch Cluster (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for Elasticsearch Cluster (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

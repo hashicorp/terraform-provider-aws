@@ -1,6 +1,7 @@
 package appmesh_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -16,6 +17,7 @@ import (
 )
 
 func testAccMesh_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var mesh appmesh.MeshData
 	resourceName := "aws_appmesh_mesh.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -24,12 +26,12 @@ func testAccMesh_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, appmesh.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMeshDestroy,
+		CheckDestroy:             testAccCheckMeshDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMeshConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMeshExists(resourceName, &mesh),
+					testAccCheckMeshExists(ctx, resourceName, &mesh),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
@@ -48,6 +50,7 @@ func testAccMesh_basic(t *testing.T) {
 }
 
 func testAccMesh_egressFilter(t *testing.T) {
+	ctx := acctest.Context(t)
 	var mesh appmesh.MeshData
 	resourceName := "aws_appmesh_mesh.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -56,12 +59,12 @@ func testAccMesh_egressFilter(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, appmesh.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMeshDestroy,
+		CheckDestroy:             testAccCheckMeshDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMeshConfig_egressFilter(rName, "ALLOW_ALL"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMeshExists(resourceName, &mesh),
+					testAccCheckMeshExists(ctx, resourceName, &mesh),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.egress_filter.0.type", "ALLOW_ALL"),
 				),
@@ -74,7 +77,7 @@ func testAccMesh_egressFilter(t *testing.T) {
 			{
 				Config: testAccMeshConfig_egressFilter(rName, "DROP_ALL"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMeshExists(resourceName, &mesh),
+					testAccCheckMeshExists(ctx, resourceName, &mesh),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.egress_filter.0.type", "DROP_ALL"),
 				),
@@ -88,6 +91,7 @@ func testAccMesh_egressFilter(t *testing.T) {
 }
 
 func testAccMesh_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var mesh appmesh.MeshData
 	resourceName := "aws_appmesh_mesh.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -96,12 +100,12 @@ func testAccMesh_tags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appmesh.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, appmesh.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMeshDestroy,
+		CheckDestroy:             testAccCheckMeshDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMeshConfig_tags(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMeshExists(resourceName, &mesh),
+					testAccCheckMeshExists(ctx, resourceName, &mesh),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.foo", "bar"),
 					resource.TestCheckResourceAttr(resourceName, "tags.good", "bad"),
@@ -115,7 +119,7 @@ func testAccMesh_tags(t *testing.T) {
 			{
 				Config: testAccMeshConfig_updateTags(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMeshExists(resourceName, &mesh),
+					testAccCheckMeshExists(ctx, resourceName, &mesh),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
 					resource.TestCheckResourceAttr(resourceName, "tags.good", "bad2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.fizz", "buzz"),
@@ -124,7 +128,7 @@ func testAccMesh_tags(t *testing.T) {
 			{
 				Config: testAccMeshConfig_removeTags(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMeshExists(resourceName, &mesh),
+					testAccCheckMeshExists(ctx, resourceName, &mesh),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 				),
 			},
@@ -132,32 +136,34 @@ func testAccMesh_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckMeshDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AppMeshConn
+func testAccCheckMeshDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppMeshConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_appmesh_mesh" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_appmesh_mesh" {
+				continue
+			}
+
+			_, err := conn.DescribeMeshWithContext(ctx, &appmesh.DescribeMeshInput{
+				MeshName: aws.String(rs.Primary.Attributes["name"]),
+			})
+			if tfawserr.ErrCodeEquals(err, "NotFoundException") {
+				continue
+			}
+			if err != nil {
+				return err
+			}
+			return fmt.Errorf("still exist.")
 		}
 
-		_, err := conn.DescribeMesh(&appmesh.DescribeMeshInput{
-			MeshName: aws.String(rs.Primary.Attributes["name"]),
-		})
-		if tfawserr.ErrCodeEquals(err, "NotFoundException") {
-			continue
-		}
-		if err != nil {
-			return err
-		}
-		return fmt.Errorf("still exist.")
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckMeshExists(name string, v *appmesh.MeshData) resource.TestCheckFunc {
+func testAccCheckMeshExists(ctx context.Context, name string, v *appmesh.MeshData) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppMeshConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppMeshConn()
 
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -167,7 +173,7 @@ func testAccCheckMeshExists(name string, v *appmesh.MeshData) resource.TestCheck
 			return fmt.Errorf("No ID is set")
 		}
 
-		resp, err := conn.DescribeMesh(&appmesh.DescribeMeshInput{
+		resp, err := conn.DescribeMeshWithContext(ctx, &appmesh.DescribeMeshInput{
 			MeshName: aws.String(rs.Primary.Attributes["name"]),
 		})
 		if err != nil {

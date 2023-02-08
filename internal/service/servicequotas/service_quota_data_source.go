@@ -1,18 +1,20 @@
 package servicequotas
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicequotas"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func DataSourceServiceQuota() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceServiceQuotaRead,
+		ReadWithoutTimeout: dataSourceServiceQuotaRead,
 
 		Schema: map[string]*schema.Schema{
 			"adjustable": {
@@ -59,8 +61,9 @@ func DataSourceServiceQuota() *schema.Resource {
 	}
 }
 
-func dataSourceServiceQuotaRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceQuotasConn
+func dataSourceServiceQuotaRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ServiceQuotasConn()
 
 	quotaCode := d.Get("quota_code").(string)
 	quotaName := d.Get("quota_name").(string)
@@ -72,16 +75,16 @@ func dataSourceServiceQuotaRead(d *schema.ResourceData, meta interface{}) error 
 	// A Service Quota will always have a default value, but will only have a current value if it has been set.
 	// If it is not set, `GetServiceQuota` will return "NoSuchResourceException"
 	if quotaName != "" {
-		defaultQuota, err = findServiceQuotaDefaultByName(conn, serviceCode, quotaName)
+		defaultQuota, err = findServiceQuotaDefaultByName(ctx, conn, serviceCode, quotaName)
 		if err != nil {
-			return fmt.Errorf("error getting Default Service Quota for (%s/%s): %w", serviceCode, quotaName, err)
+			return sdkdiag.AppendErrorf(diags, "getting Default Service Quota for (%s/%s): %s", serviceCode, quotaName, err)
 		}
 
 		quotaCode = aws.StringValue(defaultQuota.QuotaCode)
 	} else {
-		defaultQuota, err = findServiceQuotaDefaultByID(conn, serviceCode, quotaCode)
+		defaultQuota, err = findServiceQuotaDefaultByID(ctx, conn, serviceCode, quotaCode)
 		if err != nil {
-			return fmt.Errorf("error getting Default Service Quota for (%s/%s): %w", serviceCode, quotaCode, err)
+			return sdkdiag.AppendErrorf(diags, "getting Default Service Quota for (%s/%s): %s", serviceCode, quotaCode, err)
 		}
 	}
 
@@ -96,16 +99,16 @@ func dataSourceServiceQuotaRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("service_name", defaultQuota.ServiceName)
 	d.Set("value", defaultQuota.Value)
 
-	serviceQuota, err := findServiceQuotaByID(conn, serviceCode, quotaCode)
+	serviceQuota, err := findServiceQuotaByID(ctx, conn, serviceCode, quotaCode)
 	if tfresource.NotFound(err) {
-		return nil
+		return diags
 	}
 	if err != nil {
-		return fmt.Errorf("error getting Service Quota for (%s/%s): %w", serviceCode, quotaCode, err)
+		return sdkdiag.AppendErrorf(diags, "getting Service Quota for (%s/%s): %s", serviceCode, quotaCode, err)
 	}
 
 	d.Set("arn", serviceQuota.QuotaArn)
 	d.Set("value", serviceQuota.Value)
 
-	return nil
+	return diags
 }

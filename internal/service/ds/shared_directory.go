@@ -24,12 +24,12 @@ const (
 
 func ResourceSharedDirectory() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceSharedDirectoryCreate,
-		ReadContext:   resourceSharedDirectoryRead,
-		DeleteContext: resourceSharedDirectoryDelete,
+		CreateWithoutTimeout: resourceSharedDirectoryCreate,
+		ReadWithoutTimeout:   resourceSharedDirectoryRead,
+		DeleteWithoutTimeout: resourceSharedDirectoryDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -85,7 +85,7 @@ func ResourceSharedDirectory() *schema.Resource {
 }
 
 func resourceSharedDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DSConn
+	conn := meta.(*conns.AWSClient).DSConn()
 
 	dirId := d.Get("directory_id").(string)
 	input := directoryservice.ShareDirectoryInput{
@@ -113,7 +113,7 @@ func resourceSharedDirectoryCreate(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceSharedDirectoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DSConn
+	conn := meta.(*conns.AWSClient).DSConn()
 
 	ownerDirID, sharedDirID, err := parseSharedDirectoryID(d.Id())
 
@@ -152,7 +152,7 @@ func resourceSharedDirectoryRead(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceSharedDirectoryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DSConn
+	conn := meta.(*conns.AWSClient).DSConn()
 
 	dirId := d.Get("directory_id").(string)
 	sharedId := d.Get("shared_directory_id").(string)

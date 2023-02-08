@@ -89,7 +89,7 @@ func ResourceSegment() *schema.Resource {
 }
 
 func resourceSegmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EvidentlyConn
+	conn := meta.(*conns.AWSClient).EvidentlyConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -120,7 +120,7 @@ func resourceSegmentCreate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceSegmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EvidentlyConn
+	conn := meta.(*conns.AWSClient).EvidentlyConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -159,12 +159,12 @@ func resourceSegmentRead(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceSegmentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EvidentlyConn
+	conn := meta.(*conns.AWSClient).EvidentlyConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTagsWithContext(ctx, conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
 			return diag.Errorf("updating tags: %s", err)
 		}
 	}
@@ -173,7 +173,7 @@ func resourceSegmentUpdate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceSegmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EvidentlyConn
+	conn := meta.(*conns.AWSClient).EvidentlyConn()
 
 	log.Printf("[DEBUG] Deleting CloudWatch Evidently Segment: %s", d.Id())
 	_, err := conn.DeleteSegmentWithContext(ctx, &cloudwatchevidently.DeleteSegmentInput{

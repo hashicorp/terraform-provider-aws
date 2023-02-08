@@ -1,19 +1,21 @@
 package batch
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/batch"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceJobQueue() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceJobQueueRead,
+		ReadWithoutTimeout: dataSourceJobQueueRead,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -73,26 +75,25 @@ func DataSourceJobQueue() *schema.Resource {
 	}
 }
 
-func dataSourceJobQueueRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BatchConn
+func dataSourceJobQueueRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).BatchConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	params := &batch.DescribeJobQueuesInput{
 		JobQueues: []*string{aws.String(d.Get("name").(string))},
 	}
 	log.Printf("[DEBUG] Reading Batch Job Queue: %s", params)
-	desc, err := conn.DescribeJobQueues(params)
+	desc, err := conn.DescribeJobQueuesWithContext(ctx, params)
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading Batch Job Queue (%s): %s", d.Get("name").(string), err)
 	}
 
-	if len(desc.JobQueues) == 0 {
-		return fmt.Errorf("no matches found for name: %s", d.Get("name").(string))
-	}
-
-	if len(desc.JobQueues) > 1 {
-		return fmt.Errorf("multiple matches found for name: %s", d.Get("name").(string))
+	if l := len(desc.JobQueues); l == 0 {
+		return sdkdiag.AppendErrorf(diags, "reading Batch Job Queue (%s): empty response", d.Get("name").(string))
+	} else if l > 1 {
+		return sdkdiag.AppendErrorf(diags, "reading Batch Job Queue (%s): too many results: wanted 1, got %d", d.Get("name").(string), l)
 	}
 
 	jobQueue := desc.JobQueues[0]
@@ -113,12 +114,12 @@ func dataSourceJobQueueRead(d *schema.ResourceData, meta interface{}) error {
 		ceos = append(ceos, ceo)
 	}
 	if err := d.Set("compute_environment_order", ceos); err != nil {
-		return fmt.Errorf("error setting compute_environment_order: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting compute_environment_order: %s", err)
 	}
 
 	if err := d.Set("tags", KeyValueTags(jobQueue.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

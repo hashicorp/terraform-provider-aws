@@ -1,6 +1,7 @@
 package athena
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"regexp"
@@ -9,21 +10,23 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/athena"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceWorkGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceWorkGroupCreate,
-		Read:   resourceWorkGroupRead,
-		Update: resourceWorkGroupUpdate,
-		Delete: resourceWorkGroupDelete,
+		CreateWithoutTimeout: resourceWorkGroupCreate,
+		ReadWithoutTimeout:   resourceWorkGroupRead,
+		UpdateWithoutTimeout: resourceWorkGroupUpdate,
+		DeleteWithoutTimeout: resourceWorkGroupDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -68,6 +71,11 @@ func ResourceWorkGroup() *schema.Resource {
 									},
 								},
 							},
+						},
+						"execution_role": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: verify.ValidARN,
 						},
 						"publish_cloudwatch_metrics_enabled": {
 							Type:     schema.TypeBool,
@@ -165,8 +173,9 @@ func ResourceWorkGroup() *schema.Resource {
 	}
 }
 
-func resourceWorkGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AthenaConn
+func resourceWorkGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AthenaConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -187,10 +196,10 @@ func resourceWorkGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	_, err := conn.CreateWorkGroup(input)
+	_, err := conn.CreateWorkGroupWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating Athena WorkGroup: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating Athena WorkGroup: %s", err)
 	}
 
 	d.SetId(name)
@@ -201,16 +210,17 @@ func resourceWorkGroupCreate(d *schema.ResourceData, meta interface{}) error {
 			WorkGroup: aws.String(d.Id()),
 		}
 
-		if _, err := conn.UpdateWorkGroup(input); err != nil {
-			return fmt.Errorf("error disabling Athena WorkGroup (%s): %w", d.Id(), err)
+		if _, err := conn.UpdateWorkGroupWithContext(ctx, input); err != nil {
+			return sdkdiag.AppendErrorf(diags, "disabling Athena WorkGroup (%s): %s", d.Id(), err)
 		}
 	}
 
-	return resourceWorkGroupRead(d, meta)
+	return append(diags, resourceWorkGroupRead(ctx, d, meta)...)
 }
 
-func resourceWorkGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AthenaConn
+func resourceWorkGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AthenaConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -218,16 +228,16 @@ func resourceWorkGroupRead(d *schema.ResourceData, meta interface{}) error {
 		WorkGroup: aws.String(d.Id()),
 	}
 
-	resp, err := conn.GetWorkGroup(input)
+	resp, err := conn.GetWorkGroupWithContext(ctx, input)
 
 	if tfawserr.ErrMessageContains(err, athena.ErrCodeInvalidRequestException, "is not found") && !d.IsNewResource() {
 		log.Printf("[WARN] Athena WorkGroup (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Athena WorkGroup (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Athena WorkGroup (%s): %s", d.Id(), err)
 	}
 
 	arn := arn.ARN{
@@ -242,7 +252,7 @@ func resourceWorkGroupRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("description", resp.WorkGroup.Description)
 
 	if err := d.Set("configuration", flattenWorkGroupConfiguration(resp.WorkGroup.Configuration)); err != nil {
-		return fmt.Errorf("error setting configuration: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting configuration: %s", err)
 	}
 
 	d.Set("name", resp.WorkGroup.Name)
@@ -254,28 +264,29 @@ func resourceWorkGroupRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("force_destroy", false)
 	}
 
-	tags, err := ListTags(conn, arn.String())
+	tags, err := ListTags(ctx, conn, arn.String())
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for resource (%s): %w", arn, err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for resource (%s): %s", arn, err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceWorkGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AthenaConn
+func resourceWorkGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AthenaConn()
 
 	input := &athena.DeleteWorkGroupInput{
 		WorkGroup: aws.String(d.Id()),
@@ -284,17 +295,18 @@ func resourceWorkGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	if v, ok := d.GetOk("force_destroy"); ok {
 		input.RecursiveDeleteOption = aws.Bool(v.(bool))
 	}
-	_, err := conn.DeleteWorkGroup(input)
+	_, err := conn.DeleteWorkGroupWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error deleting Athena WorkGroup (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Athena WorkGroup (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceWorkGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AthenaConn
+func resourceWorkGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AthenaConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &athena.UpdateWorkGroupInput{
@@ -312,21 +324,21 @@ func resourceWorkGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 		if d.HasChange("state") {
 			input.State = aws.String(d.Get("state").(string))
 		}
-		_, err := conn.UpdateWorkGroup(input)
+		_, err := conn.UpdateWorkGroupWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error updating Athena WorkGroup (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Athena WorkGroup (%s): %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %w", err)
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
 		}
 	}
 
-	return resourceWorkGroupRead(d, meta)
+	return append(diags, resourceWorkGroupRead(ctx, d, meta)...)
 }
 
 func expandWorkGroupConfiguration(l []interface{}) *athena.WorkGroupConfiguration {
@@ -338,28 +350,32 @@ func expandWorkGroupConfiguration(l []interface{}) *athena.WorkGroupConfiguratio
 
 	configuration := &athena.WorkGroupConfiguration{}
 
-	if v, ok := m["bytes_scanned_cutoff_per_query"]; ok && v.(int) > 0 {
-		configuration.BytesScannedCutoffPerQuery = aws.Int64(int64(v.(int)))
+	if v, ok := m["bytes_scanned_cutoff_per_query"].(int); ok && v > 0 {
+		configuration.BytesScannedCutoffPerQuery = aws.Int64(int64(v))
 	}
 
-	if v, ok := m["enforce_workgroup_configuration"]; ok {
-		configuration.EnforceWorkGroupConfiguration = aws.Bool(v.(bool))
+	if v, ok := m["enforce_workgroup_configuration"].(bool); ok {
+		configuration.EnforceWorkGroupConfiguration = aws.Bool(v)
 	}
 
 	if v, ok := m["engine_version"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		configuration.EngineVersion = expandWorkGroupEngineVersion(v)
 	}
 
-	if v, ok := m["publish_cloudwatch_metrics_enabled"]; ok {
-		configuration.PublishCloudWatchMetricsEnabled = aws.Bool(v.(bool))
+	if v, ok := m["execution_role"].(string); ok && v != "" {
+		configuration.ExecutionRole = aws.String(v)
+	}
+
+	if v, ok := m["publish_cloudwatch_metrics_enabled"].(bool); ok {
+		configuration.PublishCloudWatchMetricsEnabled = aws.Bool(v)
 	}
 
 	if v, ok := m["result_configuration"]; ok {
 		configuration.ResultConfiguration = expandWorkGroupResultConfiguration(v.([]interface{}))
 	}
 
-	if v, ok := m["requester_pays_enabled"]; ok {
-		configuration.RequesterPaysEnabled = aws.Bool(v.(bool))
+	if v, ok := m["requester_pays_enabled"].(bool); ok {
+		configuration.RequesterPaysEnabled = aws.Bool(v)
 	}
 
 	return configuration
@@ -390,30 +406,34 @@ func expandWorkGroupConfigurationUpdates(l []interface{}) *athena.WorkGroupConfi
 
 	configurationUpdates := &athena.WorkGroupConfigurationUpdates{}
 
-	if v, ok := m["bytes_scanned_cutoff_per_query"]; ok && v.(int) > 0 {
-		configurationUpdates.BytesScannedCutoffPerQuery = aws.Int64(int64(v.(int)))
+	if v, ok := m["bytes_scanned_cutoff_per_query"].(int); ok && v > 0 {
+		configurationUpdates.BytesScannedCutoffPerQuery = aws.Int64(int64(v))
 	} else {
 		configurationUpdates.RemoveBytesScannedCutoffPerQuery = aws.Bool(true)
 	}
 
-	if v, ok := m["enforce_workgroup_configuration"]; ok {
-		configurationUpdates.EnforceWorkGroupConfiguration = aws.Bool(v.(bool))
+	if v, ok := m["enforce_workgroup_configuration"].(bool); ok {
+		configurationUpdates.EnforceWorkGroupConfiguration = aws.Bool(v)
 	}
 
 	if v, ok := m["engine_version"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		configurationUpdates.EngineVersion = expandWorkGroupEngineVersion(v)
 	}
 
-	if v, ok := m["publish_cloudwatch_metrics_enabled"]; ok {
-		configurationUpdates.PublishCloudWatchMetricsEnabled = aws.Bool(v.(bool))
+	if v, ok := m["execution_role"].(string); ok && v != "" {
+		configurationUpdates.ExecutionRole = aws.String(v)
+	}
+
+	if v, ok := m["publish_cloudwatch_metrics_enabled"].(bool); ok {
+		configurationUpdates.PublishCloudWatchMetricsEnabled = aws.Bool(v)
 	}
 
 	if v, ok := m["result_configuration"]; ok {
 		configurationUpdates.ResultConfigurationUpdates = expandWorkGroupResultConfigurationUpdates(v.([]interface{}))
 	}
 
-	if v, ok := m["requester_pays_enabled"]; ok {
-		configurationUpdates.RequesterPaysEnabled = aws.Bool(v.(bool))
+	if v, ok := m["requester_pays_enabled"].(bool); ok {
+		configurationUpdates.RequesterPaysEnabled = aws.Bool(v)
 	}
 
 	return configurationUpdates
@@ -512,6 +532,7 @@ func flattenWorkGroupConfiguration(configuration *athena.WorkGroupConfiguration)
 		"bytes_scanned_cutoff_per_query":     aws.Int64Value(configuration.BytesScannedCutoffPerQuery),
 		"enforce_workgroup_configuration":    aws.BoolValue(configuration.EnforceWorkGroupConfiguration),
 		"engine_version":                     flattenWorkGroupEngineVersion(configuration.EngineVersion),
+		"execution_role":                     aws.StringValue(configuration.ExecutionRole),
 		"publish_cloudwatch_metrics_enabled": aws.BoolValue(configuration.PublishCloudWatchMetricsEnabled),
 		"result_configuration":               flattenWorkGroupResultConfiguration(configuration.ResultConfiguration),
 		"requester_pays_enabled":             aws.BoolValue(configuration.RequesterPaysEnabled),

@@ -1,20 +1,22 @@
 package location
 
 import (
-	"fmt"
+	"context"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/locationservice"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourcePlaceIndex() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourcePlaceIndexRead,
+		ReadWithoutTimeout: dataSourcePlaceIndexRead,
 		Schema: map[string]*schema.Schema{
 			"create_time": {
 				Type:     schema.TypeString,
@@ -58,8 +60,9 @@ func DataSourcePlaceIndex() *schema.Resource {
 	}
 }
 
-func dataSourcePlaceIndexRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LocationConn
+func dataSourcePlaceIndexRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).LocationConn()
 
 	input := &locationservice.DescribePlaceIndexInput{}
 
@@ -67,14 +70,14 @@ func dataSourcePlaceIndexRead(d *schema.ResourceData, meta interface{}) error {
 		input.IndexName = aws.String(v.(string))
 	}
 
-	output, err := conn.DescribePlaceIndex(input)
+	output, err := conn.DescribePlaceIndexWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error getting Location Service Place Index: %w", err)
+		return sdkdiag.AppendErrorf(diags, "getting Location Service Place Index: %s", err)
 	}
 
 	if output == nil {
-		return fmt.Errorf("error getting Location Service Place Index: empty response")
+		return sdkdiag.AppendErrorf(diags, "getting Location Service Place Index: empty response")
 	}
 
 	d.SetId(aws.StringValue(output.IndexName))
@@ -93,5 +96,5 @@ func dataSourcePlaceIndexRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("tags", KeyValueTags(output.Tags).IgnoreAWS().IgnoreConfig(meta.(*conns.AWSClient).IgnoreTagsConfig).Map())
 	d.Set("update_time", aws.TimeValue(output.UpdateTime).Format(time.RFC3339))
 
-	return nil
+	return diags
 }

@@ -1,6 +1,7 @@
 package emr_test
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"testing"
@@ -17,6 +18,7 @@ import (
 )
 
 func TestAccEMRInstanceGroup_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v emr.InstanceGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_emr_instance_group.test"
@@ -25,12 +27,12 @@ func TestAccEMRInstanceGroup_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceGroupDestroy,
+		CheckDestroy:             testAccCheckInstanceGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceGroupExists(resourceName, &v),
+					testAccCheckInstanceGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "autoscaling_policy", ""),
 					resource.TestCheckResourceAttr(resourceName, "bid_price", ""),
 					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", "false"),
@@ -48,6 +50,7 @@ func TestAccEMRInstanceGroup_basic(t *testing.T) {
 }
 
 func TestAccEMRInstanceGroup_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v emr.InstanceGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_emr_instance_group.test"
@@ -56,14 +59,14 @@ func TestAccEMRInstanceGroup_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceGroupDestroy,
+		CheckDestroy:             testAccCheckInstanceGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceGroupExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfemr.ResourceInstanceGroup(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfemr.ResourceInstanceGroup(), resourceName),
+					testAccCheckInstanceGroupExists(ctx, resourceName, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfemr.ResourceInstanceGroup(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfemr.ResourceInstanceGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -73,6 +76,7 @@ func TestAccEMRInstanceGroup_disappears(t *testing.T) {
 
 // Regression test for https://github.com/hashicorp/terraform-provider-aws/issues/1355
 func TestAccEMRInstanceGroup_Disappears_emrCluster(t *testing.T) {
+	ctx := acctest.Context(t)
 	var cluster emr.Cluster
 	var ig emr.InstanceGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -83,14 +87,14 @@ func TestAccEMRInstanceGroup_Disappears_emrCluster(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceGroupDestroy,
+		CheckDestroy:             testAccCheckInstanceGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(emrClusterResourceName, &cluster),
-					testAccCheckInstanceGroupExists(resourceName, &ig),
-					acctest.CheckResourceDisappears(acctest.Provider, tfemr.ResourceCluster(), emrClusterResourceName),
+					testAccCheckClusterExists(ctx, emrClusterResourceName, &cluster),
+					testAccCheckInstanceGroupExists(ctx, resourceName, &ig),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfemr.ResourceCluster(), emrClusterResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -99,6 +103,7 @@ func TestAccEMRInstanceGroup_Disappears_emrCluster(t *testing.T) {
 }
 
 func TestAccEMRInstanceGroup_bidPrice(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v1, v2 emr.InstanceGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_emr_instance_group.test"
@@ -107,12 +112,12 @@ func TestAccEMRInstanceGroup_bidPrice(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceGroupDestroy,
+		CheckDestroy:             testAccCheckInstanceGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceGroupExists(resourceName, &v1),
+					testAccCheckInstanceGroupExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "bid_price", ""),
 				),
 			},
@@ -126,7 +131,7 @@ func TestAccEMRInstanceGroup_bidPrice(t *testing.T) {
 			{
 				Config: testAccInstanceGroupConfig_bidPrice(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceGroupExists(resourceName, &v2),
+					testAccCheckInstanceGroupExists(ctx, resourceName, &v2),
 					resource.TestCheckResourceAttr(resourceName, "bid_price", "0.30"),
 					testAccInstanceGroupRecreated(t, &v1, &v2),
 				),
@@ -141,7 +146,7 @@ func TestAccEMRInstanceGroup_bidPrice(t *testing.T) {
 			{
 				Config: testAccInstanceGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceGroupExists(resourceName, &v1),
+					testAccCheckInstanceGroupExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "bid_price", ""),
 					testAccInstanceGroupRecreated(t, &v2, &v1),
 				),
@@ -151,6 +156,7 @@ func TestAccEMRInstanceGroup_bidPrice(t *testing.T) {
 }
 
 func TestAccEMRInstanceGroup_sJSON(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v emr.InstanceGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_emr_instance_group.test"
@@ -159,12 +165,12 @@ func TestAccEMRInstanceGroup_sJSON(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceGroupDestroy,
+		CheckDestroy:             testAccCheckInstanceGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceGroupConfig_configurationsJSON(rName, "partitionName1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceGroupExists(resourceName, &v),
+					testAccCheckInstanceGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "configurations_json"),
 				),
 			},
@@ -178,7 +184,7 @@ func TestAccEMRInstanceGroup_sJSON(t *testing.T) {
 			{
 				Config: testAccInstanceGroupConfig_configurationsJSON(rName, "partitionName2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceGroupExists(resourceName, &v),
+					testAccCheckInstanceGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "configurations_json"),
 				),
 			},
@@ -194,6 +200,7 @@ func TestAccEMRInstanceGroup_sJSON(t *testing.T) {
 }
 
 func TestAccEMRInstanceGroup_autoScalingPolicy(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v emr.InstanceGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_emr_instance_group.test"
@@ -202,12 +209,12 @@ func TestAccEMRInstanceGroup_autoScalingPolicy(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceGroupDestroy,
+		CheckDestroy:             testAccCheckInstanceGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceGroupConfig_autoScalingPolicy(rName, 1, 3),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceGroupExists(resourceName, &v),
+					testAccCheckInstanceGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "autoscaling_policy"),
 				),
 			},
@@ -221,7 +228,7 @@ func TestAccEMRInstanceGroup_autoScalingPolicy(t *testing.T) {
 			{
 				Config: testAccInstanceGroupConfig_autoScalingPolicy(rName, 2, 3),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceGroupExists(resourceName, &v),
+					testAccCheckInstanceGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "autoscaling_policy"),
 				),
 			},
@@ -239,6 +246,7 @@ func TestAccEMRInstanceGroup_autoScalingPolicy(t *testing.T) {
 // Confirm we can scale down the instance count.
 // Regression test for https://github.com/hashicorp/terraform-provider-aws/issues/1264
 func TestAccEMRInstanceGroup_instanceCount(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v emr.InstanceGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_emr_instance_group.test"
@@ -247,11 +255,11 @@ func TestAccEMRInstanceGroup_instanceCount(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceGroupDestroy,
+		CheckDestroy:             testAccCheckInstanceGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceGroupConfig_basic(rName),
-				Check:  testAccCheckInstanceGroupExists(resourceName, &v),
+				Check:  testAccCheckInstanceGroupExists(ctx, resourceName, &v),
 			},
 			{
 				ResourceName:            resourceName,
@@ -262,13 +270,14 @@ func TestAccEMRInstanceGroup_instanceCount(t *testing.T) {
 			},
 			{
 				Config: testAccInstanceGroupConfig_zeroCount(rName),
-				Check:  testAccCheckInstanceGroupExists(resourceName, &v),
+				Check:  testAccCheckInstanceGroupExists(ctx, resourceName, &v),
 			},
 		},
 	})
 }
 
 func TestAccEMRInstanceGroup_EBS_ebsOptimized(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v emr.InstanceGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_emr_instance_group.test"
@@ -277,12 +286,12 @@ func TestAccEMRInstanceGroup_EBS_ebsOptimized(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceGroupDestroy,
+		CheckDestroy:             testAccCheckInstanceGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceGroupConfig_ebs(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceGroupExists(resourceName, &v),
+					testAccCheckInstanceGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "ebs_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", "true"),
 				),
@@ -297,7 +306,7 @@ func TestAccEMRInstanceGroup_EBS_ebsOptimized(t *testing.T) {
 			{
 				Config: testAccInstanceGroupConfig_ebs(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceGroupExists(resourceName, &v),
+					testAccCheckInstanceGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "ebs_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", "false"),
 				),
@@ -306,37 +315,39 @@ func TestAccEMRInstanceGroup_EBS_ebsOptimized(t *testing.T) {
 	})
 }
 
-func testAccCheckInstanceGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn
+func testAccCheckInstanceGroupDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_emr_cluster" {
-			continue
-		}
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_emr_cluster" {
+				continue
+			}
 
-		params := &emr.DescribeClusterInput{
-			ClusterId: aws.String(rs.Primary.ID),
-		}
+			params := &emr.DescribeClusterInput{
+				ClusterId: aws.String(rs.Primary.ID),
+			}
 
-		describe, err := conn.DescribeCluster(params)
+			describe, err := conn.DescribeClusterWithContext(ctx, params)
 
-		if err == nil {
-			if describe.Cluster != nil &&
-				*describe.Cluster.Status.State == "WAITING" {
-				return fmt.Errorf("EMR Cluster still exists")
+			if err == nil {
+				if describe.Cluster != nil &&
+					*describe.Cluster.Status.State == "WAITING" {
+					return fmt.Errorf("EMR Cluster still exists")
+				}
+			}
+
+			if providerErr, ok := err.(awserr.Error); !ok {
+				log.Printf("[ERROR] %v", providerErr)
+				return err
 			}
 		}
 
-		if providerErr, ok := err.(awserr.Error); !ok {
-			log.Printf("[ERROR] %v", providerErr)
-			return err
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckInstanceGroupExists(name string, ig *emr.InstanceGroup) resource.TestCheckFunc {
+func testAccCheckInstanceGroupExists(ctx context.Context, name string, ig *emr.InstanceGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -348,8 +359,8 @@ func testAccCheckInstanceGroupExists(name string, ig *emr.InstanceGroup) resourc
 		}
 
 		meta := acctest.Provider.Meta()
-		conn := meta.(*conns.AWSClient).EMRConn
-		group, err := tfemr.FetchInstanceGroup(conn, rs.Primary.Attributes["cluster_id"], rs.Primary.ID)
+		conn := meta.(*conns.AWSClient).EMRConn()
+		group, err := tfemr.FetchInstanceGroup(ctx, conn, rs.Primary.Attributes["cluster_id"], rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("EMR error: %v", err)
 		}

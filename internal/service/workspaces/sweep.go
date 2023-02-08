@@ -34,15 +34,16 @@ func init() {
 }
 
 func sweepDirectories(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).WorkSpacesConn
+	conn := client.(*conns.AWSClient).WorkSpacesConn()
 	input := &workspaces.DescribeWorkspaceDirectoriesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeWorkspaceDirectoriesPages(input, func(page *workspaces.DescribeWorkspaceDirectoriesOutput, lastPage bool) bool {
+	err = conn.DescribeWorkspaceDirectoriesPagesWithContext(ctx, input, func(page *workspaces.DescribeWorkspaceDirectoriesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -67,7 +68,7 @@ func sweepDirectories(region string) error {
 		return fmt.Errorf("error listing WorkSpaces Directories (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping WorkSpaces Directories (%s): %w", region, err)
@@ -77,15 +78,16 @@ func sweepDirectories(region string) error {
 }
 
 func sweepIPGroups(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).WorkSpacesConn
+	conn := client.(*conns.AWSClient).WorkSpacesConn()
 	input := &workspaces.DescribeIpGroupsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = describeIPGroupsPages(conn, input, func(page *workspaces.DescribeIpGroupsOutput, lastPage bool) bool {
+	err = describeIPGroupsPages(ctx, conn, input, func(page *workspaces.DescribeIpGroupsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -110,7 +112,7 @@ func sweepIPGroups(region string) error {
 		return fmt.Errorf("error listing WorkSpaces Ip Groups (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping WorkSpaces Ip Groups (%s): %w", region, err)
@@ -120,17 +122,18 @@ func sweepIPGroups(region string) error {
 }
 
 func sweepWorkspace(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).WorkSpacesConn
+	conn := client.(*conns.AWSClient).WorkSpacesConn()
 
 	var errors error
 	input := &workspaces.DescribeWorkspacesInput{}
-	err = conn.DescribeWorkspacesPages(input, func(resp *workspaces.DescribeWorkspacesOutput, _ bool) bool {
+	err = conn.DescribeWorkspacesPagesWithContext(ctx, input, func(resp *workspaces.DescribeWorkspacesOutput, _ bool) bool {
 		for _, workspace := range resp.Workspaces {
-			err := WorkspaceDelete(conn, aws.StringValue(workspace.WorkspaceId), WorkspaceTerminatedTimeout)
+			err := WorkspaceDelete(ctx, conn, aws.StringValue(workspace.WorkspaceId), WorkspaceTerminatedTimeout)
 			if err != nil {
 				errors = multierror.Append(errors, err)
 			}

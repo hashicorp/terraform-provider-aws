@@ -1,18 +1,20 @@
 package ec2
 
 import (
-	"fmt"
+	"context"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func DataSourceSpotPrice() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceSpotPriceRead,
+		ReadWithoutTimeout: dataSourceSpotPriceRead,
 
 		Timeouts: &schema.ResourceTimeout{
 			Read: schema.DefaultTimeout(20 * time.Minute),
@@ -40,8 +42,9 @@ func DataSourceSpotPrice() *schema.Resource {
 	}
 }
 
-func dataSourceSpotPriceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func dataSourceSpotPriceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	now := time.Now()
 	input := &ec2.DescribeSpotPriceHistoryInput{
@@ -66,20 +69,20 @@ func dataSourceSpotPriceRead(d *schema.ResourceData, meta interface{}) error {
 
 	var foundSpotPrice []*ec2.SpotPrice
 
-	err := conn.DescribeSpotPriceHistoryPages(input, func(output *ec2.DescribeSpotPriceHistoryOutput, lastPage bool) bool {
+	err := conn.DescribeSpotPriceHistoryPagesWithContext(ctx, input, func(output *ec2.DescribeSpotPriceHistoryOutput, lastPage bool) bool {
 		foundSpotPrice = append(foundSpotPrice, output.SpotPriceHistory...)
 		return true
 	})
 	if err != nil {
-		return fmt.Errorf("error reading EC2 Spot Price History: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Spot Price History: %s", err)
 	}
 
 	if len(foundSpotPrice) == 0 {
-		return fmt.Errorf("no EC2 Spot Price History found matching criteria; try different search")
+		return sdkdiag.AppendErrorf(diags, "no EC2 Spot Price History found matching criteria; try different search")
 	}
 
 	if len(foundSpotPrice) > 1 {
-		return fmt.Errorf("multiple EC2 Spot Price History results found matching criteria; try different search")
+		return sdkdiag.AppendErrorf(diags, "multiple EC2 Spot Price History results found matching criteria; try different search")
 	}
 
 	resultSpotPrice := foundSpotPrice[0]
@@ -88,5 +91,5 @@ func dataSourceSpotPriceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("spot_price_timestamp", (*resultSpotPrice.Timestamp).Format(time.RFC3339))
 	d.SetId(meta.(*conns.AWSClient).Region)
 
-	return nil
+	return diags
 }

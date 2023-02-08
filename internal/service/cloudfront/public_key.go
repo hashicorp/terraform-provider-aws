@@ -1,28 +1,30 @@
 package cloudfront
 
 import (
+	"context"
 	"errors"
-	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func ResourcePublicKey() *schema.Resource {
 	return &schema.Resource{
-		Create: resourcePublicKeyCreate,
-		Read:   resourcePublicKeyRead,
-		Update: resourcePublicKeyUpdate,
-		Delete: resourcePublicKeyDelete,
+		CreateWithoutTimeout: resourcePublicKeyCreate,
+		ReadWithoutTimeout:   resourcePublicKeyRead,
+		UpdateWithoutTimeout: resourcePublicKeyUpdate,
+		DeleteWithoutTimeout: resourcePublicKeyDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -63,8 +65,9 @@ func ResourcePublicKey() *schema.Resource {
 	}
 }
 
-func resourcePublicKeyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+func resourcePublicKeyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 
 	if v, ok := d.GetOk("name"); ok {
 		d.Set("name", v.(string))
@@ -80,40 +83,41 @@ func resourcePublicKeyCreate(d *schema.ResourceData, meta interface{}) error {
 
 	log.Println("[DEBUG] Create CloudFront PublicKey:", request)
 
-	output, err := conn.CreatePublicKey(request)
+	output, err := conn.CreatePublicKeyWithContext(ctx, request)
 	if err != nil {
-		return fmt.Errorf("error creating CloudFront PublicKey: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating CloudFront PublicKey: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.PublicKey.Id))
-	return resourcePublicKeyRead(d, meta)
+	return append(diags, resourcePublicKeyRead(ctx, d, meta)...)
 }
 
-func resourcePublicKeyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+func resourcePublicKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 	request := &cloudfront.GetPublicKeyInput{
 		Id: aws.String(d.Id()),
 	}
 
-	output, err := conn.GetPublicKey(request)
+	output, err := conn.GetPublicKeyWithContext(ctx, request)
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchPublicKey) {
 		create.LogNotFoundRemoveState(names.CloudFront, create.ErrActionReading, ResNamePublicKey, d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.Error(names.CloudFront, create.ErrActionReading, ResNamePublicKey, d.Id(), err)
+		return create.DiagError(names.CloudFront, create.ErrActionReading, ResNamePublicKey, d.Id(), err)
 	}
 
 	if !d.IsNewResource() && (output == nil || output.PublicKey == nil || output.PublicKey.PublicKeyConfig == nil) {
 		create.LogNotFoundRemoveState(names.CloudFront, create.ErrActionReading, ResNamePublicKey, d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if d.IsNewResource() && (output == nil || output.PublicKey == nil || output.PublicKey.PublicKeyConfig == nil) {
-		return create.Error(names.CloudFront, create.ErrActionReading, ResNamePublicKey, d.Id(), errors.New("empty response after creation"))
+		return create.DiagError(names.CloudFront, create.ErrActionReading, ResNamePublicKey, d.Id(), errors.New("empty response after creation"))
 	}
 
 	publicKeyConfig := output.PublicKey.PublicKeyConfig
@@ -123,11 +127,12 @@ func resourcePublicKeyRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("caller_reference", publicKeyConfig.CallerReference)
 	d.Set("etag", output.ETag)
 
-	return nil
+	return diags
 }
 
-func resourcePublicKeyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+func resourcePublicKeyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 
 	request := &cloudfront.UpdatePublicKeyInput{
 		Id:              aws.String(d.Id()),
@@ -135,31 +140,32 @@ func resourcePublicKeyUpdate(d *schema.ResourceData, meta interface{}) error {
 		IfMatch:         aws.String(d.Get("etag").(string)),
 	}
 
-	_, err := conn.UpdatePublicKey(request)
+	_, err := conn.UpdatePublicKeyWithContext(ctx, request)
 	if err != nil {
-		return fmt.Errorf("error updating CloudFront PublicKey (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating CloudFront PublicKey (%s): %s", d.Id(), err)
 	}
 
-	return resourcePublicKeyRead(d, meta)
+	return append(diags, resourcePublicKeyRead(ctx, d, meta)...)
 }
 
-func resourcePublicKeyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+func resourcePublicKeyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 
 	request := &cloudfront.DeletePublicKeyInput{
 		Id:      aws.String(d.Id()),
 		IfMatch: aws.String(d.Get("etag").(string)),
 	}
 
-	_, err := conn.DeletePublicKey(request)
+	_, err := conn.DeletePublicKeyWithContext(ctx, request)
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchPublicKey) {
-			return nil
+			return diags
 		}
-		return err
+		return sdkdiag.AppendErrorf(diags, "deleting CloudFront PublicKey (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandPublicKeyConfig(d *schema.ResourceData) *cloudfront.PublicKeyConfig {

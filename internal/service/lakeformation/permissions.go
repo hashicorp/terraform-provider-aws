@@ -1,6 +1,7 @@
 package lakeformation
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"reflect"
@@ -9,11 +10,13 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lakeformation"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -21,9 +24,9 @@ import (
 
 func ResourcePermissions() *schema.Resource {
 	return &schema.Resource{
-		Create: resourcePermissionsCreate,
-		Read:   resourcePermissionsRead,
-		Delete: resourcePermissionsDelete,
+		CreateWithoutTimeout: resourcePermissionsCreate,
+		ReadWithoutTimeout:   resourcePermissionsRead,
+		DeleteWithoutTimeout: resourcePermissionsDelete,
 
 		Schema: map[string]*schema.Schema{
 			"catalog_id": {
@@ -374,8 +377,9 @@ func ResourcePermissions() *schema.Resource {
 // For 2 & 3, some peeking at the config (i.e., d.Get()) is necessary to filter the permissions AWS
 // returns.
 
-func resourcePermissionsCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LakeFormationConn
+func resourcePermissionsCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).LakeFormationConn()
 
 	input := &lakeformation.GrantPermissionsInput{
 		Permissions: flex.ExpandStringList(d.Get("permissions").([]interface{})),
@@ -422,9 +426,9 @@ func resourcePermissionsCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	var output *lakeformation.GrantPermissionsOutput
-	err := resource.Retry(IAMPropagationTimeout, func() *resource.RetryError {
+	err := resource.RetryContext(ctx, IAMPropagationTimeout, func() *resource.RetryError {
 		var err error
-		output, err = conn.GrantPermissions(input)
+		output, err = conn.GrantPermissionsWithContext(ctx, input)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, lakeformation.ErrCodeInvalidInputException, "Invalid principal") {
 				return resource.RetryableError(err)
@@ -448,24 +452,25 @@ func resourcePermissionsCreate(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if tfresource.TimedOut(err) {
-		output, err = conn.GrantPermissions(input)
+		output, err = conn.GrantPermissionsWithContext(ctx, input)
 	}
 
 	if err != nil {
-		return fmt.Errorf("error creating Lake Formation Permissions (input: %v): %w", input, err)
+		return sdkdiag.AppendErrorf(diags, "creating Lake Formation Permissions (input: %v): %s", input, err)
 	}
 
 	if output == nil {
-		return fmt.Errorf("error creating Lake Formation Permissions: empty response")
+		return sdkdiag.AppendErrorf(diags, "creating Lake Formation Permissions: empty response")
 	}
 
 	d.SetId(fmt.Sprintf("%d", create.StringHashcode(input.String())))
 
-	return resourcePermissionsRead(d, meta)
+	return append(diags, resourcePermissionsRead(ctx, d, meta)...)
 }
 
-func resourcePermissionsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LakeFormationConn
+func resourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).LakeFormationConn()
 
 	input := &lakeformation.ListPermissionsInput{
 		Principal: &lakeformation.DataLakePrincipal{
@@ -535,30 +540,30 @@ func resourcePermissionsRead(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Reading Lake Formation permissions: %v", input)
 
-	allPermissions, err := waitPermissionsReady(conn, input, tableType, columnNames, excludedColumnNames, columnWildcard)
+	allPermissions, err := waitPermissionsReady(ctx, conn, input, tableType, columnNames, excludedColumnNames, columnWildcard)
 
 	if !d.IsNewResource() {
 		if tfawserr.ErrCodeEquals(err, lakeformation.ErrCodeEntityNotFoundException) {
 			log.Printf("[WARN] Resource Lake Formation permissions (%s) not found, removing from state", d.Id())
 			d.SetId("")
-			return nil
+			return diags
 		}
 
 		if tfawserr.ErrMessageContains(err, "AccessDeniedException", "Resource does not exist") {
 			log.Printf("[WARN] Resource Lake Formation permissions (%s) not found, removing from state: %s", d.Id(), err)
 			d.SetId("")
-			return nil
+			return diags
 		}
 
 		if len(allPermissions) == 0 {
 			log.Printf("[WARN] Resource Lake Formation permissions (%s) not found, removing from state (0 permissions)", d.Id())
 			d.SetId("")
-			return nil
+			return diags
 		}
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Lake Formation permissions: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading Lake Formation permissions: %s", err)
 	}
 
 	// clean permissions = filter out permissions that do not pertain to this specific resource
@@ -573,7 +578,7 @@ func resourcePermissionsRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("lf_tag_policy", nil)
 		d.Set("table_with_columns", nil)
 		d.Set("table", nil)
-		return nil
+		return diags
 	}
 
 	if len(cleanPermissions) != len(allPermissions) {
@@ -592,7 +597,7 @@ func resourcePermissionsRead(d *schema.ResourceData, meta interface{}) error {
 
 	if cleanPermissions[0].Resource.DataLocation != nil {
 		if err := d.Set("data_location", []interface{}{flattenDataLocationResource(cleanPermissions[0].Resource.DataLocation)}); err != nil {
-			return fmt.Errorf("error setting data_location: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting data_location: %s", err)
 		}
 	} else {
 		d.Set("data_location", nil)
@@ -600,7 +605,7 @@ func resourcePermissionsRead(d *schema.ResourceData, meta interface{}) error {
 
 	if cleanPermissions[0].Resource.Database != nil {
 		if err := d.Set("database", []interface{}{flattenDatabaseResource(cleanPermissions[0].Resource.Database)}); err != nil {
-			return fmt.Errorf("error setting database: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting database: %s", err)
 		}
 	} else {
 		d.Set("database", nil)
@@ -608,7 +613,7 @@ func resourcePermissionsRead(d *schema.ResourceData, meta interface{}) error {
 
 	if cleanPermissions[0].Resource.LFTag != nil {
 		if err := d.Set("lf_tag", []interface{}{flattenLFTagKeyResource(cleanPermissions[0].Resource.LFTag)}); err != nil {
-			return fmt.Errorf("error setting database: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting database: %s", err)
 		}
 	} else {
 		d.Set("lf_tag", nil)
@@ -616,7 +621,7 @@ func resourcePermissionsRead(d *schema.ResourceData, meta interface{}) error {
 
 	if cleanPermissions[0].Resource.LFTagPolicy != nil {
 		if err := d.Set("lf_tag_policy", []interface{}{flattenLFTagPolicyResource(cleanPermissions[0].Resource.LFTagPolicy)}); err != nil {
-			return fmt.Errorf("error setting database: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting database: %s", err)
 		}
 	} else {
 		d.Set("lf_tag_policy", nil)
@@ -633,7 +638,7 @@ func resourcePermissionsRead(d *schema.ResourceData, meta interface{}) error {
 
 			if perm.Resource.TableWithColumns != nil && perm.Resource.TableWithColumns.ColumnWildcard != nil {
 				if err := d.Set("table", []interface{}{flattenTableColumnsResourceAsTable(perm.Resource.TableWithColumns)}); err != nil {
-					return fmt.Errorf("error setting table: %w", err)
+					return sdkdiag.AppendErrorf(diags, "setting table: %s", err)
 				}
 				tableSet = true
 				break
@@ -641,7 +646,7 @@ func resourcePermissionsRead(d *schema.ResourceData, meta interface{}) error {
 
 			if perm.Resource.Table != nil {
 				if err := d.Set("table", []interface{}{flattenTableResource(perm.Resource.Table)}); err != nil {
-					return fmt.Errorf("error setting table: %w", err)
+					return sdkdiag.AppendErrorf(diags, "setting table: %s", err)
 				}
 				tableSet = true
 				break
@@ -660,7 +665,7 @@ func resourcePermissionsRead(d *schema.ResourceData, meta interface{}) error {
 		for _, perm := range cleanPermissions {
 			if perm.Resource.TableWithColumns != nil {
 				if err := d.Set("table_with_columns", []interface{}{flattenTableColumnsResource(perm.Resource.TableWithColumns)}); err != nil {
-					return fmt.Errorf("error setting table_with_columns: %w", err)
+					return sdkdiag.AppendErrorf(diags, "setting table_with_columns: %s", err)
 				}
 				twcSet = true
 				break
@@ -672,11 +677,12 @@ func resourcePermissionsRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("table_with_columns", nil)
 	}
 
-	return nil
+	return diags
 }
 
-func resourcePermissionsDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LakeFormationConn
+func resourcePermissionsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).LakeFormationConn()
 
 	input := &lakeformation.RevokePermissionsInput{
 		Permissions:                flex.ExpandStringList(d.Get("permissions").([]interface{})),
@@ -722,12 +728,12 @@ func resourcePermissionsDelete(d *schema.ResourceData, meta interface{}) error {
 	if input.Resource == nil || reflect.DeepEqual(input.Resource, &lakeformation.Resource{}) {
 		// if resource is empty, don't delete = it won't delete anything since this is the predicate
 		log.Printf("[WARN] No Lake Formation Resource with permissions to revoke")
-		return nil
+		return diags
 	}
 
-	err := resource.Retry(permissionsDeleteRetryTimeout, func() *resource.RetryError {
+	err := resource.RetryContext(ctx, permissionsDeleteRetryTimeout, func() *resource.RetryError {
 		var err error
-		_, err = conn.RevokePermissions(input)
+		_, err = conn.RevokePermissionsWithContext(ctx, input)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, lakeformation.ErrCodeInvalidInputException, "register the S3 path") {
 				return resource.RetryableError(err)
@@ -745,19 +751,19 @@ func resourcePermissionsDelete(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if tfresource.TimedOut(err) {
-		_, err = conn.RevokePermissions(input)
+		_, err = conn.RevokePermissionsWithContext(ctx, input)
 	}
 
 	if tfawserr.ErrMessageContains(err, lakeformation.ErrCodeInvalidInputException, "No permissions revoked. Grantee") {
-		return nil
+		return diags
 	}
 
 	if tfawserr.ErrMessageContains(err, lakeformation.ErrCodeInvalidInputException, "cannot grant/revoke permission on non-existent column") {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("unable to revoke LakeFormation Permissions (input: %v): %w", input, err)
+		return sdkdiag.AppendErrorf(diags, "unable to revoke LakeFormation Permissions (input: %v): %s", input, err)
 	}
 
 	// Attempted to add a waiter here to wait for delete to complete. However, ListPermissions() returns
@@ -768,9 +774,9 @@ func resourcePermissionsDelete(d *schema.ResourceData, meta interface{}) error {
 	// You can't just wait until permissions = 0 because there could be many other unrelated permissions
 	// on the resource and filtering is non-trivial for table with columns.
 
-	err = resource.Retry(permissionsDeleteRetryTimeout, func() *resource.RetryError {
+	err = resource.RetryContext(ctx, permissionsDeleteRetryTimeout, func() *resource.RetryError {
 		var err error
-		_, err = conn.RevokePermissions(input)
+		_, err = conn.RevokePermissionsWithContext(ctx, input)
 
 		if !tfawserr.ErrMessageContains(err, lakeformation.ErrCodeInvalidInputException, "No permissions revoked. Grantee has no") {
 			return resource.RetryableError(err)
@@ -780,18 +786,18 @@ func resourcePermissionsDelete(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if tfresource.TimedOut(err) {
-		_, err = conn.RevokePermissions(input)
+		_, err = conn.RevokePermissionsWithContext(ctx, input)
 	}
 
 	if tfawserr.ErrMessageContains(err, lakeformation.ErrCodeInvalidInputException, "No permissions revoked. Grantee") {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("unable to revoke LakeFormation Permissions (input: %v): %w", input, err)
+		return sdkdiag.AppendErrorf(diags, "unable to revoke LakeFormation Permissions (input: %v): %s", input, err)
 	}
 
-	return nil
+	return diags
 }
 
 func ExpandCatalogResource() *lakeformation.CatalogResource {

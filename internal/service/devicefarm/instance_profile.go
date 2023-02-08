@@ -1,15 +1,17 @@
 package devicefarm
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/devicefarm"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -18,12 +20,12 @@ import (
 
 func ResourceInstanceProfile() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceInstanceProfileCreate,
-		Read:   resourceInstanceProfileRead,
-		Update: resourceInstanceProfileUpdate,
-		Delete: resourceInstanceProfileDelete,
+		CreateWithoutTimeout: resourceInstanceProfileCreate,
+		ReadWithoutTimeout:   resourceInstanceProfileRead,
+		UpdateWithoutTimeout: resourceInstanceProfileUpdate,
+		DeleteWithoutTimeout: resourceInstanceProfileDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -62,8 +64,9 @@ func ResourceInstanceProfile() *schema.Resource {
 	}
 }
 
-func resourceInstanceProfileCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DeviceFarmConn
+func resourceInstanceProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DeviceFarmConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -87,9 +90,9 @@ func resourceInstanceProfileCreate(d *schema.ResourceData, meta interface{}) err
 		input.RebootAfterUse = aws.Bool(v.(bool))
 	}
 
-	out, err := conn.CreateInstanceProfile(input)
+	out, err := conn.CreateInstanceProfileWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("Error creating DeviceFarm Instance Profile: %w", err)
+		return sdkdiag.AppendErrorf(diags, "Error creating DeviceFarm Instance Profile: %s", err)
 	}
 
 	arn := aws.StringValue(out.InstanceProfile.Arn)
@@ -97,29 +100,30 @@ func resourceInstanceProfileCreate(d *schema.ResourceData, meta interface{}) err
 	d.SetId(arn)
 
 	if len(tags) > 0 {
-		if err := UpdateTags(conn, arn, nil, tags); err != nil {
-			return fmt.Errorf("error updating DeviceFarm Instance Profile (%s) tags: %w", arn, err)
+		if err := UpdateTags(ctx, conn, arn, nil, tags); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating DeviceFarm Instance Profile (%s) tags: %s", arn, err)
 		}
 	}
 
-	return resourceInstanceProfileRead(d, meta)
+	return append(diags, resourceInstanceProfileRead(ctx, d, meta)...)
 }
 
-func resourceInstanceProfileRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DeviceFarmConn
+func resourceInstanceProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DeviceFarmConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	instaceProf, err := FindInstanceProfileByARN(conn, d.Id())
+	instaceProf, err := FindInstanceProfileByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DeviceFarm Instance Profile (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading DeviceFarm Instance Profile (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading DeviceFarm Instance Profile (%s): %s", d.Id(), err)
 	}
 
 	arn := aws.StringValue(instaceProf.Arn)
@@ -130,28 +134,29 @@ func resourceInstanceProfileRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("package_cleanup", instaceProf.PackageCleanup)
 	d.Set("reboot_after_use", instaceProf.RebootAfterUse)
 
-	tags, err := ListTags(conn, arn)
+	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for DeviceFarm Instance Profile (%s): %w", arn, err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for DeviceFarm Instance Profile (%s): %s", arn, err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceInstanceProfileUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DeviceFarmConn
+func resourceInstanceProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DeviceFarmConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &devicefarm.UpdateInstanceProfileInput{
@@ -179,38 +184,39 @@ func resourceInstanceProfileUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 
 		log.Printf("[DEBUG] Updating DeviceFarm Instance Profile: %s", d.Id())
-		_, err := conn.UpdateInstanceProfile(input)
+		_, err := conn.UpdateInstanceProfileWithContext(ctx, input)
 		if err != nil {
-			return fmt.Errorf("Error Updating DeviceFarm Instance Profile: %w", err)
+			return sdkdiag.AppendErrorf(diags, "Error Updating DeviceFarm Instance Profile: %s", err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating DeviceFarm Instance Profile (%s) tags: %w", d.Get("arn").(string), err)
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating DeviceFarm Instance Profile (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
 
-	return resourceInstanceProfileRead(d, meta)
+	return append(diags, resourceInstanceProfileRead(ctx, d, meta)...)
 }
 
-func resourceInstanceProfileDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DeviceFarmConn
+func resourceInstanceProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DeviceFarmConn()
 
 	input := &devicefarm.DeleteInstanceProfileInput{
 		Arn: aws.String(d.Id()),
 	}
 
 	log.Printf("[DEBUG] Deleting DeviceFarm Instance Profile: %s", d.Id())
-	_, err := conn.DeleteInstanceProfile(input)
+	_, err := conn.DeleteInstanceProfileWithContext(ctx, input)
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, devicefarm.ErrCodeNotFoundException) {
-			return nil
+			return diags
 		}
-		return fmt.Errorf("Error deleting DeviceFarm Instance Profile: %w", err)
+		return sdkdiag.AppendErrorf(diags, "Error deleting DeviceFarm Instance Profile: %s", err)
 	}
 
-	return nil
+	return diags
 }

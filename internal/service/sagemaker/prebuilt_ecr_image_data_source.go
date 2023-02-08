@@ -1,12 +1,15 @@
 package sagemaker
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws/endpoints"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 const (
@@ -304,7 +307,7 @@ var prebuiltECRImageIDByRegion_tensorFlowServing = map[string]string{
 
 func DataSourcePrebuiltECRImage() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourcePrebuiltECRImageRead,
+		ReadWithoutTimeout: dataSourcePrebuiltECRImageRead,
 		Schema: map[string]*schema.Schema{
 			"repository_name": {
 				Type:     schema.TypeString,
@@ -376,7 +379,8 @@ func DataSourcePrebuiltECRImage() *schema.Resource {
 	}
 }
 
-func dataSourcePrebuiltECRImageRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourcePrebuiltECRImageRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	region := meta.(*conns.AWSClient).Region
 	if v, ok := d.GetOk("region"); ok {
 		region = v.(string)
@@ -426,13 +430,13 @@ func dataSourcePrebuiltECRImageRead(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if id == "" {
-		return fmt.Errorf("no registry ID available for region (%s) and repository (%s)", region, repo)
+		return sdkdiag.AppendErrorf(diags, "no registry ID available for region (%s) and repository (%s)", region, repo)
 	}
 
 	d.SetId(id)
 	d.Set("registry_id", id)
 	d.Set("registry_path", PrebuiltECRImageCreatePath(id, region, suffix, repo, d.Get("image_tag").(string)))
-	return nil
+	return diags
 }
 
 func PrebuiltECRImageCreatePath(id, region, suffix, repo, imageTag string) string {

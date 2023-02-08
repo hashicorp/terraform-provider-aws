@@ -1,9 +1,9 @@
 package iam
 
 import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
+	"context"
 	"crypto/sha1"
 	"encoding/hex"
-	"fmt"
 	"log"
 	"regexp"
 	"strings"
@@ -14,10 +14,12 @@ import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
 	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -25,12 +27,12 @@ import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
 
 func ResourceServerCertificate() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceServerCertificateCreate,
-		Read:   resourceServerCertificateRead,
-		Update: resourceServerCertificateUpdate,
-		Delete: resourceServerCertificateDelete,
+		CreateWithoutTimeout: resourceServerCertificateCreate,
+		ReadWithoutTimeout:   resourceServerCertificateRead,
+		UpdateWithoutTimeout: resourceServerCertificateUpdate,
+		DeleteWithoutTimeout: resourceServerCertificateDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceServerCertificateImport,
+			StateContext: resourceServerCertificateImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -103,8 +105,9 @@ func ResourceServerCertificate() *schema.Resource {
 	}
 }
 
-func resourceServerCertificateCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+func resourceServerCertificateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IAMConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -136,18 +139,18 @@ func resourceServerCertificateCreate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	log.Printf("[DEBUG] Creating IAM Server Certificate with opts: %s", createOpts)
-	resp, err := conn.UploadServerCertificate(createOpts)
+	resp, err := conn.UploadServerCertificateWithContext(ctx, createOpts)
 
 	// Some partitions (i.e., ISO) may not support tag-on-create
 	if createOpts.Tags != nil && verify.ErrorISOUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] failed creating IAM Server Certificate (%s) with tags: %s. Trying create without tags.", sslCertName, err)
 		createOpts.Tags = nil
 
-		resp, err = conn.UploadServerCertificate(createOpts)
+		resp, err = conn.UploadServerCertificateWithContext(ctx, createOpts)
 	}
 
 	if err != nil {
-		return fmt.Errorf("error uploading server certificate: %w", err)
+		return sdkdiag.AppendErrorf(diags, "uploading server certificate: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resp.ServerCertificateMetadata.ServerCertificateId))
@@ -155,39 +158,40 @@ func resourceServerCertificateCreate(d *schema.ResourceData, meta interface{}) e
 
 	// Some partitions (i.e., ISO) may not support tag-on-create, attempt tag after create
 	if createOpts.Tags == nil && len(tags) > 0 {
-		err := serverCertificateUpdateTags(conn, d.Get("name").(string), nil, tags)
+		err := serverCertificateUpdateTags(ctx, conn, d.Get("name").(string), nil, tags)
 
 		// If default tags only, log and continue. Otherwise, error.
 		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.ErrorISOUnsupported(conn.PartitionID, err) {
 			log.Printf("[WARN] failed adding tags after create for IAM Server Certificate (%s): %s", d.Id(), err)
-			return resourceServerCertificateRead(d, meta)
+			return append(diags, resourceServerCertificateRead(ctx, d, meta)...)
 		}
 
 		if err != nil {
-			return fmt.Errorf("failed adding tags after create for IAM Server Certificate (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "adding tags after create for IAM Server Certificate (%s): %s", d.Id(), err)
 		}
 	}
 
-	return resourceServerCertificateRead(d, meta)
+	return append(diags, resourceServerCertificateRead(ctx, d, meta)...)
 }
 
-func resourceServerCertificateRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+func resourceServerCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IAMConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	resp, err := conn.GetServerCertificate(&iam.GetServerCertificateInput{
+	resp, err := conn.GetServerCertificateWithContext(ctx, &iam.GetServerCertificateInput{
 		ServerCertificateName: aws.String(d.Get("name").(string)),
 	})
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 		log.Printf("[WARN] IAM Server Certificate (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading IAM Server Certificate (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading IAM Server Certificate (%s): %s", d.Id(), err)
 	}
 
 	cert := resp.ServerCertificate
@@ -214,50 +218,52 @@ func resourceServerCertificateRead(d *schema.ResourceData, meta interface{}) err
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceServerCertificateUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+func resourceServerCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		err := serverCertificateUpdateTags(conn, d.Get("name").(string), o, n)
+		err := serverCertificateUpdateTags(ctx, conn, d.Get("name").(string), o, n)
 
 		// Some partitions (i.e., ISO) may not support tagging, giving error
 		if verify.ErrorISOUnsupported(conn.PartitionID, err) {
 			log.Printf("[WARN] failed updating tags for IAM Server Certificate (%s): %s", d.Id(), err)
-			return resourceServerCertificateRead(d, meta)
+			return append(diags, resourceServerCertificateRead(ctx, d, meta)...)
 		}
 
 		if err != nil {
-			return fmt.Errorf("failed updating tags for IAM Server Certificate (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating tags for IAM Server Certificate (%s): %s", d.Id(), err)
 		}
 	}
 
-	return resourceServerCertificateRead(d, meta)
+	return append(diags, resourceServerCertificateRead(ctx, d, meta)...)
 }
 
-func resourceServerCertificateDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+func resourceServerCertificateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IAMConn()
 	log.Printf("[INFO] Deleting IAM Server Certificate: %s", d.Id())
-	err := resource.Retry(15*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteServerCertificate(&iam.DeleteServerCertificateInput{
+	err := resource.RetryContext(ctx, 15*time.Minute, func() *resource.RetryError {
+		_, err := conn.DeleteServerCertificateWithContext(ctx, &iam.DeleteServerCertificateInput{
 			ServerCertificateName: aws.String(d.Get("name").(string)),
 		})
 
 		if err != nil {
 			if awsErr, ok := err.(awserr.Error); ok {
 				if awsErr.Code() == iam.ErrCodeDeleteConflictException && strings.Contains(awsErr.Message(), "currently in use by arn") {
-					currentlyInUseBy(awsErr.Message(), meta.(*conns.AWSClient).ELBConn)
+					currentlyInUseBy(ctx, awsErr.Message(), meta.(*conns.AWSClient).ELBConn())
 					log.Printf("[WARN] Conflict deleting server certificate: %s, retrying", awsErr.Message())
 					return resource.RetryableError(err)
 				}
@@ -271,22 +277,26 @@ func resourceServerCertificateDelete(d *schema.ResourceData, meta interface{}) e
 	})
 
 	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteServerCertificate(&iam.DeleteServerCertificateInput{
+		_, err = conn.DeleteServerCertificateWithContext(ctx, &iam.DeleteServerCertificateInput{
 			ServerCertificateName: aws.String(d.Get("name").(string)),
 		})
 	}
 
-	return err
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting IAM Server Certificate (%s): %s", d.Id(), err)
+	}
+
+	return diags
 }
 
-func resourceServerCertificateImport(
+func resourceServerCertificateImport(ctx context.Context,
 	d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	d.Set("name", d.Id())
 	// private_key can't be fetched from any API call
 	return []*schema.ResourceData{d}, nil
 }
 
-func currentlyInUseBy(awsErr string, conn *elb.ELB) {
+func currentlyInUseBy(ctx context.Context, awsErr string, conn *elb.ELB) {
 	r := regexp.MustCompile(`currently in use by ([a-z0-9:-]+)\/([a-z0-9-]+)\.`)
 	matches := r.FindStringSubmatch(awsErr)
 	if len(matches) > 0 {
@@ -294,7 +304,7 @@ func currentlyInUseBy(awsErr string, conn *elb.ELB) {
 		describeElbOpts := &elb.DescribeLoadBalancersInput{
 			LoadBalancerNames: []*string{aws.String(lbName)},
 		}
-		if _, err := conn.DescribeLoadBalancers(describeElbOpts); err != nil {
+		if _, err := conn.DescribeLoadBalancersWithContext(ctx, describeElbOpts); err != nil {
 			if tfawserr.ErrCodeEquals(err, "LoadBalancerNotFound") {
 				log.Printf("[WARN] Load Balancer (%s) causing delete conflict not found", lbName)
 			}

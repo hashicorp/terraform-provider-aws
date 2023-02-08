@@ -22,15 +22,16 @@ func init() {
 }
 
 func sweepDomains(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).SimpleDBConn
+	conn := client.(*conns.AWSClient).SimpleDBConn()
 	input := &simpledb.ListDomainsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListDomainsPages(input, func(page *simpledb.ListDomainsOutput, lastPage bool) bool {
+	err = conn.ListDomainsPagesWithContext(ctx, input, func(page *simpledb.ListDomainsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -51,7 +52,7 @@ func sweepDomains(region string) error {
 		return fmt.Errorf("error listing SimpleDB Domains (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping SimpleDB Domains (%s): %w", region, err)

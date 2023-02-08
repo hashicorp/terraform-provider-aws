@@ -1,6 +1,7 @@
 package storagegateway
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -10,9 +11,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -20,12 +23,12 @@ import (
 
 func ResourceCachediSCSIVolume() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceCachediSCSIVolumeCreate,
-		Read:   resourceCachediSCSIVolumeRead,
-		Update: resourceCachediSCSIVolumeUpdate,
-		Delete: resourceCachediSCSIVolumeDelete,
+		CreateWithoutTimeout: resourceCachediSCSIVolumeCreate,
+		ReadWithoutTimeout:   resourceCachediSCSIVolumeRead,
+		UpdateWithoutTimeout: resourceCachediSCSIVolumeUpdate,
+		DeleteWithoutTimeout: resourceCachediSCSIVolumeDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -110,8 +113,9 @@ func ResourceCachediSCSIVolume() *schema.Resource {
 	}
 }
 
-func resourceCachediSCSIVolumeCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).StorageGatewayConn
+func resourceCachediSCSIVolumeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).StorageGatewayConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -141,31 +145,33 @@ func resourceCachediSCSIVolumeCreate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	log.Printf("[DEBUG] Creating Storage Gateway cached iSCSI volume: %s", input)
-	output, err := conn.CreateCachediSCSIVolume(input)
+	output, err := conn.CreateCachediSCSIVolumeWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("error creating Storage Gateway cached iSCSI volume: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Storage Gateway cached iSCSI volume: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.VolumeARN))
 
-	return resourceCachediSCSIVolumeRead(d, meta)
+	return append(diags, resourceCachediSCSIVolumeRead(ctx, d, meta)...)
 }
 
-func resourceCachediSCSIVolumeUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).StorageGatewayConn
+func resourceCachediSCSIVolumeUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).StorageGatewayConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %s", err)
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
 		}
 	}
 
-	return resourceCachediSCSIVolumeRead(d, meta)
+	return append(diags, resourceCachediSCSIVolumeRead(ctx, d, meta)...)
 }
 
-func resourceCachediSCSIVolumeRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).StorageGatewayConn
+func resourceCachediSCSIVolumeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).StorageGatewayConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -174,21 +180,21 @@ func resourceCachediSCSIVolumeRead(d *schema.ResourceData, meta interface{}) err
 	}
 
 	log.Printf("[DEBUG] Reading Storage Gateway cached iSCSI volume: %s", input)
-	output, err := conn.DescribeCachediSCSIVolumes(input)
+	output, err := conn.DescribeCachediSCSIVolumesWithContext(ctx, input)
 
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, storagegateway.ErrorCodeVolumeNotFound) || tfawserr.ErrMessageContains(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified volume was not found") {
 			log.Printf("[WARN] Storage Gateway cached iSCSI volume %q not found, removing from state", d.Id())
 			d.SetId("")
-			return nil
+			return diags
 		}
-		return fmt.Errorf("error reading Storage Gateway cached iSCSI volume %q: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Storage Gateway cached iSCSI volume %q: %s", d.Id(), err)
 	}
 
 	if output == nil || len(output.CachediSCSIVolumes) == 0 || output.CachediSCSIVolumes[0] == nil || aws.StringValue(output.CachediSCSIVolumes[0].VolumeARN) != d.Id() {
 		log.Printf("[WARN] Storage Gateway cached iSCSI volume %q not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	volume := output.CachediSCSIVolumes[0]
@@ -206,19 +212,19 @@ func resourceCachediSCSIVolumeRead(d *schema.ResourceData, meta interface{}) err
 		d.Set("kms_encrypted", false)
 	}
 
-	tags, err := ListTags(conn, arn)
+	tags, err := ListTags(ctx, conn, arn)
 	if err != nil {
-		return fmt.Errorf("error listing tags for resource (%s): %s", arn, err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for resource (%s): %s", arn, err)
 	}
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
 	if volume.VolumeiSCSIAttributes != nil {
@@ -232,25 +238,26 @@ func resourceCachediSCSIVolumeRead(d *schema.ResourceData, meta interface{}) err
 
 		gatewayARN, targetName, err := ParseVolumeGatewayARNAndTargetNameFromARN(targetARN)
 		if err != nil {
-			return fmt.Errorf("error parsing Storage Gateway volume gateway ARN and target name from target ARN %q: %s", targetARN, err)
+			return sdkdiag.AppendErrorf(diags, "parsing Storage Gateway volume gateway ARN and target name from target ARN %q: %s", targetARN, err)
 		}
 		d.Set("gateway_arn", gatewayARN)
 		d.Set("target_name", targetName)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceCachediSCSIVolumeDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).StorageGatewayConn
+func resourceCachediSCSIVolumeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).StorageGatewayConn()
 
 	input := &storagegateway.DeleteVolumeInput{
 		VolumeARN: aws.String(d.Id()),
 	}
 
 	log.Printf("[DEBUG] Deleting Storage Gateway cached iSCSI volume: %s", input)
-	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteVolume(input)
+	err := resource.RetryContext(ctx, 2*time.Minute, func() *resource.RetryError {
+		_, err := conn.DeleteVolumeWithContext(ctx, input)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, storagegateway.ErrorCodeVolumeNotFound) {
 				return nil
@@ -265,16 +272,16 @@ func resourceCachediSCSIVolumeDelete(d *schema.ResourceData, meta interface{}) e
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteVolume(input)
+		_, err = conn.DeleteVolumeWithContext(ctx, input)
 	}
 	if tfawserr.ErrMessageContains(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified volume was not found") {
-		return nil
+		return diags
 	}
 	if err != nil {
-		return fmt.Errorf("error deleting Storage Gateway cached iSCSI volume %q: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Storage Gateway cached iSCSI volume %q: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func ParseVolumeGatewayARNAndTargetNameFromARN(inputARN string) (string, string, error) {

@@ -1,18 +1,20 @@
 package imagebuilder
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/namevaluesfilters"
 )
 
 func DataSourceDistributionConfigurations() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceDistributionConfigurationsRead,
+		ReadWithoutTimeout: dataSourceDistributionConfigurationsRead,
 		Schema: map[string]*schema.Schema{
 			"arns": {
 				Type:     schema.TypeSet,
@@ -29,8 +31,9 @@ func DataSourceDistributionConfigurations() *schema.Resource {
 	}
 }
 
-func dataSourceDistributionConfigurationsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ImageBuilderConn
+func dataSourceDistributionConfigurationsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ImageBuilderConn()
 
 	input := &imagebuilder.ListDistributionConfigurationsInput{}
 
@@ -40,7 +43,7 @@ func dataSourceDistributionConfigurationsRead(d *schema.ResourceData, meta inter
 
 	var results []*imagebuilder.DistributionConfigurationSummary
 
-	err := conn.ListDistributionConfigurationsPages(input, func(page *imagebuilder.ListDistributionConfigurationsOutput, lastPage bool) bool {
+	err := conn.ListDistributionConfigurationsPagesWithContext(ctx, input, func(page *imagebuilder.ListDistributionConfigurationsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -57,7 +60,7 @@ func dataSourceDistributionConfigurationsRead(d *schema.ResourceData, meta inter
 	})
 
 	if err != nil {
-		return fmt.Errorf("error reading Image Builder Distribution Configurations: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading Image Builder Distribution Configurations: %s", err)
 	}
 
 	var arns, names []string
@@ -71,5 +74,5 @@ func dataSourceDistributionConfigurationsRead(d *schema.ResourceData, meta inter
 	d.Set("arns", arns)
 	d.Set("names", names)
 
-	return nil
+	return diags
 }

@@ -1,20 +1,23 @@
 package apigateway
 
 import (
+	"context"
 	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/apigateway"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceRestAPI() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceRestAPIRead,
+		ReadWithoutTimeout: dataSourceRestAPIRead,
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
@@ -76,8 +79,9 @@ func DataSourceRestAPI() *schema.Resource {
 	}
 }
 
-func dataSourceRestAPIRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+func dataSourceRestAPIRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	params := &apigateway.GetRestApisInput{}
@@ -85,7 +89,7 @@ func dataSourceRestAPIRead(d *schema.ResourceData, meta interface{}) error {
 	target := d.Get("name")
 	var matchedApis []*apigateway.RestApi
 	log.Printf("[DEBUG] Reading API Gateway REST APIs: %s", params)
-	err := conn.GetRestApisPages(params, func(page *apigateway.GetRestApisOutput, lastPage bool) bool {
+	err := conn.GetRestApisPagesWithContext(ctx, params, func(page *apigateway.GetRestApisOutput, lastPage bool) bool {
 		for _, api := range page.Items {
 			if aws.StringValue(api.Name) == target {
 				matchedApis = append(matchedApis, api)
@@ -94,14 +98,14 @@ func dataSourceRestAPIRead(d *schema.ResourceData, meta interface{}) error {
 		return !lastPage
 	})
 	if err != nil {
-		return fmt.Errorf("error describing API Gateway REST APIs: %w", err)
+		return sdkdiag.AppendErrorf(diags, "describing API Gateway REST APIs: %s", err)
 	}
 
 	if len(matchedApis) == 0 {
-		return fmt.Errorf("no REST APIs with name %q found in this region", target)
+		return sdkdiag.AppendErrorf(diags, "no REST APIs with name %q found in this region", target)
 	}
 	if len(matchedApis) > 1 {
-		return fmt.Errorf("multiple REST APIs with name %q found in this region", target)
+		return sdkdiag.AppendErrorf(diags, "multiple REST APIs with name %q found in this region", target)
 	}
 
 	match := matchedApis[0]
@@ -127,11 +131,11 @@ func dataSourceRestAPIRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err := d.Set("endpoint_configuration", flattenEndpointConfiguration(match.EndpointConfiguration)); err != nil {
-		return fmt.Errorf("error setting endpoint_configuration: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting endpoint_configuration: %s", err)
 	}
 
 	if err := d.Set("tags", KeyValueTags(match.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	executionArn := arn.ARN{
@@ -147,7 +151,7 @@ func dataSourceRestAPIRead(d *schema.ResourceData, meta interface{}) error {
 		RestApiId: aws.String(d.Id()),
 	}
 
-	err = conn.GetResourcesPages(resourceParams, func(page *apigateway.GetResourcesOutput, lastPage bool) bool {
+	err = conn.GetResourcesPagesWithContext(ctx, resourceParams, func(page *apigateway.GetResourcesOutput, lastPage bool) bool {
 		for _, item := range page.Items {
 			if aws.StringValue(item.Path) == "/" {
 				d.Set("root_resource_id", item.Id)
@@ -157,5 +161,8 @@ func dataSourceRestAPIRead(d *schema.ResourceData, meta interface{}) error {
 		return !lastPage
 	})
 
-	return err
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading API Gateway REST API (%s): %s", target, err)
+	}
+	return diags
 }

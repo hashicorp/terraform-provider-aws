@@ -9,6 +9,8 @@ func strPtr(str string) *string {
 }
 
 func TestHasResourceUniqueIDPlusAdditionalSuffix(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		TestName string
 		Input    string
@@ -47,7 +49,10 @@ func TestHasResourceUniqueIDPlusAdditionalSuffix(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.TestName, func(t *testing.T) {
+			t.Parallel()
+
 			got := hasResourceUniqueIDPlusAdditionalSuffix(testCase.Input, "suffix")
 
 			if got != testCase.Expected {
@@ -58,6 +63,8 @@ func TestHasResourceUniqueIDPlusAdditionalSuffix(t *testing.T) {
 }
 
 func TestNamePrefixFromName(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		TestName string
 		Input    string
@@ -102,7 +109,10 @@ func TestNamePrefixFromName(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.TestName, func(t *testing.T) {
+			t.Parallel()
+
 			expected := testCase.Expected
 			got := NamePrefixFromName(testCase.Input)
 
@@ -121,6 +131,8 @@ func TestNamePrefixFromName(t *testing.T) {
 	}
 
 	t.Run("extracting prefix from generated name", func(t *testing.T) {
+		t.Parallel()
+
 		for i := 0; i < 10; i++ {
 			prefix := "test-"
 			input := Name("", prefix)
@@ -138,6 +150,8 @@ func TestNamePrefixFromName(t *testing.T) {
 }
 
 func TestNamePrefixFromNameWithSuffix(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		TestName string
 		Input    string
@@ -197,7 +211,10 @@ func TestNamePrefixFromNameWithSuffix(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.TestName, func(t *testing.T) {
+			t.Parallel()
+
 			expected := testCase.Expected
 			got := NamePrefixFromNameWithSuffix(testCase.Input, "suffix")
 
@@ -216,6 +233,8 @@ func TestNamePrefixFromNameWithSuffix(t *testing.T) {
 	}
 
 	t.Run("extracting prefix from generated name", func(t *testing.T) {
+		t.Parallel()
+
 		for i := 0; i < 10; i++ {
 			prefix := "test-"
 			input := NameWithSuffix("", prefix, "suffix")

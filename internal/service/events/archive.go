@@ -1,27 +1,30 @@
 package events
 
 import (
+	"context"
 	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eventbridge"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceArchive() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceArchiveCreate,
-		Read:   resourceArchiveRead,
-		Update: resourceArchiveUpdate,
-		Delete: resourceArchiveDelete,
+		CreateWithoutTimeout: resourceArchiveCreate,
+		ReadWithoutTimeout:   resourceArchiveRead,
+		UpdateWithoutTimeout: resourceArchiveUpdate,
+		DeleteWithoutTimeout: resourceArchiveDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -63,45 +66,47 @@ func ResourceArchive() *schema.Resource {
 	}
 }
 
-func resourceArchiveCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EventsConn
+func resourceArchiveCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EventsConn()
 
 	input, err := buildCreateArchiveInputStruct(d)
 
 	if err != nil {
-		return fmt.Errorf("Creating EventBridge Archive parameters failed: %w", err)
+		return sdkdiag.AppendErrorf(diags, "Creating EventBridge Archive parameters failed: %s", err)
 	}
 
 	log.Printf("[DEBUG] Creating EventBridge Archive: %s", input)
 
-	_, err = conn.CreateArchive(input)
+	_, err = conn.CreateArchiveWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("Creating EventBridge Archive failed: %w", err)
+		return sdkdiag.AppendErrorf(diags, "Creating EventBridge Archive failed: %s", err)
 	}
 
 	d.SetId(d.Get("name").(string))
 
 	log.Printf("[INFO] EventBridge Archive (%s) created", d.Id())
 
-	return resourceArchiveRead(d, meta)
+	return append(diags, resourceArchiveRead(ctx, d, meta)...)
 }
 
-func resourceArchiveRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EventsConn
+func resourceArchiveRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EventsConn()
 	input := &eventbridge.DescribeArchiveInput{
 		ArchiveName: aws.String(d.Id()),
 	}
 
-	out, err := conn.DescribeArchive(input)
+	out, err := conn.DescribeArchiveWithContext(ctx, input)
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, eventbridge.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] EventBridge archive (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error reading EventBridge archive (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading EventBridge archive (%s): %s", d.Id(), err)
 	}
 
 	d.Set("name", out.ArchiveName)
@@ -111,43 +116,45 @@ func resourceArchiveRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", out.ArchiveArn)
 	d.Set("retention_days", out.RetentionDays)
 
-	return nil
+	return diags
 }
 
-func resourceArchiveUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EventsConn
+func resourceArchiveUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EventsConn()
 
 	input, err := buildUpdateArchiveInputStruct(d)
 
 	if err != nil {
-		return fmt.Errorf("Creating EventBridge Archive parameters failed: %w", err)
+		return sdkdiag.AppendErrorf(diags, "Creating EventBridge Archive parameters failed: %s", err)
 	}
 
 	log.Printf("[DEBUG] Updating EventBridge Archive: %s", input)
-	_, err = conn.UpdateArchive(input)
+	_, err = conn.UpdateArchiveWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("error updating EventBridge Archive (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating EventBridge Archive (%s): %s", d.Id(), err)
 	}
 
-	return resourceArchiveRead(d, meta)
+	return append(diags, resourceArchiveRead(ctx, d, meta)...)
 }
 
-func resourceArchiveDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EventsConn
+func resourceArchiveDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EventsConn()
 
 	input := &eventbridge.DeleteArchiveInput{
 		ArchiveName: aws.String(d.Get("name").(string)),
 	}
 
-	_, err := conn.DeleteArchive(input)
+	_, err := conn.DeleteArchiveWithContext(ctx, input)
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, eventbridge.ErrCodeResourceNotFoundException) {
-			return nil
+			return diags
 		}
-		return fmt.Errorf("error deleting EventBridge Archive (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting EventBridge Archive (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func buildCreateArchiveInputStruct(d *schema.ResourceData) (*eventbridge.CreateArchiveInput, error) {

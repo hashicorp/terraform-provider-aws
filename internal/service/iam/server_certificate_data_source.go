@@ -1,7 +1,7 @@
 package iam
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"sort"
 	"strings"
@@ -9,15 +9,17 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func DataSourceServerCertificate() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceServerCertificateRead,
+		ReadWithoutTimeout: dataSourceServerCertificateRead,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -93,8 +95,9 @@ func (m CertificateByExpiration) Less(i, j int) bool {
 	return m[i].Expiration.After(*m[j].Expiration)
 }
 
-func dataSourceServerCertificateRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+func dataSourceServerCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	var matcher = func(cert *iam.ServerCertificateMetadata) bool {
 		return strings.HasPrefix(aws.StringValue(cert.ServerCertificateName), d.Get("name_prefix").(string))
@@ -111,7 +114,7 @@ func dataSourceServerCertificateRead(d *schema.ResourceData, meta interface{}) e
 		input.PathPrefix = aws.String(v.(string))
 	}
 	log.Printf("[DEBUG] Reading IAM Server Certificate")
-	err := conn.ListServerCertificatesPages(input, func(p *iam.ListServerCertificatesOutput, lastPage bool) bool {
+	err := conn.ListServerCertificatesPagesWithContext(ctx, input, func(p *iam.ListServerCertificatesOutput, lastPage bool) bool {
 		for _, cert := range p.ServerCertificateMetadataList {
 			if matcher(cert) {
 				metadatas = append(metadatas, cert)
@@ -120,15 +123,15 @@ func dataSourceServerCertificateRead(d *schema.ResourceData, meta interface{}) e
 		return true
 	})
 	if err != nil {
-		return fmt.Errorf("Error describing certificates: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading IAM Server Certificate: listing certificates: %s", err)
 	}
 
 	if len(metadatas) == 0 {
-		return fmt.Errorf("Search for AWS IAM server certificate returned no results")
+		return sdkdiag.AppendErrorf(diags, "Search for AWS IAM server certificate returned no results")
 	}
 	if len(metadatas) > 1 {
 		if !d.Get("latest").(bool) {
-			return fmt.Errorf("Search for AWS IAM server certificate returned too many results")
+			return sdkdiag.AppendErrorf(diags, "Search for AWS IAM server certificate returned too many results")
 		}
 
 		sort.Sort(CertificateByExpiration(metadatas))
@@ -144,15 +147,15 @@ func dataSourceServerCertificateRead(d *schema.ResourceData, meta interface{}) e
 	}
 
 	log.Printf("[DEBUG] Get Public Key Certificate for %s", *metadata.ServerCertificateName)
-	serverCertificateResp, err := conn.GetServerCertificate(&iam.GetServerCertificateInput{
+	serverCertificateResp, err := conn.GetServerCertificateWithContext(ctx, &iam.GetServerCertificateInput{
 		ServerCertificateName: metadata.ServerCertificateName,
 	})
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading IAM Server Certificate: getting certificate details: %s", err)
 	}
 	d.Set("upload_date", serverCertificateResp.ServerCertificate.ServerCertificateMetadata.UploadDate.Format(time.RFC3339))
 	d.Set("certificate_body", serverCertificateResp.ServerCertificate.CertificateBody)
 	d.Set("certificate_chain", serverCertificateResp.ServerCertificate.CertificateChain)
 
-	return nil
+	return diags
 }

@@ -10,19 +10,21 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/directconnect"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceHostedPublicVirtualInterface() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceHostedPublicVirtualInterfaceCreate,
-		Read:   resourceHostedPublicVirtualInterfaceRead,
-		Delete: resourceHostedPublicVirtualInterfaceDelete,
+		CreateWithoutTimeout: resourceHostedPublicVirtualInterfaceCreate,
+		ReadWithoutTimeout:   resourceHostedPublicVirtualInterfaceRead,
+		DeleteWithoutTimeout: resourceHostedPublicVirtualInterfaceDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceHostedPublicVirtualInterfaceImport,
+			StateContext: resourceHostedPublicVirtualInterfaceImport,
 		},
 		CustomizeDiff: resourceHostedPublicVirtualInterfaceCustomizeDiff,
 
@@ -109,8 +111,9 @@ func ResourceHostedPublicVirtualInterface() *schema.Resource {
 	}
 }
 
-func resourceHostedPublicVirtualInterfaceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+func resourceHostedPublicVirtualInterfaceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
 	req := &directconnect.AllocatePublicVirtualInterfaceInput{
 		ConnectionId: aws.String(d.Get("connection_id").(string)),
@@ -136,31 +139,32 @@ func resourceHostedPublicVirtualInterfaceCreate(d *schema.ResourceData, meta int
 	}
 
 	log.Printf("[DEBUG] Allocating Direct Connect hosted public virtual interface: %s", req)
-	resp, err := conn.AllocatePublicVirtualInterface(req)
+	resp, err := conn.AllocatePublicVirtualInterfaceWithContext(ctx, req)
 	if err != nil {
-		return fmt.Errorf("error allocating Direct Connect hosted public virtual interface: %s", err)
+		return sdkdiag.AppendErrorf(diags, "allocating Direct Connect hosted public virtual interface: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resp.VirtualInterfaceId))
 
-	if err := hostedPublicVirtualInterfaceWaitUntilAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return err
+	if err := hostedPublicVirtualInterfaceWaitUntilAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	return resourceHostedPublicVirtualInterfaceRead(d, meta)
+	return append(diags, resourceHostedPublicVirtualInterfaceRead(ctx, d, meta)...)
 }
 
-func resourceHostedPublicVirtualInterfaceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+func resourceHostedPublicVirtualInterfaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
-	vif, err := virtualInterfaceRead(d.Id(), conn)
+	vif, err := virtualInterfaceRead(ctx, d.Id(), conn)
 	if err != nil {
-		return err
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 	if vif == nil {
 		log.Printf("[WARN] Direct Connect virtual interface (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	d.Set("address_family", vif.AddressFamily)
@@ -182,21 +186,21 @@ func resourceHostedPublicVirtualInterfaceRead(d *schema.ResourceData, meta inter
 	d.Set("name", vif.VirtualInterfaceName)
 	d.Set("owner_account_id", vif.OwnerAccount)
 	if err := d.Set("route_filter_prefixes", flattenRouteFilterPrefixes(vif.RouteFilterPrefixes)); err != nil {
-		return fmt.Errorf("error setting route_filter_prefixes: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting route_filter_prefixes: %s", err)
 	}
 	d.Set("vlan", vif.Vlan)
 
-	return nil
+	return diags
 }
 
-func resourceHostedPublicVirtualInterfaceDelete(d *schema.ResourceData, meta interface{}) error {
-	return virtualInterfaceDelete(d, meta)
+func resourceHostedPublicVirtualInterfaceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	return virtualInterfaceDelete(ctx, d, meta)
 }
 
-func resourceHostedPublicVirtualInterfaceImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+func resourceHostedPublicVirtualInterfaceImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
-	vif, err := virtualInterfaceRead(d.Id(), conn)
+	vif, err := virtualInterfaceRead(ctx, d.Id(), conn)
 	if err != nil {
 		return nil, err
 	}
@@ -227,9 +231,8 @@ func resourceHostedPublicVirtualInterfaceCustomizeDiff(_ context.Context, diff *
 	return nil
 }
 
-func hostedPublicVirtualInterfaceWaitUntilAvailable(conn *directconnect.DirectConnect, vifId string, timeout time.Duration) error {
-	return virtualInterfaceWaitUntilAvailable(
-		conn,
+func hostedPublicVirtualInterfaceWaitUntilAvailable(ctx context.Context, conn *directconnect.DirectConnect, vifId string, timeout time.Duration) error {
+	return virtualInterfaceWaitUntilAvailable(ctx, conn,
 		vifId,
 		timeout,
 		[]string{

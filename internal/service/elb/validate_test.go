@@ -5,6 +5,8 @@ import (
 )
 
 func TestValidName(t *testing.T) {
+	t.Parallel()
+
 	validNames := []string{
 		"tf-test-elb",
 	}
@@ -32,6 +34,8 @@ func TestValidName(t *testing.T) {
 }
 
 func TestValidNamePrefix(t *testing.T) {
+	t.Parallel()
+
 	validNamePrefixes := []string{
 		"test-",
 	}

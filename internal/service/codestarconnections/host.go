@@ -1,31 +1,33 @@
 package codestarconnections
 
 import (
+	"context"
 	"errors"
-	"fmt"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codestarconnections"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourceHost() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceHostCreate,
-		Read:   resourceHostRead,
-		Update: resourceHostUpdate,
-		Delete: resourceHostDelete,
+		CreateWithoutTimeout: resourceHostCreate,
+		ReadWithoutTimeout:   resourceHostRead,
+		UpdateWithoutTimeout: resourceHostUpdate,
+		DeleteWithoutTimeout: resourceHostDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -91,8 +93,9 @@ func ResourceHost() *schema.Resource {
 	}
 }
 
-func resourceHostCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeStarConnectionsConn
+func resourceHostCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CodeStarConnectionsConn()
 
 	name := d.Get("name").(string)
 	input := &codestarconnections.CreateHostInput{
@@ -103,34 +106,35 @@ func resourceHostCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Creating CodeStar Connections Host: %s", input)
-	output, err := conn.CreateHost(input)
+	output, err := conn.CreateHostWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("creating CodeStar Connections Host (%s): %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating CodeStar Connections Host (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.HostArn))
 
-	if _, err := waitHostPendingOrAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("waiting for CodeStar Connections Host (%s) create: %w", d.Id(), err)
+	if _, err := waitHostPendingOrAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for CodeStar Connections Host (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceHostRead(d, meta)
+	return append(diags, resourceHostRead(ctx, d, meta)...)
 }
 
-func resourceHostRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeStarConnectionsConn
+func resourceHostRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CodeStarConnectionsConn()
 
-	output, err := FindHostByARN(conn, d.Id())
+	output, err := FindHostByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CodeStar Connections Host (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading CodeStar Connections Host (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading CodeStar Connections Host (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", d.Id())
@@ -140,11 +144,12 @@ func resourceHostRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("status", output.Status)
 	d.Set("vpc_configuration", flattenHostVPCConfiguration(output.VpcConfiguration))
 
-	return nil
+	return diags
 }
 
-func resourceHostUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeStarConnectionsConn
+func resourceHostUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CodeStarConnectionsConn()
 
 	if d.HasChanges("provider_endpoint", "vpc_configuration") {
 		input := &codestarconnections.UpdateHostInput{
@@ -153,37 +158,38 @@ func resourceHostUpdate(d *schema.ResourceData, meta interface{}) error {
 			VpcConfiguration: expandHostVPCConfiguration(d.Get("vpc_configuration").([]interface{})),
 		}
 
-		_, err := conn.UpdateHost(input)
+		_, err := conn.UpdateHostWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("updating CodeStar Connections Host (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating CodeStar Connections Host (%s): %s", d.Id(), err)
 		}
 
-		if _, err := waitHostPendingOrAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return fmt.Errorf("waiting for CodeStar Connections Host (%s) update: %w", d.Id(), err)
+		if _, err := waitHostPendingOrAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for CodeStar Connections Host (%s) update: %s", d.Id(), err)
 		}
 	}
 
-	return resourceHostRead(d, meta)
+	return append(diags, resourceHostRead(ctx, d, meta)...)
 }
 
-func resourceHostDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeStarConnectionsConn
+func resourceHostDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CodeStarConnectionsConn()
 
 	log.Printf("[DEBUG] Deleting CodeStar Connections Host: %s", d.Id())
-	_, err := conn.DeleteHost(&codestarconnections.DeleteHostInput{
+	_, err := conn.DeleteHostWithContext(ctx, &codestarconnections.DeleteHostInput{
 		HostArn: aws.String(d.Id()),
 	})
 
 	if tfawserr.ErrCodeEquals(err, codestarconnections.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("deleting CodeStar Connections Host (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting CodeStar Connections Host (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandHostVPCConfiguration(l []interface{}) *codestarconnections.VpcConfiguration {
@@ -224,9 +230,9 @@ func flattenHostVPCConfiguration(vpcConfig *codestarconnections.VpcConfiguration
 	return []interface{}{m}
 }
 
-func statusHost(conn *codestarconnections.CodeStarConnections, arn string) resource.StateRefreshFunc {
+func statusHost(ctx context.Context, conn *codestarconnections.CodeStarConnections, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindHostByARN(conn, arn)
+		output, err := FindHostByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -248,15 +254,15 @@ const (
 	hostStatusVPCConfigInitializing = "VPC_CONFIG_INITIALIZING"
 )
 
-func waitHostPendingOrAvailable(conn *codestarconnections.CodeStarConnections, arn string, timeout time.Duration) (*codestarconnections.Host, error) { //nolint:unparam
+func waitHostPendingOrAvailable(ctx context.Context, conn *codestarconnections.CodeStarConnections, arn string, timeout time.Duration) (*codestarconnections.Host, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{hostStatusVPCConfigInitializing},
 		Target:  []string{hostStatusAvailable, hostStatusPending},
-		Refresh: statusHost(conn, arn),
+		Refresh: statusHost(ctx, conn, arn),
 		Timeout: timeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*codestarconnections.Host); ok {
 		tfresource.SetLastError(err, errors.New(aws.StringValue(output.StatusMessage)))

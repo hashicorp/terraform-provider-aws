@@ -71,7 +71,7 @@ func ResourceDisk() *schema.Resource {
 }
 
 func resourceDiskCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn
+	conn := meta.(*conns.AWSClient).LightsailConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -98,7 +98,7 @@ func resourceDiskCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	op := out.Operations[0]
 	d.SetId(d.Get("name").(string))
 
-	err = waitOperation(conn, op.Id)
+	err = waitOperation(ctx, conn, op.Id)
 	if err != nil {
 		return create.DiagError(names.Lightsail, lightsail.OperationTypeCreateDisk, ResDisk, d.Get("name").(string), errors.New("Error waiting for Create Disk request operation"))
 	}
@@ -107,7 +107,7 @@ func resourceDiskCreate(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceDiskRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn
+	conn := meta.(*conns.AWSClient).LightsailConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -145,12 +145,12 @@ func resourceDiskRead(ctx context.Context, d *schema.ResourceData, meta interfac
 }
 
 func resourceDiskUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn
+	conn := meta.(*conns.AWSClient).LightsailConn()
 
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
 
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
 			return create.DiagError(names.Lightsail, create.ErrActionUpdating, ResDisk, d.Id(), err)
 		}
 	}
@@ -158,7 +158,7 @@ func resourceDiskUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
 			return create.DiagError(names.Lightsail, create.ErrActionUpdating, ResDisk, d.Id(), err)
 		}
 	}
@@ -167,7 +167,7 @@ func resourceDiskUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceDiskDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn
+	conn := meta.(*conns.AWSClient).LightsailConn()
 
 	out, err := conn.DeleteDiskWithContext(ctx, &lightsail.DeleteDiskInput{
 		DiskName: aws.String(d.Id()),
@@ -183,7 +183,7 @@ func resourceDiskDelete(ctx context.Context, d *schema.ResourceData, meta interf
 
 	op := out.Operations[0]
 
-	err = waitOperation(conn, op.Id)
+	err = waitOperation(ctx, conn, op.Id)
 	if err != nil {
 		return create.DiagError(names.Lightsail, lightsail.OperationTypeDeleteDisk, ResDisk, d.Get("name").(string), errors.New("Error waiting for Delete Disk request operation"))
 	}

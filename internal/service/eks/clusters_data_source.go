@@ -1,17 +1,19 @@
 package eks
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eks"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func DataSourceClusters() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceClustersRead,
+		ReadWithoutTimeout: dataSourceClustersRead,
 
 		Schema: map[string]*schema.Schema{
 			"names": {
@@ -23,12 +25,13 @@ func DataSourceClusters() *schema.Resource {
 	}
 }
 
-func dataSourceClustersRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EKSConn
+func dataSourceClustersRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EKSConn()
 
 	var clusters []*string
 
-	err := conn.ListClustersPages(&eks.ListClustersInput{}, func(page *eks.ListClustersOutput, lastPage bool) bool {
+	err := conn.ListClustersPagesWithContext(ctx, &eks.ListClustersInput{}, func(page *eks.ListClustersOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -39,12 +42,12 @@ func dataSourceClustersRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if err != nil {
-		return fmt.Errorf("error listing EKS Clusters: %w", err)
+		return sdkdiag.AppendErrorf(diags, "listing EKS Clusters: %s", err)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
 
 	d.Set("names", aws.StringValueSlice(clusters))
 
-	return nil
+	return diags
 }

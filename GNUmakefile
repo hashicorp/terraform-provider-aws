@@ -7,6 +7,7 @@ TEST_COUNT          ?= 1
 ACCTEST_TIMEOUT     ?= 180m
 ACCTEST_PARALLELISM ?= 20
 GO_VER              ?= go
+SWEEP_TIMEOUT       ?= 60m
 
 ifneq ($(origin PKG), undefined)
 	PKG_NAME = internal/service/$(PKG)
@@ -66,6 +67,7 @@ gen:
 	rm -f .github/labeler-pr-triage.yml
 	rm -f infrastructure/repository/labels-service.tf
 	rm -f internal/conns/*_gen.go
+	rm -f internal/provider/*_gen.go
 	rm -f internal/service/**/*_gen.go
 	rm -f internal/sweep/sweep_test.go
 	rm -f names/caps.md
@@ -81,7 +83,7 @@ sweep:
 	# make sweep SWEEPARGS=-sweep-run=aws_example_thing
 	# set SWEEPARGS=-sweep-allow-failures to continue after first failure
 	@echo "WARNING: This will destroy infrastructure. Use only in development accounts."
-	$(GO_VER) test $(SWEEP_DIR) -v -tags=sweep -sweep=$(SWEEP) $(SWEEPARGS) -timeout 60m
+	$(GO_VER) test $(SWEEP_DIR) -v -tags=sweep -sweep=$(SWEEP) $(SWEEPARGS) -timeout $(SWEEP_TIMEOUT)
 
 test: fmtcheck
 	$(GO_VER) test $(TEST) $(TESTARGS) -timeout=5m
@@ -159,7 +161,7 @@ docscheck:
 	@tfproviderdocs check \
 		-allowed-resource-subcategories-file website/allowed-subcategories.txt \
 		-enable-contents-check \
-		-ignore-file-missing-data-sources aws_alb,aws_alb_listener,aws_alb_target_group \
+		-ignore-file-missing-data-sources aws_alb,aws_alb_listener,aws_alb_target_group,aws_albs \
 		-ignore-file-missing-resources aws_alb,aws_alb_listener,aws_alb_listener_certificate,aws_alb_listener_rule,aws_alb_target_group,aws_alb_target_group_attachment \
 		-provider-name=aws \
 		-require-resource-subcategory
@@ -173,8 +175,10 @@ gh-workflows-lint:
 
 golangci-lint:
 	@echo "==> Checking source code with golangci-lint..."
-	@golangci-lint run --config .ci/.golangci.yml ./$(PKG_NAME)/...
-	@golangci-lint run --config .ci/.golangci2.yml ./$(PKG_NAME)/...
+	@golangci-lint run \
+		--config .ci/.golangci.yml \
+		--config .ci/.golangci2.yml \
+		./$(PKG_NAME)/...
 
 providerlint:
 	@echo "==> Checking source code with providerlint..."
@@ -201,11 +205,11 @@ providerlint:
 		-XR005=false \
 		-XS001=false \
 		-XS002=false \
-		./$(PKG_NAME)/service/... ./$(PKG_NAME)/provider/...
+		./internal/service/... ./internal/provider/...
 
 importlint:
 	@echo "==> Checking source code with importlint..."
-	@impi --local . --scheme stdThirdPartyLocal ./$(PKG_NAME)/...
+	@impi --local . --scheme stdThirdPartyLocal ./internal/...
 
 tools:
 	cd .ci/providerlint && $(GO_VER) install .
@@ -257,11 +261,12 @@ website-lint-fix:
 
 semgrep:
 	@echo "==> Running Semgrep static analysis..."
-	@docker run --rm --volume "${PWD}:/src" returntocorp/semgrep --config .ci/.semgrep.yml
+	@docker run --rm --volume "${PWD}:/src" returntocorp/semgrep semgrep --config .ci/.semgrep.yml
 
 semall:
 	@echo "==> Running Semgrep checks locally (must have semgrep installed)..."
 	@semgrep --error --metrics=off \
+		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
 		--config .ci/.semgrep.yml \
 		--config .ci/.semgrep-caps-aws-ec2.yml \
 		--config .ci/.semgrep-configs.yml \
@@ -269,11 +274,14 @@ semall:
 		--config .ci/.semgrep-service-name1.yml \
 		--config .ci/.semgrep-service-name2.yml \
 		--config .ci/.semgrep-service-name3.yml \
+		--config .ci/semgrep/acctest/ \
+		--config .ci/semgrep/aws/ \
+		--config .ci/semgrep/migrate/ \
 		--config 'r/dgryski.semgrep-go.badnilguard' \
 		--config 'r/dgryski.semgrep-go.errnilcheck' \
-    	--config 'r/dgryski.semgrep-go.marshaljson' \
+		--config 'r/dgryski.semgrep-go.marshaljson' \
 		--config 'r/dgryski.semgrep-go.nilerr' \
-        --config 'r/dgryski.semgrep-go.oddifsequence' \
+		--config 'r/dgryski.semgrep-go.oddifsequence' \
 		--config 'r/dgryski.semgrep-go.oserrors'
 
 skaff:

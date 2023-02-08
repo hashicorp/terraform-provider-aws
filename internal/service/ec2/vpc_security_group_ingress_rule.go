@@ -27,7 +27,7 @@ import (
 )
 
 func init() {
-	//registerFrameworkResourceFactory(newResourceSecurityGroupIngressRule)
+	// _sp.registerFrameworkResourceFactory(newResourceSecurityGroupIngressRule)
 }
 
 // newResourceSecurityGroupIngressRule instantiates a new Resource for the aws_vpc_security_group_ingress_rule resource.
@@ -67,7 +67,7 @@ func (r *resourceSecurityGroupIngressRule) Delete(ctx context.Context, request r
 }
 
 func (r *resourceSecurityGroupIngressRule) createSecurityGroupRule(ctx context.Context, data *resourceSecurityGroupRuleData) (string, error) {
-	conn := r.Meta().EC2Conn
+	conn := r.Meta().EC2Conn()
 
 	input := &ec2.AuthorizeSecurityGroupIngressInput{
 		GroupId:       flex.StringFromFramework(ctx, data.SecurityGroupID),
@@ -84,7 +84,7 @@ func (r *resourceSecurityGroupIngressRule) createSecurityGroupRule(ctx context.C
 }
 
 func (r *resourceSecurityGroupIngressRule) deleteSecurityGroupRule(ctx context.Context, data *resourceSecurityGroupRuleData) error {
-	conn := r.Meta().EC2Conn
+	conn := r.Meta().EC2Conn()
 
 	_, err := conn.RevokeSecurityGroupIngressWithContext(ctx, &ec2.RevokeSecurityGroupIngressInput{
 		GroupId:              flex.StringFromFramework(ctx, data.SecurityGroupID),
@@ -95,7 +95,7 @@ func (r *resourceSecurityGroupIngressRule) deleteSecurityGroupRule(ctx context.C
 }
 
 func (r *resourceSecurityGroupIngressRule) findSecurityGroupRuleByID(ctx context.Context, id string) (*ec2.SecurityGroupRule, error) {
-	conn := r.Meta().EC2Conn
+	conn := r.Meta().EC2Conn()
 
 	return FindSecurityGroupIngressRuleByID(ctx, conn, id)
 }
@@ -191,7 +191,7 @@ func (r *resourceSecurityGroupRule) Update(ctx context.Context, request resource
 		return
 	}
 
-	conn := r.Meta().EC2Conn
+	conn := r.Meta().EC2Conn()
 
 	if !new.CIDRIPv4.Equal(old.CIDRIPv4) ||
 		!new.CIDRIPv6.Equal(old.CIDRIPv6) ||
@@ -219,7 +219,7 @@ func (r *resourceSecurityGroupRule) Update(ctx context.Context, request resource
 	}
 
 	if !new.TagsAll.Equal(old.TagsAll) {
-		if err := UpdateTagsWithContext(ctx, conn, new.ID.ValueString(), old.TagsAll, new.TagsAll); err != nil {
+		if err := UpdateTags(ctx, conn, new.ID.ValueString(), old.TagsAll, new.TagsAll); err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("updating VPC Security Group Rule (%s) tags", new.ID.ValueString()), err.Error())
 
 			return
@@ -311,13 +311,13 @@ func (r *resourceSecurityGroupRule) create(ctx context.Context, request resource
 
 	data.ID = types.StringValue(securityGroupRuleID)
 
-	conn := r.Meta().EC2Conn
+	conn := r.Meta().EC2Conn()
 	defaultTagsConfig := r.Meta().DefaultTagsConfig
 	ignoreTagsConfig := r.Meta().IgnoreTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(data.Tags))
 
 	if len(tags) > 0 {
-		if err := UpdateTagsWithContext(ctx, conn, data.ID.ValueString(), nil, tags); err != nil {
+		if err := UpdateTags(ctx, conn, data.ID.ValueString(), nil, tags); err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("adding VPC Security Group Rule (%s) tags", data.ID.ValueString()), err.Error())
 
 			return
@@ -327,7 +327,7 @@ func (r *resourceSecurityGroupRule) create(ctx context.Context, request resource
 	// Set values for unknowns.
 	data.ARN = r.arn(ctx, securityGroupRuleID)
 	data.SecurityGroupRuleID = types.StringValue(securityGroupRuleID)
-	data.TagsAll = flex.FlattenFrameworkStringValueMap(ctx, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
+	data.TagsAll = flex.FlattenFrameworkStringValueMapLegacy(ctx, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -413,9 +413,9 @@ func (r *resourceSecurityGroupRule) read(ctx context.Context, request resource.R
 	if tags := tags.RemoveDefaultConfig(defaultTagsConfig).Map(); len(tags) == 0 {
 		data.Tags = tftags.Null
 	} else {
-		data.Tags = flex.FlattenFrameworkStringValueMap(ctx, tags)
+		data.Tags = flex.FlattenFrameworkStringValueMapLegacy(ctx, tags)
 	}
-	data.TagsAll = flex.FlattenFrameworkStringValueMap(ctx, tags.Map())
+	data.TagsAll = flex.FlattenFrameworkStringValueMapLegacy(ctx, tags.Map())
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }

@@ -1,27 +1,28 @@
 package elasticache
 
 import (
-	"errors"
-	"fmt"
+	"context"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elasticache"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourceSecurityGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceSecurityGroupCreate,
-		Read:   resourceSecurityGroupRead,
-		Delete: resourceSecurityGroupDelete,
+		CreateWithoutTimeout: resourceSecurityGroupCreate,
+		ReadWithoutTimeout:   resourceSecurityGroupRead,
+		DeleteWithoutTimeout: resourceSecurityGroupDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -49,33 +50,34 @@ func ResourceSecurityGroup() *schema.Resource {
 	}
 }
 
-func resourceSecurityGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	return errors.New(`with the retirement of EC2-Classic no new ElastiCache Security Groups can be created`)
+func resourceSecurityGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	return sdkdiag.AppendErrorf(diags, `with the retirement of EC2-Classic no new ElastiCache Security Groups can be created`)
 }
 
-func resourceSecurityGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn
+func resourceSecurityGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 	req := &elasticache.DescribeCacheSecurityGroupsInput{
 		CacheSecurityGroupName: aws.String(d.Id()),
 	}
 
-	res, err := conn.DescribeCacheSecurityGroups(req)
+	res, err := conn.DescribeCacheSecurityGroupsWithContext(ctx, req)
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading ElastiCache Cache Security Group (%s): %s", d.Id(), err)
 	}
 	if len(res.CacheSecurityGroups) == 0 {
-		return fmt.Errorf("Error missing %v", d.Id())
+		return sdkdiag.AppendErrorf(diags, "reading ElastiCache Cache Security Group (%s): empty response", d.Id())
 	}
 
 	var group *elasticache.CacheSecurityGroup
 	for _, g := range res.CacheSecurityGroups {
-		log.Printf("[DEBUG] CacheSecurityGroupName: %v, id: %v", g.CacheSecurityGroupName, d.Id())
 		if aws.StringValue(g.CacheSecurityGroupName) == d.Id() {
 			group = g
 		}
 	}
 	if group == nil {
-		return fmt.Errorf("Error retrieving cache security group: %v", res)
+		return sdkdiag.AppendErrorf(diags, "reading ElastiCache Cache Security Group (%s): not found", d.Id())
 	}
 
 	d.Set("name", group.CacheSecurityGroupName)
@@ -87,16 +89,17 @@ func resourceSecurityGroupRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("security_group_names", sgNames)
 
-	return nil
+	return diags
 }
 
-func resourceSecurityGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn
+func resourceSecurityGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 
 	log.Printf("[DEBUG] Cache security group delete: %s", d.Id())
 
-	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteCacheSecurityGroup(&elasticache.DeleteCacheSecurityGroupInput{
+	err := resource.RetryContext(ctx, 5*time.Minute, func() *resource.RetryError {
+		_, err := conn.DeleteCacheSecurityGroupWithContext(ctx, &elasticache.DeleteCacheSecurityGroupInput{
 			CacheSecurityGroupName: aws.String(d.Id()),
 		})
 		if err != nil {
@@ -119,10 +122,12 @@ func resourceSecurityGroupDelete(d *schema.ResourceData, meta interface{}) error
 	})
 
 	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteCacheSecurityGroup(&elasticache.DeleteCacheSecurityGroupInput{
+		_, err = conn.DeleteCacheSecurityGroupWithContext(ctx, &elasticache.DeleteCacheSecurityGroupInput{
 			CacheSecurityGroupName: aws.String(d.Id()),
 		})
 	}
-
-	return err
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting ElastiCache Cache Security Group (%s): %s", d.Id(), err)
+	}
+	return diags
 }

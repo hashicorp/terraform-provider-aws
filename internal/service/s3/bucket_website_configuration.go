@@ -21,10 +21,10 @@ import (
 
 func ResourceBucketWebsiteConfiguration() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceBucketWebsiteConfigurationCreate,
-		ReadContext:   resourceBucketWebsiteConfigurationRead,
-		UpdateContext: resourceBucketWebsiteConfigurationUpdate,
-		DeleteContext: resourceBucketWebsiteConfigurationDelete,
+		CreateWithoutTimeout: resourceBucketWebsiteConfigurationCreate,
+		ReadWithoutTimeout:   resourceBucketWebsiteConfigurationRead,
+		UpdateWithoutTimeout: resourceBucketWebsiteConfigurationUpdate,
+		DeleteWithoutTimeout: resourceBucketWebsiteConfigurationDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -173,7 +173,7 @@ func ResourceBucketWebsiteConfiguration() *schema.Resource {
 }
 
 func resourceBucketWebsiteConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket := d.Get("bucket").(string)
 	expectedBucketOwner := d.Get("expected_bucket_owner").(string)
@@ -213,7 +213,7 @@ func resourceBucketWebsiteConfigurationCreate(ctx context.Context, d *schema.Res
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
 		return conn.PutBucketWebsiteWithContext(ctx, input)
 	}, s3.ErrCodeNoSuchBucket)
 
@@ -227,7 +227,7 @@ func resourceBucketWebsiteConfigurationCreate(ctx context.Context, d *schema.Res
 }
 
 func resourceBucketWebsiteConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
@@ -303,7 +303,7 @@ func resourceBucketWebsiteConfigurationRead(ctx context.Context, d *schema.Resou
 }
 
 func resourceBucketWebsiteConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
@@ -368,7 +368,7 @@ func resourceBucketWebsiteConfigurationUpdate(ctx context.Context, d *schema.Res
 }
 
 func resourceBucketWebsiteConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
@@ -397,7 +397,7 @@ func resourceBucketWebsiteConfigurationDelete(ctx context.Context, d *schema.Res
 }
 
 func resourceBucketWebsiteConfigurationWebsiteEndpoint(ctx context.Context, client *conns.AWSClient, bucket, expectedBucketOwner string) (*S3Website, error) {
-	conn := client.S3Conn
+	conn := client.S3Conn()
 
 	input := &s3.GetBucketLocationInput{
 		Bucket: aws.String(bucket),

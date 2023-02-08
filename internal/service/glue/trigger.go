@@ -1,6 +1,7 @@
 package glue
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"time"
@@ -9,10 +10,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -21,12 +24,12 @@ import (
 
 func ResourceTrigger() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceTriggerCreate,
-		Read:   resourceTriggerRead,
-		Update: resourceTriggerUpdate,
-		Delete: resourceTriggerDelete,
+		CreateWithoutTimeout: resourceTriggerCreate,
+		ReadWithoutTimeout:   resourceTriggerRead,
+		UpdateWithoutTimeout: resourceTriggerUpdate,
+		DeleteWithoutTimeout: resourceTriggerDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(5 * time.Minute),
@@ -198,8 +201,9 @@ func ResourceTrigger() *schema.Resource {
 	}
 }
 
-func resourceTriggerCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+func resourceTriggerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlueConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 	name := d.Get("name").(string)
@@ -251,8 +255,8 @@ func resourceTriggerCreate(d *schema.ResourceData, meta interface{}) error {
 		input.StartOnCreation = aws.Bool(v.(bool))
 	}
 	log.Printf("[DEBUG] Creating Glue Trigger: %s", input)
-	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
-		_, err := conn.CreateTrigger(input)
+	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+		_, err := conn.CreateTriggerWithContext(ctx, input)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "Service is unable to assume role") {
 				return resource.RetryableError(err)
@@ -263,20 +267,20 @@ func resourceTriggerCreate(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		_, err = conn.CreateTrigger(input)
+		_, err = conn.CreateTriggerWithContext(ctx, input)
 	}
 	if err != nil {
-		return fmt.Errorf("error creating Glue Trigger (%s): %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating Glue Trigger (%s): %s", name, err)
 	}
 
 	d.SetId(name)
 
 	log.Printf("[DEBUG] Waiting for Glue Trigger (%s) to create", d.Id())
-	if _, err := waitTriggerCreated(conn, d.Id()); err != nil {
+	if _, err := waitTriggerCreated(ctx, conn, d.Id()); err != nil {
 		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
-			return nil
+			return diags
 		}
-		return fmt.Errorf("error waiting for Glue Trigger (%s) to be Created: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Glue Trigger (%s) to be Created: %s", d.Id(), err)
 	}
 
 	if d.Get("enabled").(bool) && triggerType == glue.TriggerTypeOnDemand {
@@ -285,39 +289,40 @@ func resourceTriggerCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		log.Printf("[DEBUG] Starting Glue Trigger: %s", input)
-		_, err := conn.StartTrigger(input)
+		_, err := conn.StartTriggerWithContext(ctx, input)
 		if err != nil {
-			return fmt.Errorf("error starting Glue Trigger (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "starting Glue Trigger (%s): %s", d.Id(), err)
 		}
 	}
 
-	return resourceTriggerRead(d, meta)
+	return append(diags, resourceTriggerRead(ctx, d, meta)...)
 }
 
-func resourceTriggerRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+func resourceTriggerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlueConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	output, err := FindTriggerByName(conn, d.Id())
+	output, err := FindTriggerByName(ctx, conn, d.Id())
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 			log.Printf("[WARN] Glue Trigger (%s) not found, removing from state", d.Id())
 			d.SetId("")
-			return nil
+			return diags
 		}
-		return fmt.Errorf("error reading Glue Trigger (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Glue Trigger (%s): %s", d.Id(), err)
 	}
 
 	trigger := output.Trigger
 	if trigger == nil {
 		log.Printf("[WARN] Glue Trigger (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err := d.Set("actions", flattenActions(trigger.Actions)); err != nil {
-		return fmt.Errorf("error setting actions: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting actions: %s", err)
 	}
 
 	triggerARN := arn.ARN{
@@ -343,41 +348,42 @@ func resourceTriggerRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("enabled", enabled)
 
 	if err := d.Set("predicate", flattenPredicate(trigger.Predicate)); err != nil {
-		return fmt.Errorf("error setting predicate: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting predicate: %s", err)
 	}
 
 	if err := d.Set("event_batching_condition", flattenEventBatchingCondition(trigger.EventBatchingCondition)); err != nil {
-		return fmt.Errorf("error setting event_batching_condition: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting event_batching_condition: %s", err)
 	}
 
 	d.Set("name", trigger.Name)
 	d.Set("schedule", trigger.Schedule)
 
-	tags, err := ListTags(conn, triggerARN)
+	tags, err := ListTags(ctx, conn, triggerARN)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for Glue Trigger (%s): %w", triggerARN, err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for Glue Trigger (%s): %s", triggerARN, err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
 	d.Set("type", trigger.Type)
 	d.Set("workflow_name", trigger.WorkflowName)
 
-	return nil
+	return diags
 }
 
-func resourceTriggerUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+func resourceTriggerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlueConn()
 
 	if d.HasChanges("actions", "description", "predicate", "schedule", "event_batching_condition") {
 		triggerUpdate := &glue.TriggerUpdate{
@@ -406,13 +412,13 @@ func resourceTriggerUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		log.Printf("[DEBUG] Updating Glue Trigger: %s", input)
-		_, err := conn.UpdateTrigger(input)
+		_, err := conn.UpdateTriggerWithContext(ctx, input)
 		if err != nil {
-			return fmt.Errorf("error updating Glue Trigger (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Glue Trigger (%s): %s", d.Id(), err)
 		}
 
-		if _, err := waitTriggerCreated(conn, d.Id()); err != nil {
-			return fmt.Errorf("error waiting for Glue Trigger (%s) to be Update: %w", d.Id(), err)
+		if _, err := waitTriggerCreated(ctx, conn, d.Id()); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for Glue Trigger (%s) to be Update: %s", d.Id(), err)
 		}
 	}
 
@@ -423,9 +429,9 @@ func resourceTriggerUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 
 			log.Printf("[DEBUG] Starting Glue Trigger: %s", input)
-			_, err := conn.StartTrigger(input)
+			_, err := conn.StartTriggerWithContext(ctx, input)
 			if err != nil {
-				return fmt.Errorf("error starting Glue Trigger (%s): %w", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "starting Glue Trigger (%s): %s", d.Id(), err)
 			}
 		} else {
 			//Skip if Trigger is type is ON_DEMAND and is in CREATED state as this means the trigger is not running or has ran already.
@@ -435,9 +441,9 @@ func resourceTriggerUpdate(d *schema.ResourceData, meta interface{}) error {
 				}
 
 				log.Printf("[DEBUG] Stopping Glue Trigger: %s", input)
-				_, err := conn.StopTrigger(input)
+				_, err := conn.StopTriggerWithContext(ctx, input)
 				if err != nil {
-					return fmt.Errorf("error stopping Glue Trigger (%s): %w", d.Id(), err)
+					return sdkdiag.AppendErrorf(diags, "stopping Glue Trigger (%s): %s", d.Id(), err)
 				}
 			}
 		}
@@ -445,40 +451,41 @@ func resourceTriggerUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %w", err)
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
 		}
 	}
 
-	return nil
+	return diags
 }
 
-func resourceTriggerDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+func resourceTriggerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlueConn()
 
 	log.Printf("[DEBUG] Deleting Glue Trigger: %s", d.Id())
-	err := deleteTrigger(conn, d.Id())
+	err := deleteTrigger(ctx, conn, d.Id())
 	if err != nil {
-		return fmt.Errorf("error deleting Glue Trigger (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Glue Trigger (%s): %s", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Waiting for Glue Trigger (%s) to delete", d.Id())
-	if _, err := waitTriggerDeleted(conn, d.Id()); err != nil {
+	if _, err := waitTriggerDeleted(ctx, conn, d.Id()); err != nil {
 		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
-			return nil
+			return diags
 		}
-		return fmt.Errorf("error waiting for Glue Trigger (%s) to be Deleted: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Glue Trigger (%s) to be Deleted: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func deleteTrigger(conn *glue.Glue, Name string) error {
+func deleteTrigger(ctx context.Context, conn *glue.Glue, Name string) error {
 	input := &glue.DeleteTriggerInput{
 		Name: aws.String(Name),
 	}
 
-	_, err := conn.DeleteTrigger(input)
+	_, err := conn.DeleteTriggerWithContext(ctx, input)
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 			return nil

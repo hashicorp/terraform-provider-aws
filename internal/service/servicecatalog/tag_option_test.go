@@ -1,6 +1,7 @@
 package servicecatalog_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -18,6 +19,7 @@ import (
 // add sweeper to delete known test servicecat tag options
 
 func TestAccServiceCatalogTagOption_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_servicecatalog_tag_option.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -25,12 +27,12 @@ func TestAccServiceCatalogTagOption_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTagOptionDestroy,
+		CheckDestroy:             testAccCheckTagOptionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTagOptionConfig_basic(rName, "värde", "active = true"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTagOptionExists(resourceName),
+					testAccCheckTagOptionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "active", "true"),
 					resource.TestCheckResourceAttr(resourceName, "key", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "owner"),
@@ -47,6 +49,7 @@ func TestAccServiceCatalogTagOption_basic(t *testing.T) {
 }
 
 func TestAccServiceCatalogTagOption_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_servicecatalog_tag_option.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -54,13 +57,13 @@ func TestAccServiceCatalogTagOption_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTagOptionDestroy,
+		CheckDestroy:             testAccCheckTagOptionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTagOptionConfig_basic(rName, "värde", "active = true"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTagOptionExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfservicecatalog.ResourceTagOption(), resourceName),
+					testAccCheckTagOptionExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfservicecatalog.ResourceTagOption(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -69,6 +72,7 @@ func TestAccServiceCatalogTagOption_disappears(t *testing.T) {
 }
 
 func TestAccServiceCatalogTagOption_update(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_servicecatalog_tag_option.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -80,7 +84,7 @@ func TestAccServiceCatalogTagOption_update(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTagOptionDestroy,
+		CheckDestroy:             testAccCheckTagOptionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTagOptionConfig_basic(rName, "värde ett", ""),
@@ -132,6 +136,7 @@ func TestAccServiceCatalogTagOption_update(t *testing.T) {
 }
 
 func TestAccServiceCatalogTagOption_notActive(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_servicecatalog_tag_option.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -139,7 +144,7 @@ func TestAccServiceCatalogTagOption_notActive(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTagOptionDestroy,
+		CheckDestroy:             testAccCheckTagOptionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTagOptionConfig_basic(rName, "värde ett", "active = false"),
@@ -154,37 +159,39 @@ func TestAccServiceCatalogTagOption_notActive(t *testing.T) {
 	})
 }
 
-func testAccCheckTagOptionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn
+func testAccCheckTagOptionDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_servicecatalog_tag_option" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_servicecatalog_tag_option" {
+				continue
+			}
+
+			input := &servicecatalog.DescribeTagOptionInput{
+				Id: aws.String(rs.Primary.ID),
+			}
+
+			output, err := conn.DescribeTagOptionWithContext(ctx, input)
+
+			if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
+				continue
+			}
+
+			if err != nil {
+				return fmt.Errorf("error getting Service Catalog Tag Option (%s): %w", rs.Primary.ID, err)
+			}
+
+			if output != nil {
+				return fmt.Errorf("Service Catalog Tag Option (%s) still exists", rs.Primary.ID)
+			}
 		}
 
-		input := &servicecatalog.DescribeTagOptionInput{
-			Id: aws.String(rs.Primary.ID),
-		}
-
-		output, err := conn.DescribeTagOption(input)
-
-		if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
-			continue
-		}
-
-		if err != nil {
-			return fmt.Errorf("error getting Service Catalog Tag Option (%s): %w", rs.Primary.ID, err)
-		}
-
-		if output != nil {
-			return fmt.Errorf("Service Catalog Tag Option (%s) still exists", rs.Primary.ID)
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckTagOptionExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckTagOptionExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 
@@ -192,13 +199,13 @@ func testAccCheckTagOptionExists(resourceName string) resource.TestCheckFunc {
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn()
 
 		input := &servicecatalog.DescribeTagOptionInput{
 			Id: aws.String(rs.Primary.ID),
 		}
 
-		_, err := conn.DescribeTagOption(input)
+		_, err := conn.DescribeTagOptionWithContext(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("error describing Service Catalog Tag Option (%s): %w", rs.Primary.ID, err)

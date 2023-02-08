@@ -1,19 +1,22 @@
 package route53
 
 import (
+	"context"
 	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/route53"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func DataSourceDelegationSet() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceDelegationSetRead,
+		ReadWithoutTimeout: dataSourceDelegationSetRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -37,8 +40,9 @@ func DataSourceDelegationSet() *schema.Resource {
 	}
 }
 
-func dataSourceDelegationSetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53Conn
+func dataSourceDelegationSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).Route53Conn()
 
 	dSetID := d.Get("id").(string)
 
@@ -48,16 +52,16 @@ func dataSourceDelegationSetRead(d *schema.ResourceData, meta interface{}) error
 
 	log.Printf("[DEBUG] Reading Route53 delegation set: %s", input)
 
-	resp, err := conn.GetReusableDelegationSet(input)
+	resp, err := conn.GetReusableDelegationSetWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("Failed getting Route53 delegation set (%s): %w", dSetID, err)
+		return sdkdiag.AppendErrorf(diags, "getting Route53 delegation set (%s): %s", dSetID, err)
 	}
 
 	d.SetId(dSetID)
 	d.Set("caller_reference", resp.DelegationSet.CallerReference)
 
 	if err := d.Set("name_servers", aws.StringValueSlice(resp.DelegationSet.NameServers)); err != nil {
-		return fmt.Errorf("setting name_servers: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting name_servers: %s", err)
 	}
 
 	arn := arn.ARN{
@@ -67,5 +71,5 @@ func dataSourceDelegationSetRead(d *schema.ResourceData, meta interface{}) error
 	}.String()
 	d.Set("arn", arn)
 
-	return nil
+	return diags
 }

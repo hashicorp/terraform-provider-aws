@@ -1,6 +1,7 @@
 package redshiftdata_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -14,6 +15,7 @@ import (
 )
 
 func TestAccRedshiftDataStatement_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v redshiftdataapiservice.DescribeStatementOutput
 	resourceName := "aws_redshiftdata_statement.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -22,15 +24,16 @@ func TestAccRedshiftDataStatement_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, redshiftdataapiservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             nil,
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStatementConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStatementExists(resourceName, &v),
+					testAccCheckStatementExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "cluster_identifier", "aws_redshift_cluster.test", "cluster_identifier"),
-					resource.TestCheckResourceAttr(resourceName, "sql", "CREATE GROUP group_name;"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "sql", "CREATE GROUP group_name;"),
+					resource.TestCheckResourceAttr(resourceName, "workgroup_name", ""),
 				),
 			},
 			{
@@ -43,7 +46,39 @@ func TestAccRedshiftDataStatement_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckStatementExists(n string, v *redshiftdataapiservice.DescribeStatementOutput) resource.TestCheckFunc {
+func TestAccRedshiftDataStatement_workgroup(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v redshiftdataapiservice.DescribeStatementOutput
+	resourceName := "aws_redshiftdata_statement.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, redshiftdataapiservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStatementConfig_workgroup(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStatementExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "cluster_identifier", ""),
+					resource.TestCheckResourceAttr(resourceName, "parameters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "sql", "CREATE GROUP group_name;"),
+					resource.TestCheckResourceAttrPair(resourceName, "workgroup_name", "aws_redshiftserverless_workgroup.test", "workgroup_name"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"database", "db_user"},
+			},
+		},
+	})
+}
+
+func testAccCheckStatementExists(ctx context.Context, n string, v *redshiftdataapiservice.DescribeStatementOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -54,9 +89,9 @@ func testAccCheckStatementExists(n string, v *redshiftdataapiservice.DescribeSta
 			return fmt.Errorf("No Redshift Data Statement ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftDataConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftDataConn()
 
-		output, err := tfredshiftdata.FindStatementByID(conn, rs.Primary.ID)
+		output, err := tfredshiftdata.FindStatementByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -89,4 +124,23 @@ resource "aws_redshiftdata_statement" "test" {
   sql                = "CREATE GROUP group_name;"
 }
 `, rName))
+}
+
+func testAccStatementConfig_workgroup(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_redshiftserverless_namespace" "test" {
+  namespace_name = %[1]q
+}
+
+resource "aws_redshiftserverless_workgroup" "test" {
+  namespace_name = aws_redshiftserverless_namespace.test.namespace_name
+  workgroup_name = %[1]q
+}
+
+resource "aws_redshiftdata_statement" "test" {
+  workgroup_name = aws_redshiftserverless_workgroup.test.workgroup_name
+  database       = "dev"
+  sql            = "CREATE GROUP group_name;"
+}
+`, rName)
 }

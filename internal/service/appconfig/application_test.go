@@ -1,6 +1,7 @@
 package appconfig_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -17,6 +18,7 @@ import (
 )
 
 func TestAccAppConfigApplication_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appconfig_application.test"
 
@@ -24,12 +26,12 @@ func TestAccAppConfigApplication_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, appconfig.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckApplicationDestroy,
+		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationExists(resourceName),
+					testAccCheckApplicationExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "appconfig", regexp.MustCompile(`application/[a-z0-9]{4,7}`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -45,6 +47,7 @@ func TestAccAppConfigApplication_basic(t *testing.T) {
 }
 
 func TestAccAppConfigApplication_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appconfig_application.test"
 
@@ -52,13 +55,13 @@ func TestAccAppConfigApplication_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, appconfig.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckApplicationDestroy,
+		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfappconfig.ResourceApplication(), resourceName),
+					testAccCheckApplicationExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappconfig.ResourceApplication(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -67,6 +70,7 @@ func TestAccAppConfigApplication_disappears(t *testing.T) {
 }
 
 func TestAccAppConfigApplication_updateName(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rNameUpdated := sdkacctest.RandomWithPrefix("tf-acc-test-update")
 	resourceName := "aws_appconfig_application.test"
@@ -75,18 +79,18 @@ func TestAccAppConfigApplication_updateName(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, appconfig.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckApplicationDestroy,
+		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationExists(resourceName),
+					testAccCheckApplicationExists(ctx, resourceName),
 				),
 			},
 			{
 				Config: testAccApplicationConfig_name(rNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationExists(resourceName),
+					testAccCheckApplicationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rNameUpdated),
 				),
 			},
@@ -100,6 +104,7 @@ func TestAccAppConfigApplication_updateName(t *testing.T) {
 }
 
 func TestAccAppConfigApplication_updateDescription(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	description := sdkacctest.RandomWithPrefix("tf-acc-test-update")
 	resourceName := "aws_appconfig_application.test"
@@ -108,12 +113,12 @@ func TestAccAppConfigApplication_updateDescription(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, appconfig.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckApplicationDestroy,
+		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationConfig_description(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationExists(resourceName),
+					testAccCheckApplicationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", rName),
 				),
 			},
@@ -125,7 +130,7 @@ func TestAccAppConfigApplication_updateDescription(t *testing.T) {
 			{
 				Config: testAccApplicationConfig_description(rName, description),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationExists(resourceName),
+					testAccCheckApplicationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
 				),
 			},
@@ -138,7 +143,7 @@ func TestAccAppConfigApplication_updateDescription(t *testing.T) {
 				// Test Description Removal
 				Config: testAccApplicationConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationExists(resourceName),
+					testAccCheckApplicationExists(ctx, resourceName),
 				),
 			},
 		},
@@ -146,6 +151,7 @@ func TestAccAppConfigApplication_updateDescription(t *testing.T) {
 }
 
 func TestAccAppConfigApplication_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appconfig_application.test"
 
@@ -153,12 +159,12 @@ func TestAccAppConfigApplication_tags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, appconfig.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckApplicationDestroy,
+		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationExists(resourceName),
+					testAccCheckApplicationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -171,7 +177,7 @@ func TestAccAppConfigApplication_tags(t *testing.T) {
 			{
 				Config: testAccApplicationConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationExists(resourceName),
+					testAccCheckApplicationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -180,7 +186,7 @@ func TestAccAppConfigApplication_tags(t *testing.T) {
 			{
 				Config: testAccApplicationConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationExists(resourceName),
+					testAccCheckApplicationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -189,37 +195,39 @@ func TestAccAppConfigApplication_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckApplicationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn
+func testAccCheckApplicationDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_appconfig_application" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_appconfig_application" {
+				continue
+			}
+
+			input := &appconfig.GetApplicationInput{
+				ApplicationId: aws.String(rs.Primary.ID),
+			}
+
+			output, err := conn.GetApplicationWithContext(ctx, input)
+
+			if tfawserr.ErrCodeEquals(err, appconfig.ErrCodeResourceNotFoundException) {
+				continue
+			}
+
+			if err != nil {
+				return fmt.Errorf("error reading AppConfig Application (%s): %w", rs.Primary.ID, err)
+			}
+
+			if output != nil {
+				return fmt.Errorf("AppConfig Application (%s) still exists", rs.Primary.ID)
+			}
 		}
 
-		input := &appconfig.GetApplicationInput{
-			ApplicationId: aws.String(rs.Primary.ID),
-		}
-
-		output, err := conn.GetApplication(input)
-
-		if tfawserr.ErrCodeEquals(err, appconfig.ErrCodeResourceNotFoundException) {
-			continue
-		}
-
-		if err != nil {
-			return fmt.Errorf("error reading AppConfig Application (%s): %w", rs.Primary.ID, err)
-		}
-
-		if output != nil {
-			return fmt.Errorf("AppConfig Application (%s) still exists", rs.Primary.ID)
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckApplicationExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckApplicationExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -230,13 +238,13 @@ func testAccCheckApplicationExists(resourceName string) resource.TestCheckFunc {
 			return fmt.Errorf("Resource (%s) ID not set", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn()
 
 		input := &appconfig.GetApplicationInput{
 			ApplicationId: aws.String(rs.Primary.ID),
 		}
 
-		output, err := conn.GetApplication(input)
+		output, err := conn.GetApplicationWithContext(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("error reading AppConfig Application (%s): %w", rs.Primary.ID, err)

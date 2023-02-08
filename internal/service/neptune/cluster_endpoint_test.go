@@ -2,6 +2,7 @@ package neptune_test
 
 import (
 	//"errors"
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -18,6 +19,7 @@ import (
 )
 
 func TestAccNeptuneClusterEndpoint_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var dbCluster neptune.DBClusterEndpoint
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
 	resourceName := "aws_neptune_cluster_endpoint.test"
@@ -26,12 +28,12 @@ func TestAccNeptuneClusterEndpoint_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterEndpointDestroy,
+		CheckDestroy:             testAccCheckClusterEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterEndpointConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterEndpointExists(resourceName, &dbCluster),
+					testAccCheckClusterEndpointExists(ctx, resourceName, &dbCluster),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexp.MustCompile(`cluster-endpoint:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_type", "READER"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_endpoint_identifier", rName),
@@ -51,6 +53,7 @@ func TestAccNeptuneClusterEndpoint_basic(t *testing.T) {
 }
 
 func TestAccNeptuneClusterEndpoint_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	if acctest.Partition() == "aws-us-gov" {
 		t.Skip("Neptune Cluster Endpoint tags are not supported in GovCloud partition")
 	}
@@ -63,12 +66,12 @@ func TestAccNeptuneClusterEndpoint_tags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterEndpointDestroy,
+		CheckDestroy:             testAccCheckClusterEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterEndpointConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterEndpointExists(resourceName, &v),
+					testAccCheckClusterEndpointExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -81,7 +84,7 @@ func TestAccNeptuneClusterEndpoint_tags(t *testing.T) {
 			{
 				Config: testAccClusterEndpointConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterEndpointExists(resourceName, &v),
+					testAccCheckClusterEndpointExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -90,7 +93,7 @@ func TestAccNeptuneClusterEndpoint_tags(t *testing.T) {
 			{
 				Config: testAccClusterEndpointConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterEndpointExists(resourceName, &v),
+					testAccCheckClusterEndpointExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -100,6 +103,7 @@ func TestAccNeptuneClusterEndpoint_tags(t *testing.T) {
 }
 
 func TestAccNeptuneClusterEndpoint_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var dbCluster neptune.DBClusterEndpoint
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
 	resourceName := "aws_neptune_cluster_endpoint.test"
@@ -108,13 +112,13 @@ func TestAccNeptuneClusterEndpoint_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterEndpointDestroy,
+		CheckDestroy:             testAccCheckClusterEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterEndpointConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterEndpointExists(resourceName, &dbCluster),
-					acctest.CheckResourceDisappears(acctest.Provider, tfneptune.ResourceClusterEndpoint(), resourceName),
+					testAccCheckClusterEndpointExists(ctx, resourceName, &dbCluster),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfneptune.ResourceClusterEndpoint(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -123,6 +127,7 @@ func TestAccNeptuneClusterEndpoint_disappears(t *testing.T) {
 }
 
 func TestAccNeptuneClusterEndpoint_Disappears_cluster(t *testing.T) {
+	ctx := acctest.Context(t)
 	var dbCluster neptune.DBClusterEndpoint
 	rName := sdkacctest.RandomWithPrefix("tf-acc")
 	resourceName := "aws_neptune_cluster_endpoint.test"
@@ -131,13 +136,13 @@ func TestAccNeptuneClusterEndpoint_Disappears_cluster(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterEndpointDestroy,
+		CheckDestroy:             testAccCheckClusterEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterEndpointConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterEndpointExists(resourceName, &dbCluster),
-					acctest.CheckResourceDisappears(acctest.Provider, tfneptune.ResourceCluster(), "aws_neptune_cluster.test"),
+					testAccCheckClusterEndpointExists(ctx, resourceName, &dbCluster),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfneptune.ResourceCluster(), "aws_neptune_cluster.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -145,37 +150,41 @@ func TestAccNeptuneClusterEndpoint_Disappears_cluster(t *testing.T) {
 	})
 }
 
-func testAccCheckClusterEndpointDestroy(s *terraform.State) error {
-	return testAccCheckClusterEndpointDestroyWithProvider(s, acctest.Provider)
-}
-
-func testAccCheckClusterEndpointDestroyWithProvider(s *terraform.State, provider *schema.Provider) error {
-	conn := provider.Meta().(*conns.AWSClient).NeptuneConn
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_neptune_cluster_endpoint" {
-			continue
-		}
-
-		_, err := tfneptune.FindEndpointByID(conn, rs.Primary.ID)
-		// Return nil if the cluster is already destroyed
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBClusterNotFoundFault) {
-				return nil
-			}
-		}
-
-		return err
+func testAccCheckClusterEndpointDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		return testAccCheckClusterEndpointDestroyWithProvider(ctx)(s, acctest.Provider)
 	}
-
-	return nil
 }
 
-func testAccCheckClusterEndpointExists(n string, v *neptune.DBClusterEndpoint) resource.TestCheckFunc {
-	return testAccCheckClusterEndpointExistsWithProvider(n, v, func() *schema.Provider { return acctest.Provider })
+func testAccCheckClusterEndpointDestroyWithProvider(ctx context.Context) acctest.TestCheckWithProviderFunc {
+	return func(s *terraform.State, provider *schema.Provider) error {
+		conn := provider.Meta().(*conns.AWSClient).NeptuneConn()
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_neptune_cluster_endpoint" {
+				continue
+			}
+
+			_, err := tfneptune.FindEndpointByID(ctx, conn, rs.Primary.ID)
+			// Return nil if the cluster is already destroyed
+			if err != nil {
+				if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBClusterNotFoundFault) {
+					return nil
+				}
+			}
+
+			return err
+		}
+
+		return nil
+	}
 }
 
-func testAccCheckClusterEndpointExistsWithProvider(n string, v *neptune.DBClusterEndpoint, providerF func() *schema.Provider) resource.TestCheckFunc {
+func testAccCheckClusterEndpointExists(ctx context.Context, n string, v *neptune.DBClusterEndpoint) resource.TestCheckFunc {
+	return testAccCheckClusterEndpointExistsWithProvider(ctx, n, v, func() *schema.Provider { return acctest.Provider })
+}
+
+func testAccCheckClusterEndpointExistsWithProvider(ctx context.Context, n string, v *neptune.DBClusterEndpoint, providerF func() *schema.Provider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -187,8 +196,8 @@ func testAccCheckClusterEndpointExistsWithProvider(n string, v *neptune.DBCluste
 		}
 
 		provider := providerF()
-		conn := provider.Meta().(*conns.AWSClient).NeptuneConn
-		resp, err := tfneptune.FindEndpointByID(conn, rs.Primary.ID)
+		conn := provider.Meta().(*conns.AWSClient).NeptuneConn()
+		resp, err := tfneptune.FindEndpointByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("Neptune Cluster Endpoint (%s) not found: %w", rs.Primary.ID, err)
 		}

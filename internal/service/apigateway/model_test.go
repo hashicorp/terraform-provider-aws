@@ -1,6 +1,7 @@
 package apigateway_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -16,6 +17,7 @@ import (
 )
 
 func TestAccAPIGatewayModel_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf apigateway.Model
 	rInt := sdkacctest.RandString(10)
 	rName := fmt.Sprintf("tf-acc-test-%s", rInt)
@@ -26,12 +28,12 @@ func TestAccAPIGatewayModel_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckModelDestroy,
+		CheckDestroy:             testAccCheckModelDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccModelConfig_basic(rName, modelName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckModelExists(resourceName, modelName, &conf),
+					testAccCheckModelExists(ctx, resourceName, modelName, &conf),
 					testAccCheckModelAttributes(&conf, modelName),
 					resource.TestCheckResourceAttr(
 						resourceName, "name", modelName),
@@ -52,6 +54,7 @@ func TestAccAPIGatewayModel_basic(t *testing.T) {
 }
 
 func TestAccAPIGatewayModel_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf apigateway.Model
 	rInt := sdkacctest.RandString(10)
 	rName := fmt.Sprintf("tf-acc-test-%s", rInt)
@@ -62,13 +65,13 @@ func TestAccAPIGatewayModel_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckModelDestroy,
+		CheckDestroy:             testAccCheckModelDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccModelConfig_basic(rName, modelName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckModelExists(resourceName, modelName, &conf),
-					acctest.CheckResourceDisappears(acctest.Provider, tfapigateway.ResourceModel(), resourceName),
+					testAccCheckModelExists(ctx, resourceName, modelName, &conf),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigateway.ResourceModel(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -92,7 +95,7 @@ func testAccCheckModelAttributes(conf *apigateway.Model, name string) resource.T
 	}
 }
 
-func testAccCheckModelExists(n, rName string, res *apigateway.Model) resource.TestCheckFunc {
+func testAccCheckModelExists(ctx context.Context, n, rName string, res *apigateway.Model) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -103,13 +106,13 @@ func testAccCheckModelExists(n, rName string, res *apigateway.Model) resource.Te
 			return fmt.Errorf("No API Gateway Model ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
 
 		req := &apigateway.GetModelInput{
 			ModelName: aws.String(rName),
 			RestApiId: aws.String(s.RootModule().Resources["aws_api_gateway_rest_api.test"].Primary.ID),
 		}
-		describe, err := conn.GetModel(req)
+		describe, err := conn.GetModelWithContext(ctx, req)
 		if err != nil {
 			return err
 		}
@@ -123,38 +126,40 @@ func testAccCheckModelExists(n, rName string, res *apigateway.Model) resource.Te
 	}
 }
 
-func testAccCheckModelDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn
+func testAccCheckModelDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_api_gateway_model" {
-			continue
-		}
-
-		req := &apigateway.GetModelsInput{
-			RestApiId: aws.String(s.RootModule().Resources["aws_api_gateway_rest_api.test"].Primary.ID),
-		}
-		describe, err := conn.GetModels(req)
-
-		if err == nil {
-			if len(describe.Items) != 0 &&
-				*describe.Items[0].Id == rs.Primary.ID {
-				return fmt.Errorf("API Gateway Model still exists")
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_api_gateway_model" {
+				continue
 			}
-		}
 
-		aws2err, ok := err.(awserr.Error)
-		if !ok {
-			return err
-		}
-		if aws2err.Code() != "NotFoundException" {
-			return err
+			req := &apigateway.GetModelsInput{
+				RestApiId: aws.String(s.RootModule().Resources["aws_api_gateway_rest_api.test"].Primary.ID),
+			}
+			describe, err := conn.GetModelsWithContext(ctx, req)
+
+			if err == nil {
+				if len(describe.Items) != 0 &&
+					*describe.Items[0].Id == rs.Primary.ID {
+					return fmt.Errorf("API Gateway Model still exists")
+				}
+			}
+
+			aws2err, ok := err.(awserr.Error)
+			if !ok {
+				return err
+			}
+			if aws2err.Code() != "NotFoundException" {
+				return err
+			}
+
+			return nil
 		}
 
 		return nil
 	}
-
-	return nil
 }
 
 func testAccModelImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {

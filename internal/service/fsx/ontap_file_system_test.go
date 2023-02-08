@@ -1,6 +1,7 @@
 package fsx_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -17,6 +18,7 @@ import (
 )
 
 func TestAccFSxOntapFileSystem_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var filesystem fsx.FileSystem
 	resourceName := "aws_fsx_ontap_file_system.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -25,12 +27,12 @@ func TestAccFSxOntapFileSystem_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOntapFileSystemDestroy,
+		CheckDestroy:             testAccCheckOntapFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccONTAPFileSystemConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOntapFileSystemExists(resourceName, &filesystem),
+					testAccCheckOntapFileSystemExists(ctx, resourceName, &filesystem),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "fsx", regexp.MustCompile(`file-system/fs-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "2"),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
@@ -71,6 +73,7 @@ func TestAccFSxOntapFileSystem_basic(t *testing.T) {
 }
 
 func TestAccFSxOntapFileSystem_fsxSingleAz(t *testing.T) {
+	ctx := acctest.Context(t)
 	var filesystem fsx.FileSystem
 	resourceName := "aws_fsx_ontap_file_system.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -79,12 +82,12 @@ func TestAccFSxOntapFileSystem_fsxSingleAz(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOntapFileSystemDestroy,
+		CheckDestroy:             testAccCheckOntapFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccONTAPFileSystemConfig_singleAz(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOntapFileSystemExists(resourceName, &filesystem),
+					testAccCheckOntapFileSystemExists(ctx, resourceName, &filesystem),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "fsx", regexp.MustCompile(`file-system/fs-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "deployment_type", fsx.OntapDeploymentTypeSingleAz1),
 				),
@@ -100,6 +103,7 @@ func TestAccFSxOntapFileSystem_fsxSingleAz(t *testing.T) {
 }
 
 func TestAccFSxOntapFileSystem_fsxAdminPassword(t *testing.T) {
+	ctx := acctest.Context(t)
 	var filesystem1, filesystem2 fsx.FileSystem
 	resourceName := "aws_fsx_ontap_file_system.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -110,12 +114,12 @@ func TestAccFSxOntapFileSystem_fsxAdminPassword(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOntapFileSystemDestroy,
+		CheckDestroy:             testAccCheckOntapFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccONTAPFileSystemConfig_adminPassword(rName, pass1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOntapFileSystemExists(resourceName, &filesystem1),
+					testAccCheckOntapFileSystemExists(ctx, resourceName, &filesystem1),
 					resource.TestCheckResourceAttr(resourceName, "fsx_admin_password", pass1),
 				),
 			},
@@ -128,7 +132,7 @@ func TestAccFSxOntapFileSystem_fsxAdminPassword(t *testing.T) {
 			{
 				Config: testAccONTAPFileSystemConfig_adminPassword(rName, pass2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOntapFileSystemExists(resourceName, &filesystem2),
+					testAccCheckOntapFileSystemExists(ctx, resourceName, &filesystem2),
 					testAccCheckOntapFileSystemNotRecreated(&filesystem1, &filesystem2),
 					resource.TestCheckResourceAttr(resourceName, "fsx_admin_password", pass2),
 				),
@@ -138,6 +142,7 @@ func TestAccFSxOntapFileSystem_fsxAdminPassword(t *testing.T) {
 }
 
 func TestAccFSxOntapFileSystem_endpointIPAddressRange(t *testing.T) {
+	ctx := acctest.Context(t)
 	var filesystem fsx.FileSystem
 	resourceName := "aws_fsx_ontap_file_system.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -146,12 +151,12 @@ func TestAccFSxOntapFileSystem_endpointIPAddressRange(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOntapFileSystemDestroy,
+		CheckDestroy:             testAccCheckOntapFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccONTAPFileSystemConfig_endpointIPAddressRange(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOntapFileSystemExists(resourceName, &filesystem),
+					testAccCheckOntapFileSystemExists(ctx, resourceName, &filesystem),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_ip_address_range", "198.19.255.0/24"),
 				),
 			},
@@ -166,6 +171,7 @@ func TestAccFSxOntapFileSystem_endpointIPAddressRange(t *testing.T) {
 }
 
 func TestAccFSxOntapFileSystem_diskIops(t *testing.T) {
+	ctx := acctest.Context(t)
 	var filesystem fsx.FileSystem
 	resourceName := "aws_fsx_ontap_file_system.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -174,12 +180,12 @@ func TestAccFSxOntapFileSystem_diskIops(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOntapFileSystemDestroy,
+		CheckDestroy:             testAccCheckOntapFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccONTAPFileSystemConfig_diskIOPSConfiguration(rName, 3072),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOntapFileSystemExists(resourceName, &filesystem),
+					testAccCheckOntapFileSystemExists(ctx, resourceName, &filesystem),
 					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.0.mode", "USER_PROVISIONED"),
 					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.0.iops", "3072"),
@@ -194,7 +200,7 @@ func TestAccFSxOntapFileSystem_diskIops(t *testing.T) {
 			{
 				Config: testAccONTAPFileSystemConfig_diskIOPSConfiguration(rName, 4000),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOntapFileSystemExists(resourceName, &filesystem),
+					testAccCheckOntapFileSystemExists(ctx, resourceName, &filesystem),
 					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.0.mode", "USER_PROVISIONED"),
 					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.0.iops", "4000"),
@@ -205,6 +211,7 @@ func TestAccFSxOntapFileSystem_diskIops(t *testing.T) {
 }
 
 func TestAccFSxOntapFileSystem_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var filesystem fsx.FileSystem
 	resourceName := "aws_fsx_ontap_file_system.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -213,13 +220,13 @@ func TestAccFSxOntapFileSystem_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOntapFileSystemDestroy,
+		CheckDestroy:             testAccCheckOntapFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccONTAPFileSystemConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOntapFileSystemExists(resourceName, &filesystem),
-					acctest.CheckResourceDisappears(acctest.Provider, tffsx.ResourceOntapFileSystem(), resourceName),
+					testAccCheckOntapFileSystemExists(ctx, resourceName, &filesystem),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tffsx.ResourceOntapFileSystem(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -228,6 +235,7 @@ func TestAccFSxOntapFileSystem_disappears(t *testing.T) {
 }
 
 func TestAccFSxOntapFileSystem_securityGroupIDs(t *testing.T) {
+	ctx := acctest.Context(t)
 	var filesystem1, filesystem2 fsx.FileSystem
 	resourceName := "aws_fsx_ontap_file_system.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -236,12 +244,12 @@ func TestAccFSxOntapFileSystem_securityGroupIDs(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOntapFileSystemDestroy,
+		CheckDestroy:             testAccCheckOntapFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccONTAPFileSystemConfig_securityGroupIDs1(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOntapFileSystemExists(resourceName, &filesystem1),
+					testAccCheckOntapFileSystemExists(ctx, resourceName, &filesystem1),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
 				),
 			},
@@ -254,7 +262,7 @@ func TestAccFSxOntapFileSystem_securityGroupIDs(t *testing.T) {
 			{
 				Config: testAccONTAPFileSystemConfig_securityGroupIDs2(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOntapFileSystemExists(resourceName, &filesystem2),
+					testAccCheckOntapFileSystemExists(ctx, resourceName, &filesystem2),
 					testAccCheckOntapFileSystemRecreated(&filesystem1, &filesystem2),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "2"),
 				),
@@ -264,6 +272,7 @@ func TestAccFSxOntapFileSystem_securityGroupIDs(t *testing.T) {
 }
 
 func TestAccFSxOntapFileSystem_routeTableIDs(t *testing.T) {
+	ctx := acctest.Context(t)
 	var filesystem1 fsx.FileSystem
 	resourceName := "aws_fsx_ontap_file_system.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -272,12 +281,12 @@ func TestAccFSxOntapFileSystem_routeTableIDs(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOntapFileSystemDestroy,
+		CheckDestroy:             testAccCheckOntapFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccONTAPFileSystemConfig_routeTable(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOntapFileSystemExists(resourceName, &filesystem1),
+					testAccCheckOntapFileSystemExists(ctx, resourceName, &filesystem1),
 					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "route_table_ids.*", "aws_route_table.test", "id"),
 				),
@@ -293,6 +302,7 @@ func TestAccFSxOntapFileSystem_routeTableIDs(t *testing.T) {
 }
 
 func TestAccFSxOntapFileSystem_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var filesystem1, filesystem2, filesystem3 fsx.FileSystem
 	resourceName := "aws_fsx_ontap_file_system.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -301,12 +311,12 @@ func TestAccFSxOntapFileSystem_tags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOntapFileSystemDestroy,
+		CheckDestroy:             testAccCheckOntapFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccONTAPFileSystemConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOntapFileSystemExists(resourceName, &filesystem1),
+					testAccCheckOntapFileSystemExists(ctx, resourceName, &filesystem1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -320,7 +330,7 @@ func TestAccFSxOntapFileSystem_tags(t *testing.T) {
 			{
 				Config: testAccONTAPFileSystemConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOntapFileSystemExists(resourceName, &filesystem2),
+					testAccCheckOntapFileSystemExists(ctx, resourceName, &filesystem2),
 					testAccCheckOntapFileSystemNotRecreated(&filesystem1, &filesystem2),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
@@ -330,7 +340,7 @@ func TestAccFSxOntapFileSystem_tags(t *testing.T) {
 			{
 				Config: testAccONTAPFileSystemConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOntapFileSystemExists(resourceName, &filesystem3),
+					testAccCheckOntapFileSystemExists(ctx, resourceName, &filesystem3),
 					testAccCheckOntapFileSystemNotRecreated(&filesystem2, &filesystem3),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -341,6 +351,7 @@ func TestAccFSxOntapFileSystem_tags(t *testing.T) {
 }
 
 func TestAccFSxOntapFileSystem_weeklyMaintenanceStartTime(t *testing.T) {
+	ctx := acctest.Context(t)
 	var filesystem1, filesystem2 fsx.FileSystem
 	resourceName := "aws_fsx_ontap_file_system.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -349,12 +360,12 @@ func TestAccFSxOntapFileSystem_weeklyMaintenanceStartTime(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOntapFileSystemDestroy,
+		CheckDestroy:             testAccCheckOntapFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccONTAPFileSystemConfig_weeklyMaintenanceStartTime(rName, "1:01:01"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOntapFileSystemExists(resourceName, &filesystem1),
+					testAccCheckOntapFileSystemExists(ctx, resourceName, &filesystem1),
 					resource.TestCheckResourceAttr(resourceName, "weekly_maintenance_start_time", "1:01:01"),
 				),
 			},
@@ -367,7 +378,7 @@ func TestAccFSxOntapFileSystem_weeklyMaintenanceStartTime(t *testing.T) {
 			{
 				Config: testAccONTAPFileSystemConfig_weeklyMaintenanceStartTime(rName, "2:02:02"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOntapFileSystemExists(resourceName, &filesystem2),
+					testAccCheckOntapFileSystemExists(ctx, resourceName, &filesystem2),
 					testAccCheckOntapFileSystemNotRecreated(&filesystem1, &filesystem2),
 					resource.TestCheckResourceAttr(resourceName, "weekly_maintenance_start_time", "2:02:02"),
 				),
@@ -377,6 +388,7 @@ func TestAccFSxOntapFileSystem_weeklyMaintenanceStartTime(t *testing.T) {
 }
 
 func TestAccFSxOntapFileSystem_automaticBackupRetentionDays(t *testing.T) {
+	ctx := acctest.Context(t)
 	var filesystem1, filesystem2 fsx.FileSystem
 	resourceName := "aws_fsx_ontap_file_system.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -385,12 +397,12 @@ func TestAccFSxOntapFileSystem_automaticBackupRetentionDays(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOntapFileSystemDestroy,
+		CheckDestroy:             testAccCheckOntapFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccONTAPFileSystemConfig_automaticBackupRetentionDays(rName, 90),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOntapFileSystemExists(resourceName, &filesystem1),
+					testAccCheckOntapFileSystemExists(ctx, resourceName, &filesystem1),
 					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", "90"),
 				),
 			},
@@ -403,7 +415,7 @@ func TestAccFSxOntapFileSystem_automaticBackupRetentionDays(t *testing.T) {
 			{
 				Config: testAccONTAPFileSystemConfig_automaticBackupRetentionDays(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOntapFileSystemExists(resourceName, &filesystem2),
+					testAccCheckOntapFileSystemExists(ctx, resourceName, &filesystem2),
 					testAccCheckOntapFileSystemNotRecreated(&filesystem1, &filesystem2),
 					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", "0"),
 				),
@@ -411,7 +423,7 @@ func TestAccFSxOntapFileSystem_automaticBackupRetentionDays(t *testing.T) {
 			{
 				Config: testAccONTAPFileSystemConfig_automaticBackupRetentionDays(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOntapFileSystemExists(resourceName, &filesystem1),
+					testAccCheckOntapFileSystemExists(ctx, resourceName, &filesystem1),
 					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", "1"),
 				),
 			},
@@ -420,6 +432,7 @@ func TestAccFSxOntapFileSystem_automaticBackupRetentionDays(t *testing.T) {
 }
 
 func TestAccFSxOntapFileSystem_kmsKeyID(t *testing.T) {
+	ctx := acctest.Context(t)
 	var filesystem fsx.FileSystem
 	resourceName := "aws_fsx_ontap_file_system.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -428,12 +441,12 @@ func TestAccFSxOntapFileSystem_kmsKeyID(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOntapFileSystemDestroy,
+		CheckDestroy:             testAccCheckOntapFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccONTAPFileSystemConfig_kmsKeyID(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOntapFileSystemExists(resourceName, &filesystem),
+					testAccCheckOntapFileSystemExists(ctx, resourceName, &filesystem),
 					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", "aws_kms_key.test", "arn"),
 				),
 			},
@@ -448,6 +461,7 @@ func TestAccFSxOntapFileSystem_kmsKeyID(t *testing.T) {
 }
 
 func TestAccFSxOntapFileSystem_dailyAutomaticBackupStartTime(t *testing.T) {
+	ctx := acctest.Context(t)
 	var filesystem1, filesystem2 fsx.FileSystem
 	resourceName := "aws_fsx_ontap_file_system.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -456,12 +470,12 @@ func TestAccFSxOntapFileSystem_dailyAutomaticBackupStartTime(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLustreFileSystemDestroy,
+		CheckDestroy:             testAccCheckLustreFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccONTAPFileSystemConfig_dailyAutomaticBackupStartTime(rName, "01:01"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOntapFileSystemExists(resourceName, &filesystem1),
+					testAccCheckOntapFileSystemExists(ctx, resourceName, &filesystem1),
 					resource.TestCheckResourceAttr(resourceName, "daily_automatic_backup_start_time", "01:01"),
 				),
 			},
@@ -474,7 +488,7 @@ func TestAccFSxOntapFileSystem_dailyAutomaticBackupStartTime(t *testing.T) {
 			{
 				Config: testAccONTAPFileSystemConfig_dailyAutomaticBackupStartTime(rName, "02:02"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOntapFileSystemExists(resourceName, &filesystem2),
+					testAccCheckOntapFileSystemExists(ctx, resourceName, &filesystem2),
 					testAccCheckOntapFileSystemNotRecreated(&filesystem1, &filesystem2),
 					resource.TestCheckResourceAttr(resourceName, "daily_automatic_backup_start_time", "02:02"),
 				),
@@ -484,6 +498,7 @@ func TestAccFSxOntapFileSystem_dailyAutomaticBackupStartTime(t *testing.T) {
 }
 
 func TestAccFSxOntapFileSystem_throughputCapacity(t *testing.T) {
+	ctx := acctest.Context(t)
 	var filesystem1, filesystem2 fsx.FileSystem
 	resourceName := "aws_fsx_ontap_file_system.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -492,12 +507,12 @@ func TestAccFSxOntapFileSystem_throughputCapacity(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOntapFileSystemDestroy,
+		CheckDestroy:             testAccCheckOntapFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccONTAPFileSystemConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOntapFileSystemExists(resourceName, &filesystem1),
+					testAccCheckOntapFileSystemExists(ctx, resourceName, &filesystem1),
 					resource.TestCheckResourceAttr(resourceName, "throughput_capacity", "128"),
 				),
 			},
@@ -510,7 +525,7 @@ func TestAccFSxOntapFileSystem_throughputCapacity(t *testing.T) {
 			{
 				Config: testAccONTAPFileSystemConfig_throughputCapacity(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOntapFileSystemExists(resourceName, &filesystem2),
+					testAccCheckOntapFileSystemExists(ctx, resourceName, &filesystem2),
 					testAccCheckOntapFileSystemNotRecreated(&filesystem1, &filesystem2),
 					resource.TestCheckResourceAttr(resourceName, "throughput_capacity", "256"),
 				),
@@ -520,6 +535,7 @@ func TestAccFSxOntapFileSystem_throughputCapacity(t *testing.T) {
 }
 
 func TestAccFSxOntapFileSystem_storageCapacity(t *testing.T) {
+	ctx := acctest.Context(t)
 	var filesystem1, filesystem2 fsx.FileSystem
 	resourceName := "aws_fsx_ontap_file_system.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -528,12 +544,12 @@ func TestAccFSxOntapFileSystem_storageCapacity(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOntapFileSystemDestroy,
+		CheckDestroy:             testAccCheckOntapFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccONTAPFileSystemConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOntapFileSystemExists(resourceName, &filesystem1),
+					testAccCheckOntapFileSystemExists(ctx, resourceName, &filesystem1),
 					resource.TestCheckResourceAttr(resourceName, "storage_capacity", "1024"),
 				),
 			},
@@ -546,7 +562,7 @@ func TestAccFSxOntapFileSystem_storageCapacity(t *testing.T) {
 			{
 				Config: testAccONTAPFileSystemConfig_storageCapacity(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOntapFileSystemExists(resourceName, &filesystem2),
+					testAccCheckOntapFileSystemExists(ctx, resourceName, &filesystem2),
 					testAccCheckOntapFileSystemNotRecreated(&filesystem1, &filesystem2),
 					resource.TestCheckResourceAttr(resourceName, "storage_capacity", "2048"),
 				),
@@ -555,16 +571,16 @@ func TestAccFSxOntapFileSystem_storageCapacity(t *testing.T) {
 	})
 }
 
-func testAccCheckOntapFileSystemExists(resourceName string, fs *fsx.FileSystem) resource.TestCheckFunc {
+func testAccCheckOntapFileSystemExists(ctx context.Context, resourceName string, fs *fsx.FileSystem) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn()
 
-		filesystem, err := tffsx.FindFileSystemByID(conn, rs.Primary.ID)
+		filesystem, err := tffsx.FindFileSystemByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -579,24 +595,26 @@ func testAccCheckOntapFileSystemExists(resourceName string, fs *fsx.FileSystem) 
 	}
 }
 
-func testAccCheckOntapFileSystemDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn
+func testAccCheckOntapFileSystemDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FSxConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_fsx_ontap_file_system" {
-			continue
-		}
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_fsx_ontap_file_system" {
+				continue
+			}
 
-		filesystem, err := tffsx.FindFileSystemByID(conn, rs.Primary.ID)
-		if tfresource.NotFound(err) {
-			continue
-		}
+			filesystem, err := tffsx.FindFileSystemByID(ctx, conn, rs.Primary.ID)
+			if tfresource.NotFound(err) {
+				continue
+			}
 
-		if filesystem != nil {
-			return fmt.Errorf("FSx ONTAP File System (%s) still exists", rs.Primary.ID)
+			if filesystem != nil {
+				return fmt.Errorf("FSx ONTAP File System (%s) still exists", rs.Primary.ID)
+			}
 		}
+		return nil
 	}
-	return nil
 }
 
 func testAccCheckOntapFileSystemNotRecreated(i, j *fsx.FileSystem) resource.TestCheckFunc {

@@ -1,18 +1,20 @@
 package efs
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/efs"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func DataSourceAccessPoints() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAccessPointsRead,
+		ReadWithoutTimeout: dataSourceAccessPointsRead,
 
 		Schema: map[string]*schema.Schema{
 			"arns": {
@@ -34,18 +36,19 @@ func DataSourceAccessPoints() *schema.Resource {
 	}
 }
 
-func dataSourceAccessPointsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EFSConn
+func dataSourceAccessPointsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EFSConn()
 
 	fileSystemID := d.Get("file_system_id").(string)
 	input := &efs.DescribeAccessPointsInput{
 		FileSystemId: aws.String(fileSystemID),
 	}
 
-	output, err := findAccessPointDescriptions(conn, input)
+	output, err := findAccessPointDescriptions(ctx, conn, input)
 
 	if err != nil {
-		return fmt.Errorf("error reading EFS Access Points: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading EFS Access Points: %s", err)
 	}
 
 	var accessPointIDs, arns []string
@@ -59,13 +62,13 @@ func dataSourceAccessPointsRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("arns", arns)
 	d.Set("ids", accessPointIDs)
 
-	return nil
+	return diags
 }
 
-func findAccessPointDescriptions(conn *efs.EFS, input *efs.DescribeAccessPointsInput) ([]*efs.AccessPointDescription, error) {
+func findAccessPointDescriptions(ctx context.Context, conn *efs.EFS, input *efs.DescribeAccessPointsInput) ([]*efs.AccessPointDescription, error) {
 	var output []*efs.AccessPointDescription
 
-	err := conn.DescribeAccessPointsPages(input, func(page *efs.DescribeAccessPointsOutput, lastPage bool) bool {
+	err := conn.DescribeAccessPointsPagesWithContext(ctx, input, func(page *efs.DescribeAccessPointsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}

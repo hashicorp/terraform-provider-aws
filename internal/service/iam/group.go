@@ -1,6 +1,7 @@
 package iam
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"regexp"
@@ -8,21 +9,23 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourceGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceGroupCreate,
-		Read:   resourceGroupRead,
-		Update: resourceGroupUpdate,
-		Delete: resourceGroupDelete,
+		CreateWithoutTimeout: resourceGroupCreate,
+		ReadWithoutTimeout:   resourceGroupRead,
+		UpdateWithoutTimeout: resourceGroupUpdate,
+		DeleteWithoutTimeout: resourceGroupDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -51,8 +54,9 @@ func ResourceGroup() *schema.Resource {
 	}
 }
 
-func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IAMConn()
 	name := d.Get("name").(string)
 	path := d.Get("path").(string)
 
@@ -61,17 +65,18 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		GroupName: aws.String(name),
 	}
 
-	createResp, err := conn.CreateGroup(request)
+	createResp, err := conn.CreateGroupWithContext(ctx, request)
 	if err != nil {
-		return fmt.Errorf("Error creating IAM Group %s: %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating IAM Group %s: %s", name, err)
 	}
 	d.SetId(aws.StringValue(createResp.Group.GroupName))
 
-	return resourceGroupRead(d, meta)
+	return append(diags, resourceGroupRead(ctx, d, meta)...)
 }
 
-func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	request := &iam.GetGroupInput{
 		GroupName: aws.String(d.Id()),
@@ -79,10 +84,10 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 
 	var getResp *iam.GetGroupOutput
 
-	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
+	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
 		var err error
 
-		getResp, err = conn.GetGroup(request)
+		getResp, err = conn.GetGroupWithContext(ctx, request)
 
 		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 			return resource.RetryableError(err)
@@ -96,43 +101,36 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if tfresource.TimedOut(err) {
-		getResp, err = conn.GetGroup(request)
+		getResp, err = conn.GetGroupWithContext(ctx, request)
 	}
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 		log.Printf("[WARN] IAM Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading IAM Group (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading IAM Group (%s): %s", d.Id(), err)
 	}
 
 	if getResp == nil || getResp.Group == nil {
-		return fmt.Errorf("error reading IAM Group (%s): empty response", d.Id())
+		return sdkdiag.AppendErrorf(diags, "reading IAM Group (%s): empty response", d.Id())
 	}
 
 	group := getResp.Group
 
-	if err := d.Set("name", group.GroupName); err != nil {
-		return err
-	}
-	if err := d.Set("arn", group.Arn); err != nil {
-		return err
-	}
-	if err := d.Set("path", group.Path); err != nil {
-		return err
-	}
-	if err := d.Set("unique_id", group.GroupId); err != nil {
-		return err
-	}
-	return nil
+	d.Set("name", group.GroupName)
+	d.Set("arn", group.Arn)
+	d.Set("path", group.Path)
+	d.Set("unique_id", group.GroupId)
+	return diags
 }
 
-func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	if d.HasChanges("name", "path") {
-		conn := meta.(*conns.AWSClient).IAMConn
+		conn := meta.(*conns.AWSClient).IAMConn()
 		on, nn := d.GetChange("name")
 		_, np := d.GetChange("path")
 
@@ -141,36 +139,37 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 			NewGroupName: aws.String(nn.(string)),
 			NewPath:      aws.String(np.(string)),
 		}
-		_, err := conn.UpdateGroup(request)
+		_, err := conn.UpdateGroupWithContext(ctx, request)
 		if err != nil {
-			return fmt.Errorf("Error updating IAM Group %s: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating IAM Group %s: %s", d.Id(), err)
 		}
 		d.SetId(nn.(string))
-		return resourceGroupRead(d, meta)
+		return append(diags, resourceGroupRead(ctx, d, meta)...)
 	}
-	return nil
+	return diags
 }
 
-func resourceGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	request := &iam.DeleteGroupInput{
 		GroupName: aws.String(d.Id()),
 	}
 
-	if _, err := conn.DeleteGroup(request); err != nil {
-		return fmt.Errorf("Error deleting IAM Group %s: %s", d.Id(), err)
+	if _, err := conn.DeleteGroupWithContext(ctx, request); err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting IAM Group %s: %s", d.Id(), err)
 	}
-	return nil
+	return diags
 }
 
-func DeleteGroupPolicyAttachments(conn *iam.IAM, groupName string) error {
+func DeleteGroupPolicyAttachments(ctx context.Context, conn *iam.IAM, groupName string) error {
 	var attachedPolicies []*iam.AttachedPolicy
 	input := &iam.ListAttachedGroupPoliciesInput{
 		GroupName: aws.String(groupName),
 	}
 
-	err := conn.ListAttachedGroupPoliciesPages(input, func(page *iam.ListAttachedGroupPoliciesOutput, lastPage bool) bool {
+	err := conn.ListAttachedGroupPoliciesPagesWithContext(ctx, input, func(page *iam.ListAttachedGroupPoliciesOutput, lastPage bool) bool {
 		attachedPolicies = append(attachedPolicies, page.AttachedPolicies...)
 
 		return !lastPage
@@ -190,7 +189,7 @@ func DeleteGroupPolicyAttachments(conn *iam.IAM, groupName string) error {
 			PolicyArn: attachedPolicy.PolicyArn,
 		}
 
-		_, err := conn.DetachGroupPolicy(input)
+		_, err := conn.DetachGroupPolicyWithContext(ctx, input)
 
 		if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 			continue
@@ -204,13 +203,13 @@ func DeleteGroupPolicyAttachments(conn *iam.IAM, groupName string) error {
 	return nil
 }
 
-func DeleteGroupPolicies(conn *iam.IAM, groupName string) error {
+func DeleteGroupPolicies(ctx context.Context, conn *iam.IAM, groupName string) error {
 	var inlinePolicies []*string
 	input := &iam.ListGroupPoliciesInput{
 		GroupName: aws.String(groupName),
 	}
 
-	err := conn.ListGroupPoliciesPages(input, func(page *iam.ListGroupPoliciesOutput, lastPage bool) bool {
+	err := conn.ListGroupPoliciesPagesWithContext(ctx, input, func(page *iam.ListGroupPoliciesOutput, lastPage bool) bool {
 		inlinePolicies = append(inlinePolicies, page.PolicyNames...)
 		return !lastPage
 	})
@@ -229,7 +228,7 @@ func DeleteGroupPolicies(conn *iam.IAM, groupName string) error {
 			PolicyName: policyName,
 		}
 
-		_, err := conn.DeleteGroupPolicy(input)
+		_, err := conn.DeleteGroupPolicyWithContext(ctx, input)
 
 		if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 			continue

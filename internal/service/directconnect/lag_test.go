@@ -1,6 +1,7 @@
 package directconnect_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -16,6 +17,7 @@ import (
 )
 
 func TestAccDirectConnectLag_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var lag directconnect.Lag
 	resourceName := "aws_dx_lag.test"
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -25,12 +27,12 @@ func TestAccDirectConnectLag_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLagDestroy,
+		CheckDestroy:             testAccCheckLagDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLagConfig_basic(rName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLagExists(resourceName, &lag),
+					testAccCheckLagExists(ctx, resourceName, &lag),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "directconnect", regexp.MustCompile(`dxlag/.+`)),
 					resource.TestCheckNoResourceAttr(resourceName, "connection_id"),
 					resource.TestCheckResourceAttr(resourceName, "connections_bandwidth", "1Gbps"),
@@ -47,7 +49,7 @@ func TestAccDirectConnectLag_basic(t *testing.T) {
 			{
 				Config: testAccLagConfig_basic(rName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLagExists(resourceName, &lag),
+					testAccCheckLagExists(ctx, resourceName, &lag),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "directconnect", regexp.MustCompile(`dxlag/.+`)),
 					resource.TestCheckNoResourceAttr(resourceName, "connection_id"),
 					resource.TestCheckResourceAttr(resourceName, "connections_bandwidth", "1Gbps"),
@@ -72,6 +74,7 @@ func TestAccDirectConnectLag_basic(t *testing.T) {
 }
 
 func TestAccDirectConnectLag_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var lag directconnect.Lag
 	resourceName := "aws_dx_lag.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -80,13 +83,13 @@ func TestAccDirectConnectLag_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLagDestroy,
+		CheckDestroy:             testAccCheckLagDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLagConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLagExists(resourceName, &lag),
-					acctest.CheckResourceDisappears(acctest.Provider, tfdirectconnect.ResourceLag(), resourceName),
+					testAccCheckLagExists(ctx, resourceName, &lag),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdirectconnect.ResourceLag(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -95,6 +98,7 @@ func TestAccDirectConnectLag_disappears(t *testing.T) {
 }
 
 func TestAccDirectConnectLag_connectionID(t *testing.T) {
+	ctx := acctest.Context(t)
 	var lag directconnect.Lag
 	resourceName := "aws_dx_lag.test"
 	connectionResourceName := "aws_dx_connection.test"
@@ -104,12 +108,12 @@ func TestAccDirectConnectLag_connectionID(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLagDestroy,
+		CheckDestroy:             testAccCheckLagDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLagConfig_connectionID(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLagExists(resourceName, &lag),
+					testAccCheckLagExists(ctx, resourceName, &lag),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "directconnect", regexp.MustCompile(`dxlag/.+`)),
 					resource.TestCheckResourceAttrPair(resourceName, "connection_id", connectionResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "connections_bandwidth", "1Gbps"),
@@ -134,6 +138,7 @@ func TestAccDirectConnectLag_connectionID(t *testing.T) {
 }
 
 func TestAccDirectConnectLag_providerName(t *testing.T) {
+	ctx := acctest.Context(t)
 	var lag directconnect.Lag
 	resourceName := "aws_dx_lag.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -142,12 +147,12 @@ func TestAccDirectConnectLag_providerName(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLagDestroy,
+		CheckDestroy:             testAccCheckLagDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLagConfig_providerName(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLagExists(resourceName, &lag),
+					testAccCheckLagExists(ctx, resourceName, &lag),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "directconnect", regexp.MustCompile(`dxlag/.+`)),
 					resource.TestCheckNoResourceAttr(resourceName, "connection_id"),
 					resource.TestCheckResourceAttr(resourceName, "connections_bandwidth", "1Gbps"),
@@ -172,6 +177,7 @@ func TestAccDirectConnectLag_providerName(t *testing.T) {
 }
 
 func TestAccDirectConnectLag_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var lag directconnect.Lag
 	resourceName := "aws_dx_lag.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -180,12 +186,12 @@ func TestAccDirectConnectLag_tags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLagDestroy,
+		CheckDestroy:             testAccCheckLagDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLagConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLagExists(resourceName, &lag),
+					testAccCheckLagExists(ctx, resourceName, &lag),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
@@ -200,7 +206,7 @@ func TestAccDirectConnectLag_tags(t *testing.T) {
 			{
 				Config: testAccLagConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLagExists(resourceName, &lag),
+					testAccCheckLagExists(ctx, resourceName, &lag),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
@@ -210,7 +216,7 @@ func TestAccDirectConnectLag_tags(t *testing.T) {
 			{
 				Config: testAccLagConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLagExists(resourceName, &lag),
+					testAccCheckLagExists(ctx, resourceName, &lag),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -220,33 +226,35 @@ func TestAccDirectConnectLag_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckLagDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn
+func testAccCheckLagDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_dx_lag" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_dx_lag" {
+				continue
+			}
+
+			_, err := tfdirectconnect.FindLagByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Direct Connect LAG %s still exists", rs.Primary.ID)
 		}
 
-		_, err := tfdirectconnect.FindLagByID(conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("Direct Connect LAG %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckLagExists(name string, v *directconnect.Lag) resource.TestCheckFunc {
+func testAccCheckLagExists(ctx context.Context, name string, v *directconnect.Lag) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn()
 
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -257,7 +265,7 @@ func testAccCheckLagExists(name string, v *directconnect.Lag) resource.TestCheck
 			return fmt.Errorf("No ID is set")
 		}
 
-		lag, err := tfdirectconnect.FindLagByID(conn, rs.Primary.ID)
+		lag, err := tfdirectconnect.FindLagByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

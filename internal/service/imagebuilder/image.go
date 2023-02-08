@@ -1,7 +1,7 @@
 package imagebuilder
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"regexp"
 	"time"
@@ -9,22 +9,24 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceImage() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceImageCreate,
-		Read:   resourceImageRead,
-		Update: resourceImageUpdate,
-		Delete: resourceImageDelete,
+		CreateWithoutTimeout: resourceImageCreate,
+		ReadWithoutTimeout:   resourceImageRead,
+		UpdateWithoutTimeout: resourceImageUpdate,
+		DeleteWithoutTimeout: resourceImageDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(60 * time.Minute),
@@ -155,8 +157,9 @@ func ResourceImage() *schema.Resource {
 	}
 }
 
-func resourceImageCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ImageBuilderConn
+func resourceImageCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ImageBuilderConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -189,27 +192,28 @@ func resourceImageCreate(d *schema.ResourceData, meta interface{}) error {
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	output, err := conn.CreateImage(input)
+	output, err := conn.CreateImageWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating Image Builder Image: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating Image Builder Image: %s", err)
 	}
 
 	if output == nil {
-		return fmt.Errorf("error creating Image Builder Image: empty response")
+		return sdkdiag.AppendErrorf(diags, "creating Image Builder Image: empty response")
 	}
 
 	d.SetId(aws.StringValue(output.ImageBuildVersionArn))
 
-	if _, err := waitImageStatusAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("error waiting for Image Builder Image (%s) to become available: %w", d.Id(), err)
+	if _, err := waitImageStatusAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Image Builder Image (%s) to become available: %s", d.Id(), err)
 	}
 
-	return resourceImageRead(d, meta)
+	return append(diags, resourceImageRead(ctx, d, meta)...)
 }
 
-func resourceImageRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ImageBuilderConn
+func resourceImageRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ImageBuilderConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -217,20 +221,20 @@ func resourceImageRead(d *schema.ResourceData, meta interface{}) error {
 		ImageBuildVersionArn: aws.String(d.Id()),
 	}
 
-	output, err := conn.GetImage(input)
+	output, err := conn.GetImageWithContext(ctx, input)
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, imagebuilder.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Image Builder Image (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error getting Image Builder Image (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "getting Image Builder Image (%s): %s", d.Id(), err)
 	}
 
 	if output == nil || output.Image == nil {
-		return fmt.Errorf("error getting Image Builder Image (%s): empty response", d.Id())
+		return sdkdiag.AppendErrorf(diags, "getting Image Builder Image (%s): empty response", d.Id())
 	}
 
 	image := output.Image
@@ -276,50 +280,52 @@ func resourceImageRead(d *schema.ResourceData, meta interface{}) error {
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
 	d.Set("version", image.Version)
 
-	return nil
+	return diags
 }
 
-func resourceImageUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ImageBuilderConn
+func resourceImageUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ImageBuilderConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating tags for Image Builder Image (%s): %w", d.Id(), err)
+		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating tags for Image Builder Image (%s): %s", d.Id(), err)
 		}
 	}
 
-	return resourceImageRead(d, meta)
+	return append(diags, resourceImageRead(ctx, d, meta)...)
 }
 
-func resourceImageDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ImageBuilderConn
+func resourceImageDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ImageBuilderConn()
 
 	input := &imagebuilder.DeleteImageInput{
 		ImageBuildVersionArn: aws.String(d.Id()),
 	}
 
-	_, err := conn.DeleteImage(input)
+	_, err := conn.DeleteImageWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, imagebuilder.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Image Builder Image (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Image Builder Image (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func flattenOutputResources(apiObject *imagebuilder.OutputResources) map[string]interface{} {

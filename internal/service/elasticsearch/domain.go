@@ -12,11 +12,13 @@ import (
 	elasticsearch "github.com/aws/aws-sdk-go/service/elasticsearchservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -25,13 +27,13 @@ import (
 
 func ResourceDomain() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceDomainCreate,
-		Read:   resourceDomainRead,
-		Update: resourceDomainUpdate,
-		Delete: resourceDomainDelete,
+		CreateWithoutTimeout: resourceDomainCreate,
+		ReadWithoutTimeout:   resourceDomainRead,
+		UpdateWithoutTimeout: resourceDomainUpdate,
+		DeleteWithoutTimeout: resourceDomainDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: resourceDomainImport,
+			StateContext: resourceDomainImport,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -41,12 +43,12 @@ func ResourceDomain() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			customdiff.ForceNewIf("elasticsearch_version", func(_ context.Context, d *schema.ResourceDiff, meta interface{}) bool {
+			customdiff.ForceNewIf("elasticsearch_version", func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) bool {
 				newVersion := d.Get("elasticsearch_version").(string)
 				domainName := d.Get("domain_name").(string)
 
-				conn := meta.(*conns.AWSClient).ElasticsearchConn
-				resp, err := conn.GetCompatibleElasticsearchVersions(&elasticsearch.GetCompatibleElasticsearchVersionsInput{
+				conn := meta.(*conns.AWSClient).ElasticsearchConn()
+				resp, err := conn.GetCompatibleElasticsearchVersionsWithContext(ctx, &elasticsearch.GetCompatibleElasticsearchVersionsInput{
 					DomainName: aws.String(domainName),
 				})
 				if err != nil {
@@ -85,11 +87,12 @@ func ResourceDomain() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"access_policies": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				Type:                  schema.TypeString,
+				Optional:              true,
+				Computed:              true,
+				ValidateFunc:          validation.StringIsJSON,
+				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+				DiffSuppressOnRefresh: true,
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
@@ -384,6 +387,7 @@ func ResourceDomain() *schema.Resource {
 						"iops": {
 							Type:     schema.TypeInt,
 							Optional: true,
+							Computed: true,
 						},
 						"throughput": {
 							Type:         schema.TypeInt,
@@ -527,8 +531,9 @@ func ResourceDomain() *schema.Resource {
 	}
 }
 
-func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticsearchConn
+func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ElasticsearchConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -536,10 +541,10 @@ func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 	// so w/out this check Create would act as upsert
 	// and might cause duplicate domain to appear in state.
 	name := d.Get("domain_name").(string)
-	_, err := FindDomainByName(conn, name)
+	_, err := FindDomainByName(ctx, conn, name)
 
 	if err == nil {
-		return fmt.Errorf("Elasticsearch Domain (%s) already exists", name)
+		return sdkdiag.AppendErrorf(diags, "Elasticsearch Domain (%s) already exists", name)
 	}
 
 	input := &elasticsearch.CreateElasticsearchDomainInput{
@@ -552,7 +557,7 @@ func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 		policy, err := structure.NormalizeJsonString(v.(string))
 
 		if err != nil {
-			return fmt.Errorf("policy (%s) is invalid JSON: %w", policy, err)
+			return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", policy, err)
 		}
 
 		input.AccessPolicies = aws.String(policy)
@@ -575,7 +580,7 @@ func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 
 		if len(options) == 1 {
 			if options[0] == nil {
-				return fmt.Errorf("At least one field is expected inside ebs_options")
+				return sdkdiag.AppendErrorf(diags, "At least one field is expected inside ebs_options")
 			}
 
 			s := options[0].(map[string]interface{})
@@ -586,7 +591,7 @@ func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 	if v, ok := d.GetOk("encrypt_at_rest"); ok {
 		options := v.([]interface{})
 		if options[0] == nil {
-			return fmt.Errorf("At least one field is expected inside encrypt_at_rest")
+			return sdkdiag.AppendErrorf(diags, "At least one field is expected inside encrypt_at_rest")
 		}
 
 		s := options[0].(map[string]interface{})
@@ -598,7 +603,7 @@ func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 
 		if len(config) == 1 {
 			if config[0] == nil {
-				return fmt.Errorf("At least one field is expected inside cluster_config")
+				return sdkdiag.AppendErrorf(diags, "At least one field is expected inside cluster_config")
 			}
 			m := config[0].(map[string]interface{})
 			input.ElasticsearchClusterConfig = expandClusterConfig(m)
@@ -617,7 +622,7 @@ func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 
 		if len(options) == 1 {
 			if options[0] == nil {
-				return fmt.Errorf("At least one field is expected inside snapshot_options")
+				return sdkdiag.AppendErrorf(diags, "At least one field is expected inside snapshot_options")
 			}
 
 			o := options[0].(map[string]interface{})
@@ -633,7 +638,7 @@ func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 	if v, ok := d.GetOk("vpc_options"); ok {
 		options := v.([]interface{})
 		if options[0] == nil {
-			return fmt.Errorf("At least one field is expected inside vpc_options")
+			return sdkdiag.AppendErrorf(diags, "At least one field is expected inside vpc_options")
 		}
 
 		s := options[0].(map[string]interface{})
@@ -654,10 +659,9 @@ func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Creating Elasticsearch Domain: %s", input)
 
-	outputRaw, err := tfresource.RetryWhen(
-		propagationTimeout,
+	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
 		func() (interface{}, error) {
-			return conn.CreateElasticsearchDomain(input)
+			return conn.CreateElasticsearchDomainWithContext(ctx, input)
 		},
 		func(err error) (bool, error) {
 			if tfawserr.ErrMessageContains(err, elasticsearch.ErrCodeInvalidTypeException, "Error setting policy") ||
@@ -676,13 +680,13 @@ func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 	)
 
 	if err != nil {
-		return fmt.Errorf("error creating Elasticsearch Domain (%s): %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating Elasticsearch Domain (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(outputRaw.(*elasticsearch.CreateElasticsearchDomainOutput).DomainStatus.ARN))
 
-	if err := WaitForDomainCreation(conn, name, d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("error waiting for Elasticsearch Domain (%s) create: %w", d.Id(), err)
+	if err := WaitForDomainCreation(ctx, conn, name, d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Elasticsearch Domain (%s) create: %s", d.Id(), err)
 	}
 
 	if v, ok := d.GetOk("auto_tune_options"); ok && len(v.([]interface{})) > 0 {
@@ -692,44 +696,45 @@ func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		log.Printf("[DEBUG] Updating Elasticsearch Domain config: %s", input)
-		_, err = conn.UpdateElasticsearchDomainConfig(input)
+		_, err = conn.UpdateElasticsearchDomainConfigWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error updating Elasticsearch Domain (%s) config: %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Elasticsearch Domain (%s) config: %s", d.Id(), err)
 		}
 
-		if err := waitForDomainUpdate(conn, name, d.Timeout(schema.TimeoutCreate)); err != nil {
-			return fmt.Errorf("error waiting for Elasticsearch Domain (%s) update: %w", d.Id(), err)
+		if err := waitForDomainUpdate(ctx, conn, name, d.Timeout(schema.TimeoutCreate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for Elasticsearch Domain (%s) update: %s", d.Id(), err)
 		}
 	}
 
-	return resourceDomainRead(d, meta)
+	return append(diags, resourceDomainRead(ctx, d, meta)...)
 }
 
-func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticsearchConn
+func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ElasticsearchConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get("domain_name").(string)
-	ds, err := FindDomainByName(conn, name)
+	ds, err := FindDomainByName(ctx, conn, name)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Elasticsearch Domain (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Elasticsearch Domain (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Elasticsearch Domain (%s): %s", d.Id(), err)
 	}
 
-	output, err := conn.DescribeElasticsearchDomainConfig(&elasticsearch.DescribeElasticsearchDomainConfigInput{
+	output, err := conn.DescribeElasticsearchDomainConfigWithContext(ctx, &elasticsearch.DescribeElasticsearchDomainConfigInput{
 		DomainName: aws.String(name),
 	})
 
 	if err != nil {
-		return fmt.Errorf("error reading Elasticsearch Domain (%s) config: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Elasticsearch Domain (%s) config: %s", d.Id(), err)
 	}
 
 	dc := output.DomainConfig
@@ -738,7 +743,7 @@ func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 		policies, err := verify.PolicyToSet(d.Get("access_policies").(string), v)
 
 		if err != nil {
-			return err
+			return sdkdiag.AppendErrorf(diags, "reading Elasticsearch Domain (%s) config: setting policy: %s", d.Id(), err)
 		}
 
 		d.Set("access_policies", policies)
@@ -746,7 +751,7 @@ func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 
 	options := advancedOptionsIgnoreDefault(d.Get("advanced_options").(map[string]interface{}), flex.PointersMapToStringList(ds.AdvancedOptions))
 	if err = d.Set("advanced_options", options); err != nil {
-		return fmt.Errorf("setting advanced_options: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting advanced_options: %s", err)
 	}
 
 	d.Set("domain_id", ds.DomainId)
@@ -754,23 +759,23 @@ func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("elasticsearch_version", ds.ElasticsearchVersion)
 
 	if err := d.Set("ebs_options", flattenEBSOptions(ds.EBSOptions)); err != nil {
-		return fmt.Errorf("error setting ebs_options: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting ebs_options: %s", err)
 	}
 
 	if err := d.Set("encrypt_at_rest", flattenEncryptAtRestOptions(ds.EncryptionAtRestOptions)); err != nil {
-		return fmt.Errorf("error setting encrypt_at_rest: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting encrypt_at_rest: %s", err)
 	}
 
 	if err := d.Set("cluster_config", flattenClusterConfig(ds.ElasticsearchClusterConfig)); err != nil {
-		return fmt.Errorf("error setting cluster_config: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting cluster_config: %s", err)
 	}
 
 	if err := d.Set("cognito_options", flattenCognitoOptions(ds.CognitoOptions)); err != nil {
-		return fmt.Errorf("error setting cognito_options: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting cognito_options: %s", err)
 	}
 
 	if err := d.Set("node_to_node_encryption", flattenNodeToNodeEncryptionOptions(ds.NodeToNodeEncryptionOptions)); err != nil {
-		return fmt.Errorf("error setting node_to_node_encryption: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting node_to_node_encryption: %s", err)
 	}
 
 	// Populate AdvancedSecurityOptions with values returned from
@@ -785,23 +790,23 @@ func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 		advSecOpts[0]["master_user_options"] = getMasterUserOptions(d)
 
 		if err := d.Set("advanced_security_options", advSecOpts); err != nil {
-			return fmt.Errorf("error setting advanced_security_options: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting advanced_security_options: %s", err)
 		}
 	}
 
 	if v := dc.AutoTuneOptions; v != nil {
 		if err := d.Set("auto_tune_options", []interface{}{flattenAutoTuneOptions(v.Options)}); err != nil {
-			return fmt.Errorf("error setting auto_tune_options: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting auto_tune_options: %s", err)
 		}
 	}
 
 	if err := d.Set("snapshot_options", flattenSnapshotOptions(ds.SnapshotOptions)); err != nil {
-		return fmt.Errorf("error setting snapshot_options: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting snapshot_options: %s", err)
 	}
 
 	if ds.VPCOptions != nil {
 		if err := d.Set("vpc_options", flattenVPCDerivedInfo(ds.VPCOptions)); err != nil {
-			return fmt.Errorf("error setting vpc_options: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting vpc_options: %s", err)
 		}
 
 		endpoints := flex.PointersMapToStringList(ds.Endpoints)
@@ -809,7 +814,7 @@ func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 
 		d.Set("kibana_endpoint", getKibanaEndpoint(d))
 		if ds.Endpoint != nil {
-			return fmt.Errorf("%q: Elasticsearch domain in VPC expected to have null Endpoint value", d.Id())
+			return sdkdiag.AppendErrorf(diags, "%q: Elasticsearch domain in VPC expected to have null Endpoint value", d.Id())
 		}
 	} else {
 		if ds.Endpoint != nil {
@@ -817,42 +822,43 @@ func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 			d.Set("kibana_endpoint", getKibanaEndpoint(d))
 		}
 		if ds.Endpoints != nil {
-			return fmt.Errorf("%q: Elasticsearch domain not in VPC expected to have null Endpoints value", d.Id())
+			return sdkdiag.AppendErrorf(diags, "%q: Elasticsearch domain not in VPC expected to have null Endpoints value", d.Id())
 		}
 	}
 
 	if err := d.Set("log_publishing_options", flattenLogPublishingOptions(ds.LogPublishingOptions)); err != nil {
-		return fmt.Errorf("error setting log_publishing_options: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting log_publishing_options: %s", err)
 	}
 
 	if err := d.Set("domain_endpoint_options", flattenDomainEndpointOptions(ds.DomainEndpointOptions)); err != nil {
-		return fmt.Errorf("error setting domain_endpoint_options: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting domain_endpoint_options: %s", err)
 	}
 
 	d.Set("arn", ds.ARN)
 
-	tags, err := ListTags(conn, d.Id())
+	tags, err := ListTags(ctx, conn, d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for Elasticsearch Domain (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for Elasticsearch Domain (%s): %s", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceDomainUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticsearchConn
+func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ElasticsearchConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		name := d.Get("domain_name").(string)
@@ -912,7 +918,7 @@ func resourceDomainUpdate(d *schema.ResourceData, meta interface{}) error {
 			if v, ok := d.GetOk("encrypt_at_rest"); ok {
 				options := v.([]interface{})
 				if options[0] == nil {
-					return fmt.Errorf("At least one field is expected inside encrypt_at_rest")
+					return sdkdiag.AppendErrorf(diags, "At least one field is expected inside encrypt_at_rest")
 				}
 
 				s := options[0].(map[string]interface{})
@@ -960,14 +966,14 @@ func resourceDomainUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		log.Printf("[DEBUG] Updating Elasticsearch Domain config: %s", input)
-		_, err := conn.UpdateElasticsearchDomainConfig(input)
+		_, err := conn.UpdateElasticsearchDomainConfigWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error updating Elasticsearch Domain (%s) config: %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Elasticsearch Domain (%s) config: %s", d.Id(), err)
 		}
 
-		if err := waitForDomainUpdate(conn, name, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return fmt.Errorf("error waiting for Elasticsearch Domain (%s) update: %w", d.Id(), err)
+		if err := waitForDomainUpdate(ctx, conn, name, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for Elasticsearch Domain (%s) update: %s", d.Id(), err)
 		}
 
 		if d.HasChange("elasticsearch_version") {
@@ -977,14 +983,14 @@ func resourceDomainUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 
 			log.Printf("[DEBUG] Upgrading Elasticsearch Domain: %s", input)
-			_, err := conn.UpgradeElasticsearchDomain(input)
+			_, err := conn.UpgradeElasticsearchDomainWithContext(ctx, input)
 
 			if err != nil {
-				return fmt.Errorf("error upgrading Elasticsearch Domain (%s): %w", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "upgrading Elasticsearch Domain (%s): %s", d.Id(), err)
 			}
 
-			if _, err := waitUpgradeSucceeded(conn, name, d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return fmt.Errorf("error waiting for Elasticsearch Domain (%s) upgrade: %w", d.Id(), err)
+			if _, err := waitUpgradeSucceeded(ctx, conn, name, d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for Elasticsearch Domain (%s) upgrade: %s", d.Id(), err)
 			}
 		}
 	}
@@ -992,45 +998,46 @@ func resourceDomainUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating Elasticsearch Domain (%s) tags: %w", d.Id(), err)
+		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Elasticsearch Domain (%s) tags: %s", d.Id(), err)
 		}
 	}
 
-	return resourceDomainRead(d, meta)
+	return append(diags, resourceDomainRead(ctx, d, meta)...)
 }
 
-func resourceDomainDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElasticsearchConn
+func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ElasticsearchConn()
 
 	name := d.Get("domain_name").(string)
 
 	log.Printf("[DEBUG] Deleting Elasticsearch Domain: %s", d.Id())
-	_, err := conn.DeleteElasticsearchDomain(&elasticsearch.DeleteElasticsearchDomainInput{
+	_, err := conn.DeleteElasticsearchDomainWithContext(ctx, &elasticsearch.DeleteElasticsearchDomainInput{
 		DomainName: aws.String(name),
 	})
 
 	if tfawserr.ErrCodeEquals(err, elasticsearch.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Elasticsearch Domain (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Elasticsearch Domain (%s): %s", d.Id(), err)
 	}
 
-	if err := waitForDomainDelete(conn, name, d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("error waiting for Elasticsearch Domain (%s) delete: %w", d.Id(), err)
+	if err := waitForDomainDelete(ctx, conn, name, d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Elasticsearch Domain (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceDomainImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	conn := meta.(*conns.AWSClient).ElasticsearchConn
+func resourceDomainImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	conn := meta.(*conns.AWSClient).ElasticsearchConn()
 
 	d.Set("domain_name", d.Id())
 
-	ds, err := FindDomainByName(conn, d.Get("domain_name").(string))
+	ds, err := FindDomainByName(ctx, conn, d.Get("domain_name").(string))
 
 	if err != nil {
 		return nil, err

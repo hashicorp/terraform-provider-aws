@@ -1,28 +1,30 @@
 package lambda
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceCodeSigningConfig() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceCodeSigningConfigCreate,
-		Read:   resourceCodeSigningConfigRead,
-		Update: resourceCodeSigningConfigUpdate,
-		Delete: resourceCodeSigningConfigDelete,
+		CreateWithoutTimeout: resourceCodeSigningConfigCreate,
+		ReadWithoutTimeout:   resourceCodeSigningConfigRead,
+		UpdateWithoutTimeout: resourceCodeSigningConfigUpdate,
+		DeleteWithoutTimeout: resourceCodeSigningConfigDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -84,8 +86,9 @@ func ResourceCodeSigningConfig() *schema.Resource {
 	}
 }
 
-func resourceCodeSigningConfigCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LambdaConn
+func resourceCodeSigningConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).LambdaConn()
 
 	log.Printf("[DEBUG] Creating Lambda code signing config")
 
@@ -102,70 +105,72 @@ func resourceCodeSigningConfigCreate(d *schema.ResourceData, meta interface{}) e
 		}
 	}
 
-	configOutput, err := conn.CreateCodeSigningConfig(configInput)
+	configOutput, err := conn.CreateCodeSigningConfigWithContext(ctx, configInput)
 	if err != nil {
-		return fmt.Errorf("error creating Lambda code signing config: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Lambda code signing config: %s", err)
 	}
 
 	if configOutput == nil || configOutput.CodeSigningConfig == nil {
-		return fmt.Errorf("error creating Lambda code signing config: empty output")
+		return sdkdiag.AppendErrorf(diags, "creating Lambda code signing config: empty output")
 	}
 	d.SetId(aws.StringValue(configOutput.CodeSigningConfig.CodeSigningConfigArn))
 
-	return resourceCodeSigningConfigRead(d, meta)
+	return append(diags, resourceCodeSigningConfigRead(ctx, d, meta)...)
 }
 
-func resourceCodeSigningConfigRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LambdaConn
+func resourceCodeSigningConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).LambdaConn()
 
-	configOutput, err := conn.GetCodeSigningConfig(&lambda.GetCodeSigningConfigInput{
+	configOutput, err := conn.GetCodeSigningConfigWithContext(ctx, &lambda.GetCodeSigningConfigInput{
 		CodeSigningConfigArn: aws.String(d.Id()),
 	})
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Lambda Code Signing Config (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Lambda code signing config (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Lambda code signing config (%s): %s", d.Id(), err)
 	}
 
 	codeSigningConfig := configOutput.CodeSigningConfig
 	if codeSigningConfig == nil {
-		return fmt.Errorf("error getting Lambda code signing config (%s): empty CodeSigningConfig", d.Id())
+		return sdkdiag.AppendErrorf(diags, "getting Lambda code signing config (%s): empty CodeSigningConfig", d.Id())
 	}
 
 	if err := d.Set("arn", codeSigningConfig.CodeSigningConfigArn); err != nil {
-		return fmt.Errorf("error setting lambda code signing config arn: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting lambda code signing config arn: %s", err)
 	}
 
 	if err := d.Set("config_id", codeSigningConfig.CodeSigningConfigId); err != nil {
-		return fmt.Errorf("error setting lambda code signing config id: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting lambda code signing config id: %s", err)
 	}
 
 	if err := d.Set("description", codeSigningConfig.Description); err != nil {
-		return fmt.Errorf("error setting lambda code signing config description: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting lambda code signing config description: %s", err)
 	}
 
 	if err := d.Set("last_modified", codeSigningConfig.LastModified); err != nil {
-		return fmt.Errorf("error setting lambda code signing config last modified: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting lambda code signing config last modified: %s", err)
 	}
 
 	if err := d.Set("allowed_publishers", flattenCodeSigningConfigAllowedPublishers(codeSigningConfig.AllowedPublishers)); err != nil {
-		return fmt.Errorf("error setting lambda code signing config allowed publishers: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting lambda code signing config allowed publishers: %s", err)
 	}
 
 	if err := d.Set("policies", flattenCodeSigningPolicies(codeSigningConfig.CodeSigningPolicies)); err != nil {
-		return fmt.Errorf("error setting lambda code signing config code signing policies: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting lambda code signing config code signing policies: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceCodeSigningConfigUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LambdaConn
+func resourceCodeSigningConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).LambdaConn()
 
 	configInput := &lambda.UpdateCodeSigningConfigInput{
 		CodeSigningConfigArn: aws.String(d.Id()),
@@ -192,31 +197,32 @@ func resourceCodeSigningConfigUpdate(d *schema.ResourceData, meta interface{}) e
 	if configUpdate {
 		log.Printf("[DEBUG] Updating Lambda code signing config: %#v", configInput)
 
-		_, err := conn.UpdateCodeSigningConfig(configInput)
+		_, err := conn.UpdateCodeSigningConfigWithContext(ctx, configInput)
 		if err != nil {
-			return fmt.Errorf("error updating Lambda code signing config (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Lambda code signing config (%s): %s", d.Id(), err)
 		}
 	}
 
-	return resourceCodeSigningConfigRead(d, meta)
+	return append(diags, resourceCodeSigningConfigRead(ctx, d, meta)...)
 }
 
-func resourceCodeSigningConfigDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LambdaConn
+func resourceCodeSigningConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).LambdaConn()
 
-	_, err := conn.DeleteCodeSigningConfig(&lambda.DeleteCodeSigningConfigInput{
+	_, err := conn.DeleteCodeSigningConfigWithContext(ctx, &lambda.DeleteCodeSigningConfigInput{
 		CodeSigningConfigArn: aws.String(d.Id()),
 	})
 
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceNotFoundException) {
-			return nil
+			return diags
 		}
-		return fmt.Errorf("error deleting Lambda code signing config (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Lambda code signing config (%s): %s", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Lambda code signing config %q deleted", d.Id())
-	return nil
+	return diags
 }
 
 func expandCodeSigningConfigAllowedPublishers(allowedPublishers []interface{}) *lambda.AllowedPublishers {

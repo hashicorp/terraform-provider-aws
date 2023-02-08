@@ -101,7 +101,7 @@ func ResourceCustomKeyStore() *schema.Resource {
 }
 
 func resourceCustomKeyStoreCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KMSConn
+	conn := meta.(*conns.AWSClient).KMSConn()
 
 	in := &kms.CreateCustomKeyStoreInput{
 		CustomKeyStoreName: aws.String(d.Get("custom_key_store_name").(string)),
@@ -158,7 +158,7 @@ func resourceCustomKeyStoreCreate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceCustomKeyStoreRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KMSConn
+	conn := meta.(*conns.AWSClient).KMSConn()
 
 	in := &kms.DescribeCustomKeyStoresInput{
 		CustomKeyStoreId: aws.String(d.Id()),
@@ -189,7 +189,7 @@ func resourceCustomKeyStoreRead(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceCustomKeyStoreUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KMSConn
+	conn := meta.(*conns.AWSClient).KMSConn()
 
 	update := false
 
@@ -246,7 +246,7 @@ func resourceCustomKeyStoreUpdate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceCustomKeyStoreDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KMSConn
+	conn := meta.(*conns.AWSClient).KMSConn()
 
 	log.Printf("[INFO] Deleting KMS CustomKeyStore %s", d.Id())
 

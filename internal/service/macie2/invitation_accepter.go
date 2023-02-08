@@ -44,7 +44,7 @@ func ResourceInvitationAccepter() *schema.Resource {
 }
 
 func resourceInvitationAccepterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn
+	conn := meta.(*conns.AWSClient).Macie2Conn()
 
 	adminAccountID := d.Get("administrator_account_id").(string)
 	var invitationID string
@@ -52,7 +52,7 @@ func resourceInvitationAccepterCreate(ctx context.Context, d *schema.ResourceDat
 	listInvitationsInput := &macie2.ListInvitationsInput{}
 
 	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-		err := conn.ListInvitationsPages(listInvitationsInput, func(page *macie2.ListInvitationsOutput, lastPage bool) bool {
+		err := conn.ListInvitationsPagesWithContext(ctx, listInvitationsInput, func(page *macie2.ListInvitationsOutput, lastPage bool) bool {
 			for _, invitation := range page.Invitations {
 				if aws.StringValue(invitation.AccountId) == adminAccountID {
 					invitationID = aws.StringValue(invitation.InvitationId)
@@ -74,7 +74,7 @@ func resourceInvitationAccepterCreate(ctx context.Context, d *schema.ResourceDat
 	})
 
 	if tfresource.TimedOut(err) {
-		err = conn.ListInvitationsPages(listInvitationsInput, func(page *macie2.ListInvitationsOutput, lastPage bool) bool {
+		err = conn.ListInvitationsPagesWithContext(ctx, listInvitationsInput, func(page *macie2.ListInvitationsOutput, lastPage bool) bool {
 			for _, invitation := range page.Invitations {
 				if aws.StringValue(invitation.AccountId) == adminAccountID {
 					invitationID = aws.StringValue(invitation.InvitationId)
@@ -105,7 +105,7 @@ func resourceInvitationAccepterCreate(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceInvitationAccepterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn
+	conn := meta.(*conns.AWSClient).Macie2Conn()
 
 	var err error
 
@@ -134,7 +134,7 @@ func resourceInvitationAccepterRead(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceInvitationAccepterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn
+	conn := meta.(*conns.AWSClient).Macie2Conn()
 
 	input := &macie2.DisassociateFromAdministratorAccountInput{}
 

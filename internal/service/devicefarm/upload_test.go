@@ -1,6 +1,7 @@
 package devicefarm_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -17,6 +18,7 @@ import (
 )
 
 func TestAccDeviceFarmUpload_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var proj devicefarm.Upload
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rNameUpdated := sdkacctest.RandomWithPrefix("tf-acc-test-updated")
@@ -32,12 +34,12 @@ func TestAccDeviceFarmUpload_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, devicefarm.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUploadDestroy,
+		CheckDestroy:             testAccCheckUploadDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUploadConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUploadExists(resourceName, &proj),
+					testAccCheckUploadExists(ctx, resourceName, &proj),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "devicefarm", regexp.MustCompile(`upload:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "type", "APPIUM_JAVA_TESTNG_TEST_SPEC"),
@@ -54,7 +56,7 @@ func TestAccDeviceFarmUpload_basic(t *testing.T) {
 			{
 				Config: testAccUploadConfig_basic(rNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUploadExists(resourceName, &proj),
+					testAccCheckUploadExists(ctx, resourceName, &proj),
 					resource.TestCheckResourceAttr(resourceName, "name", rNameUpdated),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "devicefarm", regexp.MustCompile(`upload:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "type", "APPIUM_JAVA_TESTNG_TEST_SPEC"),
@@ -67,6 +69,7 @@ func TestAccDeviceFarmUpload_basic(t *testing.T) {
 }
 
 func TestAccDeviceFarmUpload_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var proj devicefarm.Upload
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_devicefarm_upload.test"
@@ -81,14 +84,14 @@ func TestAccDeviceFarmUpload_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, devicefarm.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUploadDestroy,
+		CheckDestroy:             testAccCheckUploadDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUploadConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUploadExists(resourceName, &proj),
-					acctest.CheckResourceDisappears(acctest.Provider, tfdevicefarm.ResourceUpload(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfdevicefarm.ResourceUpload(), resourceName),
+					testAccCheckUploadExists(ctx, resourceName, &proj),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdevicefarm.ResourceUpload(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdevicefarm.ResourceUpload(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -97,6 +100,7 @@ func TestAccDeviceFarmUpload_disappears(t *testing.T) {
 }
 
 func TestAccDeviceFarmUpload_disappears_project(t *testing.T) {
+	ctx := acctest.Context(t)
 	var proj devicefarm.Upload
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_devicefarm_upload.test"
@@ -111,14 +115,14 @@ func TestAccDeviceFarmUpload_disappears_project(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, devicefarm.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUploadDestroy,
+		CheckDestroy:             testAccCheckUploadDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUploadConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUploadExists(resourceName, &proj),
-					acctest.CheckResourceDisappears(acctest.Provider, tfdevicefarm.ResourceProject(), "aws_devicefarm_project.test"),
-					acctest.CheckResourceDisappears(acctest.Provider, tfdevicefarm.ResourceUpload(), resourceName),
+					testAccCheckUploadExists(ctx, resourceName, &proj),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdevicefarm.ResourceProject(), "aws_devicefarm_project.test"),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdevicefarm.ResourceUpload(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -126,7 +130,7 @@ func TestAccDeviceFarmUpload_disappears_project(t *testing.T) {
 	})
 }
 
-func testAccCheckUploadExists(n string, v *devicefarm.Upload) resource.TestCheckFunc {
+func testAccCheckUploadExists(ctx context.Context, n string, v *devicefarm.Upload) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -137,8 +141,8 @@ func testAccCheckUploadExists(n string, v *devicefarm.Upload) resource.TestCheck
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmConn
-		resp, err := tfdevicefarm.FindUploadByARN(conn, rs.Primary.ID)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmConn()
+		resp, err := tfdevicefarm.FindUploadByARN(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -152,28 +156,30 @@ func testAccCheckUploadExists(n string, v *devicefarm.Upload) resource.TestCheck
 	}
 }
 
-func testAccCheckUploadDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmConn
+func testAccCheckUploadDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_devicefarm_upload" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_devicefarm_upload" {
+				continue
+			}
+
+			// Try to find the resource
+			_, err := tfdevicefarm.FindUploadByARN(ctx, conn, rs.Primary.ID)
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("DeviceFarm Upload %s still exists", rs.Primary.ID)
 		}
 
-		// Try to find the resource
-		_, err := tfdevicefarm.FindUploadByARN(conn, rs.Primary.ID)
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("DeviceFarm Upload %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
 func testAccUploadConfig_basic(rName string) string {
