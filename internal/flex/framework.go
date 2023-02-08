@@ -306,7 +306,7 @@ func Float64ToFramework(_ context.Context, v *float64) types.Float64 {
 	return types.Float64Value(aws.ToFloat64(v))
 }
 
-// Float64ToFrameworkLegacy converts an int64 pointer to a Framework Float64 value.
+// Float64ToFrameworkLegacy converts a float64 pointer to a Framework Float64 value.
 // A nil float64 pointer is converted to a zero float64.
 func Float64ToFrameworkLegacy(_ context.Context, v *float64) types.Float64 {
 	return types.Float64Value(aws.ToFloat64(v))
