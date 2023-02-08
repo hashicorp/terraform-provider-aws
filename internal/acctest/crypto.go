@@ -413,6 +413,10 @@ func TLSPEMEscapeNewlines(pem string) string {
 	return strings.ReplaceAll(pem, "\n", "\\n")
 }
 
+func TLSPEMRemoveNewlines(pem string) string {
+	return strings.ReplaceAll(pem, "\n", "")
+}
+
 func ellipticCurveForName(name string) elliptic.Curve {
 	switch name {
 	case "P-224":

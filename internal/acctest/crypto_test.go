@@ -116,3 +116,18 @@ ABCD
 		t.Errorf("got: %s\nwant: %s", got, want)
 	}
 }
+
+func TestTLSPEMRemoveNewlines(t *testing.T) {
+	t.Parallel()
+
+	input := `
+ABCD
+12345
+
+`
+	want := "ABCD12345"
+
+	if got := acctest.TLSPEMRemoveNewlines(input); got != want {
+		t.Errorf("got: %s\nwant: %s", got, want)
+	}
+}
