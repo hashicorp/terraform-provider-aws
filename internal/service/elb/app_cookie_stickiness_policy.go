@@ -96,7 +96,7 @@ func resourceAppCookieStickinessPolicyCreate(ctx context.Context, d *schema.Reso
 
 	d.SetId(id)
 
-	return diags
+	return append(diags, resourceAppCookieStickinessPolicyRead(ctx, d, meta)...)
 }
 
 func resourceAppCookieStickinessPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
