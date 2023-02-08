@@ -6,6 +6,7 @@ NOTES:
 
 FEATURES:
 
+* **New Resource:** `aws_evidently_launch` ([#28752](https://github.com/hashicorp/terraform-provider-aws/issues/28752))
 * **New Resource:** `aws_lightsail_bucket_access_key` ([#28699](https://github.com/hashicorp/terraform-provider-aws/issues/28699))
 * **New Resource:** `aws_networkmanager_core_network_policy_attachment` ([#29097](https://github.com/hashicorp/terraform-provider-aws/issues/29097))
 
