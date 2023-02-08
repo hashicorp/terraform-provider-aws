@@ -1353,13 +1353,6 @@ func updateReplica(ctx context.Context, d *schema.ResourceData, conn *dynamodb.D
 				break
 			}
 
-			// like "ForceNew" for the replica - PITR change when KMS present
-			/*if ma["kms_key_arn"].(string) == mr["kms_key_arn"].(string) && ma["kms_key_arn"].(string) != "" {
-				removeFirst = append(removeFirst, mr)
-				toAdd = append(toAdd, ma)
-				break
-			}*/
-
 			// just update PITR
 			if ma["point_in_time_recovery"].(bool) != mr["point_in_time_recovery"].(bool) {
 				if err := updatePITR(ctx, conn, d.Id(), ma["point_in_time_recovery"].(bool), ma["region_name"].(string), tfVersion, d.Timeout(schema.TimeoutUpdate)); err != nil {
