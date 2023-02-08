@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_networkmanager_core_network_policy_attachment
 
-Provides a Core Network Policy Attachment resource.
+Provides a Core Network Policy Attachment resource. This puts a Core Network Policy to an existing Core Network and executes the change set, which deploys changes globally based on the policy submitted (Sets the policy to `LIVE`).
 
 ~> **NOTE on Core Networks and Policy Attachments:** For a given policy attachment, this resource is incompatible with using the [`aws_networkmanager_core_network` resource](/docs/providers/aws/r/networkmanager_core_network.html) `policy_document` argument. When using that argument and this resource, both will attempt to manage the core network's policy document and Terraform will show a permanent difference.
 
