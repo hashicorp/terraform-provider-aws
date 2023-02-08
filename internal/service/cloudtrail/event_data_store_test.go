@@ -347,7 +347,7 @@ func testAccEventDataStoreConfig_kmsKeyId(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   multi_region = true
-  policy       = jsonencode({
+  policy = jsonencode({
     Id = %[1]q
     Statement = [{
       Sid    = "Enable IAM User Permissions"
