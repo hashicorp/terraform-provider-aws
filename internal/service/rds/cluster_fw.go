@@ -738,7 +738,7 @@ func (r *resourceCluster) Create(ctx context.Context, request resource.CreateReq
 			input.VpcSecurityGroupIds = flex.ExpandFrameworkStringSet(ctx, data.VpcSecurityGroupIds)
 		}
 
-		outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
+		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
 			func() (interface{}, error) {
 				return conn.RestoreDBClusterFromSnapshotWithContext(ctx, input)
 			},
@@ -751,7 +751,6 @@ func (r *resourceCluster) Create(ctx context.Context, request resource.CreateReq
 			)
 			return
 		}
-		output = outputRaw.(*rds.RestoreDBClusterFromSnapshotOutput).DBCluster
 	} else if !data.S3Import.IsNull() && len(data.S3Import.Elements()) > 0 {
 		var s3Import []s3Import
 		response.Diagnostics.Append(data.S3Import.ElementsAs(ctx, &s3Import, false)...)
@@ -839,7 +838,7 @@ func (r *resourceCluster) Create(ctx context.Context, request resource.CreateReq
 			input.VpcSecurityGroupIds = flex.ExpandFrameworkStringSet(ctx, data.VpcSecurityGroupIds)
 		}
 
-		outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
+		_, err := tfresource.RetryWhen(ctx, propagationTimeout,
 			func() (interface{}, error) {
 				return conn.RestoreDBClusterFromS3WithContext(ctx, input)
 			},
@@ -869,7 +868,6 @@ func (r *resourceCluster) Create(ctx context.Context, request resource.CreateReq
 			)
 			return
 		}
-		output = outputRaw.(*rds.RestoreDBClusterFromS3Output).DBCluster
 	} else if !data.RestoreToPointInTime.IsNull() && len(data.RestoreToPointInTime.Elements()) > 0 {
 		var restoreToPointInTime []restoreToPointInTime
 		response.Diagnostics.Append(data.RestoreToPointInTime.ElementsAs(ctx, &restoreToPointInTime, false)...)
@@ -972,7 +970,7 @@ func (r *resourceCluster) Create(ctx context.Context, request resource.CreateReq
 			input.VpcSecurityGroupIds = flex.ExpandFrameworkStringSet(ctx, data.VpcSecurityGroupIds)
 		}
 
-		outputRaw, err := conn.RestoreDBClusterToPointInTimeWithContext(ctx, input)
+		_, err := conn.RestoreDBClusterToPointInTimeWithContext(ctx, input)
 
 		if err != nil {
 			response.Diagnostics.AddError(
@@ -981,7 +979,6 @@ func (r *resourceCluster) Create(ctx context.Context, request resource.CreateReq
 			)
 			return
 		}
-		output = outputRaw.DBCluster
 	} else {
 		input := &rds.CreateDBClusterInput{
 			CopyTagsToSnapshot:  aws.Bool(data.CopyTagsToSnapshot.ValueBool()),
@@ -1164,7 +1161,7 @@ func (r *resourceCluster) Create(ctx context.Context, request resource.CreateReq
 	if requiresModifyDbCluster {
 		modifyDbClusterInput.DBClusterIdentifier = aws.String(data.ID.ValueString())
 
-		out, err := conn.ModifyDBClusterWithContext(ctx, modifyDbClusterInput)
+		_, err := conn.ModifyDBClusterWithContext(ctx, modifyDbClusterInput)
 		if err != nil {
 			response.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.RDS, create.ErrActionUpdating, ResNameCluster, data.ID.ValueString(), err),
@@ -1173,7 +1170,8 @@ func (r *resourceCluster) Create(ctx context.Context, request resource.CreateReq
 			return
 		}
 
-		if _, err := waitDBClusterUpdated(ctx, conn, data.ID.ValueString(), createTimeout); err != nil {
+		outputRaw, err := waitDBClusterUpdated(ctx, conn, data.ID.ValueString(), createTimeout)
+		if err != nil {
 			response.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.RDS, create.ErrActionWaitingForUpdate, ResNameCluster, data.ID.ValueString(), err),
 				err.Error(),
@@ -1181,7 +1179,7 @@ func (r *resourceCluster) Create(ctx context.Context, request resource.CreateReq
 			return
 		}
 
-		output = out.DBCluster
+		output = outputRaw
 	}
 
 	state := data
@@ -1874,6 +1872,10 @@ var (
 
 func (r *resourceClusterData) refreshFromOutput(ctx context.Context, meta *conns.AWSClient, out *rds.DBCluster) diag.Diagnostics {
 	var diags diag.Diagnostics
+	if out == nil {
+		return diags
+	}
+
 	defaultTagsConfig := meta.DefaultTagsConfig
 	ignoreTagsConfig := meta.IgnoreTagsConfig
 
