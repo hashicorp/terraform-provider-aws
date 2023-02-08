@@ -1072,10 +1072,6 @@ func cycleStreamEnabled(ctx context.Context, conn *dynamodb.DynamoDB, id string,
 	return nil
 }
 
-const (
-	keySkipReplicaUpdate = "skip_replica_update"
-)
-
 func createReplicas(ctx context.Context, conn *dynamodb.DynamoDB, tableName string, tfList []interface{}, tfVersion string, create bool, timeout time.Duration) error {
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
@@ -1103,20 +1099,14 @@ func createReplicas(ctx context.Context, conn *dynamodb.DynamoDB, tableName stri
 			},
 		}
 
+		// currently this would not be needed because (replica has these arguments):
+		//   region_name can't be updated - new replica
+		//   kms_key_arn can't be updated - remove/add replica
+		//   propagate_tags - handled elsewhere
+		//   point_in_time_recovery - handled elsewhere
+		// if provisioned_throughput_override or table_class_override were added, they could be updated here
 		if !create {
 			var replicaInput = &dynamodb.UpdateReplicationGroupMemberAction{}
-
-			// An update that doesn't update returns ValidationException (in other words,
-			// attempting an update with same region and kms_key_arn as currently
-			// exists throws unhelpfully worded exception):
-			// ValidationException: One or more parameter values were invalid: KMSMasterKeyId must be specified for each replica.
-			if _, ok := tfMap[keySkipReplicaUpdate]; ok {
-				if err := updatePITR(ctx, conn, tableName, tfMap["point_in_time_recovery"].(bool), tfMap["region_name"].(string), tfVersion, timeout); err != nil {
-					return fmt.Errorf("updating replica (%s) point in time recovery: %w", tfMap["region_name"].(string), err)
-				}
-				continue
-			}
-
 			if v, ok := tfMap["region_name"].(string); ok && v != "" {
 				replicaInput.RegionName = aws.String(v)
 			}
@@ -1159,6 +1149,10 @@ func createReplicas(ctx context.Context, conn *dynamodb.DynamoDB, tableName stri
 		if tfresource.TimedOut(err) {
 			_, err = conn.UpdateTableWithContext(ctx, input)
 		}
+
+		// An update that doesn't (makes no changes) returns ValidationException
+		// (same region_name and kms_key_arn as currently) throws unhelpfully worded exception:
+		// ValidationException: One or more parameter values were invalid: KMSMasterKeyId must be specified for each replica.
 
 		if create && tfawserr.ErrMessageContains(err, "ValidationException", "already exist") {
 			return createReplicas(ctx, conn, tableName, tfList, tfVersion, false, timeout)
@@ -1298,46 +1292,84 @@ func updateReplica(ctx context.Context, d *schema.ResourceData, conn *dynamodb.D
 	o := oRaw.(*schema.Set)
 	n := nRaw.(*schema.Set)
 
-	toRemove := o.Difference(n).List()
-	toAdd := n.Difference(o).List()
-
-	// 1. changing replica kms keys requires recreation of the replica, like ForceNew, but we don't want to ForceNew the *table*
-	// 2. also, in order to update PITR if a replica is encrypted (has KMS key), it requires recreation (how'd u recover from a backup encrypted with a different key?)
+	removeRaw := o.Difference(n).List()
+	addRaw := n.Difference(o).List()
 
 	var removeFirst []interface{} // replicas to delete before recreating (like ForceNew without recreating table)
-	var toUpdate []interface{}    // replicas to update without recreating
+	var toAdd []interface{}
+	var toRemove []interface{}
 
-	// For true updates, don't remove and add, just update
-	for i, a := range toAdd {
-		for j, r := range toRemove {
-			ma := a.(map[string]interface{})
+	// first pass - add replicas that don't have corresponding remove entry
+	for _, a := range addRaw {
+		add := true
+		ma := a.(map[string]interface{})
+		for _, r := range removeRaw {
 			mr := r.(map[string]interface{})
 
-			// like "ForceNew" for the replica
-			if ma["region_name"].(string) == mr["region_name"].(string) && ma["kms_key_arn"].(string) != mr["kms_key_arn"].(string) {
-				removeFirst = append(removeFirst, toRemove[j])
-				toRemove = append(toRemove[:j], toRemove[j+1:]...) // doesn't need to be removed, already removed
+			if ma["region_name"].(string) == mr["region_name"].(string) {
+				add = false
+				break
+			}
+		}
+
+		if add {
+			toAdd = append(toAdd, ma)
+		}
+	}
+
+	// second pass - remove replicas that don't have corresponding add entry
+	for _, r := range removeRaw {
+		remove := true
+		mr := r.(map[string]interface{})
+		for _, a := range addRaw {
+			ma := a.(map[string]interface{})
+
+			if ma["region_name"].(string) == mr["region_name"].(string) {
+				remove = false
+				break
+			}
+		}
+
+		if remove {
+			toRemove = append(toRemove, mr)
+		}
+	}
+
+	// third pass - for replicas that exist in both add and remove
+	// For true updates, don't remove and add, just update
+	for _, a := range addRaw {
+		ma := a.(map[string]interface{})
+		for _, r := range removeRaw {
+			mr := r.(map[string]interface{})
+
+			if ma["region_name"].(string) != mr["region_name"].(string) {
 				continue
 			}
 
-			// update rather than remove/add
-			if ma["region_name"].(string) == mr["region_name"].(string) {
-				if ma["kms_key_arn"].(string) == mr["kms_key_arn"].(string) {
-					// An update that doesn't update returns a ValidationException (in other words,
-					// attempting an update with same region and kms_key_arn as currently
-					// exists throws unhelpfully worded exception):
-					// ValidationException: One or more parameter values were invalid: KMSMasterKeyId must be specified for each replica.
-					//
-					// Here, want to still update PITR, a separately called update
-					v := toAdd[i].(map[string]interface{})
-					v[keySkipReplicaUpdate] = true
-					toAdd[i] = v
-				}
-				toUpdate = append(toUpdate, toAdd[i])
-				toRemove = append(toRemove[:j], toRemove[j+1:]...)
-				toAdd = append(toAdd[:i], toAdd[i+1:]...)
-				continue
+			// like "ForceNew" for the replica - KMS change
+			if ma["kms_key_arn"].(string) != mr["kms_key_arn"].(string) {
+				toRemove = append(toRemove, mr)
+				toAdd = append(toAdd, ma)
+				break
 			}
+
+			// like "ForceNew" for the replica - PITR change when KMS present
+			/*if ma["kms_key_arn"].(string) == mr["kms_key_arn"].(string) && ma["kms_key_arn"].(string) != "" {
+				removeFirst = append(removeFirst, mr)
+				toAdd = append(toAdd, ma)
+				break
+			}*/
+
+			// just update PITR
+			if ma["point_in_time_recovery"].(bool) != mr["point_in_time_recovery"].(bool) {
+				if err := updatePITR(ctx, conn, d.Id(), ma["point_in_time_recovery"].(bool), ma["region_name"].(string), tfVersion, d.Timeout(schema.TimeoutUpdate)); err != nil {
+					return fmt.Errorf("updating replica (%s) point in time recovery: %w", ma["region_name"].(string), err)
+				}
+				break
+			}
+
+			// nothing changed, assuming propagate_tags changed so do nothing here
+			break
 		}
 	}
 
@@ -1347,21 +1379,15 @@ func updateReplica(ctx context.Context, d *schema.ResourceData, conn *dynamodb.D
 		}
 	}
 
-	if len(toAdd) > 0 {
-		if err := createReplicas(ctx, conn, d.Id(), toAdd, tfVersion, true, d.Timeout(schema.TimeoutCreate)); err != nil {
-			return fmt.Errorf("updating replicas, while creating: %w", err)
-		}
-	}
-
-	if len(toUpdate) > 0 {
-		if err := createReplicas(ctx, conn, d.Id(), toUpdate, tfVersion, false, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return fmt.Errorf("updating replicas, while updating: %w", err)
-		}
-	}
-
 	if len(toRemove) > 0 {
 		if err := deleteReplicas(ctx, conn, d.Id(), toRemove, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return fmt.Errorf("updating replicas, while deleting: %w", err)
+		}
+	}
+
+	if len(toAdd) > 0 {
+		if err := createReplicas(ctx, conn, d.Id(), toAdd, tfVersion, true, d.Timeout(schema.TimeoutCreate)); err != nil {
+			return fmt.Errorf("updating replicas, while creating: %w", err)
 		}
 	}
 
@@ -1557,7 +1583,7 @@ func deleteReplicas(ctx context.Context, conn *dynamodb.DynamoDB, tableName stri
 				_, err = conn.UpdateTableWithContext(ctx, input)
 			}
 
-			if err != nil {
+			if err != nil && !tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
 				return fmt.Errorf("deleting replica (%s): %w", regionName, err)
 			}
 
