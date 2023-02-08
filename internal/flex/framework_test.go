@@ -1066,6 +1066,11 @@ func TestSet_Difference_strings(t *testing.T) {
 			new:      Set[string]{"one"},
 			expected: Set[string]{"two"},
 		},
+		"difference_add": {
+			original: Set[string]{"one"},
+			new:      Set[string]{"one", "two"},
+			expected: nil,
+		},
 	}
 
 	for name, test := range tests {
