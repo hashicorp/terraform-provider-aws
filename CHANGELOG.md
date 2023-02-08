@@ -11,11 +11,13 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* resource/aws_networkfirewall_firewall: Add `ip_address_type` attribute to the `subnet_mapping` configuration block ([#29010](https://github.com/hashicorp/terraform-provider-aws/issues/29010))
 * resource/aws_networkmanager_core_network: Add `base_policy_region` and `create_base_policy` arguments ([#29097](https://github.com/hashicorp/terraform-provider-aws/issues/29097))
 
 BUG FIXES:
 
 * data-source/aws_kms_key: Reinstate support for KMS multi-Region key ID or ARN values for the `key_id` argument ([#29266](https://github.com/hashicorp/terraform-provider-aws/issues/29266))
+* resource/aws_ec2_client_vpn_endpoint: Change `authentication_options` from `TypeList` to `TypeSet` as order is not significant ([#29294](https://github.com/hashicorp/terraform-provider-aws/issues/29294))
 * resource/aws_kms_grant: Retries until valid principal ARNs are returned instead of not updating state ([#29245](https://github.com/hashicorp/terraform-provider-aws/issues/29245))
 * resource/aws_prometheus_workspace: Create a logging configuration on resource update if none existed previously ([#27472](https://github.com/hashicorp/terraform-provider-aws/issues/27472))
 * resource/aws_s3_bucket: Fix crash when `logging` is empty ([#29243](https://github.com/hashicorp/terraform-provider-aws/issues/29243))
