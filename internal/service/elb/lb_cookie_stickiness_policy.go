@@ -2,6 +2,7 @@ package elb
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"strconv"
@@ -185,6 +186,43 @@ func resourceCookieStickinessPolicyDelete(ctx context.Context, d *schema.Resourc
 		return sdkdiag.AppendErrorf(diags, "deleting LB stickiness policy %s: %s", d.Id(), err)
 	}
 	return diags
+}
+
+// Determine if a particular policy is assigned to an ELB listener
+func resourceSticknessPolicyAssigned(ctx context.Context, conn *elb.ELB, policyName, lbName, lbPort string) (bool, error) {
+	describeElbOpts := &elb.DescribeLoadBalancersInput{
+		LoadBalancerNames: []*string{aws.String(lbName)},
+	}
+	describeResp, err := conn.DescribeLoadBalancersWithContext(ctx, describeElbOpts)
+
+	if tfawserr.ErrCodeEquals(err, elb.ErrCodeAccessPointNotFoundException) {
+		return false, nil
+	}
+
+	if err != nil {
+		return false, fmt.Errorf("retrieving LB: %s", err)
+	}
+
+	if len(describeResp.LoadBalancerDescriptions) != 1 {
+		return false, errors.New("retrieving LB: empty response")
+	}
+
+	lb := describeResp.LoadBalancerDescriptions[0]
+	assigned := false
+	for _, listener := range lb.ListenerDescriptions {
+		if listener == nil || listener.Listener == nil || lbPort != strconv.Itoa(int(aws.Int64Value(listener.Listener.LoadBalancerPort))) {
+			continue
+		}
+
+		for _, v := range listener.PolicyNames {
+			if policyName == aws.StringValue(v) {
+				assigned = true
+				break
+			}
+		}
+	}
+
+	return assigned, nil
 }
 
 // CookieStickinessPolicyParseID takes an ID and parses it into
