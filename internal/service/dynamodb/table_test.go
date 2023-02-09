@@ -43,7 +43,7 @@ func TestUpdateDiffGSI(t *testing.T) {
 		{ // No-op => no changes
 			Old: []interface{}{
 				map[string]interface{}{
-					"name":            "att1-index",
+					names.AttrName:    "att1-index",
 					"hash_key":        "att1",
 					"write_capacity":  10,
 					"read_capacity":   10,
@@ -52,7 +52,7 @@ func TestUpdateDiffGSI(t *testing.T) {
 			},
 			New: []interface{}{
 				map[string]interface{}{
-					"name":            "att1-index",
+					names.AttrName:    "att1-index",
 					"hash_key":        "att1",
 					"write_capacity":  10,
 					"read_capacity":   10,
@@ -64,7 +64,7 @@ func TestUpdateDiffGSI(t *testing.T) {
 		{ // No-op => ignore ordering of non_key_attributes
 			Old: []interface{}{
 				map[string]interface{}{
-					"name":               "att1-index",
+					names.AttrName:       "att1-index",
 					"hash_key":           "att1",
 					"write_capacity":     10,
 					"read_capacity":      10,
@@ -74,7 +74,7 @@ func TestUpdateDiffGSI(t *testing.T) {
 			},
 			New: []interface{}{
 				map[string]interface{}{
-					"name":               "att1-index",
+					names.AttrName:       "att1-index",
 					"hash_key":           "att1",
 					"write_capacity":     10,
 					"read_capacity":      10,
@@ -88,7 +88,7 @@ func TestUpdateDiffGSI(t *testing.T) {
 		{ // Creation
 			Old: []interface{}{
 				map[string]interface{}{
-					"name":            "att1-index",
+					names.AttrName:    "att1-index",
 					"hash_key":        "att1",
 					"write_capacity":  10,
 					"read_capacity":   10,
@@ -97,14 +97,14 @@ func TestUpdateDiffGSI(t *testing.T) {
 			},
 			New: []interface{}{
 				map[string]interface{}{
-					"name":            "att1-index",
+					names.AttrName:    "att1-index",
 					"hash_key":        "att1",
 					"write_capacity":  10,
 					"read_capacity":   10,
 					"projection_type": "ALL",
 				},
 				map[string]interface{}{
-					"name":            "att2-index",
+					names.AttrName:    "att2-index",
 					"hash_key":        "att2",
 					"write_capacity":  12,
 					"read_capacity":   11,
@@ -136,14 +136,14 @@ func TestUpdateDiffGSI(t *testing.T) {
 		{ // Deletion
 			Old: []interface{}{
 				map[string]interface{}{
-					"name":            "att1-index",
+					names.AttrName:    "att1-index",
 					"hash_key":        "att1",
 					"write_capacity":  10,
 					"read_capacity":   10,
 					"projection_type": "ALL",
 				},
 				map[string]interface{}{
-					"name":            "att2-index",
+					names.AttrName:    "att2-index",
 					"hash_key":        "att2",
 					"write_capacity":  12,
 					"read_capacity":   11,
@@ -152,7 +152,7 @@ func TestUpdateDiffGSI(t *testing.T) {
 			},
 			New: []interface{}{
 				map[string]interface{}{
-					"name":            "att1-index",
+					names.AttrName:    "att1-index",
 					"hash_key":        "att1",
 					"write_capacity":  10,
 					"read_capacity":   10,
@@ -171,7 +171,7 @@ func TestUpdateDiffGSI(t *testing.T) {
 		{ // Update
 			Old: []interface{}{
 				map[string]interface{}{
-					"name":            "att1-index",
+					names.AttrName:    "att1-index",
 					"hash_key":        "att1",
 					"write_capacity":  10,
 					"read_capacity":   10,
@@ -180,7 +180,7 @@ func TestUpdateDiffGSI(t *testing.T) {
 			},
 			New: []interface{}{
 				map[string]interface{}{
-					"name":            "att1-index",
+					names.AttrName:    "att1-index",
 					"hash_key":        "att1",
 					"write_capacity":  20,
 					"read_capacity":   30,
@@ -203,7 +203,7 @@ func TestUpdateDiffGSI(t *testing.T) {
 		{ // Update of non-capacity attributes
 			Old: []interface{}{
 				map[string]interface{}{
-					"name":            "att1-index",
+					names.AttrName:    "att1-index",
 					"hash_key":        "att1",
 					"write_capacity":  10,
 					"read_capacity":   10,
@@ -212,7 +212,7 @@ func TestUpdateDiffGSI(t *testing.T) {
 			},
 			New: []interface{}{
 				map[string]interface{}{
-					"name":               "att1-index",
+					names.AttrName:       "att1-index",
 					"hash_key":           "att-new",
 					"range_key":          "new-range-key",
 					"write_capacity":     10,
@@ -256,7 +256,7 @@ func TestUpdateDiffGSI(t *testing.T) {
 		{ // Update of all attributes
 			Old: []interface{}{
 				map[string]interface{}{
-					"name":            "att1-index",
+					names.AttrName:    "att1-index",
 					"hash_key":        "att1",
 					"write_capacity":  10,
 					"read_capacity":   10,
@@ -265,7 +265,7 @@ func TestUpdateDiffGSI(t *testing.T) {
 			},
 			New: []interface{}{
 				map[string]interface{}{
-					"name":               "att1-index",
+					names.AttrName:       "att1-index",
 					"hash_key":           "att-new",
 					"range_key":          "new-range-key",
 					"write_capacity":     12,
@@ -340,14 +340,14 @@ func TestAccDynamoDBTable_basic(t *testing.T) {
 				Config: testAccTableConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "dynamodb", fmt.Sprintf("table/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "dynamodb", fmt.Sprintf("table/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "read_capacity", "1"),
 					resource.TestCheckResourceAttr(resourceName, "write_capacity", "1"),
 					resource.TestCheckResourceAttr(resourceName, "hash_key", rName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "attribute.*", map[string]string{
-						"name": rName,
-						"type": "S",
+						names.AttrName: rName,
+						names.AttrType: "S",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "table_class", ""),
@@ -453,7 +453,7 @@ func TestAccDynamoDBTable_extended(t *testing.T) {
 				Config: testAccTableConfig_addSecondaryGSI(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "hash_key", "TestTableHashKey"),
 					resource.TestCheckResourceAttr(resourceName, "range_key", "TestTableRangeKey"),
 					resource.TestCheckResourceAttr(resourceName, "billing_mode", dynamodb.BillingModeProvisioned),
@@ -464,23 +464,23 @@ func TestAccDynamoDBTable_extended(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "local_secondary_index.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "attribute.*", map[string]string{
-						"name": "TestTableHashKey",
-						"type": "S",
+						names.AttrName: "TestTableHashKey",
+						names.AttrType: "S",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "attribute.*", map[string]string{
-						"name": "TestTableRangeKey",
-						"type": "S",
+						names.AttrName: "TestTableRangeKey",
+						names.AttrType: "S",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "attribute.*", map[string]string{
-						"name": "TestLSIRangeKey",
-						"type": "N",
+						names.AttrName: "TestLSIRangeKey",
+						names.AttrType: "N",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "attribute.*", map[string]string{
-						"name": "ReplacementGSIRangeKey",
-						"type": "N",
+						names.AttrName: "ReplacementGSIRangeKey",
+						names.AttrType: "N",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
-						"name":                 "ReplacementTestTableGSI",
+						names.AttrName:         "ReplacementTestTableGSI",
 						"hash_key":             "TestTableHashKey",
 						"range_key":            "ReplacementGSIRangeKey",
 						"write_capacity":       "5",
@@ -490,7 +490,7 @@ func TestAccDynamoDBTable_extended(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemAttr(resourceName, "global_secondary_index.*.non_key_attributes.*", "TestNonKeyAttribute"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "local_secondary_index.*", map[string]string{
-						"name":            "TestTableLSI",
+						names.AttrName:    "TestTableLSI",
 						"range_key":       "TestLSIRangeKey",
 						"projection_type": "ALL",
 					}),
@@ -965,17 +965,17 @@ func TestAccDynamoDBTable_gsiUpdateCapacity(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
 						"read_capacity":  "1",
 						"write_capacity": "1",
-						"name":           "att1-index",
+						names.AttrName:   "att1-index",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
 						"read_capacity":  "1",
 						"write_capacity": "1",
-						"name":           "att2-index",
+						names.AttrName:   "att2-index",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
 						"read_capacity":  "1",
 						"write_capacity": "1",
-						"name":           "att3-index",
+						names.AttrName:   "att3-index",
 					}),
 				),
 			},
@@ -992,17 +992,17 @@ func TestAccDynamoDBTable_gsiUpdateCapacity(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
 						"read_capacity":  "2",
 						"write_capacity": "2",
-						"name":           "att1-index",
+						names.AttrName:   "att1-index",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
 						"read_capacity":  "2",
 						"write_capacity": "2",
-						"name":           "att2-index",
+						names.AttrName:   "att2-index",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
 						"read_capacity":  "2",
 						"write_capacity": "2",
-						"name":           "att3-index",
+						names.AttrName:   "att3-index",
 					}),
 				),
 			},
@@ -1033,7 +1033,7 @@ func TestAccDynamoDBTable_gsiUpdateOtherAttributes(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
 						"hash_key":             "att3",
-						"name":                 "att3-index",
+						names.AttrName:         "att3-index",
 						"non_key_attributes.#": "0",
 						"projection_type":      "ALL",
 						"range_key":            "",
@@ -1042,7 +1042,7 @@ func TestAccDynamoDBTable_gsiUpdateOtherAttributes(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
 						"hash_key":             "att1",
-						"name":                 "att1-index",
+						names.AttrName:         "att1-index",
 						"non_key_attributes.#": "0",
 						"projection_type":      "ALL",
 						"range_key":            "",
@@ -1051,7 +1051,7 @@ func TestAccDynamoDBTable_gsiUpdateOtherAttributes(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
 						"hash_key":             "att2",
-						"name":                 "att2-index",
+						names.AttrName:         "att2-index",
 						"non_key_attributes.#": "0",
 						"projection_type":      "ALL",
 						"range_key":            "",
@@ -1072,7 +1072,7 @@ func TestAccDynamoDBTable_gsiUpdateOtherAttributes(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
 						"hash_key":             "att4",
-						"name":                 "att2-index",
+						names.AttrName:         "att2-index",
 						"non_key_attributes.#": "0",
 						"projection_type":      "ALL",
 						"range_key":            "att2",
@@ -1081,7 +1081,7 @@ func TestAccDynamoDBTable_gsiUpdateOtherAttributes(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
 						"hash_key":             "att3",
-						"name":                 "att3-index",
+						names.AttrName:         "att3-index",
 						"non_key_attributes.#": "1",
 						"projection_type":      "INCLUDE",
 						"range_key":            "att4",
@@ -1091,7 +1091,7 @@ func TestAccDynamoDBTable_gsiUpdateOtherAttributes(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceName, "global_secondary_index.*.non_key_attributes.*", "RandomAttribute"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
 						"hash_key":             "att1",
-						"name":                 "att1-index",
+						names.AttrName:         "att1-index",
 						"non_key_attributes.#": "0",
 						"projection_type":      "ALL",
 						"range_key":            "",
@@ -1123,7 +1123,7 @@ func TestAccDynamoDBTable_lsiNonKeyAttributes(t *testing.T) {
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "local_secondary_index.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "local_secondary_index.*", map[string]string{
-						"name":                 "TestTableLSI",
+						names.AttrName:         "TestTableLSI",
 						"non_key_attributes.#": "1",
 						"non_key_attributes.0": "TestNonKeyAttribute",
 						"projection_type":      "INCLUDE",
@@ -1164,7 +1164,7 @@ func TestAccDynamoDBTable_gsiUpdateNonKeyAttributes(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
 						"hash_key":             "att4",
-						"name":                 "att2-index",
+						names.AttrName:         "att2-index",
 						"non_key_attributes.#": "0",
 						"projection_type":      "ALL",
 						"range_key":            "att2",
@@ -1173,7 +1173,7 @@ func TestAccDynamoDBTable_gsiUpdateNonKeyAttributes(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
 						"hash_key":             "att3",
-						"name":                 "att3-index",
+						names.AttrName:         "att3-index",
 						"non_key_attributes.#": "1",
 						"projection_type":      "INCLUDE",
 						"range_key":            "att4",
@@ -1183,7 +1183,7 @@ func TestAccDynamoDBTable_gsiUpdateNonKeyAttributes(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceName, "global_secondary_index.*.non_key_attributes.*", "RandomAttribute"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
 						"hash_key":             "att1",
-						"name":                 "att1-index",
+						names.AttrName:         "att1-index",
 						"non_key_attributes.#": "0",
 						"projection_type":      "ALL",
 						"range_key":            "",
@@ -1203,7 +1203,7 @@ func TestAccDynamoDBTable_gsiUpdateNonKeyAttributes(t *testing.T) {
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
 						"hash_key":             "att4",
-						"name":                 "att2-index",
+						names.AttrName:         "att2-index",
 						"non_key_attributes.#": "0",
 						"projection_type":      "ALL",
 						"range_key":            "att2",
@@ -1212,7 +1212,7 @@ func TestAccDynamoDBTable_gsiUpdateNonKeyAttributes(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
 						"hash_key":             "att3",
-						"name":                 "att3-index",
+						names.AttrName:         "att3-index",
 						"non_key_attributes.#": "2",
 						"projection_type":      "INCLUDE",
 						"range_key":            "att4",
@@ -1223,7 +1223,7 @@ func TestAccDynamoDBTable_gsiUpdateNonKeyAttributes(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceName, "global_secondary_index.*.non_key_attributes.*", "AnotherAttribute"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
 						"hash_key":             "att1",
-						"name":                 "att1-index",
+						names.AttrName:         "att1-index",
 						"non_key_attributes.#": "0",
 						"projection_type":      "ALL",
 						"range_key":            "",
@@ -1257,7 +1257,7 @@ func TestAccDynamoDBTable_GsiUpdateNonKeyAttributes_emptyPlan(t *testing.T) {
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
 						"hash_key":             "att1",
-						"name":                 "att1-index",
+						names.AttrName:         "att1-index",
 						"non_key_attributes.#": "2",
 						"projection_type":      "INCLUDE",
 						"range_key":            "att2",
@@ -1483,7 +1483,7 @@ func TestAccDynamoDBTable_encryption(t *testing.T) {
 					testAccCheckInitialTableExists(ctx, resourceName, &confBYOK),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "server_side_encryption.0.kms_key_arn", kmsKeyResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "server_side_encryption.0.kms_key_arn", kmsKeyResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -1587,9 +1587,9 @@ func TestAccDynamoDBTable_Replica_single(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "dynamodb", fmt.Sprintf("table/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "dynamodb", fmt.Sprintf("table/%s", rName)),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]*regexp.Regexp{
-						"arn": regexp.MustCompile(fmt.Sprintf(`:dynamodb:%s:`, acctest.AlternateRegion())),
+						names.AttrARN: regexp.MustCompile(fmt.Sprintf(`:dynamodb:%s:`, acctest.AlternateRegion())),
 					}),
 				),
 			},
@@ -1645,9 +1645,9 @@ func TestAccDynamoDBTable_Replica_singleStreamSpecification(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "dynamodb", fmt.Sprintf("table/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "dynamodb", fmt.Sprintf("table/%s", rName)),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]*regexp.Regexp{
-						"arn":          regexp.MustCompile(fmt.Sprintf(`:dynamodb:%s:.*table/%s`, acctest.AlternateRegion(), rName)),
+						names.AttrARN:  regexp.MustCompile(fmt.Sprintf(`:dynamodb:%s:.*table/%s`, acctest.AlternateRegion(), rName)),
 						"stream_arn":   regexp.MustCompile(fmt.Sprintf(`:dynamodb:%s:.*table/%s/stream`, acctest.AlternateRegion(), rName)),
 						"stream_label": regexp.MustCompile(`[0-9]+.*:[0-9]+`),
 					}),
@@ -1726,9 +1726,9 @@ func TestAccDynamoDBTable_Replica_singleCMK(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "replica.0.kms_key_arn", kmsKeyReplicaResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "replica.0.kms_key_arn", kmsKeyReplicaResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "server_side_encryption.0.kms_key_arn", kmsKeyResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "server_side_encryption.0.kms_key_arn", kmsKeyResourceName, names.AttrARN),
 				),
 			},
 		},
@@ -1772,9 +1772,9 @@ func TestAccDynamoDBTable_Replica_singleAddCMK(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "replica.0.kms_key_arn", kmsKeyReplicaResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "replica.0.kms_key_arn", kmsKeyReplicaResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "server_side_encryption.0.kms_key_arn", kmsKeyResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "server_side_encryption.0.kms_key_arn", kmsKeyResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -1782,9 +1782,9 @@ func TestAccDynamoDBTable_Replica_singleAddCMK(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "replica.0.kms_key_arn", kmsKeyReplica2ResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "replica.0.kms_key_arn", kmsKeyReplica2ResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "server_side_encryption.0.kms_key_arn", kmsKeyResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "server_side_encryption.0.kms_key_arn", kmsKeyResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -2319,7 +2319,7 @@ func TestAccDynamoDBTable_backupEncryption(t *testing.T) {
 					testAccCheckInitialTableExists(ctx, resourceName, &confBYOK),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "server_side_encryption.0.kms_key_arn", kmsKeyResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "server_side_encryption.0.kms_key_arn", kmsKeyResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -2359,7 +2359,7 @@ func TestAccDynamoDBTable_backup_overrideEncryption(t *testing.T) {
 					testAccCheckInitialTableExists(ctx, resourceName, &confBYOK),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "server_side_encryption.0.kms_key_arn", kmsKeyResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "server_side_encryption.0.kms_key_arn", kmsKeyResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -2495,7 +2495,7 @@ func testAccCheckReplicaHasTags(ctx context.Context, n string, region string, co
 			conn = dynamodb.New(session)
 		}
 
-		newARN, err := tfdynamodb.ARNForNewRegion(rs.Primary.Attributes["arn"], region)
+		newARN, err := tfdynamodb.ARNForNewRegion(rs.Primary.Attributes[names.AttrARN], region)
 
 		if err != nil {
 			return create.Error(names.DynamoDB, create.ErrActionChecking, tfdynamodb.ResNameTable, rs.Primary.ID, err)
@@ -2504,11 +2504,11 @@ func testAccCheckReplicaHasTags(ctx context.Context, n string, region string, co
 		tags, err := tfdynamodb.ListTags(ctx, conn, newARN)
 
 		if err != nil && !tfawserr.ErrMessageContains(err, "UnknownOperationException", "Tagging is not currently supported in DynamoDB Local.") {
-			return create.Error(names.DynamoDB, create.ErrActionChecking, tfdynamodb.ResNameTable, rs.Primary.Attributes["arn"], err)
+			return create.Error(names.DynamoDB, create.ErrActionChecking, tfdynamodb.ResNameTable, rs.Primary.Attributes[names.AttrARN], err)
 		}
 
 		if len(tags.Keys()) != count {
-			return create.Error(names.DynamoDB, create.ErrActionChecking, tfdynamodb.ResNameTable, rs.Primary.Attributes["arn"], fmt.Errorf("expected %d tags on replica, found %d", count, len(tags.Keys())))
+			return create.Error(names.DynamoDB, create.ErrActionChecking, tfdynamodb.ResNameTable, rs.Primary.Attributes[names.AttrARN], fmt.Errorf("expected %d tags on replica, found %d", count, len(tags.Keys())))
 		}
 
 		return nil
@@ -2527,23 +2527,23 @@ func testAccCheckInitialTableConf(resourceName string) resource.TestCheckFunc {
 		resource.TestCheckResourceAttr(resourceName, "global_secondary_index.#", "1"),
 		resource.TestCheckResourceAttr(resourceName, "local_secondary_index.#", "1"),
 		resource.TestCheckTypeSetElemNestedAttrs(resourceName, "attribute.*", map[string]string{
-			"name": "TestTableHashKey",
-			"type": "S",
+			names.AttrName: "TestTableHashKey",
+			names.AttrType: "S",
 		}),
 		resource.TestCheckTypeSetElemNestedAttrs(resourceName, "attribute.*", map[string]string{
-			"name": "TestTableRangeKey",
-			"type": "S",
+			names.AttrName: "TestTableRangeKey",
+			names.AttrType: "S",
 		}),
 		resource.TestCheckTypeSetElemNestedAttrs(resourceName, "attribute.*", map[string]string{
-			"name": "TestLSIRangeKey",
-			"type": "N",
+			names.AttrName: "TestLSIRangeKey",
+			names.AttrType: "N",
 		}),
 		resource.TestCheckTypeSetElemNestedAttrs(resourceName, "attribute.*", map[string]string{
-			"name": "TestGSIRangeKey",
-			"type": "S",
+			names.AttrName: "TestGSIRangeKey",
+			names.AttrType: "S",
 		}),
 		resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
-			"name":            "InitialTestTableGSI",
+			names.AttrName:    "InitialTestTableGSI",
 			"hash_key":        "TestTableHashKey",
 			"range_key":       "TestGSIRangeKey",
 			"write_capacity":  "1",
@@ -2551,7 +2551,7 @@ func testAccCheckInitialTableConf(resourceName string) resource.TestCheckFunc {
 			"projection_type": "KEYS_ONLY",
 		}),
 		resource.TestCheckTypeSetElemNestedAttrs(resourceName, "local_secondary_index.*", map[string]string{
-			"name":            "TestTableLSI",
+			names.AttrName:    "TestTableLSI",
 			"range_key":       "TestLSIRangeKey",
 			"projection_type": "ALL",
 		}),
