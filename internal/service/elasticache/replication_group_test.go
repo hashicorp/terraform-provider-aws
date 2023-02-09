@@ -3877,28 +3877,77 @@ data "aws_elasticache_replication_group" "test" {
 }
 
 func testAccReplicationGroupConfig_networkTypeIPv6(rName string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnetsIPv6(rName, 1), fmt.Sprintf(`
+resource "aws_elasticache_subnet_group" "test" {
+  name        = %[1]q
+  description = %[1]q
+  subnet_ids  = aws_subnet.test[*].id
+}
+
+resource "aws_security_group" "test" {
+  name        = %[1]q
+  description = %[1]q
+  vpc_id      = aws_vpc.test.id
+  ingress {
+    from_port   = -1
+    to_port     = -1
+    protocol    = "icmp"
+    cidr_blocks = ["0.0.0.0/0"]
+    }
+    tags = {
+      Name = %[1]q
+    }
+}
+
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id          = %[1]q
   replication_group_description = "test description"
   node_type                     = "cache.t3.small"
   ip_discovery                  = "ipv6"
   network_type                  = "ipv6"
+
+  subnet_group_name  = aws_elasticache_subnet_group.test.name
+  security_group_ids = [aws_security_group.test.id]
 }
 `, rName)
 }
 
 func testAccReplicationGroupConfig_networkTypeDualStack(rName string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnetsIPv6(rName, 1), fmt.Sprintf(`
+resource "aws_elasticache_subnet_group" "test" {
+  name        = %[1]q
+  description = %[1]q
+  subnet_ids  = aws_subnet.test[*].id
+}
+
+resource "aws_security_group" "test" {
+  name        = %[1]q
+  description = %[1]q
+  vpc_id      = aws_vpc.test.id
+  ingress {
+    from_port   = -1
+    to_port     = -1
+    protocol    = "icmp"
+    cidr_blocks = ["0.0.0.0/0"]
+    }
+    tags = {
+    Name = %[1]q
+    }
+}
+
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id          = %[1]q
   replication_group_description = "test description"
   node_type                     = "cache.t3.small"
   ip_discovery                  = "ipv6"
   network_type                  = "dual_stack"
+
+  subnet_group_name  = aws_elasticache_subnet_group.test.name
+  security_group_ids = [aws_security_group.test.id]
 }
 `, rName)
 }
+
 func resourceReplicationGroupDisableAutomaticFailover(conn *elasticache.ElastiCache, replicationGroupID string, timeout time.Duration) error {
 	return resourceReplicationGroupModify(conn, timeout, &elasticache.ModifyReplicationGroupInput{
 		ReplicationGroupId:       aws.String(replicationGroupID),
