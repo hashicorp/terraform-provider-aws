@@ -184,10 +184,6 @@ func (r *resourceCluster) Schema(ctx context.Context, request resource.SchemaReq
 			},
 			"db_cluster_parameter_group_name": schema.StringAttribute{
 				Optional: true,
-				//Computed: true,
-				//PlanModifiers: []planmodifier.String{
-				//	stringplanmodifier.UseStateForUnknown(),
-				//},
 			},
 			"db_cluster_parameter_group_name_actual": schema.StringAttribute{
 				Computed: true,
@@ -326,7 +322,9 @@ func (r *resourceCluster) Schema(ctx context.Context, request resource.SchemaReq
 					stringplanmodifier.RequiresReplace(),
 					stringplanmodifier.UseStateForUnknown(),
 				},
-				// TODO Validate
+				Validators: []validator.String{
+					fwvalidators.ARN(),
+				},
 			},
 			"master_password": schema.StringAttribute{
 				Optional:  true,
@@ -372,7 +370,9 @@ func (r *resourceCluster) Schema(ctx context.Context, request resource.SchemaReq
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
-				// TODO Validate,
+				Validators: []validator.String{
+					fwvalidators.OnceADayWindowFormat(),
+				},
 			},
 			"preferred_maintenance_window": schema.StringAttribute{
 				Optional: true,
@@ -380,7 +380,9 @@ func (r *resourceCluster) Schema(ctx context.Context, request resource.SchemaReq
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
-				// TODO Validate,
+				Validators: []validator.String{
+					fwvalidators.OnceAWeekWindowFormat(),
+				},
 			},
 			"reader_endpoint": schema.StringAttribute{
 				Computed: true,
@@ -475,7 +477,7 @@ func (r *resourceCluster) Schema(ctx context.Context, request resource.SchemaReq
 							Validators: []validator.String{
 								stringvalidator.Any(
 									fwvalidators.ClusterIdentifier(),
-									// TODO need ARN validator
+									fwvalidators.ARN(),
 								),
 							},
 						},
@@ -1316,8 +1318,8 @@ func (r *resourceCluster) Update(ctx context.Context, request resource.UpdateReq
 		n := flex.ExpandFrameworkStringValueSet(ctx, plan.EnabledCloudwatchLogsExports)
 
 		input.CloudwatchLogsExportConfiguration = &rds.CloudwatchLogsExportConfiguration{
-			DisableLogTypes: aws.StringSlice(o.Difference(n)), // anything in old set that is not in new
-			EnableLogTypes:  aws.StringSlice(n.Difference(o)), // anything in new set that is not in old
+			DisableLogTypes: aws.StringSlice(o.Difference(n)),
+			EnableLogTypes:  aws.StringSlice(n.Difference(o)),
 		}
 		modifyCluster = true
 	}
@@ -1500,16 +1502,6 @@ func (r *resourceCluster) Update(ctx context.Context, request resource.UpdateReq
 		}
 	}
 
-	//out, err := FindDBClusterByID(ctx, conn, plan.ID.ValueString())
-	//
-	//if err != nil {
-	//	response.Diagnostics.AddError(
-	//		create.ProblemStandardMessage(names.RDS, create.ErrActionWaitingForUpdate, ResNameCluster, plan.ID.ValueString(), err),
-	//		err.Error(),
-	//	)
-	//	return
-	//}
-
 	stateOutput := plan
 	stateOutput.ScalingConfigurationActual = state.ScalingConfigurationActual
 	stateOutput.EngineVersionActual = state.EngineVersionActual
@@ -1670,45 +1662,18 @@ func (r *resourceCluster) ImportState(ctx context.Context, request resource.Impo
 // the diff that should be shown to the user for approval, and once
 // during the apply phase with any unknown values from configuration
 // filled in with their final values.
-//
-// The planned new state is represented by
-// ModifyPlanResponse.Plan. It must meet the following
-// constraints:
-// 1. Any non-Computed attribute set in config must preserve the exact
-// config value or return the corresponding attribute value from the
-// prior state (ModifyPlanRequest.State).
-// 2. Any attribute with a known value must not have its value changed
-// in subsequent calls to ModifyPlan or Create/Read/Update.
-// 3. Any attribute with an unknown value may either remain unknown
-// or take on any value of the expected type.
-//
-// Any errors will prevent further resource-level plan modifications.
 func (r *resourceCluster) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	var plan, state resourceClusterData
+	var finalSnapshotIdentifier types.String
+	var skipFinalSnapshot types.Bool
 
-	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
-
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
+	response.Diagnostics.Append(request.Plan.GetAttribute(ctx, path.Root("final_snapshot_identifier"), &finalSnapshotIdentifier)...)
+	response.Diagnostics.Append(request.Plan.GetAttribute(ctx, path.Root("skip_final_snapshot"), &skipFinalSnapshot)...)
 
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	//var finalSnapshotIdentifier types.String
-	//var skipFinalSnapshot types.Bool
-	//
-	//response.Diagnostics.Append(request.Plan.GetAttribute(ctx, path.Root("final_snapshot_identifier"), &finalSnapshotIdentifier)...)
-	//response.Diagnostics.Append(request.Plan.GetAttribute(ctx, path.Root("skip_final_snapshot"), &skipFinalSnapshot)...)
-
-	//if response.Diagnostics.HasError() {
-	//	return
-	//}
-
-	if plan.SkipFinalSnapshot.ValueBool() == false && plan.FinalSnapshotIdentifier.IsNull() {
+	if skipFinalSnapshot.ValueBool() == false && finalSnapshotIdentifier.IsNull() {
 		response.Diagnostics.AddAttributeWarning(
 			path.Root("final_snapshot_identifier"),
 			"Attribute cannot be null",
@@ -1717,26 +1682,31 @@ func (r *resourceCluster) ModifyPlan(ctx context.Context, request resource.Modif
 		)
 	}
 
-	//var engineMode types.String
-	//response.Diagnostics.Append(request.Plan.GetAttribute(ctx, path.Root("engine_mode"), &engineMode)...)
-	//
-	//if engineMode.IsUnknown() {
-	//	response.Diagnostics.Append(response.Plan.SetAttribute(ctx, path.Root("db_cluster_parameter_group_name"), types.StringUnknown())...)
-	//}
+	var engineVersionPlan, engineVersionState types.String
+	response.Diagnostics.Append(request.Plan.GetAttribute(ctx, path.Root("engine_version"), &engineVersionPlan)...)
+	response.Diagnostics.Append(request.State.GetAttribute(ctx, path.Root("engine_version"), &engineVersionState)...)
 
-	//var engineVersionPlan, engineVersionState types.String
-	//response.Diagnostics.Append(request.Plan.GetAttribute(ctx, path.Root("engine_version"), &engineVersionPlan)...)
-	//response.Diagnostics.Append(request.State.GetAttribute(ctx, path.Root("engine_version"), &engineVersionState)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
-	if (!plan.EngineVersion.IsNull() && !plan.EngineVersion.IsUnknown()) && (!state.EngineVersion.IsNull() && !state.EngineVersion.IsUnknown()) {
-		if !plan.EngineVersion.Equal(state.EngineVersion) {
+	if (!engineVersionPlan.IsNull() && !engineVersionPlan.IsUnknown()) && (!engineVersionState.IsNull() && !engineVersionState.IsUnknown()) {
+		if !engineVersionPlan.Equal(engineVersionState) {
 			response.Diagnostics.Append(response.Plan.SetAttribute(ctx, path.Root("db_cluster_parameter_group_name_actual"), types.StringUnknown())...)
 			response.Diagnostics.Append(response.Plan.SetAttribute(ctx, path.Root("engine_version_actual"), types.StringUnknown())...)
 		}
 	}
 
-	if (!plan.ScalingConfiguration.IsNull() && len(plan.ScalingConfiguration.Elements()) > 0) && (!state.ScalingConfiguration.IsNull() && len(state.ScalingConfiguration.Elements()) > 0) {
-		if !plan.ScalingConfiguration.Equal(state.ScalingConfiguration) {
+	var scalingConfigurationPlan, scalingConfigurationState types.List
+	response.Diagnostics.Append(request.Plan.GetAttribute(ctx, path.Root("scaling_configuration"), &scalingConfigurationPlan)...)
+	response.Diagnostics.Append(request.State.GetAttribute(ctx, path.Root("scaling_configuration"), &scalingConfigurationState)...)
+
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	if (!scalingConfigurationPlan.IsNull() && len(scalingConfigurationPlan.Elements()) > 0) && (!scalingConfigurationState.IsNull() && len(scalingConfigurationState.Elements()) > 0) {
+		if !scalingConfigurationPlan.Equal(scalingConfigurationState) {
 			response.Diagnostics.Append(response.Plan.SetAttribute(ctx, path.Root("scaling_configuration_actual"), types.ListUnknown(types.ObjectType{AttrTypes: scalingConfigurationAttrTypes}))...)
 		}
 	}
@@ -1940,7 +1910,6 @@ func (r *resourceClusterData) refreshFromOutput(ctx context.Context, meta *conns
 		r.DatabaseName = types.StringValue("")
 	}
 	r.DbClusterInstanceClass = flex.StringToFrameworkLegacy(ctx, out.DBClusterInstanceClass)
-	//r.DbClusterParameterGroupName = flex.StringToFrameworkLegacy(ctx, out.DBClusterParameterGroup)
 	r.DbClusterParameterGroupNameActual = flex.StringToFrameworkLegacy(ctx, out.DBClusterParameterGroup)
 	r.DbSubnetGroupName = flex.StringToFrameworkLegacy(ctx, out.DBSubnetGroup)
 	r.DeletionProtection = flex.BoolToFramework(ctx, out.DeletionProtection)
@@ -1949,7 +1918,6 @@ func (r *resourceClusterData) refreshFromOutput(ctx context.Context, meta *conns
 	r.Endpoint = flex.StringToFrameworkLegacy(ctx, out.Endpoint)
 	r.Engine = flex.StringToFrameworkLegacy(ctx, out.Engine)
 	r.EngineMode = flex.StringToFrameworkLegacy(ctx, out.EngineMode)
-	// r.EngineVersionActual = flex.StringToFrameworkLegacy(ctx, out.EngineVersion)
 	r.setResourceDataEngineVersionFromCluster(ctx, out)
 
 	// Fetch and save Global Cluster if engine mode is global
@@ -1996,7 +1964,6 @@ func (r *resourceClusterData) refreshFromOutput(ctx context.Context, meta *conns
 	r.PreferredMaintenanceWindow = flex.StringValueToFrameworkLegacy(ctx, pmw)
 	r.ReaderEndpoint = flex.StringToFrameworkLegacy(ctx, out.ReaderEndpoint)
 	r.ReplicationSourceIdentifier = flex.StringToFrameworkLegacy(ctx, out.ReplicationSourceIdentifier)
-	// r.ScalingConfiguration = flattenScalingConfigurationFramework(ctx, out.ScalingConfigurationInfo)
 	r.ScalingConfigurationActual = flattenScalingConfigurationFramework(ctx, out.ScalingConfigurationInfo)
 	r.ServerlessV2ScalingConfiguration = flattenServerlessV2ScalingConfigurationFramework(ctx, out.ServerlessV2ScalingConfiguration)
 	r.StorageEncrypted = flex.BoolToFramework(ctx, out.StorageEncrypted)
