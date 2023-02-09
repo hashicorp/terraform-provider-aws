@@ -39,7 +39,7 @@ func ResourceIPAMPoolCIDRAllocation() *schema.Resource {
 				ConflictsWith: []string{"netmask_length"},
 				ValidateFunc: validation.Any(
 					verify.ValidIPv4CIDRNetworkAddress,
-					validation.IsCIDRNetwork(0, 32),
+					verify.ValidIPv6CIDRNetworkAddress,
 				),
 			},
 			"description": {
@@ -56,7 +56,7 @@ func ResourceIPAMPoolCIDRAllocation() *schema.Resource {
 					ValidateFunc: validation.Any(
 						verify.ValidIPv4CIDRNetworkAddress,
 						// Follow the numbers used for netmask_length
-						validation.IsCIDRNetwork(0, 32),
+						validation.IsCIDRNetwork(0, 128),
 					),
 				},
 			},
@@ -73,7 +73,7 @@ func ResourceIPAMPoolCIDRAllocation() *schema.Resource {
 				Type:          schema.TypeInt,
 				Optional:      true,
 				ForceNew:      true,
-				ValidateFunc:  validation.IntBetween(0, 32),
+				ValidateFunc:  validation.IntBetween(0, 128),
 				ConflictsWith: []string{"cidr"},
 			},
 			"resource_id": {

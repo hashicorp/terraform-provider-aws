@@ -1,8 +1,16 @@
 package flex
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+)
+
+const (
+	// A common separator to be used for creating resource Ids from a combination of attributes
+	ResourceIdSeparator = ","
 )
 
 // Takes the result of flatmap.Expand for an array of strings
@@ -142,4 +150,60 @@ func PointersMapToStringList(pointers map[string]*string) map[string]interface{}
 		list[i] = *v
 	}
 	return list
+}
+
+// Takes a string of resource attributes separated by the ResourceIdSeparator constant and an expected number of Id Parts
+// Returns a list of the resource attributes strings used to construct the unique Id or an error message if the resource id does not parse properly
+func ExpandResourceId(id string, partCount int) ([]string, error) {
+	idParts := strings.Split(id, ResourceIdSeparator)
+
+	if len(idParts) <= 1 {
+		return nil, fmt.Errorf("unexpected format for ID (%v), expected more than one part", idParts)
+	}
+
+	if len(idParts) != partCount {
+		return nil, fmt.Errorf("unexpected format for ID (%s), expected (%d) parts separated by (%s)", id, partCount, ResourceIdSeparator)
+	}
+
+	var emptyPart bool
+	emptyParts := make([]int, 0, partCount)
+	for index, part := range idParts {
+		if part == "" {
+			emptyPart = true
+			emptyParts = append(emptyParts, index)
+		}
+	}
+
+	if emptyPart {
+		return nil, fmt.Errorf("unexpected format for ID (%[1]s), the following id parts indexes are blank (%v)", id, emptyParts)
+	}
+
+	return idParts, nil
+}
+
+// Takes a list of the resource attributes as strings used to construct the unique Id and an expected number of Id Parts
+// Returns a string of resource attributes separated by the ResourceIdSeparator constant or an error message if the id parts do not parse properly
+func FlattenResourceId(idParts []string, partCount int) (string, error) {
+	if len(idParts) <= 1 {
+		return "", fmt.Errorf("unexpected format for ID parts (%v), expected more than one part", idParts)
+	}
+
+	if len(idParts) != partCount {
+		return "", fmt.Errorf("unexpected format for ID parts (%v), expected (%d) parts", idParts, partCount)
+	}
+
+	var emptyPart bool
+	emptyParts := make([]int, 0, len(idParts))
+	for index, part := range idParts {
+		if part == "" {
+			emptyPart = true
+			emptyParts = append(emptyParts, index)
+		}
+	}
+
+	if emptyPart {
+		return "", fmt.Errorf("unexpected format for ID parts (%v), the following id parts indexes are blank (%v)", idParts, emptyParts)
+	}
+
+	return strings.Join(idParts, ResourceIdSeparator), nil
 }

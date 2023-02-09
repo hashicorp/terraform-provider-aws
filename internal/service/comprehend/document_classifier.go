@@ -27,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -143,8 +144,8 @@ func ResourceDocumentClassifier() *schema.Resource {
 			"model_kms_key_id": {
 				Type:             schema.TypeString,
 				Optional:         true,
-				DiffSuppressFunc: diffSuppressKMSKeyId,
-				ValidateFunc:     validateKMSKey,
+				DiffSuppressFunc: tfkms.DiffSuppressKey,
+				ValidateFunc:     tfkms.ValidateKey,
 			},
 			"name": {
 				Type:         schema.TypeString,
@@ -162,8 +163,8 @@ func ResourceDocumentClassifier() *schema.Resource {
 						"kms_key_id": {
 							Type:             schema.TypeString,
 							Optional:         true,
-							DiffSuppressFunc: diffSuppressKMSKeyOrAlias,
-							ValidateFunc:     validateKMSKeyOrAlias,
+							DiffSuppressFunc: tfkms.DiffSuppressKeyOrAlias,
+							ValidateFunc:     tfkms.ValidateKeyOrAlias,
 						},
 						"s3_uri": {
 							Type:     schema.TypeString,
@@ -200,8 +201,8 @@ func ResourceDocumentClassifier() *schema.Resource {
 			"volume_kms_key_id": {
 				Type:             schema.TypeString,
 				Optional:         true,
-				DiffSuppressFunc: diffSuppressKMSKeyId,
-				ValidateFunc:     validateKMSKey,
+				DiffSuppressFunc: tfkms.DiffSuppressKey,
+				ValidateFunc:     tfkms.ValidateKey,
 			},
 			"vpc_config": {
 				Type:     schema.TypeList,
