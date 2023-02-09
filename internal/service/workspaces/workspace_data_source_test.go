@@ -82,7 +82,7 @@ func testAccWorkspaceDataSource_byDirectoryID_userName(t *testing.T) {
 
 func testAccWorkspaceDataSource_workspaceIDAndDirectoryIDConflict(t *testing.T) {
 	ctx := acctest.Context(t)
-	
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckHasIAMRole(ctx, t, "workspaces_DefaultRole") },
 		ErrorCheck:               acctest.ErrorCheck(t, workspaces.EndpointsID),

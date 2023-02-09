@@ -878,7 +878,7 @@ func PreCheckHasIAMRole(ctx context.Context, t *testing.T, roleName string) {
 	input := &iam.GetRoleInput{
 		RoleName: aws.String(roleName),
 	}
-	
+
 	_, err := conn.GetRoleWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
