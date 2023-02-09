@@ -347,7 +347,7 @@ func TestAccDynamoDBTable_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "hash_key", rName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "attribute.*", map[string]string{
 						names.AttrName: rName,
-						"type":         "S",
+						names.AttrType: "S",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "table_class", ""),
@@ -465,19 +465,19 @@ func TestAccDynamoDBTable_extended(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "local_secondary_index.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "attribute.*", map[string]string{
 						names.AttrName: "TestTableHashKey",
-						"type":         "S",
+						names.AttrType: "S",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "attribute.*", map[string]string{
 						names.AttrName: "TestTableRangeKey",
-						"type":         "S",
+						names.AttrType: "S",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "attribute.*", map[string]string{
 						names.AttrName: "TestLSIRangeKey",
-						"type":         "N",
+						names.AttrType: "N",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "attribute.*", map[string]string{
 						names.AttrName: "ReplacementGSIRangeKey",
-						"type":         "N",
+						names.AttrType: "N",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
 						names.AttrName:         "ReplacementTestTableGSI",
@@ -2528,19 +2528,19 @@ func testAccCheckInitialTableConf(resourceName string) resource.TestCheckFunc {
 		resource.TestCheckResourceAttr(resourceName, "local_secondary_index.#", "1"),
 		resource.TestCheckTypeSetElemNestedAttrs(resourceName, "attribute.*", map[string]string{
 			names.AttrName: "TestTableHashKey",
-			"type":         "S",
+			names.AttrType: "S",
 		}),
 		resource.TestCheckTypeSetElemNestedAttrs(resourceName, "attribute.*", map[string]string{
 			names.AttrName: "TestTableRangeKey",
-			"type":         "S",
+			names.AttrType: "S",
 		}),
 		resource.TestCheckTypeSetElemNestedAttrs(resourceName, "attribute.*", map[string]string{
 			names.AttrName: "TestLSIRangeKey",
-			"type":         "N",
+			names.AttrType: "N",
 		}),
 		resource.TestCheckTypeSetElemNestedAttrs(resourceName, "attribute.*", map[string]string{
 			names.AttrName: "TestGSIRangeKey",
-			"type":         "S",
+			names.AttrType: "S",
 		}),
 		resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
 			names.AttrName:    "InitialTestTableGSI",

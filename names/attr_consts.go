@@ -7,4 +7,5 @@ const (
 	AttrName      = "name"
 	AttrTags      = "tags"
 	AttrTagsAll   = "tags_all"
+	AttrType      = "type"
 )

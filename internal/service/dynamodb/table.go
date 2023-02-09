@@ -125,7 +125,7 @@ func ResourceTable() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"type": {
+						names.AttrType: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(dynamodb.ScalarAttributeType_Values(), false),
@@ -1809,7 +1809,7 @@ func flattenTableAttributeDefinitions(definitions []*dynamodb.AttributeDefinitio
 
 		m := map[string]string{
 			names.AttrName: aws.StringValue(d.AttributeName),
-			"type":         aws.StringValue(d.AttributeType),
+			names.AttrType: aws.StringValue(d.AttributeType),
 		}
 
 		attributes = append(attributes, m)
@@ -1918,7 +1918,7 @@ func expandAttributes(cfg []interface{}) []*dynamodb.AttributeDefinition {
 		attr := attribute.(map[string]interface{})
 		attributes[i] = &dynamodb.AttributeDefinition{
 			AttributeName: aws.String(attr[names.AttrName].(string)),
-			AttributeType: aws.String(attr["type"].(string)),
+			AttributeType: aws.String(attr[names.AttrType].(string)),
 		}
 	}
 	return attributes
