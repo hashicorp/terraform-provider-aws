@@ -32,7 +32,7 @@ func main() {
 	data, err := common.ReadAllCSVData(namesDataFile)
 
 	if err != nil {
-		g.Fatalf("error reading %s: %s", namesDataFile, err.Error())
+		g.Fatalf("error reading %s: %s", namesDataFile, err)
 	}
 
 	g.Infof("Generating per-service %s", filepath.Base(spdFile))
@@ -92,10 +92,15 @@ func main() {
 			return s.FrameworkResources[i] < s.FrameworkResources[j]
 		})
 
-		d := g.NewGoFileDestination(fmt.Sprintf("../../service/%s/%s", p, spdFile))
+		filename := fmt.Sprintf("../../service/%s/%s", p, spdFile)
+		d := g.NewGoFileDestination(filename)
 
 		if err := d.WriteTemplate("servicepackagedata", spdTmpl, s); err != nil {
-			g.Fatalf("error generating %s service package data: %s", p, err.Error())
+			g.Fatalf("error generating %s service package data: %s", p, err)
+		}
+
+		if err := d.Write(); err != nil {
+			g.Fatalf("generating file (%s): %s", filename, err)
 		}
 
 		td.Services = append(td.Services, s)
@@ -110,7 +115,11 @@ func main() {
 	d := g.NewGoFileDestination(spsFile)
 
 	if err := d.WriteTemplate("servicepackages", spsTmpl, td); err != nil {
-		g.Fatalf("error generating service packages list: %s", err.Error())
+		g.Fatalf("error generating service packages list: %s", err)
+	}
+
+	if err := d.Write(); err != nil {
+		g.Fatalf("generating file (%s): %s", spsFile, err)
 	}
 }
 
