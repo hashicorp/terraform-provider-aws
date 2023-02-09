@@ -58,7 +58,7 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("kms_key_id", logGroup.KmsKeyId)
 	d.Set("retention_in_days", logGroup.RetentionInDays)
 
-	tags, err := ListLogGroupTagsWithContext(ctx, conn, name)
+	tags, err := ListLogGroupTags(ctx, conn, name)
 
 	if err != nil {
 		return diag.Errorf("listing tags for CloudWatch Logs Log Group (%s): %s", name, err)

@@ -423,7 +423,7 @@ func expandFieldToMatch(l []interface{}) *wafv2.FieldToMatch {
 	}
 
 	if v, ok := m["body"]; ok && len(v.([]interface{})) > 0 {
-		f.Body = &wafv2.Body{}
+		f.Body = expandBody(v.([]interface{}))
 	}
 
 	if v, ok := m["cookies"]; ok && len(v.([]interface{})) > 0 {
@@ -548,6 +548,22 @@ func expandJSONBody(l []interface{}) *wafv2.JsonBody {
 	}
 
 	return jsonBody
+}
+
+func expandBody(l []interface{}) *wafv2.Body {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	body := &wafv2.Body{}
+
+	if v, ok := m["oversize_handling"].(string); ok && v != "" {
+		body.OversizeHandling = aws.String(v)
+	}
+
+	return body
 }
 
 func expandJSONMatchPattern(l []interface{}) *wafv2.JsonMatchPattern {
@@ -1005,7 +1021,7 @@ func expandManagedRuleGroupConfigs(tfList []interface{}) []*wafv2.ManagedRuleGro
 		}
 
 		var r wafv2.ManagedRuleGroupConfig
-		if v, ok := m["aws_managed_rules_bot_rule_set"].([]interface{}); ok && len(v) > 0 {
+		if v, ok := m["aws_managed_rules_bot_control_rule_set"].([]interface{}); ok && len(v) > 0 {
 			r.AWSManagedRulesBotControlRuleSet = expandManagedRulesBotControlRuleSet(v)
 		}
 		if v, ok := m["login_path"].(string); ok && v != "" {
@@ -1500,7 +1516,7 @@ func flattenFieldToMatch(f *wafv2.FieldToMatch) interface{} {
 	}
 
 	if f.Body != nil {
-		m["body"] = make([]map[string]interface{}, 1)
+		m["body"] = flattenBody(f.Body)
 	}
 
 	if f.Cookies != nil {
@@ -1606,6 +1622,18 @@ func flattenJSONBody(b *wafv2.JsonBody) interface{} {
 		"match_pattern":             flattenJSONMatchPattern(b.MatchPattern),
 		"match_scope":               aws.StringValue(b.MatchScope),
 		"oversize_handling":         aws.StringValue(b.OversizeHandling),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenBody(b *wafv2.Body) interface{} {
+	if b == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"oversize_handling": aws.StringValue(b.OversizeHandling),
 	}
 
 	return []interface{}{m}

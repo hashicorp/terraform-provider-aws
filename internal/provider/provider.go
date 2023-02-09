@@ -1532,6 +1532,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			"aws_emrserverless_application": emrserverless.ResourceApplication(),
 
 			"aws_evidently_feature": evidently.ResourceFeature(),
+			"aws_evidently_launch":  evidently.ResourceLaunch(),
 			"aws_evidently_project": evidently.ResourceProject(),
 			"aws_evidently_segment": evidently.ResourceSegment(),
 
@@ -1601,7 +1602,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			"aws_guardduty_organization_admin_account": guardduty.ResourceOrganizationAdminAccount(),
 			"aws_guardduty_organization_configuration": guardduty.ResourceOrganizationConfiguration(),
 			"aws_guardduty_publishing_destination":     guardduty.ResourcePublishingDestination(),
-			"aws_guardduty_threatintelset":             guardduty.ResourceThreatintelset(),
+			"aws_guardduty_threatintelset":             guardduty.ResourceThreatIntelSet(),
 
 			"aws_iam_access_key":                  iam.ResourceAccessKey(),
 			"aws_iam_account_alias":               iam.ResourceAccountAlias(),
@@ -1737,6 +1738,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			"aws_licensemanager_license_configuration": licensemanager.ResourceLicenseConfiguration(),
 
 			"aws_lightsail_bucket":                               lightsail.ResourceBucket(),
+			"aws_lightsail_bucket_access_key":                    lightsail.ResourceBucketAccessKey(),
 			"aws_lightsail_certificate":                          lightsail.ResourceCertificate(),
 			"aws_lightsail_container_service":                    lightsail.ResourceContainerService(),
 			"aws_lightsail_container_service_deployment_version": lightsail.ResourceContainerServiceDeploymentVersion(),
@@ -1820,6 +1822,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			"aws_networkmanager_connect_attachment":                       networkmanager.ResourceConnectAttachment(),
 			"aws_networkmanager_connection":                               networkmanager.ResourceConnection(),
 			"aws_networkmanager_core_network":                             networkmanager.ResourceCoreNetwork(),
+			"aws_networkmanager_core_network_policy_attachment":           networkmanager.ResourceCoreNetworkPolicyAttachment(),
 			"aws_networkmanager_customer_gateway_association":             networkmanager.ResourceCustomerGatewayAssociation(),
 			"aws_networkmanager_device":                                   networkmanager.ResourceDevice(),
 			"aws_networkmanager_global_network":                           networkmanager.ResourceGlobalNetwork(),

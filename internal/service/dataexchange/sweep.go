@@ -23,6 +23,7 @@ func init() {
 }
 
 func sweepDataSets(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
@@ -35,7 +36,7 @@ func sweepDataSets(region string) error {
 
 	input := &dataexchange.ListDataSetsInput{}
 
-	err = conn.ListDataSetsPages(input, func(page *dataexchange.ListDataSetsOutput, lastPage bool) bool {
+	err = conn.ListDataSetsPagesWithContext(ctx, input, func(page *dataexchange.ListDataSetsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -56,7 +57,7 @@ func sweepDataSets(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing DataExchange DataSet for %s: %w", region, err))
 	}
 
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping DataExchange DataSet for %s: %w", region, err))
 	}
 

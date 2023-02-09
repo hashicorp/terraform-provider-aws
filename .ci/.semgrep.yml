@@ -10,6 +10,7 @@ rules:
       - metavariable-regex:
           metavariable: "$FUNCNAME"
           regex: "^TestAcc[^_]+_([a-zA-Z]+[dD]isappears|[^_]+_disappears)$"
+      - focus-metavariable: $FUNCNAME
     severity: WARNING
 
   - id: aws-sdk-go-multiple-service-imports
@@ -468,7 +469,7 @@ rules:
 
   - id: helper-schema-TimeoutError-check-doesnt-return-output
     languages: [go]
-    message: If the resource.Retry(), resource.RetryContext(), or tfresource.RetryContext() function returns a value, ensure the isResourceTimeoutError() check does as well
+    message: If the resource.Retry(), resource.RetryContext(), or tfresource.Retry() function returns a value, ensure the isResourceTimeoutError() check does as well
     paths:
       exclude:
         - "*_test.go"
@@ -498,7 +499,7 @@ rules:
                   ...
                   if isResourceTimeoutError($ERR) { ... }
               - pattern-not-inside: |
-                  $ERR = tfresource.RetryContext(..., func() *resource.RetryError {
+                  $ERR = tfresource.Retry(..., func() *resource.RetryError {
                     ...
                     _, $ERR2 = $CONN.$FUNC(...)
                     ...
@@ -527,7 +528,7 @@ rules:
                   ...
                   if tfresource.TimedOut($ERR) { ... }
               - pattern-not-inside: |
-                  $ERR = tfresource.RetryContext(..., func() *resource.RetryError {
+                  $ERR = tfresource.Retry(..., func() *resource.RetryError {
                     ...
                     _, $ERR2 = $CONN.$FUNC(...)
                     ...
@@ -832,21 +833,6 @@ rules:
     pattern: int(*$VALUE)
     severity: WARNING
 
-  - id: aws-go-sdk-error-code-helper
-    languages: [go]
-    message: "Use `tfawserr` helpers for checking AWS Go SDK errors (e.g. `tfawserr.ErrMessageContains(err, CODE, MESSAGE)`)"
-    paths:
-      include:
-        - internal/
-    patterns:
-      - pattern-either:
-          - pattern: if $AWSERR, $OK := $ORIGINALERR.(awserr.Error); $OK && $AWSERR.Code() == $CODE { $BODY }
-          - pattern: |
-              if $AWSERR, $OK := $ORIGINALERR.(awserr.Error); $OK {
-                if $AWSERR.Code() == $CODE { $BODY }
-              }
-    severity: WARNING
-
   - id: fmt-Errorf-awserr-Error-Code
     languages: [go]
     message: Prefer `err` with `%w` format verb instead of `err.Code()` or `err.Message()`
@@ -869,16 +855,6 @@ rules:
       - pattern: "[]string{..., string($X), ...}"
     severity: WARNING
 
-  - id: avoid-context-TODO-in-tests
-    languages: [go]
-    message: Prefer using context.Background() instead of context.TODO()
-    paths:
-      include:
-        - "internal/**/*_test.go"
-    patterns:
-      - pattern: context.TODO
-    severity: ERROR
-
   - id: avoid-context-CRUD-handlers
     languages: [go]
     message: Prefer using WithoutTimeout CRUD handlers instead of Context variants
@@ -887,4 +863,21 @@ rules:
         - internal/service
     patterns:
       - pattern-regex: "(Create|Read|Update|Delete)Context:"
+    severity: ERROR
+
+  - id: bare-error-returns
+    languages: [go]
+    message: API errors should be wrapped with the CRUD info
+    paths:
+      include:
+        - internal/service
+    patterns:
+      - pattern: return $ERR
+      - pattern-inside: |
+          func $FUNC($D *schema.ResourceData, ...) error {
+            ...
+          }
+      - metavariable-regex:
+          metavariable: $ERR
+          regex: "[Ee]rr(?!ors\\.)"
     severity: ERROR

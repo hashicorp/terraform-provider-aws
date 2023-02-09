@@ -167,7 +167,7 @@ func (d *dataSourceAccelerator) Read(ctx context.Context, request datasource.Rea
 
 	data.Attributes = d.flattenAcceleratorAttributesFramework(ctx, attributes)
 
-	tags, err := ListTagsWithContext(ctx, conn, acceleratorARN)
+	tags, err := ListTags(ctx, conn, acceleratorARN)
 
 	if err != nil {
 		response.Diagnostics.AddError("listing tags for Global Accelerator Accelerator", err.Error())

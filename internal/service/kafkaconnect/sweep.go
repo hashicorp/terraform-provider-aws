@@ -30,6 +30,7 @@ func init() {
 }
 
 func sweepConnectors(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -38,7 +39,7 @@ func sweepConnectors(region string) error {
 	input := &kafkaconnect.ListConnectorsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListConnectorsPages(input, func(page *kafkaconnect.ListConnectorsOutput, lastPage bool) bool {
+	err = conn.ListConnectorsPagesWithContext(ctx, input, func(page *kafkaconnect.ListConnectorsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -63,7 +64,7 @@ func sweepConnectors(region string) error {
 		return fmt.Errorf("error listing MSK Connect Connectors (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping MSK Connect Connectors (%s): %w", region, err)
@@ -73,6 +74,7 @@ func sweepConnectors(region string) error {
 }
 
 func sweepCustomPlugins(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -81,7 +83,7 @@ func sweepCustomPlugins(region string) error {
 	input := &kafkaconnect.ListCustomPluginsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListCustomPluginsPages(input, func(page *kafkaconnect.ListCustomPluginsOutput, lastPage bool) bool {
+	err = conn.ListCustomPluginsPagesWithContext(ctx, input, func(page *kafkaconnect.ListCustomPluginsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -106,7 +108,7 @@ func sweepCustomPlugins(region string) error {
 		return fmt.Errorf("error listing MSK Connect Custom Plugins (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping MSK Connect Custom Plugins (%s): %w", region, err)

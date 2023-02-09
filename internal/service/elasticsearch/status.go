@@ -1,6 +1,8 @@
 package elasticsearch
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
 	elasticsearch "github.com/aws/aws-sdk-go/service/elasticsearchservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -14,9 +16,9 @@ const (
 	ConfigStatusExists   = "Exists"
 )
 
-func statusUpgradeStatus(conn *elasticsearch.ElasticsearchService, name string) resource.StateRefreshFunc {
+func statusUpgradeStatus(ctx context.Context, conn *elasticsearch.ElasticsearchService, name string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		out, err := conn.GetUpgradeStatus(&elasticsearch.GetUpgradeStatusInput{
+		out, err := conn.GetUpgradeStatusWithContext(ctx, &elasticsearch.GetUpgradeStatusInput{
 			DomainName: aws.String(name),
 		})
 		if err != nil {
@@ -34,9 +36,9 @@ func statusUpgradeStatus(conn *elasticsearch.ElasticsearchService, name string) 
 	}
 }
 
-func domainConfigStatus(conn *elasticsearch.ElasticsearchService, name string) resource.StateRefreshFunc {
+func domainConfigStatus(ctx context.Context, conn *elasticsearch.ElasticsearchService, name string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		out, err := conn.DescribeElasticsearchDomainConfig(&elasticsearch.DescribeElasticsearchDomainConfigInput{
+		out, err := conn.DescribeElasticsearchDomainConfigWithContext(ctx, &elasticsearch.DescribeElasticsearchDomainConfigInput{
 			DomainName: aws.String(name),
 		})
 

@@ -1,6 +1,8 @@
 package sns
 
-import "time"
+import (
+	"time"
+)
 
 const (
 	FIFOTopicNameSuffix = ".fifo"

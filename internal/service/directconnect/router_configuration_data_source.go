@@ -82,7 +82,7 @@ func dataSourceRouterConfigurationRead(ctx context.Context, d *schema.ResourceDa
 	routerTypeIdentifier := d.Get("router_type_identifier").(string)
 	virtualInterfaceId := d.Get("virtual_interface_id").(string)
 
-	out, err := findRouterConfigurationByTypeAndVif(conn, routerTypeIdentifier, virtualInterfaceId)
+	out, err := findRouterConfigurationByTypeAndVif(ctx, conn, routerTypeIdentifier, virtualInterfaceId)
 	if err != nil {
 		return create.DiagError(names.DirectConnect, create.ErrActionReading, DSNameRouterConfiguration, virtualInterfaceId, err)
 	}
@@ -101,13 +101,13 @@ func dataSourceRouterConfigurationRead(ctx context.Context, d *schema.ResourceDa
 	return nil
 }
 
-func findRouterConfigurationByTypeAndVif(conn *directconnect.DirectConnect, routerTypeIdentifier string, virtualInterfaceId string) (*directconnect.DescribeRouterConfigurationOutput, error) {
+func findRouterConfigurationByTypeAndVif(ctx context.Context, conn *directconnect.DirectConnect, routerTypeIdentifier string, virtualInterfaceId string) (*directconnect.DescribeRouterConfigurationOutput, error) {
 	input := &directconnect.DescribeRouterConfigurationInput{
 		RouterTypeIdentifier: aws.String(routerTypeIdentifier),
 		VirtualInterfaceId:   aws.String(virtualInterfaceId),
 	}
 
-	output, err := conn.DescribeRouterConfiguration(input)
+	output, err := conn.DescribeRouterConfigurationWithContext(ctx, input)
 
 	if err != nil {
 		return nil, err

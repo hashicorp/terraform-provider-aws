@@ -12,6 +12,7 @@ import (
 )
 
 func TestAccNetworkFirewallFirewallDataSource_arn(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_firewall.test"
 	dataSourceName := "data.aws_networkfirewall_firewall.test"
@@ -20,14 +21,14 @@ func TestAccNetworkFirewallFirewallDataSource_arn(t *testing.T) {
 	vpcResourceName := "aws_vpc.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, networkfirewall.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFirewallDataSourceConfig_arn(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallExists(resourceName),
+					testAccCheckFirewallExists(ctx, resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "network-firewall", fmt.Sprintf("firewall/%s", rName)),
 					resource.TestCheckResourceAttr(dataSourceName, "delete_protection", "false"),
 					resource.TestCheckResourceAttr(dataSourceName, "description", ""),
@@ -59,6 +60,7 @@ func TestAccNetworkFirewallFirewallDataSource_arn(t *testing.T) {
 }
 
 func TestAccNetworkFirewallFirewallDataSource_name(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_firewall.test"
 	dataSourceName := "data.aws_networkfirewall_firewall.test"
@@ -67,14 +69,14 @@ func TestAccNetworkFirewallFirewallDataSource_name(t *testing.T) {
 	vpcResourceName := "aws_vpc.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, networkfirewall.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFirewallDataSourceConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallExists(resourceName),
+					testAccCheckFirewallExists(ctx, resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "network-firewall", fmt.Sprintf("firewall/%s", rName)),
 					resource.TestCheckResourceAttr(dataSourceName, "delete_protection", "false"),
 					resource.TestCheckResourceAttr(dataSourceName, "description", ""),
@@ -106,6 +108,7 @@ func TestAccNetworkFirewallFirewallDataSource_name(t *testing.T) {
 }
 
 func TestAccNetworkFirewallFirewallDataSource_arnandname(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_firewall.test"
 	dataSourceName := "data.aws_networkfirewall_firewall.test"
@@ -114,14 +117,14 @@ func TestAccNetworkFirewallFirewallDataSource_arnandname(t *testing.T) {
 	vpcResourceName := "aws_vpc.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, networkfirewall.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFirewallDataSourceConfig_arnandname(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFirewallExists(resourceName),
+					testAccCheckFirewallExists(ctx, resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "network-firewall", fmt.Sprintf("firewall/%s", rName)),
 					resource.TestCheckResourceAttr(dataSourceName, "delete_protection", "false"),
 					resource.TestCheckResourceAttr(dataSourceName, "description", ""),

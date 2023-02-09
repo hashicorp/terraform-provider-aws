@@ -65,7 +65,7 @@ func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.SetId(name)
 
-	_, err = tfresource.RetryWhenNotFoundContext(ctx, propagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, propagationTimeout, func() (interface{}, error) {
 		return FindLogStreamByTwoPartKey(ctx, conn, d.Get("log_group_name").(string), d.Id())
 	})
 

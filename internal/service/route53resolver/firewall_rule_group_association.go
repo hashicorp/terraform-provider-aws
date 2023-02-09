@@ -27,7 +27,7 @@ func ResourceFirewallRuleGroupAssociation() *schema.Resource {
 		DeleteWithoutTimeout: resourceFirewallRuleGroupAssociationDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -130,7 +130,7 @@ func resourceFirewallRuleGroupAssociationRead(ctx context.Context, d *schema.Res
 	d.Set("priority", ruleGroupAssociation.Priority)
 	d.Set("vpc_id", ruleGroupAssociation.VpcId)
 
-	tags, err := ListTagsWithContext(ctx, conn, arn)
+	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
 		return diag.Errorf("listing tags for Route53 Resolver Firewall Rule Group Association (%s): %s", arn, err)
@@ -178,7 +178,7 @@ func resourceFirewallRuleGroupAssociationUpdate(ctx context.Context, d *schema.R
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTagsWithContext(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.Errorf("updating Route53 Resolver Firewall Rule Group Association (%s) tags: %s", d.Id(), err)
 		}
 	}

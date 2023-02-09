@@ -36,7 +36,7 @@ func dataSourceLoadBalancersRead(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*conns.AWSClient).ELBV2Conn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	results, err := FindLoadBalancers(conn, &elbv2.DescribeLoadBalancersInput{})
+	results, err := FindLoadBalancers(ctx, conn, &elbv2.DescribeLoadBalancersInput{})
 
 	if err != nil {
 		return create.DiagError(names.ELBV2, create.ErrActionReading, DSNameLoadBalancers, "", err)
@@ -48,7 +48,7 @@ func dataSourceLoadBalancersRead(ctx context.Context, d *schema.ResourceData, me
 
 		for _, loadBalancer := range results {
 			arn := aws.StringValue(loadBalancer.LoadBalancerArn)
-			tags, err := ListTags(conn, arn)
+			tags, err := ListTags(ctx, conn, arn)
 
 			if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeLoadBalancerNotFoundException) {
 				continue

@@ -1,6 +1,8 @@
 package acmpca
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -13,9 +15,9 @@ const (
 )
 
 // statusCertificateAuthority fetches the Deployment and its Status
-func statusCertificateAuthority(conn *acmpca.ACMPCA, arn string) resource.StateRefreshFunc {
+func statusCertificateAuthority(ctx context.Context, conn *acmpca.ACMPCA, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		certificateAuthority, err := FindCertificateAuthorityByARN(conn, arn)
+		certificateAuthority, err := FindCertificateAuthorityByARN(ctx, conn, arn)
 
 		if tfawserr.ErrCodeEquals(err, acmpca.ErrCodeResourceNotFoundException) {
 			return nil, certificateAuthorityStatusNotFound, nil

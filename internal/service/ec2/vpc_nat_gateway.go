@@ -25,7 +25,7 @@ func ResourceNATGateway() *schema.Resource {
 		DeleteWithoutTimeout: resourceNATGatewayDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -155,7 +155,7 @@ func resourceNATGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTagsWithContext(ctx, conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
 			return diag.Errorf("updating EC2 NAT Gateway (%s) tags: %s", d.Id(), err)
 		}
 	}

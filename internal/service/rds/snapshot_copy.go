@@ -218,7 +218,7 @@ func resourceSnapshotCopyRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("target_db_snapshot_identifier", snapshot.DBSnapshotIdentifier)
 	d.Set("vpc_id", snapshot.VpcId)
 
-	tags, err := ListTagsWithContext(ctx, conn, arn)
+	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
 		return diag.Errorf("error listing tags for RDS DB Snapshot (%s): %s", arn, err)
@@ -244,7 +244,7 @@ func resourceSnapshotCopyUpdate(ctx context.Context, d *schema.ResourceData, met
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTagsWithContext(ctx, conn, d.Get("db_snapshot_arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("db_snapshot_arn").(string), o, n); err != nil {
 			return diag.Errorf("error updating RDS DB Snapshot (%s) tags: %s", d.Get("db_snapshot_arn").(string), err)
 		}
 	}
@@ -298,7 +298,7 @@ func waitSnapshotCopyAvailable(ctx context.Context, d *schema.ResourceData, meta
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"creating"},
 		Target:     []string{"available"},
-		Refresh:    resourceSnapshotStateRefreshFunc(d, meta),
+		Refresh:    resourceSnapshotStateRefreshFunc(ctx, d, meta),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second, // Wait 30 secs before starting

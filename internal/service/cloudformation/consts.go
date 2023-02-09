@@ -1,6 +1,8 @@
 package cloudformation
 
-import "time"
+import (
+	"time"
+)
 
 const (
 	ResNameStack = "Stack"

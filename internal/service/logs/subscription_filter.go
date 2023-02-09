@@ -92,7 +92,7 @@ func resourceSubscriptionFilterPut(ctx context.Context, d *schema.ResourceData, 
 		input.RoleArn = aws.String(v.(string))
 	}
 
-	_, err := tfresource.RetryWhenContext(ctx, 5*time.Minute,
+	_, err := tfresource.RetryWhen(ctx, 5*time.Minute,
 		func() (interface{}, error) {
 			return conn.PutSubscriptionFilterWithContext(ctx, input)
 		},

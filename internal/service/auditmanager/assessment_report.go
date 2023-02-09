@@ -160,7 +160,7 @@ func (r *resourceAssessmentReport) Delete(ctx context.Context, req resource.Dele
 	// Example:
 	//   ValidationException: The assessment report is currently being generated and can’t be
 	//   deleted. You can only delete assessment reports that are completed or failed
-	err := tfresource.RetryContext(ctx, reportCompletionTimeout, func() *sdkv2resource.RetryError {
+	err := tfresource.Retry(ctx, reportCompletionTimeout, func() *sdkv2resource.RetryError {
 		_, err := conn.DeleteAssessmentReport(ctx, &auditmanager.DeleteAssessmentReportInput{
 			AssessmentId:       aws.String(state.AssessmentID.ValueString()),
 			AssessmentReportId: aws.String(state.ID.ValueString()),

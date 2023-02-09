@@ -1,6 +1,7 @@
 package elbv2_test
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"regexp"
@@ -84,6 +85,7 @@ func TestALBTargetGroupCloudWatchSuffixFromARN(t *testing.T) {
 }
 
 func TestAccELBV2TargetGroup_backwardsCompatibility(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_alb_target_group.test"
@@ -92,12 +94,12 @@ func TestAccELBV2TargetGroup_backwardsCompatibility(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetGroupDestroy,
+		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_backwardsCompatibility(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &conf),
+					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "port", "443"),
@@ -127,6 +129,7 @@ func TestAccELBV2TargetGroup_backwardsCompatibility(t *testing.T) {
 }
 
 func TestAccELBV2TargetGroup_ProtocolVersion_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var before, after elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_target_group.test"
@@ -135,12 +138,12 @@ func TestAccELBV2TargetGroup_ProtocolVersion_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetGroupDestroy,
+		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_protocolVersion(rName, "HTTP2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &before),
+					testAccCheckTargetGroupExists(ctx, resourceName, &before),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "port", "443"),
@@ -170,7 +173,7 @@ func TestAccELBV2TargetGroup_ProtocolVersion_basic(t *testing.T) {
 			{
 				Config: testAccTargetGroupConfig_protocolVersion(rName, "HTTP1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &after),
+					testAccCheckTargetGroupExists(ctx, resourceName, &after),
 					testAccCheckTargetGroupRecreated(&after, &before),
 					resource.TestCheckResourceAttr(resourceName, "protocol_version", "HTTP1"),
 				),
@@ -180,6 +183,7 @@ func TestAccELBV2TargetGroup_ProtocolVersion_basic(t *testing.T) {
 }
 
 func TestAccELBV2TargetGroup_ProtocolVersion_grpcHealthCheck(t *testing.T) {
+	ctx := acctest.Context(t)
 	var targetGroup1 elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_target_group.test"
@@ -188,12 +192,12 @@ func TestAccELBV2TargetGroup_ProtocolVersion_grpcHealthCheck(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetGroupDestroy,
+		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_grpcProtocolVersion(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &targetGroup1),
+					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup1),
 					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.path", "/Test.Check/healthcheck"),
 					resource.TestCheckResourceAttr(resourceName, "health_check.0.matcher", "0-99"),
@@ -204,6 +208,7 @@ func TestAccELBV2TargetGroup_ProtocolVersion_grpcHealthCheck(t *testing.T) {
 }
 
 func TestAccELBV2TargetGroup_ProtocolVersion_grpcUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
 	var targetGroup1 elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_target_group.test"
@@ -212,12 +217,12 @@ func TestAccELBV2TargetGroup_ProtocolVersion_grpcUpdate(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetGroupDestroy,
+		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_basic(rName, 200),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &targetGroup1),
+					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup1),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTPS"),
 					resource.TestCheckResourceAttr(resourceName, "protocol_version", "HTTP1"),
 				),
@@ -225,7 +230,7 @@ func TestAccELBV2TargetGroup_ProtocolVersion_grpcUpdate(t *testing.T) {
 			{
 				Config: testAccTargetGroupConfig_grpcProtocolVersion(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &targetGroup1),
+					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup1),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "protocol_version", "GRPC"),
 				),
@@ -235,6 +240,7 @@ func TestAccELBV2TargetGroup_ProtocolVersion_grpcUpdate(t *testing.T) {
 }
 
 func TestAccELBV2TargetGroup_ipAddressType(t *testing.T) {
+	ctx := acctest.Context(t)
 	var targetGroup1 elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_target_group.test"
@@ -243,12 +249,12 @@ func TestAccELBV2TargetGroup_ipAddressType(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetGroupDestroy,
+		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_ipAddressType(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &targetGroup1),
+					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup1),
 					resource.TestCheckResourceAttr(resourceName, "target_type", "ip"),
 					resource.TestCheckResourceAttr(resourceName, "ip_address_type", "ipv6"),
 				),
@@ -269,6 +275,7 @@ func TestAccELBV2TargetGroup_ipAddressType(t *testing.T) {
 }
 
 func TestAccELBV2TargetGroup_tls(t *testing.T) {
+	ctx := acctest.Context(t)
 	var targetGroup1 elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_target_group.test"
@@ -277,12 +284,12 @@ func TestAccELBV2TargetGroup_tls(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetGroupDestroy,
+		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_protocolTLS(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &targetGroup1),
+					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup1),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "TLS"),
 				),
 			},
@@ -291,6 +298,7 @@ func TestAccELBV2TargetGroup_tls(t *testing.T) {
 }
 
 func TestAccELBV2TargetGroup_HealthCheck_tcpHTTPS(t *testing.T) {
+	ctx := acctest.Context(t)
 	var confBefore, confAfter elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_target_group.test"
@@ -299,12 +307,12 @@ func TestAccELBV2TargetGroup_HealthCheck_tcpHTTPS(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetGroupDestroy,
+		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_typeTCPHTTPHealthCheck(rName, "/healthz", 2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &confBefore),
+					testAccCheckTargetGroupExists(ctx, resourceName, &confBefore),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "port", "8082"),
@@ -326,7 +334,7 @@ func TestAccELBV2TargetGroup_HealthCheck_tcpHTTPS(t *testing.T) {
 			{
 				Config: testAccTargetGroupConfig_typeTCPHTTPHealthCheck(rName, "/healthz2", 4),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &confAfter),
+					testAccCheckTargetGroupExists(ctx, resourceName, &confAfter),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "port", "8082"),
@@ -350,6 +358,7 @@ func TestAccELBV2TargetGroup_HealthCheck_tcpHTTPS(t *testing.T) {
 }
 
 func TestAccELBV2TargetGroup_attrsOnCreate(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_target_group.test"
@@ -358,12 +367,12 @@ func TestAccELBV2TargetGroup_attrsOnCreate(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetGroupDestroy,
+		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_basic(rName, 0),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &conf),
+					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "0"),
 					resource.TestCheckResourceAttr(resourceName, "slow_start", "0"),
@@ -372,7 +381,7 @@ func TestAccELBV2TargetGroup_attrsOnCreate(t *testing.T) {
 			{
 				Config: testAccTargetGroupConfig_basic(rName, 200),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &conf),
+					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "deregistration_delay", "200"),
 					resource.TestCheckResourceAttr(resourceName, "slow_start", "0"),
@@ -383,6 +392,7 @@ func TestAccELBV2TargetGroup_attrsOnCreate(t *testing.T) {
 }
 
 func TestAccELBV2TargetGroup_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_target_group.test"
@@ -391,12 +401,12 @@ func TestAccELBV2TargetGroup_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetGroupDestroy,
+		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_basic(rName, 200),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &conf),
+					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "port", "443"),
@@ -428,6 +438,7 @@ func TestAccELBV2TargetGroup_basic(t *testing.T) {
 }
 
 func TestAccELBV2TargetGroup_udp(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_target_group.test"
@@ -436,12 +447,12 @@ func TestAccELBV2TargetGroup_udp(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetGroupDestroy,
+		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_basicUdp(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &conf),
+					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "port", "514"),
@@ -459,6 +470,7 @@ func TestAccELBV2TargetGroup_udp(t *testing.T) {
 }
 
 func TestAccELBV2TargetGroup_ForceNew_name(t *testing.T) {
+	ctx := acctest.Context(t)
 	var before, after elbv2.TargetGroup
 	rNameBefore := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rNameAfter := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -468,19 +480,19 @@ func TestAccELBV2TargetGroup_ForceNew_name(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetGroupDestroy,
+		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_basic(rNameBefore, 200),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &before),
+					testAccCheckTargetGroupExists(ctx, resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "name", rNameBefore),
 				),
 			},
 			{
 				Config: testAccTargetGroupConfig_basic(rNameAfter, 200),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &after),
+					testAccCheckTargetGroupExists(ctx, resourceName, &after),
 					testAccCheckTargetGroupRecreated(&after, &before),
 					resource.TestCheckResourceAttr(resourceName, "name", rNameAfter),
 				),
@@ -490,6 +502,7 @@ func TestAccELBV2TargetGroup_ForceNew_name(t *testing.T) {
 }
 
 func TestAccELBV2TargetGroup_ForceNew_port(t *testing.T) {
+	ctx := acctest.Context(t)
 	var before, after elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_target_group.test"
@@ -498,19 +511,19 @@ func TestAccELBV2TargetGroup_ForceNew_port(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetGroupDestroy,
+		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_basic(rName, 200),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &before),
+					testAccCheckTargetGroupExists(ctx, resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "port", "443"),
 				),
 			},
 			{
 				Config: testAccTargetGroupConfig_updatedPort(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &after),
+					testAccCheckTargetGroupExists(ctx, resourceName, &after),
 					testAccCheckTargetGroupRecreated(&after, &before),
 					resource.TestCheckResourceAttr(resourceName, "port", "442"),
 				),
@@ -520,6 +533,7 @@ func TestAccELBV2TargetGroup_ForceNew_port(t *testing.T) {
 }
 
 func TestAccELBV2TargetGroup_ForceNew_protocol(t *testing.T) {
+	ctx := acctest.Context(t)
 	var before, after elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_target_group.test"
@@ -528,19 +542,19 @@ func TestAccELBV2TargetGroup_ForceNew_protocol(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetGroupDestroy,
+		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_basic(rName, 200),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &before),
+					testAccCheckTargetGroupExists(ctx, resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTPS"),
 				),
 			},
 			{
 				Config: testAccTargetGroupConfig_updatedProtocol(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &after),
+					testAccCheckTargetGroupExists(ctx, resourceName, &after),
 					testAccCheckTargetGroupRecreated(&after, &before),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTP"),
 				),
@@ -550,6 +564,7 @@ func TestAccELBV2TargetGroup_ForceNew_protocol(t *testing.T) {
 }
 
 func TestAccELBV2TargetGroup_ForceNew_vpc(t *testing.T) {
+	ctx := acctest.Context(t)
 	var before, after elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_target_group.test"
@@ -558,19 +573,19 @@ func TestAccELBV2TargetGroup_ForceNew_vpc(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetGroupDestroy,
+		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_basic(rName, 200),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &before),
+					testAccCheckTargetGroupExists(ctx, resourceName, &before),
 				),
 			},
 			{
 				Config: testAccTargetGroupConfig_updatedVPC(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupRecreated(&after, &before),
-					testAccCheckTargetGroupExists(resourceName, &after),
+					testAccCheckTargetGroupExists(ctx, resourceName, &after),
 				),
 			},
 		},
@@ -578,6 +593,7 @@ func TestAccELBV2TargetGroup_ForceNew_vpc(t *testing.T) {
 }
 
 func TestAccELBV2TargetGroup_Defaults_application(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_target_group.test"
@@ -586,12 +602,12 @@ func TestAccELBV2TargetGroup_Defaults_application(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetGroupDestroy,
+		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_albDefaults(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &conf),
+					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "port", "443"),
@@ -616,6 +632,7 @@ func TestAccELBV2TargetGroup_Defaults_application(t *testing.T) {
 }
 
 func TestAccELBV2TargetGroup_Defaults_network(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_target_group.test"
@@ -642,7 +659,7 @@ timeout  = 4
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetGroupDestroy,
+		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccTargetGroupConfig_nlbDefaults(rName, healthCheckInvalid1),
@@ -655,7 +672,7 @@ timeout  = 4
 			{
 				Config: testAccTargetGroupConfig_nlbDefaults(rName, healthCheckValid),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &conf),
+					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "port", "443"),
@@ -679,6 +696,7 @@ timeout  = 4
 }
 
 func TestAccELBV2TargetGroup_HealthCheck_enable(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_target_group.test"
@@ -687,12 +705,12 @@ func TestAccELBV2TargetGroup_HealthCheck_enable(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetGroupDestroy,
+		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_noHealthcheck(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &conf),
+					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
@@ -702,7 +720,7 @@ func TestAccELBV2TargetGroup_HealthCheck_enable(t *testing.T) {
 			{
 				Config: testAccTargetGroupConfig_enableHealthcheck(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &conf),
+					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
@@ -714,6 +732,7 @@ func TestAccELBV2TargetGroup_HealthCheck_enable(t *testing.T) {
 }
 
 func TestAccELBV2TargetGroup_Name_generated(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_target_group.test"
@@ -722,12 +741,12 @@ func TestAccELBV2TargetGroup_Name_generated(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetGroupDestroy,
+		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_generatedName(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &conf),
+					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 				),
 			},
 		},
@@ -735,6 +754,7 @@ func TestAccELBV2TargetGroup_Name_generated(t *testing.T) {
 }
 
 func TestAccELBV2TargetGroup_Name_prefix(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_target_group.test"
@@ -743,12 +763,12 @@ func TestAccELBV2TargetGroup_Name_prefix(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetGroupDestroy,
+		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_namePrefix(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &conf),
+					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestMatchResourceAttr(resourceName, "name", regexp.MustCompile("^tf-")),
 				),
 			},
@@ -757,6 +777,7 @@ func TestAccELBV2TargetGroup_Name_prefix(t *testing.T) {
 }
 
 func TestAccELBV2TargetGroup_NetworkLB_tcpHealthCheckUpdated(t *testing.T) {
+	ctx := acctest.Context(t)
 	var targetGroup1, targetGroup2 elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_target_group.test"
@@ -765,12 +786,12 @@ func TestAccELBV2TargetGroup_NetworkLB_tcpHealthCheckUpdated(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetGroupDestroy,
+		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_typeTCP(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &targetGroup1),
+					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup1),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "port", "8082"),
@@ -794,7 +815,7 @@ func TestAccELBV2TargetGroup_NetworkLB_tcpHealthCheckUpdated(t *testing.T) {
 			{
 				Config: testAccTargetGroupConfig_typeTCPHealthCheckUpdated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &targetGroup2),
+					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup2),
 					testAccCheckTargetGroupNotRecreated(&targetGroup1, &targetGroup2),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -819,6 +840,7 @@ func TestAccELBV2TargetGroup_NetworkLB_tcpHealthCheckUpdated(t *testing.T) {
 }
 
 func TestAccELBV2TargetGroup_networkLB_TargetGroupWithConnectionTermination(t *testing.T) {
+	ctx := acctest.Context(t)
 	var confBefore, confAfter elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_target_group.test"
@@ -827,19 +849,19 @@ func TestAccELBV2TargetGroup_networkLB_TargetGroupWithConnectionTermination(t *t
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetGroupDestroy,
+		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_typeTCP(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &confBefore),
+					testAccCheckTargetGroupExists(ctx, resourceName, &confBefore),
 					resource.TestCheckResourceAttr(resourceName, "connection_termination", "false"),
 				),
 			},
 			{
 				Config: testAccTargetGroupConfig_typeTCPConnectionTermination(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &confAfter),
+					testAccCheckTargetGroupExists(ctx, resourceName, &confAfter),
 					resource.TestCheckResourceAttr(resourceName, "connection_termination", "true"),
 				),
 			},
@@ -848,6 +870,7 @@ func TestAccELBV2TargetGroup_networkLB_TargetGroupWithConnectionTermination(t *t
 }
 
 func TestAccELBV2TargetGroup_NetworkLB_targetGroupWithProxy(t *testing.T) {
+	ctx := acctest.Context(t)
 	var confBefore, confAfter elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_target_group.test"
@@ -856,19 +879,19 @@ func TestAccELBV2TargetGroup_NetworkLB_targetGroupWithProxy(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetGroupDestroy,
+		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_typeTCP(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &confBefore),
+					testAccCheckTargetGroupExists(ctx, resourceName, &confBefore),
 					resource.TestCheckResourceAttr(resourceName, "proxy_protocol_v2", "false"),
 				),
 			},
 			{
 				Config: testAccTargetGroupConfig_typeTCPProxyProtocol(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &confAfter),
+					testAccCheckTargetGroupExists(ctx, resourceName, &confAfter),
 					resource.TestCheckResourceAttr(resourceName, "proxy_protocol_v2", "true"),
 				),
 			},
@@ -877,6 +900,7 @@ func TestAccELBV2TargetGroup_NetworkLB_targetGroupWithProxy(t *testing.T) {
 }
 
 func TestAccELBV2TargetGroup_preserveClientIPValid(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf elbv2.TargetGroup
 	resourceName := "aws_lb_target_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -885,19 +909,19 @@ func TestAccELBV2TargetGroup_preserveClientIPValid(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetGroupDestroy,
+		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_preserveClientIP(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &conf),
+					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "preserve_client_ip", "true"),
 				),
 			},
 			{
 				Config: testAccTargetGroupConfig_preserveClientIP(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &conf),
+					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "preserve_client_ip", "false"),
 				),
 			},
@@ -906,20 +930,21 @@ func TestAccELBV2TargetGroup_preserveClientIPValid(t *testing.T) {
 }
 
 func TestAccELBV2TargetGroup_Geneve_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGatewayLoadBalancer(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGatewayLoadBalancer(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetGroupDestroy,
+		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_protocolGeneve(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &conf),
+					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "port", "6081"),
 					resource.TestCheckResourceAttr(resourceName, "protocol", elbv2.ProtocolEnumGeneve),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
@@ -941,20 +966,21 @@ func TestAccELBV2TargetGroup_Geneve_basic(t *testing.T) {
 }
 
 func TestAccELBV2TargetGroup_Geneve_notSticky(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGatewayLoadBalancer(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGatewayLoadBalancer(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetGroupDestroy,
+		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_protocolGeneve(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &conf),
+					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "port", "6081"),
 					resource.TestCheckResourceAttr(resourceName, "protocol", elbv2.ProtocolEnumGeneve),
 				),
@@ -962,7 +988,7 @@ func TestAccELBV2TargetGroup_Geneve_notSticky(t *testing.T) {
 			{
 				Config: testAccTargetGroupConfig_protocolGeneveHealth(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &conf),
+					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "port", "6081"),
 					resource.TestCheckResourceAttr(resourceName, "protocol", elbv2.ProtocolEnumGeneve),
 					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
@@ -981,20 +1007,21 @@ func TestAccELBV2TargetGroup_Geneve_notSticky(t *testing.T) {
 }
 
 func TestAccELBV2TargetGroup_Geneve_Sticky(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGatewayLoadBalancer(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGatewayLoadBalancer(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetGroupDestroy,
+		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_protocolGeneveSticky(rName, "source_ip_dest_ip"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &conf),
+					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "port", "6081"),
 					resource.TestCheckResourceAttr(resourceName, "protocol", elbv2.ProtocolEnumGeneve),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
@@ -1005,7 +1032,7 @@ func TestAccELBV2TargetGroup_Geneve_Sticky(t *testing.T) {
 			{
 				Config: testAccTargetGroupConfig_protocolGeneveSticky(rName, "source_ip_dest_ip_proto"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &conf),
+					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "port", "6081"),
 					resource.TestCheckResourceAttr(resourceName, "protocol", elbv2.ProtocolEnumGeneve),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
@@ -1018,20 +1045,21 @@ func TestAccELBV2TargetGroup_Geneve_Sticky(t *testing.T) {
 }
 
 func TestAccELBV2TargetGroup_Geneve_targetFailover(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGatewayLoadBalancer(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGatewayLoadBalancer(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetGroupDestroy,
+		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_protocolGeneveTargetFailover(rName, "rebalance"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &conf),
+					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "port", "6081"),
 					resource.TestCheckResourceAttr(resourceName, "protocol", elbv2.ProtocolEnumGeneve),
 					resource.TestCheckResourceAttr(resourceName, "target_failover.0.on_deregistration", "rebalance"),
@@ -1052,7 +1080,7 @@ func TestAccELBV2TargetGroup_Geneve_targetFailover(t *testing.T) {
 			{
 				Config: testAccTargetGroupConfig_protocolGeneveTargetFailover(rName, "no_rebalance"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &conf),
+					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "port", "6081"),
 					resource.TestCheckResourceAttr(resourceName, "protocol", elbv2.ProtocolEnumGeneve),
 					resource.TestCheckResourceAttr(resourceName, "target_failover.0.on_deregistration", "no_rebalance"),
@@ -1075,6 +1103,7 @@ func TestAccELBV2TargetGroup_Geneve_targetFailover(t *testing.T) {
 }
 
 func TestAccELBV2TargetGroup_Stickiness_defaultALB(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_target_group.test"
@@ -1083,12 +1112,12 @@ func TestAccELBV2TargetGroup_Stickiness_defaultALB(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetGroupDestroy,
+		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_stickinessDefault(rName, "HTTP"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &conf),
+					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "lb_cookie"),
@@ -1099,6 +1128,7 @@ func TestAccELBV2TargetGroup_Stickiness_defaultALB(t *testing.T) {
 }
 
 func TestAccELBV2TargetGroup_Stickiness_defaultNLB(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_target_group.test"
@@ -1107,12 +1137,12 @@ func TestAccELBV2TargetGroup_Stickiness_defaultNLB(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetGroupDestroy,
+		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_stickinessDefault(rName, "TCP"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &conf),
+					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "source_ip"),
@@ -1121,7 +1151,7 @@ func TestAccELBV2TargetGroup_Stickiness_defaultNLB(t *testing.T) {
 			{
 				Config: testAccTargetGroupConfig_stickinessDefault(rName, "UDP"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &conf),
+					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "source_ip"),
@@ -1130,7 +1160,7 @@ func TestAccELBV2TargetGroup_Stickiness_defaultNLB(t *testing.T) {
 			{
 				Config: testAccTargetGroupConfig_stickinessDefault(rName, "TCP_UDP"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &conf),
+					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "source_ip"),
@@ -1141,13 +1171,14 @@ func TestAccELBV2TargetGroup_Stickiness_defaultNLB(t *testing.T) {
 }
 
 func TestAccELBV2TargetGroup_Stickiness_invalidALB(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetGroupDestroy,
+		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccTargetGroupConfig_stickinessValidity(rName, "HTTP", "source_ip", true),
@@ -1171,13 +1202,14 @@ func TestAccELBV2TargetGroup_Stickiness_invalidALB(t *testing.T) {
 }
 
 func TestAccELBV2TargetGroup_Stickiness_invalidNLB(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetGroupDestroy,
+		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccTargetGroupConfig_stickinessValidity(rName, "TCP", "lb_cookie", true),
@@ -1200,6 +1232,7 @@ func TestAccELBV2TargetGroup_Stickiness_invalidNLB(t *testing.T) {
 }
 
 func TestAccELBV2TargetGroup_Stickiness_validALB(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_target_group.test"
@@ -1208,12 +1241,12 @@ func TestAccELBV2TargetGroup_Stickiness_validALB(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetGroupDestroy,
+		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_stickinessValidity(rName, "HTTP", "lb_cookie", true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &conf),
+					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "lb_cookie"),
@@ -1223,7 +1256,7 @@ func TestAccELBV2TargetGroup_Stickiness_validALB(t *testing.T) {
 			{
 				Config: testAccTargetGroupConfig_stickinessValidity(rName, "HTTPS", "lb_cookie", true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &conf),
+					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "lb_cookie"),
@@ -1235,6 +1268,7 @@ func TestAccELBV2TargetGroup_Stickiness_validALB(t *testing.T) {
 }
 
 func TestAccELBV2TargetGroup_Stickiness_validNLB(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_target_group.test"
@@ -1243,12 +1277,12 @@ func TestAccELBV2TargetGroup_Stickiness_validNLB(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetGroupDestroy,
+		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_stickinessValidity(rName, "TCP", "source_ip", false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &conf),
+					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "source_ip"),
@@ -1257,7 +1291,7 @@ func TestAccELBV2TargetGroup_Stickiness_validNLB(t *testing.T) {
 			{
 				Config: testAccTargetGroupConfig_stickinessValidity(rName, "TCP", "source_ip", true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &conf),
+					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "source_ip"),
@@ -1266,7 +1300,7 @@ func TestAccELBV2TargetGroup_Stickiness_validNLB(t *testing.T) {
 			{
 				Config: testAccTargetGroupConfig_stickinessValidity(rName, "UDP", "source_ip", true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &conf),
+					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "source_ip"),
@@ -1275,7 +1309,7 @@ func TestAccELBV2TargetGroup_Stickiness_validNLB(t *testing.T) {
 			{
 				Config: testAccTargetGroupConfig_stickinessValidity(rName, "TCP_UDP", "source_ip", true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &conf),
+					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.0.type", "source_ip"),
@@ -1286,6 +1320,7 @@ func TestAccELBV2TargetGroup_Stickiness_validNLB(t *testing.T) {
 }
 
 func TestAccELBV2TargetGroup_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_target_group.test"
@@ -1294,12 +1329,12 @@ func TestAccELBV2TargetGroup_tags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetGroupDestroy,
+		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &conf),
+					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -1307,7 +1342,7 @@ func TestAccELBV2TargetGroup_tags(t *testing.T) {
 			{
 				Config: testAccTargetGroupConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &conf),
+					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -1316,7 +1351,7 @@ func TestAccELBV2TargetGroup_tags(t *testing.T) {
 			{
 				Config: testAccTargetGroupConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &conf),
+					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -1326,6 +1361,7 @@ func TestAccELBV2TargetGroup_tags(t *testing.T) {
 }
 
 func TestAccELBV2TargetGroup_Stickiness_updateAppEnabled(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf elbv2.TargetGroup
 	targetGroupName := fmt.Sprintf("test-target-group-%s", sdkacctest.RandString(10))
 	resourceName := "aws_lb_target_group.test"
@@ -1334,12 +1370,12 @@ func TestAccELBV2TargetGroup_Stickiness_updateAppEnabled(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetGroupDestroy,
+		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_appStickiness(targetGroupName, false, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &conf),
+					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "name", targetGroupName),
 					resource.TestCheckResourceAttr(resourceName, "port", "443"),
@@ -1360,7 +1396,7 @@ func TestAccELBV2TargetGroup_Stickiness_updateAppEnabled(t *testing.T) {
 			{
 				Config: testAccTargetGroupConfig_appStickiness(targetGroupName, true, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &conf),
+					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "name", targetGroupName),
 					resource.TestCheckResourceAttr(resourceName, "port", "443"),
@@ -1386,7 +1422,7 @@ func TestAccELBV2TargetGroup_Stickiness_updateAppEnabled(t *testing.T) {
 			{
 				Config: testAccTargetGroupConfig_appStickiness(targetGroupName, true, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &conf),
+					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "name", targetGroupName),
 					resource.TestCheckResourceAttr(resourceName, "port", "443"),
@@ -1414,6 +1450,7 @@ func TestAccELBV2TargetGroup_Stickiness_updateAppEnabled(t *testing.T) {
 }
 
 func TestAccELBV2TargetGroup_HealthCheck_update(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_target_group.test"
@@ -1422,12 +1459,12 @@ func TestAccELBV2TargetGroup_HealthCheck_update(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetGroupDestroy,
+		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_basic(rName, 200),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &conf),
+					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "port", "443"),
@@ -1452,7 +1489,7 @@ func TestAccELBV2TargetGroup_HealthCheck_update(t *testing.T) {
 			{
 				Config: testAccTargetGroupConfig_updateHealthCheck(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &conf),
+					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "port", "443"),
@@ -1479,6 +1516,7 @@ func TestAccELBV2TargetGroup_HealthCheck_update(t *testing.T) {
 }
 
 func TestAccELBV2TargetGroup_Stickiness_updateEnabled(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_target_group.test"
@@ -1487,12 +1525,12 @@ func TestAccELBV2TargetGroup_Stickiness_updateEnabled(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetGroupDestroy,
+		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_stickiness(rName, false, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &conf),
+					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "port", "443"),
@@ -1513,7 +1551,7 @@ func TestAccELBV2TargetGroup_Stickiness_updateEnabled(t *testing.T) {
 			{
 				Config: testAccTargetGroupConfig_stickiness(rName, true, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &conf),
+					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "port", "443"),
@@ -1538,7 +1576,7 @@ func TestAccELBV2TargetGroup_Stickiness_updateEnabled(t *testing.T) {
 			{
 				Config: testAccTargetGroupConfig_stickiness(rName, true, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &conf),
+					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "port", "443"),
@@ -1565,6 +1603,7 @@ func TestAccELBV2TargetGroup_Stickiness_updateEnabled(t *testing.T) {
 }
 
 func TestAccELBV2TargetGroup_HealthCheck_without(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_target_group.test"
@@ -1573,12 +1612,12 @@ func TestAccELBV2TargetGroup_HealthCheck_without(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetGroupDestroy,
+		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_noHealthcheck(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &conf),
+					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "health_check.#", "1"),
@@ -1590,6 +1629,7 @@ func TestAccELBV2TargetGroup_HealthCheck_without(t *testing.T) {
 }
 
 func TestAccELBV2TargetGroup_ALBAlias_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_alb_target_group.test"
@@ -1598,12 +1638,12 @@ func TestAccELBV2TargetGroup_ALBAlias_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetGroupDestroy,
+		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_albBasic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &conf),
+					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "port", "443"),
@@ -1634,6 +1674,7 @@ func TestAccELBV2TargetGroup_ALBAlias_basic(t *testing.T) {
 }
 
 func TestAccELBV2TargetGroup_ALBAlias_changeNameForceNew(t *testing.T) {
+	ctx := acctest.Context(t)
 	var before, after elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rNameAfter := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1643,19 +1684,19 @@ func TestAccELBV2TargetGroup_ALBAlias_changeNameForceNew(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetGroupDestroy,
+		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_albBasic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &before),
+					testAccCheckTargetGroupExists(ctx, resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
 			},
 			{
 				Config: testAccTargetGroupConfig_albBasic(rNameAfter),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &after),
+					testAccCheckTargetGroupExists(ctx, resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, "name", rNameAfter),
 				),
 			},
@@ -1664,6 +1705,7 @@ func TestAccELBV2TargetGroup_ALBAlias_changeNameForceNew(t *testing.T) {
 }
 
 func TestAccELBV2TargetGroup_ALBAlias_changePortForceNew(t *testing.T) {
+	ctx := acctest.Context(t)
 	var before, after elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_alb_target_group.test"
@@ -1672,19 +1714,19 @@ func TestAccELBV2TargetGroup_ALBAlias_changePortForceNew(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetGroupDestroy,
+		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_albBasic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &before),
+					testAccCheckTargetGroupExists(ctx, resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "port", "443"),
 				),
 			},
 			{
 				Config: testAccTargetGroupConfig_albUpdatedPort(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &after),
+					testAccCheckTargetGroupExists(ctx, resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, "port", "442"),
 				),
 			},
@@ -1693,6 +1735,7 @@ func TestAccELBV2TargetGroup_ALBAlias_changePortForceNew(t *testing.T) {
 }
 
 func TestAccELBV2TargetGroup_ALBAlias_changeProtocolForceNew(t *testing.T) {
+	ctx := acctest.Context(t)
 	var before, after elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_alb_target_group.test"
@@ -1701,19 +1744,19 @@ func TestAccELBV2TargetGroup_ALBAlias_changeProtocolForceNew(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetGroupDestroy,
+		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_albBasic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &before),
+					testAccCheckTargetGroupExists(ctx, resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTPS"),
 				),
 			},
 			{
 				Config: testAccTargetGroupConfig_albUpdatedProtocol(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &after),
+					testAccCheckTargetGroupExists(ctx, resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTP"),
 				),
 			},
@@ -1722,6 +1765,7 @@ func TestAccELBV2TargetGroup_ALBAlias_changeProtocolForceNew(t *testing.T) {
 }
 
 func TestAccELBV2TargetGroup_ALBAlias_changeVPCForceNew(t *testing.T) {
+	ctx := acctest.Context(t)
 	var before, after elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_alb_target_group.test"
@@ -1730,18 +1774,18 @@ func TestAccELBV2TargetGroup_ALBAlias_changeVPCForceNew(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetGroupDestroy,
+		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_albBasic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &before),
+					testAccCheckTargetGroupExists(ctx, resourceName, &before),
 				),
 			},
 			{
 				Config: testAccTargetGroupConfig_albUpdatedVPC(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &after),
+					testAccCheckTargetGroupExists(ctx, resourceName, &after),
 				),
 			},
 		},
@@ -1749,6 +1793,7 @@ func TestAccELBV2TargetGroup_ALBAlias_changeVPCForceNew(t *testing.T) {
 }
 
 func TestAccELBV2TargetGroup_ALBAlias_generatedName(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_alb_target_group.test"
@@ -1757,12 +1802,12 @@ func TestAccELBV2TargetGroup_ALBAlias_generatedName(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetGroupDestroy,
+		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_albGeneratedName(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &conf),
+					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 				),
 			},
 		},
@@ -1770,6 +1815,7 @@ func TestAccELBV2TargetGroup_ALBAlias_generatedName(t *testing.T) {
 }
 
 func TestAccELBV2TargetGroup_ALBAlias_lambda(t *testing.T) {
+	ctx := acctest.Context(t)
 	var targetGroup1 elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_alb_target_group.test"
@@ -1778,12 +1824,12 @@ func TestAccELBV2TargetGroup_ALBAlias_lambda(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetGroupDestroy,
+		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_albLambda(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &targetGroup1),
+					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup1),
 					resource.TestCheckResourceAttr(resourceName, "lambda_multi_value_headers_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "target_type", "lambda"),
 				),
@@ -1805,6 +1851,7 @@ func TestAccELBV2TargetGroup_ALBAlias_lambda(t *testing.T) {
 }
 
 func TestAccELBV2TargetGroup_ALBAlias_lambdaMultiValueHeadersEnabled(t *testing.T) {
+	ctx := acctest.Context(t)
 	var targetGroup1 elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_alb_target_group.test"
@@ -1813,12 +1860,12 @@ func TestAccELBV2TargetGroup_ALBAlias_lambdaMultiValueHeadersEnabled(t *testing.
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetGroupDestroy,
+		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_albLambdaMultiValueHeadersEnabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &targetGroup1),
+					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup1),
 					resource.TestCheckResourceAttr(resourceName, "lambda_multi_value_headers_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "target_type", "lambda"),
 				),
@@ -1838,7 +1885,7 @@ func TestAccELBV2TargetGroup_ALBAlias_lambdaMultiValueHeadersEnabled(t *testing.
 			{
 				Config: testAccTargetGroupConfig_albLambdaMultiValueHeadersEnabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &targetGroup1),
+					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup1),
 					resource.TestCheckResourceAttr(resourceName, "lambda_multi_value_headers_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "target_type", "lambda"),
 				),
@@ -1846,7 +1893,7 @@ func TestAccELBV2TargetGroup_ALBAlias_lambdaMultiValueHeadersEnabled(t *testing.
 			{
 				Config: testAccTargetGroupConfig_albLambdaMultiValueHeadersEnabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &targetGroup1),
+					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup1),
 					resource.TestCheckResourceAttr(resourceName, "lambda_multi_value_headers_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "target_type", "lambda"),
 				),
@@ -1856,13 +1903,14 @@ func TestAccELBV2TargetGroup_ALBAlias_lambdaMultiValueHeadersEnabled(t *testing.
 }
 
 func TestAccELBV2TargetGroup_ALBAlias_missingPortProtocolVPC(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := fmt.Sprintf("test-target-group-%s", sdkacctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetGroupDestroy,
+		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccTargetGroupConfig_albMissingPort(rName),
@@ -1881,6 +1929,7 @@ func TestAccELBV2TargetGroup_ALBAlias_missingPortProtocolVPC(t *testing.T) {
 }
 
 func TestAccELBV2TargetGroup_ALBAlias_namePrefix(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_alb_target_group.test"
@@ -1889,12 +1938,12 @@ func TestAccELBV2TargetGroup_ALBAlias_namePrefix(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetGroupDestroy,
+		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_albNamePrefix(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &conf),
+					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestMatchResourceAttr(resourceName, "name", regexp.MustCompile("^tf-")),
 				),
 			},
@@ -1903,6 +1952,7 @@ func TestAccELBV2TargetGroup_ALBAlias_namePrefix(t *testing.T) {
 }
 
 func TestAccELBV2TargetGroup_ALBAlias_setAndUpdateSlowStart(t *testing.T) {
+	ctx := acctest.Context(t)
 	var before, after elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_alb_target_group.test"
@@ -1911,19 +1961,19 @@ func TestAccELBV2TargetGroup_ALBAlias_setAndUpdateSlowStart(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetGroupDestroy,
+		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_albUpdateSlowStart(rName, 30),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &before),
+					testAccCheckTargetGroupExists(ctx, resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "slow_start", "30"),
 				),
 			},
 			{
 				Config: testAccTargetGroupConfig_albUpdateSlowStart(rName, 60),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &after),
+					testAccCheckTargetGroupExists(ctx, resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, "slow_start", "60"),
 				),
 			},
@@ -1932,6 +1982,7 @@ func TestAccELBV2TargetGroup_ALBAlias_setAndUpdateSlowStart(t *testing.T) {
 }
 
 func TestAccELBV2TargetGroup_ALBAlias_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_alb_target_group.test"
@@ -1940,12 +1991,12 @@ func TestAccELBV2TargetGroup_ALBAlias_tags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetGroupDestroy,
+		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_albBasic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &conf),
+					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.TestName", rName),
 				),
@@ -1953,7 +2004,7 @@ func TestAccELBV2TargetGroup_ALBAlias_tags(t *testing.T) {
 			{
 				Config: testAccTargetGroupConfig_albUpdateTags(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &conf),
+					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Environment", "Production"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Type", "ALB Target Group"),
@@ -1964,6 +2015,7 @@ func TestAccELBV2TargetGroup_ALBAlias_tags(t *testing.T) {
 }
 
 func TestAccELBV2TargetGroup_ALBAlias_updateHealthCheck(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_alb_target_group.test"
@@ -1972,12 +2024,12 @@ func TestAccELBV2TargetGroup_ALBAlias_updateHealthCheck(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetGroupDestroy,
+		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_albBasic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &conf),
+					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "port", "443"),
@@ -2001,7 +2053,7 @@ func TestAccELBV2TargetGroup_ALBAlias_updateHealthCheck(t *testing.T) {
 			{
 				Config: testAccTargetGroupConfig_albUpdateHealthCheck(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &conf),
+					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "port", "443"),
@@ -2027,6 +2079,7 @@ func TestAccELBV2TargetGroup_ALBAlias_updateHealthCheck(t *testing.T) {
 }
 
 func TestAccELBV2TargetGroup_ALBAlias_updateLoadBalancingAlgorithmType(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_alb_target_group.test"
@@ -2035,12 +2088,12 @@ func TestAccELBV2TargetGroup_ALBAlias_updateLoadBalancingAlgorithmType(t *testin
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetGroupDestroy,
+		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_albLoadBalancingAlgorithm(rName, false, ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &conf),
+					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "load_balancing_algorithm_type", "round_robin"),
@@ -2049,7 +2102,7 @@ func TestAccELBV2TargetGroup_ALBAlias_updateLoadBalancingAlgorithmType(t *testin
 			{
 				Config: testAccTargetGroupConfig_albLoadBalancingAlgorithm(rName, true, "round_robin"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &conf),
+					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "load_balancing_algorithm_type", "round_robin"),
@@ -2058,7 +2111,7 @@ func TestAccELBV2TargetGroup_ALBAlias_updateLoadBalancingAlgorithmType(t *testin
 			{
 				Config: testAccTargetGroupConfig_albLoadBalancingAlgorithm(rName, true, "least_outstanding_requests"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &conf),
+					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "load_balancing_algorithm_type", "least_outstanding_requests"),
@@ -2069,6 +2122,7 @@ func TestAccELBV2TargetGroup_ALBAlias_updateLoadBalancingAlgorithmType(t *testin
 }
 
 func TestAccELBV2TargetGroup_ALBAlias_updateStickinessEnabled(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf elbv2.TargetGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_alb_target_group.test"
@@ -2077,12 +2131,12 @@ func TestAccELBV2TargetGroup_ALBAlias_updateStickinessEnabled(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetGroupDestroy,
+		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_albStickiness(rName, false, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &conf),
+					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "port", "443"),
@@ -2103,7 +2157,7 @@ func TestAccELBV2TargetGroup_ALBAlias_updateStickinessEnabled(t *testing.T) {
 			{
 				Config: testAccTargetGroupConfig_albStickiness(rName, true, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &conf),
+					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "port", "443"),
@@ -2128,7 +2182,7 @@ func TestAccELBV2TargetGroup_ALBAlias_updateStickinessEnabled(t *testing.T) {
 			{
 				Config: testAccTargetGroupConfig_albStickiness(rName, true, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &conf),
+					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "port", "443"),
@@ -2155,6 +2209,7 @@ func TestAccELBV2TargetGroup_ALBAlias_updateStickinessEnabled(t *testing.T) {
 }
 
 func TestAccELBV2TargetGroup_Name_noDuplicates(t *testing.T) {
+	ctx := acctest.Context(t)
 	var targetGroup elbv2.TargetGroup
 	tgName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_target_group.first"
@@ -2163,12 +2218,12 @@ func TestAccELBV2TargetGroup_Name_noDuplicates(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTargetGroupDestroy,
+		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTargetGroupConfig_duplicateNameFirst(tgName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTargetGroupExists(resourceName, &targetGroup),
+					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
 					resource.TestCheckResourceAttr(resourceName, "name", tgName),
 				),
 			},
@@ -3245,31 +3300,33 @@ resource "aws_lb_target_group" "test" {
 `, rName)
 }
 
-func testAccCheckTargetGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn()
+func testAccCheckTargetGroupDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_lb_target_group" && rs.Type != "aws_alb_target_group" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_lb_target_group" && rs.Type != "aws_alb_target_group" {
+				continue
+			}
+
+			_, err := tfelbv2.FindTargetGroupByARN(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("ELBv2 Target Group %s still exists", rs.Primary.ID)
 		}
 
-		_, err := tfelbv2.FindTargetGroupByARN(conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("ELBv2 Target Group %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckTargetGroupExists(n string, v *elbv2.TargetGroup) resource.TestCheckFunc {
+func testAccCheckTargetGroupExists(ctx context.Context, n string, v *elbv2.TargetGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -3282,7 +3339,7 @@ func testAccCheckTargetGroupExists(n string, v *elbv2.TargetGroup) resource.Test
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn()
 
-		output, err := tfelbv2.FindTargetGroupByARN(conn, rs.Primary.ID)
+		output, err := tfelbv2.FindTargetGroupByARN(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
