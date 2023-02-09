@@ -121,7 +121,7 @@ func ResourceTable() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -135,7 +135,7 @@ func ResourceTable() *schema.Resource {
 				Set: func(v interface{}) int {
 					var buf bytes.Buffer
 					m := v.(map[string]interface{})
-					buf.WriteString(fmt.Sprintf("%s-", m["name"].(string)))
+					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrName].(string)))
 					return create.StringHashcode(buf.String())
 				},
 			},
@@ -154,7 +154,7 @@ func ResourceTable() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -195,7 +195,7 @@ func ResourceTable() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
@@ -222,11 +222,11 @@ func ResourceTable() *schema.Resource {
 				Set: func(v interface{}) int {
 					var buf bytes.Buffer
 					m := v.(map[string]interface{})
-					buf.WriteString(fmt.Sprintf("%s-", m["name"].(string)))
+					buf.WriteString(fmt.Sprintf("%s-", m[names.AttrName].(string)))
 					return create.StringHashcode(buf.String())
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -359,8 +359,8 @@ func ResourceTable() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice(dynamodb.TableClass_Values(), false),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"ttl": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -394,9 +394,9 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DynamoDBConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get(names.AttrTags).(map[string]interface{})))
 
-	tableName := d.Get("name").(string)
+	tableName := d.Get(names.AttrName).(string)
 	keySchemaMap := map[string]interface{}{
 		"hash_key": d.Get("hash_key").(string),
 	}
@@ -443,7 +443,7 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 			for _, gsiObject := range gsiSet.List() {
 				gsi := gsiObject.(map[string]interface{})
 				if err := validateGSIProvisionedThroughput(gsi, billingModeOverride); err != nil {
-					return create.DiagError(names.DynamoDB, create.ErrActionCreating, ResNameTable, d.Get("name").(string), err)
+					return create.DiagError(names.DynamoDB, create.ErrActionCreating, ResNameTable, d.Get(names.AttrName).(string), err)
 				}
 
 				gsiObject := expandGlobalSecondaryIndex(gsi, billingModeOverride)
@@ -571,8 +571,8 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		for _, gsiObject := range gsiSet.List() {
 			gsi := gsiObject.(map[string]interface{})
 
-			if _, err := waitGSIActive(ctx, conn, d.Id(), gsi["name"].(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return create.DiagError(names.DynamoDB, create.ErrActionWaitingForCreation, ResNameTable, d.Id(), fmt.Errorf("GSI (%s): %w", gsi["name"].(string), err))
+			if _, err := waitGSIActive(ctx, conn, d.Id(), gsi[names.AttrName].(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return create.DiagError(names.DynamoDB, create.ErrActionWaitingForCreation, ResNameTable, d.Id(), fmt.Errorf("GSI (%s): %w", gsi[names.AttrName].(string), err))
 			}
 		}
 	}
@@ -619,7 +619,7 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	d.Set(names.AttrARN, table.TableArn)
-	d.Set("name", table.TableName)
+	d.Set(names.AttrName, table.TableName)
 
 	if table.BillingModeSummary != nil {
 		d.Set("billing_mode", table.BillingModeSummary.BillingMode)
@@ -731,12 +731,12 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return create.DiagSettingError(names.DynamoDB, ResNameTable, d.Id(), "tags", err)
+	if err := d.Set(names.AttrTags, tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return create.DiagSettingError(names.DynamoDB, ResNameTable, d.Id(), names.AttrTags, err)
 	}
 
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return create.DiagSettingError(names.DynamoDB, ResNameTable, d.Id(), "tags_all", err)
+	if err := d.Set(names.AttrTagsAll, tags.Map()); err != nil {
+		return create.DiagSettingError(names.DynamoDB, ResNameTable, d.Id(), names.AttrTagsAll, err)
 	}
 
 	return diags
@@ -980,10 +980,10 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
-	if d.HasChange("tags_all") {
+	if d.HasChange(names.AttrTagsAll) {
 		replicaTagsChange = true
 
-		o, n := d.GetChange("tags_all")
+		o, n := d.GetChange(names.AttrTagsAll)
 		if err := UpdateTags(ctx, conn, d.Get(names.AttrARN).(string), o, n); err != nil {
 			return create.DiagError(names.DynamoDB, create.ErrActionUpdating, ResNameTable, d.Id(), err)
 		}
@@ -991,7 +991,7 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if replicaTagsChange {
 		if v, ok := d.Get("replica").(*schema.Set); ok && v.Len() > 0 {
-			if err := updateReplicaTags(ctx, conn, d.Get(names.AttrARN).(string), v.List(), d.Get("tags_all"), meta.(*conns.AWSClient).TerraformVersion); err != nil {
+			if err := updateReplicaTags(ctx, conn, d.Get(names.AttrARN).(string), v.List(), d.Get(names.AttrTagsAll), meta.(*conns.AWSClient).TerraformVersion); err != nil {
 				return create.DiagError(names.DynamoDB, create.ErrActionUpdating, ResNameTable, d.Id(), err)
 			}
 		}
@@ -1408,7 +1408,7 @@ func UpdateDiffGSI(oldGsi, newGsi []interface{}, billingMode string) (ops []*dyn
 	oldGsis := make(map[string]interface{})
 	for _, gsidata := range oldGsi {
 		m := gsidata.(map[string]interface{})
-		oldGsis[m["name"].(string)] = m
+		oldGsis[m[names.AttrName].(string)] = m
 	}
 	newGsis := make(map[string]interface{})
 	for _, gsidata := range newGsi {
@@ -1417,16 +1417,16 @@ func UpdateDiffGSI(oldGsi, newGsi []interface{}, billingMode string) (ops []*dyn
 		if e = validateGSIProvisionedThroughput(m, billingMode); e != nil {
 			return
 		}
-		newGsis[m["name"].(string)] = m
+		newGsis[m[names.AttrName].(string)] = m
 	}
 
 	for _, data := range newGsi {
 		newMap := data.(map[string]interface{})
-		newName := newMap["name"].(string)
+		newName := newMap[names.AttrName].(string)
 
 		if _, exists := oldGsis[newName]; !exists {
 			m := data.(map[string]interface{})
-			idxName := m["name"].(string)
+			idxName := m[names.AttrName].(string)
 
 			ops = append(ops, &dynamodb.GlobalSecondaryIndexUpdate{
 				Create: &dynamodb.CreateGlobalSecondaryIndexAction{
@@ -1441,12 +1441,12 @@ func UpdateDiffGSI(oldGsi, newGsi []interface{}, billingMode string) (ops []*dyn
 
 	for _, data := range oldGsi {
 		oldMap := data.(map[string]interface{})
-		oldName := oldMap["name"].(string)
+		oldName := oldMap[names.AttrName].(string)
 
 		newData, exists := newGsis[oldName]
 		if exists {
 			newMap := newData.(map[string]interface{})
-			idxName := newMap["name"].(string)
+			idxName := newMap[names.AttrName].(string)
 
 			oldWriteCapacity, oldReadCapacity := oldMap["write_capacity"].(int), oldMap["read_capacity"].(int)
 			newWriteCapacity, newReadCapacity := newMap["write_capacity"].(int), newMap["read_capacity"].(int)
@@ -1808,8 +1808,8 @@ func flattenTableAttributeDefinitions(definitions []*dynamodb.AttributeDefinitio
 		}
 
 		m := map[string]string{
-			"name": aws.StringValue(d.AttributeName),
-			"type": aws.StringValue(d.AttributeType),
+			names.AttrName: aws.StringValue(d.AttributeName),
+			"type":         aws.StringValue(d.AttributeType),
 		}
 
 		attributes = append(attributes, m)
@@ -1831,7 +1831,7 @@ func flattenTableLocalSecondaryIndex(lsi []*dynamodb.LocalSecondaryIndexDescript
 		}
 
 		m := map[string]interface{}{
-			"name": aws.StringValue(l.IndexName),
+			names.AttrName: aws.StringValue(l.IndexName),
 		}
 
 		if l.Projection != nil {
@@ -1871,7 +1871,7 @@ func flattenTableGlobalSecondaryIndex(gsi []*dynamodb.GlobalSecondaryIndexDescri
 		if g.ProvisionedThroughput != nil {
 			gsi["write_capacity"] = aws.Int64Value(g.ProvisionedThroughput.WriteCapacityUnits)
 			gsi["read_capacity"] = aws.Int64Value(g.ProvisionedThroughput.ReadCapacityUnits)
-			gsi["name"] = aws.StringValue(g.IndexName)
+			gsi[names.AttrName] = aws.StringValue(g.IndexName)
 		}
 
 		for _, attribute := range g.KeySchema {
@@ -1917,7 +1917,7 @@ func expandAttributes(cfg []interface{}) []*dynamodb.AttributeDefinition {
 	for i, attribute := range cfg {
 		attr := attribute.(map[string]interface{})
 		attributes[i] = &dynamodb.AttributeDefinition{
-			AttributeName: aws.String(attr["name"].(string)),
+			AttributeName: aws.String(attr[names.AttrName].(string)),
 			AttributeType: aws.String(attr["type"].(string)),
 		}
 	}
@@ -2003,7 +2003,7 @@ func expandLocalSecondaryIndexes(cfg []interface{}, keySchemaM map[string]interf
 	indexes := make([]*dynamodb.LocalSecondaryIndex, len(cfg))
 	for i, lsi := range cfg {
 		m := lsi.(map[string]interface{})
-		idxName := m["name"].(string)
+		idxName := m[names.AttrName].(string)
 
 		// TODO: See https://github.com/hashicorp/terraform-provider-aws/issues/3176
 		if _, ok := m["hash_key"]; !ok {
@@ -2021,7 +2021,7 @@ func expandLocalSecondaryIndexes(cfg []interface{}, keySchemaM map[string]interf
 
 func expandGlobalSecondaryIndex(data map[string]interface{}, billingMode string) *dynamodb.GlobalSecondaryIndex {
 	return &dynamodb.GlobalSecondaryIndex{
-		IndexName:             aws.String(data["name"].(string)),
+		IndexName:             aws.String(data[names.AttrName].(string)),
 		KeySchema:             expandKeySchema(data),
 		Projection:            expandProjection(data),
 		ProvisionedThroughput: expandProvisionedThroughput(data, billingMode),
@@ -2148,7 +2148,7 @@ func validateTableAttributes(d *schema.ResourceDiff) error {
 	unindexedAttributes := []string{}
 	for _, attr := range attributes {
 		attribute := attr.(map[string]interface{})
-		attrName := attribute["name"].(string)
+		attrName := attribute[names.AttrName].(string)
 
 		if _, ok := indexedAttributes[attrName]; !ok {
 			unindexedAttributes = append(unindexedAttributes, attrName)

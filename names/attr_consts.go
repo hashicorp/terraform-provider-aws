@@ -1,5 +1,8 @@
 package names
 
 const (
-	AttrARN = "arn"
+	AttrARN     = "arn"
+	AttrName    = "name"
+	AttrTags    = "tags"
+	AttrTagsAll = "tags_all"
 )
