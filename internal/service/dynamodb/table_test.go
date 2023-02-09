@@ -340,7 +340,7 @@ func TestAccDynamoDBTable_basic(t *testing.T) {
 				Config: testAccTableConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "dynamodb", fmt.Sprintf("table/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "dynamodb", fmt.Sprintf("table/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "read_capacity", "1"),
 					resource.TestCheckResourceAttr(resourceName, "write_capacity", "1"),
@@ -1483,7 +1483,7 @@ func TestAccDynamoDBTable_encryption(t *testing.T) {
 					testAccCheckInitialTableExists(ctx, resourceName, &confBYOK),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "server_side_encryption.0.kms_key_arn", kmsKeyResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "server_side_encryption.0.kms_key_arn", kmsKeyResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -1587,9 +1587,9 @@ func TestAccDynamoDBTable_Replica_single(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "dynamodb", fmt.Sprintf("table/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "dynamodb", fmt.Sprintf("table/%s", rName)),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]*regexp.Regexp{
-						"arn": regexp.MustCompile(fmt.Sprintf(`:dynamodb:%s:`, acctest.AlternateRegion())),
+						names.AttrARN: regexp.MustCompile(fmt.Sprintf(`:dynamodb:%s:`, acctest.AlternateRegion())),
 					}),
 				),
 			},
@@ -1645,9 +1645,9 @@ func TestAccDynamoDBTable_Replica_singleStreamSpecification(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "dynamodb", fmt.Sprintf("table/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "dynamodb", fmt.Sprintf("table/%s", rName)),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]*regexp.Regexp{
-						"arn":          regexp.MustCompile(fmt.Sprintf(`:dynamodb:%s:.*table/%s`, acctest.AlternateRegion(), rName)),
+						names.AttrARN:  regexp.MustCompile(fmt.Sprintf(`:dynamodb:%s:.*table/%s`, acctest.AlternateRegion(), rName)),
 						"stream_arn":   regexp.MustCompile(fmt.Sprintf(`:dynamodb:%s:.*table/%s/stream`, acctest.AlternateRegion(), rName)),
 						"stream_label": regexp.MustCompile(`[0-9]+.*:[0-9]+`),
 					}),
@@ -1726,9 +1726,9 @@ func TestAccDynamoDBTable_Replica_singleCMK(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "replica.0.kms_key_arn", kmsKeyReplicaResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "replica.0.kms_key_arn", kmsKeyReplicaResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "server_side_encryption.0.kms_key_arn", kmsKeyResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "server_side_encryption.0.kms_key_arn", kmsKeyResourceName, names.AttrARN),
 				),
 			},
 		},
@@ -1772,9 +1772,9 @@ func TestAccDynamoDBTable_Replica_singleAddCMK(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "replica.0.kms_key_arn", kmsKeyReplicaResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "replica.0.kms_key_arn", kmsKeyReplicaResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "server_side_encryption.0.kms_key_arn", kmsKeyResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "server_side_encryption.0.kms_key_arn", kmsKeyResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -1782,9 +1782,9 @@ func TestAccDynamoDBTable_Replica_singleAddCMK(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "replica.0.kms_key_arn", kmsKeyReplica2ResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "replica.0.kms_key_arn", kmsKeyReplica2ResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "server_side_encryption.0.kms_key_arn", kmsKeyResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "server_side_encryption.0.kms_key_arn", kmsKeyResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -2319,7 +2319,7 @@ func TestAccDynamoDBTable_backupEncryption(t *testing.T) {
 					testAccCheckInitialTableExists(ctx, resourceName, &confBYOK),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "server_side_encryption.0.kms_key_arn", kmsKeyResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "server_side_encryption.0.kms_key_arn", kmsKeyResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -2359,7 +2359,7 @@ func TestAccDynamoDBTable_backup_overrideEncryption(t *testing.T) {
 					testAccCheckInitialTableExists(ctx, resourceName, &confBYOK),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "server_side_encryption.0.kms_key_arn", kmsKeyResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "server_side_encryption.0.kms_key_arn", kmsKeyResourceName, names.AttrARN),
 				),
 			},
 			{
@@ -2495,7 +2495,7 @@ func testAccCheckReplicaHasTags(ctx context.Context, n string, region string, co
 			conn = dynamodb.New(session)
 		}
 
-		newARN, err := tfdynamodb.ARNForNewRegion(rs.Primary.Attributes["arn"], region)
+		newARN, err := tfdynamodb.ARNForNewRegion(rs.Primary.Attributes[names.AttrARN], region)
 
 		if err != nil {
 			return create.Error(names.DynamoDB, create.ErrActionChecking, tfdynamodb.ResNameTable, rs.Primary.ID, err)
@@ -2504,11 +2504,11 @@ func testAccCheckReplicaHasTags(ctx context.Context, n string, region string, co
 		tags, err := tfdynamodb.ListTags(ctx, conn, newARN)
 
 		if err != nil && !tfawserr.ErrMessageContains(err, "UnknownOperationException", "Tagging is not currently supported in DynamoDB Local.") {
-			return create.Error(names.DynamoDB, create.ErrActionChecking, tfdynamodb.ResNameTable, rs.Primary.Attributes["arn"], err)
+			return create.Error(names.DynamoDB, create.ErrActionChecking, tfdynamodb.ResNameTable, rs.Primary.Attributes[names.AttrARN], err)
 		}
 
 		if len(tags.Keys()) != count {
-			return create.Error(names.DynamoDB, create.ErrActionChecking, tfdynamodb.ResNameTable, rs.Primary.Attributes["arn"], fmt.Errorf("expected %d tags on replica, found %d", count, len(tags.Keys())))
+			return create.Error(names.DynamoDB, create.ErrActionChecking, tfdynamodb.ResNameTable, rs.Primary.Attributes[names.AttrARN], fmt.Errorf("expected %d tags on replica, found %d", count, len(tags.Keys())))
 		}
 
 		return nil
