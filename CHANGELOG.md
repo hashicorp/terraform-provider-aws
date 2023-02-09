@@ -13,6 +13,12 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* data-source/aws_cloudtrail_service_account: Add service account ID for `ap-southeast-4` AWS Region ([#29103](https://github.com/hashicorp/terraform-provider-aws/issues/29103))
+* data-source/aws_elb_hosted_zone_id: Add hosted zone ID for `ap-southeast-4` AWS Region ([#29103](https://github.com/hashicorp/terraform-provider-aws/issues/29103))
+* data-source/aws_lb_hosted_zone_id: Add hosted zone IDs for `ap-southeast-4` AWS Region ([#29103](https://github.com/hashicorp/terraform-provider-aws/issues/29103))
+* data-source/aws_s3_bucket: Add hosted zone ID for `ap-south-2` AWS Region ([#29103](https://github.com/hashicorp/terraform-provider-aws/issues/29103))
+* data-source/aws_s3_bucket: Add hosted zone ID for `ap-southeast-4` AWS Region ([#29103](https://github.com/hashicorp/terraform-provider-aws/issues/29103))
+* provider: Support `ap-southeast-4` as a valid AWS region ([#29329](https://github.com/hashicorp/terraform-provider-aws/issues/29329))
 * resource/aws_dynamodb_table: Add `arn`, `stream_arn`, and `stream_label` attributes to `replica` to obtain this information for replicas ([#29269](https://github.com/hashicorp/terraform-provider-aws/issues/29269))
 * resource/aws_efs_mount_target: Add configurable timeouts for Create and Delete ([#27991](https://github.com/hashicorp/terraform-provider-aws/issues/27991))
 * resource/aws_lambda_function: Add `replace_security_groups_on_destroy` and `replacement_security_group_ids` attributes ([#29289](https://github.com/hashicorp/terraform-provider-aws/issues/29289))
