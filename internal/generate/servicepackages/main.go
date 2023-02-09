@@ -145,8 +145,8 @@ var spsTmpl string
 var (
 	frameworkDataSourceAnnotation = regexp.MustCompile(`^//\s*@FrameworkDataSource\s*$`)
 	frameworkResourceAnnotation   = regexp.MustCompile(`^//\s*@FrameworkResource\s*$`)
-	sdkDataSourceAnnotation       = regexp.MustCompile(`^//\s*@SDKDataSource\("([a-z0-9_]+)"\)\s*$`)
-	sdkResourceAnnotation         = regexp.MustCompile(`^//\s*@SDKResource\("([a-z0-9_]+)"\)\s*$`)
+	sdkDataSourceAnnotation       = regexp.MustCompile(`^//\s*@SDKDataSource\(\s*"([a-z0-9_]+)"\s*\)\s*$`)
+	sdkResourceAnnotation         = regexp.MustCompile(`^//\s*@SDKResource\(\s*"([a-z0-9_]+)"\s*\)\s*$`)
 )
 
 type visitor struct {
