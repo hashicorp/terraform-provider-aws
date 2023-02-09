@@ -3914,18 +3914,6 @@ resource "aws_elasticache_replication_group" "test" {
 `, rName, ipDiscovery, networkType))
 }
 
-// func testAccReplicationGroupConfig_networkTypeDualStack(rName string) string {
-// 	return fmt.Sprintf(`
-// resource "aws_elasticache_replication_group" "test" {
-//   replication_group_id          = %[1]q
-//   replication_group_description = "test description"
-//   node_type                     = "cache.t3.small"
-//   ip_discovery                  = "ipv6"
-//   network_type                  = "dual_stack"
-// }
-// `, rName)
-// }
-
 func resourceReplicationGroupDisableAutomaticFailover(conn *elasticache.ElastiCache, replicationGroupID string, timeout time.Duration) error {
 	return resourceReplicationGroupModify(conn, timeout, &elasticache.ModifyReplicationGroupInput{
 		ReplicationGroupId:       aws.String(replicationGroupID),
