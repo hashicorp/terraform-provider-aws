@@ -1621,6 +1621,42 @@ func TestAccDynamoDBTable_Replica_single(t *testing.T) {
 	})
 }
 
+func TestAccDynamoDBTable_Replica_singleStreamSpecification(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var conf dynamodb.TableDescription
+	resourceName := "aws_dynamodb_table.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 3), // 3 due to shared test configuration
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_replicaStreamSpecification(rName, true, "KEYS_ONLY"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "dynamodb", fmt.Sprintf("table/%s", rName)),
+					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]*regexp.Regexp{
+						"arn":          regexp.MustCompile(fmt.Sprintf(`:dynamodb:%s:.*table/%s`, acctest.AlternateRegion(), rName)),
+						"stream_arn":   regexp.MustCompile(fmt.Sprintf(`:dynamodb:%s:.*table/%s/stream`, acctest.AlternateRegion(), rName)),
+						"stream_label": regexp.MustCompile(`[0-9]+.*:[0-9]+`),
+					}),
+				),
+			},
+		},
+	})
+}
+
 func TestAccDynamoDBTable_Replica_singleDefaultKeyEncrypted(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -3994,6 +4030,37 @@ resource "aws_dynamodb_table" "test" {
   }
 }
 `, rName, region1, region2))
+}
+
+func testAccTableConfig_replicaStreamSpecification(rName string, streamEnabled bool, viewType string) string {
+	if viewType != "null" {
+		viewType = fmt.Sprintf(`"%s"`, viewType)
+	}
+	return acctest.ConfigCompose(
+		acctest.ConfigMultipleRegionProvider(3),
+		fmt.Sprintf(`
+data "aws_region" "alternate" {
+  provider = "awsalternate"
+}
+
+resource "aws_dynamodb_table" "test" {
+  name           = %[1]q
+  hash_key       = "TestTableHashKey"
+  billing_mode   = "PAY_PER_REQUEST"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  replica {
+    region_name    = data.aws_region.alternate.name
+  }
+
+  stream_enabled   = %[2]t
+  stream_view_type = %[3]s
+}
+`, rName, streamEnabled, viewType))
 }
 
 func testAccTableConfig_lsi(rName, lsiName string) string {
