@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -330,11 +329,10 @@ func deleteParameterGroup(ctx context.Context, conn *elasticache.ElastiCache, na
 	err := resource.RetryContext(ctx, 3*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteCacheParameterGroupWithContext(ctx, &deleteOpts)
 		if err != nil {
-			awsErr, ok := err.(awserr.Error)
-			if ok && awsErr.Code() == "CacheParameterGroupNotFoundFault" {
+			if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeCacheParameterGroupNotFoundFault) {
 				return nil
 			}
-			if ok && awsErr.Code() == "InvalidCacheParameterGroupState" {
+			if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeInvalidCacheParameterGroupStateFault) {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)

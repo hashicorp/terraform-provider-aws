@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -14,12 +12,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfapigateway "github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccAPIGatewayIntegrationResponse_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf apigateway.IntegrationResponse
-	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(10))
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_integration_response.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -30,29 +29,16 @@ func TestAccAPIGatewayIntegrationResponse_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIntegrationResponseConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIntegrationResponseExists(ctx, resourceName, &conf),
-					testAccCheckIntegrationResponseAttributes(&conf),
-					resource.TestCheckResourceAttr(
-						resourceName, "response_templates.application/json", ""),
-					resource.TestCheckResourceAttr(
-						resourceName, "response_templates.application/xml", "#set($inputRoot = $input.path('$'))\n{ }"),
-					resource.TestCheckResourceAttr(
-						resourceName, "content_handling", ""),
-				),
-			},
-
-			{
-				Config: testAccIntegrationResponseConfig_update(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntegrationResponseExists(ctx, resourceName, &conf),
-					testAccCheckIntegrationResponseAttributesUpdate(&conf),
-					resource.TestCheckResourceAttr(
-						resourceName, "response_templates.application/json", "$input.path('$')"),
-					resource.TestCheckResourceAttr(
-						resourceName, "response_templates.application/xml", ""),
-					resource.TestCheckResourceAttr(
-						resourceName, "content_handling", "CONVERT_TO_BINARY"),
+					resource.TestCheckResourceAttr(resourceName, "content_handling", ""),
+					resource.TestCheckResourceAttr(resourceName, "response_parameters.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "response_parameters.method.response.header.Content-Type", "integration.response.body.type"),
+					resource.TestCheckResourceAttr(resourceName, "response_templates.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "response_templates.application/json", ""),
+					resource.TestCheckResourceAttr(resourceName, "response_templates.application/xml", "#set($inputRoot = $input.path('$'))\n{ }"),
+					resource.TestCheckResourceAttr(resourceName, "selection_pattern", ".*"),
+					resource.TestCheckResourceAttr(resourceName, "status_code", "400"),
 				),
 			},
 			{
@@ -61,6 +47,19 @@ func TestAccAPIGatewayIntegrationResponse_basic(t *testing.T) {
 				ImportStateIdFunc: testAccIntegrationResponseImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
+			{
+				Config: testAccIntegrationResponseConfig_update(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckIntegrationResponseExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "content_handling", "CONVERT_TO_BINARY"),
+					resource.TestCheckResourceAttr(resourceName, "response_parameters.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "response_templates.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "response_templates.application/json", "$input.path('$')"),
+					resource.TestCheckResourceAttr(resourceName, "response_templates.application/xml", ""),
+					resource.TestCheckResourceAttr(resourceName, "selection_pattern", ""),
+					resource.TestCheckResourceAttr(resourceName, "status_code", "400"),
+				),
+			},
 		},
 	})
 }
@@ -68,7 +67,7 @@ func TestAccAPIGatewayIntegrationResponse_basic(t *testing.T) {
 func TestAccAPIGatewayIntegrationResponse_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf apigateway.IntegrationResponse
-	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(10))
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_integration_response.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -89,50 +88,7 @@ func TestAccAPIGatewayIntegrationResponse_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckIntegrationResponseAttributes(conf *apigateway.IntegrationResponse) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if *conf.StatusCode != "400" {
-			return fmt.Errorf("wrong StatusCode: %q", *conf.StatusCode)
-		}
-		if conf.ResponseTemplates["application/json"] != nil {
-			return fmt.Errorf("wrong ResponseTemplate for application/json")
-		}
-		if *conf.ResponseTemplates["application/xml"] != "#set($inputRoot = $input.path('$'))\n{ }" {
-			return fmt.Errorf("wrong ResponseTemplate for application/xml")
-		}
-		if conf.SelectionPattern == nil || *conf.SelectionPattern != ".*" {
-			return fmt.Errorf("wrong SelectionPattern (expected .*)")
-		}
-		if *conf.ResponseParameters["method.response.header.Content-Type"] != "integration.response.body.type" {
-			return fmt.Errorf("wrong ResponseParameters for header.Content-Type")
-		}
-		return nil
-	}
-}
-
-func testAccCheckIntegrationResponseAttributesUpdate(conf *apigateway.IntegrationResponse) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if *conf.StatusCode != "400" {
-			return fmt.Errorf("wrong StatusCode: %q", *conf.StatusCode)
-		}
-		if *conf.ResponseTemplates["application/json"] != "$input.path('$')" {
-			return fmt.Errorf("wrong ResponseTemplate for application/json")
-		}
-		if conf.ResponseTemplates["application/xml"] != nil {
-			return fmt.Errorf("wrong ResponseTemplate for application/xml")
-		}
-		if conf.SelectionPattern != nil {
-			return fmt.Errorf("wrong SelectionPattern (expected nil)")
-		}
-		if conf.ResponseParameters["method.response.header.Content-Type"] != nil {
-			return fmt.Errorf("ResponseParameters for header.Content-Type shouldnt exist")
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckIntegrationResponseExists(ctx context.Context, n string, res *apigateway.IntegrationResponse) resource.TestCheckFunc {
+func testAccCheckIntegrationResponseExists(ctx context.Context, n string, v *apigateway.IntegrationResponse) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -140,23 +96,18 @@ func testAccCheckIntegrationResponseExists(ctx context.Context, n string, res *a
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No API Gateway Method ID is set")
+			return fmt.Errorf("No API Gateway Integration Response ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
 
-		req := &apigateway.GetIntegrationResponseInput{
-			HttpMethod: aws.String("GET"),
-			ResourceId: aws.String(s.RootModule().Resources["aws_api_gateway_resource.test"].Primary.ID),
-			RestApiId:  aws.String(s.RootModule().Resources["aws_api_gateway_rest_api.test"].Primary.ID),
-			StatusCode: aws.String(rs.Primary.Attributes["status_code"]),
-		}
-		describe, err := conn.GetIntegrationResponseWithContext(ctx, req)
+		output, err := tfapigateway.FindIntegrationResponseByFourPartKey(ctx, conn, rs.Primary.Attributes["http_method"], rs.Primary.Attributes["resource_id"], rs.Primary.Attributes["rest_api_id"], rs.Primary.Attributes["status_code"])
+
 		if err != nil {
 			return err
 		}
 
-		*res = *describe
+		*v = *output
 
 		return nil
 	}
@@ -171,27 +122,17 @@ func testAccCheckIntegrationResponseDestroy(ctx context.Context) resource.TestCh
 				continue
 			}
 
-			req := &apigateway.GetIntegrationResponseInput{
-				HttpMethod: aws.String("GET"),
-				ResourceId: aws.String(s.RootModule().Resources["aws_api_gateway_resource.test"].Primary.ID),
-				RestApiId:  aws.String(s.RootModule().Resources["aws_api_gateway_rest_api.test"].Primary.ID),
-				StatusCode: aws.String(rs.Primary.Attributes["status_code"]),
-			}
-			_, err := conn.GetIntegrationResponseWithContext(ctx, req)
+			_, err := tfapigateway.FindIntegrationResponseByFourPartKey(ctx, conn, rs.Primary.Attributes["http_method"], rs.Primary.Attributes["resource_id"], rs.Primary.Attributes["rest_api_id"], rs.Primary.Attributes["status_code"])
 
-			if err == nil {
-				return fmt.Errorf("API Gateway Method still exists")
+			if tfresource.NotFound(err) {
+				continue
 			}
 
-			aws2err, ok := err.(awserr.Error)
-			if !ok {
-				return err
-			}
-			if aws2err.Code() != "NotFoundException" {
+			if err != nil {
 				return err
 			}
 
-			return nil
+			return fmt.Errorf("API Gateway Integration Response %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -212,7 +153,7 @@ func testAccIntegrationResponseImportStateIdFunc(resourceName string) resource.I
 func testAccIntegrationResponseConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
-  name = "%s"
+  name = %[1]q
 }
 
 resource "aws_api_gateway_resource" "test" {
@@ -282,7 +223,7 @@ resource "aws_api_gateway_integration_response" "test" {
 func testAccIntegrationResponseConfig_update(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
-  name = "%s"
+  name = %[1]q
 }
 
 resource "aws_api_gateway_resource" "test" {
