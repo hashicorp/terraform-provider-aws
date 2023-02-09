@@ -2,6 +2,7 @@
 
 NOTES:
 
+* provider: Resolves provider crashes reporting `Error: Plugin did not respond` and `fatal error: concurrent map writes` with updated upstream package (`terraform-plugin-log`) ([#29269](https://github.com/hashicorp/terraform-provider-aws/issues/29269))
 * resource/aws_networkmanager_core_network: The `policy_document` attribute is being deprecated in favor of the new `aws_networkmanager_core_network_policy_attachment` resource. ([#29097](https://github.com/hashicorp/terraform-provider-aws/issues/29097))
 
 FEATURES:
