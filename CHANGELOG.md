@@ -15,6 +15,7 @@ ENHANCEMENTS:
 
 * resource/aws_dynamodb_table: Add `arn`, `stream_arn`, and `stream_label` attributes to `replica` to obtain this information for replicas ([#29269](https://github.com/hashicorp/terraform-provider-aws/issues/29269))
 * resource/aws_efs_mount_target: Add configurable timeouts for Create and Delete ([#27991](https://github.com/hashicorp/terraform-provider-aws/issues/27991))
+* resource/aws_lambda_function: Add `replace_security_groups_on_destroy` and `replacement_security_group_ids` attributes ([#29289](https://github.com/hashicorp/terraform-provider-aws/issues/29289))
 * resource/aws_networkfirewall_firewall: Add `ip_address_type` attribute to the `subnet_mapping` configuration block ([#29010](https://github.com/hashicorp/terraform-provider-aws/issues/29010))
 * resource/aws_networkmanager_core_network: Add `base_policy_region` and `create_base_policy` arguments ([#29097](https://github.com/hashicorp/terraform-provider-aws/issues/29097))
 
