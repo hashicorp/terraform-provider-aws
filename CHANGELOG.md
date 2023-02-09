@@ -13,6 +13,7 @@ FEATURES:
 ENHANCEMENTS:
 
 * resource/aws_dynamodb_table: Add `arn`, `stream_arn`, and `stream_label` attributes to `replica` to obtain this information for replicas ([#29269](https://github.com/hashicorp/terraform-provider-aws/issues/29269))
+* resource/aws_efs_mount_target: Add configurable timeouts for Create and Delete ([#27991](https://github.com/hashicorp/terraform-provider-aws/issues/27991))
 * resource/aws_networkfirewall_firewall: Add `ip_address_type` attribute to the `subnet_mapping` configuration block ([#29010](https://github.com/hashicorp/terraform-provider-aws/issues/29010))
 * resource/aws_networkmanager_core_network: Add `base_policy_region` and `create_base_policy` arguments ([#29097](https://github.com/hashicorp/terraform-provider-aws/issues/29097))
 
@@ -22,6 +23,7 @@ BUG FIXES:
 * resource/aws_dynamodb_table: Avoid recreating table replicas when enabling PITR on them ([#29269](https://github.com/hashicorp/terraform-provider-aws/issues/29269))
 * resource/aws_ec2_client_vpn_endpoint: Change `authentication_options` from `TypeList` to `TypeSet` as order is not significant ([#29294](https://github.com/hashicorp/terraform-provider-aws/issues/29294))
 * resource/aws_kms_grant: Retries until valid principal ARNs are returned instead of not updating state ([#29245](https://github.com/hashicorp/terraform-provider-aws/issues/29245))
+* resource/aws_opsworks_permission: `stack_id` and `user_arn` are both Required and ForceNew ([#27991](https://github.com/hashicorp/terraform-provider-aws/issues/27991))
 * resource/aws_prometheus_workspace: Create a logging configuration on resource update if none existed previously ([#27472](https://github.com/hashicorp/terraform-provider-aws/issues/27472))
 * resource/aws_s3_bucket: Fix crash when `logging` is empty ([#29243](https://github.com/hashicorp/terraform-provider-aws/issues/29243))
 * resource/aws_sns_topic: Fixes potential race condition when reading policy document. ([#29226](https://github.com/hashicorp/terraform-provider-aws/issues/29226))
