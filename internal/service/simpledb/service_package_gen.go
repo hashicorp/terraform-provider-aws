@@ -35,7 +35,4 @@ func (p *servicePackage) ServicePackageName() string {
 	return "simpledb"
 }
 
-var (
-	_sp                                = &servicePackage{}
-	ServicePackage intf.ServicePackage = _sp
-)
+var ServicePackage intf.ServicePackage = &servicePackage{}

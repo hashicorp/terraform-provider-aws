@@ -18,7 +18,9 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []func(contex
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.Context) (resource.ResourceWithConfigure, error) {
-	return []func(context.Context) (resource.ResourceWithConfigure, error){}
+	return []func(context.Context) (resource.ResourceWithConfigure, error){
+		newResourceExportTask,
+	}
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
@@ -33,7 +35,4 @@ func (p *servicePackage) ServicePackageName() string {
 	return "rds"
 }
 
-var (
-	_sp                                = &servicePackage{}
-	ServicePackage intf.ServicePackage = _sp
-)
+var ServicePackage intf.ServicePackage = &servicePackage{}

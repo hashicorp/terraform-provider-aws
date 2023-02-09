@@ -33,7 +33,4 @@ func (p *servicePackage) ServicePackageName() string {
 	return "cognitoidentity"
 }
 
-var (
-	_sp                                = &servicePackage{}
-	ServicePackage intf.ServicePackage = _sp
-)
+var ServicePackage intf.ServicePackage = &servicePackage{}

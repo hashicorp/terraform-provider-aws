@@ -20,6 +20,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []func(contex
 func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.Context) (resource.ResourceWithConfigure, error) {
 	return []func(context.Context) (resource.ResourceWithConfigure, error){
 		newResourceIndex,
+		newResourceView,
 	}
 }
 
@@ -35,7 +36,4 @@ func (p *servicePackage) ServicePackageName() string {
 	return "resourceexplorer2"
 }
 
-var (
-	_sp                                = &servicePackage{}
-	ServicePackage intf.ServicePackage = _sp
-)
+var ServicePackage intf.ServicePackage = &servicePackage{}
