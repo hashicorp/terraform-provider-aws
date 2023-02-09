@@ -82,7 +82,7 @@ func TestAccElastiCacheReplicationGroup_networkTypeIPv6(t *testing.T) {
 		CheckDestroy:             testAccCheckReplicationGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationGroupConfig_networkTypeIPv6(rName),
+				Config: testAccReplicationGroupConfig_ipDiscovery(rName, "ipv6", "ipv6"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
@@ -122,7 +122,7 @@ func TestAccElastiCacheReplicationGroup_networkTypeDualStack(t *testing.T) {
 		CheckDestroy:             testAccCheckReplicationGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationGroupConfig_networkTypeDualStack(rName),
+				Config: testAccReplicationGroupConfig_ipDiscovery(rName, "ipv6", "dual_stack"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "engine", "redis"),
@@ -3876,13 +3876,13 @@ data "aws_elasticache_replication_group" "test" {
 `, rName, enableClusterMode, slowLogDeliveryEnabled, slowDeliveryDestination, slowDeliveryFormat, engineLogDeliveryEnabled, engineDeliveryDestination, engineLogDeliveryFormat)
 }
 
-func testAccReplicationGroupConfig_networkTypeIPv6(rName string) string {
+func testAccReplicationGroupConfig_ipDiscovery(rName, ipDiscovery, networkType string) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnetsIPv6(rName, 1), fmt.Sprintf(`
 resource "aws_elasticache_subnet_group" "test" {
   name        = %[1]q
   description = %[1]q
   subnet_ids  = aws_subnet.test[*].id
-}
+ }
 
 resource "aws_security_group" "test" {
   name        = %[1]q
@@ -3902,51 +3902,29 @@ resource "aws_security_group" "test" {
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id          = %[1]q
   replication_group_description = "test description"
+  engine                        = "redis"
+  engine_version                = "6.2"
   node_type                     = "cache.t3.small"
-  ip_discovery                  = "ipv6"
-  network_type                  = "ipv6"
+  ip_discovery                  = %[2]q
+  network_type                  = %[3]q
 
   subnet_group_name  = aws_elasticache_subnet_group.test.name
   security_group_ids = [aws_security_group.test.id]
 }
-`, rName)
+`, rName, ipDiscovery, networkType))
 }
 
-func testAccReplicationGroupConfig_networkTypeDualStack(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnetsIPv6(rName, 1), fmt.Sprintf(`
-resource "aws_elasticache_subnet_group" "test" {
-  name        = %[1]q
-  description = %[1]q
-  subnet_ids  = aws_subnet.test[*].id
-}
-
-resource "aws_security_group" "test" {
-  name        = %[1]q
-  description = %[1]q
-  vpc_id      = aws_vpc.test.id
-  ingress {
-    from_port   = -1
-    to_port     = -1
-    protocol    = "icmp"
-    cidr_blocks = ["0.0.0.0/0"]
-    }
-    tags = {
-    Name = %[1]q
-    }
-}
-
-resource "aws_elasticache_replication_group" "test" {
-  replication_group_id          = %[1]q
-  replication_group_description = "test description"
-  node_type                     = "cache.t3.small"
-  ip_discovery                  = "ipv6"
-  network_type                  = "dual_stack"
-
-  subnet_group_name  = aws_elasticache_subnet_group.test.name
-  security_group_ids = [aws_security_group.test.id]
-}
-`, rName)
-}
+// func testAccReplicationGroupConfig_networkTypeDualStack(rName string) string {
+// 	return fmt.Sprintf(`
+// resource "aws_elasticache_replication_group" "test" {
+//   replication_group_id          = %[1]q
+//   replication_group_description = "test description"
+//   node_type                     = "cache.t3.small"
+//   ip_discovery                  = "ipv6"
+//   network_type                  = "dual_stack"
+// }
+// `, rName)
+// }
 
 func resourceReplicationGroupDisableAutomaticFailover(conn *elasticache.ElastiCache, replicationGroupID string, timeout time.Duration) error {
 	return resourceReplicationGroupModify(conn, timeout, &elasticache.ModifyReplicationGroupInput{
