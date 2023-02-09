@@ -1,26 +1,29 @@
 package efs
 
 import (
+	"context"
 	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/efs"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourceBackupPolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceBackupPolicyCreate,
-		Read:   resourceBackupPolicyRead,
-		Update: resourceBackupPolicyUpdate,
-		Delete: resourceBackupPolicyDelete,
+		CreateWithoutTimeout: resourceBackupPolicyCreate,
+		ReadWithoutTimeout:   resourceBackupPolicyRead,
+		UpdateWithoutTimeout: resourceBackupPolicyUpdate,
+		DeleteWithoutTimeout: resourceBackupPolicyDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -51,93 +54,97 @@ func ResourceBackupPolicy() *schema.Resource {
 	}
 }
 
-func resourceBackupPolicyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EFSConn
+func resourceBackupPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EFSConn()
 
 	fsID := d.Get("file_system_id").(string)
 
-	if err := backupPolicyPut(conn, fsID, d.Get("backup_policy").([]interface{})[0].(map[string]interface{})); err != nil {
-		return err
+	if err := backupPolicyPut(ctx, conn, fsID, d.Get("backup_policy").([]interface{})[0].(map[string]interface{})); err != nil {
+		return sdkdiag.AppendErrorf(diags, "creating EFS Backup Policy (%s): %s", fsID, err)
 	}
 
 	d.SetId(fsID)
 
-	return resourceBackupPolicyRead(d, meta)
+	return append(diags, resourceBackupPolicyRead(ctx, d, meta)...)
 }
 
-func resourceBackupPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EFSConn
+func resourceBackupPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EFSConn()
 
-	output, err := FindBackupPolicyByID(conn, d.Id())
+	output, err := FindBackupPolicyByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EFS Backup Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading EFS Backup Policy (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading EFS Backup Policy (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("backup_policy", []interface{}{flattenBackupPolicy(output)}); err != nil {
-		return fmt.Errorf("error setting backup_policy: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting backup_policy: %s", err)
 	}
 
 	d.Set("file_system_id", d.Id())
 
-	return nil
+	return diags
 }
 
-func resourceBackupPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EFSConn
+func resourceBackupPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EFSConn()
 
-	if err := backupPolicyPut(conn, d.Id(), d.Get("backup_policy").([]interface{})[0].(map[string]interface{})); err != nil {
-		return err
+	if err := backupPolicyPut(ctx, conn, d.Id(), d.Get("backup_policy").([]interface{})[0].(map[string]interface{})); err != nil {
+		return sdkdiag.AppendErrorf(diags, "updating EFS Backup Policy (%s): %s", d.Id(), err)
 	}
 
-	return resourceBackupPolicyRead(d, meta)
+	return append(diags, resourceBackupPolicyRead(ctx, d, meta)...)
 }
 
-func resourceBackupPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EFSConn
+func resourceBackupPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EFSConn()
 
-	err := backupPolicyPut(conn, d.Id(), map[string]interface{}{
+	err := backupPolicyPut(ctx, conn, d.Id(), map[string]interface{}{
 		"status": efs.StatusDisabled,
 	})
 
 	if tfawserr.ErrCodeEquals(err, efs.ErrCodeFileSystemNotFound) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("deleting EFS Backup Policy (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting EFS Backup Policy (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 // backupPolicyPut attempts to update the file system's backup policy.
 // Any error is returned.
-func backupPolicyPut(conn *efs.EFS, fsID string, tfMap map[string]interface{}) error {
+func backupPolicyPut(ctx context.Context, conn *efs.EFS, fsID string, tfMap map[string]interface{}) error {
 	input := &efs.PutBackupPolicyInput{
 		BackupPolicy: expandBackupPolicy(tfMap),
 		FileSystemId: aws.String(fsID),
 	}
 
 	log.Printf("[DEBUG] Putting EFS Backup Policy: %s", input)
-	_, err := conn.PutBackupPolicy(input)
+	_, err := conn.PutBackupPolicyWithContext(ctx, input)
 
 	if err != nil {
 		return fmt.Errorf("error putting EFS Backup Policy (%s): %w", fsID, err)
 	}
 
 	if aws.StringValue(input.BackupPolicy.Status) == efs.StatusEnabled {
-		if _, err := waitBackupPolicyEnabled(conn, fsID); err != nil {
+		if _, err := waitBackupPolicyEnabled(ctx, conn, fsID); err != nil {
 			return fmt.Errorf("error waiting for EFS Backup Policy (%s) to enable: %w", fsID, err)
 		}
 	} else {
-		if _, err := waitBackupPolicyDisabled(conn, fsID); err != nil {
+		if _, err := waitBackupPolicyDisabled(ctx, conn, fsID); err != nil {
 			return fmt.Errorf("error waiting for EFS Backup Policy (%s) to disable: %w", fsID, err)
 		}
 	}

@@ -1,6 +1,7 @@
 package rds_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"strings"
@@ -18,6 +19,7 @@ import (
 )
 
 func TestAccRDSClusterEndpoint_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -32,14 +34,14 @@ func TestAccRDSClusterEndpoint_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterEndpointDestroy,
+		CheckDestroy:             testAccCheckClusterEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterEndpointConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterEndpointExists(readerResourceName, &customReaderEndpoint),
+					testAccCheckClusterEndpointExists(ctx, readerResourceName, &customReaderEndpoint),
 					testAccCheckClusterEndpointAttributes(&customReaderEndpoint),
-					testAccCheckClusterEndpointExists(defaultResourceName, &customEndpoint),
+					testAccCheckClusterEndpointExists(ctx, defaultResourceName, &customEndpoint),
 					testAccCheckClusterEndpointAttributes(&customEndpoint),
 					acctest.MatchResourceAttrRegionalARN(readerResourceName, "arn", "rds", regexp.MustCompile(`cluster-endpoint:.+`)),
 					resource.TestCheckResourceAttrSet(readerResourceName, "endpoint"),
@@ -65,6 +67,7 @@ func TestAccRDSClusterEndpoint_basic(t *testing.T) {
 }
 
 func TestAccRDSClusterEndpoint_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -77,12 +80,12 @@ func TestAccRDSClusterEndpoint_tags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterEndpointDestroy,
+		CheckDestroy:             testAccCheckClusterEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterEndpointConfig_tags1(rInt, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterEndpointExists(resourceName, &customReaderEndpoint),
+					testAccCheckClusterEndpointExists(ctx, resourceName, &customReaderEndpoint),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -95,7 +98,7 @@ func TestAccRDSClusterEndpoint_tags(t *testing.T) {
 			{
 				Config: testAccClusterEndpointConfig_tags2(rInt, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterEndpointExists(resourceName, &customReaderEndpoint),
+					testAccCheckClusterEndpointExists(ctx, resourceName, &customReaderEndpoint),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -104,7 +107,7 @@ func TestAccRDSClusterEndpoint_tags(t *testing.T) {
 			{
 				Config: testAccClusterEndpointConfig_tags1(rInt, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterEndpointExists(resourceName, &customReaderEndpoint),
+					testAccCheckClusterEndpointExists(ctx, resourceName, &customReaderEndpoint),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -144,47 +147,50 @@ func testAccCheckClusterEndpointAttributes(v *rds.DBClusterEndpoint) resource.Te
 	}
 }
 
-func testAccCheckClusterEndpointDestroy(s *terraform.State) error {
-	return testAccCheckClusterEndpointDestroyWithProvider(s, acctest.Provider)
+func testAccCheckClusterEndpointDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		return testAccCheckClusterEndpointDestroyWithProvider(ctx)(s, acctest.Provider)
+	}
 }
 
-func testAccCheckClusterEndpointDestroyWithProvider(s *terraform.State, provider *schema.Provider) error {
-	conn := provider.Meta().(*conns.AWSClient).RDSConn
+func testAccCheckClusterEndpointDestroyWithProvider(ctx context.Context) acctest.TestCheckWithProviderFunc {
+	return func(s *terraform.State, provider *schema.Provider) error {
+		conn := provider.Meta().(*conns.AWSClient).RDSConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_rds_cluster_endpoint" {
-			continue
-		}
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_rds_cluster_endpoint" {
+				continue
+			}
 
-		// Try to find the Group
-		var err error
-		resp, err := conn.DescribeDBClusterEndpoints(
-			&rds.DescribeDBClusterEndpointsInput{
+			// Try to find the Group
+			var err error
+			resp, err := conn.DescribeDBClusterEndpointsWithContext(ctx, &rds.DescribeDBClusterEndpointsInput{
 				DBClusterEndpointIdentifier: aws.String(rs.Primary.ID),
 			})
 
-		if err == nil {
-			if len(resp.DBClusterEndpoints) != 0 &&
-				*resp.DBClusterEndpoints[0].DBClusterEndpointIdentifier == rs.Primary.ID {
-				return fmt.Errorf("DB Cluster Endpoint %s still exists", rs.Primary.ID)
+			if err == nil {
+				if len(resp.DBClusterEndpoints) != 0 &&
+					*resp.DBClusterEndpoints[0].DBClusterEndpointIdentifier == rs.Primary.ID {
+					return fmt.Errorf("DB Cluster Endpoint %s still exists", rs.Primary.ID)
+				}
 			}
+
+			if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBClusterNotFoundFault) {
+				continue
+			}
+
+			return err
 		}
 
-		if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBClusterNotFoundFault) {
-			continue
-		}
-
-		return err
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckClusterEndpointExists(resourceName string, endpoint *rds.DBClusterEndpoint) resource.TestCheckFunc {
-	return testAccCheckClusterEndpointExistsWithProvider(resourceName, endpoint, acctest.Provider)
+func testAccCheckClusterEndpointExists(ctx context.Context, resourceName string, endpoint *rds.DBClusterEndpoint) resource.TestCheckFunc {
+	return testAccCheckClusterEndpointExistsWithProvider(ctx, resourceName, endpoint, acctest.Provider)
 }
 
-func testAccCheckClusterEndpointExistsWithProvider(resourceName string, endpoint *rds.DBClusterEndpoint, provider *schema.Provider) resource.TestCheckFunc {
+func testAccCheckClusterEndpointExistsWithProvider(ctx context.Context, resourceName string, endpoint *rds.DBClusterEndpoint, provider *schema.Provider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -195,9 +201,9 @@ func testAccCheckClusterEndpointExistsWithProvider(resourceName string, endpoint
 			return fmt.Errorf("DBClusterEndpoint ID is not set")
 		}
 
-		conn := provider.Meta().(*conns.AWSClient).RDSConn
+		conn := provider.Meta().(*conns.AWSClient).RDSConn()
 
-		response, err := conn.DescribeDBClusterEndpoints(&rds.DescribeDBClusterEndpointsInput{
+		response, err := conn.DescribeDBClusterEndpointsWithContext(ctx, &rds.DescribeDBClusterEndpointsInput{
 			DBClusterEndpointIdentifier: aws.String(rs.Primary.ID),
 		})
 

@@ -1,6 +1,7 @@
 package organizations_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -14,6 +15,7 @@ import (
 )
 
 func testAccDelegatedAdministrator_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var organization organizations.DelegatedAdministrator
 	resourceName := "aws_organizations_delegated_administrator.test"
 	servicePrincipal := "config-multiaccountsetup.amazonaws.com"
@@ -26,12 +28,12 @@ func testAccDelegatedAdministrator_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
-		CheckDestroy:             testAccCheckDelegatedAdministratorDestroy,
+		CheckDestroy:             testAccCheckDelegatedAdministratorDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDelegatedAdministratorConfig_basic(servicePrincipal),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDelegatedAdministratorExists(resourceName, &organization),
+					testAccCheckDelegatedAdministratorExists(ctx, resourceName, &organization),
 					resource.TestCheckResourceAttrPair(resourceName, "account_id", dataSourceIdentity, "account_id"),
 					resource.TestCheckResourceAttr(resourceName, "service_principal", servicePrincipal),
 					acctest.CheckResourceAttrRFC3339(resourceName, "delegation_enabled_date"),
@@ -48,6 +50,7 @@ func testAccDelegatedAdministrator_basic(t *testing.T) {
 }
 
 func testAccDelegatedAdministrator_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var organization organizations.DelegatedAdministrator
 	resourceName := "aws_organizations_delegated_administrator.test"
 	servicePrincipal := "config-multiaccountsetup.amazonaws.com"
@@ -58,14 +61,14 @@ func testAccDelegatedAdministrator_disappears(t *testing.T) {
 			acctest.PreCheckAlternateAccount(t)
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
-		CheckDestroy:             testAccCheckDelegatedAdministratorDestroy,
+		CheckDestroy:             testAccCheckDelegatedAdministratorDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDelegatedAdministratorConfig_basic(servicePrincipal),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDelegatedAdministratorExists(resourceName, &organization),
-					acctest.CheckResourceDisappears(acctest.Provider, tforganizations.ResourceDelegatedAdministrator(), resourceName),
+					testAccCheckDelegatedAdministratorExists(ctx, resourceName, &organization),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tforganizations.ResourceDelegatedAdministrator(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -73,46 +76,48 @@ func testAccDelegatedAdministrator_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckDelegatedAdministratorDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn
+func testAccCheckDelegatedAdministratorDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_organizations_delegated_administrator" {
-			continue
-		}
-
-		accountID, servicePrincipal, err := tforganizations.DecodeOrganizationDelegatedAdministratorID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-		input := &organizations.ListDelegatedAdministratorsInput{
-			ServicePrincipal: aws.String(servicePrincipal),
-		}
-
-		exists := false
-		err = conn.ListDelegatedAdministratorsPages(input, func(page *organizations.ListDelegatedAdministratorsOutput, lastPage bool) bool {
-			for _, delegated := range page.DelegatedAdministrators {
-				if aws.StringValue(delegated.Id) == accountID {
-					exists = true
-				}
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_organizations_delegated_administrator" {
+				continue
 			}
 
-			return !lastPage
-		})
+			accountID, servicePrincipal, err := tforganizations.DecodeOrganizationDelegatedAdministratorID(rs.Primary.ID)
+			if err != nil {
+				return err
+			}
+			input := &organizations.ListDelegatedAdministratorsInput{
+				ServicePrincipal: aws.String(servicePrincipal),
+			}
 
-		if err != nil {
-			return err
+			exists := false
+			err = conn.ListDelegatedAdministratorsPagesWithContext(ctx, input, func(page *organizations.ListDelegatedAdministratorsOutput, lastPage bool) bool {
+				for _, delegated := range page.DelegatedAdministrators {
+					if aws.StringValue(delegated.Id) == accountID {
+						exists = true
+					}
+				}
+
+				return !lastPage
+			})
+
+			if err != nil {
+				return err
+			}
+
+			if exists {
+				return fmt.Errorf("organization DelegatedAdministrator still exists: %q", rs.Primary.ID)
+			}
 		}
 
-		if exists {
-			return fmt.Errorf("organization DelegatedAdministrator still exists: %q", rs.Primary.ID)
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckDelegatedAdministratorExists(n string, org *organizations.DelegatedAdministrator) resource.TestCheckFunc {
+func testAccCheckDelegatedAdministratorExists(ctx context.Context, n string, org *organizations.DelegatedAdministrator) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -127,14 +132,14 @@ func testAccCheckDelegatedAdministratorExists(n string, org *organizations.Deleg
 		if err != nil {
 			return err
 		}
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn()
 		input := &organizations.ListDelegatedAdministratorsInput{
 			ServicePrincipal: aws.String(servicePrincipal),
 		}
 
 		exists := false
 		var resp *organizations.DelegatedAdministrator
-		err = conn.ListDelegatedAdministratorsPages(input, func(page *organizations.ListDelegatedAdministratorsOutput, lastPage bool) bool {
+		err = conn.ListDelegatedAdministratorsPagesWithContext(ctx, input, func(page *organizations.ListDelegatedAdministratorsOutput, lastPage bool) bool {
 			for _, delegated := range page.DelegatedAdministrators {
 				if aws.StringValue(delegated.Id) == accountID {
 					exists = true

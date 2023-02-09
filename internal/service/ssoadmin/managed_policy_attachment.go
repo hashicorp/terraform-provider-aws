@@ -1,6 +1,7 @@
 package ssoadmin
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -8,18 +9,20 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceManagedPolicyAttachment() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceManagedPolicyAttachmentCreate,
-		Read:   resourceManagedPolicyAttachmentRead,
-		Delete: resourceManagedPolicyAttachmentDelete,
+		CreateWithoutTimeout: resourceManagedPolicyAttachmentCreate,
+		ReadWithoutTimeout:   resourceManagedPolicyAttachmentRead,
+		DeleteWithoutTimeout: resourceManagedPolicyAttachmentDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"instance_arn": {
@@ -51,8 +54,9 @@ func ResourceManagedPolicyAttachment() *schema.Resource {
 	}
 }
 
-func resourceManagedPolicyAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSOAdminConn
+func resourceManagedPolicyAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SSOAdminConn()
 
 	instanceArn := d.Get("instance_arn").(string)
 	managedPolicyArn := d.Get("managed_policy_arn").(string)
@@ -64,46 +68,47 @@ func resourceManagedPolicyAttachmentCreate(d *schema.ResourceData, meta interfac
 		PermissionSetArn: aws.String(permissionSetArn),
 	}
 
-	_, err := conn.AttachManagedPolicyToPermissionSet(input)
+	_, err := conn.AttachManagedPolicyToPermissionSetWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error attaching Managed Policy to SSO Permission Set (%s): %w", permissionSetArn, err)
+		return sdkdiag.AppendErrorf(diags, "attaching Managed Policy to SSO Permission Set (%s): %s", permissionSetArn, err)
 	}
 
 	d.SetId(fmt.Sprintf("%s,%s,%s", managedPolicyArn, permissionSetArn, instanceArn))
 
 	// Provision ALL accounts after attaching the managed policy
-	if err := provisionPermissionSet(conn, permissionSetArn, instanceArn); err != nil {
-		return err
+	if err := provisionPermissionSet(ctx, conn, permissionSetArn, instanceArn); err != nil {
+		return sdkdiag.AppendErrorf(diags, "provisioning SSO Permission Set (%s): %s", permissionSetArn, err)
 	}
 
-	return resourceManagedPolicyAttachmentRead(d, meta)
+	return append(diags, resourceManagedPolicyAttachmentRead(ctx, d, meta)...)
 }
 
-func resourceManagedPolicyAttachmentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSOAdminConn
+func resourceManagedPolicyAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SSOAdminConn()
 
 	managedPolicyArn, permissionSetArn, instanceArn, err := ParseManagedPolicyAttachmentID(d.Id())
 	if err != nil {
-		return fmt.Errorf("error parsing SSO Managed Policy Attachment ID: %w", err)
+		return sdkdiag.AppendErrorf(diags, "parsing SSO Managed Policy Attachment ID: %s", err)
 	}
 
-	policy, err := FindManagedPolicy(conn, managedPolicyArn, permissionSetArn, instanceArn)
+	policy, err := FindManagedPolicy(ctx, conn, managedPolicyArn, permissionSetArn, instanceArn)
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ssoadmin.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Managed Policy (%s) for SSO Permission Set (%s) not found, removing from state", managedPolicyArn, permissionSetArn)
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Managed Policy (%s) for SSO Permission Set (%s): %w", managedPolicyArn, permissionSetArn, err)
+		return sdkdiag.AppendErrorf(diags, "reading Managed Policy (%s) for SSO Permission Set (%s): %s", managedPolicyArn, permissionSetArn, err)
 	}
 
 	if policy == nil {
 		log.Printf("[WARN] Managed Policy (%s) for SSO Permission Set (%s) not found, removing from state", managedPolicyArn, permissionSetArn)
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	d.Set("instance_arn", instanceArn)
@@ -111,15 +116,16 @@ func resourceManagedPolicyAttachmentRead(d *schema.ResourceData, meta interface{
 	d.Set("managed_policy_name", policy.Name)
 	d.Set("permission_set_arn", permissionSetArn)
 
-	return nil
+	return diags
 }
 
-func resourceManagedPolicyAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSOAdminConn
+func resourceManagedPolicyAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SSOAdminConn()
 
 	managedPolicyArn, permissionSetArn, instanceArn, err := ParseManagedPolicyAttachmentID(d.Id())
 	if err != nil {
-		return fmt.Errorf("error parsing SSO Managed Policy Attachment ID: %w", err)
+		return sdkdiag.AppendErrorf(diags, "parsing SSO Managed Policy Attachment ID: %s", err)
 	}
 
 	input := &ssoadmin.DetachManagedPolicyFromPermissionSetInput{
@@ -128,21 +134,21 @@ func resourceManagedPolicyAttachmentDelete(d *schema.ResourceData, meta interfac
 		ManagedPolicyArn: aws.String(managedPolicyArn),
 	}
 
-	_, err = conn.DetachManagedPolicyFromPermissionSet(input)
+	_, err = conn.DetachManagedPolicyFromPermissionSetWithContext(ctx, input)
 
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, ssoadmin.ErrCodeResourceNotFoundException) {
-			return nil
+			return diags
 		}
-		return fmt.Errorf("error detaching Managed Policy (%s) from SSO Permission Set (%s): %w", managedPolicyArn, permissionSetArn, err)
+		return sdkdiag.AppendErrorf(diags, "detaching Managed Policy (%s) from SSO Permission Set (%s): %s", managedPolicyArn, permissionSetArn, err)
 	}
 
 	// Provision ALL accounts after detaching the managed policy
-	if err := provisionPermissionSet(conn, permissionSetArn, instanceArn); err != nil {
-		return err
+	if err := provisionPermissionSet(ctx, conn, permissionSetArn, instanceArn); err != nil {
+		return sdkdiag.AppendErrorf(diags, "provisioning SSO Permission Set (%s): %s", permissionSetArn, err)
 	}
 
-	return nil
+	return diags
 }
 
 func ParseManagedPolicyAttachmentID(id string) (string, string, string, error) {

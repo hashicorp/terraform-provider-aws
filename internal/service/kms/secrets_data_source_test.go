@@ -1,6 +1,7 @@
 package kms_test
 
 import (
+	"context"
 	"encoding/base64"
 	"fmt"
 	"testing"
@@ -14,6 +15,7 @@ import (
 )
 
 func TestAccKMSSecretsDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var encryptedPayload string
 	var key kms.KeyMetadata
 
@@ -21,7 +23,7 @@ func TestAccKMSSecretsDataSource_basic(t *testing.T) {
 	resourceName := "aws_kms_key.test"
 
 	// Run a resource test to setup our KMS key
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, kms.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -29,8 +31,8 @@ func TestAccKMSSecretsDataSource_basic(t *testing.T) {
 			{
 				Config: testAccSecretsDataSourceConfig_key,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyExists(resourceName, &key),
-					testAccSecretsEncryptDataSource(&key, plaintext, &encryptedPayload),
+					testAccCheckKeyExists(ctx, resourceName, &key),
+					testAccSecretsEncryptDataSource(ctx, &key, plaintext, &encryptedPayload),
 					// We need to dereference the encryptedPayload in a test Terraform configuration
 					testAccSecretsDecryptDataSource(t, plaintext, &encryptedPayload),
 				),
@@ -39,9 +41,36 @@ func TestAccKMSSecretsDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccSecretsEncryptDataSource(key *kms.KeyMetadata, plaintext string, encryptedPayload *string) resource.TestCheckFunc {
+func TestAccKMSSecretsDataSource_asymmetric(t *testing.T) {
+	ctx := acctest.Context(t)
+	var encryptedPayload string
+	var key kms.KeyMetadata
+
+	plaintext := "my-plaintext-string"
+	resourceName := "aws_kms_key.test"
+
+	// Run a resource test to setup our KMS key
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, kms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSecretsDataSourceConfig_asymmetricKey,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKeyExists(ctx, resourceName, &key),
+					testAccSecretsEncryptDataSourceAsymmetric(ctx, &key, plaintext, &encryptedPayload),
+					// We need to dereference the encryptedPayload in a test Terraform configuration
+					testAccSecretsDecryptDataSourceAsym(t, &key, plaintext, &encryptedPayload),
+				),
+			},
+		},
+	})
+}
+
+func testAccSecretsEncryptDataSource(ctx context.Context, key *kms.KeyMetadata, plaintext string, encryptedPayload *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn()
 
 		input := &kms.EncryptInput{
 			KeyId:     key.Arn,
@@ -51,12 +80,35 @@ func testAccSecretsEncryptDataSource(key *kms.KeyMetadata, plaintext string, enc
 			},
 		}
 
-		resp, err := conn.Encrypt(input)
+		output, err := conn.EncryptWithContext(ctx, input)
+
 		if err != nil {
-			return fmt.Errorf("failed encrypting string: %s", err)
+			return err
 		}
 
-		*encryptedPayload = base64.StdEncoding.EncodeToString(resp.CiphertextBlob)
+		*encryptedPayload = base64.StdEncoding.EncodeToString(output.CiphertextBlob)
+
+		return nil
+	}
+}
+
+func testAccSecretsEncryptDataSourceAsymmetric(ctx context.Context, key *kms.KeyMetadata, plaintext string, encryptedPayload *string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn()
+
+		input := &kms.EncryptInput{
+			KeyId:               key.Arn,
+			Plaintext:           []byte(plaintext),
+			EncryptionAlgorithm: aws.String("RSAES_OAEP_SHA_1"),
+		}
+
+		output, err := conn.EncryptWithContext(ctx, input)
+
+		if err != nil {
+			return err
+		}
+
+		*encryptedPayload = base64.StdEncoding.EncodeToString(output.CiphertextBlob)
 
 		return nil
 	}
@@ -85,6 +137,30 @@ func testAccSecretsDecryptDataSource(t *testing.T, plaintext string, encryptedPa
 	}
 }
 
+func testAccSecretsDecryptDataSourceAsym(t *testing.T, key *kms.KeyMetadata, plaintext string, encryptedPayload *string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		dataSourceName := "data.aws_kms_secrets.test"
+		keyid := key.Arn
+
+		resource.Test(t, resource.TestCase{
+			PreCheck:                 func() { acctest.PreCheck(t) },
+			ErrorCheck:               acctest.ErrorCheck(t, kms.EndpointsID),
+			ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+			Steps: []resource.TestStep{
+				{
+					Config: testAccSecretsDataSourceConfig_asymmetricSecret(*encryptedPayload, *keyid),
+					Check: resource.ComposeTestCheckFunc(
+						resource.TestCheckResourceAttr(dataSourceName, "plaintext.%", "1"),
+						resource.TestCheckResourceAttr(dataSourceName, "plaintext.secret1", plaintext),
+					),
+				},
+			},
+		})
+
+		return nil
+	}
+}
+
 const testAccSecretsDataSourceConfig_key = `
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
@@ -93,16 +169,37 @@ resource "aws_kms_key" "test" {
 `
 
 func testAccSecretsDataSourceConfig_secret(payload string) string {
-	return testAccSecretsDataSourceConfig_key + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccSecretsDataSourceConfig_key, fmt.Sprintf(`
 data "aws_kms_secrets" "test" {
   secret {
     name    = "secret1"
-    payload = %q
+    payload = %[1]q
 
     context = {
       name = "value"
     }
   }
 }
-`, payload)
+`, payload))
+}
+
+const testAccSecretsDataSourceConfig_asymmetricKey = `
+resource "aws_kms_key" "test" {
+  deletion_window_in_days  = 7
+  description              = "Testing the Terraform AWS KMS Secrets data_source"
+  customer_master_key_spec = "RSA_2048"
+}
+`
+
+func testAccSecretsDataSourceConfig_asymmetricSecret(payload string, keyid string) string {
+	return acctest.ConfigCompose(testAccSecretsDataSourceConfig_asymmetricKey, fmt.Sprintf(`
+data "aws_kms_secrets" "test" {
+  secret {
+    name                 = "secret1"
+    payload              = %[1]q
+    encryption_algorithm = "RSAES_OAEP_SHA_1"
+    key_id               = %[2]q
+  }
+}
+`, payload, keyid))
 }

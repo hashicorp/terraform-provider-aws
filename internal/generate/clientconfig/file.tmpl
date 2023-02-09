@@ -22,7 +22,7 @@ import (
 func (c *Config) sdkv1Conns(client *AWSClient, sess *session.Session) {
 {{- range .Services }}
 	{{- if eq .SDKVersion "1" }}
-	client.{{ .ProviderNameUpper }}Conn = {{ .GoV1Package }}.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.{{ .ProviderNameUpper }}])}))
+	client.{{ .ProviderPackage }}Conn = {{ .GoV1Package }}.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints[names.{{ .ProviderNameUpper }}])}))
 	{{- end }}
 {{- end }}
 }
@@ -31,7 +31,7 @@ func (c *Config) sdkv1Conns(client *AWSClient, sess *session.Session) {
 func (c *Config) sdkv2Conns(client *AWSClient, cfg aws_sdkv2.Config) {
 {{- range .Services }}
 	{{- if eq .SDKVersion "2" }}
-	client.{{ .ProviderNameUpper }}Client = {{ .GoV2Package }}.NewFromConfig(cfg, func(o *{{ .GoV2Package }}.Options) {
+	client.{{ .ProviderPackage }}Client = {{ .GoV2Package }}.NewFromConfig(cfg, func(o *{{ .GoV2Package }}.Options) {
 		if endpoint := c.Endpoints[names.{{ .ProviderNameUpper }}]; endpoint != "" {
 			o.EndpointResolver = {{ .GoV2Package }}.EndpointResolverFromURL(endpoint)
 		}

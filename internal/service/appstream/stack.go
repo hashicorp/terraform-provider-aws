@@ -25,10 +25,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-var (
-	flagDiffUserSettings = false
-)
-
 func ResourceStack() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStackCreate,
@@ -91,15 +87,11 @@ func ResourceStack() *schema.Resource {
 			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(0, 256),
 			},
 			"display_name": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(0, 100),
 			},
 			"embed_host_domains": {
@@ -184,7 +176,7 @@ func ResourceStack() *schema.Resource {
 				},
 				Set: userSettingsHash,
 			},
-			"tags":     tftags.TagsSchemaForceNew(),
+			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 		},
 
@@ -238,7 +230,7 @@ func ResourceStack() *schema.Resource {
 }
 
 func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppStreamConn
+	conn := meta.(*conns.AWSClient).AppStreamConn()
 	input := &appstream.CreateStackInput{
 		Name: aws.String(d.Get("name").(string)),
 	}
@@ -315,7 +307,7 @@ func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppStreamConn
+	conn := meta.(*conns.AWSClient).AppStreamConn()
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -354,7 +346,7 @@ func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta interfa
 			return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream Stack (%s): %w", "user_settings", d.Id(), err))
 		}
 
-		tg, err := conn.ListTagsForResource(&appstream.ListTagsForResourceInput{
+		tg, err := conn.ListTagsForResourceWithContext(ctx, &appstream.ListTagsForResourceInput{
 			ResourceArn: v.Arn,
 		})
 		if err != nil {
@@ -375,7 +367,7 @@ func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta interfa
 }
 
 func resourceStackUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppStreamConn
+	conn := meta.(*conns.AWSClient).AppStreamConn()
 
 	input := &appstream.UpdateStackInput{
 		Name: aws.String(d.Id()),
@@ -406,10 +398,10 @@ func resourceStackUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if d.HasChange("user_settings") {
-		input.UserSettings = expandUserSettings(d.Get("user_settings").([]interface{}))
+		input.UserSettings = expandUserSettings(d.Get("user_settings").(*schema.Set).List())
 	}
 
-	resp, err := conn.UpdateStack(input)
+	resp, err := conn.UpdateStackWithContext(ctx, input)
 
 	if err != nil {
 		diag.FromErr(fmt.Errorf("error updating Appstream Stack (%s): %w", d.Id(), err))
@@ -419,7 +411,7 @@ func resourceStackUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		arn := aws.StringValue(resp.Stack.Arn)
 
 		o, n := d.GetChange("tags")
-		if err := UpdateTags(conn, arn, o, n); err != nil {
+		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
 			return diag.FromErr(fmt.Errorf("error updating Appstream Stack tags (%s): %w", d.Id(), err))
 		}
 	}
@@ -428,7 +420,7 @@ func resourceStackUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceStackDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppStreamConn
+	conn := meta.(*conns.AWSClient).AppStreamConn()
 
 	log.Printf("[DEBUG] Deleting AppStream Stack: (%s)", d.Id())
 	_, err := conn.DeleteStackWithContext(ctx, &appstream.DeleteStackInput{
@@ -711,6 +703,7 @@ func flattenUserSettings(apiObjects []*appstream.UserSetting) []map[string]inter
 }
 
 func suppressAppsStreamStackUserSettings(k, old, new string, d *schema.ResourceData) bool {
+	flagDiffUserSettings := false
 	count := len(d.Get("user_settings").(*schema.Set).List())
 	defaultCount := len(appstream.Action_Values())
 

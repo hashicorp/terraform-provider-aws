@@ -25,10 +25,10 @@ import (
 
 func ResourceFeature() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceFeatureCreate,
-		ReadContext:   resourceFeatureRead,
-		UpdateContext: resourceFeatureUpdate,
-		DeleteContext: resourceFeatureDelete,
+		CreateWithoutTimeout: resourceFeatureCreate,
+		ReadWithoutTimeout:   resourceFeatureRead,
+		UpdateWithoutTimeout: resourceFeatureUpdate,
+		DeleteWithoutTimeout: resourceFeatureDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -193,7 +193,7 @@ func ResourceFeature() *schema.Resource {
 }
 
 func resourceFeatureCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EvidentlyConn
+	conn := meta.(*conns.AWSClient).EvidentlyConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -237,7 +237,7 @@ func resourceFeatureCreate(ctx context.Context, d *schema.ResourceData, meta int
 	// concat Feature name and Project Name or ARN to be used in Read for imports
 	d.SetId(fmt.Sprintf("%s:%s", aws.StringValue(output.Feature.Name), aws.StringValue(output.Feature.Project)))
 
-	if _, err := waitFeatureCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waitFeatureCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return diag.Errorf("waiting for CloudWatch Evidently Feature (%s) for Project (%s) creation: %s", name, project, err)
 	}
 
@@ -245,7 +245,7 @@ func resourceFeatureCreate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceFeatureRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EvidentlyConn
+	conn := meta.(*conns.AWSClient).EvidentlyConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -301,7 +301,7 @@ func resourceFeatureRead(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceFeatureUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EvidentlyConn
+	conn := meta.(*conns.AWSClient).EvidentlyConn()
 
 	if d.HasChanges("default_variation", "description", "entity_overrides", "evaluation_strategy", "variations") {
 		name := d.Get("name").(string)
@@ -332,7 +332,7 @@ func resourceFeatureUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			return diag.Errorf("updating CloudWatch Evidently Feature (%s) for Project (%s): %s", name, project, err)
 		}
 
-		if _, err := waitFeatureUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if _, err := waitFeatureUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return diag.Errorf("waiting for CloudWatch Evidently Feature (%s) for Project (%s) update: %s", name, project, err)
 		}
 	}
@@ -340,7 +340,7 @@ func resourceFeatureUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTagsWithContext(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.Errorf("updating tags: %s", err)
 		}
 	}
@@ -349,7 +349,7 @@ func resourceFeatureUpdate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceFeatureDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EvidentlyConn
+	conn := meta.(*conns.AWSClient).EvidentlyConn()
 
 	name := d.Get("name").(string)
 	project := d.Get("project").(string)
@@ -368,7 +368,7 @@ func resourceFeatureDelete(ctx context.Context, d *schema.ResourceData, meta int
 		return diag.Errorf("deleting CloudWatch Evidently Feature (%s) for Project (%s): %s", name, project, err)
 	}
 
-	if _, err := waitFeatureDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err := waitFeatureDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return diag.Errorf("waiting for CloudWatch Evidently Feature (%s) for Project (%s) deletion: %s", name, project, err)
 	}
 

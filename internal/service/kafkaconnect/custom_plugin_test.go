@@ -16,19 +16,20 @@ import (
 )
 
 func TestAccKafkaConnectCustomPlugin_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mskconnect_custom_plugin.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(kafkaconnect.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, kafkaconnect.EndpointsID),
-		CheckDestroy:             testAccCheckCustomPluginDestroy,
+		CheckDestroy:             testAccCheckCustomPluginDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomPluginConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckCustomPluginExists(resourceName),
+					testAccCheckCustomPluginExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "content_type", "ZIP"),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
@@ -52,20 +53,21 @@ func TestAccKafkaConnectCustomPlugin_basic(t *testing.T) {
 }
 
 func TestAccKafkaConnectCustomPlugin_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mskconnect_custom_plugin.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(kafkaconnect.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, kafkaconnect.EndpointsID),
-		CheckDestroy:             testAccCheckCustomPluginDestroy,
+		CheckDestroy:             testAccCheckCustomPluginDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomPluginConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCustomPluginExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfkafkaconnect.ResourceCustomPlugin(), resourceName),
+					testAccCheckCustomPluginExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfkafkaconnect.ResourceCustomPlugin(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -74,19 +76,20 @@ func TestAccKafkaConnectCustomPlugin_disappears(t *testing.T) {
 }
 
 func TestAccKafkaConnectCustomPlugin_description(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mskconnect_custom_plugin.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(kafkaconnect.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, kafkaconnect.EndpointsID),
-		CheckDestroy:             testAccCheckCustomPluginDestroy,
+		CheckDestroy:             testAccCheckCustomPluginDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomPluginConfig_description(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCustomPluginExists(resourceName),
+					testAccCheckCustomPluginExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", "testing"),
 				),
 			},
@@ -100,19 +103,20 @@ func TestAccKafkaConnectCustomPlugin_description(t *testing.T) {
 }
 
 func TestAccKafkaConnectCustomPlugin_objectVersion(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mskconnect_custom_plugin.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(kafkaconnect.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, kafkaconnect.EndpointsID),
-		CheckDestroy:             testAccCheckCustomPluginDestroy,
+		CheckDestroy:             testAccCheckCustomPluginDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomPluginConfig_objectVersion(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCustomPluginExists(resourceName),
+					testAccCheckCustomPluginExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "location.0.s3.0.object_version"),
 				),
 			},
@@ -125,7 +129,7 @@ func TestAccKafkaConnectCustomPlugin_objectVersion(t *testing.T) {
 	})
 }
 
-func testAccCheckCustomPluginExists(name string) resource.TestCheckFunc {
+func testAccCheckCustomPluginExists(ctx context.Context, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -136,36 +140,38 @@ func testAccCheckCustomPluginExists(name string) resource.TestCheckFunc {
 			return fmt.Errorf("No MSK Connect Custom Plugin ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConnectConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConnectConn()
 
-		_, err := tfkafkaconnect.FindCustomPluginByARN(context.Background(), conn, rs.Primary.ID)
+		_, err := tfkafkaconnect.FindCustomPluginByARN(ctx, conn, rs.Primary.ID)
 
 		return err
 	}
 }
 
-func testAccCheckCustomPluginDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConnectConn
+func testAccCheckCustomPluginDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConnectConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_mskconnect_custom_plugin" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_mskconnect_custom_plugin" {
+				continue
+			}
+
+			_, err := tfkafkaconnect.FindCustomPluginByARN(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("MSK Connect Custom Plugin %s still exists", rs.Primary.ID)
 		}
 
-		_, err := tfkafkaconnect.FindCustomPluginByARN(context.Background(), conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("MSK Connect Custom Plugin %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
 func testAccCustomPluginBaseConfig(rName string, s3BucketVersioning bool) string {

@@ -1,26 +1,28 @@
 package cloudfront
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourceMonitoringSubscription() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceMonitoringSubscriptionCreate,
-		Read:   resourceMonitoringSubscriptionRead,
-		Update: resourceMonitoringSubscriptionCreate,
-		Delete: resourceMonitoringSubscriptionDelete,
+		CreateWithoutTimeout: resourceMonitoringSubscriptionCreate,
+		ReadWithoutTimeout:   resourceMonitoringSubscriptionRead,
+		UpdateWithoutTimeout: resourceMonitoringSubscriptionCreate,
+		DeleteWithoutTimeout: resourceMonitoringSubscriptionDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceMonitoringSubscriptionImport,
+			StateContext: resourceMonitoringSubscriptionImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -58,8 +60,9 @@ func ResourceMonitoringSubscription() *schema.Resource {
 	}
 }
 
-func resourceMonitoringSubscriptionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+func resourceMonitoringSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 
 	id := d.Get("distribution_id").(string)
 	input := &cloudfront.CreateMonitoringSubscriptionInput{
@@ -71,63 +74,65 @@ func resourceMonitoringSubscriptionCreate(d *schema.ResourceData, meta interface
 	}
 
 	log.Printf("[DEBUG] Creating CloudFront Monitoring Subscription: %s", input)
-	_, err := conn.CreateMonitoringSubscription(input)
+	_, err := conn.CreateMonitoringSubscriptionWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating CloudFront Monitoring Subscription (%s): %w", id, err)
+		return sdkdiag.AppendErrorf(diags, "creating CloudFront Monitoring Subscription (%s): %s", id, err)
 	}
 
 	d.SetId(id)
 
-	return resourceMonitoringSubscriptionRead(d, meta)
+	return append(diags, resourceMonitoringSubscriptionRead(ctx, d, meta)...)
 }
 
-func resourceMonitoringSubscriptionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+func resourceMonitoringSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 
-	output, err := FindMonitoringSubscriptionByDistributionID(conn, d.Id())
+	output, err := FindMonitoringSubscriptionByDistributionID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudFront Monitoring Subscription (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading CloudFront Monitoring Subscription (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading CloudFront Monitoring Subscription (%s): %s", d.Id(), err)
 	}
 
 	if output.MonitoringSubscription != nil {
 		if err := d.Set("monitoring_subscription", []interface{}{flattenMonitoringSubscription(output.MonitoringSubscription)}); err != nil {
-			return fmt.Errorf("error setting monitoring_subscription: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting monitoring_subscription: %s", err)
 		}
 	} else {
 		d.Set("monitoring_subscription", nil)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceMonitoringSubscriptionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+func resourceMonitoringSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 
 	log.Printf("[DEBUG] Deleting CloudFront Monitoring Subscription (%s)", d.Id())
-	_, err := conn.DeleteMonitoringSubscription(&cloudfront.DeleteMonitoringSubscriptionInput{
+	_, err := conn.DeleteMonitoringSubscriptionWithContext(ctx, &cloudfront.DeleteMonitoringSubscriptionInput{
 		DistributionId: aws.String(d.Id()),
 	})
 
 	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchDistribution) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting CloudFront Monitoring Subscription (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting CloudFront Monitoring Subscription (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceMonitoringSubscriptionImport(d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
+func resourceMonitoringSubscriptionImport(ctx context.Context, d *schema.ResourceData, m interface{}) ([]*schema.ResourceData, error) {
 	d.Set("distribution_id", d.Id())
 	return []*schema.ResourceData{d}, nil
 }

@@ -10,6 +10,7 @@ import (
 )
 
 func TestAccEMRContainersVirtualClusterDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
 	dataSourceResourceName := "data.aws_emrcontainers_virtual_cluster.test"
 	resourceName := "aws_emrcontainers_virtual_cluster.test"
@@ -28,7 +29,7 @@ func TestAccEMRContainersVirtualClusterDataSource_basic(t *testing.T) {
 		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		ExternalProviders:        testExternalProviders,
-		CheckDestroy:             testAccCheckVirtualClusterDestroy,
+		CheckDestroy:             testAccCheckVirtualClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVirtualClusterDataSourceConfig_basic(rName),

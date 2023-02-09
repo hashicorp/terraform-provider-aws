@@ -30,7 +30,7 @@ func ResourceBudgetAction() *schema.Resource {
 		DeleteWithoutTimeout: resourceBudgetActionDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -212,7 +212,7 @@ func ResourceBudgetAction() *schema.Resource {
 }
 
 func resourceBudgetActionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).BudgetsConn
+	conn := meta.(*conns.AWSClient).BudgetsConn()
 
 	accountID := d.Get("account_id").(string)
 	if accountID == "" {
@@ -230,7 +230,7 @@ func resourceBudgetActionCreate(ctx context.Context, d *schema.ResourceData, met
 		Subscribers:      expandBudgetActionSubscriber(d.Get("subscriber").(*schema.Set)),
 	}
 
-	outputRaw, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (interface{}, error) {
 		return conn.CreateBudgetActionWithContext(ctx, input)
 	}, budgets.ErrCodeAccessDeniedException)
 
@@ -252,7 +252,7 @@ func resourceBudgetActionCreate(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceBudgetActionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).BudgetsConn
+	conn := meta.(*conns.AWSClient).BudgetsConn()
 
 	accountID, actionID, budgetName, err := BudgetActionParseResourceID(d.Id())
 
@@ -301,7 +301,7 @@ func resourceBudgetActionRead(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceBudgetActionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).BudgetsConn
+	conn := meta.(*conns.AWSClient).BudgetsConn()
 
 	accountID, actionID, budgetName, err := BudgetActionParseResourceID(d.Id())
 
@@ -353,7 +353,7 @@ func resourceBudgetActionUpdate(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceBudgetActionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).BudgetsConn
+	conn := meta.(*conns.AWSClient).BudgetsConn()
 
 	accountID, actionID, budgetName, err := BudgetActionParseResourceID(d.Id())
 

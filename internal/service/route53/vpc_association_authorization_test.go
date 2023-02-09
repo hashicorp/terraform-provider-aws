@@ -1,6 +1,7 @@
 package route53_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -15,6 +16,7 @@ import (
 )
 
 func TestAccRoute53VPCAssociationAuthorization_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_route53_vpc_association_authorization.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -24,12 +26,12 @@ func TestAccRoute53VPCAssociationAuthorization_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
-		CheckDestroy:             testAccCheckVPCAssociationAuthorizationDestroy,
+		CheckDestroy:             testAccCheckVPCAssociationAuthorizationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCAssociationAuthorizationConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCAssociationAuthorizationExists(resourceName),
+					testAccCheckVPCAssociationAuthorizationExists(ctx, resourceName),
 				),
 			},
 			{
@@ -43,6 +45,7 @@ func TestAccRoute53VPCAssociationAuthorization_basic(t *testing.T) {
 }
 
 func TestAccRoute53VPCAssociationAuthorization_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_route53_vpc_association_authorization.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -52,13 +55,13 @@ func TestAccRoute53VPCAssociationAuthorization_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
-		CheckDestroy:             testAccCheckVPCAssociationAuthorizationDestroy,
+		CheckDestroy:             testAccCheckVPCAssociationAuthorizationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCAssociationAuthorizationConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCAssociationAuthorizationExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfroute53.ResourceVPCAssociationAuthorization(), resourceName),
+					testAccCheckVPCAssociationAuthorizationExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfroute53.ResourceVPCAssociationAuthorization(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -66,41 +69,43 @@ func TestAccRoute53VPCAssociationAuthorization_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckVPCAssociationAuthorizationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn
+func testAccCheckVPCAssociationAuthorizationDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_route53_vpc_association_authorization" {
-			continue
-		}
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_route53_vpc_association_authorization" {
+				continue
+			}
 
-		zone_id, vpc_id, err := tfroute53.VPCAssociationAuthorizationParseID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
+			zone_id, vpc_id, err := tfroute53.VPCAssociationAuthorizationParseID(rs.Primary.ID)
+			if err != nil {
+				return err
+			}
 
-		req := route53.ListVPCAssociationAuthorizationsInput{
-			HostedZoneId: aws.String(zone_id),
-		}
+			req := route53.ListVPCAssociationAuthorizationsInput{
+				HostedZoneId: aws.String(zone_id),
+			}
 
-		res, err := conn.ListVPCAssociationAuthorizations(&req)
-		if tfawserr.ErrCodeEquals(err, route53.ErrCodeNoSuchHostedZone) {
-			return nil
-		}
-		if err != nil {
-			return err
-		}
+			res, err := conn.ListVPCAssociationAuthorizationsWithContext(ctx, &req)
+			if tfawserr.ErrCodeEquals(err, route53.ErrCodeNoSuchHostedZone) {
+				return nil
+			}
+			if err != nil {
+				return err
+			}
 
-		for _, vpc := range res.VPCs {
-			if vpc_id == *vpc.VPCId {
-				return fmt.Errorf("VPC association authorization for zone %v with %v still exists", zone_id, vpc_id)
+			for _, vpc := range res.VPCs {
+				if vpc_id == *vpc.VPCId {
+					return fmt.Errorf("VPC association authorization for zone %v with %v still exists", zone_id, vpc_id)
+				}
 			}
 		}
+		return nil
 	}
-	return nil
 }
 
-func testAccCheckVPCAssociationAuthorizationExists(n string) resource.TestCheckFunc {
+func testAccCheckVPCAssociationAuthorizationExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -116,13 +121,13 @@ func testAccCheckVPCAssociationAuthorizationExists(n string) resource.TestCheckF
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Conn()
 
 		req := route53.ListVPCAssociationAuthorizationsInput{
 			HostedZoneId: aws.String(zone_id),
 		}
 
-		res, err := conn.ListVPCAssociationAuthorizations(&req)
+		res, err := conn.ListVPCAssociationAuthorizationsWithContext(ctx, &req)
 		if err != nil {
 			return err
 		}

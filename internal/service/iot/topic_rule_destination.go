@@ -26,7 +26,7 @@ func ResourceTopicRuleDestination() *schema.Resource {
 		DeleteWithoutTimeout: resourceTopicRuleDestinationDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -83,7 +83,7 @@ func ResourceTopicRuleDestination() *schema.Resource {
 }
 
 func resourceTopicRuleDestinationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IoTConn
+	conn := meta.(*conns.AWSClient).IoTConn()
 
 	input := &iot.CreateTopicRuleDestinationInput{
 		DestinationConfiguration: &iot.TopicRuleDestinationConfiguration{},
@@ -94,7 +94,7 @@ func resourceTopicRuleDestinationCreate(ctx context.Context, d *schema.ResourceD
 	}
 
 	log.Printf("[INFO] Creating IoT Topic Rule Destination: %s", input)
-	outputRaw, err := tfresource.RetryWhen(propagationTimeout,
+	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
 		func() (interface{}, error) {
 			return conn.CreateTopicRuleDestinationWithContext(ctx, input)
 		},
@@ -137,7 +137,7 @@ func resourceTopicRuleDestinationCreate(ctx context.Context, d *schema.ResourceD
 }
 
 func resourceTopicRuleDestinationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IoTConn
+	conn := meta.(*conns.AWSClient).IoTConn()
 
 	output, err := FindTopicRuleDestinationByARN(ctx, conn, d.Id())
 
@@ -165,7 +165,7 @@ func resourceTopicRuleDestinationRead(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceTopicRuleDestinationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IoTConn
+	conn := meta.(*conns.AWSClient).IoTConn()
 
 	if d.HasChange("enabled") {
 		input := &iot.UpdateTopicRuleDestinationInput{
@@ -194,7 +194,7 @@ func resourceTopicRuleDestinationUpdate(ctx context.Context, d *schema.ResourceD
 }
 
 func resourceTopicRuleDestinationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IoTConn
+	conn := meta.(*conns.AWSClient).IoTConn()
 
 	log.Printf("[INFO] Deleting IoT Topic Rule Destination: %s", d.Id())
 	_, err := conn.DeleteTopicRuleDestinationWithContext(ctx, &iot.DeleteTopicRuleDestinationInput{

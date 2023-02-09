@@ -18,7 +18,7 @@ import (
 
 func DataSourceCatalogTable() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceCatalogTableRead,
+		ReadWithoutTimeout: dataSourceCatalogTableRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -315,7 +315,7 @@ func DataSourceCatalogTable() *schema.Resource {
 }
 
 func dataSourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).GlueConn
+	conn := meta.(*conns.AWSClient).GlueConn()
 
 	catalogID := createCatalogID(d, meta.(*conns.AWSClient).AccountID)
 	dbName := d.Get("database_name").(string)
@@ -393,7 +393,7 @@ func dataSourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, met
 		TableName:    out.Table.Name,
 		DatabaseName: out.Table.DatabaseName,
 	}
-	partOut, err := conn.GetPartitionIndexes(partIndexInput)
+	partOut, err := conn.GetPartitionIndexesWithContext(ctx, partIndexInput)
 	if err != nil {
 		return diag.Errorf("error getting Glue Partition Indexes: %s", err)
 	}

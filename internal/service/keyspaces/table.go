@@ -295,7 +295,7 @@ func ResourceTable() *schema.Resource {
 }
 
 func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KeyspacesConn
+	conn := meta.(*conns.AWSClient).KeyspacesConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -357,7 +357,7 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KeyspacesConn
+	conn := meta.(*conns.AWSClient).KeyspacesConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -426,7 +426,7 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		d.Set("ttl", nil)
 	}
 
-	tags, err := ListTags(conn, d.Get("arn").(string))
+	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
 
 	if err != nil {
 		return diag.Errorf("listing tags for Keyspaces Table (%s): %s", d.Id(), err)
@@ -447,7 +447,7 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 }
 
 func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KeyspacesConn
+	conn := meta.(*conns.AWSClient).KeyspacesConn()
 
 	keyspaceName, tableName, err := TableParseResourceID(d.Id())
 
@@ -602,7 +602,7 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.Errorf("updating Keyspaces Table (%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -611,7 +611,7 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceTableDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KeyspacesConn
+	conn := meta.(*conns.AWSClient).KeyspacesConn()
 
 	keyspaceName, tableName, err := TableParseResourceID(d.Id())
 

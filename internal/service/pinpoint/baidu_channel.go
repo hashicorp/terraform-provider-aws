@@ -1,24 +1,26 @@
 package pinpoint
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/pinpoint"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func ResourceBaiduChannel() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceBaiduChannelUpsert,
-		Read:   resourceBaiduChannelRead,
-		Update: resourceBaiduChannelUpsert,
-		Delete: resourceBaiduChannelDelete,
+		CreateWithoutTimeout: resourceBaiduChannelUpsert,
+		ReadWithoutTimeout:   resourceBaiduChannelRead,
+		UpdateWithoutTimeout: resourceBaiduChannelUpsert,
+		DeleteWithoutTimeout: resourceBaiduChannelDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -46,8 +48,9 @@ func ResourceBaiduChannel() *schema.Resource {
 	}
 }
 
-func resourceBaiduChannelUpsert(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).PinpointConn
+func resourceBaiduChannelUpsert(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).PinpointConn()
 
 	applicationId := d.Get("application_id").(string)
 
@@ -62,55 +65,57 @@ func resourceBaiduChannelUpsert(d *schema.ResourceData, meta interface{}) error 
 		BaiduChannelRequest: params,
 	}
 
-	_, err := conn.UpdateBaiduChannel(&req)
+	_, err := conn.UpdateBaiduChannelWithContext(ctx, &req)
 	if err != nil {
-		return fmt.Errorf("error updating Pinpoint Baidu Channel for application %s: %s", applicationId, err)
+		return sdkdiag.AppendErrorf(diags, "updating Pinpoint Baidu Channel for application %s: %s", applicationId, err)
 	}
 
 	d.SetId(applicationId)
 
-	return resourceBaiduChannelRead(d, meta)
+	return append(diags, resourceBaiduChannelRead(ctx, d, meta)...)
 }
 
-func resourceBaiduChannelRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).PinpointConn
+func resourceBaiduChannelRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).PinpointConn()
 
 	log.Printf("[INFO] Reading Pinpoint Baidu Channel for application %s", d.Id())
 
-	output, err := conn.GetBaiduChannel(&pinpoint.GetBaiduChannelInput{
+	output, err := conn.GetBaiduChannelWithContext(ctx, &pinpoint.GetBaiduChannelInput{
 		ApplicationId: aws.String(d.Id()),
 	})
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, pinpoint.ErrCodeNotFoundException) {
-			log.Printf("[WARN] Pinpoint Baidu Channel for application %s not found, error code (404)", d.Id())
+			log.Printf("[WARN] Pinpoint Baidu Channel for application %s not found, removing from state", d.Id())
 			d.SetId("")
-			return nil
+			return diags
 		}
 
-		return fmt.Errorf("error getting Pinpoint Baidu Channel for application %s: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "getting Pinpoint Baidu Channel for application %s: %s", d.Id(), err)
 	}
 
 	d.Set("application_id", output.BaiduChannelResponse.ApplicationId)
 	d.Set("enabled", output.BaiduChannelResponse.Enabled)
 	// ApiKey and SecretKey are never returned
 
-	return nil
+	return diags
 }
 
-func resourceBaiduChannelDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).PinpointConn
+func resourceBaiduChannelDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).PinpointConn()
 
 	log.Printf("[DEBUG] Deleting Pinpoint Baidu Channel for application %s", d.Id())
-	_, err := conn.DeleteBaiduChannel(&pinpoint.DeleteBaiduChannelInput{
+	_, err := conn.DeleteBaiduChannelWithContext(ctx, &pinpoint.DeleteBaiduChannelInput{
 		ApplicationId: aws.String(d.Id()),
 	})
 
 	if tfawserr.ErrCodeEquals(err, pinpoint.ErrCodeNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Pinpoint Baidu Channel for application %s: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Pinpoint Baidu Channel for application %s: %s", d.Id(), err)
 	}
-	return nil
+	return diags
 }

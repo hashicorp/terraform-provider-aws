@@ -1,6 +1,7 @@
 package accessanalyzer_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/accessanalyzer"
@@ -8,9 +9,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-// AccessAnalyzer is limited to one per region, so run serially
-// locally and in TeamCity.
+// AccessAnalyzer is limited to one per region, so run serially locally and in TeamCity.
 func TestAccAccessAnalyzer_serial(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]map[string]func(t *testing.T){
 		"Analyzer": {
 			"basic":             testAccAnalyzer_basic,
@@ -25,25 +27,15 @@ func TestAccAccessAnalyzer_serial(t *testing.T) {
 		},
 	}
 
-	for group, m := range testCases {
-		m := m
-		t.Run(group, func(t *testing.T) {
-			for name, tc := range m {
-				tc := tc
-				t.Run(name, func(t *testing.T) {
-					tc(t)
-				})
-			}
-		})
-	}
+	acctest.RunSerialTests2Levels(t, testCases, 0)
 }
 
-func testAccPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AccessAnalyzerConn
+func testAccPreCheck(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AccessAnalyzerConn()
 
 	input := &accessanalyzer.ListAnalyzersInput{}
 
-	_, err := conn.ListAnalyzers(input)
+	_, err := conn.ListAnalyzersWithContext(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

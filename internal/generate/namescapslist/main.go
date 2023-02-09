@@ -19,9 +19,7 @@ var header string
 var tmpl string
 
 const (
-	filename     = "../../../names/caps.md"
-	capsDataFile = "../../../names/caps.csv"
-	maxBadCaps   = 31
+	maxBadCaps = 31
 )
 
 type CapsDatum struct {
@@ -35,6 +33,10 @@ type TemplateData struct {
 }
 
 func main() {
+	const (
+		filename     = "../../../names/caps.md"
+		capsDataFile = "../../../names/caps.csv"
+	)
 	g := common.NewGenerator()
 
 	g.Infof("Generating %s", strings.TrimPrefix(filename, "../../../"))
@@ -42,14 +44,20 @@ func main() {
 	badCaps, err := readBadCaps(capsDataFile)
 
 	if err != nil {
-		g.Fatalf("error reading %s: %s", capsDataFile, err.Error())
+		g.Fatalf("error reading %s: %s", capsDataFile, err)
 	}
 
 	td := TemplateData{}
 	td.BadCaps = badCaps
 
-	if err := g.ApplyAndWriteTemplate(filename, "namescapslist", header+"\n"+tmpl+"\n", td, nil); err != nil {
-		g.Fatalf("error: %s", err.Error())
+	d := g.NewUnformattedFileDestination(filename)
+
+	if err := d.WriteTemplate("namescapslist", header+"\n"+tmpl+"\n", td); err != nil {
+		g.Fatalf("generating file (%s): %s", filename, err)
+	}
+
+	if err := d.Write(); err != nil {
+		g.Fatalf("generating file (%s): %s", filename, err)
 	}
 }
 

@@ -19,10 +19,10 @@ import (
 
 func ResourceBucketAccelerateConfiguration() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceBucketAccelerateConfigurationCreate,
-		ReadContext:   resourceBucketAccelerateConfigurationRead,
-		UpdateContext: resourceBucketAccelerateConfigurationUpdate,
-		DeleteContext: resourceBucketAccelerateConfigurationDelete,
+		CreateWithoutTimeout: resourceBucketAccelerateConfigurationCreate,
+		ReadWithoutTimeout:   resourceBucketAccelerateConfigurationRead,
+		UpdateWithoutTimeout: resourceBucketAccelerateConfigurationUpdate,
+		DeleteWithoutTimeout: resourceBucketAccelerateConfigurationDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -50,7 +50,7 @@ func ResourceBucketAccelerateConfiguration() *schema.Resource {
 }
 
 func resourceBucketAccelerateConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket := d.Get("bucket").(string)
 	expectedBucketOwner := d.Get("expected_bucket_owner").(string)
@@ -66,7 +66,7 @@ func resourceBucketAccelerateConfigurationCreate(ctx context.Context, d *schema.
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
 		return conn.PutBucketAccelerateConfigurationWithContext(ctx, input)
 	}, s3.ErrCodeNoSuchBucket)
 
@@ -80,7 +80,7 @@ func resourceBucketAccelerateConfigurationCreate(ctx context.Context, d *schema.
 }
 
 func resourceBucketAccelerateConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
@@ -124,7 +124,7 @@ func resourceBucketAccelerateConfigurationRead(ctx context.Context, d *schema.Re
 }
 
 func resourceBucketAccelerateConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
@@ -152,7 +152,7 @@ func resourceBucketAccelerateConfigurationUpdate(ctx context.Context, d *schema.
 }
 
 func resourceBucketAccelerateConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {

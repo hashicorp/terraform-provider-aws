@@ -1,20 +1,23 @@
 package redshift
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/redshift"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceCluster() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceClusterRead,
+		ReadWithoutTimeout: dataSourceClusterRead,
 
 		Schema: map[string]*schema.Schema{
 			"allow_version_upgrade": {
@@ -194,15 +197,16 @@ func DataSourceCluster() *schema.Resource {
 	}
 }
 
-func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	clusterID := d.Get("cluster_identifier").(string)
-	rsc, err := FindClusterByID(conn, clusterID)
+	rsc, err := FindClusterByID(ctx, conn, clusterID)
 
 	if err != nil {
-		return fmt.Errorf("reading Redshift Cluster (%s): %w", clusterID, err)
+		return sdkdiag.AppendErrorf(diags, "reading Redshift Cluster (%s): %s", clusterID, err)
 	}
 
 	d.SetId(clusterID)
@@ -222,12 +226,12 @@ func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("availability_zone", rsc.AvailabilityZone)
 	azr, err := clusterAvailabilityZoneRelocationStatus(rsc)
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading Redshift Cluster (%s): %s", clusterID, err)
 	}
 	d.Set("availability_zone_relocation_enabled", azr)
 	d.Set("cluster_identifier", rsc.ClusterIdentifier)
 	if err := d.Set("cluster_nodes", flattenClusterNodes(rsc.ClusterNodes)); err != nil {
-		return fmt.Errorf("setting cluster_nodes: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting cluster_nodes: %s", err)
 	}
 
 	if len(rsc.ClusterParameterGroups) > 0 {
@@ -284,7 +288,7 @@ func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("manual_snapshot_retention_period", rsc.ManualSnapshotRetentionPeriod)
 
 	if err := d.Set("tags", KeyValueTags(rsc.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	d.Set("vpc_id", rsc.VpcId)
@@ -295,12 +299,12 @@ func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("vpc_security_group_ids", vpcg)
 
-	loggingStatus, err := conn.DescribeLoggingStatus(&redshift.DescribeLoggingStatusInput{
+	loggingStatus, err := conn.DescribeLoggingStatusWithContext(ctx, &redshift.DescribeLoggingStatusInput{
 		ClusterIdentifier: aws.String(clusterID),
 	})
 
 	if err != nil {
-		return fmt.Errorf("reading Redshift Cluster (%s) logging status: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Redshift Cluster (%s) logging status: %s", d.Id(), err)
 	}
 
 	if loggingStatus != nil && aws.BoolValue(loggingStatus.LoggingEnabled) {
@@ -311,5 +315,5 @@ func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("log_destination_type", loggingStatus.LogDestinationType)
 	}
 
-	return nil
+	return diags
 }

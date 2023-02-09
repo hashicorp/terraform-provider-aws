@@ -1,7 +1,10 @@
 package cloudfront
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws/endpoints"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
@@ -16,7 +19,7 @@ const (
 
 func DataSourceLogDeliveryCanonicalUserID() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceLogDeliveryCanonicalUserIDRead,
+		ReadWithoutTimeout: dataSourceLogDeliveryCanonicalUserIDRead,
 
 		Schema: map[string]*schema.Schema{
 			"region": {
@@ -27,7 +30,8 @@ func DataSourceLogDeliveryCanonicalUserID() *schema.Resource {
 	}
 }
 
-func dataSourceLogDeliveryCanonicalUserIDRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceLogDeliveryCanonicalUserIDRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	canonicalId := defaultLogDeliveryCanonicalUserID
 
 	region := meta.(*conns.AWSClient).Region
@@ -41,5 +45,5 @@ func dataSourceLogDeliveryCanonicalUserIDRead(d *schema.ResourceData, meta inter
 
 	d.SetId(canonicalId)
 
-	return nil
+	return diags
 }

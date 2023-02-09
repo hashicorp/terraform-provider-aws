@@ -1,26 +1,28 @@
 package servicecatalog
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourceTagOption() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceTagOptionCreate,
-		Read:   resourceTagOptionRead,
-		Update: resourceTagOptionUpdate,
-		Delete: resourceTagOptionDelete,
+		CreateWithoutTimeout: resourceTagOptionCreate,
+		ReadWithoutTimeout:   resourceTagOptionRead,
+		UpdateWithoutTimeout: resourceTagOptionUpdate,
+		DeleteWithoutTimeout: resourceTagOptionDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -53,8 +55,9 @@ func ResourceTagOption() *schema.Resource {
 	}
 }
 
-func resourceTagOptionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn
+func resourceTagOptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 
 	input := &servicecatalog.CreateTagOptionInput{
 		Key:   aws.String(d.Get("key").(string)),
@@ -62,10 +65,10 @@ func resourceTagOptionCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	var output *servicecatalog.CreateTagOptionOutput
-	err := resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
+	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 		var err error
 
-		output, err = conn.CreateTagOption(input)
+		output, err = conn.CreateTagOptionWithContext(ctx, input)
 
 		if tfawserr.ErrMessageContains(err, servicecatalog.ErrCodeInvalidParametersException, "profile does not exist") {
 			return resource.RetryableError(err)
@@ -79,15 +82,15 @@ func resourceTagOptionCreate(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if tfresource.TimedOut(err) {
-		output, err = conn.CreateTagOption(input)
+		output, err = conn.CreateTagOptionWithContext(ctx, input)
 	}
 
 	if err != nil {
-		return fmt.Errorf("error creating Service Catalog Tag Option: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating Service Catalog Tag Option: %s", err)
 	}
 
 	if output == nil || output.TagOptionDetail == nil {
-		return fmt.Errorf("error creating Service Catalog Tag Option: empty response")
+		return sdkdiag.AppendErrorf(diags, "creating Service Catalog Tag Option: empty response")
 	}
 
 	d.SetId(aws.StringValue(output.TagOptionDetail.Id))
@@ -96,36 +99,37 @@ func resourceTagOptionCreate(d *schema.ResourceData, meta interface{}) error {
 	// inactive Tag Option, you must create an active one and then update it (but calling this resource's
 	// Update will error with ErrCodeDuplicateResourceException because Value is unchanged).
 	if v, ok := d.GetOk("active"); !ok {
-		_, err = conn.UpdateTagOption(&servicecatalog.UpdateTagOptionInput{
+		_, err = conn.UpdateTagOptionWithContext(ctx, &servicecatalog.UpdateTagOptionInput{
 			Id:     aws.String(d.Id()),
 			Active: aws.Bool(v.(bool)),
 		})
 
 		if err != nil {
-			return fmt.Errorf("error creating Service Catalog Tag Option, updating active (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "creating Service Catalog Tag Option, updating active (%s): %s", d.Id(), err)
 		}
 	}
 
-	return resourceTagOptionRead(d, meta)
+	return append(diags, resourceTagOptionRead(ctx, d, meta)...)
 }
 
-func resourceTagOptionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn
+func resourceTagOptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 
-	output, err := WaitTagOptionReady(conn, d.Id(), d.Timeout(schema.TimeoutRead))
+	output, err := WaitTagOptionReady(ctx, conn, d.Id(), d.Timeout(schema.TimeoutRead))
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Service Catalog Tag Option (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error describing Service Catalog Tag Option (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "describing Service Catalog Tag Option (%s): %s", d.Id(), err)
 	}
 
 	if output == nil {
-		return fmt.Errorf("error getting Service Catalog Tag Option (%s): empty response", d.Id())
+		return sdkdiag.AppendErrorf(diags, "getting Service Catalog Tag Option (%s): empty response", d.Id())
 	}
 
 	d.Set("active", output.Active)
@@ -133,11 +137,12 @@ func resourceTagOptionRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("owner", output.Owner)
 	d.Set("value", output.Value)
 
-	return nil
+	return diags
 }
 
-func resourceTagOptionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn
+func resourceTagOptionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 
 	input := &servicecatalog.UpdateTagOptionInput{
 		Id: aws.String(d.Id()),
@@ -154,8 +159,8 @@ func resourceTagOptionUpdate(d *schema.ResourceData, meta interface{}) error {
 		input.Value = aws.String(d.Get("value").(string))
 	}
 
-	err := resource.Retry(d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
-		_, err := conn.UpdateTagOption(input)
+	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
+		_, err := conn.UpdateTagOptionWithContext(ctx, input)
 
 		if tfawserr.ErrMessageContains(err, servicecatalog.ErrCodeInvalidParametersException, "profile does not exist") {
 			return resource.RetryableError(err)
@@ -169,36 +174,37 @@ func resourceTagOptionUpdate(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if tfresource.TimedOut(err) {
-		_, err = conn.UpdateTagOption(input)
+		_, err = conn.UpdateTagOptionWithContext(ctx, input)
 	}
 
 	if err != nil {
-		return fmt.Errorf("error updating Service Catalog Tag Option (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating Service Catalog Tag Option (%s): %s", d.Id(), err)
 	}
 
-	return resourceTagOptionRead(d, meta)
+	return append(diags, resourceTagOptionRead(ctx, d, meta)...)
 }
 
-func resourceTagOptionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn
+func resourceTagOptionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 
 	input := &servicecatalog.DeleteTagOptionInput{
 		Id: aws.String(d.Id()),
 	}
 
-	_, err := conn.DeleteTagOption(input)
+	_, err := conn.DeleteTagOptionWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Service Catalog Tag Option (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Service Catalog Tag Option (%s): %s", d.Id(), err)
 	}
 
-	if err := WaitTagOptionDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("error waiting for Service Catalog Tag Option (%s) to be deleted: %w", d.Id(), err)
+	if err := WaitTagOptionDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Service Catalog Tag Option (%s) to be deleted: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

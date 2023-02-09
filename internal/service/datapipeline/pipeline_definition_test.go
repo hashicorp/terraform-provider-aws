@@ -17,6 +17,7 @@ import (
 )
 
 func TestAccDataPipelinePipelineDefinition_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var pipelineOutput datapipeline.GetPipelineDefinitionOutput
 	resourceName := "aws_datapipeline_pipeline_definition.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -24,13 +25,13 @@ func TestAccDataPipelinePipelineDefinition_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPipelineDefinitionDestroy,
+		CheckDestroy:             testAccCheckPipelineDefinitionDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, datapipeline.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPipelineDefinitionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPipelineDefinitionExists(resourceName, &pipelineOutput),
+					testAccCheckPipelineDefinitionExists(ctx, resourceName, &pipelineOutput),
 					resource.TestCheckResourceAttr(resourceName, "pipeline_object.0.id", "Default"),
 					resource.TestCheckResourceAttr(resourceName, "pipeline_object.0.name", "Default"),
 					resource.TestCheckResourceAttr(resourceName, "pipeline_object.0.field.0.key", "workerGroup"),
@@ -47,6 +48,7 @@ func TestAccDataPipelinePipelineDefinition_basic(t *testing.T) {
 }
 
 func TestAccDataPipelinePipelineDefinition_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var pipelineOutput datapipeline.GetPipelineDefinitionOutput
 	resourceName := "aws_datapipeline_pipeline_definition.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -54,14 +56,14 @@ func TestAccDataPipelinePipelineDefinition_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPipelineDefinitionDestroy,
+		CheckDestroy:             testAccCheckPipelineDefinitionDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, datapipeline.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPipelineDefinitionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPipelineDefinitionExists(resourceName, &pipelineOutput),
-					acctest.CheckResourceDisappears(acctest.Provider, tfdatapipeline.ResourcePipelineDefinition(), resourceName),
+					testAccCheckPipelineDefinitionExists(ctx, resourceName, &pipelineOutput),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdatapipeline.ResourcePipelineDefinition(), resourceName),
 				),
 			},
 		},
@@ -69,6 +71,7 @@ func TestAccDataPipelinePipelineDefinition_disappears(t *testing.T) {
 }
 
 func TestAccDataPipelinePipelineDefinition_complete(t *testing.T) {
+	ctx := acctest.Context(t)
 	var pipelineOutput datapipeline.GetPipelineDefinitionOutput
 	resourceName := "aws_datapipeline_pipeline_definition.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
@@ -76,20 +79,20 @@ func TestAccDataPipelinePipelineDefinition_complete(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPipelineDefinitionDestroy,
+		CheckDestroy:             testAccCheckPipelineDefinitionDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, datapipeline.EndpointsID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPipelineDefinitionConfig_complete(rName, "myAWSCLICmd"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPipelineDefinitionExists(resourceName, &pipelineOutput),
+					testAccCheckPipelineDefinitionExists(ctx, resourceName, &pipelineOutput),
 					resource.TestCheckResourceAttr(resourceName, "parameter_object.0.id", "myAWSCLICmd"),
 				),
 			},
 			{
 				Config: testAccPipelineDefinitionConfig_complete(rName, "myAWSCLICmd2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPipelineDefinitionExists(resourceName, &pipelineOutput),
+					testAccCheckPipelineDefinitionExists(ctx, resourceName, &pipelineOutput),
 					resource.TestCheckResourceAttr(resourceName, "parameter_object.0.id", "myAWSCLICmd2"),
 				),
 			},
@@ -102,15 +105,15 @@ func TestAccDataPipelinePipelineDefinition_complete(t *testing.T) {
 	})
 }
 
-func testAccCheckPipelineDefinitionExists(resourceName string, datapipelineOutput *datapipeline.GetPipelineDefinitionOutput) resource.TestCheckFunc {
+func testAccCheckPipelineDefinitionExists(ctx context.Context, resourceName string, datapipelineOutput *datapipeline.GetPipelineDefinitionOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
 			return fmt.Errorf("not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataPipelineConn
-		resp, err := conn.GetPipelineDefinitionWithContext(context.Background(), &datapipeline.GetPipelineDefinitionInput{PipelineId: aws.String(rs.Primary.ID)})
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DataPipelineConn()
+		resp, err := conn.GetPipelineDefinitionWithContext(ctx, &datapipeline.GetPipelineDefinitionInput{PipelineId: aws.String(rs.Primary.ID)})
 		if err != nil {
 			return fmt.Errorf("problem checking for DataPipeline Pipeline Definition existence: %w", err)
 		}
@@ -125,31 +128,33 @@ func testAccCheckPipelineDefinitionExists(resourceName string, datapipelineOutpu
 	}
 }
 
-func testAccCheckPipelineDefinitionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DataPipelineConn
+func testAccCheckPipelineDefinitionDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DataPipelineConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_datapipeline_pipeline_definition" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_datapipeline_pipeline_definition" {
+				continue
+			}
+
+			resp, err := conn.GetPipelineDefinitionWithContext(ctx, &datapipeline.GetPipelineDefinitionInput{PipelineId: aws.String(rs.Primary.ID)})
+
+			if tfawserr.ErrCodeEquals(err, datapipeline.ErrCodePipelineNotFoundException) ||
+				tfawserr.ErrCodeEquals(err, datapipeline.ErrCodePipelineDeletedException) {
+				continue
+			}
+
+			if err != nil {
+				return fmt.Errorf("problem while checking if DataPipeline Pipeline Definition was destroyed: %w", err)
+			}
+
+			if resp != nil {
+				return fmt.Errorf("DataPipeline Pipeline Definition %q still exists", rs.Primary.ID)
+			}
 		}
 
-		resp, err := conn.GetPipelineDefinitionWithContext(context.Background(), &datapipeline.GetPipelineDefinitionInput{PipelineId: aws.String(rs.Primary.ID)})
-
-		if tfawserr.ErrCodeEquals(err, datapipeline.ErrCodePipelineNotFoundException) ||
-			tfawserr.ErrCodeEquals(err, datapipeline.ErrCodePipelineDeletedException) {
-			continue
-		}
-
-		if err != nil {
-			return fmt.Errorf("problem while checking if DataPipeline Pipeline Definition was destroyed: %w", err)
-		}
-
-		if resp != nil {
-			return fmt.Errorf("DataPipeline Pipeline Definition %q still exists", rs.Primary.ID)
-		}
+		return nil
 	}
-
-	return nil
 }
 
 func testAccPipelineDefinitionConfig_basic(name string) string {

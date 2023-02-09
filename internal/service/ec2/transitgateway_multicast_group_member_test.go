@@ -1,6 +1,7 @@
 package ec2_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -15,20 +16,21 @@ import (
 )
 
 func testAccTransitGatewayMulticastGroupMember_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v ec2.TransitGatewayMulticastGroup
 	resourceName := "aws_ec2_transit_gateway_multicast_group_member.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTransitGatewayMulticastGroupMemberDestroy,
+		CheckDestroy:             testAccCheckTransitGatewayMulticastGroupMemberDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayMulticastGroupMemberConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitGatewayMulticastGroupMemberExists(resourceName, &v),
+					testAccCheckTransitGatewayMulticastGroupMemberExists(ctx, resourceName, &v),
 				),
 			},
 		},
@@ -36,21 +38,22 @@ func testAccTransitGatewayMulticastGroupMember_basic(t *testing.T) {
 }
 
 func testAccTransitGatewayMulticastGroupMember_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v ec2.TransitGatewayMulticastGroup
 	resourceName := "aws_ec2_transit_gateway_multicast_group_member.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTransitGatewayMulticastGroupMemberDestroy,
+		CheckDestroy:             testAccCheckTransitGatewayMulticastGroupMemberDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayMulticastGroupMemberConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitGatewayMulticastGroupMemberExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceTransitGatewayMulticastGroupMember(), resourceName),
+					testAccCheckTransitGatewayMulticastGroupMemberExists(ctx, resourceName, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceTransitGatewayMulticastGroupMember(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -59,22 +62,23 @@ func testAccTransitGatewayMulticastGroupMember_disappears(t *testing.T) {
 }
 
 func testAccTransitGatewayMulticastGroupMember_Disappears_domain(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v ec2.TransitGatewayMulticastGroup
 	resourceName := "aws_ec2_transit_gateway_multicast_group_member.test"
 	domainResourceName := "aws_ec2_transit_gateway_multicast_domain.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTransitGatewayMulticastGroupMemberDestroy,
+		CheckDestroy:             testAccCheckTransitGatewayMulticastGroupMemberDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayMulticastGroupMemberConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitGatewayMulticastGroupMemberExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceTransitGatewayMulticastDomain(), domainResourceName),
+					testAccCheckTransitGatewayMulticastGroupMemberExists(ctx, resourceName, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceTransitGatewayMulticastDomain(), domainResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -83,29 +87,30 @@ func testAccTransitGatewayMulticastGroupMember_Disappears_domain(t *testing.T) {
 }
 
 func testAccTransitGatewayMulticastGroupMember_twoMembers(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v1, v2 ec2.TransitGatewayMulticastGroup
 	resource1Name := "aws_ec2_transit_gateway_multicast_group_member.test1"
 	resource2Name := "aws_ec2_transit_gateway_multicast_group_member.test2"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTransitGatewayMulticastGroupMemberDestroy,
+		CheckDestroy:             testAccCheckTransitGatewayMulticastGroupMemberDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayMulticastGroupMemberConfig_twoMembers(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitGatewayMulticastGroupMemberExists(resource1Name, &v1),
-					testAccCheckTransitGatewayMulticastGroupMemberExists(resource2Name, &v2),
+					testAccCheckTransitGatewayMulticastGroupMemberExists(ctx, resource1Name, &v1),
+					testAccCheckTransitGatewayMulticastGroupMemberExists(ctx, resource2Name, &v2),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckTransitGatewayMulticastGroupMemberExists(n string, v *ec2.TransitGatewayMulticastGroup) resource.TestCheckFunc {
+func testAccCheckTransitGatewayMulticastGroupMemberExists(ctx context.Context, n string, v *ec2.TransitGatewayMulticastGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -122,9 +127,9 @@ func testAccCheckTransitGatewayMulticastGroupMemberExists(n string, v *ec2.Trans
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
-		output, err := tfec2.FindTransitGatewayMulticastGroupMemberByThreePartKey(conn, multicastDomainID, groupIPAddress, eniID)
+		output, err := tfec2.FindTransitGatewayMulticastGroupMemberByThreePartKey(ctx, conn, multicastDomainID, groupIPAddress, eniID)
 
 		if err != nil {
 			return err
@@ -136,34 +141,36 @@ func testAccCheckTransitGatewayMulticastGroupMemberExists(n string, v *ec2.Trans
 	}
 }
 
-func testAccCheckTransitGatewayMulticastGroupMemberDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+func testAccCheckTransitGatewayMulticastGroupMemberDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_ec2_transit_gateway_multicast_group_member" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_ec2_transit_gateway_multicast_group_member" {
+				continue
+			}
+
+			multicastDomainID, groupIPAddress, eniID, err := tfec2.TransitGatewayMulticastGroupMemberParseResourceID(rs.Primary.ID)
+
+			if err != nil {
+				return err
+			}
+
+			_, err = tfec2.FindTransitGatewayMulticastGroupMemberByThreePartKey(ctx, conn, multicastDomainID, groupIPAddress, eniID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("EC2 Transit Gateway Multicast Group Member %s still exists", rs.Primary.ID)
 		}
 
-		multicastDomainID, groupIPAddress, eniID, err := tfec2.TransitGatewayMulticastGroupMemberParseResourceID(rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		_, err = tfec2.FindTransitGatewayMulticastGroupMemberByThreePartKey(conn, multicastDomainID, groupIPAddress, eniID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("EC2 Transit Gateway Multicast Group Member %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
 func testAccTransitGatewayMulticastGroupMemberConfig_basic(rName string) string {

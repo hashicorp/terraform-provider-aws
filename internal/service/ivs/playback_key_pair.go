@@ -67,7 +67,7 @@ const (
 )
 
 func resourcePlaybackKeyPairCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IVSConn
+	conn := meta.(*conns.AWSClient).IVSConn()
 
 	in := &ivs.ImportPlaybackKeyPairInput{
 		PublicKeyMaterial: aws.String(d.Get("public_key").(string)),
@@ -103,7 +103,7 @@ func resourcePlaybackKeyPairCreate(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourcePlaybackKeyPairRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IVSConn
+	conn := meta.(*conns.AWSClient).IVSConn()
 
 	out, err := FindPlaybackKeyPairByID(ctx, conn, d.Id())
 
@@ -121,7 +121,7 @@ func resourcePlaybackKeyPairRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("name", out.Name)
 	d.Set("fingerprint", out.Fingerprint)
 
-	tags, err := ListTagsWithContext(ctx, conn, d.Id())
+	tags, err := ListTags(ctx, conn, d.Id())
 	if err != nil {
 		return create.DiagError(names.IVS, create.ErrActionReading, ResNamePlaybackKeyPair, d.Id(), err)
 	}
@@ -142,7 +142,7 @@ func resourcePlaybackKeyPairRead(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourcePlaybackKeyPairDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IVSConn
+	conn := meta.(*conns.AWSClient).IVSConn()
 
 	log.Printf("[INFO] Deleting IVS PlaybackKeyPair %s", d.Id())
 

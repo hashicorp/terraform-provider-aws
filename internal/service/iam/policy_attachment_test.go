@@ -1,6 +1,7 @@
 package iam_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -14,6 +15,7 @@ import (
 )
 
 func TestAccIAMPolicyAttachment_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var out iam.ListEntitiesForPolicyOutput
 
 	rString := sdkacctest.RandString(8)
@@ -38,7 +40,7 @@ func TestAccIAMPolicyAttachment_basic(t *testing.T) {
 			{
 				Config: testAccPolicyAttachmentConfig_attach(userName, roleName, groupName, policyName, attachmentName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyAttachmentExists("aws_iam_policy_attachment.test-attach", 3, &out),
+					testAccCheckPolicyAttachmentExists(ctx, "aws_iam_policy_attachment.test-attach", 3, &out),
 					testAccCheckPolicyAttachmentAttributes([]string{userName}, []string{roleName}, []string{groupName}, &out),
 				),
 			},
@@ -48,7 +50,7 @@ func TestAccIAMPolicyAttachment_basic(t *testing.T) {
 					groupName, groupName2, groupName3,
 					policyName, attachmentName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyAttachmentExists("aws_iam_policy_attachment.test-attach", 6, &out),
+					testAccCheckPolicyAttachmentExists(ctx, "aws_iam_policy_attachment.test-attach", 6, &out),
 					testAccCheckPolicyAttachmentAttributes([]string{userName2, userName3},
 						[]string{roleName2, roleName3}, []string{groupName2, groupName3}, &out),
 				),
@@ -58,6 +60,7 @@ func TestAccIAMPolicyAttachment_basic(t *testing.T) {
 }
 
 func TestAccIAMPolicyAttachment_paginatedEntities(t *testing.T) {
+	ctx := acctest.Context(t)
 	var out iam.ListEntitiesForPolicyOutput
 
 	rString := sdkacctest.RandString(8)
@@ -74,7 +77,7 @@ func TestAccIAMPolicyAttachment_paginatedEntities(t *testing.T) {
 			{
 				Config: testAccPolicyAttachmentConfig_paginatedAttach(userNamePrefix, policyName, attachmentName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyAttachmentExists("aws_iam_policy_attachment.test-paginated-attach", 101, &out),
+					testAccCheckPolicyAttachmentExists(ctx, "aws_iam_policy_attachment.test-paginated-attach", 101, &out),
 				),
 			},
 		},
@@ -82,6 +85,7 @@ func TestAccIAMPolicyAttachment_paginatedEntities(t *testing.T) {
 }
 
 func TestAccIAMPolicyAttachment_Groups_renamedGroup(t *testing.T) {
+	ctx := acctest.Context(t)
 	var out iam.ListEntitiesForPolicyOutput
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -98,14 +102,14 @@ func TestAccIAMPolicyAttachment_Groups_renamedGroup(t *testing.T) {
 			{
 				Config: testAccPolicyAttachmentConfig_groupsRenamedGroup(rName, groupName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyAttachmentExists(resourceName, 1, &out),
+					testAccCheckPolicyAttachmentExists(ctx, resourceName, 1, &out),
 					testAccCheckPolicyAttachmentAttributes([]string{}, []string{}, []string{groupName1}, &out),
 				),
 			},
 			{
 				Config: testAccPolicyAttachmentConfig_groupsRenamedGroup(rName, groupName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyAttachmentExists(resourceName, 1, &out),
+					testAccCheckPolicyAttachmentExists(ctx, resourceName, 1, &out),
 					testAccCheckPolicyAttachmentAttributes([]string{}, []string{}, []string{groupName2}, &out),
 				),
 			},
@@ -114,6 +118,7 @@ func TestAccIAMPolicyAttachment_Groups_renamedGroup(t *testing.T) {
 }
 
 func TestAccIAMPolicyAttachment_Roles_renamedRole(t *testing.T) {
+	ctx := acctest.Context(t)
 	var out iam.ListEntitiesForPolicyOutput
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -130,14 +135,14 @@ func TestAccIAMPolicyAttachment_Roles_renamedRole(t *testing.T) {
 			{
 				Config: testAccPolicyAttachmentConfig_rolesRenamedRole(rName, roleName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyAttachmentExists(resourceName, 1, &out),
+					testAccCheckPolicyAttachmentExists(ctx, resourceName, 1, &out),
 					testAccCheckPolicyAttachmentAttributes([]string{}, []string{roleName1}, []string{}, &out),
 				),
 			},
 			{
 				Config: testAccPolicyAttachmentConfig_rolesRenamedRole(rName, roleName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyAttachmentExists(resourceName, 1, &out),
+					testAccCheckPolicyAttachmentExists(ctx, resourceName, 1, &out),
 					testAccCheckPolicyAttachmentAttributes([]string{}, []string{roleName2}, []string{}, &out),
 				),
 			},
@@ -146,6 +151,7 @@ func TestAccIAMPolicyAttachment_Roles_renamedRole(t *testing.T) {
 }
 
 func TestAccIAMPolicyAttachment_Users_renamedUser(t *testing.T) {
+	ctx := acctest.Context(t)
 	var out iam.ListEntitiesForPolicyOutput
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -162,14 +168,14 @@ func TestAccIAMPolicyAttachment_Users_renamedUser(t *testing.T) {
 			{
 				Config: testAccPolicyAttachmentConfig_usersRenamedUser(rName, userName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyAttachmentExists(resourceName, 1, &out),
+					testAccCheckPolicyAttachmentExists(ctx, resourceName, 1, &out),
 					testAccCheckPolicyAttachmentAttributes([]string{userName1}, []string{}, []string{}, &out),
 				),
 			},
 			{
 				Config: testAccPolicyAttachmentConfig_usersRenamedUser(rName, userName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyAttachmentExists(resourceName, 1, &out),
+					testAccCheckPolicyAttachmentExists(ctx, resourceName, 1, &out),
 					testAccCheckPolicyAttachmentAttributes([]string{userName2}, []string{}, []string{}, &out),
 				),
 			},
@@ -181,7 +187,7 @@ func testAccCheckPolicyAttachmentDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckPolicyAttachmentExists(n string, c int64, out *iam.ListEntitiesForPolicyOutput) resource.TestCheckFunc {
+func testAccCheckPolicyAttachmentExists(ctx context.Context, n string, c int64, out *iam.ListEntitiesForPolicyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -192,10 +198,10 @@ func testAccCheckPolicyAttachmentExists(n string, c int64, out *iam.ListEntities
 			return fmt.Errorf("No policy name is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 		arn := rs.Primary.Attributes["policy_arn"]
 
-		resp, err := conn.GetPolicy(&iam.GetPolicyInput{
+		resp, err := conn.GetPolicyWithContext(ctx, &iam.GetPolicyInput{
 			PolicyArn: aws.String(arn),
 		})
 		if err != nil {
@@ -204,7 +210,7 @@ func testAccCheckPolicyAttachmentExists(n string, c int64, out *iam.ListEntities
 		if c != *resp.Policy.AttachmentCount {
 			return fmt.Errorf("Error: Policy (%s) has wrong number of entities attached on initial creation", n)
 		}
-		resp2, err := conn.ListEntitiesForPolicy(&iam.ListEntitiesForPolicyInput{
+		resp2, err := conn.ListEntitiesForPolicyWithContext(ctx, &iam.ListEntitiesForPolicyInput{
 			PolicyArn: aws.String(arn),
 		})
 		if err != nil {

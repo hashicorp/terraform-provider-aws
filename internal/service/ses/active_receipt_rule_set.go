@@ -1,6 +1,7 @@
 package ses
 
 import (
+	"context"
 	"fmt"
 	"log"
 
@@ -8,17 +9,19 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ses"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func ResourceActiveReceiptRuleSet() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceActiveReceiptRuleSetUpdate,
-		Update: resourceActiveReceiptRuleSetUpdate,
-		Read:   resourceActiveReceiptRuleSetRead,
-		Delete: resourceActiveReceiptRuleSetDelete,
+		CreateWithoutTimeout: resourceActiveReceiptRuleSetUpdate,
+		UpdateWithoutTimeout: resourceActiveReceiptRuleSetUpdate,
+		ReadWithoutTimeout:   resourceActiveReceiptRuleSetRead,
+		DeleteWithoutTimeout: resourceActiveReceiptRuleSetDelete,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -34,8 +37,9 @@ func ResourceActiveReceiptRuleSet() *schema.Resource {
 	}
 }
 
-func resourceActiveReceiptRuleSetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+func resourceActiveReceiptRuleSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	ruleSetName := d.Get("rule_set_name").(string)
 
@@ -43,35 +47,36 @@ func resourceActiveReceiptRuleSetUpdate(d *schema.ResourceData, meta interface{}
 		RuleSetName: aws.String(ruleSetName),
 	}
 
-	_, err := conn.SetActiveReceiptRuleSet(createOpts)
+	_, err := conn.SetActiveReceiptRuleSetWithContext(ctx, createOpts)
 	if err != nil {
-		return fmt.Errorf("Error setting active SES rule set: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting active SES rule set: %s", err)
 	}
 
 	d.SetId(ruleSetName)
 
-	return resourceActiveReceiptRuleSetRead(d, meta)
+	return append(diags, resourceActiveReceiptRuleSetRead(ctx, d, meta)...)
 }
 
-func resourceActiveReceiptRuleSetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+func resourceActiveReceiptRuleSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	describeOpts := &ses.DescribeActiveReceiptRuleSetInput{}
 
-	response, err := conn.DescribeActiveReceiptRuleSet(describeOpts)
+	response, err := conn.DescribeActiveReceiptRuleSetWithContext(ctx, describeOpts)
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, ses.ErrCodeRuleSetDoesNotExistException) {
 			log.Printf("[WARN] SES Receipt Rule Set (%s) belonging to SES Active Receipt Rule Set not found, removing from state", d.Id())
 			d.SetId("")
-			return nil
+			return diags
 		}
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading SES Active Receipt Rule Set: %s", err)
 	}
 
 	if response.Metadata == nil {
 		log.Print("[WARN] No active Receipt Rule Set found")
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	d.Set("rule_set_name", response.Metadata.Name)
@@ -85,20 +90,21 @@ func resourceActiveReceiptRuleSetRead(d *schema.ResourceData, meta interface{}) 
 	}.String()
 	d.Set("arn", arn)
 
-	return nil
+	return diags
 }
 
-func resourceActiveReceiptRuleSetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+func resourceActiveReceiptRuleSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SESConn()
 
 	deleteOpts := &ses.SetActiveReceiptRuleSetInput{
 		RuleSetName: nil,
 	}
 
-	_, err := conn.SetActiveReceiptRuleSet(deleteOpts)
+	_, err := conn.SetActiveReceiptRuleSetWithContext(ctx, deleteOpts)
 	if err != nil {
-		return fmt.Errorf("Error deleting active SES rule set: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting active SES rule set: %s", err)
 	}
 
-	return nil
+	return diags
 }

@@ -10,6 +10,8 @@ import (
 
 // testing rulesForGroupPermissions
 func TestRulesMixedMatching(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		local  []interface{}
 		remote []map[string]interface{}

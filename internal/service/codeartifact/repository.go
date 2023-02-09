@@ -1,6 +1,7 @@
 package codeartifact
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -9,9 +10,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/codeartifact"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -19,12 +22,12 @@ import (
 
 func ResourceRepository() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceRepositoryCreate,
-		Read:   resourceRepositoryRead,
-		Update: resourceRepositoryUpdate,
-		Delete: resourceRepositoryDelete,
+		CreateWithoutTimeout: resourceRepositoryCreate,
+		ReadWithoutTimeout:   resourceRepositoryRead,
+		UpdateWithoutTimeout: resourceRepositoryUpdate,
+		DeleteWithoutTimeout: resourceRepositoryDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -99,8 +102,9 @@ func ResourceRepository() *schema.Resource {
 	}
 }
 
-func resourceRepositoryCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeArtifactConn
+func resourceRepositoryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CodeArtifactConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 	log.Print("[DEBUG] Creating CodeArtifact Repository")
@@ -123,9 +127,9 @@ func resourceRepositoryCreate(d *schema.ResourceData, meta interface{}) error {
 		params.Upstreams = expandUpstreams(v.([]interface{}))
 	}
 
-	res, err := conn.CreateRepository(params)
+	res, err := conn.CreateRepositoryWithContext(ctx, params)
 	if err != nil {
-		return fmt.Errorf("error creating CodeArtifact Repository: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating CodeArtifact Repository: %s", err)
 	}
 
 	repo := res.Repository
@@ -140,17 +144,18 @@ func resourceRepositoryCreate(d *schema.ResourceData, meta interface{}) error {
 			ExternalConnection: aws.String(externalConnection["external_connection_name"].(string)),
 		}
 
-		_, err := conn.AssociateExternalConnection(input)
+		_, err := conn.AssociateExternalConnectionWithContext(ctx, input)
 		if err != nil {
-			return fmt.Errorf("error associating external connection to CodeArtifact repository: %w", err)
+			return sdkdiag.AppendErrorf(diags, "associating external connection to CodeArtifact repository: %s", err)
 		}
 	}
 
-	return resourceRepositoryRead(d, meta)
+	return append(diags, resourceRepositoryRead(ctx, d, meta)...)
 }
 
-func resourceRepositoryUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeArtifactConn
+func resourceRepositoryUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CodeArtifactConn()
 	log.Print("[DEBUG] Updating CodeArtifact Repository")
 
 	needsUpdate := false
@@ -175,9 +180,9 @@ func resourceRepositoryUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if needsUpdate {
-		_, err := conn.UpdateRepository(params)
+		_, err := conn.UpdateRepositoryWithContext(ctx, params)
 		if err != nil {
-			return fmt.Errorf("error updating CodeArtifact Repository: %w", err)
+			return sdkdiag.AppendErrorf(diags, "updating CodeArtifact Repository: %s", err)
 		}
 	}
 
@@ -191,9 +196,9 @@ func resourceRepositoryUpdate(d *schema.ResourceData, meta interface{}) error {
 				ExternalConnection: aws.String(externalConnection["external_connection_name"].(string)),
 			}
 
-			_, err := conn.AssociateExternalConnection(input)
+			_, err := conn.AssociateExternalConnectionWithContext(ctx, input)
 			if err != nil {
-				return fmt.Errorf("error associating external connection to CodeArtifact repository: %w", err)
+				return sdkdiag.AppendErrorf(diags, "associating external connection to CodeArtifact repository: %s", err)
 			}
 		} else {
 			oldConn, _ := d.GetChange("external_connections")
@@ -205,25 +210,26 @@ func resourceRepositoryUpdate(d *schema.ResourceData, meta interface{}) error {
 				ExternalConnection: aws.String(externalConnection["external_connection_name"].(string)),
 			}
 
-			_, err := conn.DisassociateExternalConnection(input)
+			_, err := conn.DisassociateExternalConnectionWithContext(ctx, input)
 			if err != nil {
-				return fmt.Errorf("error disassociating external connection to CodeArtifact repository: %w", err)
+				return sdkdiag.AppendErrorf(diags, "disassociating external connection to CodeArtifact repository: %s", err)
 			}
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating CodeArtifact Repository (%s) tags: %w", d.Id(), err)
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating CodeArtifact Repository (%s) tags: %s", d.Id(), err)
 		}
 	}
 
-	return resourceRepositoryRead(d, meta)
+	return append(diags, resourceRepositoryRead(ctx, d, meta)...)
 }
 
-func resourceRepositoryRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeArtifactConn
+func resourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CodeArtifactConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -231,9 +237,9 @@ func resourceRepositoryRead(d *schema.ResourceData, meta interface{}) error {
 
 	owner, domain, repo, err := DecodeRepositoryID(d.Id())
 	if err != nil {
-		return err
+		return create.DiagError(names.CodeArtifact, create.ErrActionReading, ResNameRepository, d.Id(), err)
 	}
-	sm, err := conn.DescribeRepository(&codeartifact.DescribeRepositoryInput{
+	sm, err := conn.DescribeRepositoryWithContext(ctx, &codeartifact.DescribeRepositoryInput{
 		Repository:  aws.String(repo),
 		Domain:      aws.String(domain),
 		DomainOwner: aws.String(owner),
@@ -241,11 +247,11 @@ func resourceRepositoryRead(d *schema.ResourceData, meta interface{}) error {
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, codeartifact.ErrCodeResourceNotFoundException) {
 		create.LogNotFoundRemoveState(names.CodeArtifact, create.ErrActionReading, ResNameRepository, d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.Error(names.CodeArtifact, create.ErrActionReading, ResNameRepository, d.Id(), err)
+		return create.DiagError(names.CodeArtifact, create.ErrActionReading, ResNameRepository, d.Id(), err)
 	}
 
 	arn := aws.StringValue(sm.Repository.Arn)
@@ -258,43 +264,44 @@ func resourceRepositoryRead(d *schema.ResourceData, meta interface{}) error {
 
 	if sm.Repository.Upstreams != nil {
 		if err := d.Set("upstream", flattenUpstreams(sm.Repository.Upstreams)); err != nil {
-			return fmt.Errorf("[WARN] Error setting upstream: %w", err)
+			return sdkdiag.AppendErrorf(diags, "[WARN] Error setting upstream: %s", err)
 		}
 	}
 
 	if sm.Repository.ExternalConnections != nil {
 		if err := d.Set("external_connections", flattenExternalConnections(sm.Repository.ExternalConnections)); err != nil {
-			return fmt.Errorf("[WARN] Error setting external_connections: %w", err)
+			return sdkdiag.AppendErrorf(diags, "[WARN] Error setting external_connections: %s", err)
 		}
 	}
 
-	tags, err := ListTags(conn, arn)
+	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for CodeArtifact Repository (%s): %w", arn, err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for CodeArtifact Repository (%s): %s", arn, err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceRepositoryDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeArtifactConn
+func resourceRepositoryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CodeArtifactConn()
 	log.Printf("[DEBUG] Deleting CodeArtifact Repository: %s", d.Id())
 
 	owner, domain, repo, err := DecodeRepositoryID(d.Id())
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "deleting CodeArtifact Repository (%s): %s", d.Id(), err)
 	}
 	input := &codeartifact.DeleteRepositoryInput{
 		Repository:  aws.String(repo),
@@ -302,17 +309,17 @@ func resourceRepositoryDelete(d *schema.ResourceData, meta interface{}) error {
 		DomainOwner: aws.String(owner),
 	}
 
-	_, err = conn.DeleteRepository(input)
+	_, err = conn.DeleteRepositoryWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, codeartifact.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting CodeArtifact Repository (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting CodeArtifact Repository (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandUpstreams(l []interface{}) []*codeartifact.UpstreamRepository {

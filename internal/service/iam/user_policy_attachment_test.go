@@ -1,11 +1,13 @@
 package iam_test
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/iam"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -15,6 +17,7 @@ import (
 )
 
 func TestAccIAMUserPolicyAttachment_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var out iam.ListAttachedUserPoliciesOutput
 	rName := sdkacctest.RandString(10)
 	policyName1 := fmt.Sprintf("test-policy-%s", sdkacctest.RandString(10))
@@ -30,7 +33,7 @@ func TestAccIAMUserPolicyAttachment_basic(t *testing.T) {
 			{
 				Config: testAccUserPolicyAttachmentConfig_attach(rName, policyName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserPolicyAttachmentExists("aws_iam_user_policy_attachment.test-attach", 1, &out),
+					testAccCheckUserPolicyAttachmentExists(ctx, "aws_iam_user_policy_attachment.test-attach", 1, &out),
 					testAccCheckUserPolicyAttachmentAttributes([]string{policyName1}, &out),
 				),
 			},
@@ -48,7 +51,7 @@ func TestAccIAMUserPolicyAttachment_basic(t *testing.T) {
 
 					rs := s[0]
 
-					if !strings.HasPrefix(rs.Attributes["policy_arn"], "arn:") {
+					if !arn.IsARN(rs.Attributes["policy_arn"]) {
 						return fmt.Errorf("expected policy_arn attribute to be set and begin with arn:, received: %s", rs.Attributes["policy_arn"])
 					}
 
@@ -58,7 +61,7 @@ func TestAccIAMUserPolicyAttachment_basic(t *testing.T) {
 			{
 				Config: testAccUserPolicyAttachmentConfig_attachUpdate(rName, policyName1, policyName2, policyName3),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserPolicyAttachmentExists("aws_iam_user_policy_attachment.test-attach", 2, &out),
+					testAccCheckUserPolicyAttachmentExists(ctx, "aws_iam_user_policy_attachment.test-attach", 2, &out),
 					testAccCheckUserPolicyAttachmentAttributes([]string{policyName2, policyName3}, &out),
 				),
 			},
@@ -70,7 +73,7 @@ func testAccCheckUserPolicyAttachmentDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckUserPolicyAttachmentExists(n string, c int, out *iam.ListAttachedUserPoliciesOutput) resource.TestCheckFunc {
+func testAccCheckUserPolicyAttachmentExists(ctx context.Context, n string, c int, out *iam.ListAttachedUserPoliciesOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -81,10 +84,10 @@ func testAccCheckUserPolicyAttachmentExists(n string, c int, out *iam.ListAttach
 			return fmt.Errorf("No policy name is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn()
 		user := rs.Primary.Attributes["user"]
 
-		attachedPolicies, err := conn.ListAttachedUserPolicies(&iam.ListAttachedUserPoliciesInput{
+		attachedPolicies, err := conn.ListAttachedUserPoliciesWithContext(ctx, &iam.ListAttachedUserPoliciesInput{
 			UserName: aws.String(user),
 		})
 		if err != nil {

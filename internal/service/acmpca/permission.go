@@ -1,6 +1,7 @@
 package acmpca
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -8,9 +9,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -18,9 +21,9 @@ import (
 
 func ResourcePermission() *schema.Resource {
 	return &schema.Resource{
-		Create: resourcePermissionCreate,
-		Read:   resourcePermissionRead,
-		Delete: resourcePermissionDelete,
+		CreateWithoutTimeout: resourcePermissionCreate,
+		ReadWithoutTimeout:   resourcePermissionRead,
+		DeleteWithoutTimeout: resourcePermissionDelete,
 
 		Schema: map[string]*schema.Schema{
 			"actions": {
@@ -60,8 +63,9 @@ func ResourcePermission() *schema.Resource {
 	}
 }
 
-func resourcePermissionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ACMPCAConn
+func resourcePermissionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ACMPCAConn()
 
 	caARN := d.Get("certificate_authority_arn").(string)
 	principal := d.Get("principal").(string)
@@ -78,36 +82,37 @@ func resourcePermissionCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Creating ACM PCA Permission: %s", input)
-	_, err := conn.CreatePermission(input)
+	_, err := conn.CreatePermissionWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("creating ACM PCA Permission (%s): %w", id, err)
+		return sdkdiag.AppendErrorf(diags, "creating ACM PCA Permission (%s): %s", id, err)
 	}
 
 	d.SetId(id)
 
-	return resourcePermissionRead(d, meta)
+	return append(diags, resourcePermissionRead(ctx, d, meta)...)
 }
 
-func resourcePermissionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ACMPCAConn
+func resourcePermissionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ACMPCAConn()
 
 	caARN, principal, sourceAccount, err := PermissionParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading ACM PCA Permission (%s): %s", d.Id(), err)
 	}
 
-	permission, err := FindPermission(conn, caARN, principal, sourceAccount)
+	permission, err := FindPermission(ctx, conn, caARN, principal, sourceAccount)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ACM PCA Permission (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading ACM PCA Permission (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading ACM PCA Permission (%s): %s", d.Id(), err)
 	}
 
 	d.Set("actions", aws.StringValueSlice(permission.Actions))
@@ -116,16 +121,17 @@ func resourcePermissionRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("principal", permission.Principal)
 	d.Set("source_account", permission.SourceAccount)
 
-	return nil
+	return diags
 }
 
-func resourcePermissionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ACMPCAConn
+func resourcePermissionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ACMPCAConn()
 
 	caARN, principal, sourceAccount, err := PermissionParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "deleting ACM PCA Permission (%s): %s", d.Id(), err)
 	}
 
 	input := &acmpca.DeletePermissionInput{
@@ -138,17 +144,17 @@ func resourcePermissionDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Deleting ACM PCA Permission: %s", d.Id())
-	_, err = conn.DeletePermission(input)
+	_, err = conn.DeletePermissionWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, acmpca.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("deleting ACM PCA Permission: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting ACM PCA Permission (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 const permissionIDSeparator = ","

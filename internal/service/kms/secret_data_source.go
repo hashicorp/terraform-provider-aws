@@ -1,8 +1,9 @@
 package kms
 
 import (
-	"errors"
+	"context"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -10,8 +11,8 @@ const SecretRemovedMessage = "This data source has been replaced with the `aws_k
 
 func DataSourceSecret() *schema.Resource {
 	return &schema.Resource{
-		Read: func(d *schema.ResourceData, meta interface{}) error {
-			return errors.New(SecretRemovedMessage)
+		ReadWithoutTimeout: func(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+			return diag.Errorf(SecretRemovedMessage)
 		},
 
 		Schema: map[string]*schema.Schema{

@@ -1,17 +1,19 @@
 package backup
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/backup"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func DataSourceSelection() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceSelectionRead,
+		ReadWithoutTimeout: dataSourceSelectionRead,
 
 		Schema: map[string]*schema.Schema{
 			"plan_id": {
@@ -39,17 +41,18 @@ func DataSourceSelection() *schema.Resource {
 	}
 }
 
-func dataSourceSelectionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BackupConn
+func dataSourceSelectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).BackupConn()
 
 	input := &backup.GetBackupSelectionInput{
 		BackupPlanId: aws.String(d.Get("plan_id").(string)),
 		SelectionId:  aws.String(d.Get("selection_id").(string)),
 	}
 
-	resp, err := conn.GetBackupSelection(input)
+	resp, err := conn.GetBackupSelectionWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("Error getting Backup Selection: %w", err)
+		return sdkdiag.AppendErrorf(diags, "Error getting Backup Selection: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resp.SelectionId))
@@ -58,9 +61,9 @@ func dataSourceSelectionRead(d *schema.ResourceData, meta interface{}) error {
 
 	if resp.BackupSelection.Resources != nil {
 		if err := d.Set("resources", aws.StringValueSlice(resp.BackupSelection.Resources)); err != nil {
-			return fmt.Errorf("error setting resources: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting resources: %s", err)
 		}
 	}
 
-	return nil
+	return diags
 }

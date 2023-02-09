@@ -23,17 +23,18 @@ func init() {
 }
 
 func sweepApplications(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).ApplicationInsightsConn
+	conn := client.(*conns.AWSClient).ApplicationInsightsConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
-	err = conn.ListApplicationsPages(&applicationinsights.ListApplicationsInput{}, func(resp *applicationinsights.ListApplicationsOutput, lastPage bool) bool {
+	err = conn.ListApplicationsPagesWithContext(ctx, &applicationinsights.ListApplicationsInput{}, func(resp *applicationinsights.ListApplicationsOutput, lastPage bool) bool {
 		if len(resp.ApplicationInfoList) == 0 {
 			log.Print("[DEBUG] No ApplicationInsights Applications to sweep")
 			return !lastPage
@@ -55,7 +56,7 @@ func sweepApplications(region string) error {
 		// in case work can be done, don't jump out yet
 	}
 
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping ApplicationInsights Applications for %s: %w", region, err))
 	}
 

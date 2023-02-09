@@ -35,14 +35,15 @@ func init() {
 }
 
 func sweepGateways(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).StorageGatewayConn
+	conn := client.(*conns.AWSClient).StorageGatewayConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListGatewaysPages(&storagegateway.ListGatewaysInput{}, func(page *storagegateway.ListGatewaysOutput, lastPage bool) bool {
+	err = conn.ListGatewaysPagesWithContext(ctx, &storagegateway.ListGatewaysInput{}, func(page *storagegateway.ListGatewaysOutput, lastPage bool) bool {
 		if len(page.Gateways) == 0 {
 			log.Print("[DEBUG] No Storage Gateway Gateways to sweep")
 			return true
@@ -68,7 +69,7 @@ func sweepGateways(region string) error {
 		return fmt.Errorf("error listing Storage Gateway Gateways (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Storage Gateway Gateways (%s): %w", region, err)
@@ -78,14 +79,15 @@ func sweepGateways(region string) error {
 }
 
 func sweepTapePools(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).StorageGatewayConn
+	conn := client.(*conns.AWSClient).StorageGatewayConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListTapePoolsPages(&storagegateway.ListTapePoolsInput{}, func(page *storagegateway.ListTapePoolsOutput, lastPage bool) bool {
+	err = conn.ListTapePoolsPagesWithContext(ctx, &storagegateway.ListTapePoolsInput{}, func(page *storagegateway.ListTapePoolsOutput, lastPage bool) bool {
 		if len(page.PoolInfos) == 0 {
 			log.Print("[DEBUG] No Storage Gateway Tape Pools to sweep")
 			return true
@@ -111,7 +113,7 @@ func sweepTapePools(region string) error {
 		return fmt.Errorf("error listing Storage Gateway Tape Pools (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Storage Gateway Gateways (%s): %w", region, err)
@@ -121,14 +123,15 @@ func sweepTapePools(region string) error {
 }
 
 func sweepFileSystemAssociations(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).StorageGatewayConn
+	conn := client.(*conns.AWSClient).StorageGatewayConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListFileSystemAssociationsPages(&storagegateway.ListFileSystemAssociationsInput{}, func(page *storagegateway.ListFileSystemAssociationsOutput, lastPage bool) bool {
+	err = conn.ListFileSystemAssociationsPagesWithContext(ctx, &storagegateway.ListFileSystemAssociationsInput{}, func(page *storagegateway.ListFileSystemAssociationsOutput, lastPage bool) bool {
 		if len(page.FileSystemAssociationSummaryList) == 0 {
 			log.Print("[DEBUG] No Storage Gateway File System Associations to sweep")
 			return true
@@ -154,7 +157,7 @@ func sweepFileSystemAssociations(region string) error {
 		return fmt.Errorf("error listing Storage Gateway File System Associations (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Storage Gateway File System Associations (%s): %w", region, err)

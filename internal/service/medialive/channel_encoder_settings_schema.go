@@ -170,6 +170,12 @@ func channelEncoderSettingsSchema() *schema.Schema {
 														Computed:         true,
 														ValidateDiagFunc: enum.Validate[types.AacProfile](),
 													},
+													"rate_control_mode": {
+														Type:             schema.TypeString,
+														Optional:         true,
+														Computed:         true,
+														ValidateDiagFunc: enum.Validate[types.AacRateControlMode](),
+													},
 													"raw_format": {
 														Type:             schema.TypeString,
 														Optional:         true,

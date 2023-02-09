@@ -1,0 +1,7 @@
+```release-note:enhancement
+provider: Masks authentication fields in HTTP header logging
+```
+
+```release-note:enhancement
+provider: Adds structured fields in logging
+```

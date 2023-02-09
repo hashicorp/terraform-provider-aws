@@ -27,6 +27,9 @@ jobs:
       - run: |
           semgrep $COMMON_PARAMS \
             --config .ci/.semgrep.yml \
+            --config .ci/semgrep/acctest/ \
+            --config .ci/semgrep/aws/ \
+            --config .ci/semgrep/migrate/ \
             --config 'r/dgryski.semgrep-go.badnilguard' \
             --config 'r/dgryski.semgrep-go.errnilcheck' \
             --config 'r/dgryski.semgrep-go.marshaljson' \

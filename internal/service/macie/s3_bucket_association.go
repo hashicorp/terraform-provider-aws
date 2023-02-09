@@ -1,24 +1,27 @@
 package macie
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/macie"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceS3BucketAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceS3BucketAssociationCreate,
-		Read:   resourceS3BucketAssociationRead,
-		Update: resourceS3BucketAssociationUpdate,
-		Delete: resourceS3BucketAssociationDelete,
+		CreateWithoutTimeout: resourceS3BucketAssociationCreate,
+		ReadWithoutTimeout:   resourceS3BucketAssociationRead,
+		UpdateWithoutTimeout: resourceS3BucketAssociationUpdate,
+		DeleteWithoutTimeout: resourceS3BucketAssociationDelete,
 
 		Schema: map[string]*schema.Schema{
 			"bucket_name": {
@@ -63,8 +66,9 @@ func ResourceS3BucketAssociation() *schema.Resource {
 	}
 }
 
-func resourceS3BucketAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).MacieConn
+func resourceS3BucketAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).MacieConn()
 
 	req := &macie.AssociateS3ResourcesInput{
 		S3Resources: []*macie.S3ResourceClassification{
@@ -82,20 +86,21 @@ func resourceS3BucketAssociationCreate(d *schema.ResourceData, meta interface{})
 	}
 
 	log.Printf("[DEBUG] Creating Macie S3 bucket association: %#v", req)
-	resp, err := conn.AssociateS3Resources(req)
+	resp, err := conn.AssociateS3ResourcesWithContext(ctx, req)
 	if err != nil {
-		return fmt.Errorf("Error creating Macie S3 bucket association: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Macie S3 bucket association: %s", err)
 	}
 	if len(resp.FailedS3Resources) > 0 {
-		return fmt.Errorf("Error creating Macie S3 bucket association: %s", resp.FailedS3Resources[0])
+		return sdkdiag.AppendErrorf(diags, "creating Macie S3 bucket association: %s", resp.FailedS3Resources[0])
 	}
 
 	d.SetId(fmt.Sprintf("%s/%s", d.Get("bucket_name"), d.Get("prefix")))
-	return resourceS3BucketAssociationRead(d, meta)
+	return append(diags, resourceS3BucketAssociationRead(ctx, d, meta)...)
 }
 
-func resourceS3BucketAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).MacieConn
+func resourceS3BucketAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).MacieConn()
 
 	req := &macie.ListS3ResourcesInput{}
 	if v, ok := d.GetOk("member_account_id"); ok {
@@ -106,7 +111,7 @@ func resourceS3BucketAssociationRead(d *schema.ResourceData, meta interface{}) e
 	prefix := d.Get("prefix")
 
 	var res *macie.S3ResourceClassification
-	err := conn.ListS3ResourcesPages(req, func(page *macie.ListS3ResourcesOutput, lastPage bool) bool {
+	err := conn.ListS3ResourcesPagesWithContext(ctx, req, func(page *macie.ListS3ResourcesOutput, lastPage bool) bool {
 		for _, v := range page.S3Resources {
 			if aws.StringValue(v.BucketName) == bucketName && aws.StringValue(v.Prefix) == prefix {
 				res = v
@@ -117,24 +122,25 @@ func resourceS3BucketAssociationRead(d *schema.ResourceData, meta interface{}) e
 		return true
 	})
 	if err != nil {
-		return fmt.Errorf("Error listing Macie S3 bucket associations: %s", err)
+		return sdkdiag.AppendErrorf(diags, "listing Macie S3 bucket associations: %s", err)
 	}
 
 	if res == nil {
 		log.Printf("[WARN] Macie S3 bucket association (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err := d.Set("classification_type", flattenClassificationType(res.ClassificationType)); err != nil {
-		return fmt.Errorf("error setting classification_type: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting classification_type: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceS3BucketAssociationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).MacieConn
+func resourceS3BucketAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).MacieConn()
 
 	if d.HasChange("classification_type") {
 		req := &macie.UpdateS3ResourcesInput{
@@ -153,20 +159,21 @@ func resourceS3BucketAssociationUpdate(d *schema.ResourceData, meta interface{})
 		}
 
 		log.Printf("[DEBUG] Updating Macie S3 bucket association: %#v", req)
-		resp, err := conn.UpdateS3Resources(req)
+		resp, err := conn.UpdateS3ResourcesWithContext(ctx, req)
 		if err != nil {
-			return fmt.Errorf("Error updating Macie S3 bucket association: %s", err)
+			return sdkdiag.AppendErrorf(diags, "updating Macie S3 bucket association: %s", err)
 		}
 		if len(resp.FailedS3Resources) > 0 {
-			return fmt.Errorf("Error updating Macie S3 bucket association: %s", resp.FailedS3Resources[0])
+			return sdkdiag.AppendErrorf(diags, "updating Macie S3 bucket association: %s", resp.FailedS3Resources[0])
 		}
 	}
 
-	return resourceS3BucketAssociationRead(d, meta)
+	return append(diags, resourceS3BucketAssociationRead(ctx, d, meta)...)
 }
 
-func resourceS3BucketAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).MacieConn
+func resourceS3BucketAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).MacieConn()
 
 	log.Printf("[DEBUG] Deleting Macie S3 bucket association: %s", d.Id())
 
@@ -184,9 +191,9 @@ func resourceS3BucketAssociationDelete(d *schema.ResourceData, meta interface{})
 		req.AssociatedS3Resources[0].Prefix = aws.String(v.(string))
 	}
 
-	resp, err := conn.DisassociateS3Resources(req)
+	resp, err := conn.DisassociateS3ResourcesWithContext(ctx, req)
 	if err != nil {
-		return fmt.Errorf("Error deleting Macie S3 bucket association: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting Macie S3 bucket association: %s", err)
 	}
 	if len(resp.FailedS3Resources) > 0 {
 		failed := resp.FailedS3Resources[0]
@@ -199,10 +206,10 @@ func resourceS3BucketAssociationDelete(d *schema.ResourceData, meta interface{})
 		// }
 		if aws.StringValue(failed.ErrorCode) == macie.ErrCodeInvalidInputException &&
 			strings.Contains(aws.StringValue(failed.ErrorMessage), "is not associated with Macie") {
-			return nil
+			return diags
 		}
-		return fmt.Errorf("Error deleting Macie S3 bucket association: %s", failed)
+		return sdkdiag.AppendErrorf(diags, "deleting Macie S3 bucket association: %s", failed)
 	}
 
-	return nil
+	return diags
 }

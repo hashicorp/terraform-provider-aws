@@ -36,7 +36,7 @@ func ResourceProvisioningTemplate() *schema.Resource {
 		DeleteWithoutTimeout: resourceProvisioningTemplateDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -109,7 +109,7 @@ func ResourceProvisioningTemplate() *schema.Resource {
 }
 
 func resourceProvisioningTemplateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IoTConn
+	conn := meta.(*conns.AWSClient).IoTConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -140,7 +140,7 @@ func resourceProvisioningTemplateCreate(ctx context.Context, d *schema.ResourceD
 	}
 
 	log.Printf("[DEBUG] Creating IoT Provisioning Template: %s", input)
-	outputRaw, err := tfresource.RetryWhenAWSErrMessageContainsContext(ctx, propagationTimeout,
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
 		func() (interface{}, error) {
 			return conn.CreateProvisioningTemplateWithContext(ctx, input)
 		},
@@ -156,7 +156,7 @@ func resourceProvisioningTemplateCreate(ctx context.Context, d *schema.ResourceD
 }
 
 func resourceProvisioningTemplateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IoTConn
+	conn := meta.(*conns.AWSClient).IoTConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -187,7 +187,7 @@ func resourceProvisioningTemplateRead(ctx context.Context, d *schema.ResourceDat
 	d.Set("provisioning_role_arn", output.ProvisioningRoleArn)
 	d.Set("template_body", output.TemplateBody)
 
-	tags, err := ListTags(conn, d.Get("arn").(string))
+	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
 
 	if err != nil {
 		return diag.Errorf("error listing tags for IoT Provisioning Template (%s): %s", d.Id(), err)
@@ -208,7 +208,7 @@ func resourceProvisioningTemplateRead(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceProvisioningTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IoTConn
+	conn := meta.(*conns.AWSClient).IoTConn()
 
 	if d.HasChange("template_body") {
 		input := &iot.CreateProvisioningTemplateVersionInput{
@@ -234,7 +234,7 @@ func resourceProvisioningTemplateUpdate(ctx context.Context, d *schema.ResourceD
 		}
 
 		log.Printf("[DEBUG] Updating IoT Provisioning Template: %s", input)
-		_, err := tfresource.RetryWhenAWSErrMessageContainsContext(ctx, propagationTimeout,
+		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
 			func() (interface{}, error) {
 				return conn.UpdateProvisioningTemplateWithContext(ctx, input)
 			},
@@ -248,7 +248,7 @@ func resourceProvisioningTemplateUpdate(ctx context.Context, d *schema.ResourceD
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.Errorf("error updating tags: %s", err)
 		}
 	}
@@ -257,7 +257,7 @@ func resourceProvisioningTemplateUpdate(ctx context.Context, d *schema.ResourceD
 }
 
 func resourceProvisioningTemplateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IoTConn
+	conn := meta.(*conns.AWSClient).IoTConn()
 
 	log.Printf("[INFO] Deleting IoT Provisioning Template: %s", d.Id())
 	_, err := conn.DeleteProvisioningTemplateWithContext(ctx, &iot.DeleteProvisioningTemplateInput{

@@ -114,7 +114,7 @@ func DataSourceTransitGatewayMulticastDomain() *schema.Resource {
 }
 
 func dataSourceTransitGatewayMulticastDomainRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeTransitGatewayMulticastDomainsInput{}
@@ -131,7 +131,7 @@ func dataSourceTransitGatewayMulticastDomainRead(ctx context.Context, d *schema.
 		input.Filters = nil
 	}
 
-	transitGatewayMulticastDomain, err := FindTransitGatewayMulticastDomain(conn, input)
+	transitGatewayMulticastDomain, err := FindTransitGatewayMulticastDomain(ctx, conn, input)
 
 	if err != nil {
 		return diag.FromErr(tfresource.SingularDataSourceFindError("EC2 Transit Gateway Multicast Domain", err))
@@ -151,7 +151,7 @@ func dataSourceTransitGatewayMulticastDomainRead(ctx context.Context, d *schema.
 		return diag.Errorf("setting tags: %s", err)
 	}
 
-	associations, err := FindTransitGatewayMulticastDomainAssociations(conn, &ec2.GetTransitGatewayMulticastDomainAssociationsInput{
+	associations, err := FindTransitGatewayMulticastDomainAssociations(ctx, conn, &ec2.GetTransitGatewayMulticastDomainAssociationsInput{
 		TransitGatewayMulticastDomainId: aws.String(d.Id()),
 	})
 
@@ -163,7 +163,7 @@ func dataSourceTransitGatewayMulticastDomainRead(ctx context.Context, d *schema.
 		return diag.Errorf("setting associations: %s", err)
 	}
 
-	members, err := FindTransitGatewayMulticastGroups(conn, &ec2.SearchTransitGatewayMulticastGroupsInput{
+	members, err := FindTransitGatewayMulticastGroups(ctx, conn, &ec2.SearchTransitGatewayMulticastGroupsInput{
 		Filters: BuildAttributeFilterList(map[string]string{
 			"is-group-member": "true",
 			"is-group-source": "false",
@@ -179,7 +179,7 @@ func dataSourceTransitGatewayMulticastDomainRead(ctx context.Context, d *schema.
 		return diag.Errorf("setting members: %s", err)
 	}
 
-	sources, err := FindTransitGatewayMulticastGroups(conn, &ec2.SearchTransitGatewayMulticastGroupsInput{
+	sources, err := FindTransitGatewayMulticastGroups(ctx, conn, &ec2.SearchTransitGatewayMulticastGroupsInput{
 		Filters: BuildAttributeFilterList(map[string]string{
 			"is-group-member": "false",
 			"is-group-source": "true",

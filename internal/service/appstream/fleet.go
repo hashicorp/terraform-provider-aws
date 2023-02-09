@@ -200,7 +200,7 @@ func ResourceFleet() *schema.Resource {
 }
 
 func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppStreamConn
+	conn := meta.(*conns.AWSClient).AppStreamConn()
 	input := &appstream.CreateFleetInput{
 		Name:            aws.String(d.Get("name").(string)),
 		InstanceType:    aws.String(d.Get("instance_type").(string)),
@@ -311,7 +311,7 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppStreamConn
+	conn := meta.(*conns.AWSClient).AppStreamConn()
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -381,7 +381,7 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		d.Set("vpc_config", nil)
 	}
 
-	tg, err := conn.ListTagsForResource(&appstream.ListTagsForResourceInput{
+	tg, err := conn.ListTagsForResourceWithContext(ctx, &appstream.ListTagsForResourceInput{
 		ResourceArn: fleet.Arn,
 	})
 
@@ -408,7 +408,7 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 }
 
 func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppStreamConn
+	conn := meta.(*conns.AWSClient).AppStreamConn()
 	input := &appstream.UpdateFleetInput{
 		Name: aws.String(d.Id()),
 	}
@@ -496,7 +496,7 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		arn := aws.StringValue(resp.Fleet.Arn)
 
 		o, n := d.GetChange("tags")
-		if err := UpdateTags(conn, arn, o, n); err != nil {
+		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
 			return diag.FromErr(fmt.Errorf("error updating Appstream Fleet tags (%s): %w", d.Id(), err))
 		}
 	}
@@ -519,7 +519,7 @@ func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceFleetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppStreamConn
+	conn := meta.(*conns.AWSClient).AppStreamConn()
 
 	// Stop fleet workflow
 	log.Printf("[DEBUG] Stopping AppStream Fleet: (%s)", d.Id())

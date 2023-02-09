@@ -1,6 +1,7 @@
 package opsworks_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/opsworks"
@@ -11,6 +12,7 @@ import (
 )
 
 func TestAccOpsWorksJavaAppLayer_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v opsworks.Layer
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opsworks_java_app_layer.test"
@@ -19,12 +21,12 @@ func TestAccOpsWorksJavaAppLayer_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckJavaAppLayerDestroy,
+		CheckDestroy:             testAccCheckJavaAppLayerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccJavaAppLayerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLayerExists(resourceName, &v),
+					testAccCheckLayerExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "app_server", "tomcat"),
 					resource.TestCheckResourceAttr(resourceName, "app_server_version", "7"),
 					resource.TestCheckResourceAttr(resourceName, "jvm_options", ""),
@@ -39,8 +41,8 @@ func TestAccOpsWorksJavaAppLayer_basic(t *testing.T) {
 
 // _disappears and _tags for OpsWorks Layers are tested via aws_opsworks_rails_app_layer.
 
-func testAccCheckJavaAppLayerDestroy(s *terraform.State) error {
-	return testAccCheckLayerDestroy("aws_opsworks_java_app_layer", s)
+func testAccCheckJavaAppLayerDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error { return testAccCheckLayerDestroy(ctx, "aws_opsworks_java_app_layer", s) }
 }
 
 func testAccJavaAppLayerConfig_basic(rName string) string {

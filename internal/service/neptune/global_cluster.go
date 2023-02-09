@@ -108,7 +108,7 @@ func ResourceGlobalCluster() *schema.Resource {
 }
 
 func resourceGlobalClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NeptuneConn
+	conn := meta.(*conns.AWSClient).NeptuneConn()
 
 	input := &neptune.CreateGlobalClusterInput{
 		GlobalClusterIdentifier: aws.String(d.Get("global_cluster_identifier").(string)),
@@ -149,7 +149,7 @@ func resourceGlobalClusterCreate(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceGlobalClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NeptuneConn
+	conn := meta.(*conns.AWSClient).NeptuneConn()
 
 	globalCluster, err := FindGlobalClusterById(ctx, conn, d.Id())
 
@@ -192,7 +192,7 @@ func resourceGlobalClusterRead(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceGlobalClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NeptuneConn
+	conn := meta.(*conns.AWSClient).NeptuneConn()
 
 	input := &neptune.ModifyGlobalClusterInput{
 		DeletionProtection:      aws.Bool(d.Get("deletion_protection").(bool)),
@@ -225,7 +225,7 @@ func resourceGlobalClusterUpdate(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceGlobalClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NeptuneConn
+	conn := meta.(*conns.AWSClient).NeptuneConn()
 
 	for _, globalClusterMemberRaw := range d.Get("global_cluster_members").(*schema.Set).List() {
 		globalClusterMember, ok := globalClusterMemberRaw.(map[string]interface{})
@@ -411,7 +411,7 @@ func resourceGlobalClusterUpgradeEngineVersion(ctx context.Context, d *schema.Re
 		if err != nil {
 			return err
 		}
-		_, err = WaitDBClusterAvailable(conn, aws.StringValue(dbCluster.DBClusterIdentifier), d.Timeout(schema.TimeoutUpdate))
+		_, err = WaitDBClusterAvailable(ctx, conn, aws.StringValue(dbCluster.DBClusterIdentifier), d.Timeout(schema.TimeoutUpdate))
 		if err != nil {
 			return err
 		}

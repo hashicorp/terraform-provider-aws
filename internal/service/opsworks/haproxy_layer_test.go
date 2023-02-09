@@ -1,6 +1,7 @@
 package opsworks_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/opsworks"
@@ -11,6 +12,7 @@ import (
 )
 
 func TestAccOpsWorksHAProxyLayer_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v opsworks.Layer
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opsworks_haproxy_layer.test"
@@ -19,12 +21,12 @@ func TestAccOpsWorksHAProxyLayer_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckHAProxyLayerDestroy,
+		CheckDestroy:             testAccCheckHAProxyLayerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHAProxyLayerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLayerExists(resourceName, &v),
+					testAccCheckLayerExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "healthcheck_method", "OPTIONS"),
 					resource.TestCheckResourceAttr(resourceName, "healthcheck_url", "/"),
 					resource.TestCheckResourceAttr(resourceName, "name", "HAProxy"),
@@ -40,8 +42,8 @@ func TestAccOpsWorksHAProxyLayer_basic(t *testing.T) {
 
 // _disappears and _tags for OpsWorks Layers are tested via aws_opsworks_rails_app_layer.
 
-func testAccCheckHAProxyLayerDestroy(s *terraform.State) error {
-	return testAccCheckLayerDestroy("aws_opsworks_haproxy_layer", s)
+func testAccCheckHAProxyLayerDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error { return testAccCheckLayerDestroy(ctx, "aws_opsworks_haproxy_layer", s) }
 }
 
 func testAccHAProxyLayerConfig_basic(rName string) string {

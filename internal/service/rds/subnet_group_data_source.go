@@ -1,15 +1,19 @@
 package rds
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func DataSourceSubnetGroup() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceSubnetGroupRead,
+		ReadWithoutTimeout: dataSourceSubnetGroupRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -46,13 +50,14 @@ func DataSourceSubnetGroup() *schema.Resource {
 	}
 }
 
-func dataSourceSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+func dataSourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RDSConn()
 
-	v, err := FindDBSubnetGroupByName(conn, d.Get("name").(string))
+	v, err := FindDBSubnetGroupByName(ctx, conn, d.Get("name").(string))
 
 	if err != nil {
-		return tfresource.SingularDataSourceFindError("RDS DB Subnet Group", err)
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("RDS DB Subnet Group", err))
 	}
 
 	d.SetId(aws.StringValue(v.DBSubnetGroupName))
@@ -68,5 +73,5 @@ func dataSourceSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("supported_network_types", aws.StringValueSlice(v.SupportedNetworkTypes))
 	d.Set("vpc_id", v.VpcId)
 
-	return nil
+	return diags
 }

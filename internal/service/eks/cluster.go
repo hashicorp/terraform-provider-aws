@@ -29,7 +29,7 @@ func ResourceCluster() *schema.Resource {
 		DeleteWithoutTimeout: resourceClusterDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -286,7 +286,7 @@ func ResourceCluster() *schema.Resource {
 }
 
 func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EKSConn
+	conn := meta.(*conns.AWSClient).EKSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 	name := d.Get("name").(string)
@@ -315,7 +315,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	outputRaw, err := tfresource.RetryWhenContext(ctx, propagationTimeout,
+	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
 		func() (interface{}, error) {
 			return conn.CreateClusterWithContext(ctx, input)
 		},
@@ -362,7 +362,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EKSConn
+	conn := meta.(*conns.AWSClient).EKSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -427,7 +427,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EKSConn
+	conn := meta.(*conns.AWSClient).EKSConn()
 
 	// Do any version update first.
 	if d.HasChange("version") {
@@ -521,7 +521,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTagsWithContext(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.Errorf("updating EKS Cluster (%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -530,7 +530,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EKSConn
+	conn := meta.(*conns.AWSClient).EKSConn()
 
 	log.Printf("[DEBUG] Deleting EKS Cluster: %s", d.Id())
 
@@ -540,7 +540,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 
 	// If a cluster is scaling up due to load a delete request will fail
 	// This is a temporary workaround until EKS supports multiple parallel mutating operations
-	err := tfresource.RetryContext(context.Background(), clusterDeleteRetryTimeout, func() *resource.RetryError {
+	err := tfresource.Retry(ctx, clusterDeleteRetryTimeout, func() *resource.RetryError {
 		var err error
 
 		_, err = conn.DeleteClusterWithContext(ctx, input)

@@ -1,20 +1,22 @@
 package ec2
 
 import (
-	"fmt"
+	"context"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func DataSourceTransitGateway() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceTransitGatewayRead,
+		ReadWithoutTimeout: dataSourceTransitGatewayRead,
 
 		Timeouts: &schema.ResourceTimeout{
 			Read: schema.DefaultTimeout(20 * time.Minute),
@@ -85,8 +87,9 @@ func DataSourceTransitGateway() *schema.Resource {
 	}
 }
 
-func dataSourceTransitGatewayRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func dataSourceTransitGatewayRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeTransitGatewaysInput{}
@@ -104,10 +107,10 @@ func dataSourceTransitGatewayRead(d *schema.ResourceData, meta interface{}) erro
 		input.TransitGatewayIds = aws.StringSlice([]string{v.(string)})
 	}
 
-	transitGateway, err := FindTransitGateway(conn, input)
+	transitGateway, err := FindTransitGateway(ctx, conn, input)
 
 	if err != nil {
-		return tfresource.SingularDataSourceFindError("EC2 Transit Gateway", err)
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Transit Gateway", err))
 	}
 
 	d.SetId(aws.StringValue(transitGateway.TransitGatewayId))
@@ -126,8 +129,8 @@ func dataSourceTransitGatewayRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("vpn_ecmp_support", transitGateway.Options.VpnEcmpSupport)
 
 	if err := d.Set("tags", KeyValueTags(transitGateway.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

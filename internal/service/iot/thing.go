@@ -1,28 +1,30 @@
 package iot
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iot"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourceThing() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceThingCreate,
-		Read:   resourceThingRead,
-		Update: resourceThingUpdate,
-		Delete: resourceThingDelete,
+		CreateWithoutTimeout: resourceThingCreate,
+		ReadWithoutTimeout:   resourceThingRead,
+		UpdateWithoutTimeout: resourceThingUpdate,
+		DeleteWithoutTimeout: resourceThingDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -58,8 +60,9 @@ func ResourceThing() *schema.Resource {
 	}
 }
 
-func resourceThingCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
+func resourceThingCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IoTConn()
 
 	name := d.Get("name").(string)
 	input := &iot.CreateThingInput{
@@ -77,30 +80,31 @@ func resourceThingCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Creating IoT Thing: %s", input)
-	output, err := conn.CreateThing(input)
+	output, err := conn.CreateThingWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating IoT Thing (%s): %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating IoT Thing (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.ThingName))
 
-	return resourceThingRead(d, meta)
+	return append(diags, resourceThingRead(ctx, d, meta)...)
 }
 
-func resourceThingRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
+func resourceThingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IoTConn()
 
-	output, err := FindThingByName(conn, d.Id())
+	output, err := FindThingByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] IoT Thing (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading IoT Thing (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading IoT Thing (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", output.ThingArn)
@@ -110,11 +114,12 @@ func resourceThingRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("thing_type_name", output.ThingTypeName)
 	d.Set("version", output.Version)
 
-	return nil
+	return diags
 }
 
-func resourceThingUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
+func resourceThingUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IoTConn()
 
 	input := &iot.UpdateThingInput{
 		ThingName: aws.String(d.Get("name").(string)),
@@ -141,30 +146,31 @@ func resourceThingUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Updating IoT Thing: %s", input)
-	_, err := conn.UpdateThing(input)
+	_, err := conn.UpdateThingWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error updating IoT Thing (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating IoT Thing (%s): %s", d.Id(), err)
 	}
 
-	return resourceThingRead(d, meta)
+	return append(diags, resourceThingRead(ctx, d, meta)...)
 }
 
-func resourceThingDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
+func resourceThingDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IoTConn()
 
 	log.Printf("[DEBUG] Deleting IoT Thing: %s", d.Id())
-	_, err := conn.DeleteThing(&iot.DeleteThingInput{
+	_, err := conn.DeleteThingWithContext(ctx, &iot.DeleteThingInput{
 		ThingName: aws.String(d.Id()),
 	})
 
 	if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting IoT Thing (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting IoT Thing (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

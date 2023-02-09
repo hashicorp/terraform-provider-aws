@@ -1,18 +1,20 @@
 package route53recoverycontrolconfig
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
 	r53rcc "github.com/aws/aws-sdk-go/service/route53recoverycontrolconfig"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func statusCluster(conn *r53rcc.Route53RecoveryControlConfig, clusterArn string) resource.StateRefreshFunc {
+func statusCluster(ctx context.Context, conn *r53rcc.Route53RecoveryControlConfig, clusterArn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &r53rcc.DescribeClusterInput{
 			ClusterArn: aws.String(clusterArn),
 		}
 
-		output, err := conn.DescribeCluster(input)
+		output, err := conn.DescribeClusterWithContext(ctx, input)
 
 		if err != nil {
 			return output, "", err
@@ -22,13 +24,13 @@ func statusCluster(conn *r53rcc.Route53RecoveryControlConfig, clusterArn string)
 	}
 }
 
-func statusRoutingControl(conn *r53rcc.Route53RecoveryControlConfig, routingControlArn string) resource.StateRefreshFunc {
+func statusRoutingControl(ctx context.Context, conn *r53rcc.Route53RecoveryControlConfig, routingControlArn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &r53rcc.DescribeRoutingControlInput{
 			RoutingControlArn: aws.String(routingControlArn),
 		}
 
-		output, err := conn.DescribeRoutingControl(input)
+		output, err := conn.DescribeRoutingControlWithContext(ctx, input)
 
 		if err != nil {
 			return output, "", err
@@ -38,13 +40,13 @@ func statusRoutingControl(conn *r53rcc.Route53RecoveryControlConfig, routingCont
 	}
 }
 
-func statusControlPanel(conn *r53rcc.Route53RecoveryControlConfig, controlPanelArn string) resource.StateRefreshFunc {
+func statusControlPanel(ctx context.Context, conn *r53rcc.Route53RecoveryControlConfig, controlPanelArn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &r53rcc.DescribeControlPanelInput{
 			ControlPanelArn: aws.String(controlPanelArn),
 		}
 
-		output, err := conn.DescribeControlPanel(input)
+		output, err := conn.DescribeControlPanelWithContext(ctx, input)
 
 		if err != nil {
 			return output, "", err
@@ -54,13 +56,13 @@ func statusControlPanel(conn *r53rcc.Route53RecoveryControlConfig, controlPanelA
 	}
 }
 
-func statusSafetyRule(conn *r53rcc.Route53RecoveryControlConfig, safetyRuleArn string) resource.StateRefreshFunc {
+func statusSafetyRule(ctx context.Context, conn *r53rcc.Route53RecoveryControlConfig, safetyRuleArn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &r53rcc.DescribeSafetyRuleInput{
 			SafetyRuleArn: aws.String(safetyRuleArn),
 		}
 
-		output, err := conn.DescribeSafetyRule(input)
+		output, err := conn.DescribeSafetyRuleWithContext(ctx, input)
 
 		if err != nil {
 			return output, "", err

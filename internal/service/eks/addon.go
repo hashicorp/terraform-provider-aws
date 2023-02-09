@@ -65,6 +65,11 @@ func ResourceAddon() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validClusterName,
 			},
+			"configuration_values": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
 			"created_at": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -94,7 +99,7 @@ func ResourceAddon() *schema.Resource {
 }
 
 func resourceAddonCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EKSConn
+	conn := meta.(*conns.AWSClient).EKSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -118,6 +123,10 @@ func resourceAddonCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if v, ok := d.GetOk("service_account_role_arn"); ok {
 		input.ServiceAccountRoleArn = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("configuration_values"); ok {
+		input.ConfigurationValues = aws.String(v.(string))
 	}
 
 	if len(tags) > 0 {
@@ -172,7 +181,7 @@ func resourceAddonCreate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceAddonRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EKSConn
+	conn := meta.(*conns.AWSClient).EKSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -198,6 +207,7 @@ func resourceAddonRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("addon_version", addon.AddonVersion)
 	d.Set("arn", addon.AddonArn)
 	d.Set("cluster_name", addon.ClusterName)
+	d.Set("configuration_values", addon.ConfigurationValues)
 	d.Set("created_at", aws.TimeValue(addon.CreatedAt).Format(time.RFC3339))
 	d.Set("modified_at", aws.TimeValue(addon.ModifiedAt).Format(time.RFC3339))
 	d.Set("service_account_role_arn", addon.ServiceAccountRoleArn)
@@ -217,7 +227,7 @@ func resourceAddonRead(ctx context.Context, d *schema.ResourceData, meta interfa
 }
 
 func resourceAddonUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EKSConn
+	conn := meta.(*conns.AWSClient).EKSConn()
 
 	clusterName, addonName, err := AddonParseResourceID(d.Id())
 
@@ -225,7 +235,7 @@ func resourceAddonUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.FromErr(err)
 	}
 
-	if d.HasChanges("addon_version", "service_account_role_arn") {
+	if d.HasChanges("addon_version", "service_account_role_arn", "configuration_values") {
 		input := &eks.UpdateAddonInput{
 			AddonName:          aws.String(addonName),
 			ClientRequestToken: aws.String(resource.UniqueId()),
@@ -234,6 +244,10 @@ func resourceAddonUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 		if d.HasChange("addon_version") {
 			input.AddonVersion = aws.String(d.Get("addon_version").(string))
+		}
+
+		if d.HasChange("configuration_values") {
+			input.ConfigurationValues = aws.String(d.Get("configuration_values").(string))
 		}
 
 		if v, ok := d.GetOk("resolve_conflicts"); ok {
@@ -271,7 +285,7 @@ func resourceAddonUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.FromErr(fmt.Errorf("error updating tags: %w", err))
 		}
 	}
@@ -280,7 +294,7 @@ func resourceAddonUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceAddonDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EKSConn
+	conn := meta.(*conns.AWSClient).EKSConn()
 
 	clusterName, addonName, err := AddonParseResourceID(d.Id())
 

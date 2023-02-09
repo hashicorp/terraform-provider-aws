@@ -1,7 +1,7 @@
 package neptune
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"strings"
 	"time"
@@ -9,10 +9,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/neptune"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -24,12 +26,12 @@ const maxParams = 20
 
 func ResourceParameterGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceParameterGroupCreate,
-		Read:   resourceParameterGroupRead,
-		Update: resourceParameterGroupUpdate,
-		Delete: resourceParameterGroupDelete,
+		CreateWithoutTimeout: resourceParameterGroupCreate,
+		ReadWithoutTimeout:   resourceParameterGroupRead,
+		UpdateWithoutTimeout: resourceParameterGroupUpdate,
+		DeleteWithoutTimeout: resourceParameterGroupDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -88,8 +90,9 @@ func ResourceParameterGroup() *schema.Resource {
 	}
 }
 
-func resourceParameterGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).NeptuneConn
+func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).NeptuneConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -101,20 +104,21 @@ func resourceParameterGroupCreate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	log.Printf("[DEBUG] Create Neptune Parameter Group: %#v", createOpts)
-	resp, err := conn.CreateDBParameterGroup(&createOpts)
+	resp, err := conn.CreateDBParameterGroupWithContext(ctx, &createOpts)
 	if err != nil {
-		return fmt.Errorf("Error creating Neptune Parameter Group: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Neptune Parameter Group: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resp.DBParameterGroup.DBParameterGroupName))
 	d.Set("arn", resp.DBParameterGroup.DBParameterGroupArn)
 	log.Printf("[INFO] Neptune Parameter Group ID: %s", d.Id())
 
-	return resourceParameterGroupUpdate(d, meta)
+	return append(diags, resourceParameterGroupUpdate(ctx, d, meta)...)
 }
 
-func resourceParameterGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).NeptuneConn
+func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).NeptuneConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -122,23 +126,23 @@ func resourceParameterGroupRead(d *schema.ResourceData, meta interface{}) error 
 		DBParameterGroupName: aws.String(d.Id()),
 	}
 
-	describeResp, err := conn.DescribeDBParameterGroups(&describeOpts)
+	describeResp, err := conn.DescribeDBParameterGroupsWithContext(ctx, &describeOpts)
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBParameterGroupNotFoundFault) {
 			log.Printf("[WARN] Neptune Parameter Group (%s) not found, removing from state", d.Id())
 			d.SetId("")
-			return nil
+			return diags
 		}
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading Neptune Parameter Group (%s): %s", d.Id(), err)
 	}
 
 	if describeResp == nil {
-		return fmt.Errorf("Unable to get Describe Response for Neptune Parameter Group (%s)", d.Id())
+		return sdkdiag.AppendErrorf(diags, "reading Neptune Parameter Group (%s): empty result", d.Id())
 	}
 
 	if len(describeResp.DBParameterGroups) != 1 ||
 		aws.StringValue(describeResp.DBParameterGroups[0].DBParameterGroupName) != d.Id() {
-		return fmt.Errorf("Unable to find Parameter Group: %#v", describeResp.DBParameterGroups)
+		return sdkdiag.AppendErrorf(diags, "reading Neptune Parameter Group (%s): no match", d.Id())
 	}
 
 	arn := aws.StringValue(describeResp.DBParameterGroups[0].DBParameterGroupArn)
@@ -154,41 +158,42 @@ func resourceParameterGroupRead(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	var parameters []*neptune.Parameter
-	err = conn.DescribeDBParametersPages(&describeParametersOpts,
+	err = conn.DescribeDBParametersPagesWithContext(ctx, &describeParametersOpts,
 		func(describeParametersResp *neptune.DescribeDBParametersOutput, lastPage bool) bool {
 			parameters = append(parameters, describeParametersResp.Parameters...)
 			return !lastPage
 		})
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading Neptune Parameter Group (%s) parameters: %s", d.Id(), err)
 	}
 
 	if err := d.Set("parameter", flattenParameters(parameters)); err != nil {
-		return fmt.Errorf("setting parameter: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting parameter: %s", err)
 	}
 
-	tags, err := ListTags(conn, d.Get("arn").(string))
+	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
 
 	if err != nil {
-		return fmt.Errorf("listing tags for Neptune Parameter Group (%s): %s", d.Get("arn").(string), err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for Neptune Parameter Group (%s): %s", d.Get("arn").(string), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceParameterGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).NeptuneConn
+func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).NeptuneConn()
 
 	if d.HasChange("parameter") {
 		o, n := d.GetChange("parameter")
@@ -223,8 +228,8 @@ func resourceParameterGroupUpdate(d *schema.ResourceData, meta interface{}) erro
 			}
 
 			log.Printf("[DEBUG] Reset Neptune Parameter Group: %s", resetOpts)
-			err := resource.Retry(30*time.Second, func() *resource.RetryError {
-				_, err := conn.ResetDBParameterGroup(&resetOpts)
+			err := resource.RetryContext(ctx, 30*time.Second, func() *resource.RetryError {
+				_, err := conn.ResetDBParameterGroupWithContext(ctx, &resetOpts)
 				if err != nil {
 					if tfawserr.ErrMessageContains(err, "InvalidDBParameterGroupState", " has pending changes") {
 						return resource.RetryableError(err)
@@ -234,10 +239,10 @@ func resourceParameterGroupUpdate(d *schema.ResourceData, meta interface{}) erro
 				return nil
 			})
 			if tfresource.TimedOut(err) {
-				_, err = conn.ResetDBParameterGroup(&resetOpts)
+				_, err = conn.ResetDBParameterGroupWithContext(ctx, &resetOpts)
 			}
 			if err != nil {
-				return fmt.Errorf("Error resetting Neptune Parameter Group: %s", err)
+				return sdkdiag.AppendErrorf(diags, "resetting Neptune Parameter Group: %s", err)
 			}
 		}
 
@@ -254,9 +259,9 @@ func resourceParameterGroupUpdate(d *schema.ResourceData, meta interface{}) erro
 			}
 
 			log.Printf("[DEBUG] Modify Neptune Parameter Group: %s", modifyOpts)
-			_, err := conn.ModifyDBParameterGroup(&modifyOpts)
+			_, err := conn.ModifyDBParameterGroupWithContext(ctx, &modifyOpts)
 			if err != nil {
-				return fmt.Errorf("Error modifying Neptune Parameter Group: %s", err)
+				return sdkdiag.AppendErrorf(diags, "modifying Neptune Parameter Group: %s", err)
 			}
 		}
 	}
@@ -264,22 +269,23 @@ func resourceParameterGroupUpdate(d *schema.ResourceData, meta interface{}) erro
 	if !d.IsNewResource() && d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("updating Neptune Parameter Group (%s) tags: %s", d.Get("arn").(string), err)
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Neptune Parameter Group (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
 
-	return resourceParameterGroupRead(d, meta)
+	return append(diags, resourceParameterGroupRead(ctx, d, meta)...)
 }
 
-func resourceParameterGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).NeptuneConn
+func resourceParameterGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).NeptuneConn()
 
 	deleteOpts := neptune.DeleteDBParameterGroupInput{
 		DBParameterGroupName: aws.String(d.Id()),
 	}
-	err := resource.Retry(3*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteDBParameterGroup(&deleteOpts)
+	err := resource.RetryContext(ctx, 3*time.Minute, func() *resource.RetryError {
+		_, err := conn.DeleteDBParameterGroupWithContext(ctx, &deleteOpts)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBParameterGroupNotFoundFault) {
 				return nil
@@ -293,16 +299,16 @@ func resourceParameterGroupDelete(d *schema.ResourceData, meta interface{}) erro
 	})
 
 	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteDBParameterGroup(&deleteOpts)
+		_, err = conn.DeleteDBParameterGroupWithContext(ctx, &deleteOpts)
 	}
 
 	if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBParameterGroupNotFoundFault) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error deleting Neptune Parameter Group: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting Neptune Parameter Group: %s", err)
 	}
 
-	return nil
+	return diags
 }

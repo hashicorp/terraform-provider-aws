@@ -1,6 +1,7 @@
 package devicefarm_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -17,6 +18,7 @@ import (
 )
 
 func TestAccDeviceFarmInstanceProfile_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var profile devicefarm.InstanceProfile
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rNameUpdated := sdkacctest.RandomWithPrefix("tf-acc-test-updated")
@@ -32,12 +34,12 @@ func TestAccDeviceFarmInstanceProfile_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, devicefarm.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceProfileDestroy,
+		CheckDestroy:             testAccCheckInstanceProfileDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceProfileConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceProfileExists(resourceName, &profile),
+					testAccCheckInstanceProfileExists(ctx, resourceName, &profile),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "reboot_after_use", "true"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -52,7 +54,7 @@ func TestAccDeviceFarmInstanceProfile_basic(t *testing.T) {
 			{
 				Config: testAccInstanceProfileConfig_basic(rNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceProfileExists(resourceName, &profile),
+					testAccCheckInstanceProfileExists(ctx, resourceName, &profile),
 					resource.TestCheckResourceAttr(resourceName, "name", rNameUpdated),
 					resource.TestCheckResourceAttr(resourceName, "reboot_after_use", "true"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -64,6 +66,7 @@ func TestAccDeviceFarmInstanceProfile_basic(t *testing.T) {
 }
 
 func TestAccDeviceFarmInstanceProfile_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var profile devicefarm.InstanceProfile
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_devicefarm_instance_profile.test"
@@ -78,12 +81,12 @@ func TestAccDeviceFarmInstanceProfile_tags(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, devicefarm.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceProfileDestroy,
+		CheckDestroy:             testAccCheckInstanceProfileDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceProfileConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceProfileExists(resourceName, &profile),
+					testAccCheckInstanceProfileExists(ctx, resourceName, &profile),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -96,7 +99,7 @@ func TestAccDeviceFarmInstanceProfile_tags(t *testing.T) {
 			{
 				Config: testAccInstanceProfileConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceProfileExists(resourceName, &profile),
+					testAccCheckInstanceProfileExists(ctx, resourceName, &profile),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -105,7 +108,7 @@ func TestAccDeviceFarmInstanceProfile_tags(t *testing.T) {
 			{
 				Config: testAccInstanceProfileConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceProfileExists(resourceName, &profile),
+					testAccCheckInstanceProfileExists(ctx, resourceName, &profile),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -115,6 +118,7 @@ func TestAccDeviceFarmInstanceProfile_tags(t *testing.T) {
 }
 
 func TestAccDeviceFarmInstanceProfile_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var profile devicefarm.InstanceProfile
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_devicefarm_instance_profile.test"
@@ -129,14 +133,14 @@ func TestAccDeviceFarmInstanceProfile_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, devicefarm.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceProfileDestroy,
+		CheckDestroy:             testAccCheckInstanceProfileDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceProfileConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceProfileExists(resourceName, &profile),
-					acctest.CheckResourceDisappears(acctest.Provider, tfdevicefarm.ResourceInstanceProfile(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfdevicefarm.ResourceInstanceProfile(), resourceName),
+					testAccCheckInstanceProfileExists(ctx, resourceName, &profile),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdevicefarm.ResourceInstanceProfile(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdevicefarm.ResourceInstanceProfile(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -144,7 +148,7 @@ func TestAccDeviceFarmInstanceProfile_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckInstanceProfileExists(n string, v *devicefarm.InstanceProfile) resource.TestCheckFunc {
+func testAccCheckInstanceProfileExists(ctx context.Context, n string, v *devicefarm.InstanceProfile) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -155,8 +159,8 @@ func testAccCheckInstanceProfileExists(n string, v *devicefarm.InstanceProfile) 
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmConn
-		resp, err := tfdevicefarm.FindInstanceProfileByARN(conn, rs.Primary.ID)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmConn()
+		resp, err := tfdevicefarm.FindInstanceProfileByARN(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -170,28 +174,30 @@ func testAccCheckInstanceProfileExists(n string, v *devicefarm.InstanceProfile) 
 	}
 }
 
-func testAccCheckInstanceProfileDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmConn
+func testAccCheckInstanceProfileDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_devicefarm_instance_profile" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_devicefarm_instance_profile" {
+				continue
+			}
+
+			// Try to find the resource
+			_, err := tfdevicefarm.FindInstanceProfileByARN(ctx, conn, rs.Primary.ID)
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("DeviceFarm Instance Profile %s still exists", rs.Primary.ID)
 		}
 
-		// Try to find the resource
-		_, err := tfdevicefarm.FindInstanceProfileByARN(conn, rs.Primary.ID)
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("DeviceFarm Instance Profile %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
 func testAccInstanceProfileConfig_basic(rName string) string {

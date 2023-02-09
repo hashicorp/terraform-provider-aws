@@ -1,29 +1,31 @@
 package imagebuilder
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceContainerRecipe() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceContainerRecipeCreate,
-		Read:   resourceContainerRecipeRead,
-		Update: resourceContainerRecipeUpdate,
-		Delete: resourceContainerRecipeDelete,
+		CreateWithoutTimeout: resourceContainerRecipeCreate,
+		ReadWithoutTimeout:   resourceContainerRecipeRead,
+		UpdateWithoutTimeout: resourceContainerRecipeUpdate,
+		DeleteWithoutTimeout: resourceContainerRecipeDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -276,8 +278,9 @@ func ResourceContainerRecipe() *schema.Resource {
 	}
 }
 
-func resourceContainerRecipeCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ImageBuilderConn
+func resourceContainerRecipeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ImageBuilderConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -337,23 +340,24 @@ func resourceContainerRecipeCreate(d *schema.ResourceData, meta interface{}) err
 		input.WorkingDirectory = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateContainerRecipe(input)
+	output, err := conn.CreateContainerRecipeWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating Image Builder Container Recipe: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating Image Builder Container Recipe: %s", err)
 	}
 
 	if output == nil {
-		return fmt.Errorf("error creating Image Builder Container Recipe: empty response")
+		return sdkdiag.AppendErrorf(diags, "creating Image Builder Container Recipe: empty response")
 	}
 
 	d.SetId(aws.StringValue(output.ContainerRecipeArn))
 
-	return resourceContainerRecipeRead(d, meta)
+	return append(diags, resourceContainerRecipeRead(ctx, d, meta)...)
 }
 
-func resourceContainerRecipeRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ImageBuilderConn
+func resourceContainerRecipeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ImageBuilderConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -361,20 +365,20 @@ func resourceContainerRecipeRead(d *schema.ResourceData, meta interface{}) error
 		ContainerRecipeArn: aws.String(d.Id()),
 	}
 
-	output, err := conn.GetContainerRecipe(input)
+	output, err := conn.GetContainerRecipeWithContext(ctx, input)
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, imagebuilder.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Image Builder Container Recipe (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error getting Image Builder Container Recipe (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "getting Image Builder Container Recipe (%s): %s", d.Id(), err)
 	}
 
 	if output == nil || output.ContainerRecipe == nil {
-		return fmt.Errorf("error getting Image Builder Container Recipe (%s): empty response", d.Id())
+		return sdkdiag.AppendErrorf(diags, "getting Image Builder Container Recipe (%s): empty response", d.Id())
 	}
 
 	containerRecipe := output.ContainerRecipe
@@ -402,52 +406,54 @@ func resourceContainerRecipeRead(d *schema.ResourceData, meta interface{}) error
 	tags := KeyValueTags(containerRecipe.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
 	d.Set("target_repository", []interface{}{flattenTargetContainerRepository(containerRecipe.TargetRepository)})
 	d.Set("version", containerRecipe.Version)
 	d.Set("working_directory", containerRecipe.WorkingDirectory)
 
-	return nil
+	return diags
 }
 
-func resourceContainerRecipeUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ImageBuilderConn
+func resourceContainerRecipeUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ImageBuilderConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating tags for Image Builder Container Recipe (%s): %w", d.Id(), err)
+		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating tags for Image Builder Container Recipe (%s): %s", d.Id(), err)
 		}
 	}
 
-	return resourceContainerRecipeRead(d, meta)
+	return append(diags, resourceContainerRecipeRead(ctx, d, meta)...)
 }
 
-func resourceContainerRecipeDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ImageBuilderConn
+func resourceContainerRecipeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ImageBuilderConn()
 
 	input := &imagebuilder.DeleteContainerRecipeInput{
 		ContainerRecipeArn: aws.String(d.Id()),
 	}
 
-	_, err := conn.DeleteContainerRecipe(input)
+	_, err := conn.DeleteContainerRecipeWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, imagebuilder.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Image Builder Container Recipe (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Image Builder Container Recipe (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandInstanceConfiguration(tfMap map[string]interface{}) *imagebuilder.InstanceConfiguration {

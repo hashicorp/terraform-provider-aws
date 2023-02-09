@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccDMSS3Endpoint_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_dms_s3_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -18,12 +19,12 @@ func TestAccDMSS3Endpoint_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEndpointDestroy,
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccS3EndpointConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEndpointExists(resourceName),
+					testAccCheckEndpointExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "add_column_name", "true"),
 					resource.TestCheckResourceAttr(resourceName, "add_trailing_padding_character", "false"),
 					resource.TestCheckResourceAttr(resourceName, "bucket_folder", "folder"),
@@ -75,6 +76,7 @@ func TestAccDMSS3Endpoint_basic(t *testing.T) {
 }
 
 func TestAccDMSS3Endpoint_update(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_dms_s3_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -82,12 +84,12 @@ func TestAccDMSS3Endpoint_update(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEndpointDestroy,
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccS3EndpointConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEndpointExists(resourceName),
+					testAccCheckEndpointExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "add_column_name", "true"),
 					resource.TestCheckResourceAttr(resourceName, "add_trailing_padding_character", "false"),
 					resource.TestCheckResourceAttr(resourceName, "bucket_folder", "folder"),
@@ -131,7 +133,7 @@ func TestAccDMSS3Endpoint_update(t *testing.T) {
 			{
 				Config: testAccS3EndpointConfig_update(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEndpointExists(resourceName),
+					testAccCheckEndpointExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "add_column_name", "false"),
 					resource.TestCheckResourceAttr(resourceName, "add_trailing_padding_character", "true"),
 					resource.TestCheckResourceAttr(resourceName, "bucket_folder", "folder2"),
@@ -178,6 +180,7 @@ func TestAccDMSS3Endpoint_update(t *testing.T) {
 }
 
 func TestAccDMSS3Endpoint_simple(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_dms_s3_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -185,12 +188,12 @@ func TestAccDMSS3Endpoint_simple(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEndpointDestroy,
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccS3EndpointConfig_simple(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEndpointExists(resourceName),
+					testAccCheckEndpointExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "add_column_name", "false"),
 					resource.TestCheckResourceAttr(resourceName, "add_trailing_padding_character", "false"),
 					resource.TestCheckResourceAttr(resourceName, "bucket_folder", ""),
@@ -241,6 +244,7 @@ func TestAccDMSS3Endpoint_simple(t *testing.T) {
 }
 
 func TestAccDMSS3Endpoint_sourceSimple(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_dms_s3_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -248,12 +252,12 @@ func TestAccDMSS3Endpoint_sourceSimple(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEndpointDestroy,
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccS3EndpointConfig_sourceSimple(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEndpointExists(resourceName),
+					testAccCheckEndpointExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "add_column_name", "false"),
 					resource.TestCheckResourceAttr(resourceName, "bucket_folder", ""),
 					resource.TestCheckResourceAttr(resourceName, "bucket_name", "beckut_name"),
@@ -302,6 +306,7 @@ func TestAccDMSS3Endpoint_sourceSimple(t *testing.T) {
 }
 
 func TestAccDMSS3Endpoint_source(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_dms_s3_endpoint.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -309,12 +314,12 @@ func TestAccDMSS3Endpoint_source(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEndpointDestroy,
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccS3EndpointConfig_source(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEndpointExists(resourceName),
+					testAccCheckEndpointExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "bucket_folder", "folder"),
 					resource.TestCheckResourceAttr(resourceName, "bucket_name", "bucket_name"),
 					resource.TestCheckResourceAttr(resourceName, "cdc_path", "cdc/path"),
@@ -350,7 +355,7 @@ func TestAccDMSS3Endpoint_source(t *testing.T) {
 			{
 				Config: testAccS3EndpointConfig_sourceUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEndpointExists(resourceName),
+					testAccCheckEndpointExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "bucket_folder", "folder2"),
 					resource.TestCheckResourceAttr(resourceName, "bucket_name", "beckut_name"),
 					resource.TestCheckResourceAttr(resourceName, "cdc_path", "cdc/path2"),

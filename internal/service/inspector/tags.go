@@ -4,6 +4,7 @@
 package inspector
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -15,7 +16,7 @@ import (
 
 // updateTags updates WorkSpaces resource tags.
 // The identifier is the resource ARN.
-func updateTags(conn *inspector.Inspector, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func updateTags(ctx context.Context, conn *inspector.Inspector, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 
@@ -25,7 +26,7 @@ func updateTags(conn *inspector.Inspector, identifier string, oldTagsMap interfa
 			Tags:        Tags(newTags.IgnoreAWS()),
 		}
 
-		_, err := conn.SetTagsForResource(input)
+		_, err := conn.SetTagsForResourceWithContext(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
@@ -35,7 +36,7 @@ func updateTags(conn *inspector.Inspector, identifier string, oldTagsMap interfa
 			ResourceArn: aws.String(identifier),
 		}
 
-		_, err := conn.SetTagsForResource(input)
+		_, err := conn.SetTagsForResourceWithContext(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)

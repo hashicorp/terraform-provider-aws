@@ -8,6 +8,8 @@ import (
 )
 
 func TestTLSRSAPrivateKeyPEM(t *testing.T) {
+	t.Parallel()
+
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 
 	if !strings.Contains(key, acctest.PEMBlockTypeRSAPrivateKey) {
@@ -16,6 +18,8 @@ func TestTLSRSAPrivateKeyPEM(t *testing.T) {
 }
 
 func TestTLSRSAPublicKeyPEM(t *testing.T) {
+	t.Parallel()
+
 	privateKey := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	publicKey := acctest.TLSRSAPublicKeyPEM(t, privateKey)
 
@@ -25,6 +29,8 @@ func TestTLSRSAPublicKeyPEM(t *testing.T) {
 }
 
 func TestTLSRSAX509LocallySignedCertificatePEM(t *testing.T) {
+	t.Parallel()
+
 	caKey := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	caCertificate := acctest.TLSRSAX509SelfSignedCACertificatePEM(t, caKey)
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
@@ -36,6 +42,8 @@ func TestTLSRSAX509LocallySignedCertificatePEM(t *testing.T) {
 }
 
 func TestTLSRSAX509SelfSignedCACertificatePEM(t *testing.T) {
+	t.Parallel()
+
 	caKey := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	caCertificate := acctest.TLSRSAX509SelfSignedCACertificatePEM(t, caKey)
 
@@ -45,6 +53,8 @@ func TestTLSRSAX509SelfSignedCACertificatePEM(t *testing.T) {
 }
 
 func TestTLSRSAX509SelfSignedCertificatePEM(t *testing.T) {
+	t.Parallel()
+
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
 
@@ -54,6 +64,8 @@ func TestTLSRSAX509SelfSignedCertificatePEM(t *testing.T) {
 }
 
 func TestTLSRSAX509CertificateRequestPEM(t *testing.T) {
+	t.Parallel()
+
 	csr, key := acctest.TLSRSAX509CertificateRequestPEM(t, 2048, "example.com")
 
 	if !strings.Contains(csr, acctest.PEMBlockTypeCertificateRequest) {
@@ -66,10 +78,56 @@ func TestTLSRSAX509CertificateRequestPEM(t *testing.T) {
 }
 
 func TestTLSECDSAPublicKeyPEM(t *testing.T) {
+	t.Parallel()
+
 	privateKey := acctest.TLSECDSAPrivateKeyPEM(t, "P-384")
 	publicKey, _ := acctest.TLSECDSAPublicKeyPEM(t, privateKey)
 
 	if !strings.Contains(publicKey, acctest.PEMBlockTypePublicKey) {
 		t.Errorf("key does not contain PUBLIC KEY: %s", publicKey)
+	}
+}
+
+func TestTLSPEMEscapeNewlines(t *testing.T) {
+	t.Parallel()
+
+	input := `
+ABCD
+12345
+`
+	want := "\\nABCD\\n12345\\n"
+
+	if got := acctest.TLSPEMEscapeNewlines(input); got != want {
+		t.Errorf("got: %s\nwant: %s", got, want)
+	}
+}
+
+func TestTLSPEMRemovePublicKeyEncapsulationBoundaries(t *testing.T) {
+	t.Parallel()
+
+	input := `-----BEGIN PUBLIC KEY-----
+ABCD
+12345
+-----END PUBLIC KEY-----
+`
+	want := "\nABCD\n12345\n\n"
+
+	if got := acctest.TLSPEMRemovePublicKeyEncapsulationBoundaries(input); got != want {
+		t.Errorf("got: %s\nwant: %s", got, want)
+	}
+}
+
+func TestTLSPEMRemoveNewlines(t *testing.T) {
+	t.Parallel()
+
+	input := `
+ABCD
+12345
+
+`
+	want := "ABCD12345"
+
+	if got := acctest.TLSPEMRemoveNewlines(input); got != want {
+		t.Errorf("got: %s\nwant: %s", got, want)
 	}
 }

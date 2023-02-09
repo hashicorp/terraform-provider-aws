@@ -1,17 +1,19 @@
 package outposts
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/outposts"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func DataSourceSites() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceSitesRead,
+		ReadWithoutTimeout: dataSourceSitesRead,
 
 		Schema: map[string]*schema.Schema{
 			"ids": {
@@ -23,14 +25,15 @@ func DataSourceSites() *schema.Resource {
 	}
 }
 
-func dataSourceSitesRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OutpostsConn
+func dataSourceSitesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).OutpostsConn()
 
 	input := &outposts.ListSitesInput{}
 
 	var ids []string
 
-	err := conn.ListSitesPages(input, func(page *outposts.ListSitesOutput, lastPage bool) bool {
+	err := conn.ListSitesPagesWithContext(ctx, input, func(page *outposts.ListSitesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -47,14 +50,14 @@ func dataSourceSitesRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if err != nil {
-		return fmt.Errorf("error listing Outposts Sites: %w", err)
+		return sdkdiag.AppendErrorf(diags, "listing Outposts Sites: %s", err)
 	}
 
 	if err := d.Set("ids", ids); err != nil {
-		return fmt.Errorf("error setting ids: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting ids: %s", err)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
 
-	return nil
+	return diags
 }

@@ -128,7 +128,7 @@ func ResourceFindingsFilter() *schema.Resource {
 }
 
 func resourceFindingsFilterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn
+	conn := meta.(*conns.AWSClient).Macie2Conn()
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
@@ -184,7 +184,7 @@ func resourceFindingsFilterCreate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceFindingsFilterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn
+	conn := meta.(*conns.AWSClient).Macie2Conn()
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -227,7 +227,7 @@ func resourceFindingsFilterRead(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceFindingsFilterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn
+	conn := meta.(*conns.AWSClient).Macie2Conn()
 
 	input := &macie2.UpdateFindingsFilterInput{
 		Id: aws.String(d.Id()),
@@ -265,7 +265,7 @@ func resourceFindingsFilterUpdate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceFindingsFilterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn
+	conn := meta.(*conns.AWSClient).Macie2Conn()
 
 	input := &macie2.DeleteFindingsFilterInput{
 		Id: aws.String(d.Id()),

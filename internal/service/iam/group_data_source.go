@@ -1,18 +1,20 @@
 package iam
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func DataSourceGroup() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceGroupRead,
+		ReadWithoutTimeout: dataSourceGroupRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -59,8 +61,9 @@ func DataSourceGroup() *schema.Resource {
 	}
 }
 
-func dataSourceGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	groupName := d.Get("group_name").(string)
 
@@ -72,7 +75,7 @@ func dataSourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	var group *iam.Group
 
 	log.Printf("[DEBUG] Reading IAM Group: %s", req)
-	err := conn.GetGroupPages(req, func(page *iam.GetGroupOutput, lastPage bool) bool {
+	err := conn.GetGroupPagesWithContext(ctx, req, func(page *iam.GetGroupOutput, lastPage bool) bool {
 		if group == nil {
 			group = page.Group
 		}
@@ -80,10 +83,10 @@ func dataSourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 		return !lastPage
 	})
 	if err != nil {
-		return fmt.Errorf("Error getting group: %w", err)
+		return sdkdiag.AppendErrorf(diags, "getting group: %s", err)
 	}
 	if group == nil {
-		return fmt.Errorf("no IAM group found")
+		return sdkdiag.AppendErrorf(diags, "no IAM group found")
 	}
 
 	d.SetId(aws.StringValue(group.GroupId))
@@ -91,10 +94,10 @@ func dataSourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("path", group.Path)
 	d.Set("group_id", group.GroupId)
 	if err := d.Set("users", dataSourceGroupUsersRead(users)); err != nil {
-		return fmt.Errorf("error setting users: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting users: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
 func dataSourceGroupUsersRead(iamUsers []*iam.User) []map[string]interface{} {

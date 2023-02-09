@@ -1,18 +1,20 @@
 package eks
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eks"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func DataSourceNodeGroups() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceNodeGroupsRead,
+		ReadWithoutTimeout: dataSourceNodeGroupsRead,
 
 		Schema: map[string]*schema.Schema{
 			"cluster_name": {
@@ -29,8 +31,9 @@ func DataSourceNodeGroups() *schema.Resource {
 	}
 }
 
-func dataSourceNodeGroupsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EKSConn
+func dataSourceNodeGroupsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EKSConn()
 
 	clusterName := d.Get("cluster_name").(string)
 
@@ -40,7 +43,7 @@ func dataSourceNodeGroupsRead(d *schema.ResourceData, meta interface{}) error {
 
 	var nodegroups []*string
 
-	err := conn.ListNodegroupsPages(input, func(page *eks.ListNodegroupsOutput, lastPage bool) bool {
+	err := conn.ListNodegroupsPagesWithContext(ctx, input, func(page *eks.ListNodegroupsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -51,7 +54,7 @@ func dataSourceNodeGroupsRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if err != nil {
-		return fmt.Errorf("error listing EKS Node Groups: %w", err)
+		return sdkdiag.AppendErrorf(diags, "listing EKS Node Groups: %s", err)
 	}
 
 	d.SetId(clusterName)
@@ -59,5 +62,5 @@ func dataSourceNodeGroupsRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("cluster_name", clusterName)
 	d.Set("names", aws.StringValueSlice(nodegroups))
 
-	return nil
+	return diags
 }

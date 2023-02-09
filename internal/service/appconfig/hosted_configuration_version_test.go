@@ -1,6 +1,7 @@
 package appconfig_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -17,6 +18,7 @@ import (
 )
 
 func TestAccAppConfigHostedConfigurationVersion_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appconfig_hosted_configuration_version.test"
 
@@ -24,12 +26,12 @@ func TestAccAppConfigHostedConfigurationVersion_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, appconfig.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckHostedConfigurationVersionDestroy,
+		CheckDestroy:             testAccCheckHostedConfigurationVersionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHostedConfigurationVersionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckHostedConfigurationVersionExists(resourceName),
+					testAccCheckHostedConfigurationVersionExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "appconfig", regexp.MustCompile(`application/[a-z0-9]{4,7}/configurationprofile/[a-z0-9]{4,7}/hostedconfigurationversion/[0-9]+`)),
 					resource.TestCheckResourceAttrPair(resourceName, "application_id", "aws_appconfig_application.test", "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration_profile_id", "aws_appconfig_configuration_profile.test", "configuration_profile_id"),
@@ -49,6 +51,7 @@ func TestAccAppConfigHostedConfigurationVersion_basic(t *testing.T) {
 }
 
 func TestAccAppConfigHostedConfigurationVersion_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appconfig_hosted_configuration_version.test"
 
@@ -56,13 +59,13 @@ func TestAccAppConfigHostedConfigurationVersion_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, appconfig.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckHostedConfigurationVersionDestroy,
+		CheckDestroy:             testAccCheckHostedConfigurationVersionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHostedConfigurationVersionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckHostedConfigurationVersionExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfappconfig.ResourceHostedConfigurationVersion(), resourceName),
+					testAccCheckHostedConfigurationVersionExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappconfig.ResourceHostedConfigurationVersion(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -70,45 +73,47 @@ func TestAccAppConfigHostedConfigurationVersion_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckHostedConfigurationVersionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn
+func testAccCheckHostedConfigurationVersionDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_appconfig_hosted_configuration_version" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_appconfig_hosted_configuration_version" {
+				continue
+			}
+
+			appID, confProfID, versionNumber, err := tfappconfig.HostedConfigurationVersionParseID(rs.Primary.ID)
+
+			if err != nil {
+				return err
+			}
+
+			input := &appconfig.GetHostedConfigurationVersionInput{
+				ApplicationId:          aws.String(appID),
+				ConfigurationProfileId: aws.String(confProfID),
+				VersionNumber:          aws.Int64(int64(versionNumber)),
+			}
+
+			output, err := conn.GetHostedConfigurationVersionWithContext(ctx, input)
+
+			if tfawserr.ErrCodeEquals(err, appconfig.ErrCodeResourceNotFoundException) {
+				continue
+			}
+
+			if err != nil {
+				return fmt.Errorf("error reading AppConfig Hosted Configuration Version (%s): %w", rs.Primary.ID, err)
+			}
+
+			if output != nil {
+				return fmt.Errorf("AppConfig Hosted Configuration Version (%s) still exists", rs.Primary.ID)
+			}
 		}
 
-		appID, confProfID, versionNumber, err := tfappconfig.HostedConfigurationVersionParseID(rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		input := &appconfig.GetHostedConfigurationVersionInput{
-			ApplicationId:          aws.String(appID),
-			ConfigurationProfileId: aws.String(confProfID),
-			VersionNumber:          aws.Int64(int64(versionNumber)),
-		}
-
-		output, err := conn.GetHostedConfigurationVersion(input)
-
-		if tfawserr.ErrCodeEquals(err, appconfig.ErrCodeResourceNotFoundException) {
-			continue
-		}
-
-		if err != nil {
-			return fmt.Errorf("error reading AppConfig Hosted Configuration Version (%s): %w", rs.Primary.ID, err)
-		}
-
-		if output != nil {
-			return fmt.Errorf("AppConfig Hosted Configuration Version (%s) still exists", rs.Primary.ID)
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckHostedConfigurationVersionExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckHostedConfigurationVersionExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -125,9 +130,9 @@ func testAccCheckHostedConfigurationVersionExists(resourceName string) resource.
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn()
 
-		output, err := conn.GetHostedConfigurationVersion(&appconfig.GetHostedConfigurationVersionInput{
+		output, err := conn.GetHostedConfigurationVersionWithContext(ctx, &appconfig.GetHostedConfigurationVersionInput{
 			ApplicationId:          aws.String(appID),
 			ConfigurationProfileId: aws.String(confProfID),
 			VersionNumber:          aws.Int64(int64(versionNumber)),
