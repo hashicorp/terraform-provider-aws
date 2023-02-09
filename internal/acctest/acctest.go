@@ -220,10 +220,12 @@ func PreCheck(t *testing.T) {
 		region := Region()
 		os.Setenv(envvar.DefaultRegion, region)
 
-		err := sdkdiag.DiagnosticsError(Provider.Configure(context.Background(), terraform.NewResourceConfigRaw(nil)))
+		// TODO: take `ctx` as a parameter instead
+		ctx := Context(t)
 
-		if err != nil {
-			t.Fatal(err)
+		diags := Provider.Configure(ctx, terraform.NewResourceConfigRaw(nil))
+		if err := sdkdiag.DiagnosticsError(diags); err != nil {
+			t.Fatalf("configuring provider: %s", err)
 		}
 	})
 }
