@@ -20,6 +20,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * data-source/aws_kms_key: Reinstate support for KMS multi-Region key ID or ARN values for the `key_id` argument ([#29266](https://github.com/hashicorp/terraform-provider-aws/issues/29266))
+* resource/aws_cloudwatch_log_group: Fix IAM eventual consistency error when setting a retention policy ([#29325](https://github.com/hashicorp/terraform-provider-aws/issues/29325))
 * resource/aws_dynamodb_table: Avoid recreating table replicas when enabling PITR on them ([#29269](https://github.com/hashicorp/terraform-provider-aws/issues/29269))
 * resource/aws_ec2_client_vpn_endpoint: Change `authentication_options` from `TypeList` to `TypeSet` as order is not significant ([#29294](https://github.com/hashicorp/terraform-provider-aws/issues/29294))
 * resource/aws_kms_grant: Retries until valid principal ARNs are returned instead of not updating state ([#29245](https://github.com/hashicorp/terraform-provider-aws/issues/29245))
