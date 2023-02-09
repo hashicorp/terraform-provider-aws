@@ -260,6 +260,10 @@ func ResourceTable() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"arn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						"kms_key_arn": {
 							Type:         schema.TypeString,
 							Optional:     true,
@@ -281,6 +285,14 @@ func ResourceTable() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 							// update is equivalent of force a new *replica*, not table
+						},
+						"stream_arn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"stream_label": {
+							Type:     schema.TypeString,
+							Computed: true,
 						},
 					},
 				},
@@ -663,6 +675,10 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	replicas := flattenReplicaDescriptions(table.Replicas)
 
 	if replicas, err = addReplicaPITRs(ctx, conn, d.Id(), meta.(*conns.AWSClient).TerraformVersion, replicas); err != nil {
+		return create.DiagError(names.DynamoDB, create.ErrActionReading, ResNameTable, d.Id(), err)
+	}
+
+	if replicas, err = enrichReplicas(ctx, conn, aws.StringValue(table.TableArn), d.Id(), meta.(*conns.AWSClient).TerraformVersion, replicas); err != nil {
 		return create.DiagError(names.DynamoDB, create.ErrActionReading, ResNameTable, d.Id(), err)
 	}
 
@@ -1099,9 +1115,14 @@ func createReplicas(ctx context.Context, conn *dynamodb.DynamoDB, tableName stri
 			},
 		}
 
+		// currently this would not be needed because (replica has these arguments):
+		//   region_name can't be updated - new replica
+		//   kms_key_arn can't be updated - remove/add replica
+		//   propagate_tags - handled elsewhere
+		//   point_in_time_recovery - handled elsewhere
+		// if provisioned_throughput_override or table_class_override were added, they could be updated here
 		if !create {
 			var replicaInput = &dynamodb.UpdateReplicationGroupMemberAction{}
-
 			if v, ok := tfMap["region_name"].(string); ok && v != "" {
 				replicaInput.RegionName = aws.String(v)
 			}
@@ -1144,6 +1165,10 @@ func createReplicas(ctx context.Context, conn *dynamodb.DynamoDB, tableName stri
 		if tfresource.TimedOut(err) {
 			_, err = conn.UpdateTableWithContext(ctx, input)
 		}
+
+		// An update that doesn't (makes no changes) returns ValidationException
+		// (same region_name and kms_key_arn as currently) throws unhelpfully worded exception:
+		// ValidationException: One or more parameter values were invalid: KMSMasterKeyId must be specified for each replica.
 
 		if create && tfawserr.ErrMessageContains(err, "ValidationException", "already exist") {
 			return createReplicas(ctx, conn, tableName, tfList, tfVersion, false, timeout)
@@ -1283,49 +1308,95 @@ func updateReplica(ctx context.Context, d *schema.ResourceData, conn *dynamodb.D
 	o := oRaw.(*schema.Set)
 	n := nRaw.(*schema.Set)
 
-	removed := o.Difference(n).List()
-	added := n.Difference(o).List()
-
-	// 1. changing replica kms keys requires recreation of the replica, like ForceNew, but we don't want to ForceNew the *table*
-	// 2. also, in order to update PITR if a replica is encrypted (has KMS key), it requires recreation (how'd u recover from a backup encrypted with a different key?)
+	removeRaw := o.Difference(n).List()
+	addRaw := n.Difference(o).List()
 
 	var removeFirst []interface{} // replicas to delete before recreating (like ForceNew without recreating table)
+	var toAdd []interface{}
+	var toRemove []interface{}
 
-	// For true updates, don't remove and add, just update (i.e., keep in added
-	// but remove from removed)
-	for _, a := range added {
-		for j, r := range removed {
-			ma := a.(map[string]interface{})
+	// first pass - add replicas that don't have corresponding remove entry
+	for _, a := range addRaw {
+		add := true
+		ma := a.(map[string]interface{})
+		for _, r := range removeRaw {
 			mr := r.(map[string]interface{})
 
-			if ma["region_name"].(string) == mr["region_name"].(string) && (ma["kms_key_arn"].(string) != "" || mr["kms_key_arn"].(string) != "") {
-				removeFirst = append(removeFirst, removed[j])
-				removed = append(removed[:j], removed[j+1:]...)
-				continue
-			}
-
 			if ma["region_name"].(string) == mr["region_name"].(string) {
-				removed = append(removed[:j], removed[j+1:]...)
-				continue
+				add = false
+				break
 			}
+		}
+
+		if add {
+			toAdd = append(toAdd, ma)
 		}
 	}
 
-	if len(removeFirst) > 0 { // like ForceNew but doesn't recreate the table
+	// second pass - remove replicas that don't have corresponding add entry
+	for _, r := range removeRaw {
+		remove := true
+		mr := r.(map[string]interface{})
+		for _, a := range addRaw {
+			ma := a.(map[string]interface{})
+
+			if ma["region_name"].(string) == mr["region_name"].(string) {
+				remove = false
+				break
+			}
+		}
+
+		if remove {
+			toRemove = append(toRemove, mr)
+		}
+	}
+
+	// third pass - for replicas that exist in both add and remove
+	// For true updates, don't remove and add, just update
+	for _, a := range addRaw {
+		ma := a.(map[string]interface{})
+		for _, r := range removeRaw {
+			mr := r.(map[string]interface{})
+
+			if ma["region_name"].(string) != mr["region_name"].(string) {
+				continue
+			}
+
+			// like "ForceNew" for the replica - KMS change
+			if ma["kms_key_arn"].(string) != mr["kms_key_arn"].(string) {
+				toRemove = append(toRemove, mr)
+				toAdd = append(toAdd, ma)
+				break
+			}
+
+			// just update PITR
+			if ma["point_in_time_recovery"].(bool) != mr["point_in_time_recovery"].(bool) {
+				if err := updatePITR(ctx, conn, d.Id(), ma["point_in_time_recovery"].(bool), ma["region_name"].(string), tfVersion, d.Timeout(schema.TimeoutUpdate)); err != nil {
+					return fmt.Errorf("updating replica (%s) point in time recovery: %w", ma["region_name"].(string), err)
+				}
+				break
+			}
+
+			// nothing changed, assuming propagate_tags changed so do nothing here
+			break
+		}
+	}
+
+	if len(removeFirst) > 0 { // mini ForceNew, recreates replica but doesn't recreate the table
 		if err := deleteReplicas(ctx, conn, d.Id(), removeFirst, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return fmt.Errorf("updating replicas, while deleting: %w", err)
 		}
 	}
 
-	if len(added) > 0 {
-		if err := createReplicas(ctx, conn, d.Id(), added, tfVersion, true, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return fmt.Errorf("updating replicas, while creating: %w", err)
+	if len(toRemove) > 0 {
+		if err := deleteReplicas(ctx, conn, d.Id(), toRemove, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return fmt.Errorf("updating replicas, while deleting: %w", err)
 		}
 	}
 
-	if len(removed) > 0 {
-		if err := deleteReplicas(ctx, conn, d.Id(), removed, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return fmt.Errorf("updating replicas, while deleting: %w", err)
+	if len(toAdd) > 0 {
+		if err := createReplicas(ctx, conn, d.Id(), toAdd, tfVersion, true, d.Timeout(schema.TimeoutCreate)); err != nil {
+			return fmt.Errorf("updating replicas, while creating: %w", err)
 		}
 	}
 
@@ -1501,8 +1572,16 @@ func deleteReplicas(ctx context.Context, conn *dynamodb.DynamoDB, tableName stri
 
 			err := resource.RetryContext(ctx, updateTableTimeout, func() *resource.RetryError {
 				_, err := conn.UpdateTableWithContext(ctx, input)
+				notFoundRetries := 0
 				if err != nil {
 					if tfawserr.ErrCodeEquals(err, "ThrottlingException") {
+						return resource.RetryableError(err)
+					}
+					if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
+						notFoundRetries++
+						if notFoundRetries > 3 {
+							return resource.NonRetryableError(err)
+						}
 						return resource.RetryableError(err)
 					}
 					if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeLimitExceededException, "can be created, updated, or deleted simultaneously") {
@@ -1521,7 +1600,7 @@ func deleteReplicas(ctx context.Context, conn *dynamodb.DynamoDB, tableName stri
 				_, err = conn.UpdateTableWithContext(ctx, input)
 			}
 
-			if err != nil {
+			if err != nil && !tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
 				return fmt.Errorf("deleting replica (%s): %w", regionName, err)
 			}
 
@@ -1570,6 +1649,25 @@ func replicaPITR(ctx context.Context, conn *dynamodb.DynamoDB, tableName string,
 	return enabled, nil
 }
 
+func replicaStream(ctx context.Context, conn *dynamodb.DynamoDB, tableName string, region string, tfVersion string) (string, string) {
+	// This does not return an error because it is attempting to add "Computed"-only information to replica - tolerating errors.
+	session, err := conns.NewSessionForRegion(&conn.Config, region, tfVersion)
+	if err != nil {
+		log.Printf("[WARN] Attempting to get replica (%s) stream information, ignoring encountered error: %s", tableName, err)
+		return "", ""
+	}
+
+	conn = dynamodb.New(session)
+
+	table, err := FindTableByName(ctx, conn, tableName)
+	if err != nil {
+		log.Printf("[WARN] When attempting to get replica (%s) stream information, ignoring encountered error: %s", tableName, err)
+		return "", ""
+	}
+
+	return aws.StringValue(table.LatestStreamArn), aws.StringValue(table.LatestStreamLabel)
+}
+
 func addReplicaPITRs(ctx context.Context, conn *dynamodb.DynamoDB, tableName string, tfVersion string, replicas []interface{}) ([]interface{}, error) {
 	// This non-standard approach is needed because PITR info for a replica
 	// must come from a region-specific connection.
@@ -1582,6 +1680,27 @@ func addReplicaPITRs(ctx context.Context, conn *dynamodb.DynamoDB, tableName str
 			return nil, err
 		}
 		replica["point_in_time_recovery"] = enabled
+		replicas[i] = replica
+	}
+
+	return replicas, nil
+}
+
+func enrichReplicas(ctx context.Context, conn *dynamodb.DynamoDB, arn, tableName, tfVersion string, replicas []interface{}) ([]interface{}, error) {
+	// This non-standard approach is needed because PITR info for a replica
+	// must come from a region-specific connection.
+	for i, replicaRaw := range replicas {
+		replica := replicaRaw.(map[string]interface{})
+
+		newARN, err := ARNForNewRegion(arn, replica["region_name"].(string))
+		if err != nil {
+			return nil, fmt.Errorf("creating new-region ARN: %s", err)
+		}
+		replica["arn"] = newARN
+
+		streamARN, streamLabel := replicaStream(ctx, conn, tableName, replica["region_name"].(string), tfVersion)
+		replica["stream_arn"] = streamARN
+		replica["stream_label"] = streamLabel
 		replicas[i] = replica
 	}
 

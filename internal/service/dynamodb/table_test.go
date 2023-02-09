@@ -1470,7 +1470,6 @@ func TestAccDynamoDBTable_encryption(t *testing.T) {
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	kmsKeyResourceName := "aws_kms_key.test"
-	//kmsAliasDatasourceName := "data.aws_kms_alias.dynamodb"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -1588,6 +1587,10 @@ func TestAccDynamoDBTable_Replica_single(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "dynamodb", fmt.Sprintf("table/%s", rName)),
+					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]*regexp.Regexp{
+						"arn": regexp.MustCompile(fmt.Sprintf(`:dynamodb:%s:`, acctest.AlternateRegion())),
+					}),
 				),
 			},
 			{
@@ -1613,6 +1616,42 @@ func TestAccDynamoDBTable_Replica_single(t *testing.T) {
 			{
 				Config:   testAccTableConfig_replica1(rName),
 				PlanOnly: true,
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBTable_Replica_singleStreamSpecification(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var conf dynamodb.TableDescription
+	resourceName := "aws_dynamodb_table.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 3), // 3 due to shared test configuration
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_replicaStreamSpecification(rName, true, "KEYS_ONLY"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "dynamodb", fmt.Sprintf("table/%s", rName)),
+					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]*regexp.Regexp{
+						"arn":          regexp.MustCompile(fmt.Sprintf(`:dynamodb:%s:.*table/%s`, acctest.AlternateRegion(), rName)),
+						"stream_arn":   regexp.MustCompile(fmt.Sprintf(`:dynamodb:%s:.*table/%s/stream`, acctest.AlternateRegion(), rName)),
+						"stream_label": regexp.MustCompile(`[0-9]+.*:[0-9]+`),
+					}),
+				),
 			},
 		},
 	})
@@ -1670,9 +1709,7 @@ func TestAccDynamoDBTable_Replica_singleCMK(t *testing.T) {
 	var conf dynamodb.TableDescription
 	resourceName := "aws_dynamodb_table.test"
 	kmsKeyResourceName := "aws_kms_key.test"
-	// kmsAliasDatasourceName := "data.aws_kms_alias.master"
 	kmsKeyReplicaResourceName := "aws_kms_key.replica"
-	// kmsAliasReplicaDatasourceName := "data.aws_kms_alias.replica"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1707,10 +1744,8 @@ func TestAccDynamoDBTable_Replica_singleAddCMK(t *testing.T) {
 	var conf dynamodb.TableDescription
 	resourceName := "aws_dynamodb_table.test"
 	kmsKeyResourceName := "aws_kms_key.test"
-	//kmsAliasDatasourceName := "data.aws_kms_alias.dynamodb"
 	kmsKeyReplicaResourceName := "aws_kms_key.replica"
 	kmsKeyReplica2ResourceName := "aws_kms_key.replica2"
-	//kmsAliasReplicaDatasourceName := "data.aws_kms_alias.replica"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1768,7 +1803,7 @@ func TestAccDynamoDBTable_Replica_pitr(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var conf dynamodb.TableDescription
+	var conf, replica1, replica2, replica3, replica4 dynamodb.TableDescription
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1785,6 +1820,8 @@ func TestAccDynamoDBTable_Replica_pitr(t *testing.T) {
 				Config: testAccTableConfig_replicaPITR(rName, false, true, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
+					testAccCheckReplicaExists(ctx, resourceName, acctest.AlternateRegion(), &replica1),
+					testAccCheckReplicaExists(ctx, resourceName, acctest.ThirdRegion(), &replica2),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
 						"point_in_time_recovery": "true",
@@ -1802,6 +1839,10 @@ func TestAccDynamoDBTable_Replica_pitr(t *testing.T) {
 				Config: testAccTableConfig_replicaPITR(rName, true, false, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
+					testAccCheckReplicaExists(ctx, resourceName, acctest.AlternateRegion(), &replica3),
+					testAccCheckReplicaExists(ctx, resourceName, acctest.ThirdRegion(), &replica4),
+					testAccCheckTableNotRecreated(&replica1, &replica3),
+					testAccCheckTableNotRecreated(&replica2, &replica4),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
 						"point_in_time_recovery": "false",
@@ -1825,7 +1866,7 @@ func TestAccDynamoDBTable_Replica_pitrKMS(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var conf dynamodb.TableDescription
+	var conf, replica1, replica2, replica3, replica4 dynamodb.TableDescription
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1839,9 +1880,32 @@ func TestAccDynamoDBTable_Replica_pitrKMS(t *testing.T) {
 		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
+				Config: testAccTableConfig_replicaPITRKMS(rName, false, false, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceName, &conf),
+					testAccCheckReplicaExists(ctx, resourceName, acctest.AlternateRegion(), &replica1),
+					testAccCheckReplicaExists(ctx, resourceName, acctest.ThirdRegion(), &replica2),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
+						"point_in_time_recovery": "false",
+						"region_name":            acctest.AlternateRegion(),
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
+						"point_in_time_recovery": "false",
+						"region_name":            acctest.ThirdRegion(),
+					}),
+					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.0.enabled", "false"),
+				),
+			},
+			{
 				Config: testAccTableConfig_replicaPITRKMS(rName, false, true, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
+					testAccCheckReplicaExists(ctx, resourceName, acctest.AlternateRegion(), &replica3),
+					testAccCheckReplicaExists(ctx, resourceName, acctest.ThirdRegion(), &replica4),
+					testAccCheckTableNotRecreated(&replica1, &replica3),
+					testAccCheckTableNotRecreated(&replica2, &replica4),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
 						"point_in_time_recovery": "true",
@@ -1856,9 +1920,34 @@ func TestAccDynamoDBTable_Replica_pitrKMS(t *testing.T) {
 				),
 			},
 			{
+				Config: testAccTableConfig_replicaPITRKMS(rName, false, true, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceName, &conf),
+					testAccCheckReplicaExists(ctx, resourceName, acctest.AlternateRegion(), &replica1),
+					testAccCheckReplicaExists(ctx, resourceName, acctest.ThirdRegion(), &replica2),
+					testAccCheckTableNotRecreated(&replica1, &replica3),
+					testAccCheckTableNotRecreated(&replica2, &replica4),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
+						"point_in_time_recovery": "true",
+						"region_name":            acctest.AlternateRegion(),
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
+						"point_in_time_recovery": "true",
+						"region_name":            acctest.ThirdRegion(),
+					}),
+					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.0.enabled", "false"),
+				),
+			},
+			{
 				Config: testAccTableConfig_replicaPITRKMS(rName, true, false, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
+					testAccCheckReplicaExists(ctx, resourceName, acctest.AlternateRegion(), &replica3),
+					testAccCheckReplicaExists(ctx, resourceName, acctest.ThirdRegion(), &replica4),
+					testAccCheckTableNotRecreated(&replica1, &replica3),
+					testAccCheckTableNotRecreated(&replica2, &replica4),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
 						"point_in_time_recovery": "false",
@@ -1870,6 +1959,27 @@ func TestAccDynamoDBTable_Replica_pitrKMS(t *testing.T) {
 					}),
 					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.0.enabled", "true"),
+				),
+			},
+			{
+				Config: testAccTableConfig_replicaPITRKMS(rName, false, false, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceName, &conf),
+					testAccCheckReplicaExists(ctx, resourceName, acctest.AlternateRegion(), &replica1),
+					testAccCheckReplicaExists(ctx, resourceName, acctest.ThirdRegion(), &replica2),
+					testAccCheckTableNotRecreated(&replica1, &replica3),
+					testAccCheckTableNotRecreated(&replica2, &replica4),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
+						"point_in_time_recovery": "false",
+						"region_name":            acctest.AlternateRegion(),
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]string{
+						"point_in_time_recovery": "false",
+						"region_name":            acctest.ThirdRegion(),
+					}),
+					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "point_in_time_recovery.0.enabled", "false"),
 				),
 			},
 		},
@@ -2322,6 +2432,41 @@ func testAccCheckTableNotRecreated(i, j *dynamodb.TableDescription) resource.Tes
 		if !i.CreationDateTime.Equal(aws.TimeValue(j.CreationDateTime)) {
 			return errors.New("DynamoDB Table was recreated")
 		}
+
+		return nil
+	}
+}
+
+func testAccCheckReplicaExists(ctx context.Context, n string, region string, v *dynamodb.TableDescription) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("no DynamoDB table name specified!")
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn()
+		terraformVersion := acctest.Provider.Meta().(*conns.AWSClient).TerraformVersion
+
+		if aws.StringValue(conn.Config.Region) != region {
+			session, err := conns.NewSessionForRegion(&conn.Config, region, terraformVersion)
+			if err != nil {
+				return create.Error(names.DynamoDB, create.ErrActionChecking, tfdynamodb.ResNameTable, rs.Primary.ID, err)
+			}
+
+			conn = dynamodb.New(session)
+		}
+
+		output, err := tfdynamodb.FindTableByName(ctx, conn, rs.Primary.ID)
+
+		if err != nil {
+			return create.Error(names.DynamoDB, create.ErrActionChecking, tfdynamodb.ResNameTable, rs.Primary.ID, err)
+		}
+
+		*v = *output
 
 		return nil
 	}
@@ -3885,6 +4030,37 @@ resource "aws_dynamodb_table" "test" {
   }
 }
 `, rName, region1, region2))
+}
+
+func testAccTableConfig_replicaStreamSpecification(rName string, streamEnabled bool, viewType string) string {
+	if viewType != "null" {
+		viewType = fmt.Sprintf(`"%s"`, viewType)
+	}
+	return acctest.ConfigCompose(
+		acctest.ConfigMultipleRegionProvider(3),
+		fmt.Sprintf(`
+data "aws_region" "alternate" {
+  provider = "awsalternate"
+}
+
+resource "aws_dynamodb_table" "test" {
+  name         = %[1]q
+  hash_key     = "TestTableHashKey"
+  billing_mode = "PAY_PER_REQUEST"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  replica {
+    region_name = data.aws_region.alternate.name
+  }
+
+  stream_enabled   = %[2]t
+  stream_view_type = %[3]s
+}
+`, rName, streamEnabled, viewType))
 }
 
 func testAccTableConfig_lsi(rName, lsiName string) string {

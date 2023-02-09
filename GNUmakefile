@@ -6,6 +6,7 @@ SVC_DIR             ?= ./internal/service
 TEST_COUNT          ?= 1
 ACCTEST_TIMEOUT     ?= 180m
 ACCTEST_PARALLELISM ?= 20
+P                   ?= 20
 GO_VER              ?= go
 SWEEP_TIMEOUT       ?= 60m
 
@@ -14,8 +15,17 @@ ifneq ($(origin PKG), undefined)
 	TEST = ./$(PKG_NAME)/...
 endif
 
+ifneq ($(origin K), undefined)
+	PKG_NAME = internal/service/$(K)
+	TEST = ./$(PKG_NAME)/...
+endif
+
 ifneq ($(origin TESTS), undefined)
 	RUNARGS = -run='$(TESTS)'
+endif
+
+ifneq ($(origin T), undefined)
+	RUNARGS = -run='$(T)'
 endif
 
 ifneq ($(origin SWEEPERS), undefined)
@@ -55,6 +65,10 @@ endif
 ifeq ($(PKG_NAME), internal/service/wavelength)
 	PKG_NAME = internal/service/ec2
 	TEST = ./$(PKG_NAME)/...
+endif
+
+ifneq ($(P), 20)
+	ACCTEST_PARALLELISM = $(P)
 endif
 
 default: build
@@ -99,6 +113,9 @@ testacc: fmtcheck
 		echo "See the contributing guide for more information: https://hashicorp.github.io/terraform-provider-aws/running-and-writing-acceptance-tests"; \
 		exit 1; \
 	fi
+	TF_ACC=1 $(GO_VER) test ./$(PKG_NAME)/... -v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT)
+
+t: fmtcheck
 	TF_ACC=1 $(GO_VER) test ./$(PKG_NAME)/... -v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT)
 
 testacc-lint:
@@ -297,6 +314,7 @@ yamllint:
 	build \
 	gen \
 	sweep \
+	t \
 	test \
 	testacc \
 	testacc-lint \
