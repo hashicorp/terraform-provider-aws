@@ -238,7 +238,7 @@ func ResourceTable() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"enabled": {
+						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Required: true,
 						},
@@ -264,7 +264,7 @@ func ResourceTable() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"kms_key_arn": {
+						names.AttrKMSKeyARN: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
@@ -319,11 +319,11 @@ func ResourceTable() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"enabled": {
+						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Required: true,
 						},
-						"kms_key_arn": {
+						names.AttrKMSKeyARN: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Computed:     true,
@@ -372,7 +372,7 @@ func ResourceTable() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"enabled": {
+						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  false,
@@ -918,7 +918,7 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 					regionName = v
 					replicaRegions = append(replicaRegions, v)
 				}
-				if v, ok := tfMap["kms_key_arn"].(string); ok && v != "" {
+				if v, ok := tfMap[names.AttrKMSKeyARN].(string); ok && v != "" {
 					KMSMasterKeyId = v
 				}
 				var input = &dynamodb.UpdateReplicationGroupMemberAction{
@@ -1045,7 +1045,7 @@ func isTableOptionDisabled(v interface{}) bool {
 	if len(options) == 0 {
 		return true
 	}
-	e := options[0].(map[string]interface{})["enabled"]
+	e := options[0].(map[string]interface{})[names.AttrEnabled]
 	return !e.(bool)
 }
 
@@ -1102,7 +1102,7 @@ func createReplicas(ctx context.Context, conn *dynamodb.DynamoDB, tableName stri
 			replicaInput.RegionName = aws.String(v)
 		}
 
-		if v, ok := tfMap["kms_key_arn"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrKMSKeyARN].(string); ok && v != "" {
 			replicaInput.KMSMasterKeyId = aws.String(v)
 		}
 
@@ -1127,7 +1127,7 @@ func createReplicas(ctx context.Context, conn *dynamodb.DynamoDB, tableName stri
 				replicaInput.RegionName = aws.String(v)
 			}
 
-			if v, ok := tfMap["kms_key_arn"].(string); ok && v != "" {
+			if v, ok := tfMap[names.AttrKMSKeyARN].(string); ok && v != "" {
 				replicaInput.KMSMasterKeyId = aws.String(v)
 			}
 
@@ -1239,7 +1239,7 @@ func updateTimeToLive(ctx context.Context, conn *dynamodb.DynamoDB, tableName st
 		TableName: aws.String(tableName),
 		TimeToLiveSpecification: &dynamodb.TimeToLiveSpecification{
 			AttributeName: aws.String(ttlMap["attribute_name"].(string)),
-			Enabled:       aws.Bool(ttlMap["enabled"].(bool)),
+			Enabled:       aws.Bool(ttlMap[names.AttrEnabled].(bool)),
 		},
 	}
 
@@ -1250,7 +1250,7 @@ func updateTimeToLive(ctx context.Context, conn *dynamodb.DynamoDB, tableName st
 
 	log.Printf("[DEBUG] Waiting for DynamoDB Table (%s) Time to Live update to complete", tableName)
 
-	if _, err := waitTTLUpdated(ctx, conn, tableName, ttlMap["enabled"].(bool), timeout); err != nil {
+	if _, err := waitTTLUpdated(ctx, conn, tableName, ttlMap[names.AttrEnabled].(bool), timeout); err != nil {
 		return fmt.Errorf("waiting for Time To Live update: %w", err)
 	}
 
@@ -1363,7 +1363,7 @@ func updateReplica(ctx context.Context, d *schema.ResourceData, conn *dynamodb.D
 			}
 
 			// like "ForceNew" for the replica - KMS change
-			if ma["kms_key_arn"].(string) != mr["kms_key_arn"].(string) {
+			if ma[names.AttrKMSKeyARN].(string) != mr[names.AttrKMSKeyARN].(string) {
 				toRemove = append(toRemove, mr)
 				toAdd = append(toAdd, ma)
 				break
@@ -1752,8 +1752,8 @@ func clearSSEDefaultKey(ctx context.Context, sseList []interface{}, meta interfa
 		return sseList
 	}
 
-	if sse["kms_key_arn"].(string) == dk {
-		sse["kms_key_arn"] = ""
+	if sse[names.AttrKMSKeyARN].(string) == dk {
+		sse[names.AttrKMSKeyARN] = ""
 		return []interface{}{sse}
 	}
 
@@ -1770,7 +1770,7 @@ func clearReplicaDefaultKeys(ctx context.Context, replicas []interface{}, meta i
 	for i, replicaRaw := range replicas {
 		replica := replicaRaw.(map[string]interface{})
 
-		if v, ok := replica["kms_key_arn"].(string); !ok || v == "" {
+		if v, ok := replica[names.AttrKMSKeyARN].(string); !ok || v == "" {
 			continue
 		}
 
@@ -1783,8 +1783,8 @@ func clearReplicaDefaultKeys(ctx context.Context, replicas []interface{}, meta i
 			continue
 		}
 
-		if replica["kms_key_arn"].(string) == dk {
-			replica["kms_key_arn"] = ""
+		if replica[names.AttrKMSKeyARN].(string) == dk {
+			replica[names.AttrKMSKeyARN] = ""
 		}
 
 		replicas[i] = replica
@@ -1905,8 +1905,8 @@ func flattenTableServerSideEncryption(description *dynamodb.SSEDescription) []in
 	}
 
 	m := map[string]interface{}{
-		"enabled":     aws.StringValue(description.Status) == dynamodb.SSEStatusEnabled,
-		"kms_key_arn": aws.StringValue(description.KMSMasterKeyArn),
+		names.AttrEnabled:   aws.StringValue(description.Status) == dynamodb.SSEStatusEnabled,
+		names.AttrKMSKeyARN: aws.StringValue(description.KMSMasterKeyArn),
 	}
 
 	return []interface{}{m}
@@ -1932,7 +1932,7 @@ func flattenReplicaDescription(apiObject *dynamodb.ReplicaDescription) map[strin
 	tfMap := map[string]interface{}{}
 
 	if apiObject.KMSMasterKeyId != nil {
-		tfMap["kms_key_arn"] = aws.StringValue(apiObject.KMSMasterKeyId)
+		tfMap[names.AttrKMSKeyARN] = aws.StringValue(apiObject.KMSMasterKeyId)
 	}
 
 	if apiObject.RegionName != nil {
@@ -1962,7 +1962,7 @@ func flattenReplicaDescriptions(apiObjects []*dynamodb.ReplicaDescription) []int
 
 func flattenTTL(ttlOutput *dynamodb.DescribeTimeToLiveOutput) []interface{} {
 	m := map[string]interface{}{
-		"enabled": false,
+		names.AttrEnabled: false,
 	}
 
 	if ttlOutput == nil || ttlOutput.TimeToLiveDescription == nil {
@@ -1972,14 +1972,14 @@ func flattenTTL(ttlOutput *dynamodb.DescribeTimeToLiveOutput) []interface{} {
 	ttlDesc := ttlOutput.TimeToLiveDescription
 
 	m["attribute_name"] = aws.StringValue(ttlDesc.AttributeName)
-	m["enabled"] = (aws.StringValue(ttlDesc.TimeToLiveStatus) == dynamodb.TimeToLiveStatusEnabled)
+	m[names.AttrEnabled] = (aws.StringValue(ttlDesc.TimeToLiveStatus) == dynamodb.TimeToLiveStatusEnabled)
 
 	return []interface{}{m}
 }
 
 func flattenPITR(pitrDesc *dynamodb.DescribeContinuousBackupsOutput) []interface{} {
 	m := map[string]interface{}{
-		"enabled": false,
+		names.AttrEnabled: false,
 	}
 
 	if pitrDesc == nil {
@@ -1989,7 +1989,7 @@ func flattenPITR(pitrDesc *dynamodb.DescribeContinuousBackupsOutput) []interface
 	if pitrDesc.ContinuousBackupsDescription != nil {
 		pitr := pitrDesc.ContinuousBackupsDescription.PointInTimeRecoveryDescription
 		if pitr != nil {
-			m["enabled"] = (aws.StringValue(pitr.PointInTimeRecoveryStatus) == dynamodb.PointInTimeRecoveryStatusEnabled)
+			m[names.AttrEnabled] = (aws.StringValue(pitr.PointInTimeRecoveryStatus) == dynamodb.PointInTimeRecoveryStatusEnabled)
 		}
 	}
 
@@ -2096,9 +2096,9 @@ func expandEncryptAtRestOptions(vOptions []interface{}) *dynamodb.SSESpecificati
 	if len(vOptions) > 0 {
 		mOptions := vOptions[0].(map[string]interface{})
 
-		enabled = mOptions["enabled"].(bool)
+		enabled = mOptions[names.AttrEnabled].(bool)
 		if enabled {
-			if vKmsKeyArn, ok := mOptions["kms_key_arn"].(string); ok && vKmsKeyArn != "" {
+			if vKmsKeyArn, ok := mOptions[names.AttrKMSKeyARN].(string); ok && vKmsKeyArn != "" {
 				options.KMSMasterKeyId = aws.String(vKmsKeyArn)
 				options.SSEType = aws.String(dynamodb.SSETypeKms)
 			}

@@ -64,7 +64,7 @@ func ResourceTableReplica() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"kms_key_arn": { // through main table
+			names.AttrKMSKeyARN: { // through main table
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -83,8 +83,8 @@ func ResourceTableReplica() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(dynamodb.TableClass_Values(), false),
 			},
-			"tags":     tftags.TagsSchema(),         // direct to replica
-			"tags_all": tftags.TagsSchemaComputed(), // direct to replica
+			names.AttrTags:    tftags.TagsSchema(),         // direct to replica
+			names.AttrTagsAll: tftags.TagsSchemaComputed(), // direct to replica
 		},
 	}
 }
@@ -115,7 +115,7 @@ func resourceTableReplicaCreate(ctx context.Context, d *schema.ResourceData, met
 
 	replicaInput.RegionName = aws.String(replicaRegion)
 
-	if v, ok := d.GetOk("kms_key_arn"); ok {
+	if v, ok := d.GetOk(names.AttrKMSKeyARN); ok {
 		replicaInput.KMSMasterKeyId = aws.String(v.(string))
 	}
 
@@ -256,9 +256,9 @@ func resourceTableReplicaRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if replica.KMSMasterKeyId == nil || aws.StringValue(replica.KMSMasterKeyId) == dk {
-		d.Set("kms_key_arn", nil)
+		d.Set(names.AttrKMSKeyARN, nil)
 	} else {
-		d.Set("kms_key_arn", replica.KMSMasterKeyId)
+		d.Set(names.AttrKMSKeyARN, replica.KMSMasterKeyId)
 	}
 
 	if replica.ReplicaTableClassSummary != nil {
@@ -336,12 +336,12 @@ func resourceTableReplicaReadReplica(ctx context.Context, d *schema.ResourceData
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return create.DiagSettingError(names.DynamoDB, ResNameTableReplica, d.Id(), "tags", err)
+	if err := d.Set(names.AttrTags, tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return create.DiagSettingError(names.DynamoDB, ResNameTableReplica, d.Id(), names.AttrTags, err)
 	}
 
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return create.DiagSettingError(names.DynamoDB, ResNameTableReplica, d.Id(), "tags_all", err)
+	if err := d.Set(names.AttrTagsAll, tags.Map()); err != nil {
+		return create.DiagSettingError(names.DynamoDB, ResNameTableReplica, d.Id(), names.AttrTagsAll, err)
 	}
 
 	return diags
@@ -381,15 +381,15 @@ func resourceTableReplicaUpdate(ctx context.Context, d *schema.ResourceData, met
 		RegionName: aws.String(replicaRegion),
 	}
 
-	if d.HasChange("kms_key_arn") && !d.IsNewResource() { // create ends with update and sets kms_key_arn causing change that is not
+	if d.HasChange(names.AttrKMSKeyARN) && !d.IsNewResource() { // create ends with update and sets kms_key_arn causing change that is not
 		dk, err := kms.FindDefaultKey(ctx, "dynamodb", replicaRegion, meta)
 		if err != nil {
 			return create.DiagError(names.DynamoDB, create.ErrActionUpdating, ResNameTableReplica, d.Id(), fmt.Errorf("region %s: %w", replicaRegion, err))
 		}
 
-		if d.Get("kms_key_arn").(string) != dk {
+		if d.Get(names.AttrKMSKeyARN).(string) != dk {
 			viaMainChanges = true
-			viaMainInput.KMSMasterKeyId = aws.String(d.Get("kms_key_arn").(string))
+			viaMainInput.KMSMasterKeyId = aws.String(d.Get(names.AttrKMSKeyARN).(string))
 		}
 	}
 
@@ -435,9 +435,9 @@ func resourceTableReplicaUpdate(ctx context.Context, d *schema.ResourceData, met
 	// handled direct to replica
 	// * point_in_time_recovery
 	// * tags
-	if d.HasChanges("point_in_time_recovery", "tags_all") {
-		if d.HasChange("tags_all") {
-			o, n := d.GetChange("tags_all")
+	if d.HasChanges("point_in_time_recovery", names.AttrTagsAll) {
+		if d.HasChange(names.AttrTagsAll) {
+			o, n := d.GetChange(names.AttrTagsAll)
 			if err := UpdateTags(ctx, repConn, d.Get(names.AttrARN).(string), o, n); err != nil {
 				return create.DiagError(names.DynamoDB, create.ErrActionUpdating, ResNameTableReplica, d.Id(), err)
 			}
