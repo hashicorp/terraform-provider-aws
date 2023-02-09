@@ -1572,8 +1572,16 @@ func deleteReplicas(ctx context.Context, conn *dynamodb.DynamoDB, tableName stri
 
 			err := resource.RetryContext(ctx, updateTableTimeout, func() *resource.RetryError {
 				_, err := conn.UpdateTableWithContext(ctx, input)
+				notFoundRetries := 0
 				if err != nil {
 					if tfawserr.ErrCodeEquals(err, "ThrottlingException") {
+						return resource.RetryableError(err)
+					}
+					if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
+						notFoundRetries++
+						if notFoundRetries > 3 {
+							return resource.NonRetryableError(err)
+						}
 						return resource.RetryableError(err)
 					}
 					if tfawserr.ErrMessageContains(err, dynamodb.ErrCodeLimitExceededException, "can be created, updated, or deleted simultaneously") {
