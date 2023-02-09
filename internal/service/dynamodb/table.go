@@ -111,7 +111,7 @@ func ResourceTable() *schema.Resource {
 		MigrateState:  resourceTableMigrateState,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -260,7 +260,7 @@ func ResourceTable() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"arn": {
+						names.AttrARN: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -618,7 +618,7 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return create.DiagError(names.DynamoDB, create.ErrActionReading, ResNameTable, d.Id(), err)
 	}
 
-	d.Set("arn", table.TableArn)
+	d.Set(names.AttrARN, table.TableArn)
 	d.Set("name", table.TableName)
 
 	if table.BillingModeSummary != nil {
@@ -722,7 +722,7 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
+	tags, err := ListTags(ctx, conn, d.Get(names.AttrARN).(string))
 	// When a Table is `ARCHIVED`, ListTags returns `ResourceNotFoundException`
 	if err != nil && !(tfawserr.ErrMessageContains(err, "UnknownOperationException", "Tagging is not currently supported in DynamoDB Local.") || tfresource.NotFound(err)) {
 		return create.DiagError(names.DynamoDB, create.ErrActionReading, ResNameTable, d.Id(), fmt.Errorf("tags: %w", err))
@@ -984,14 +984,14 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		replicaTagsChange = true
 
 		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get(names.AttrARN).(string), o, n); err != nil {
 			return create.DiagError(names.DynamoDB, create.ErrActionUpdating, ResNameTable, d.Id(), err)
 		}
 	}
 
 	if replicaTagsChange {
 		if v, ok := d.Get("replica").(*schema.Set); ok && v.Len() > 0 {
-			if err := updateReplicaTags(ctx, conn, d.Get("arn").(string), v.List(), d.Get("tags_all"), meta.(*conns.AWSClient).TerraformVersion); err != nil {
+			if err := updateReplicaTags(ctx, conn, d.Get(names.AttrARN).(string), v.List(), d.Get("tags_all"), meta.(*conns.AWSClient).TerraformVersion); err != nil {
 				return create.DiagError(names.DynamoDB, create.ErrActionUpdating, ResNameTable, d.Id(), err)
 			}
 		}
@@ -1696,7 +1696,7 @@ func enrichReplicas(ctx context.Context, conn *dynamodb.DynamoDB, arn, tableName
 		if err != nil {
 			return nil, fmt.Errorf("creating new-region ARN: %s", err)
 		}
-		replica["arn"] = newARN
+		replica[names.AttrARN] = newARN
 
 		streamARN, streamLabel := replicaStream(ctx, conn, tableName, replica["region_name"].(string), tfVersion)
 		replica["stream_arn"] = streamARN
