@@ -3,6 +3,7 @@ package networkfirewall
 import (
 	"context"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/networkfirewall"
@@ -175,7 +176,6 @@ func resourceFirewallPolicyCreate(ctx context.Context, d *schema.ResourceData, m
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	log.Printf("[DEBUG] Creating NetworkFirewall Firewall Policy: %s", input)
 	output, err := conn.CreateFirewallPolicyWithContext(ctx, input)
 
 	if err != nil {
@@ -204,20 +204,17 @@ func resourceFirewallPolicyRead(ctx context.Context, d *schema.ResourceData, met
 		return diag.Errorf("reading NetworkFirewall Firewall Policy (%s): %s", d.Id(), err)
 	}
 
-	resp := output.FirewallPolicyResponse
-	policy := output.FirewallPolicy
-
-	d.Set("arn", resp.FirewallPolicyArn)
-	d.Set("description", resp.Description)
-	d.Set("encryption_configuration", flattenEncryptionConfiguration(resp.EncryptionConfiguration))
-	d.Set("name", resp.FirewallPolicyName)
-	d.Set("update_token", output.UpdateToken)
-
-	if err := d.Set("firewall_policy", flattenFirewallPolicy(policy)); err != nil {
+	response := output.FirewallPolicyResponse
+	d.Set("arn", response.FirewallPolicyArn)
+	d.Set("description", response.Description)
+	d.Set("encryption_configuration", flattenEncryptionConfiguration(response.EncryptionConfiguration))
+	if err := d.Set("firewall_policy", flattenFirewallPolicy(output.FirewallPolicy)); err != nil {
 		return diag.Errorf("setting firewall_policy: %s", err)
 	}
+	d.Set("name", response.FirewallPolicyName)
+	d.Set("update_token", output.UpdateToken)
 
-	tags := KeyValueTags(resp.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(response.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -249,7 +246,6 @@ func resourceFirewallPolicyUpdate(ctx context.Context, d *schema.ResourceData, m
 			input.EncryptionConfiguration = expandEncryptionConfiguration(d.Get("encryption_configuration").([]interface{}))
 		}
 
-		log.Printf("[DEBUG] Updating NetworkFirewall Firewall Policy: %s", input)
 		_, err := conn.UpdateFirewallPolicyWithContext(ctx, input)
 
 		if err != nil {
@@ -269,10 +265,13 @@ func resourceFirewallPolicyUpdate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceFirewallPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	const (
+		timeout = 10 * time.Minute
+	)
 	conn := meta.(*conns.AWSClient).NetworkFirewallConn()
 
 	log.Printf("[DEBUG] Deleting NetworkFirewall Firewall Policy: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, firewallPolicyTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, timeout, func() (interface{}, error) {
 		return conn.DeleteFirewallPolicyWithContext(ctx, &networkfirewall.DeleteFirewallPolicyInput{
 			FirewallPolicyArn: aws.String(d.Id()),
 		})
@@ -286,7 +285,7 @@ func resourceFirewallPolicyDelete(ctx context.Context, d *schema.ResourceData, m
 		return diag.Errorf("deleting NetworkFirewall Firewall Policy (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitFirewallPolicyDeleted(ctx, conn, d.Id()); err != nil {
+	if _, err := waitFirewallPolicyDeleted(ctx, conn, d.Id(), timeout); err != nil {
 		return diag.Errorf("waiting for NetworkFirewall Firewall Policy (%s) delete: %s", d.Id(), err)
 	}
 
@@ -334,18 +333,18 @@ func statusFirewallPolicy(ctx context.Context, conn *networkfirewall.NetworkFire
 	}
 }
 
-func waitFirewallPolicyDeleted(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string) (*networkfirewall.DescribeFirewallPolicyOutput, error) {
+func waitFirewallPolicyDeleted(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string, timeout time.Duration) (*networkfirewall.DescribeFirewallPolicyOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{networkfirewall.ResourceStatusDeleting},
 		Target:  []string{},
 		Refresh: statusFirewallPolicy(ctx, conn, arn),
-		Timeout: firewallPolicyTimeout,
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if v, ok := outputRaw.(*networkfirewall.DescribeFirewallPolicyOutput); ok {
-		return v, err
+	if output, ok := outputRaw.(*networkfirewall.DescribeFirewallPolicyOutput); ok {
+		return output, err
 	}
 
 	return nil, err

@@ -247,7 +247,7 @@ func resourceIntegrationRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("cache_namespace", integration.CacheNamespace)
 	d.Set("connection_id", integration.ConnectionId)
 	d.Set("connection_type", apigateway.ConnectionTypeInternet)
-	if integration.ConnectionType != nil {
+	if integration.ConnectionType != nil { // nosemgrep:ci.helper-schema-ResourceData-Set-extraneous-nil-check
 		d.Set("connection_type", integration.ConnectionType)
 	}
 	d.Set("content_handling", integration.ContentHandling)
