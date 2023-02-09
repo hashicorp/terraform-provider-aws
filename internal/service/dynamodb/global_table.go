@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func ResourceGlobalTable() *schema.Resource {
@@ -52,7 +53,7 @@ func ResourceGlobalTable() *schema.Resource {
 				},
 			},
 
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -242,7 +243,7 @@ func resourceGlobalTableStateRefreshFunc(ctx context.Context,
 }
 
 func flattenGlobalTable(d *schema.ResourceData, globalTableDescription *dynamodb.GlobalTableDescription) error {
-	d.Set("arn", globalTableDescription.GlobalTableArn)
+	d.Set(names.AttrARN, globalTableDescription.GlobalTableArn)
 	d.Set("name", globalTableDescription.GlobalTableName)
 
 	return d.Set("replica", flattenReplicas(globalTableDescription.ReplicationGroup))

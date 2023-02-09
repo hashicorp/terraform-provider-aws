@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func DataSourceTable() *schema.Resource {
@@ -25,7 +26,7 @@ func DataSourceTable() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -249,7 +250,7 @@ func dataSourceTableRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.SetId(aws.StringValue(table.TableName))
 
-	d.Set("arn", table.TableArn)
+	d.Set(names.AttrARN, table.TableArn)
 	d.Set("name", table.TableName)
 
 	if table.BillingModeSummary != nil {
@@ -334,10 +335,10 @@ func dataSourceTableRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "setting ttl: %s", err)
 	}
 
-	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
+	tags, err := ListTags(ctx, conn, d.Get(names.AttrARN).(string))
 	// When a Table is `ARCHIVED`, ListTags returns `ResourceNotFoundException`
 	if err != nil && !(tfawserr.ErrMessageContains(err, "UnknownOperationException", "Tagging is not currently supported in DynamoDB Local.") || tfresource.NotFound(err)) {
-		return sdkdiag.AppendErrorf(diags, "listing tags for DynamoDB Table (%s): %s", d.Get("arn").(string), err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for DynamoDB Table (%s): %s", d.Get(names.AttrARN).(string), err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {

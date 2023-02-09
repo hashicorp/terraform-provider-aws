@@ -53,7 +53,7 @@ func ResourceTableReplica() *schema.Resource {
 		),
 
 		Schema: map[string]*schema.Schema{
-			"arn": { // direct to replica
+			names.AttrARN: { // direct to replica
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -172,7 +172,7 @@ func resourceTableReplicaCreate(ctx context.Context, d *schema.ResourceData, met
 		return create.DiagError(names.DynamoDB, create.ErrActionCreating, ResNameTableReplica, d.Id(), err)
 	}
 
-	d.Set("arn", repARN)
+	d.Set(names.AttrARN, repARN)
 
 	return append(diags, resourceTableReplicaUpdate(ctx, d, meta)...)
 }
@@ -308,7 +308,7 @@ func resourceTableReplicaReadReplica(ctx context.Context, d *schema.ResourceData
 		return diags
 	}
 
-	d.Set("arn", result.Table.TableArn)
+	d.Set(names.AttrARN, result.Table.TableArn)
 
 	pitrOut, err := conn.DescribeContinuousBackupsWithContext(ctx, &dynamodb.DescribeContinuousBackupsInput{
 		TableName: aws.String(tableName),
@@ -327,7 +327,7 @@ func resourceTableReplicaReadReplica(ctx context.Context, d *schema.ResourceData
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
+	tags, err := ListTags(ctx, conn, d.Get(names.AttrARN).(string))
 	// When a Table is `ARCHIVED`, ListTags returns `ResourceNotFoundException`
 	if err != nil && !(tfawserr.ErrMessageContains(err, "UnknownOperationException", "Tagging is not currently supported in DynamoDB Local.") || tfresource.NotFound(err)) {
 		return create.DiagError(names.DynamoDB, create.ErrActionReading, ResNameTableReplica, d.Id(), fmt.Errorf("tags: %w", err))
@@ -438,7 +438,7 @@ func resourceTableReplicaUpdate(ctx context.Context, d *schema.ResourceData, met
 	if d.HasChanges("point_in_time_recovery", "tags_all") {
 		if d.HasChange("tags_all") {
 			o, n := d.GetChange("tags_all")
-			if err := UpdateTags(ctx, repConn, d.Get("arn").(string), o, n); err != nil {
+			if err := UpdateTags(ctx, repConn, d.Get(names.AttrARN).(string), o, n); err != nil {
 				return create.DiagError(names.DynamoDB, create.ErrActionUpdating, ResNameTableReplica, d.Id(), err)
 			}
 		}
