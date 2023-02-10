@@ -338,7 +338,7 @@ func ResourceService() *schema.Resource {
 								Schema: map[string]*schema.Schema{
 									"log_driver": {
 										Type:         schema.TypeString,
-										Optional:     true,
+										Required:     true,
 										ValidateFunc: validation.StringInSlice(ecs.LogDriver_Values(), false),
 									},
 									"options": {
@@ -373,12 +373,12 @@ func ResourceService() *schema.Resource {
 						"service": {
 							Type:     schema.TypeList,
 							Optional: true,
-							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"client_alias": {
 										Type:     schema.TypeList,
-										Required: true,
+										Optional: true,
+										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"dns_name": {
@@ -388,7 +388,7 @@ func ResourceService() *schema.Resource {
 												"port": {
 													Type:         schema.TypeInt,
 													Required:     true,
-													ValidateFunc: validation.IntBetween(1, 65535),
+													ValidateFunc: validation.IntBetween(0, 65535),
 												},
 											},
 										},
@@ -400,7 +400,7 @@ func ResourceService() *schema.Resource {
 									"ingress_port_override": {
 										Type:         schema.TypeInt,
 										Optional:     true,
-										ValidateFunc: validation.IntBetween(1, 65535),
+										ValidateFunc: validation.IntBetween(0, 65535),
 									},
 									"port_name": {
 										Type:     schema.TypeString,
