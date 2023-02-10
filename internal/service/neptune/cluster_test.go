@@ -59,7 +59,7 @@ func TestAccNeptuneCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "engine", "neptune"),
 					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
 					resource.TestCheckResourceAttrSet(resourceName, "hosted_zone_id"),
-					resource.TestCheckResourceAttr(resourceName, "neptune_cluster_parameter_group_name", "default.neptune1"),
+					resource.TestCheckResourceAttr(resourceName, "neptune_cluster_parameter_group_name", "default.neptune1.2"),
 					resource.TestCheckResourceAttrSet(resourceName, "reader_endpoint"),
 					resource.TestCheckResourceAttr(resourceName, "serverless_v2_scaling_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", "false"),
@@ -421,7 +421,7 @@ func TestAccNeptuneCluster_updateEngineVersion(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_engineVersion(rName, "1.0.4.1"),
+				Config: testAccClusterConfig_engineVersion(rName, "1.0.4.1", "default.neptune1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", "1.0.4.1"),
@@ -429,7 +429,7 @@ func TestAccNeptuneCluster_updateEngineVersion(t *testing.T) {
 			},
 			testAccClusterImportStep(resourceName),
 			{
-				Config: testAccClusterConfig_engineVersion(rName, "1.0.5.1"),
+				Config: testAccClusterConfig_engineVersion(rName, "1.0.5.1", "default.neptune1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", "1.0.5.1"),
@@ -453,7 +453,7 @@ func TestAccNeptuneCluster_updateEngineMajorVersion(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_engineVersion(rName, "1.0.4.1"),
+				Config: testAccClusterConfig_engineVersion(rName, "1.0.4.1", "default.neptune1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", "1.0.4.1"),
@@ -461,7 +461,7 @@ func TestAccNeptuneCluster_updateEngineMajorVersion(t *testing.T) {
 			},
 			testAccClusterImportStep(resourceName),
 			{
-				Config: testAccClusterConfig_engineMajorVersionUpdate(rName, "1.1.1.0"),
+				Config: testAccClusterConfig_engineMajorVersionUpdate(rName, "1.1.1.0", "default.neptune1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", "1.1.1.0"),
@@ -686,7 +686,7 @@ resource "aws_neptune_cluster" "test" {
   cluster_identifier                   = %[1]q
   availability_zones                   = local.availability_zone_names
   engine                               = "neptune"
-  neptune_cluster_parameter_group_name = "default.neptune1"
+  neptune_cluster_parameter_group_name = "default.neptune1.2"
   skip_final_snapshot                  = true
 }
 `, rName))
@@ -698,7 +698,7 @@ resource "aws_neptune_cluster" "test" {
   cluster_identifier                   = %[1]q
   availability_zones                   = local.availability_zone_names
   engine                               = "neptune"
-  neptune_cluster_parameter_group_name = "default.neptune1"
+  neptune_cluster_parameter_group_name = "default.neptune1.2"
   skip_final_snapshot                  = true
   copy_tags_to_snapshot                = %[2]t
 }
@@ -711,7 +711,7 @@ resource "aws_neptune_cluster" "test" {
   cluster_identifier                   = %[1]q
   availability_zones                   = local.availability_zone_names
   engine                               = "neptune"
-  neptune_cluster_parameter_group_name = "default.neptune1"
+  neptune_cluster_parameter_group_name = "default.neptune1.2"
   skip_final_snapshot                  = true
   deletion_protection                  = %[2]t
 }
@@ -723,7 +723,7 @@ func testAccClusterConfig_namePrefix(rName string) string {
 resource "aws_neptune_cluster" "test" {
   cluster_identifier_prefix            = %[1]q
   engine                               = "neptune"
-  neptune_cluster_parameter_group_name = "default.neptune1"
+  neptune_cluster_parameter_group_name = "default.neptune1.2"
   skip_final_snapshot                  = true
 }
 `, rName)
@@ -751,7 +751,7 @@ func testAccClusterConfig_finalSnapshot(rName string) string {
 resource "aws_neptune_cluster" "test" {
   cluster_identifier                   = %[1]q
   availability_zones                   = local.availability_zone_names
-  neptune_cluster_parameter_group_name = "default.neptune1"
+  neptune_cluster_parameter_group_name = "default.neptune1.2"
   final_snapshot_identifier            = %[1]q
 }
 `, rName))
@@ -763,7 +763,7 @@ resource "aws_neptune_cluster" "test" {
   cluster_identifier                   = %[1]q
   availability_zones                   = local.availability_zone_names
   engine                               = "neptune"
-  neptune_cluster_parameter_group_name = "default.neptune1"
+  neptune_cluster_parameter_group_name = "default.neptune1.2"
   skip_final_snapshot                  = true
 
   tags = {
@@ -779,7 +779,7 @@ resource "aws_neptune_cluster" "test" {
   cluster_identifier                   = %[1]q
   availability_zones                   = local.availability_zone_names
   engine                               = "neptune"
-  neptune_cluster_parameter_group_name = "default.neptune1"
+  neptune_cluster_parameter_group_name = "default.neptune1.2"
   skip_final_snapshot                  = true
 
   tags = {
@@ -869,7 +869,7 @@ EOF
 resource "aws_neptune_cluster" "test" {
   cluster_identifier                   = %[1]q
   availability_zones                   = local.availability_zone_names
-  neptune_cluster_parameter_group_name = "default.neptune1"
+  neptune_cluster_parameter_group_name = "default.neptune1.2"
   skip_final_snapshot                  = true
 
   depends_on = [aws_iam_role.test, aws_iam_role.test-2]
@@ -959,6 +959,8 @@ resource "aws_neptune_cluster" "test" {
   skip_final_snapshot = true
   iam_roles           = [aws_iam_role.test.arn, aws_iam_role.test-2.arn]
 
+  neptune_cluster_parameter_group_name = "default.neptune1.2"
+
   depends_on = [aws_iam_role.test, aws_iam_role.test-2]
 }
 `, rName))
@@ -1009,6 +1011,8 @@ resource "aws_neptune_cluster" "test" {
   skip_final_snapshot = true
   iam_roles           = [aws_iam_role.test.arn]
 
+  neptune_cluster_parameter_group_name = "default.neptune1.2"
+
   depends_on = [aws_iam_role.test]
 }
 `, rName))
@@ -1042,7 +1046,7 @@ resource "aws_kms_key" "test" {
 resource "aws_neptune_cluster" "test" {
   cluster_identifier                   = %[1]q
   availability_zones                   = local.availability_zone_names
-  neptune_cluster_parameter_group_name = "default.neptune1"
+  neptune_cluster_parameter_group_name = "default.neptune1.2"
   storage_encrypted                    = true
   kms_key_arn                          = aws_kms_key.test.arn
   skip_final_snapshot                  = true
@@ -1057,6 +1061,8 @@ resource "aws_neptune_cluster" "test" {
   availability_zones  = local.availability_zone_names
   storage_encrypted   = true
   skip_final_snapshot = true
+
+  neptune_cluster_parameter_group_name = "default.neptune1.2"
 }
 `, rName))
 }
@@ -1070,6 +1076,8 @@ resource "aws_neptune_cluster" "test" {
   preferred_backup_window      = "07:00-09:00"
   preferred_maintenance_window = "tue:04:00-tue:04:30"
   skip_final_snapshot          = true
+
+  neptune_cluster_parameter_group_name = "default.neptune1.2"
 }
 `, rName))
 }
@@ -1084,6 +1092,8 @@ resource "aws_neptune_cluster" "test" {
   preferred_maintenance_window = "wed:01:00-wed:01:30"
   apply_immediately            = true
   skip_final_snapshot          = true
+
+  neptune_cluster_parameter_group_name = "default.neptune1.2"
 }
 `, rName))
 }
@@ -1095,6 +1105,8 @@ resource "aws_neptune_cluster" "test" {
   availability_zones                  = local.availability_zone_names
   iam_database_authentication_enabled = true
   skip_final_snapshot                 = true
+
+  neptune_cluster_parameter_group_name = "default.neptune1.2"
 }
 `, rName))
 }
@@ -1106,6 +1118,8 @@ resource "aws_neptune_cluster" "test" {
   availability_zones             = local.availability_zone_names
   skip_final_snapshot            = true
   enable_cloudwatch_logs_exports = ["audit"]
+
+  neptune_cluster_parameter_group_name = "default.neptune1.2"
 }
 `, rName))
 }
@@ -1131,31 +1145,31 @@ resource "aws_neptune_cluster_instance" "test" {
 `, rName))
 }
 
-func testAccClusterConfig_engineVersion(rName, engineVersion string) string {
+func testAccClusterConfig_engineVersion(rName, engineVersion, clusterParameterGroupName string) string {
 	return acctest.ConfigCompose(testAccClusterConfig_engineVersionBase(rName), fmt.Sprintf(`
 resource "aws_neptune_cluster" "test" {
   cluster_identifier                   = %[1]q
   apply_immediately                    = true
   availability_zones                   = local.availability_zone_names
   engine_version                       = %[2]q
-  neptune_cluster_parameter_group_name = "default.neptune1"
+  neptune_cluster_parameter_group_name = %[3]q
   skip_final_snapshot                  = true
 }
-`, rName, engineVersion))
+`, rName, engineVersion, clusterParameterGroupName))
 }
 
-func testAccClusterConfig_engineMajorVersionUpdate(rName, engineVersion string) string {
+func testAccClusterConfig_engineMajorVersionUpdate(rName, engineVersion, clusterParameterGroupName string) string {
 	return acctest.ConfigCompose(testAccClusterConfig_engineVersionBase(rName), fmt.Sprintf(`
 resource "aws_neptune_cluster" "test" {
   cluster_identifier                   = %[1]q
   apply_immediately                    = true
   availability_zones                   = local.availability_zone_names
   engine_version                       = %[2]q
-  neptune_cluster_parameter_group_name = "default.neptune1"
+  neptune_cluster_parameter_group_name = %[3]q
   skip_final_snapshot                  = true
   allow_major_version_upgrade          = true
 }
-`, rName, engineVersion))
+`, rName, engineVersion, clusterParameterGroupName))
 }
 
 func testAccClusterConfig_globalIdentifierPrimarySecondary(rNameGlobal, rNamePrimary, rNameSecondary string) string {
@@ -1233,7 +1247,9 @@ resource "aws_neptune_cluster" "secondary" {
   engine                               = aws_neptune_global_cluster.test.engine
   engine_version                       = aws_neptune_global_cluster.test.engine_version
   neptune_cluster_parameter_group_name = "default.neptune1.2"
+
   depends_on                           = [aws_neptune_cluster_instance.primary]
+
   lifecycle {
     ignore_changes = [replication_source_identifier]
   }
@@ -1241,7 +1257,7 @@ resource "aws_neptune_cluster" "secondary" {
 
 resource "aws_neptune_cluster_instance" "secondary" {
   provider                     = "awsalternate"
-  identifier                   = "%[3]q
+  identifier                   = %[3]q
   cluster_identifier           = aws_neptune_cluster.secondary.id
   neptune_parameter_group_name = "default.neptune1.2"
   engine_version               = aws_neptune_global_cluster.test.engine_version

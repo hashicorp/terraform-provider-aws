@@ -457,18 +457,14 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "reading Neptune Cluster (%s): %s", d.Id(), err)
 	}
 
-	globalCluster, err := findGlobalClusterByClusterARN(ctx, conn, aws.StringValue(dbc.DBClusterArn))
-
 	// Ignore the following API error for regions/partitions that do not support Neptune Global Clusters:
 	// InvalidParameterValue: Access Denied to API Version: APIGlobalDatabases
-	if err != nil && !tfawserr.ErrMessageContains(err, "InvalidParameterValue", "Access Denied to API Version: APIGlobalDatabases") {
-		return sdkdiag.AppendErrorf(diags, "reading Neptune Global Cluster information for Neptune Cluster (%s): %s", d.Id(), err)
-	}
-
-	if globalCluster != nil {
-		d.Set("global_cluster_identifier", globalCluster.GlobalClusterIdentifier)
-	} else {
+	if globalCluster, err := findGlobalClusterByClusterARN(ctx, conn, aws.StringValue(dbc.DBClusterArn)); tfresource.NotFound(err) || tfawserr.ErrMessageContains(err, "InvalidParameterValue", "Access Denied to API Version: APIGlobalDatabases") {
 		d.Set("global_cluster_identifier", "")
+	} else if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Neptune Global Cluster information for Neptune Cluster (%s): %s", d.Id(), err)
+	} else {
+		d.Set("global_cluster_identifier", globalCluster.GlobalClusterIdentifier)
 	}
 
 	arn := aws.StringValue(dbc.DBClusterArn)
@@ -858,7 +854,7 @@ func findClusterByARN(ctx context.Context, conn *neptune.Neptune, arn string) (*
 		return nil, &resource.NotFoundError{}
 	}
 
-	return nil, nil
+	return output, nil
 }
 
 func statusCluster(ctx context.Context, conn *neptune.Neptune, id string) resource.StateRefreshFunc {

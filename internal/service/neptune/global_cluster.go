@@ -302,7 +302,7 @@ func findGlobalClusterByClusterARN(ctx context.Context, conn *neptune.Neptune, a
 		return nil, &resource.NotFoundError{}
 	}
 
-	return nil, nil
+	return output, nil
 }
 
 func statusGlobalClusterRefreshFunc(ctx context.Context, conn *neptune.Neptune, globalClusterID string) resource.StateRefreshFunc {
