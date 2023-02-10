@@ -301,7 +301,7 @@ func resourceEBSVolumeDelete(ctx context.Context, d *schema.ResourceData, meta i
 		}
 
 		log.Printf("[DEBUG] Creating EBS Snapshot: %s", input)
-		outputRaw, err := tfresource.RetryWhenAWSErrMessageContainsContext(ctx, 1*time.Minute,
+		outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, 1*time.Minute,
 			func() (interface{}, error) {
 				return conn.CreateSnapshotWithContext(ctx, input)
 			},
@@ -313,7 +313,7 @@ func resourceEBSVolumeDelete(ctx context.Context, d *schema.ResourceData, meta i
 
 		snapshotID := aws.StringValue(outputRaw.(*ec2.Snapshot).SnapshotId)
 
-		_, err = tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, d.Timeout(schema.TimeoutDelete),
+		_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutDelete),
 			func() (interface{}, error) {
 				return nil, conn.WaitUntilSnapshotCompletedWithContext(ctx, &ec2.DescribeSnapshotsInput{
 					SnapshotIds: aws.StringSlice([]string{snapshotID}),
@@ -327,7 +327,7 @@ func resourceEBSVolumeDelete(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	log.Printf("[DEBUG] Deleting EBS Volume: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, d.Timeout(schema.TimeoutDelete),
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutDelete),
 		func() (interface{}, error) {
 			return conn.DeleteVolumeWithContext(ctx, &ec2.DeleteVolumeInput{
 				VolumeId: aws.String(d.Id()),

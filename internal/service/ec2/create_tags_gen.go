@@ -28,7 +28,7 @@ func CreateTags(ctx context.Context, conn ec2iface.EC2API, identifier string, ta
 		Tags:      Tags(tags.IgnoreAWS()),
 	}
 
-	_, err := tfresource.RetryWhenNotFoundContext(ctx, eventualConsistencyTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenNotFound(ctx, eventualConsistencyTimeout, func() (interface{}, error) {
 		output, err := conn.CreateTagsWithContext(ctx, input)
 
 		if tfawserr.ErrCodeContains(err, ".NotFound") {

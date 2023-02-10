@@ -2,6 +2,7 @@ package sns
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"regexp"
@@ -19,9 +20,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/attrmap"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/jmespath/go-jmespath"
 )
 
 var (
@@ -290,7 +293,8 @@ func resourceTopicCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	return resourceTopicRead(ctx, d, meta)
 }
 
-func resourceTopicRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTopicRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SNSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -302,9 +306,8 @@ func resourceTopicRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		d.SetId("")
 		return nil
 	}
-
 	if err != nil {
-		return diag.Errorf("reading SNS Topic (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SNS Topic (%s): %s", d.Id(), err)
 	}
 
 	err = topicAttributeMap.APIAttributesToResourceData(attributes, d)
@@ -336,21 +339,74 @@ func resourceTopicRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	if err != nil {
-		return diag.Errorf("listing tags for SNS Topic (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for SNS Topic (%s): %s", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
 	return nil
+}
+
+// policyHasValidAWSPrincipals validates that the Principals in an IAM Policy are valid
+// Assumes that non-"AWS" Principals are valid
+// The value can be a single string or a slice of strings
+// Valid strings are either an ARN or an AWS account ID
+func policyHasValidAWSPrincipals(policy string) (bool, error) { // nosemgrep:ci.aws-in-func-name
+	var policyData any
+	err := json.Unmarshal([]byte(policy), &policyData)
+	if err != nil {
+		return false, fmt.Errorf("parsing policy: %w", err)
+	}
+
+	result, err := jmespath.Search("Statement[*].Principal.AWS", policyData)
+	if err != nil {
+		return false, fmt.Errorf("parsing policy: %w", err)
+	}
+
+	principals, ok := result.([]any)
+	if !ok {
+		return false, fmt.Errorf(`parsing policy: unexpected result: (%[1]T) "%[1]v"`, result)
+	}
+
+	for _, principal := range principals {
+		switch x := principal.(type) {
+		case string:
+			if !isValidAWSPrincipal(x) {
+				return false, nil
+			}
+		case []string:
+			for _, s := range x {
+				if !isValidAWSPrincipal(s) {
+					return false, nil
+				}
+			}
+		}
+	}
+
+	return true, nil
+}
+
+// isValidAWSPrincipal returns true if a string is either an ARN, an AWS account ID, or `*`
+func isValidAWSPrincipal(principal string) bool { // nosemgrep:ci.aws-in-func-name
+	if principal == "*" {
+		return true
+	}
+	if arn.IsARN(principal) {
+		return true
+	}
+	if regexp.MustCompile(`^\d{12}$`).MatchString(principal) {
+		return true
+	}
+	return false
 }
 
 func resourceTopicUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -470,7 +526,7 @@ func putTopicAttribute(ctx context.Context, conn *sns.SNS, arn string, name, val
 		TopicArn:       aws.String(arn),
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, topicPutAttributeTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, topicPutAttributeTimeout, func() (interface{}, error) {
 		return conn.SetTopicAttributesWithContext(ctx, input)
 	}, sns.ErrCodeInvalidParameterException)
 

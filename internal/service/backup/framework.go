@@ -235,7 +235,7 @@ func resourceFrameworkUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 		log.Printf("[DEBUG] Updating Backup Framework: %#v", input)
 
-		_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
+		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
 			return conn.UpdateFrameworkWithContext(ctx, input)
 		}, backup.ErrCodeConflictException)
 
@@ -266,7 +266,7 @@ func resourceFrameworkDelete(ctx context.Context, d *schema.ResourceData, meta i
 		FrameworkName: aws.String(d.Id()),
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
 		return conn.DeleteFrameworkWithContext(ctx, input)
 	}, backup.ErrCodeConflictException)
 

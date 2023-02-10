@@ -264,7 +264,7 @@ func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.VpcId = aws.String(v.(string))
 	}
 
-	outputRaw, err := tfresource.RetryWhenContext(ctx, d.Timeout(schema.TimeoutCreate),
+	outputRaw, err := tfresource.RetryWhen(ctx, d.Timeout(schema.TimeoutCreate),
 		func() (interface{}, error) {
 			return conn.CreateStackWithContext(ctx, input)
 		},

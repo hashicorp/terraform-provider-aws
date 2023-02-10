@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -14,12 +12,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfapigateway "github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccAPIGatewayRequestValidator_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf apigateway.UpdateRequestValidatorOutput
-	rName := fmt.Sprintf("tf-test-acc-%s", sdkacctest.RandString(8))
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_request_validator.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -32,24 +31,9 @@ func TestAccAPIGatewayRequestValidator_basic(t *testing.T) {
 				Config: testAccRequestValidatorConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRequestValidatorExists(ctx, resourceName, &conf),
-					testAccCheckRequestValidatorName(&conf, "tf-acc-test-request-validator"),
-					resource.TestCheckResourceAttr(resourceName, "name", "tf-acc-test-request-validator"),
-					testAccCheckRequestValidatorValidateRequestBody(&conf, false),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "validate_request_body", "false"),
-					testAccCheckRequestValidatorValidateRequestParameters(&conf, false),
 					resource.TestCheckResourceAttr(resourceName, "validate_request_parameters", "false"),
-				),
-			},
-			{
-				Config: testAccRequestValidatorConfig_updated(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRequestValidatorExists(ctx, resourceName, &conf),
-					testAccCheckRequestValidatorName(&conf, "tf-acc-test-request-validator_modified"),
-					resource.TestCheckResourceAttr(resourceName, "name", "tf-acc-test-request-validator_modified"),
-					testAccCheckRequestValidatorValidateRequestBody(&conf, true),
-					resource.TestCheckResourceAttr(resourceName, "validate_request_body", "true"),
-					testAccCheckRequestValidatorValidateRequestParameters(&conf, true),
-					resource.TestCheckResourceAttr(resourceName, "validate_request_parameters", "true"),
 				),
 			},
 			{
@@ -58,6 +42,15 @@ func TestAccAPIGatewayRequestValidator_basic(t *testing.T) {
 				ImportStateIdFunc: testAccRequestValidatorImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
+			{
+				Config: testAccRequestValidatorConfig_updated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRequestValidatorExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("%s-modified", rName)),
+					resource.TestCheckResourceAttr(resourceName, "validate_request_body", "true"),
+					resource.TestCheckResourceAttr(resourceName, "validate_request_parameters", "true"),
+				),
+			},
 		},
 	})
 }
@@ -65,7 +58,7 @@ func TestAccAPIGatewayRequestValidator_basic(t *testing.T) {
 func TestAccAPIGatewayRequestValidator_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf apigateway.UpdateRequestValidatorOutput
-	rName := fmt.Sprintf("tf-test-acc-%s", sdkacctest.RandString(8))
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_request_validator.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -86,43 +79,7 @@ func TestAccAPIGatewayRequestValidator_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckRequestValidatorName(conf *apigateway.UpdateRequestValidatorOutput, expectedName string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if conf.Name == nil {
-			return fmt.Errorf("Empty Name, expected: %q", expectedName)
-		}
-		if *conf.Name != expectedName {
-			return fmt.Errorf("Name didn't match. Expected: %q, Given: %q", expectedName, *conf.Name)
-		}
-		return nil
-	}
-}
-
-func testAccCheckRequestValidatorValidateRequestBody(conf *apigateway.UpdateRequestValidatorOutput, expectedValue bool) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if conf.ValidateRequestBody == nil {
-			return fmt.Errorf("Empty ValidateRequestBody, expected: %t", expectedValue)
-		}
-		if *conf.ValidateRequestBody != expectedValue {
-			return fmt.Errorf("ValidateRequestBody didn't match. Expected: %t, Given: %t", expectedValue, *conf.ValidateRequestBody)
-		}
-		return nil
-	}
-}
-
-func testAccCheckRequestValidatorValidateRequestParameters(conf *apigateway.UpdateRequestValidatorOutput, expectedValue bool) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if conf.ValidateRequestParameters == nil {
-			return fmt.Errorf("Empty ValidateRequestParameters, expected: %t", expectedValue)
-		}
-		if *conf.ValidateRequestParameters != expectedValue {
-			return fmt.Errorf("ValidateRequestParameters didn't match. Expected: %t, Given: %t", expectedValue, *conf.ValidateRequestParameters)
-		}
-		return nil
-	}
-}
-
-func testAccCheckRequestValidatorExists(ctx context.Context, n string, res *apigateway.UpdateRequestValidatorOutput) resource.TestCheckFunc {
+func testAccCheckRequestValidatorExists(ctx context.Context, n string, v *apigateway.UpdateRequestValidatorOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -130,21 +87,18 @@ func testAccCheckRequestValidatorExists(ctx context.Context, n string, res *apig
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No API Request Validator ID is set")
+			return fmt.Errorf("No API Gateway Request Validator ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
 
-		req := &apigateway.GetRequestValidatorInput{
-			RequestValidatorId: aws.String(rs.Primary.ID),
-			RestApiId:          aws.String(rs.Primary.Attributes["rest_api_id"]),
-		}
-		describe, err := conn.GetRequestValidatorWithContext(ctx, req)
+		output, err := tfapigateway.FindRequestValidatorByTwoPartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["rest_api_id"])
+
 		if err != nil {
 			return err
 		}
 
-		*res = *describe
+		*v = *output
 
 		return nil
 	}
@@ -159,25 +113,17 @@ func testAccCheckRequestValidatorDestroy(ctx context.Context) resource.TestCheck
 				continue
 			}
 
-			req := &apigateway.GetRequestValidatorInput{
-				RequestValidatorId: aws.String(rs.Primary.ID),
-				RestApiId:          aws.String(rs.Primary.Attributes["rest_api_id"]),
-			}
-			_, err := conn.GetRequestValidatorWithContext(ctx, req)
+			_, err := tfapigateway.FindRequestValidatorByTwoPartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["rest_api_id"])
 
-			if err == nil {
-				return fmt.Errorf("API Request Validator still exists")
+			if tfresource.NotFound(err) {
+				continue
 			}
 
-			aws2err, ok := err.(awserr.Error)
-			if !ok {
-				return err
-			}
-			if aws2err.Code() != apigateway.ErrCodeNotFoundException {
+			if err != nil {
 				return err
 			}
 
-			return nil
+			return fmt.Errorf("API Gateway Request Validator %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -198,27 +144,27 @@ func testAccRequestValidatorImportStateIdFunc(resourceName string) resource.Impo
 func testAccRequestValidatorConfig_base(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
-  name = "%s"
+  name = %[1]q
 }
 `, rName)
 }
 
 func testAccRequestValidatorConfig_basic(rName string) string {
-	return fmt.Sprintf(testAccRequestValidatorConfig_base(rName) + `
+	return acctest.ConfigCompose(testAccRequestValidatorConfig_base(rName), fmt.Sprintf(`
 resource "aws_api_gateway_request_validator" "test" {
-  name        = "tf-acc-test-request-validator"
+  name        = %[1]q
   rest_api_id = aws_api_gateway_rest_api.test.id
 }
-`)
+`, rName))
 }
 
 func testAccRequestValidatorConfig_updated(rName string) string {
-	return fmt.Sprintf(testAccRequestValidatorConfig_base(rName) + `
+	return acctest.ConfigCompose(testAccRequestValidatorConfig_base(rName), fmt.Sprintf(`
 resource "aws_api_gateway_request_validator" "test" {
-  name                        = "tf-acc-test-request-validator_modified"
+  name                        = "%[1]s-modified"
   rest_api_id                 = aws_api_gateway_rest_api.test.id
   validate_request_body       = true
   validate_request_parameters = true
 }
-`)
+`, rName))
 }

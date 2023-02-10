@@ -14,7 +14,7 @@ const (
 )
 
 func retryWhenIAMNotPropagated[T any](ctx context.Context, f func() (T, error)) (T, error) {
-	v, err := tfresource.RetryWhenContext(
+	v, err := tfresource.RetryWhen(
 		ctx,
 		iamPropagationTimeout,
 		func() (interface{}, error) {

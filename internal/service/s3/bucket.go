@@ -820,7 +820,7 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		o, n := d.GetChange("tags_all")
 
 		// Retry due to S3 eventual consistency
-		_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
+		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
 			terr := BucketUpdateTags(ctx, conn, d.Id(), o, n)
 			return nil, terr
 		}, s3.ErrCodeNoSuchBucket)
@@ -976,7 +976,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("bucket_domain_name", meta.(*conns.AWSClient).PartitionHostname(fmt.Sprintf("%s.s3", d.Get("bucket").(string))))
 
 	// Read the policy if configured outside this resource e.g. with aws_s3_bucket_policy resource
-	pol, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, d.Timeout(schema.TimeoutRead), func() (interface{}, error) {
+	pol, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutRead), func() (interface{}, error) {
 		return conn.GetBucketPolicyWithContext(ctx, &s3.GetBucketPolicyInput{
 			Bucket: aws.String(d.Id()),
 		})
@@ -1008,7 +1008,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	// Read the Grant ACL.
 	// In the event grants are not configured on the bucket, the API returns an empty array
-	apResponse, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, d.Timeout(schema.TimeoutRead), func() (interface{}, error) {
+	apResponse, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutRead), func() (interface{}, error) {
 		return conn.GetBucketAclWithContext(ctx, &s3.GetBucketAclInput{
 			Bucket: aws.String(d.Id()),
 		})
@@ -1036,7 +1036,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	// Read the CORS
-	corsResponse, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, d.Timeout(schema.TimeoutRead), func() (interface{}, error) {
+	corsResponse, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutRead), func() (interface{}, error) {
 		return conn.GetBucketCorsWithContext(ctx, &s3.GetBucketCorsInput{
 			Bucket: aws.String(d.Id()),
 		})
@@ -1064,7 +1064,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	// Read the website configuration
-	wsResponse, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, d.Timeout(schema.TimeoutRead), func() (interface{}, error) {
+	wsResponse, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutRead), func() (interface{}, error) {
 		return conn.GetBucketWebsiteWithContext(ctx, &s3.GetBucketWebsiteInput{
 			Bucket: aws.String(d.Id()),
 		})
@@ -1102,7 +1102,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	// Read the versioning configuration
 
-	versioningResponse, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, d.Timeout(schema.TimeoutRead), func() (interface{}, error) {
+	versioningResponse, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutRead), func() (interface{}, error) {
 		return conn.GetBucketVersioningWithContext(ctx, &s3.GetBucketVersioningInput{
 			Bucket: aws.String(d.Id()),
 		})
@@ -1129,7 +1129,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	// Read the acceleration status
 
-	accelerateResponse, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, d.Timeout(schema.TimeoutRead), func() (interface{}, error) {
+	accelerateResponse, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutRead), func() (interface{}, error) {
 		return conn.GetBucketAccelerateConfigurationWithContext(ctx, &s3.GetBucketAccelerateConfigurationInput{
 			Bucket: aws.String(d.Id()),
 		})
@@ -1155,7 +1155,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	// Read the request payer configuration.
 
-	payerResponse, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, d.Timeout(schema.TimeoutRead), func() (interface{}, error) {
+	payerResponse, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutRead), func() (interface{}, error) {
 		return conn.GetBucketRequestPaymentWithContext(ctx, &s3.GetBucketRequestPaymentInput{
 			Bucket: aws.String(d.Id()),
 		})
@@ -1179,7 +1179,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	// Read the logging configuration if configured outside this resource
-	loggingResponse, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, d.Timeout(schema.TimeoutRead), func() (interface{}, error) {
+	loggingResponse, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutRead), func() (interface{}, error) {
 		return conn.GetBucketLoggingWithContext(ctx, &s3.GetBucketLoggingInput{
 			Bucket: aws.String(d.Id()),
 		})
@@ -1208,7 +1208,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	// Read the lifecycle configuration
 
-	lifecycleResponse, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, d.Timeout(schema.TimeoutRead), func() (interface{}, error) {
+	lifecycleResponse, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutRead), func() (interface{}, error) {
 		return conn.GetBucketLifecycleConfigurationWithContext(ctx, &s3.GetBucketLifecycleConfigurationInput{
 			Bucket: aws.String(d.Id()),
 		})
@@ -1237,7 +1237,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	// Read the bucket replication configuration if configured outside this resource
 
-	replicationResponse, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, d.Timeout(schema.TimeoutRead), func() (interface{}, error) {
+	replicationResponse, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutRead), func() (interface{}, error) {
 		return conn.GetBucketReplicationWithContext(ctx, &s3.GetBucketReplicationInput{
 			Bucket: aws.String(d.Id()),
 		})
@@ -1267,7 +1267,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	// Read the bucket server side encryption configuration
 
-	encryptionResponse, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, d.Timeout(schema.TimeoutRead), func() (interface{}, error) {
+	encryptionResponse, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutRead), func() (interface{}, error) {
 		return conn.GetBucketEncryptionWithContext(ctx, &s3.GetBucketEncryptionInput{
 			Bucket: aws.String(d.Id()),
 		})
@@ -1295,7 +1295,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	// Object Lock configuration.
-	resp, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, d.Timeout(schema.TimeoutRead), func() (interface{}, error) {
+	resp, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutRead), func() (interface{}, error) {
 		return conn.GetObjectLockConfigurationWithContext(ctx, &s3.GetObjectLockConfigurationInput{
 			Bucket: aws.String(d.Id()),
 		})
@@ -1332,7 +1332,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	// Add the region as an attribute
-	discoveredRegion, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, d.Timeout(schema.TimeoutRead), func() (interface{}, error) {
+	discoveredRegion, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutRead), func() (interface{}, error) {
 		return s3manager.GetBucketRegionWithClient(ctx, conn, d.Id(), func(r *request.Request) {
 			// By default, GetBucketRegion forces virtual host addressing, which
 			// is not compatible with many non-AWS implementations. Instead, pass
@@ -1400,7 +1400,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	// Retry due to S3 eventual consistency
-	tagsRaw, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, d.Timeout(schema.TimeoutRead), func() (interface{}, error) {
+	tagsRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutRead), func() (interface{}, error) {
 		return BucketListTags(ctx, conn, d.Id())
 	}, s3.ErrCodeNoSuchBucket)
 
@@ -1538,7 +1538,7 @@ func websiteEndpoint(ctx context.Context, client *conns.AWSClient, d *schema.Res
 
 	// Lookup the region for this bucket
 
-	locationResponse, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, d.Timeout(schema.TimeoutRead), func() (interface{}, error) {
+	locationResponse, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutRead), func() (interface{}, error) {
 		return client.S3Conn().GetBucketLocation(
 			&s3.GetBucketLocationInput{
 				Bucket: aws.String(bucket),
@@ -1597,7 +1597,7 @@ func resourceBucketInternalAccelerationUpdate(ctx context.Context, conn *s3.S3, 
 		},
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
 		return conn.PutBucketAccelerateConfigurationWithContext(ctx, input)
 	}, s3.ErrCodeNoSuchBucket)
 
@@ -1616,7 +1616,7 @@ func resourceBucketInternalACLUpdate(ctx context.Context, conn *s3.S3, d *schema
 		ACL:    aws.String(acl),
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
 		return conn.PutBucketAclWithContext(ctx, input)
 	}, s3.ErrCodeNoSuchBucket)
 
@@ -1628,7 +1628,7 @@ func resourceBucketInternalCorsUpdate(ctx context.Context, conn *s3.S3, d *schem
 
 	if len(rawCors) == 0 {
 		// Delete CORS
-		_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
+		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
 			return conn.DeleteBucketCorsWithContext(ctx, &s3.DeleteBucketCorsInput{
 				Bucket: aws.String(d.Id()),
 			})
@@ -1682,7 +1682,7 @@ func resourceBucketInternalCorsUpdate(ctx context.Context, conn *s3.S3, d *schem
 		},
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
 		return conn.PutBucketCorsWithContext(ctx, input)
 	}, s3.ErrCodeNoSuchBucket)
 
@@ -1702,7 +1702,7 @@ func resourceBucketInternalGrantsUpdate(ctx context.Context, conn *s3.S3, d *sch
 		return nil
 	}
 
-	resp, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
+	resp, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
 		return conn.GetBucketAclWithContext(ctx, &s3.GetBucketAclInput{
 			Bucket: aws.String(d.Id()),
 		})
@@ -1726,7 +1726,7 @@ func resourceBucketInternalGrantsUpdate(ctx context.Context, conn *s3.S3, d *sch
 		},
 	}
 
-	_, err = tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
+	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
 		return conn.PutBucketAclWithContext(ctx, input)
 	}, s3.ErrCodeNoSuchBucket)
 
@@ -1882,7 +1882,7 @@ func resourceBucketInternalLifecycleUpdate(ctx context.Context, conn *s3.S3, d *
 		},
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
 		return conn.PutBucketLifecycleConfigurationWithContext(ctx, input)
 	}, s3.ErrCodeNoSuchBucket)
 
@@ -1893,7 +1893,7 @@ func resourceBucketInternalLoggingUpdate(ctx context.Context, conn *s3.S3, d *sc
 	logging := d.Get("logging").([]interface{})
 	loggingStatus := &s3.BucketLoggingStatus{}
 
-	if len(logging) > 0 {
+	if len(logging) > 0 && logging[0] != nil {
 		c := logging[0].(map[string]interface{})
 
 		loggingEnabled := &s3.LoggingEnabled{}
@@ -1912,7 +1912,7 @@ func resourceBucketInternalLoggingUpdate(ctx context.Context, conn *s3.S3, d *sc
 		BucketLoggingStatus: loggingStatus,
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
 		return conn.PutBucketLoggingWithContext(ctx, input)
 	}, s3.ErrCodeNoSuchBucket)
 
@@ -1926,7 +1926,7 @@ func resourceBucketInternalObjectLockConfigurationUpdate(ctx context.Context, co
 		ObjectLockConfiguration: expandObjectLockConfiguration(d.Get("object_lock_configuration").([]interface{})),
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
 		return conn.PutObjectLockConfigurationWithContext(ctx, req)
 	}, s3.ErrCodeNoSuchBucket)
 
@@ -1940,7 +1940,7 @@ func resourceBucketInternalPolicyUpdate(ctx context.Context, conn *s3.S3, d *sch
 	}
 
 	if policy == "" {
-		_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
+		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
 			return conn.DeleteBucketPolicyWithContext(ctx, &s3.DeleteBucketPolicyInput{
 				Bucket: aws.String(d.Id()),
 			})
@@ -2040,7 +2040,7 @@ func resourceBucketInternalRequestPayerUpdate(ctx context.Context, conn *s3.S3, 
 		},
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
 		return conn.PutBucketRequestPaymentWithContext(ctx, input)
 	}, s3.ErrCodeNoSuchBucket)
 
@@ -2099,7 +2099,7 @@ func resourceBucketInternalServerSideEncryptionConfigurationUpdate(ctx context.C
 		ServerSideEncryptionConfiguration: rc,
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, d.Timeout(schema.TimeoutUpdate),
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate),
 		func() (interface{}, error) {
 			return conn.PutBucketEncryptionWithContext(ctx, input)
 		},
@@ -2116,7 +2116,7 @@ func resourceBucketInternalVersioningUpdate(ctx context.Context, conn *s3.S3, bu
 		VersioningConfiguration: versioningConfig,
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, timeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout, func() (interface{}, error) {
 		return conn.PutBucketVersioningWithContext(ctx, input)
 	}, s3.ErrCodeNoSuchBucket)
 
@@ -2131,7 +2131,7 @@ func resourceBucketInternalWebsiteUpdate(ctx context.Context, conn *s3.S3, d *sc
 			Bucket: aws.String(d.Id()),
 		}
 
-		_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
+		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
 			return conn.DeleteBucketWebsiteWithContext(ctx, input)
 		}, s3.ErrCodeNoSuchBucket)
 
@@ -2155,7 +2155,7 @@ func resourceBucketInternalWebsiteUpdate(ctx context.Context, conn *s3.S3, d *sc
 		WebsiteConfiguration: websiteConfig,
 	}
 
-	_, err = tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
+	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
 		return conn.PutBucketWebsiteWithContext(ctx, input)
 	}, s3.ErrCodeNoSuchBucket)
 

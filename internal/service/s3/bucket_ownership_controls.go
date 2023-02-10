@@ -148,7 +148,7 @@ func resourceBucketOwnershipControlsDelete(ctx context.Context, d *schema.Resour
 		Bucket: aws.String(d.Id()),
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, 5*time.Minute,
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 5*time.Minute,
 		func() (any, error) {
 			return conn.DeleteBucketOwnershipControlsWithContext(ctx, input)
 		},

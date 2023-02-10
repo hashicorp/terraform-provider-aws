@@ -341,7 +341,7 @@ type kmsKey struct {
 
 func findKey(ctx context.Context, conn *kms.KMS, keyID string, isNewResource bool) (*kmsKey, error) {
 	// Wait for propagation since KMS is eventually consistent.
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFoundContext(ctx, PropagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, PropagationTimeout, func() (interface{}, error) {
 		var err error
 		var key kmsKey
 
@@ -434,7 +434,7 @@ func updateKeyEnabled(ctx context.Context, conn *kms.KMS, keyID string, enabled 
 		return nil, err
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, PropagationTimeout, updateFunc, kms.ErrCodeNotFoundException)
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, PropagationTimeout, updateFunc, kms.ErrCodeNotFoundException)
 	if err != nil {
 		return fmt.Errorf("%s KMS Key: %w", action, err)
 	}
@@ -470,7 +470,7 @@ func updateKeyPolicy(ctx context.Context, conn *kms.KMS, keyID string, policy st
 		return nil, err
 	}
 
-	_, err = tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, PropagationTimeout, updateFunc, kms.ErrCodeNotFoundException, kms.ErrCodeMalformedPolicyDocumentException)
+	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, PropagationTimeout, updateFunc, kms.ErrCodeNotFoundException, kms.ErrCodeMalformedPolicyDocumentException)
 	if err != nil {
 		return fmt.Errorf("updating policy: %w", err)
 	}
@@ -505,7 +505,7 @@ func updateKeyRotationEnabled(ctx context.Context, conn *kms.KMS, keyID string, 
 		return nil, err
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, KeyRotationUpdatedTimeout, updateFunc, kms.ErrCodeNotFoundException, kms.ErrCodeDisabledException)
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, KeyRotationUpdatedTimeout, updateFunc, kms.ErrCodeNotFoundException, kms.ErrCodeDisabledException)
 	if err != nil {
 		return fmt.Errorf("%s key rotation: %w", action, err)
 	}

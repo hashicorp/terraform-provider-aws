@@ -107,7 +107,7 @@ func resourceProxyTargetCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.DBInstanceIdentifiers = aws.StringSlice([]string{v.(string)})
 	}
 
-	outputRaw, err := tfresource.RetryWhenAWSErrMessageContainsContext(ctx, 5*time.Minute,
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, 5*time.Minute,
 		func() (interface{}, error) {
 			return conn.RegisterDBProxyTargetsWithContext(ctx, input)
 		},

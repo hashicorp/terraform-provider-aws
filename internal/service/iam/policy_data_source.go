@@ -74,7 +74,7 @@ func dataSourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta inte
 	pathPrefix := d.Get("path_prefix").(string)
 
 	if arn == "" {
-		raw, err := tfresource.RetryWhenNotFoundContext(ctx, propagationTimeout,
+		raw, err := tfresource.RetryWhenNotFound(ctx, propagationTimeout,
 			func() (interface{}, error) {
 				return FindPolicyByName(ctx, conn, name, pathPrefix)
 			},

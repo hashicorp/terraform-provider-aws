@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-type cleanupWaiterFunc func(context.Context, ...tfresource.OptionsFunc) //nolint:unused // WIP
+type cleanupWaiterFunc func(context.Context, ...tfresource.OptionsFunc)
 
 type cleanupWaiterErrFunc func(context.Context, ...tfresource.OptionsFunc) error //nolint:unused // WIP
 
@@ -64,7 +64,7 @@ func (o *blueGreenOrchestrator) switchover(ctx context.Context, identifier strin
 	input := &rds_sdkv2.SwitchoverBlueGreenDeploymentInput{
 		BlueGreenDeploymentIdentifier: aws.String(identifier),
 	}
-	_, err := tfresource.RetryWhenContext(ctx, 10*time.Minute,
+	_, err := tfresource.RetryWhen(ctx, 10*time.Minute,
 		func() (interface{}, error) {
 			return o.conn.SwitchoverBlueGreenDeployment(ctx, input)
 		},

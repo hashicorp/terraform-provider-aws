@@ -39,7 +39,7 @@ func ResourceIPAMPoolCIDRAllocation() *schema.Resource {
 				ConflictsWith: []string{"netmask_length"},
 				ValidateFunc: validation.Any(
 					verify.ValidIPv4CIDRNetworkAddress,
-					validation.IsCIDRNetwork(0, 32),
+					verify.ValidIPv6CIDRNetworkAddress,
 				),
 			},
 			"description": {
@@ -56,7 +56,7 @@ func ResourceIPAMPoolCIDRAllocation() *schema.Resource {
 					ValidateFunc: validation.Any(
 						verify.ValidIPv4CIDRNetworkAddress,
 						// Follow the numbers used for netmask_length
-						validation.IsCIDRNetwork(0, 32),
+						validation.IsCIDRNetwork(0, 128),
 					),
 				},
 			},
@@ -73,7 +73,7 @@ func ResourceIPAMPoolCIDRAllocation() *schema.Resource {
 				Type:          schema.TypeInt,
 				Optional:      true,
 				ForceNew:      true,
-				ValidateFunc:  validation.IntBetween(0, 32),
+				ValidateFunc:  validation.IntBetween(0, 128),
 				ConflictsWith: []string{"cidr"},
 			},
 			"resource_id": {
@@ -125,6 +125,10 @@ func resourceIPAMPoolCIDRAllocationCreate(ctx context.Context, d *schema.Resourc
 	}
 	d.SetId(IPAMPoolCIDRAllocationCreateResourceID(aws.StringValue(output.IpamPoolAllocation.IpamPoolAllocationId), ipamPoolID))
 
+	if _, err := WaitIPAMPoolCIDRAllocationCreated(ctx, conn, aws.StringValue(output.IpamPoolAllocation.IpamPoolAllocationId), ipamPoolID, d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for IPAM Pool CIDR Allocation (%s) create: %s", d.Id(), err)
+	}
+
 	return append(diags, resourceIPAMPoolCIDRAllocationRead(ctx, d, meta)...)
 }
 
@@ -135,7 +139,7 @@ func resourceIPAMPoolCIDRAllocationRead(ctx context.Context, d *schema.ResourceD
 	allocationID, poolID, err := IPAMPoolCIDRAllocationParseResourceID(d.Id())
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading IPAM Pool CIDR Allocation (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "parsing IPAM Pool CIDR Allocation (%s): %s", d.Id(), err)
 	}
 
 	allocation, err := FindIPAMPoolAllocationByTwoPartKey(ctx, conn, allocationID, poolID)

@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func ResourceGlobalTable() *schema.Resource {
@@ -32,7 +33,7 @@ func ResourceGlobalTable() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -52,7 +53,7 @@ func ResourceGlobalTable() *schema.Resource {
 				},
 			},
 
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -64,7 +65,7 @@ func resourceGlobalTableCreate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DynamoDBConn()
 
-	globalTableName := d.Get("name").(string)
+	globalTableName := d.Get(names.AttrName).(string)
 
 	input := &dynamodb.CreateGlobalTableInput{
 		GlobalTableName:  aws.String(globalTableName),
@@ -242,8 +243,8 @@ func resourceGlobalTableStateRefreshFunc(ctx context.Context,
 }
 
 func flattenGlobalTable(d *schema.ResourceData, globalTableDescription *dynamodb.GlobalTableDescription) error {
-	d.Set("arn", globalTableDescription.GlobalTableArn)
-	d.Set("name", globalTableDescription.GlobalTableName)
+	d.Set(names.AttrARN, globalTableDescription.GlobalTableArn)
+	d.Set(names.AttrName, globalTableDescription.GlobalTableName)
 
 	return d.Set("replica", flattenReplicas(globalTableDescription.ReplicationGroup))
 }

@@ -962,7 +962,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		createInput.VPCZoneIdentifier = expandVPCZoneIdentifiers(v.(*schema.Set).List())
 	}
 
-	_, err := tfresource.RetryWhenAWSErrMessageContainsContext(ctx, propagationTimeout,
+	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
 		func() (interface{}, error) {
 			return conn.CreateAutoScalingGroupWithContext(ctx, createInput)
 		},
@@ -977,7 +977,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if twoPhases {
 		for _, input := range expandPutLifecycleHookInputs(asgName, initialLifecycleHooks) {
-			_, err := tfresource.RetryWhenAWSErrMessageContainsContext(ctx, 5*time.Minute,
+			_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, 5*time.Minute,
 				func() (interface{}, error) {
 					return conn.PutLifecycleHookWithContext(ctx, input)
 				},
@@ -1650,7 +1650,7 @@ func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	log.Printf("[DEBUG] Deleting Auto Scaling Group: %s", d.Id())
-	_, err = tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, d.Timeout(schema.TimeoutDelete),
+	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutDelete),
 		func() (interface{}, error) {
 			return conn.DeleteAutoScalingGroupWithContext(ctx, &autoscaling.DeleteAutoScalingGroupInput{
 				AutoScalingGroupName: aws.String(d.Id()),
@@ -1667,7 +1667,7 @@ func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "deleting Auto Scaling Group (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFoundContext(ctx, d.Timeout(schema.TimeoutDelete),
+	_, err = tfresource.RetryUntilNotFound(ctx, d.Timeout(schema.TimeoutDelete),
 		func() (interface{}, error) {
 			return FindGroupByName(ctx, conn, d.Id())
 		})
@@ -1739,7 +1739,7 @@ func deleteWarmPool(ctx context.Context, conn *autoscaling.AutoScaling, name str
 	}
 
 	log.Printf("[DEBUG] Deleting Auto Scaling Warm Pool: %s", name)
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, timeout,
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout,
 		func() (interface{}, error) {
 			return conn.DeleteWarmPoolWithContext(ctx, &autoscaling.DeleteWarmPoolInput{
 				AutoScalingGroupName: aws.String(name),
@@ -3597,7 +3597,7 @@ func cancelInstanceRefresh(ctx context.Context, conn *autoscaling.AutoScaling, n
 func startInstanceRefresh(ctx context.Context, conn *autoscaling.AutoScaling, input *autoscaling.StartInstanceRefreshInput) error {
 	name := aws.StringValue(input.AutoScalingGroupName)
 
-	_, err := tfresource.RetryWhenContext(ctx, instanceRefreshStartedTimeout,
+	_, err := tfresource.RetryWhen(ctx, instanceRefreshStartedTimeout,
 		func() (interface{}, error) {
 			return conn.StartInstanceRefreshWithContext(ctx, input)
 		},

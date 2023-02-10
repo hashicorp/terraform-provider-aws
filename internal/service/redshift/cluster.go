@@ -846,7 +846,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 				ClusterIdentifier: aws.String(d.Id()),
 			}
 
-			_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, clusterInvalidClusterStateFaultTimeout,
+			_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, clusterInvalidClusterStateFaultTimeout,
 				func() (interface{}, error) {
 					return conn.RebootClusterWithContext(ctx, rebootInput)
 				},
@@ -944,7 +944,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	log.Printf("[DEBUG] Deleting Redshift Cluster: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, clusterInvalidClusterStateFaultTimeout,
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, clusterInvalidClusterStateFaultTimeout,
 		func() (interface{}, error) {
 			return conn.DeleteClusterWithContext(ctx, input)
 		},
@@ -996,7 +996,7 @@ func enableLogging(ctx context.Context, conn *redshift.Redshift, clusterID strin
 		input.S3KeyPrefix = aws.String(v)
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, clusterInvalidClusterStateFaultTimeout,
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, clusterInvalidClusterStateFaultTimeout,
 		func() (interface{}, error) {
 			return conn.EnableLoggingWithContext(ctx, input)
 		},
@@ -1015,7 +1015,7 @@ func disableLogging(ctx context.Context, conn *redshift.Redshift, clusterID stri
 		ClusterIdentifier: aws.String(clusterID),
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, clusterInvalidClusterStateFaultTimeout,
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, clusterInvalidClusterStateFaultTimeout,
 		func() (interface{}, error) {
 			return conn.DisableLoggingWithContext(ctx, input)
 		},

@@ -54,7 +54,7 @@ func resourcePolicyAttachmentCreate(ctx context.Context, d *schema.ResourceData,
 		TargetId: aws.String(targetID),
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, 4*time.Minute, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 4*time.Minute, func() (interface{}, error) {
 		return conn.AttachPolicyWithContext(ctx, input)
 	}, organizations.ErrCodeFinalizingOrganizationException)
 

@@ -168,7 +168,7 @@ func testAccCheckTopicPolicyDestroy(ctx context.Context) resource.TestCheckFunc 
 				continue
 			}
 
-			_, err := tfsns.FindTopicAttributesByARN(ctx, conn, rs.Primary.ID)
+			_, err := tfsns.GetTopicAttributesByARN(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue

@@ -560,7 +560,7 @@ func resourceCertificateDelete(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).ACMConn()
 
 	log.Printf("[INFO] Deleting ACM Certificate: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, certificateCrossServicePropagationTimeout,
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, certificateCrossServicePropagationTimeout,
 		func() (interface{}, error) {
 			return conn.DeleteCertificateWithContext(ctx, &acm.DeleteCertificateInput{
 				CertificateArn: aws.String(d.Id()),
