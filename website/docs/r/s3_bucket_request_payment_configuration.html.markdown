@@ -25,8 +25,8 @@ resource "aws_s3_bucket_request_payment_configuration" "example" {
 
 The following arguments are supported:
 
-* `bucket` - (Required, Forces new resource) The name of the bucket.
-* `expected_bucket_owner` - (Optional, Forces new resource) The account ID of the expected bucket owner.
+* `bucket` - (Required, Forces new resource) Name of the bucket.
+* `expected_bucket_owner` - (Optional, Forces new resource) Account ID of the expected bucket owner.
 * `payer` - (Required) Specifies who pays for the download and request fees. Valid values: `BucketOwner`, `Requester`.
 
 ## Attributes Reference
