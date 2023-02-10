@@ -5770,7 +5770,7 @@ func FindIPAMResourceDiscoveryById(ctx context.Context, conn *ec2.EC2, id string
 		IpamResourceDiscoveryIds: aws.StringSlice([]string{id}),
 	}
 
-	output, err := conn.DescribeIpamResourceDiscoveries(input)
+	output, err := conn.DescribeIpamResourceDiscoveriesWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidIPAMResourceDiscoveryIdNotFound) {
 		return nil, &resource.NotFoundError{
@@ -5795,7 +5795,7 @@ func FindIPAMResourceDiscoveryAssociationById(ctx context.Context, conn *ec2.EC2
 		IpamResourceDiscoveryAssociationIds: aws.StringSlice([]string{id}),
 	}
 
-	output, err := conn.DescribeIpamResourceDiscoveryAssociations(input)
+	output, err := conn.DescribeIpamResourceDiscoveryAssociationsWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidIPAMResourceDiscoveryAssociationIDNotFound) {
 		return nil, &resource.NotFoundError{

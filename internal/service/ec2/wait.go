@@ -2954,7 +2954,7 @@ func WaitIPAMResourceDiscoveryAvailable(ctx context.Context, conn *ec2.EC2, id s
 		Delay:   5 * time.Second,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*ec2.Ipam); ok {
 		return output, err
@@ -2972,7 +2972,7 @@ func WaitIPAMResourceDiscoveryAssociationAvailable(ctx context.Context, conn *ec
 		Delay:   5 * time.Second,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*ec2.IpamResourceDiscoveryAssociation); ok {
 		return output, err
@@ -2990,7 +2990,7 @@ func WaiterIPAMResourceDiscoveryAssociationDeleted(ctx context.Context, conn *ec
 		Delay:   5 * time.Second,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*ec2.IpamResourceDiscoveryAssociation); ok {
 		return output, err
@@ -3008,7 +3008,7 @@ func WaiterIPAMResourceDiscoveryDeleted(ctx context.Context, conn *ec2.EC2, id s
 		Delay:   5 * time.Second,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*ec2.IpamResourceDiscovery); ok {
 		return output, err
