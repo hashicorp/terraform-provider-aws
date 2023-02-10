@@ -11,11 +11,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-const (
-	deliveryStreamEncryptionEnabledTimeout  = 10 * time.Minute
-	deliveryStreamEncryptionDisabledTimeout = 10 * time.Minute
-)
-
 func waitDeliveryStreamCreated(ctx context.Context, conn *firehose.Firehose, name string, timeout time.Duration) (*firehose.DeliveryStreamDescription, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{firehose.DeliveryStreamStatusCreating},
@@ -58,12 +53,12 @@ func waitDeliveryStreamDeleted(ctx context.Context, conn *firehose.Firehose, nam
 	return nil, err
 }
 
-func waitDeliveryStreamEncryptionEnabled(ctx context.Context, conn *firehose.Firehose, name string) (*firehose.DeliveryStreamEncryptionConfiguration, error) { //nolint:unparam
+func waitDeliveryStreamEncryptionEnabled(ctx context.Context, conn *firehose.Firehose, name string, timeout time.Duration) (*firehose.DeliveryStreamEncryptionConfiguration, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{firehose.DeliveryStreamEncryptionStatusEnabling},
 		Target:  []string{firehose.DeliveryStreamEncryptionStatusEnabled},
 		Refresh: statusDeliveryStreamEncryptionConfiguration(ctx, conn, name),
-		Timeout: deliveryStreamEncryptionEnabledTimeout,
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -79,12 +74,12 @@ func waitDeliveryStreamEncryptionEnabled(ctx context.Context, conn *firehose.Fir
 	return nil, err
 }
 
-func waitDeliveryStreamEncryptionDisabled(ctx context.Context, conn *firehose.Firehose, name string) (*firehose.DeliveryStreamEncryptionConfiguration, error) {
+func waitDeliveryStreamEncryptionDisabled(ctx context.Context, conn *firehose.Firehose, name string, timeout time.Duration) (*firehose.DeliveryStreamEncryptionConfiguration, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{firehose.DeliveryStreamEncryptionStatusDisabling},
 		Target:  []string{firehose.DeliveryStreamEncryptionStatusDisabled},
 		Refresh: statusDeliveryStreamEncryptionConfiguration(ctx, conn, name),
-		Timeout: deliveryStreamEncryptionDisabledTimeout,
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)

@@ -713,6 +713,7 @@ In addition to all arguments above, the following attributes are exported:
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `30m`)
+* `update` - (Default `10m`)
 * `delete` - (Default `30m`)
 
 ## Import
