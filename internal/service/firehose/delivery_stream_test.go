@@ -3067,7 +3067,6 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
   extended_s3_configuration {
     role_arn            = aws_iam_role.firehose.arn
     bucket_arn          = aws_s3_bucket.bucket.arn
-    # prefix              = "custom-prefix/customerId=!{partitionKeyFromLambda:customerId}/year=!{timestamp:yyyy}/month=!{timestamp:MM}/day=!{timestamp:dd}/hour=!{timestamp:HH}/"
     error_output_prefix = "prefix1"
     buffer_size         = 64
   }
