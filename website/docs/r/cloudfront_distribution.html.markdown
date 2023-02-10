@@ -231,10 +231,8 @@ The CloudFront distribution argument layout is a complex structure composed of s
 * `response_headers_policy_id` (Optional) - Identifier for a response headers policy.
 * `smooth_streaming` (Optional) - Indicates whether you want to distribute media files in Microsoft Smooth Streaming format using the origin that is associated with this cache behavior.
 * `target_origin_id` (Required) - Value of ID for the origin that you want CloudFront to route requests to when a request matches the path pattern either for a cache behavior or for the default cache behavior.
-* `trusted_key_groups` (Optional) - List of key group IDs that CloudFront can use to validate signed URLs or signed cookies.
-See the [CloudFront User Guide](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-trusted-signers.html) for more information about this feature.
-* `trusted_signers` (Optional) - List of AWS account IDs (or `self`) that you want to allow to create signed URLs for private content.
-See the [CloudFront User Guide](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-trusted-signers.html) for more information about this feature.
+* `trusted_key_groups` (Optional) - List of key group IDs that CloudFront can use to validate signed URLs or signed cookies. See the [CloudFront User Guide](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-trusted-signers.html) for more information about this feature.
+* `trusted_signers` (Optional) - List of AWS account IDs (or `self`) that you want to allow to create signed URLs for private content. See the [CloudFront User Guide](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-trusted-signers.html) for more information about this feature.
 * `viewer_protocol_policy` (Required) - Use this element to specify the protocol that users can use to access the files in the origin specified by TargetOriginId when a request matches the path pattern in PathPattern. One of `allow-all`, `https-only`, or `redirect-to-https`.
 
 ##### Forwarded Values Arguments
@@ -321,8 +319,8 @@ argument should not be specified.
 #### Logging Config Arguments
 
 * `bucket` (Required) - Amazon S3 bucket to store the access logs in, for example, `myawslogbucket.s3.amazonaws.com`.
-* `include_cookies` (Optional) - Specifies whether you want CloudFront to include cookies in access logs (default: `false`).
-* `prefix` (Optional) - Optional string that you want CloudFront to prefix to the access log filenames for this distribution, for example, `myprefix/`.
+* `include_cookies` (Optional) - Whether to include cookies in access logs (default: `false`).
+* `prefix` (Optional) - Prefix to the access log filenames for this distribution, for example, `myprefix/`.
 
 #### Origin Arguments
 
@@ -348,7 +346,7 @@ argument should not be specified.
 
 ##### Origin Shield Arguments
 
-* `enabled` (Required) - Flag that specifies whether Origin Shield is enabled.
+* `enabled` (Required) - Whether Origin Shield is enabled.
 * `origin_shield_region` (Required) - AWS Region for Origin Shield. To specify a region, use the region code, not the region name. For example, specify the US East (Ohio) region as us-east-2.
 
 ##### S3 Origin Config Arguments
@@ -371,8 +369,7 @@ argument should not be specified.
 
 #### Restrictions Arguments
 
-The `restrictions` sub-resource takes another single sub-resource named
-`geo_restriction` (see the example for usage).
+The `restrictions` sub-resource takes another single sub-resource named `geo_restriction` (see the example for usage).
 
 The arguments of `geo_restriction` are:
 
@@ -385,7 +382,7 @@ The arguments of `geo_restriction` are:
 * `cloudfront_default_certificate` - `true` if you want viewers to use HTTPS to request your objects and you're using the CloudFront domain name for your distribution. Specify this, `acm_certificate_arn`, or `iam_certificate_id`.
 * `iam_certificate_id` - IAM certificate identifier of the custom viewer certificate for this distribution if you are using a custom domain. Specify this, `acm_certificate_arn`, or `cloudfront_default_certificate`.
 * `minimum_protocol_version` - Minimum version of the SSL protocol that you want CloudFront to use for HTTPS connections. Can only be set if `cloudfront_default_certificate = false`. See all possible values in [this](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/secure-connections-supported-viewer-protocols-ciphers.html) table under "Security policy." Some examples include: `TLSv1.2_2019` and `TLSv1.2_2021`. Default: `TLSv1`. **NOTE**: If you are using a custom certificate (specified with `acm_certificate_arn` or `iam_certificate_id`), and have specified `sni-only` in `ssl_support_method`, `TLSv1` or later must be specified. If you have specified `vip` in `ssl_support_method`, only `SSLv3` or `TLSv1` can be specified. If you have specified `cloudfront_default_certificate`, `TLSv1` must be specified.
-* `ssl_support_method`: Specifies how you want CloudFront to serve HTTPS requests. One of `vip` or `sni-only`. Required if you specify `acm_certificate_arn` or `iam_certificate_id`. **NOTE:** `vip` causes CloudFront to use a dedicated IP address and may incur extra charges.
+* `ssl_support_method` - How you want CloudFront to serve HTTPS requests. One of `vip` or `sni-only`. Required if you specify `acm_certificate_arn` or `iam_certificate_id`. **NOTE:** `vip` causes CloudFront to use a dedicated IP address and may incur extra charges.
 
 ## Attributes Reference
 
