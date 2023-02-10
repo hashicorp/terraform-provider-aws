@@ -353,6 +353,7 @@ func TestAccAutoScalingPolicy_predictiveScalingUpdated(t *testing.T) {
 }
 
 func TestAccAutoScalingPolicy_predictiveScalingFloatTargetValue(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v autoscaling.ScalingPolicy
 	resourceSimpleName := "aws_autoscaling_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -361,12 +362,12 @@ func TestAccAutoScalingPolicy_predictiveScalingFloatTargetValue(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPolicyDestroy,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyConfig_predictiveScalingFloatTargetValue(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScalingPolicyExists(resourceSimpleName, &v),
+					testAccCheckScalingPolicyExists(ctx, resourceSimpleName, &v),
 					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.metric_specification.0.target_value", "0.2"),
 					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.metric_specification.0.predefined_metric_pair_specification.0.predefined_metric_type", "ASGCPUUtilization"),
 					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.metric_specification.0.predefined_metric_pair_specification.0.resource_label", "testLabel"),
