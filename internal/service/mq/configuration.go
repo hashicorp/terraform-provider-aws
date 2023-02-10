@@ -28,7 +28,7 @@ func ResourceConfiguration() *schema.Resource {
 		DeleteWithoutTimeout: schema.NoopContext, // Delete is not available in the API
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -224,7 +224,7 @@ func resourceConfigurationUpdate(ctx context.Context, d *schema.ResourceData, me
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTagsWithContext(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.Errorf("updating MQ Configuration (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}

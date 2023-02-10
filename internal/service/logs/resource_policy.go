@@ -134,7 +134,7 @@ func FindResourcePolicyByName(ctx context.Context, conn *cloudwatchlogs.CloudWat
 	input := &cloudwatchlogs.DescribeResourcePoliciesInput{}
 	var output *cloudwatchlogs.ResourcePolicy
 
-	err := describeResourcePoliciesPagesWithContext(ctx, conn, input, func(page *cloudwatchlogs.DescribeResourcePoliciesOutput, lastPage bool) bool {
+	err := describeResourcePoliciesPages(ctx, conn, input, func(page *cloudwatchlogs.DescribeResourcePoliciesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}

@@ -1,6 +1,7 @@
 package grafana
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"time"
@@ -9,11 +10,13 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/managedgrafana"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -22,13 +25,13 @@ import (
 
 func ResourceWorkspace() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceWorkspaceCreate,
-		Read:   resourceWorkspaceRead,
-		Update: resourceWorkspaceUpdate,
-		Delete: resourceWorkspaceDelete,
+		CreateWithoutTimeout: resourceWorkspaceCreate,
+		ReadWithoutTimeout:   resourceWorkspaceRead,
+		UpdateWithoutTimeout: resourceWorkspaceUpdate,
+		DeleteWithoutTimeout: resourceWorkspaceDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -156,7 +159,8 @@ func ResourceWorkspace() *schema.Resource {
 	}
 }
 
-func resourceWorkspaceCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceWorkspaceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GrafanaConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
@@ -210,36 +214,37 @@ func resourceWorkspaceCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Creating Grafana Workspace: %s", input)
-	output, err := conn.CreateWorkspace(input)
+	output, err := conn.CreateWorkspaceWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating Grafana Workspace: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating Grafana Workspace: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.Workspace.Id))
 
-	if _, err := waitWorkspaceCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("error waiting for Grafana Workspace (%s) create: %w", d.Id(), err)
+	if _, err := waitWorkspaceCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Grafana Workspace (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceWorkspaceRead(d, meta)
+	return append(diags, resourceWorkspaceRead(ctx, d, meta)...)
 }
 
-func resourceWorkspaceRead(d *schema.ResourceData, meta interface{}) error {
+func resourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GrafanaConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	workspace, err := FindWorkspaceByID(conn, d.Id())
+	workspace, err := FindWorkspaceByID(ctx, conn, d.Id())
 
 	if tfresource.NotFound(err) && !d.IsNewResource() {
 		log.Printf("[WARN] Grafana Workspace (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Grafana Workspace (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Grafana Workspace (%s): %s", d.Id(), err)
 	}
 
 	d.Set("account_access_type", workspace.AccountAccessType)
@@ -267,36 +272,37 @@ func resourceWorkspaceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("stack_set_name", workspace.StackSetName)
 
 	if err := d.Set("vpc_configuration", flattenVPCConfiguration(workspace.VpcConfiguration)); err != nil {
-		return fmt.Errorf("error setting vpc_configuration: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting vpc_configuration: %s", err)
 	}
 
 	tags := KeyValueTags(workspace.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
 	input := &managedgrafana.DescribeWorkspaceConfigurationInput{
 		WorkspaceId: aws.String(d.Id()),
 	}
 
-	output, err := conn.DescribeWorkspaceConfiguration(input)
+	output, err := conn.DescribeWorkspaceConfigurationWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error reading Grafana Workspace (%s) configuration: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Grafana Workspace (%s): %s", d.Id(), err)
 	}
 
 	d.Set("configuration", output.Configuration)
 
-	return nil
+	return diags
 }
 
-func resourceWorkspaceUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceWorkspaceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GrafanaConn()
 
 	if d.HasChangesExcept("configuration", "tags", "tags_all") {
@@ -348,14 +354,14 @@ func resourceWorkspaceUpdate(d *schema.ResourceData, meta interface{}) error {
 			input.VpcConfiguration = expandVPCConfiguration(d.Get("vpc_configuration").([]interface{}))
 		}
 
-		_, err := conn.UpdateWorkspace(input)
+		_, err := conn.UpdateWorkspaceWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error updating Grafana Workspace (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Grafana Workspace (%s): %s", d.Id(), err)
 		}
 
-		if _, err := waitWorkspaceUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return fmt.Errorf("error waiting for Grafana Workspace (%s) update: %w", d.Id(), err)
+		if _, err := waitWorkspaceUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for Grafana Workspace (%s) update: %s", d.Id(), err)
 		}
 	}
 
@@ -365,49 +371,50 @@ func resourceWorkspaceUpdate(d *schema.ResourceData, meta interface{}) error {
 			Configuration: aws.String(d.Get("configuration").(string)),
 		}
 
-		_, err := conn.UpdateWorkspaceConfiguration(input)
+		_, err := conn.UpdateWorkspaceConfigurationWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error updating Grafana Workspace (%s) configuration: %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Grafana Workspace (%s) configuration: %s", d.Id(), err)
 		}
 
-		if _, err := waitWorkspaceUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return fmt.Errorf("error waiting for Grafana Workspace (%s) configuration update: %w", d.Id(), err)
+		if _, err := waitWorkspaceUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Grafana Workspace (%s) configuration: waiting for completion: %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating Grafana Workspace (%s) tags: %w", d.Id(), err)
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Grafana Workspace (%s) tags: %s", d.Id(), err)
 		}
 	}
 
-	return resourceWorkspaceRead(d, meta)
+	return append(diags, resourceWorkspaceRead(ctx, d, meta)...)
 }
 
-func resourceWorkspaceDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceWorkspaceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GrafanaConn()
 
 	log.Printf("[DEBUG] Deleting Grafana Workspace: %s", d.Id())
-	_, err := conn.DeleteWorkspace(&managedgrafana.DeleteWorkspaceInput{
+	_, err := conn.DeleteWorkspaceWithContext(ctx, &managedgrafana.DeleteWorkspaceInput{
 		WorkspaceId: aws.String(d.Id()),
 	})
 
 	if tfawserr.ErrCodeEquals(err, managedgrafana.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Grafana Workspace (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Grafana Workspace (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitWorkspaceDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("error waiting for Grafana Workspace (%s) delete: %w", d.Id(), err)
+	if _, err := waitWorkspaceDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Grafana Workspace (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandVPCConfiguration(cfg []interface{}) *managedgrafana.VpcConfiguration {

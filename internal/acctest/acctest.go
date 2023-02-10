@@ -2,6 +2,7 @@ package acctest
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -37,6 +38,7 @@ import (
 	tforganizations "github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
 	tfsts "github.com/hashicorp/terraform-provider-aws/internal/service/sts"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/jmespath/go-jmespath"
 )
 
 const (
@@ -582,6 +584,52 @@ func CheckResourceAttrEquivalentJSON(resourceName, attributeName, expectedJSON s
 	}
 }
 
+func CheckResourceAttrJMESPair(nameFirst, keyFirst, jmesPath, nameSecond, keySecond string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		first, err := PrimaryInstanceState(s, nameFirst)
+		if err != nil {
+			return err
+		}
+
+		second, err := PrimaryInstanceState(s, nameSecond)
+		if err != nil {
+			return err
+		}
+
+		vFirst, okFirst := first.Attributes[keyFirst]
+		if !okFirst {
+			return fmt.Errorf("%s: Attribute %q not set", nameFirst, keyFirst)
+		}
+
+		var jsonData any
+		err = json.Unmarshal([]byte(vFirst), &jsonData)
+		if err != nil {
+			return fmt.Errorf("%s: Expected attribute %q to be JSON: %w", nameFirst, keyFirst, err)
+		}
+
+		result, err := jmespath.Search(jmesPath, jsonData)
+		if err != nil {
+			return fmt.Errorf("Invalid JMESPath %q: %w", jmesPath, err)
+		}
+
+		value, ok := result.(string)
+		if !ok {
+			return fmt.Errorf("%s: Attribute %q, JMESPath %q, expected single string, got %#v", nameFirst, keyFirst, jmesPath, result)
+		}
+
+		vSecond, okSecond := second.Attributes[keySecond]
+		if !okSecond {
+			return fmt.Errorf("%s: Attribute %q, JMESPath %q is %q, but %q is not set in %s", nameFirst, keyFirst, jmesPath, value, keySecond, nameSecond)
+		}
+
+		if value != vSecond {
+			return fmt.Errorf("%s: Attribute %q, JMESPath %q, expected %q, got %q", nameFirst, keyFirst, jmesPath, vSecond, value)
+		}
+
+		return nil
+	}
+}
+
 // Copied and inlined from the SDK testing code
 func PrimaryInstanceState(s *terraform.State, name string) (*terraform.InstanceState, error) {
 	rs, ok := s.RootModule().Resources[name]
@@ -752,43 +800,43 @@ func PreCheckPartitionNot(t *testing.T, partitions ...string) {
 	}
 }
 
-func PreCheckOrganizationsAccount(t *testing.T) {
-	_, err := tforganizations.FindOrganization(Provider.Meta().(*conns.AWSClient).OrganizationsConn())
+func PreCheckOrganizationsAccount(ctx context.Context, t *testing.T) {
+	_, err := tforganizations.FindOrganization(ctx, Provider.Meta().(*conns.AWSClient).OrganizationsConn())
 
 	if tfresource.NotFound(err) {
 		return
 	}
 
 	if err != nil {
-		t.Fatalf("error describing AWS Organization: %s", err)
+		t.Fatalf("describing AWS Organization: %s", err)
 	}
 
 	t.Skip("skipping tests; this AWS account must not be an existing member of an AWS Organization")
 }
 
-func PreCheckOrganizationsEnabled(t *testing.T) {
-	_, err := tforganizations.FindOrganization(Provider.Meta().(*conns.AWSClient).OrganizationsConn())
+func PreCheckOrganizationsEnabled(ctx context.Context, t *testing.T) {
+	_, err := tforganizations.FindOrganization(ctx, Provider.Meta().(*conns.AWSClient).OrganizationsConn())
 
 	if tfresource.NotFound(err) {
 		t.Skip("this AWS account must be an existing member of an AWS Organization")
 	}
 
 	if err != nil {
-		t.Fatalf("error describing AWS Organization: %s", err)
+		t.Fatalf("describing AWS Organization: %s", err)
 	}
 }
 
-func PreCheckOrganizationManagementAccount(t *testing.T) {
-	organization, err := tforganizations.FindOrganization(Provider.Meta().(*conns.AWSClient).OrganizationsConn())
+func PreCheckOrganizationManagementAccount(ctx context.Context, t *testing.T) {
+	organization, err := tforganizations.FindOrganization(ctx, Provider.Meta().(*conns.AWSClient).OrganizationsConn())
 
 	if err != nil {
-		t.Fatalf("error describing AWS Organization: %s", err)
+		t.Fatalf("describing AWS Organization: %s", err)
 	}
 
-	callerIdentity, err := tfsts.FindCallerIdentity(context.Background(), Provider.Meta().(*conns.AWSClient).STSConn())
+	callerIdentity, err := tfsts.FindCallerIdentity(ctx, Provider.Meta().(*conns.AWSClient).STSConn())
 
 	if err != nil {
-		t.Fatalf("error getting current identity: %s", err)
+		t.Fatalf("getting current identity: %s", err)
 	}
 
 	if aws.StringValue(organization.MasterAccountId) != aws.StringValue(callerIdentity.Account) {
@@ -820,7 +868,7 @@ func PreCheckSSOAdminInstances(t *testing.T) {
 	}
 
 	if err != nil {
-		t.Fatalf("error listing SSO Instances: %s", err)
+		t.Fatalf("listing SSO Instances: %s", err)
 	}
 }
 
@@ -865,7 +913,7 @@ func PreCheckIAMServiceLinkedRole(t *testing.T, pathPrefix string) {
 	}
 
 	if err != nil {
-		t.Fatalf("error listing IAM roles: %s", err)
+		t.Fatalf("listing IAM roles: %s", err)
 	}
 
 	if role == nil {
@@ -1019,14 +1067,14 @@ func RegionProviderFunc(region string, providers *[]*schema.Provider) func() *sc
 	}
 }
 
-func DeleteResource(resource *schema.Resource, d *schema.ResourceData, meta interface{}) error {
+func DeleteResource(ctx context.Context, resource *schema.Resource, d *schema.ResourceData, meta interface{}) error {
 	if resource.DeleteContext != nil || resource.DeleteWithoutTimeout != nil {
 		var diags diag.Diagnostics
 
 		if resource.DeleteContext != nil {
-			diags = resource.DeleteContext(context.Background(), d, meta)
+			diags = resource.DeleteContext(ctx, d, meta)
 		} else {
-			diags = resource.DeleteWithoutTimeout(context.Background(), d, meta)
+			diags = resource.DeleteWithoutTimeout(ctx, d, meta)
 		}
 
 		for i := range diags {
@@ -1041,7 +1089,7 @@ func DeleteResource(resource *schema.Resource, d *schema.ResourceData, meta inte
 	return resource.Delete(d, meta)
 }
 
-func CheckResourceDisappears(provo *schema.Provider, resource *schema.Resource, n string) resource.TestCheckFunc {
+func CheckResourceDisappears(ctx context.Context, provo *schema.Provider, resource *schema.Resource, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -1052,11 +1100,13 @@ func CheckResourceDisappears(provo *schema.Provider, resource *schema.Resource, 
 			return fmt.Errorf("resource ID missing: %s", n)
 		}
 
-		return DeleteResource(resource, resource.Data(rs.Primary), provo.Meta())
+		return DeleteResource(ctx, resource, resource.Data(rs.Primary), provo.Meta())
 	}
 }
 
-func CheckWithProviders(f func(*terraform.State, *schema.Provider) error, providers *[]*schema.Provider) resource.TestCheckFunc {
+type TestCheckWithProviderFunc func(*terraform.State, *schema.Provider) error
+
+func CheckWithProviders(f TestCheckWithProviderFunc, providers *[]*schema.Provider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		numberOfProviders := len(*providers)
 		for i, provo := range *providers {
@@ -1975,7 +2025,7 @@ resource "aws_subnet" "test" {
 	)
 }
 
-func CheckVPCExists(n string, v *ec2.Vpc) resource.TestCheckFunc {
+func CheckVPCExists(ctx context.Context, n string, v *ec2.Vpc) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -1988,7 +2038,7 @@ func CheckVPCExists(n string, v *ec2.Vpc) resource.TestCheckFunc {
 
 		conn := Provider.Meta().(*conns.AWSClient).EC2Conn()
 
-		output, err := tfec2.FindVPCByID(conn, rs.Primary.ID)
+		output, err := tfec2.FindVPCByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

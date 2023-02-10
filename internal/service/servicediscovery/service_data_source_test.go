@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccServiceDiscoveryServiceDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_service_discovery_service.test"
 	resourceName := "aws_service_discovery_service.test"
@@ -19,7 +20,7 @@ func TestAccServiceDiscoveryServiceDataSource_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t)
-			testAccPreCheck(t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, servicediscovery.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -42,6 +43,7 @@ func TestAccServiceDiscoveryServiceDataSource_basic(t *testing.T) {
 }
 
 func TestAccServiceDiscoveryServiceDataSource_private(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_service_discovery_service.test"
 	resourceName := "aws_service_discovery_service.test"
@@ -50,7 +52,7 @@ func TestAccServiceDiscoveryServiceDataSource_private(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t)
-			testAccPreCheck(t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, servicediscovery.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -73,6 +75,7 @@ func TestAccServiceDiscoveryServiceDataSource_private(t *testing.T) {
 }
 
 func TestAccServiceDiscoveryServiceDataSource_public(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_service_discovery_service.test"
 	resourceName := "aws_service_discovery_service.test"
@@ -81,7 +84,7 @@ func TestAccServiceDiscoveryServiceDataSource_public(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t)
-			testAccPreCheck(t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, servicediscovery.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

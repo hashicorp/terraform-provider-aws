@@ -75,7 +75,7 @@ func dataSourceTransitGatewayConnectPeerRead(ctx context.Context, d *schema.Reso
 		d.Get("filter").(*schema.Set),
 	)...)
 
-	transitGatewayConnectPeer, err := FindTransitGatewayConnectPeer(conn, input)
+	transitGatewayConnectPeer, err := FindTransitGatewayConnectPeer(ctx, conn, input)
 
 	if err != nil {
 		return diag.FromErr(tfresource.SingularDataSourceFindError("EC2 Transit Gateway Connect Peer", err))

@@ -35,6 +35,7 @@ func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 }
 
 func TestAccRDSCluster_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var dbCluster rds.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
@@ -43,12 +44,12 @@ func TestAccRDSCluster_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "rds", fmt.Sprintf("cluster:%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "backtrack_window", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "cluster_resource_id"),
@@ -85,6 +86,7 @@ func TestAccRDSCluster_basic(t *testing.T) {
 }
 
 func TestAccRDSCluster_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var dbCluster rds.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
@@ -93,13 +95,13 @@ func TestAccRDSCluster_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster),
-					acctest.CheckResourceDisappears(acctest.Provider, tfrds.ResourceCluster(), resourceName),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfrds.ResourceCluster(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -108,6 +110,7 @@ func TestAccRDSCluster_disappears(t *testing.T) {
 }
 
 func TestAccRDSCluster_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var dbCluster1, dbCluster2, dbCluster3 rds.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
@@ -116,12 +119,12 @@ func TestAccRDSCluster_tags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster1),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -129,7 +132,7 @@ func TestAccRDSCluster_tags(t *testing.T) {
 			{
 				Config: testAccClusterConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster2),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster2),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -138,7 +141,7 @@ func TestAccRDSCluster_tags(t *testing.T) {
 			{
 				Config: testAccClusterConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster3),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster3),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -148,6 +151,7 @@ func TestAccRDSCluster_tags(t *testing.T) {
 }
 
 func TestAccRDSCluster_identifierGenerated(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v rds.DBCluster
 	resourceName := "aws_rds_cluster.test"
 
@@ -155,12 +159,12 @@ func TestAccRDSCluster_identifierGenerated(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_identifierGenerated(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &v),
+					testAccCheckClusterExists(ctx, resourceName, &v),
 					resource.TestMatchResourceAttr(resourceName, "cluster_identifier", regexp.MustCompile("^tf-")),
 				),
 			},
@@ -169,6 +173,7 @@ func TestAccRDSCluster_identifierGenerated(t *testing.T) {
 }
 
 func TestAccRDSCluster_identifierPrefix(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v rds.DBCluster
 	resourceName := "aws_rds_cluster.test"
 
@@ -176,12 +181,12 @@ func TestAccRDSCluster_identifierPrefix(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_identifierPrefix("tf-test-"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &v),
+					testAccCheckClusterExists(ctx, resourceName, &v),
 					resource.TestMatchResourceAttr(resourceName, "cluster_identifier", regexp.MustCompile("^tf-test-")),
 				),
 			},
@@ -190,6 +195,7 @@ func TestAccRDSCluster_identifierPrefix(t *testing.T) {
 }
 
 func TestAccRDSCluster_allowMajorVersionUpgrade(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -208,12 +214,12 @@ func TestAccRDSCluster_allowMajorVersionUpgrade(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_allowMajorVersionUpgrade(rName, true, engine, engineVersion1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster1),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
 					resource.TestCheckResourceAttr(resourceName, "allow_major_version_upgrade", "true"),
 					resource.TestCheckResourceAttr(resourceName, "engine", engine),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", engineVersion1),
@@ -236,7 +242,7 @@ func TestAccRDSCluster_allowMajorVersionUpgrade(t *testing.T) {
 			{
 				Config: testAccClusterConfig_allowMajorVersionUpgrade(rName, true, engine, engineVersion2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster2),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster2),
 					resource.TestCheckResourceAttr(resourceName, "allow_major_version_upgrade", "true"),
 					resource.TestCheckResourceAttr(resourceName, "engine", engine),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", engineVersion2),
@@ -247,6 +253,7 @@ func TestAccRDSCluster_allowMajorVersionUpgrade(t *testing.T) {
 }
 
 func TestAccRDSCluster_allowMajorVersionUpgradeWithCustomParametersApplyImm(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -265,12 +272,12 @@ func TestAccRDSCluster_allowMajorVersionUpgradeWithCustomParametersApplyImm(t *t
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_allowMajorVersionUpgradeCustomParameters(rName, true, engine, engineVersion1, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster1),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
 					resource.TestCheckResourceAttr(resourceName, "allow_major_version_upgrade", "true"),
 					resource.TestCheckResourceAttr(resourceName, "engine", engine),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", engineVersion1),
@@ -279,7 +286,7 @@ func TestAccRDSCluster_allowMajorVersionUpgradeWithCustomParametersApplyImm(t *t
 			{
 				Config: testAccClusterConfig_allowMajorVersionUpgradeCustomParameters(rName, true, engine, engineVersion2, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster2),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster2),
 					resource.TestCheckResourceAttr(resourceName, "allow_major_version_upgrade", "true"),
 					resource.TestCheckResourceAttr(resourceName, "engine", engine),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", engineVersion2),
@@ -290,6 +297,7 @@ func TestAccRDSCluster_allowMajorVersionUpgradeWithCustomParametersApplyImm(t *t
 }
 
 func TestAccRDSCluster_allowMajorVersionUpgradeWithCustomParameters(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -308,12 +316,12 @@ func TestAccRDSCluster_allowMajorVersionUpgradeWithCustomParameters(t *testing.T
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_allowMajorVersionUpgradeCustomParameters(rName, true, engine, engineVersion1, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster1),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
 					resource.TestCheckResourceAttr(resourceName, "allow_major_version_upgrade", "true"),
 					resource.TestCheckResourceAttr(resourceName, "engine", engine),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", engineVersion1),
@@ -336,7 +344,7 @@ func TestAccRDSCluster_allowMajorVersionUpgradeWithCustomParameters(t *testing.T
 			{
 				Config: testAccClusterConfig_allowMajorVersionUpgradeCustomParameters(rName, true, engine, engineVersion2, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster2),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster2),
 					resource.TestCheckResourceAttr(resourceName, "allow_major_version_upgrade", "true"),
 					resource.TestCheckResourceAttr(resourceName, "engine", engine),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", engineVersion2),
@@ -347,6 +355,7 @@ func TestAccRDSCluster_allowMajorVersionUpgradeWithCustomParameters(t *testing.T
 }
 
 func TestAccRDSCluster_onlyMajorVersion(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -364,12 +373,12 @@ func TestAccRDSCluster_onlyMajorVersion(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_majorVersionOnly(rName, false, engine, engineVersion1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster1),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
 					resource.TestCheckResourceAttr(resourceName, "engine", engine),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", engineVersion1),
 				),
@@ -394,6 +403,7 @@ func TestAccRDSCluster_onlyMajorVersion(t *testing.T) {
 }
 
 func TestAccRDSCluster_availabilityZones(t *testing.T) {
+	ctx := acctest.Context(t)
 	var dbCluster rds.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
@@ -402,12 +412,12 @@ func TestAccRDSCluster_availabilityZones(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_availabilityZones(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 				),
 			},
 		},
@@ -415,6 +425,7 @@ func TestAccRDSCluster_availabilityZones(t *testing.T) {
 }
 
 func TestAccRDSCluster_storageType(t *testing.T) {
+	ctx := acctest.Context(t)
 	var dbCluster rds.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
@@ -423,12 +434,12 @@ func TestAccRDSCluster_storageType(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_storageType(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "storage_type", "io1"),
 				),
 			},
@@ -437,6 +448,7 @@ func TestAccRDSCluster_storageType(t *testing.T) {
 }
 
 func TestAccRDSCluster_allocatedStorage(t *testing.T) {
+	ctx := acctest.Context(t)
 	var dbCluster rds.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
@@ -445,12 +457,12 @@ func TestAccRDSCluster_allocatedStorage(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_allocatedStorage(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "100"),
 				),
 			},
@@ -459,6 +471,7 @@ func TestAccRDSCluster_allocatedStorage(t *testing.T) {
 }
 
 func TestAccRDSCluster_iops(t *testing.T) {
+	ctx := acctest.Context(t)
 	var dbCluster rds.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
@@ -467,12 +480,12 @@ func TestAccRDSCluster_iops(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_iops(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "iops", "1000"),
 				),
 			},
@@ -481,6 +494,7 @@ func TestAccRDSCluster_iops(t *testing.T) {
 }
 
 func TestAccRDSCluster_dbClusterInstanceClass(t *testing.T) {
+	ctx := acctest.Context(t)
 	var dbCluster rds.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
@@ -489,12 +503,12 @@ func TestAccRDSCluster_dbClusterInstanceClass(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_dbClusterInstanceClass(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "db_cluster_instance_class", "db.r6gd.xlarge"),
 				),
 			},
@@ -503,6 +517,7 @@ func TestAccRDSCluster_dbClusterInstanceClass(t *testing.T) {
 }
 
 func TestAccRDSCluster_backtrackWindow(t *testing.T) {
+	ctx := acctest.Context(t)
 	var dbCluster rds.DBCluster
 	resourceName := "aws_rds_cluster.test"
 
@@ -510,19 +525,19 @@ func TestAccRDSCluster_backtrackWindow(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_backtrackWindow(43200),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "backtrack_window", "43200"),
 				),
 			},
 			{
 				Config: testAccClusterConfig_backtrackWindow(86400),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "backtrack_window", "86400"),
 				),
 			},
@@ -531,6 +546,7 @@ func TestAccRDSCluster_backtrackWindow(t *testing.T) {
 }
 
 func TestAccRDSCluster_dbSubnetGroupName(t *testing.T) {
+	ctx := acctest.Context(t)
 	var dbCluster rds.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
@@ -539,12 +555,12 @@ func TestAccRDSCluster_dbSubnetGroupName(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_subnetGroupName(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 				),
 			},
 		},
@@ -552,6 +568,7 @@ func TestAccRDSCluster_dbSubnetGroupName(t *testing.T) {
 }
 
 func TestAccRDSCluster_pointInTimeRestore(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -565,13 +582,13 @@ func TestAccRDSCluster_pointInTimeRestore(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_pointInTimeRestoreSource(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(sourceResourceName, &sourceDBCluster),
-					testAccCheckClusterExists(resourceName, &dbCluster),
+					testAccCheckClusterExists(ctx, sourceResourceName, &sourceDBCluster),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttrPair(resourceName, "engine", sourceResourceName, "engine"),
 				),
 			},
@@ -580,6 +597,7 @@ func TestAccRDSCluster_pointInTimeRestore(t *testing.T) {
 }
 
 func TestAccRDSCluster_PointInTimeRestore_enabledCloudWatchLogsExports(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -593,13 +611,13 @@ func TestAccRDSCluster_PointInTimeRestore_enabledCloudWatchLogsExports(t *testin
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_pointInTimeRestoreSource_enabledCloudWatchLogsExports(rName, "audit"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(sourceResourceName, &sourceDBCluster),
-					testAccCheckClusterExists(resourceName, &dbCluster),
+					testAccCheckClusterExists(ctx, sourceResourceName, &sourceDBCluster),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "audit"),
 				),
@@ -609,6 +627,7 @@ func TestAccRDSCluster_PointInTimeRestore_enabledCloudWatchLogsExports(t *testin
 }
 
 func TestAccRDSCluster_takeFinalSnapshot(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v rds.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
@@ -617,12 +636,12 @@ func TestAccRDSCluster_takeFinalSnapshot(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroyWithFinalSnapshot,
+		CheckDestroy:             testAccCheckClusterDestroyWithFinalSnapshot(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_finalSnapshot(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &v),
+					testAccCheckClusterExists(ctx, resourceName, &v),
 				),
 			},
 		},
@@ -633,11 +652,12 @@ func TestAccRDSCluster_takeFinalSnapshot(t *testing.T) {
 // https://github.com/hashicorp/terraform/issues/11568
 // Expected error updated to match API response
 func TestAccRDSCluster_missingUserNameCausesError(t *testing.T) {
+	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccClusterConfig_withoutUserNameAndPassword(sdkacctest.RandInt()),
@@ -648,6 +668,7 @@ func TestAccRDSCluster_missingUserNameCausesError(t *testing.T) {
 }
 
 func TestAccRDSCluster_EnabledCloudWatchLogsExports_mySQL(t *testing.T) {
+	ctx := acctest.Context(t)
 	var dbCluster1, dbCluster2, dbCluster3 rds.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
@@ -656,12 +677,12 @@ func TestAccRDSCluster_EnabledCloudWatchLogsExports_mySQL(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_enabledCloudWatchLogsExports1(rName, "audit"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster1),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "audit"),
 				),
@@ -669,7 +690,7 @@ func TestAccRDSCluster_EnabledCloudWatchLogsExports_mySQL(t *testing.T) {
 			{
 				Config: testAccClusterConfig_enabledCloudWatchLogsExports2(rName, "slowquery", "error"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster2),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster2),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "error"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "slowquery"),
@@ -678,7 +699,7 @@ func TestAccRDSCluster_EnabledCloudWatchLogsExports_mySQL(t *testing.T) {
 			{
 				Config: testAccClusterConfig_enabledCloudWatchLogsExports1(rName, "error"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster3),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster3),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "error"),
 				),
@@ -688,6 +709,7 @@ func TestAccRDSCluster_EnabledCloudWatchLogsExports_mySQL(t *testing.T) {
 }
 
 func TestAccRDSCluster_EnabledCloudWatchLogsExports_postgresql(t *testing.T) {
+	ctx := acctest.Context(t)
 	var dbCluster1, dbCluster2 rds.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
@@ -696,12 +718,12 @@ func TestAccRDSCluster_EnabledCloudWatchLogsExports_postgresql(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_enabledCloudWatchLogsExportsPostgreSQL1(rName, "postgresql"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster1),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "postgresql"),
 				),
@@ -709,7 +731,7 @@ func TestAccRDSCluster_EnabledCloudWatchLogsExports_postgresql(t *testing.T) {
 			{
 				Config: testAccClusterConfig_enabledCloudWatchLogsExportsPostgreSQL2(rName, "postgresql", "upgrade"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster2),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster2),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "postgresql"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_cloudwatch_logs_exports.*", "upgrade"),
@@ -720,6 +742,7 @@ func TestAccRDSCluster_EnabledCloudWatchLogsExports_postgresql(t *testing.T) {
 }
 
 func TestAccRDSCluster_updateIAMRoles(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v rds.DBCluster
 	ri := sdkacctest.RandInt()
 	resourceName := "aws_rds_cluster.test"
@@ -728,18 +751,18 @@ func TestAccRDSCluster_updateIAMRoles(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_includingIAMRoles(ri),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &v),
+					testAccCheckClusterExists(ctx, resourceName, &v),
 				),
 			},
 			{
 				Config: testAccClusterConfig_addIAMRoles(ri),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &v),
+					testAccCheckClusterExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(
 						resourceName, "iam_roles.#", "2"),
 				),
@@ -747,7 +770,7 @@ func TestAccRDSCluster_updateIAMRoles(t *testing.T) {
 			{
 				Config: testAccClusterConfig_removeIAMRoles(ri),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &v),
+					testAccCheckClusterExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(
 						resourceName, "iam_roles.#", "1"),
 				),
@@ -757,6 +780,7 @@ func TestAccRDSCluster_updateIAMRoles(t *testing.T) {
 }
 
 func TestAccRDSCluster_kmsKey(t *testing.T) {
+	ctx := acctest.Context(t)
 	var dbCluster1 rds.DBCluster
 	kmsKeyResourceName := "aws_kms_key.foo"
 	resourceName := "aws_rds_cluster.test"
@@ -765,12 +789,12 @@ func TestAccRDSCluster_kmsKey(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_kmsKey(sdkacctest.RandInt()),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster1),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
 					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsKeyResourceName, "arn"),
 				),
 			},
@@ -779,6 +803,7 @@ func TestAccRDSCluster_kmsKey(t *testing.T) {
 }
 
 func TestAccRDSCluster_networkType(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -791,19 +816,19 @@ func TestAccRDSCluster_networkType(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_networkType(rName, "IPV4"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "network_type", "IPV4"),
 				),
 			},
 			{
 				Config: testAccClusterConfig_networkType(rName, "DUAL"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "network_type", "DUAL"),
 				),
 			},
@@ -812,6 +837,7 @@ func TestAccRDSCluster_networkType(t *testing.T) {
 }
 
 func TestAccRDSCluster_encrypted(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v rds.DBCluster
 	resourceName := "aws_rds_cluster.test"
 
@@ -819,12 +845,12 @@ func TestAccRDSCluster_encrypted(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_encrypted(sdkacctest.RandInt()),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &v),
+					testAccCheckClusterExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(
 						resourceName, "storage_encrypted", "true"),
 					resource.TestCheckResourceAttr(
@@ -836,6 +862,7 @@ func TestAccRDSCluster_encrypted(t *testing.T) {
 }
 
 func TestAccRDSCluster_copyTagsToSnapshot(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v rds.DBCluster
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_rds_cluster.test"
@@ -844,26 +871,26 @@ func TestAccRDSCluster_copyTagsToSnapshot(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_copyTagsToSnapshot(rInt, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &v),
+					testAccCheckClusterExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", "true"),
 				),
 			},
 			{
 				Config: testAccClusterConfig_copyTagsToSnapshot(rInt, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &v),
+					testAccCheckClusterExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", "false"),
 				),
 			},
 			{
 				Config: testAccClusterConfig_copyTagsToSnapshot(rInt, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &v),
+					testAccCheckClusterExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", "true"),
 				),
 			},
@@ -872,6 +899,7 @@ func TestAccRDSCluster_copyTagsToSnapshot(t *testing.T) {
 }
 
 func TestAccRDSCluster_ReplicationSourceIdentifier_kmsKeyID(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -893,13 +921,13 @@ func TestAccRDSCluster_ReplicationSourceIdentifier_kmsKeyID(t *testing.T) {
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
 		ProviderFactories: acctest.FactoriesAlternate(t, &providers),
-		CheckDestroy:      acctest.CheckWithProviders(testAccCheckClusterDestroyWithProvider, &providers),
+		CheckDestroy:      acctest.CheckWithProviders(testAccCheckClusterDestroyWithProvider(ctx), &providers),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_replicationSourceIDKMSKeyID(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExistsWithProvider(resourceName, &primaryCluster, acctest.RegionProviderFunc(acctest.Region(), &providers)),
-					testAccCheckClusterExistsWithProvider(resourceName2, &replicaCluster, acctest.RegionProviderFunc(acctest.AlternateRegion(), &providers)),
+					testAccCheckClusterExistsWithProvider(ctx, resourceName, &primaryCluster, acctest.RegionProviderFunc(acctest.Region(), &providers)),
+					testAccCheckClusterExistsWithProvider(ctx, resourceName2, &replicaCluster, acctest.RegionProviderFunc(acctest.AlternateRegion(), &providers)),
 				),
 			},
 		},
@@ -907,6 +935,7 @@ func TestAccRDSCluster_ReplicationSourceIdentifier_kmsKeyID(t *testing.T) {
 }
 
 func TestAccRDSCluster_backupsUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v rds.DBCluster
 	resourceName := "aws_rds_cluster.test"
 
@@ -915,12 +944,12 @@ func TestAccRDSCluster_backupsUpdate(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_backups(ri),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &v),
+					testAccCheckClusterExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(
 						resourceName, "preferred_backup_window", "07:00-09:00"),
 					resource.TestCheckResourceAttr(
@@ -932,7 +961,7 @@ func TestAccRDSCluster_backupsUpdate(t *testing.T) {
 			{
 				Config: testAccClusterConfig_backupsUpdate(ri),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &v),
+					testAccCheckClusterExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(
 						resourceName, "preferred_backup_window", "03:00-09:00"),
 					resource.TestCheckResourceAttr(
@@ -946,6 +975,7 @@ func TestAccRDSCluster_backupsUpdate(t *testing.T) {
 }
 
 func TestAccRDSCluster_iamAuth(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v rds.DBCluster
 	resourceName := "aws_rds_cluster.test"
 
@@ -953,12 +983,12 @@ func TestAccRDSCluster_iamAuth(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_iamAuth(sdkacctest.RandInt()),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &v),
+					testAccCheckClusterExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(
 						resourceName, "iam_database_authentication_enabled", "true"),
 				),
@@ -968,6 +998,7 @@ func TestAccRDSCluster_iamAuth(t *testing.T) {
 }
 
 func TestAccRDSCluster_deletionProtection(t *testing.T) {
+	ctx := acctest.Context(t)
 	var dbCluster1 rds.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
@@ -976,19 +1007,19 @@ func TestAccRDSCluster_deletionProtection(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_deletionProtection(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster1),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
 					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "true"),
 				),
 			},
 			{
 				Config: testAccClusterConfig_deletionProtection(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster1),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
 					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
 				),
 			},
@@ -997,6 +1028,7 @@ func TestAccRDSCluster_deletionProtection(t *testing.T) {
 }
 
 func TestAccRDSCluster_engineMode(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1010,12 +1042,12 @@ func TestAccRDSCluster_engineMode(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_engineMode(rName, "serverless"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster1),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
 					resource.TestCheckResourceAttr(resourceName, "engine_mode", "serverless"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.#", "0"),
@@ -1024,7 +1056,7 @@ func TestAccRDSCluster_engineMode(t *testing.T) {
 			{
 				Config: testAccClusterConfig_engineMode(rName, "provisioned"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster2),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster2),
 					testAccCheckClusterRecreated(&dbCluster1, &dbCluster2),
 					resource.TestCheckResourceAttr(resourceName, "engine_mode", "provisioned"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.#", "0"),
@@ -1036,21 +1068,22 @@ func TestAccRDSCluster_engineMode(t *testing.T) {
 }
 
 func TestAccRDSCluster_EngineMode_global(t *testing.T) {
+	ctx := acctest.Context(t)
 	var dbCluster1 rds.DBCluster
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGlobalCluster(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGlobalCluster(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_EngineMode_global(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster1),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
 					resource.TestCheckResourceAttr(resourceName, "engine_mode", "global"),
 				),
 			},
@@ -1059,6 +1092,7 @@ func TestAccRDSCluster_EngineMode_global(t *testing.T) {
 }
 
 func TestAccRDSCluster_EngineMode_multiMaster(t *testing.T) {
+	ctx := acctest.Context(t)
 	var dbCluster1 rds.DBCluster
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1068,12 +1102,12 @@ func TestAccRDSCluster_EngineMode_multiMaster(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_EngineMode_multimaster(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster1),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
 					resource.TestCheckResourceAttr(resourceName, "engine_mode", "multimaster"),
 				),
 			},
@@ -1082,6 +1116,7 @@ func TestAccRDSCluster_EngineMode_multiMaster(t *testing.T) {
 }
 
 func TestAccRDSCluster_EngineMode_parallelQuery(t *testing.T) {
+	ctx := acctest.Context(t)
 	var dbCluster1 rds.DBCluster
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1091,12 +1126,12 @@ func TestAccRDSCluster_EngineMode_parallelQuery(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_engineMode(rName, "parallelquery"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster1),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
 					resource.TestCheckResourceAttr(resourceName, "engine_mode", "parallelquery"),
 				),
 			},
@@ -1105,6 +1140,7 @@ func TestAccRDSCluster_EngineMode_parallelQuery(t *testing.T) {
 }
 
 func TestAccRDSCluster_engineVersion(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1118,12 +1154,12 @@ func TestAccRDSCluster_engineVersion(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_engineVersion(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "engine", "aurora-postgresql"),
 					resource.TestCheckResourceAttrPair(resourceName, "engine_version", dataSourceName, "version"),
 				),
@@ -1137,6 +1173,7 @@ func TestAccRDSCluster_engineVersion(t *testing.T) {
 }
 
 func TestAccRDSCluster_engineVersionWithPrimaryInstance(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1151,12 +1188,12 @@ func TestAccRDSCluster_engineVersionWithPrimaryInstance(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_engineVersionPrimaryInstance(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttrPair(resourceName, "engine", dataSourceName, "engine"),
 					resource.TestCheckResourceAttrPair(resourceName, "engine_version", dataSourceName, "version"),
 				),
@@ -1164,7 +1201,7 @@ func TestAccRDSCluster_engineVersionWithPrimaryInstance(t *testing.T) {
 			{
 				Config: testAccClusterConfig_engineVersionPrimaryInstance(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttrPair(resourceName, "engine", dataSourceNameUpgrade, "engine"),
 					resource.TestCheckResourceAttrPair(resourceName, "engine_version", dataSourceNameUpgrade, "version"),
 				),
@@ -1174,6 +1211,7 @@ func TestAccRDSCluster_engineVersionWithPrimaryInstance(t *testing.T) {
 }
 
 func TestAccRDSCluster_GlobalClusterIdentifierEngineMode_global(t *testing.T) {
+	ctx := acctest.Context(t)
 	var dbCluster1 rds.DBCluster
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1181,15 +1219,15 @@ func TestAccRDSCluster_GlobalClusterIdentifierEngineMode_global(t *testing.T) {
 	resourceName := "aws_rds_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGlobalCluster(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGlobalCluster(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_GlobalClusterID_EngineMode_global(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster1),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
 					resource.TestCheckResourceAttrPair(resourceName, "global_cluster_identifier", globalClusterResourceName, "id"),
 				),
 			},
@@ -1198,21 +1236,22 @@ func TestAccRDSCluster_GlobalClusterIdentifierEngineMode_global(t *testing.T) {
 }
 
 func TestAccRDSCluster_GlobalClusterIdentifierEngineModeGlobal_add(t *testing.T) {
+	ctx := acctest.Context(t)
 	var dbCluster1 rds.DBCluster
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGlobalCluster(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGlobalCluster(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_EngineMode_global(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster1),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
 					resource.TestCheckResourceAttr(resourceName, "global_cluster_identifier", ""),
 				),
 			},
@@ -1225,6 +1264,7 @@ func TestAccRDSCluster_GlobalClusterIdentifierEngineModeGlobal_add(t *testing.T)
 }
 
 func TestAccRDSCluster_GlobalClusterIdentifierEngineModeGlobal_remove(t *testing.T) {
+	ctx := acctest.Context(t)
 	var dbCluster1 rds.DBCluster
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1232,22 +1272,22 @@ func TestAccRDSCluster_GlobalClusterIdentifierEngineModeGlobal_remove(t *testing
 	resourceName := "aws_rds_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGlobalCluster(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGlobalCluster(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_GlobalClusterID_EngineMode_global(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster1),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
 					resource.TestCheckResourceAttrPair(resourceName, "global_cluster_identifier", globalClusterResourceName, "id"),
 				),
 			},
 			{
 				Config: testAccClusterConfig_EngineMode_global(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster1),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
 					resource.TestCheckResourceAttr(resourceName, "global_cluster_identifier", ""),
 				),
 			},
@@ -1256,6 +1296,7 @@ func TestAccRDSCluster_GlobalClusterIdentifierEngineModeGlobal_remove(t *testing
 }
 
 func TestAccRDSCluster_GlobalClusterIdentifierEngineModeGlobal_update(t *testing.T) {
+	ctx := acctest.Context(t)
 	var dbCluster1 rds.DBCluster
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1264,15 +1305,15 @@ func TestAccRDSCluster_GlobalClusterIdentifierEngineModeGlobal_update(t *testing
 	resourceName := "aws_rds_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGlobalCluster(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGlobalCluster(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_GlobalClusterID_EngineMode_globalUpdate(rName, globalClusterResourceName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster1),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
 					resource.TestCheckResourceAttrPair(resourceName, "global_cluster_identifier", globalClusterResourceName1, "id"),
 				),
 			},
@@ -1285,6 +1326,7 @@ func TestAccRDSCluster_GlobalClusterIdentifierEngineModeGlobal_update(t *testing
 }
 
 func TestAccRDSCluster_GlobalClusterIdentifierEngineMode_provisioned(t *testing.T) {
+	ctx := acctest.Context(t)
 	var dbCluster1 rds.DBCluster
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1292,15 +1334,15 @@ func TestAccRDSCluster_GlobalClusterIdentifierEngineMode_provisioned(t *testing.
 	resourceName := "aws_rds_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGlobalCluster(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGlobalCluster(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_GlobalClusterID_EngineMode_provisioned(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster1),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
 					resource.TestCheckResourceAttrPair(resourceName, "global_cluster_identifier", globalClusterResourceName, "id"),
 				),
 			},
@@ -1310,6 +1352,7 @@ func TestAccRDSCluster_GlobalClusterIdentifierEngineMode_provisioned(t *testing.
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/13126
 func TestAccRDSCluster_GlobalClusterIdentifier_primarySecondaryClusters(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1328,17 +1371,17 @@ func TestAccRDSCluster_GlobalClusterIdentifier_primarySecondaryClusters(t *testi
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckMultipleRegion(t, 2)
-			testAccPreCheckGlobalCluster(t)
+			testAccPreCheckGlobalCluster(ctx, t)
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
 		ProviderFactories: acctest.FactoriesAlternate(t, &providers),
-		CheckDestroy:      testAccCheckClusterDestroy,
+		CheckDestroy:      testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_GlobalClusterID_primarySecondaryClusters(rNameGlobal, rNamePrimary, rNameSecondary),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExistsWithProvider(resourceNamePrimary, &primaryDbCluster, acctest.RegionProviderFunc(acctest.Region(), &providers)),
-					testAccCheckClusterExistsWithProvider(resourceNameSecondary, &secondaryDbCluster, acctest.RegionProviderFunc(acctest.AlternateRegion(), &providers)),
+					testAccCheckClusterExistsWithProvider(ctx, resourceNamePrimary, &primaryDbCluster, acctest.RegionProviderFunc(acctest.Region(), &providers)),
+					testAccCheckClusterExistsWithProvider(ctx, resourceNameSecondary, &secondaryDbCluster, acctest.RegionProviderFunc(acctest.AlternateRegion(), &providers)),
 				),
 			},
 		},
@@ -1347,6 +1390,7 @@ func TestAccRDSCluster_GlobalClusterIdentifier_primarySecondaryClusters(t *testi
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/13715
 func TestAccRDSCluster_GlobalClusterIdentifier_replicationSourceIdentifier(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1362,17 +1406,17 @@ func TestAccRDSCluster_GlobalClusterIdentifier_replicationSourceIdentifier(t *te
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckMultipleRegion(t, 2)
-			testAccPreCheckGlobalCluster(t)
+			testAccPreCheckGlobalCluster(ctx, t)
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
 		ProviderFactories: acctest.FactoriesAlternate(t, &providers),
-		CheckDestroy:      testAccCheckClusterDestroy,
+		CheckDestroy:      testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_GlobalClusterID_replicationSourceID(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExistsWithProvider(resourceNamePrimary, &primaryDbCluster, acctest.RegionProviderFunc(acctest.Region(), &providers)),
-					testAccCheckClusterExistsWithProvider(resourceNameSecondary, &secondaryDbCluster, acctest.RegionProviderFunc(acctest.AlternateRegion(), &providers)),
+					testAccCheckClusterExistsWithProvider(ctx, resourceNamePrimary, &primaryDbCluster, acctest.RegionProviderFunc(acctest.Region(), &providers)),
+					testAccCheckClusterExistsWithProvider(ctx, resourceNameSecondary, &secondaryDbCluster, acctest.RegionProviderFunc(acctest.AlternateRegion(), &providers)),
 				),
 			},
 		},
@@ -1381,6 +1425,7 @@ func TestAccRDSCluster_GlobalClusterIdentifier_replicationSourceIdentifier(t *te
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/14457
 func TestAccRDSCluster_GlobalClusterIdentifier_secondaryClustersWriteForwarding(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1399,17 +1444,17 @@ func TestAccRDSCluster_GlobalClusterIdentifier_secondaryClustersWriteForwarding(
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckMultipleRegion(t, 2)
-			testAccPreCheckGlobalCluster(t)
+			testAccPreCheckGlobalCluster(ctx, t)
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, rds.EndpointsID),
 		ProviderFactories: acctest.FactoriesAlternate(t, &providers),
-		CheckDestroy:      testAccCheckClusterDestroy,
+		CheckDestroy:      testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_GlobalClusterID_secondaryClustersWriteForwarding(rNameGlobal, rNamePrimary, rNameSecondary),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExistsWithProvider(resourceNamePrimary, &primaryDbCluster, acctest.RegionProviderFunc(acctest.Region(), &providers)),
-					testAccCheckClusterExistsWithProvider(resourceNameSecondary, &secondaryDbCluster, acctest.RegionProviderFunc(acctest.AlternateRegion(), &providers)),
+					testAccCheckClusterExistsWithProvider(ctx, resourceNamePrimary, &primaryDbCluster, acctest.RegionProviderFunc(acctest.Region(), &providers)),
+					testAccCheckClusterExistsWithProvider(ctx, resourceNameSecondary, &secondaryDbCluster, acctest.RegionProviderFunc(acctest.AlternateRegion(), &providers)),
 					resource.TestCheckResourceAttr(resourceNameSecondary, "enable_global_write_forwarding", "true"),
 				),
 			},
@@ -1418,6 +1463,7 @@ func TestAccRDSCluster_GlobalClusterIdentifier_secondaryClustersWriteForwarding(
 }
 
 func TestAccRDSCluster_port(t *testing.T) {
+	ctx := acctest.Context(t)
 	var dbCluster1, dbCluster2 rds.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_cluster.test"
@@ -1426,19 +1472,19 @@ func TestAccRDSCluster_port(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_port(rName, 5432),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster1),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
 					resource.TestCheckResourceAttr(resourceName, "port", "5432"),
 				),
 			},
 			{
 				Config: testAccClusterConfig_port(rName, 2345),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster2),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster2),
 					resource.TestCheckResourceAttr(resourceName, "port", "2345"),
 				),
 			},
@@ -1447,6 +1493,7 @@ func TestAccRDSCluster_port(t *testing.T) {
 }
 
 func TestAccRDSCluster_scaling(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1460,12 +1507,12 @@ func TestAccRDSCluster_scaling(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_scalingConfiguration(rName, false, 128, 4, 301, "RollbackCapacityChange"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.auto_pause", "false"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.max_capacity", "128"),
@@ -1477,7 +1524,7 @@ func TestAccRDSCluster_scaling(t *testing.T) {
 			{
 				Config: testAccClusterConfig_scalingConfiguration(rName, true, 256, 8, 86400, "ForceApplyCapacityChange"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.auto_pause", "true"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.max_capacity", "256"),
@@ -1491,6 +1538,7 @@ func TestAccRDSCluster_scaling(t *testing.T) {
 }
 
 func TestAccRDSCluster_serverlessV2ScalingConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1504,12 +1552,12 @@ func TestAccRDSCluster_serverlessV2ScalingConfiguration(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_serverlessV2ScalingConfiguration(rName, 64.0, 0.5),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.0.max_capacity", "64"),
 					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.0.min_capacity", "0.5"),
@@ -1518,7 +1566,7 @@ func TestAccRDSCluster_serverlessV2ScalingConfiguration(t *testing.T) {
 			{
 				Config: testAccClusterConfig_serverlessV2ScalingConfiguration(rName, 128.0, 8.5),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.0.max_capacity", "128"),
 					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.0.min_capacity", "8.5"),
@@ -1530,6 +1578,7 @@ func TestAccRDSCluster_serverlessV2ScalingConfiguration(t *testing.T) {
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/11698
 func TestAccRDSCluster_Scaling_defaultMinCapacity(t *testing.T) {
+	ctx := acctest.Context(t)
 	var dbCluster rds.DBCluster
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1539,12 +1588,12 @@ func TestAccRDSCluster_Scaling_defaultMinCapacity(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_ScalingConfiguration_defaultMinCapacity(rName, false, 128, 301, "RollbackCapacityChange"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.auto_pause", "false"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.max_capacity", "128"),
@@ -1558,6 +1607,7 @@ func TestAccRDSCluster_Scaling_defaultMinCapacity(t *testing.T) {
 }
 
 func TestAccRDSCluster_snapshotIdentifier(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1574,14 +1624,14 @@ func TestAccRDSCluster_snapshotIdentifier(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_snapshotID(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(sourceDbResourceName, &sourceDbCluster),
-					testAccCheckClusterSnapshotExists(snapshotResourceName, &dbClusterSnapshot),
-					testAccCheckClusterExists(resourceName, &dbCluster),
+					testAccCheckClusterExists(ctx, sourceDbResourceName, &sourceDbCluster),
+					testAccCheckClusterSnapshotExists(ctx, snapshotResourceName, &dbClusterSnapshot),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 				),
 			},
 		},
@@ -1589,6 +1639,7 @@ func TestAccRDSCluster_snapshotIdentifier(t *testing.T) {
 }
 
 func TestAccRDSCluster_SnapshotIdentifier_deletionProtection(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1605,14 +1656,14 @@ func TestAccRDSCluster_SnapshotIdentifier_deletionProtection(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_SnapshotID_deletionProtection(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(sourceDbResourceName, &sourceDbCluster),
-					testAccCheckClusterSnapshotExists(snapshotResourceName, &dbClusterSnapshot),
-					testAccCheckClusterExists(resourceName, &dbCluster),
+					testAccCheckClusterExists(ctx, sourceDbResourceName, &sourceDbCluster),
+					testAccCheckClusterSnapshotExists(ctx, snapshotResourceName, &dbClusterSnapshot),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "true"),
 				),
 			},
@@ -1620,9 +1671,9 @@ func TestAccRDSCluster_SnapshotIdentifier_deletionProtection(t *testing.T) {
 			{
 				Config: testAccClusterConfig_SnapshotID_deletionProtection(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(sourceDbResourceName, &sourceDbCluster),
-					testAccCheckClusterSnapshotExists(snapshotResourceName, &dbClusterSnapshot),
-					testAccCheckClusterExists(resourceName, &dbCluster),
+					testAccCheckClusterExists(ctx, sourceDbResourceName, &sourceDbCluster),
+					testAccCheckClusterSnapshotExists(ctx, snapshotResourceName, &dbClusterSnapshot),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
 				),
 			},
@@ -1631,6 +1682,7 @@ func TestAccRDSCluster_SnapshotIdentifier_deletionProtection(t *testing.T) {
 }
 
 func TestAccRDSCluster_SnapshotIdentifierEngineMode_parallelQuery(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1647,14 +1699,14 @@ func TestAccRDSCluster_SnapshotIdentifierEngineMode_parallelQuery(t *testing.T) 
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_SnapshotID_engineMode(rName, "parallelquery"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(sourceDbResourceName, &sourceDbCluster),
-					testAccCheckClusterSnapshotExists(snapshotResourceName, &dbClusterSnapshot),
-					testAccCheckClusterExists(resourceName, &dbCluster),
+					testAccCheckClusterExists(ctx, sourceDbResourceName, &sourceDbCluster),
+					testAccCheckClusterSnapshotExists(ctx, snapshotResourceName, &dbClusterSnapshot),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "engine_mode", "parallelquery"),
 				),
 			},
@@ -1663,6 +1715,7 @@ func TestAccRDSCluster_SnapshotIdentifierEngineMode_parallelQuery(t *testing.T) 
 }
 
 func TestAccRDSCluster_SnapshotIdentifierEngineMode_provisioned(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1679,14 +1732,14 @@ func TestAccRDSCluster_SnapshotIdentifierEngineMode_provisioned(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_SnapshotID_engineMode(rName, "provisioned"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(sourceDbResourceName, &sourceDbCluster),
-					testAccCheckClusterSnapshotExists(snapshotResourceName, &dbClusterSnapshot),
-					testAccCheckClusterExists(resourceName, &dbCluster),
+					testAccCheckClusterExists(ctx, sourceDbResourceName, &sourceDbCluster),
+					testAccCheckClusterSnapshotExists(ctx, snapshotResourceName, &dbClusterSnapshot),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "engine_mode", "provisioned"),
 				),
 			},
@@ -1699,6 +1752,8 @@ func TestAccRDSCluster_SnapshotIdentifierEngineMode_serverless(t *testing.T) {
 	// to initialize some data.
 	t.Skip("serverless does not support snapshot restore on an empty volume")
 
+	ctx := acctest.Context(t)
+
 	var dbCluster, sourceDbCluster rds.DBCluster
 	var dbClusterSnapshot rds.DBClusterSnapshot
 
@@ -1711,14 +1766,14 @@ func TestAccRDSCluster_SnapshotIdentifierEngineMode_serverless(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_SnapshotID_engineMode(rName, "serverless"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(sourceDbResourceName, &sourceDbCluster),
-					testAccCheckClusterSnapshotExists(snapshotResourceName, &dbClusterSnapshot),
-					testAccCheckClusterExists(resourceName, &dbCluster),
+					testAccCheckClusterExists(ctx, sourceDbResourceName, &sourceDbCluster),
+					testAccCheckClusterSnapshotExists(ctx, snapshotResourceName, &dbClusterSnapshot),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "engine_mode", "serverless"),
 				),
 			},
@@ -1728,6 +1783,7 @@ func TestAccRDSCluster_SnapshotIdentifierEngineMode_serverless(t *testing.T) {
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/6157
 func TestAccRDSCluster_SnapshotIdentifierEngineVersion_different(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1745,14 +1801,14 @@ func TestAccRDSCluster_SnapshotIdentifierEngineVersion_different(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_SnapshotID_engineVersion(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(sourceDbResourceName, &sourceDbCluster),
-					testAccCheckClusterSnapshotExists(snapshotResourceName, &dbClusterSnapshot),
-					testAccCheckClusterExists(resourceName, &dbCluster),
+					testAccCheckClusterExists(ctx, sourceDbResourceName, &sourceDbCluster),
+					testAccCheckClusterSnapshotExists(ctx, snapshotResourceName, &dbClusterSnapshot),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttrPair(resourceName, "engine_version", dataSourceName, "version"),
 				),
 			},
@@ -1762,6 +1818,7 @@ func TestAccRDSCluster_SnapshotIdentifierEngineVersion_different(t *testing.T) {
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/6157
 func TestAccRDSCluster_SnapshotIdentifierEngineVersion_equal(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1779,14 +1836,14 @@ func TestAccRDSCluster_SnapshotIdentifierEngineVersion_equal(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_SnapshotID_engineVersion(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(sourceDbResourceName, &sourceDbCluster),
-					testAccCheckClusterSnapshotExists(snapshotResourceName, &dbClusterSnapshot),
-					testAccCheckClusterExists(resourceName, &dbCluster),
+					testAccCheckClusterExists(ctx, sourceDbResourceName, &sourceDbCluster),
+					testAccCheckClusterSnapshotExists(ctx, snapshotResourceName, &dbClusterSnapshot),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttrPair(resourceName, "engine_version", dataSourceName, "version"),
 				),
 			},
@@ -1795,6 +1852,7 @@ func TestAccRDSCluster_SnapshotIdentifierEngineVersion_equal(t *testing.T) {
 }
 
 func TestAccRDSCluster_SnapshotIdentifier_kmsKeyID(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1812,14 +1870,14 @@ func TestAccRDSCluster_SnapshotIdentifier_kmsKeyID(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_SnapshotID_kmsKeyID(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(sourceDbResourceName, &sourceDbCluster),
-					testAccCheckClusterSnapshotExists(snapshotResourceName, &dbClusterSnapshot),
-					testAccCheckClusterExists(resourceName, &dbCluster),
+					testAccCheckClusterExists(ctx, sourceDbResourceName, &sourceDbCluster),
+					testAccCheckClusterSnapshotExists(ctx, snapshotResourceName, &dbClusterSnapshot),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsKeyResourceName, "arn"),
 				),
 			},
@@ -1828,6 +1886,7 @@ func TestAccRDSCluster_SnapshotIdentifier_kmsKeyID(t *testing.T) {
 }
 
 func TestAccRDSCluster_SnapshotIdentifier_masterPassword(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1844,14 +1903,14 @@ func TestAccRDSCluster_SnapshotIdentifier_masterPassword(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_SnapshotID_masterPassword(rName, "password1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(sourceDbResourceName, &sourceDbCluster),
-					testAccCheckClusterSnapshotExists(snapshotResourceName, &dbClusterSnapshot),
-					testAccCheckClusterExists(resourceName, &dbCluster),
+					testAccCheckClusterExists(ctx, sourceDbResourceName, &sourceDbCluster),
+					testAccCheckClusterSnapshotExists(ctx, snapshotResourceName, &dbClusterSnapshot),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "master_password", "password1"),
 				),
 			},
@@ -1860,6 +1919,7 @@ func TestAccRDSCluster_SnapshotIdentifier_masterPassword(t *testing.T) {
 }
 
 func TestAccRDSCluster_SnapshotIdentifier_masterUsername(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1876,14 +1936,14 @@ func TestAccRDSCluster_SnapshotIdentifier_masterUsername(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_SnapshotID_masterUsername(rName, "username1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(sourceDbResourceName, &sourceDbCluster),
-					testAccCheckClusterSnapshotExists(snapshotResourceName, &dbClusterSnapshot),
-					testAccCheckClusterExists(resourceName, &dbCluster),
+					testAccCheckClusterExists(ctx, sourceDbResourceName, &sourceDbCluster),
+					testAccCheckClusterSnapshotExists(ctx, snapshotResourceName, &dbClusterSnapshot),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "master_username", "foo"),
 				),
 				// It is not currently possible to update the master username in the RDS API
@@ -1894,6 +1954,7 @@ func TestAccRDSCluster_SnapshotIdentifier_masterUsername(t *testing.T) {
 }
 
 func TestAccRDSCluster_SnapshotIdentifier_preferredBackupWindow(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1910,14 +1971,14 @@ func TestAccRDSCluster_SnapshotIdentifier_preferredBackupWindow(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_SnapshotID_preferredBackupWindow(rName, "00:00-08:00"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(sourceDbResourceName, &sourceDbCluster),
-					testAccCheckClusterSnapshotExists(snapshotResourceName, &dbClusterSnapshot),
-					testAccCheckClusterExists(resourceName, &dbCluster),
+					testAccCheckClusterExists(ctx, sourceDbResourceName, &sourceDbCluster),
+					testAccCheckClusterSnapshotExists(ctx, snapshotResourceName, &dbClusterSnapshot),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "preferred_backup_window", "00:00-08:00"),
 				),
 			},
@@ -1926,6 +1987,7 @@ func TestAccRDSCluster_SnapshotIdentifier_preferredBackupWindow(t *testing.T) {
 }
 
 func TestAccRDSCluster_SnapshotIdentifier_preferredMaintenanceWindow(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1942,14 +2004,14 @@ func TestAccRDSCluster_SnapshotIdentifier_preferredMaintenanceWindow(t *testing.
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_SnapshotID_preferredMaintenanceWindow(rName, "sun:01:00-sun:01:30"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(sourceDbResourceName, &sourceDbCluster),
-					testAccCheckClusterSnapshotExists(snapshotResourceName, &dbClusterSnapshot),
-					testAccCheckClusterExists(resourceName, &dbCluster),
+					testAccCheckClusterExists(ctx, sourceDbResourceName, &sourceDbCluster),
+					testAccCheckClusterSnapshotExists(ctx, snapshotResourceName, &dbClusterSnapshot),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "preferred_maintenance_window", "sun:01:00-sun:01:30"),
 				),
 			},
@@ -1958,6 +2020,7 @@ func TestAccRDSCluster_SnapshotIdentifier_preferredMaintenanceWindow(t *testing.
 }
 
 func TestAccRDSCluster_SnapshotIdentifier_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -1974,14 +2037,14 @@ func TestAccRDSCluster_SnapshotIdentifier_tags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_SnapshotID_tags(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(sourceDbResourceName, &sourceDbCluster),
-					testAccCheckClusterSnapshotExists(snapshotResourceName, &dbClusterSnapshot),
-					testAccCheckClusterExists(resourceName, &dbCluster),
+					testAccCheckClusterExists(ctx, sourceDbResourceName, &sourceDbCluster),
+					testAccCheckClusterSnapshotExists(ctx, snapshotResourceName, &dbClusterSnapshot),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -1991,6 +2054,7 @@ func TestAccRDSCluster_SnapshotIdentifier_tags(t *testing.T) {
 }
 
 func TestAccRDSCluster_SnapshotIdentifier_vpcSecurityGroupIDs(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -2007,14 +2071,14 @@ func TestAccRDSCluster_SnapshotIdentifier_vpcSecurityGroupIDs(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_SnapshotID_vpcSecurityGroupIDs(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(sourceDbResourceName, &sourceDbCluster),
-					testAccCheckClusterSnapshotExists(snapshotResourceName, &dbClusterSnapshot),
-					testAccCheckClusterExists(resourceName, &dbCluster),
+					testAccCheckClusterExists(ctx, sourceDbResourceName, &sourceDbCluster),
+					testAccCheckClusterSnapshotExists(ctx, snapshotResourceName, &dbClusterSnapshot),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 				),
 			},
 		},
@@ -2026,6 +2090,7 @@ func TestAccRDSCluster_SnapshotIdentifier_vpcSecurityGroupIDs(t *testing.T) {
 // vpc_security_group_ids is set (which triggered the resource update function),
 // and tags is set which was missing its ARN used for tagging
 func TestAccRDSCluster_SnapshotIdentifierVPCSecurityGroupIDs_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -2042,14 +2107,14 @@ func TestAccRDSCluster_SnapshotIdentifierVPCSecurityGroupIDs_tags(t *testing.T) 
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_SnapshotID_VPCSecurityGroupIds_tags(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(sourceDbResourceName, &sourceDbCluster),
-					testAccCheckClusterSnapshotExists(snapshotResourceName, &dbClusterSnapshot),
-					testAccCheckClusterExists(resourceName, &dbCluster),
+					testAccCheckClusterExists(ctx, sourceDbResourceName, &sourceDbCluster),
+					testAccCheckClusterSnapshotExists(ctx, snapshotResourceName, &dbClusterSnapshot),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -2059,6 +2124,7 @@ func TestAccRDSCluster_SnapshotIdentifierVPCSecurityGroupIDs_tags(t *testing.T) 
 }
 
 func TestAccRDSCluster_SnapshotIdentifier_encryptedRestore(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -2076,14 +2142,14 @@ func TestAccRDSCluster_SnapshotIdentifier_encryptedRestore(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_SnapshotID_encryptedRestore(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(sourceDbResourceName, &sourceDbCluster),
-					testAccCheckClusterSnapshotExists(snapshotResourceName, &dbClusterSnapshot),
-					testAccCheckClusterExists(resourceName, &dbCluster),
+					testAccCheckClusterExists(ctx, sourceDbResourceName, &sourceDbCluster),
+					testAccCheckClusterSnapshotExists(ctx, snapshotResourceName, &dbClusterSnapshot),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsKeyResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", "true"),
 				),
@@ -2093,6 +2159,7 @@ func TestAccRDSCluster_SnapshotIdentifier_encryptedRestore(t *testing.T) {
 }
 
 func TestAccRDSCluster_enableHTTPEndpoint(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -2106,19 +2173,19 @@ func TestAccRDSCluster_enableHTTPEndpoint(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_enableHTTPEndpoint(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "enable_http_endpoint", "true"),
 				),
 			},
 			{
 				Config: testAccClusterConfig_enableHTTPEndpoint(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(resourceName, &dbCluster),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "enable_http_endpoint", "false"),
 				),
 			},
@@ -2126,80 +2193,84 @@ func TestAccRDSCluster_enableHTTPEndpoint(t *testing.T) {
 	})
 }
 
-func testAccCheckClusterDestroy(s *terraform.State) error {
-	return testAccCheckClusterDestroyWithProvider(s, acctest.Provider)
-}
-
-func testAccCheckClusterDestroyWithProvider(s *terraform.State, provider *schema.Provider) error {
-	ctx := context.Background()
-	conn := provider.Meta().(*conns.AWSClient).RDSConn()
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_rds_cluster" {
-			continue
-		}
-
-		_, err := tfrds.FindDBClusterByID(ctx, conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("RDS Cluster %s still exists", rs.Primary.ID)
+func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		return testAccCheckClusterDestroyWithProvider(ctx)(s, acctest.Provider)
 	}
-
-	return nil
 }
 
-func testAccCheckClusterDestroyWithFinalSnapshot(s *terraform.State) error {
-	ctx := context.Background()
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
+func testAccCheckClusterDestroyWithProvider(ctx context.Context) acctest.TestCheckWithProviderFunc {
+	return func(s *terraform.State, provider *schema.Provider) error {
+		conn := provider.Meta().(*conns.AWSClient).RDSConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_rds_cluster" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_rds_cluster" {
+				continue
+			}
+
+			_, err := tfrds.FindDBClusterByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("RDS Cluster %s still exists", rs.Primary.ID)
 		}
 
-		finalSnapshotID := rs.Primary.Attributes["final_snapshot_identifier"]
-		_, err := tfrds.FindDBClusterSnapshotByID(conn, finalSnapshotID)
-
-		if err != nil {
-			return err
-		}
-
-		_, err = conn.DeleteDBClusterSnapshot(&rds.DeleteDBClusterSnapshotInput{
-			DBClusterSnapshotIdentifier: aws.String(finalSnapshotID),
-		})
-
-		if err != nil {
-			return err
-		}
-
-		_, err = tfrds.FindDBClusterByID(ctx, conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("RDS Cluster %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckClusterExists(n string, v *rds.DBCluster) resource.TestCheckFunc {
-	return testAccCheckClusterExistsWithProvider(n, v, func() *schema.Provider { return acctest.Provider })
+func testAccCheckClusterDestroyWithFinalSnapshot(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_rds_cluster" {
+				continue
+			}
+
+			finalSnapshotID := rs.Primary.Attributes["final_snapshot_identifier"]
+			_, err := tfrds.FindDBClusterSnapshotByID(ctx, conn, finalSnapshotID)
+
+			if err != nil {
+				return err
+			}
+
+			_, err = conn.DeleteDBClusterSnapshotWithContext(ctx, &rds.DeleteDBClusterSnapshotInput{
+				DBClusterSnapshotIdentifier: aws.String(finalSnapshotID),
+			})
+
+			if err != nil {
+				return err
+			}
+
+			_, err = tfrds.FindDBClusterByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("RDS Cluster %s still exists", rs.Primary.ID)
+		}
+
+		return nil
+	}
 }
 
-func testAccCheckClusterExistsWithProvider(n string, v *rds.DBCluster, providerF func() *schema.Provider) resource.TestCheckFunc {
+func testAccCheckClusterExists(ctx context.Context, n string, v *rds.DBCluster) resource.TestCheckFunc {
+	return testAccCheckClusterExistsWithProvider(ctx, n, v, func() *schema.Provider { return acctest.Provider })
+}
+
+func testAccCheckClusterExistsWithProvider(ctx context.Context, n string, v *rds.DBCluster, providerF func() *schema.Provider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -2210,7 +2281,6 @@ func testAccCheckClusterExistsWithProvider(n string, v *rds.DBCluster, providerF
 			return fmt.Errorf("No RDS Cluster ID is set")
 		}
 
-		ctx := context.Background()
 		conn := providerF().Meta().(*conns.AWSClient).RDSConn()
 
 		output, err := tfrds.FindDBClusterByID(ctx, conn, rs.Primary.ID)

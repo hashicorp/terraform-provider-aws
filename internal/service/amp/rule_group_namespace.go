@@ -21,7 +21,7 @@ func ResourceRuleGroupNamespace() *schema.Resource {
 		DeleteWithoutTimeout: resourceRuleGroupNamespaceDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{

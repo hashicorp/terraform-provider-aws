@@ -4,7 +4,6 @@
 package resourceexplorer2
 
 import (
-	"context"
 	"fmt"
 	"log"
 
@@ -23,6 +22,7 @@ func init() {
 }
 
 func sweepIndexes(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
@@ -30,7 +30,6 @@ func sweepIndexes(region string) error {
 	conn := client.(*conns.AWSClient).ResourceExplorer2Client()
 	input := &resourceexplorer2.ListIndexesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
-	ctx := context.Background()
 
 	pages := resourceexplorer2.NewListIndexesPaginator(conn, input)
 	for pages.HasMorePages() {
@@ -50,7 +49,7 @@ func sweepIndexes(region string) error {
 		}
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Resource Explorer Indexes (%s): %w", region, err)

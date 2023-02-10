@@ -166,7 +166,7 @@ func dataSourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 	clusterName := d.Get("cluster_name").(string)
 	nodeGroupName := d.Get("node_group_name").(string)
 	id := NodeGroupCreateResourceID(clusterName, nodeGroupName)
-	nodeGroup, err := FindNodegroupByClusterNameAndNodegroupName(conn, clusterName, nodeGroupName)
+	nodeGroup, err := FindNodegroupByClusterNameAndNodegroupName(ctx, conn, clusterName, nodeGroupName)
 
 	if err != nil {
 		return diag.Errorf("error reading EKS Node Group (%s): %s", id, err)

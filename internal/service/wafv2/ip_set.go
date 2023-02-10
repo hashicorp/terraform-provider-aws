@@ -33,7 +33,7 @@ func ResourceIPSet() *schema.Resource {
 		DeleteWithoutTimeout: resourceIPSetDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "/")
 				if len(idParts) != 3 || idParts[0] == "" || idParts[1] == "" || idParts[2] == "" {
 					return nil, fmt.Errorf("Unexpected format of ID (%q), expected ID/NAME/SCOPE", d.Id())
@@ -178,7 +178,7 @@ func resourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("lock_token", output.LockToken)
 	d.Set("name", ipSet.Name)
 
-	tags, err := ListTagsWithContext(ctx, conn, arn)
+	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
 		return diag.Errorf("listing tags for WAFv2 IPSet (%s): %s", arn, err)
@@ -230,7 +230,7 @@ func resourceIPSetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		o, n := d.GetChange("tags_all")
 		arn := d.Get("arn").(string)
 
-		if err := UpdateTagsWithContext(ctx, conn, arn, o, n); err != nil {
+		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
 			return diag.Errorf("updating tags for WAFv2 IPSet (%s): %s", arn, err)
 		}
 	}
@@ -249,7 +249,7 @@ func resourceIPSetDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	log.Printf("[INFO] Deleting WAFv2 IPSet: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, ipSetDeleteTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, ipSetDeleteTimeout, func() (interface{}, error) {
 		return conn.DeleteIPSetWithContext(ctx, input)
 	}, wafv2.ErrCodeWAFAssociatedItemException)
 

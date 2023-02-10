@@ -25,7 +25,7 @@ func ResourceHTTPNamespace() *schema.Resource {
 		DeleteWithoutTimeout: resourceHTTPNamespaceDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -126,7 +126,7 @@ func resourceHTTPNamespaceRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 	d.Set("name", ns.Name)
 
-	tags, err := ListTagsWithContext(ctx, conn, arn)
+	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
 		return diag.Errorf("listing tags for Service Discovery HTTP Namespace (%s): %s", arn, err)
@@ -152,7 +152,7 @@ func resourceHTTPNamespaceUpdate(ctx context.Context, d *schema.ResourceData, me
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTagsWithContext(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.Errorf("updating Service Discovery HTTP Namespace (%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -164,7 +164,7 @@ func resourceHTTPNamespaceDelete(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn()
 
 	log.Printf("[INFO] Deleting Service Discovery HTTP Namespace: %s", d.Id())
-	outputRaw, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, 2*time.Minute, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
 		return conn.DeleteNamespaceWithContext(ctx, &servicediscovery.DeleteNamespaceInput{
 			Id: aws.String(d.Id()),
 		})

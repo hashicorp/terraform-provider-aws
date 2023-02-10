@@ -12,11 +12,11 @@ import (
 )
 
 // FindReplicationGroupByID retrieves an ElastiCache Replication Group by id.
-func FindReplicationGroupByID(conn *elasticache.ElastiCache, id string) (*elasticache.ReplicationGroup, error) {
+func FindReplicationGroupByID(ctx context.Context, conn *elasticache.ElastiCache, id string) (*elasticache.ReplicationGroup, error) {
 	input := &elasticache.DescribeReplicationGroupsInput{
 		ReplicationGroupId: aws.String(id),
 	}
-	output, err := conn.DescribeReplicationGroups(input)
+	output, err := conn.DescribeReplicationGroupsWithContext(ctx, input)
 	if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeReplicationGroupNotFoundFault) {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
@@ -38,13 +38,13 @@ func FindReplicationGroupByID(conn *elasticache.ElastiCache, id string) (*elasti
 }
 
 // FindReplicationGroupMemberClustersByID retrieves all of an ElastiCache Replication Group's MemberClusters by the id of the Replication Group.
-func FindReplicationGroupMemberClustersByID(conn *elasticache.ElastiCache, id string) ([]*elasticache.CacheCluster, error) {
-	rg, err := FindReplicationGroupByID(conn, id)
+func FindReplicationGroupMemberClustersByID(ctx context.Context, conn *elasticache.ElastiCache, id string) ([]*elasticache.CacheCluster, error) {
+	rg, err := FindReplicationGroupByID(ctx, conn, id)
 	if err != nil {
 		return nil, err
 	}
 
-	clusters, err := FindCacheClustersByID(conn, aws.StringValueSlice(rg.MemberClusters))
+	clusters, err := FindCacheClustersByID(ctx, conn, aws.StringValueSlice(rg.MemberClusters))
 	if err != nil {
 		return clusters, err
 	}
@@ -58,25 +58,25 @@ func FindReplicationGroupMemberClustersByID(conn *elasticache.ElastiCache, id st
 }
 
 // FindCacheClusterByID retrieves an ElastiCache Cache Cluster by id.
-func FindCacheClusterByID(conn *elasticache.ElastiCache, id string) (*elasticache.CacheCluster, error) {
+func FindCacheClusterByID(ctx context.Context, conn *elasticache.ElastiCache, id string) (*elasticache.CacheCluster, error) {
 	input := &elasticache.DescribeCacheClustersInput{
 		CacheClusterId: aws.String(id),
 	}
-	return FindCacheCluster(conn, input)
+	return FindCacheCluster(ctx, conn, input)
 }
 
 // FindCacheClusterWithNodeInfoByID retrieves an ElastiCache Cache Cluster with Node Info by id.
-func FindCacheClusterWithNodeInfoByID(conn *elasticache.ElastiCache, id string) (*elasticache.CacheCluster, error) {
+func FindCacheClusterWithNodeInfoByID(ctx context.Context, conn *elasticache.ElastiCache, id string) (*elasticache.CacheCluster, error) {
 	input := &elasticache.DescribeCacheClustersInput{
 		CacheClusterId:    aws.String(id),
 		ShowCacheNodeInfo: aws.Bool(true),
 	}
-	return FindCacheCluster(conn, input)
+	return FindCacheCluster(ctx, conn, input)
 }
 
 // FindCacheCluster retrieves an ElastiCache Cache Cluster using DescribeCacheClustersInput.
-func FindCacheCluster(conn *elasticache.ElastiCache, input *elasticache.DescribeCacheClustersInput) (*elasticache.CacheCluster, error) {
-	result, err := conn.DescribeCacheClusters(input)
+func FindCacheCluster(ctx context.Context, conn *elasticache.ElastiCache, input *elasticache.DescribeCacheClustersInput) (*elasticache.CacheCluster, error) {
+	result, err := conn.DescribeCacheClustersWithContext(ctx, input)
 	if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeCacheClusterNotFoundFault) {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
@@ -99,7 +99,7 @@ func FindCacheCluster(conn *elasticache.ElastiCache, input *elasticache.Describe
 
 // FindCacheClustersByID retrieves a list of ElastiCache Cache Clusters by id.
 // Order of the clusters is not guaranteed.
-func FindCacheClustersByID(conn *elasticache.ElastiCache, idList []string) ([]*elasticache.CacheCluster, error) {
+func FindCacheClustersByID(ctx context.Context, conn *elasticache.ElastiCache, idList []string) ([]*elasticache.CacheCluster, error) {
 	var results []*elasticache.CacheCluster
 	ids := make(map[string]bool)
 	for _, v := range idList {
@@ -107,7 +107,7 @@ func FindCacheClustersByID(conn *elasticache.ElastiCache, idList []string) ([]*e
 	}
 
 	input := &elasticache.DescribeCacheClustersInput{}
-	err := conn.DescribeCacheClustersPages(input, func(page *elasticache.DescribeCacheClustersOutput, _ bool) bool {
+	err := conn.DescribeCacheClustersPagesWithContext(ctx, input, func(page *elasticache.DescribeCacheClustersOutput, _ bool) bool {
 		if page == nil || page.CacheClusters == nil || len(page.CacheClusters) == 0 {
 			return true
 		}
@@ -156,8 +156,8 @@ func FindGlobalReplicationGroupByID(ctx context.Context, conn *elasticache.Elast
 }
 
 // FindGlobalReplicationGroupMemberByID retrieves a member Replication Group by id from a Global Replication Group.
-func FindGlobalReplicationGroupMemberByID(conn *elasticache.ElastiCache, globalReplicationGroupID string, id string) (*elasticache.GlobalReplicationGroupMember, error) {
-	globalReplicationGroup, err := FindGlobalReplicationGroupByID(context.TODO(), conn, globalReplicationGroupID)
+func FindGlobalReplicationGroupMemberByID(ctx context.Context, conn *elasticache.ElastiCache, globalReplicationGroupID string, id string) (*elasticache.GlobalReplicationGroupMember, error) {
+	globalReplicationGroup, err := FindGlobalReplicationGroupByID(ctx, conn, globalReplicationGroupID)
 	if err != nil {
 		return nil, &resource.NotFoundError{
 			Message:   "unable to retrieve enclosing Global Replication Group",
@@ -182,11 +182,11 @@ func FindGlobalReplicationGroupMemberByID(conn *elasticache.ElastiCache, globalR
 	}
 }
 
-func FindUserByID(conn *elasticache.ElastiCache, userID string) (*elasticache.User, error) {
+func FindUserByID(ctx context.Context, conn *elasticache.ElastiCache, userID string) (*elasticache.User, error) {
 	input := &elasticache.DescribeUsersInput{
 		UserId: aws.String(userID),
 	}
-	out, err := conn.DescribeUsers(input)
+	out, err := conn.DescribeUsersWithContext(ctx, input)
 
 	if err != nil {
 		return nil, err
@@ -206,11 +206,11 @@ func FindUserByID(conn *elasticache.ElastiCache, userID string) (*elasticache.Us
 	}
 }
 
-func FindUserGroupByID(conn *elasticache.ElastiCache, groupID string) (*elasticache.UserGroup, error) {
+func FindUserGroupByID(ctx context.Context, conn *elasticache.ElastiCache, groupID string) (*elasticache.UserGroup, error) {
 	input := &elasticache.DescribeUserGroupsInput{
 		UserGroupId: aws.String(groupID),
 	}
-	out, err := conn.DescribeUserGroups(input)
+	out, err := conn.DescribeUserGroupsWithContext(ctx, input)
 	if err != nil {
 		return nil, err
 	}
@@ -225,11 +225,11 @@ func FindUserGroupByID(conn *elasticache.ElastiCache, groupID string) (*elastica
 	}
 }
 
-func FindParameterGroupByName(conn *elasticache.ElastiCache, name string) (*elasticache.CacheParameterGroup, error) {
+func FindParameterGroupByName(ctx context.Context, conn *elasticache.ElastiCache, name string) (*elasticache.CacheParameterGroup, error) {
 	input := elasticache.DescribeCacheParameterGroupsInput{
 		CacheParameterGroupName: aws.String(name),
 	}
-	out, err := conn.DescribeCacheParameterGroups(&input)
+	out, err := conn.DescribeCacheParameterGroupsWithContext(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeCacheParameterGroupNotFoundFault) {
 		return nil, &resource.NotFoundError{
@@ -251,12 +251,12 @@ func FindParameterGroupByName(conn *elasticache.ElastiCache, name string) (*elas
 	}
 }
 
-func FindCacheSubnetGroupByName(conn *elasticache.ElastiCache, name string) (*elasticache.CacheSubnetGroup, error) {
+func FindCacheSubnetGroupByName(ctx context.Context, conn *elasticache.ElastiCache, name string) (*elasticache.CacheSubnetGroup, error) {
 	input := elasticache.DescribeCacheSubnetGroupsInput{
 		CacheSubnetGroupName: aws.String(name),
 	}
 
-	output, err := conn.DescribeCacheSubnetGroups(&input)
+	output, err := conn.DescribeCacheSubnetGroupsWithContext(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeCacheSubnetGroupNotFoundFault) {
 		return nil, &resource.NotFoundError{

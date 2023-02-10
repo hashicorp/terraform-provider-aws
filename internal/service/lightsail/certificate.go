@@ -30,7 +30,7 @@ func ResourceCertificate() *schema.Resource {
 		DeleteWithoutTimeout: resourceCertificateDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -157,7 +157,7 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	op := resp.Operations[0]
 
-	err = waitOperation(conn, op.Id)
+	err = waitOperation(ctx, conn, op.Id)
 	if err != nil {
 		return create.DiagError(names.Lightsail, lightsail.OperationTypeCreateCertificate, ResCertificate, d.Get("name").(string), errors.New("Error waiting for Create Certificate request operation"))
 	}
@@ -211,7 +211,7 @@ func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
 
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
 			return create.DiagError(names.Lightsail, create.ErrActionUpdating, ResCertificate, d.Id(), err)
 		}
 	}
@@ -219,7 +219,7 @@ func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
 			return create.DiagError(names.Lightsail, create.ErrActionUpdating, ResCertificate, d.Id(), err)
 		}
 	}
@@ -244,7 +244,7 @@ func resourceCertificateDelete(ctx context.Context, d *schema.ResourceData, meta
 
 	op := resp.Operations[0]
 
-	err = waitOperation(conn, op.Id)
+	err = waitOperation(ctx, conn, op.Id)
 
 	if err != nil {
 		return create.DiagError(names.Lightsail, lightsail.OperationTypeDeleteCertificate, ResCertificate, d.Id(), err)

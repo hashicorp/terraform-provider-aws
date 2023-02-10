@@ -1,15 +1,16 @@
 package elb
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws/endpoints"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
-// See http://docs.aws.amazon.com/general/latest/gr/rande.html#elb_region
-// See https://docs.amazonaws.cn/en_us/general/latest/gr/rande.html#elb_region
+// See https://docs.aws.amazon.com/general/latest/gr/elb.html#elb_region
 
 var HostedZoneIdPerRegionMap = map[string]string{
 	endpoints.AfSouth1RegionID:     "Z268VQBMOI5EKX",
@@ -22,6 +23,7 @@ var HostedZoneIdPerRegionMap = map[string]string{
 	endpoints.ApSoutheast1RegionID: "Z1LMS91P8CMLE5",
 	endpoints.ApSoutheast2RegionID: "Z1GM3OXH4ZPM65",
 	endpoints.ApSoutheast3RegionID: "Z08888821HLRG5A9ZRTER",
+	endpoints.ApSoutheast4RegionID: "Z09517862IB2WZLPXG76F",
 	endpoints.CaCentral1RegionID:   "ZQSVJUPU6J1EY",
 	endpoints.CnNorth1RegionID:     "Z1GDH35T77C1KE",
 	endpoints.CnNorthwest1RegionID: "ZM7IZAIOVVDZF",
@@ -46,7 +48,7 @@ var HostedZoneIdPerRegionMap = map[string]string{
 
 func DataSourceHostedZoneID() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceHostedZoneIDRead,
+		ReadWithoutTimeout: dataSourceHostedZoneIDRead,
 
 		Schema: map[string]*schema.Schema{
 			"region": {
@@ -57,7 +59,8 @@ func DataSourceHostedZoneID() *schema.Resource {
 	}
 }
 
-func dataSourceHostedZoneIDRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceHostedZoneIDRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	region := meta.(*conns.AWSClient).Region
 	if v, ok := d.GetOk("region"); ok {
 		region = v.(string)
@@ -65,8 +68,8 @@ func dataSourceHostedZoneIDRead(d *schema.ResourceData, meta interface{}) error 
 
 	if zoneId, ok := HostedZoneIdPerRegionMap[region]; ok {
 		d.SetId(zoneId)
-		return nil
+		return diags
 	}
 
-	return fmt.Errorf("Unknown region (%q)", region)
+	return sdkdiag.AppendErrorf(diags, "Unknown region (%q)", region)
 }

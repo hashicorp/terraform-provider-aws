@@ -11,14 +11,18 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
+	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -32,10 +36,10 @@ const (
 
 func ResourceFunction() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceFunctionCreate,
-		Read:   resourceFunctionRead,
-		Update: resourceFunctionUpdate,
-		Delete: resourceFunctionDelete,
+		CreateWithoutTimeout: resourceFunctionCreate,
+		ReadWithoutTimeout:   resourceFunctionRead,
+		UpdateWithoutTimeout: resourceFunctionUpdate,
+		DeleteWithoutTimeout: resourceFunctionDelete,
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
@@ -43,7 +47,7 @@ func ResourceFunction() *schema.Resource {
 		},
 
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				d.Set("function_name", d.Id())
 				return []*schema.ResourceData{d}, nil
 			},
@@ -232,6 +236,16 @@ func ResourceFunction() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"replace_security_groups_on_destroy": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+			"replacement_security_group_ids": {
+				Type:         schema.TypeSet,
+				Optional:     true,
+				Elem:         &schema.Schema{Type: schema.TypeString},
+				RequiredWith: []string{"replace_security_groups_on_destroy"},
+			},
 			"reserved_concurrent_executions": {
 				Type:         schema.TypeInt,
 				Optional:     true,
@@ -379,7 +393,8 @@ const (
 	functionExtraThrottlingTimeout = 9 * time.Minute
 )
 
-func resourceFunctionCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
@@ -406,7 +421,7 @@ func resourceFunctionCreate(d *schema.ResourceData, meta interface{}) error {
 		zipFile, err := readFileContents(v.(string))
 
 		if err != nil {
-			return fmt.Errorf("reading ZIP file (%s): %w", v, err)
+			return sdkdiag.AppendErrorf(diags, "reading ZIP file (%s): %s", v, err)
 		}
 
 		input.Code.ZipFile = zipFile
@@ -430,7 +445,7 @@ func resourceFunctionCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("dead_letter_config"); ok && len(v.([]interface{})) > 0 {
 		if v.([]interface{})[0] == nil {
-			return fmt.Errorf("nil dead_letter_config supplied for function: %s", functionName)
+			return sdkdiag.AppendErrorf(diags, "nil dead_letter_config supplied for function: %s", functionName)
 		}
 
 		input.DeadLetterConfig = &lambda.DeadLetterConfig{
@@ -495,43 +510,44 @@ func resourceFunctionCreate(d *schema.ResourceData, meta interface{}) error {
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	_, err := retryFunctionOp(func() (interface{}, error) {
-		return conn.CreateFunction(input)
+	_, err := retryFunctionOp(ctx, func() (interface{}, error) {
+		return conn.CreateFunctionWithContext(ctx, input)
 	})
 
 	if err != nil {
-		return fmt.Errorf("creating Lambda Function (%s): %w", functionName, err)
+		return sdkdiag.AppendErrorf(diags, "creating Lambda Function (%s): %s", functionName, err)
 	}
 
 	d.SetId(functionName)
 
-	_, err = tfresource.RetryWhenNotFound(propagationTimeout, func() (interface{}, error) {
-		return FindFunctionByName(conn, d.Id())
+	_, err = tfresource.RetryWhenNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+		return FindFunctionByName(ctx, conn, d.Id())
 	})
 
 	if err != nil {
-		return fmt.Errorf("waiting for Lambda Function (%s) create: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "creating Lambda Function (%s): waiting for completion: %s", d.Id(), err)
 	}
 
-	if _, err := waitFunctionCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("waiting for Lambda Function (%s) create: %w", d.Id(), err)
+	if _, err := waitFunctionCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "creating Lambda Function (%s): waiting for completion: %s", d.Id(), err)
 	}
 
 	if v, ok := d.Get("reserved_concurrent_executions").(int); ok && v >= 0 {
-		_, err := conn.PutFunctionConcurrency(&lambda.PutFunctionConcurrencyInput{
+		_, err := conn.PutFunctionConcurrencyWithContext(ctx, &lambda.PutFunctionConcurrencyInput{
 			FunctionName:                 aws.String(d.Id()),
 			ReservedConcurrentExecutions: aws.Int64(int64(v)),
 		})
 
 		if err != nil {
-			return fmt.Errorf("setting Lambda Function (%s) concurrency: %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "setting Lambda Function (%s) concurrency: %s", d.Id(), err)
 		}
 	}
 
-	return resourceFunctionRead(d, meta)
+	return append(diags, resourceFunctionRead(ctx, d, meta)...)
 }
 
-func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
+func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -546,16 +562,16 @@ func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 		input.Qualifier = aws.String(v.(string))
 	}
 
-	output, err := findFunction(conn, input)
+	output, err := findFunction(ctx, conn, input)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Lambda Function %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading Lambda Function (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Lambda Function (%s): %s", d.Id(), err)
 	}
 
 	function := output.Configuration
@@ -568,24 +584,24 @@ func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 				"target_arn": aws.StringValue(function.DeadLetterConfig.TargetArn),
 			},
 		}); err != nil {
-			return fmt.Errorf("setting dead_letter_config: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting dead_letter_config: %s", err)
 		}
 	} else {
 		d.Set("dead_letter_config", []interface{}{})
 	}
 	d.Set("description", function.Description)
 	if err := d.Set("environment", flattenEnvironment(function.Environment)); err != nil {
-		return fmt.Errorf("setting environment: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting environment: %s", err)
 	}
 	if err := d.Set("ephemeral_storage", flattenEphemeralStorage(function.EphemeralStorage)); err != nil {
-		return fmt.Errorf("setting ephemeral_storage: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting ephemeral_storage: %s", err)
 	}
 	if err := d.Set("file_system_config", flattenFileSystemConfigs(function.FileSystemConfigs)); err != nil {
-		return fmt.Errorf("setting file_system_config: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting file_system_config: %s", err)
 	}
 	d.Set("handler", function.Handler)
 	if err := d.Set("image_config", FlattenImageConfig(function.ImageConfigResponse)); err != nil {
-		return fmt.Errorf("setting image_config: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting image_config: %s", err)
 	}
 	if output.Code != nil {
 		d.Set("image_uri", output.Code.ImageUri)
@@ -594,7 +610,7 @@ func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("kms_key_arn", function.KMSKeyArn)
 	d.Set("last_modified", function.LastModified)
 	if err := d.Set("layers", flattenLayers(function.Layers)); err != nil {
-		return fmt.Errorf("setting layers: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting layers: %s", err)
 	}
 	d.Set("memory_size", function.MemorySize)
 	d.Set("package_type", function.PackageType)
@@ -608,7 +624,7 @@ func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("signing_job_arn", function.SigningJobArn)
 	d.Set("signing_profile_version_arn", function.SigningProfileVersionArn)
 	if err := d.Set("snap_start", flattenSnapStart(function.SnapStart)); err != nil {
-		return fmt.Errorf("setting snap_start: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting snap_start: %s", err)
 	}
 	d.Set("source_code_hash", function.CodeSha256)
 	d.Set("source_code_size", function.CodeSize)
@@ -622,10 +638,10 @@ func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 			"mode": tracingConfigMode,
 		},
 	}); err != nil {
-		return fmt.Errorf("setting tracing_config: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting tracing_config: %s", err)
 	}
 	if err := d.Set("vpc_config", flattenVPCConfigResponse(function.VpcConfig)); err != nil {
-		return fmt.Errorf("setting vpc_config: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting vpc_config: %s", err)
 	}
 
 	if hasQualifier {
@@ -633,10 +649,10 @@ func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("qualified_invoke_arn", functionInvokeARN(functionARN, meta))
 		d.Set("version", function.Version)
 	} else {
-		latest, err := findLatestFunctionVersionByName(conn, d.Id())
+		latest, err := findLatestFunctionVersionByName(ctx, conn, d.Id())
 
 		if err != nil {
-			return fmt.Errorf("reading Lambda Function (%s) latest version: %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "reading Lambda Function (%s) latest version: %s", d.Id(), err)
 		}
 
 		qualifiedARN := aws.StringValue(latest.FunctionArn)
@@ -650,11 +666,11 @@ func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 
 		//lintignore:AWSR002
 		if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-			return fmt.Errorf("setting tags: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 		}
 
 		if err := d.Set("tags_all", tags.Map()); err != nil {
-			return fmt.Errorf("setting tags_all: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 		}
 	}
 
@@ -668,12 +684,12 @@ func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 
 		// Code Signing is only supported on zip packaged lambda functions.
 		if aws.StringValue(function.PackageType) == lambda.PackageTypeZip {
-			output, err := conn.GetFunctionCodeSigningConfig(&lambda.GetFunctionCodeSigningConfigInput{
+			output, err := conn.GetFunctionCodeSigningConfigWithContext(ctx, &lambda.GetFunctionCodeSigningConfigInput{
 				FunctionName: aws.String(d.Id()),
 			})
 
 			if err != nil {
-				return fmt.Errorf("reading Lambda Function (%s) code signing config: %w", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "reading Lambda Function (%s) code signing config: %s", d.Id(), err)
 			}
 
 			if output != nil {
@@ -684,29 +700,30 @@ func resourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("code_signing_config_arn", codeSigningConfigArn)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaConn()
 
 	if d.HasChange("code_signing_config_arn") {
 		if v, ok := d.GetOk("code_signing_config_arn"); ok {
-			_, err := conn.PutFunctionCodeSigningConfig(&lambda.PutFunctionCodeSigningConfigInput{
+			_, err := conn.PutFunctionCodeSigningConfigWithContext(ctx, &lambda.PutFunctionCodeSigningConfigInput{
 				CodeSigningConfigArn: aws.String(v.(string)),
 				FunctionName:         aws.String(d.Id()),
 			})
 
 			if err != nil {
-				return fmt.Errorf("setting Lambda Function (%s) code signing config: %w", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "setting Lambda Function (%s) code signing config: %s", d.Id(), err)
 			}
 		} else {
-			_, err := conn.DeleteFunctionCodeSigningConfig(&lambda.DeleteFunctionCodeSigningConfigInput{
+			_, err := conn.DeleteFunctionCodeSigningConfigWithContext(ctx, &lambda.DeleteFunctionCodeSigningConfigInput{
 				FunctionName: aws.String(d.Id()),
 			})
 
 			if err != nil {
-				return fmt.Errorf("deleting Lambda Function (%s) code signing config: %w", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "deleting Lambda Function (%s) code signing config: %s", d.Id(), err)
 			}
 		}
 	}
@@ -715,8 +732,8 @@ func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 		arn := d.Get("arn").(string)
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, arn, o, n); err != nil {
-			return fmt.Errorf("updating Lambda Function (%s) tags: %w", arn, err)
+		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Lambda Function (%s) tags: %s", arn, err)
 		}
 	}
 
@@ -729,7 +746,7 @@ func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 		if d.HasChange("dead_letter_config") {
 			if v, ok := d.GetOk("dead_letter_config"); ok && len(v.([]interface{})) > 0 {
 				if v.([]interface{})[0] == nil {
-					return fmt.Errorf("nil dead_letter_config supplied for function: %s", d.Id())
+					return sdkdiag.AppendErrorf(diags, "nil dead_letter_config supplied for function: %s", d.Id())
 				}
 
 				input.DeadLetterConfig = &lambda.DeadLetterConfig{
@@ -839,16 +856,16 @@ func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 
-		_, err := retryFunctionOp(func() (interface{}, error) {
-			return conn.UpdateFunctionConfiguration(input)
+		_, err := retryFunctionOp(ctx, func() (interface{}, error) {
+			return conn.UpdateFunctionConfigurationWithContext(ctx, input)
 		})
 
 		if err != nil {
-			return fmt.Errorf("updating Lambda Function (%s) configuration: %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Lambda Function (%s) configuration: %s", d.Id(), err)
 		}
 
-		if _, err := waitFunctionUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return fmt.Errorf("waiting for Lambda Function (%s) configuration update: %w", d.Id(), err)
+		if _, err := waitFunctionUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for Lambda Function (%s) configuration update: %s", d.Id(), err)
 		}
 	}
 
@@ -877,7 +894,7 @@ func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 				old, _ := d.GetChange("filename")
 				d.Set("filename", old)
 
-				return fmt.Errorf("reading ZIP file (%s): %w", v, err)
+				return sdkdiag.AppendErrorf(diags, "reading ZIP file (%s): %s", v, err)
 			}
 
 			input.ZipFile = zipFile
@@ -891,7 +908,7 @@ func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 
-		_, err := conn.UpdateFunctionCode(input)
+		_, err := conn.UpdateFunctionCodeWithContext(ctx, input)
 
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "Error occurred while GetObject.") {
@@ -902,31 +919,31 @@ func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 				}
 			}
 
-			return fmt.Errorf("updating Lambda Function (%s) code: %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Lambda Function (%s) code: %s", d.Id(), err)
 		}
 
-		if _, err := waitFunctionUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return fmt.Errorf("waiting for Lambda Function (%s) code update: %w", d.Id(), err)
+		if _, err := waitFunctionUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Lambda Function (%s) code: waiting for completion: %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("reserved_concurrent_executions") {
 		if v, ok := d.Get("reserved_concurrent_executions").(int); ok && v >= 0 {
-			_, err := conn.PutFunctionConcurrency(&lambda.PutFunctionConcurrencyInput{
+			_, err := conn.PutFunctionConcurrencyWithContext(ctx, &lambda.PutFunctionConcurrencyInput{
 				FunctionName:                 aws.String(d.Id()),
 				ReservedConcurrentExecutions: aws.Int64(int64(v)),
 			})
 
 			if err != nil {
-				return fmt.Errorf("setting Lambda Function (%s) concurrency: %w", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "setting Lambda Function (%s) concurrency: %s", d.Id(), err)
 			}
 		} else {
-			_, err := conn.DeleteFunctionConcurrency(&lambda.DeleteFunctionConcurrencyInput{
+			_, err := conn.DeleteFunctionConcurrencyWithContext(ctx, &lambda.DeleteFunctionConcurrencyInput{
 				FunctionName: aws.String(d.Id()),
 			})
 
 			if err != nil {
-				return fmt.Errorf("deleting Lambda Function (%s) concurrency: %w", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "deleting Lambda Function (%s) concurrency: %s", d.Id(), err)
 			}
 		}
 	}
@@ -936,58 +953,65 @@ func resourceFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 			FunctionName: aws.String(d.Id()),
 		}
 
-		outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(propagationTimeout, func() (interface{}, error) {
-			return conn.PublishVersion(input)
+		outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+			return conn.PublishVersionWithContext(ctx, input)
 		}, lambda.ErrCodeResourceConflictException, "in progress")
 
 		if err != nil {
-			return fmt.Errorf("publishing Lambda Function (%s) version: %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "publishing Lambda Function (%s) version: %s", d.Id(), err)
 		}
 
 		output := outputRaw.(*lambda.FunctionConfiguration)
 
-		err = conn.WaitUntilFunctionUpdated(&lambda.GetFunctionConfigurationInput{
+		err = conn.WaitUntilFunctionUpdatedWithContext(ctx, &lambda.GetFunctionConfigurationInput{
 			FunctionName: output.FunctionArn,
 			Qualifier:    output.Version,
 		})
 
 		if err != nil {
-			return fmt.Errorf("waiting for Lambda Function (%s) version publish: %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "publishing Lambda Function (%s) version: waiting for completion: %s", d.Id(), err)
 		}
 	}
 
-	return resourceFunctionRead(d, meta)
+	return append(diags, resourceFunctionRead(ctx, d, meta)...)
 }
 
-func resourceFunctionDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceFunctionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaConn()
 
 	log.Printf("[INFO] Deleting Lambda Function: %s", d.Id())
-	_, err := conn.DeleteFunction(&lambda.DeleteFunctionInput{
+	_, err := conn.DeleteFunctionWithContext(ctx, &lambda.DeleteFunctionInput{
 		FunctionName: aws.String(d.Id()),
 	})
 
 	if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("deleting Lambda Function (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Lambda Function (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	if _, ok := d.GetOk("replace_security_groups_on_destroy"); ok {
+		if err := replaceSecurityGroups(ctx, d, meta); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+	}
+
+	return diags
 }
 
-func FindFunctionByName(conn *lambda.Lambda, name string) (*lambda.GetFunctionOutput, error) {
+func FindFunctionByName(ctx context.Context, conn *lambda.Lambda, name string) (*lambda.GetFunctionOutput, error) {
 	input := &lambda.GetFunctionInput{
 		FunctionName: aws.String(name),
 	}
 
-	return findFunction(conn, input)
+	return findFunction(ctx, conn, input)
 }
 
-func findFunction(conn *lambda.Lambda, input *lambda.GetFunctionInput) (*lambda.GetFunctionOutput, error) {
-	output, err := conn.GetFunction(input)
+func findFunction(ctx context.Context, conn *lambda.Lambda, input *lambda.GetFunctionInput) (*lambda.GetFunctionOutput, error) {
+	output, err := conn.GetFunctionWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceNotFoundException) {
 		return nil, &resource.NotFoundError{
@@ -1007,14 +1031,14 @@ func findFunction(conn *lambda.Lambda, input *lambda.GetFunctionInput) (*lambda.
 	return output, nil
 }
 
-func findLatestFunctionVersionByName(conn *lambda.Lambda, name string) (*lambda.FunctionConfiguration, error) {
+func findLatestFunctionVersionByName(ctx context.Context, conn *lambda.Lambda, name string) (*lambda.FunctionConfiguration, error) {
 	input := &lambda.ListVersionsByFunctionInput{
 		FunctionName: aws.String(name),
 		MaxItems:     aws.Int64(10000),
 	}
 	var output *lambda.FunctionConfiguration
 
-	err := conn.ListVersionsByFunctionPages(input, func(page *lambda.ListVersionsByFunctionOutput, lastPage bool) bool {
+	err := conn.ListVersionsByFunctionPagesWithContext(ctx, input, func(page *lambda.ListVersionsByFunctionOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -1038,9 +1062,59 @@ func findLatestFunctionVersionByName(conn *lambda.Lambda, name string) (*lambda.
 	return output, nil
 }
 
-func statusFunctionLastUpdateStatus(conn *lambda.Lambda, name string) resource.StateRefreshFunc {
+// replaceSecurityGroups will replace the security groups on orphaned lambda ENI's
+//
+// If the replacement_security_group_ids attribute is set, those values will be used as
+// replacements. Otherwise, the default security group is used.
+func replaceSecurityGroups(ctx context.Context, d *schema.ResourceData, meta interface{}) error {
+	ec2Conn := meta.(*conns.AWSClient).EC2Conn()
+
+	var sgIDs []string
+	var vpcID string
+	if v, ok := d.GetOk("vpc_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		tfMap := v.([]interface{})[0].(map[string]interface{})
+		sgIDs = flex.ExpandStringValueSet(tfMap["security_group_ids"].(*schema.Set))
+		vpcID = tfMap["vpc_id"].(string)
+	} else { // empty VPC config, nothing to do
+		return nil
+	}
+
+	if len(sgIDs) == 0 { // no security groups, nothing to do
+		return nil
+	}
+
+	var replacmentSGIDs []*string
+	if v, ok := d.GetOk("replacement_security_group_ids"); ok {
+		replacmentSGIDs = flex.ExpandStringSet(v.(*schema.Set))
+	} else {
+		defaultSG, err := tfec2.FindSecurityGroupByNameAndVPCID(ctx, ec2Conn, "default", vpcID)
+		if err != nil || defaultSG == nil {
+			return fmt.Errorf("finding VPC (%s) default security group: %s", vpcID, err)
+		}
+		replacmentSGIDs = []*string{defaultSG.GroupId}
+	}
+
+	networkInterfaces, err := tfec2.FindLambdaNetworkInterfacesBySecurityGroupIDsAndFunctionName(ctx, ec2Conn, sgIDs, d.Id())
+	if err != nil {
+		return fmt.Errorf("finding Lambda Function (%s) network interfaces: %s", d.Id(), err)
+	}
+
+	for _, ni := range networkInterfaces {
+		_, err := ec2Conn.ModifyNetworkInterfaceAttributeWithContext(ctx, &ec2.ModifyNetworkInterfaceAttributeInput{
+			NetworkInterfaceId: ni.NetworkInterfaceId,
+			Groups:             replacmentSGIDs,
+		})
+		if err != nil {
+			return fmt.Errorf("modifying Lambda Function (%s) network interfaces: %s", d.Id(), err)
+		}
+	}
+
+	return nil
+}
+
+func statusFunctionLastUpdateStatus(ctx context.Context, conn *lambda.Lambda, name string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindFunctionByName(conn, name)
+		output, err := FindFunctionByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -1054,9 +1128,9 @@ func statusFunctionLastUpdateStatus(conn *lambda.Lambda, name string) resource.S
 	}
 }
 
-func statusFunctionState(conn *lambda.Lambda, name string) resource.StateRefreshFunc {
+func statusFunctionState(ctx context.Context, conn *lambda.Lambda, name string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindFunctionByName(conn, name)
+		output, err := FindFunctionByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -1070,16 +1144,16 @@ func statusFunctionState(conn *lambda.Lambda, name string) resource.StateRefresh
 	}
 }
 
-func waitFunctionCreated(conn *lambda.Lambda, name string, timeout time.Duration) (*lambda.FunctionConfiguration, error) {
+func waitFunctionCreated(ctx context.Context, conn *lambda.Lambda, name string, timeout time.Duration) (*lambda.FunctionConfiguration, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{lambda.StatePending},
 		Target:  []string{lambda.StateActive},
-		Refresh: statusFunctionState(conn, name),
+		Refresh: statusFunctionState(ctx, conn, name),
 		Timeout: timeout,
 		Delay:   5 * time.Second,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*lambda.FunctionConfiguration); ok {
 		tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(output.StateReasonCode), aws.StringValue(output.StateReason)))
@@ -1090,16 +1164,16 @@ func waitFunctionCreated(conn *lambda.Lambda, name string, timeout time.Duration
 	return nil, err
 }
 
-func waitFunctionUpdated(conn *lambda.Lambda, functionName string, timeout time.Duration) (*lambda.FunctionConfiguration, error) { //nolint:unparam
+func waitFunctionUpdated(ctx context.Context, conn *lambda.Lambda, functionName string, timeout time.Duration) (*lambda.FunctionConfiguration, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{lambda.LastUpdateStatusInProgress},
 		Target:  []string{lambda.LastUpdateStatusSuccessful},
-		Refresh: statusFunctionLastUpdateStatus(conn, functionName),
+		Refresh: statusFunctionLastUpdateStatus(ctx, conn, functionName),
 		Timeout: timeout,
 		Delay:   5 * time.Second,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*lambda.FunctionConfiguration); ok {
 		tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(output.LastUpdateStatusReasonCode), aws.StringValue(output.LastUpdateStatusReason)))
@@ -1112,8 +1186,8 @@ func waitFunctionUpdated(conn *lambda.Lambda, functionName string, timeout time.
 
 // retryFunctionOp retries a Lambda Function Create or Update operation.
 // It handles IAM eventual consistency and EC2 throttling.
-func retryFunctionOp(f func() (interface{}, error)) (interface{}, error) { //nolint:unparam
-	output, err := tfresource.RetryWhen(propagationTimeout,
+func retryFunctionOp(ctx context.Context, f func() (interface{}, error)) (interface{}, error) { //nolint:unparam
+	output, err := tfresource.RetryWhen(ctx, propagationTimeout,
 		f,
 		func(err error) (bool, error) {
 			if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "The role defined for the function cannot be assumed by Lambda") {
@@ -1141,7 +1215,7 @@ func retryFunctionOp(f func() (interface{}, error)) (interface{}, error) { //nol
 
 	// Additional retries when throttled.
 	if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "throttled by EC2") {
-		output, err = tfresource.RetryWhen(functionExtraThrottlingTimeout,
+		output, err = tfresource.RetryWhen(ctx, functionExtraThrottlingTimeout,
 			f,
 			func(err error) (bool, error) {
 				if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "throttled by EC2") {

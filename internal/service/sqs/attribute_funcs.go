@@ -57,7 +57,7 @@ func (h *queueAttributeHandler) Upsert(ctx context.Context, d *schema.ResourceDa
 func (h *queueAttributeHandler) Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SQSConn()
 
-	outputRaw, err := tfresource.RetryWhenNotFoundContext(ctx, queueAttributeReadTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNotFound(ctx, queueAttributeReadTimeout, func() (interface{}, error) {
 		return FindQueueAttributeByURL(ctx, conn, d.Id(), h.AttributeName)
 	})
 
@@ -96,7 +96,7 @@ func (h *queueAttributeHandler) Delete(ctx context.Context, d *schema.ResourceDa
 	attributes := map[string]string{
 		h.AttributeName: "",
 	}
-	_, err := conn.SetQueueAttributes(&sqs.SetQueueAttributesInput{
+	_, err := conn.SetQueueAttributesWithContext(ctx, &sqs.SetQueueAttributesInput{
 		Attributes: aws.StringMap(attributes),
 		QueueUrl:   aws.String(d.Id()),
 	})

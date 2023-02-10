@@ -1488,7 +1488,7 @@ func resourceNetworkInsightsAnalysisUpdate(ctx context.Context, d *schema.Resour
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTagsWithContext(ctx, conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
 			return diag.Errorf("updating EC2 Network Insights Analysis (%s) tags: %s", d.Id(), err)
 		}
 	}
