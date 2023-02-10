@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
+	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -21,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -233,6 +235,16 @@ func ResourceFunction() *schema.Resource {
 			"qualified_invoke_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"replace_security_groups_on_destroy": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+			"replacement_security_group_ids": {
+				Type:         schema.TypeSet,
+				Optional:     true,
+				Elem:         &schema.Schema{Type: schema.TypeString},
+				RequiredWith: []string{"replace_security_groups_on_destroy"},
 			},
 			"reserved_concurrent_executions": {
 				Type:         schema.TypeInt,
@@ -981,6 +993,12 @@ func resourceFunctionDelete(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "deleting Lambda Function (%s): %s", d.Id(), err)
 	}
 
+	if _, ok := d.GetOk("replace_security_groups_on_destroy"); ok {
+		if err := replaceSecurityGroups(ctx, d, meta); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+	}
+
 	return diags
 }
 
@@ -1042,6 +1060,56 @@ func findLatestFunctionVersionByName(ctx context.Context, conn *lambda.Lambda, n
 	}
 
 	return output, nil
+}
+
+// replaceSecurityGroups will replace the security groups on orphaned lambda ENI's
+//
+// If the replacement_security_group_ids attribute is set, those values will be used as
+// replacements. Otherwise, the default security group is used.
+func replaceSecurityGroups(ctx context.Context, d *schema.ResourceData, meta interface{}) error {
+	ec2Conn := meta.(*conns.AWSClient).EC2Conn()
+
+	var sgIDs []string
+	var vpcID string
+	if v, ok := d.GetOk("vpc_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		tfMap := v.([]interface{})[0].(map[string]interface{})
+		sgIDs = flex.ExpandStringValueSet(tfMap["security_group_ids"].(*schema.Set))
+		vpcID = tfMap["vpc_id"].(string)
+	} else { // empty VPC config, nothing to do
+		return nil
+	}
+
+	if len(sgIDs) == 0 { // no security groups, nothing to do
+		return nil
+	}
+
+	var replacmentSGIDs []*string
+	if v, ok := d.GetOk("replacement_security_group_ids"); ok {
+		replacmentSGIDs = flex.ExpandStringSet(v.(*schema.Set))
+	} else {
+		defaultSG, err := tfec2.FindSecurityGroupByNameAndVPCID(ctx, ec2Conn, "default", vpcID)
+		if err != nil || defaultSG == nil {
+			return fmt.Errorf("finding VPC (%s) default security group: %s", vpcID, err)
+		}
+		replacmentSGIDs = []*string{defaultSG.GroupId}
+	}
+
+	networkInterfaces, err := tfec2.FindLambdaNetworkInterfacesBySecurityGroupIDsAndFunctionName(ctx, ec2Conn, sgIDs, d.Id())
+	if err != nil {
+		return fmt.Errorf("finding Lambda Function (%s) network interfaces: %s", d.Id(), err)
+	}
+
+	for _, ni := range networkInterfaces {
+		_, err := ec2Conn.ModifyNetworkInterfaceAttributeWithContext(ctx, &ec2.ModifyNetworkInterfaceAttributeInput{
+			NetworkInterfaceId: ni.NetworkInterfaceId,
+			Groups:             replacmentSGIDs,
+		})
+		if err != nil {
+			return fmt.Errorf("modifying Lambda Function (%s) network interfaces: %s", d.Id(), err)
+		}
+	}
+
+	return nil
 }
 
 func statusFunctionLastUpdateStatus(ctx context.Context, conn *lambda.Lambda, name string) resource.StateRefreshFunc {

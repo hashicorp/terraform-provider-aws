@@ -1572,6 +1572,24 @@ func FindNetworkInterfaceByID(ctx context.Context, conn *ec2.EC2, id string) (*e
 	return output, nil
 }
 
+func FindLambdaNetworkInterfacesBySecurityGroupIDsAndFunctionName(ctx context.Context, conn *ec2.EC2, securityGroupIDs []string, functionName string) ([]*ec2.NetworkInterface, error) {
+	// lambdaENIDescriptionPrefix is the common prefix used in the description for Lambda function
+	// elastic network interfaces (ENI). This can be used with a function name to filter to only
+	// ENIs associated with a single function.
+	lambdaENIDescriptionPrefix := "AWS Lambda VPC ENI-"
+	description := fmt.Sprintf("%s%s-*", lambdaENIDescriptionPrefix, functionName)
+
+	input := &ec2.DescribeNetworkInterfacesInput{
+		Filters: BuildAttributeFilterList(map[string]string{
+			"interface-type": ec2.NetworkInterfaceTypeLambda,
+			"description":    description,
+		}),
+	}
+	input.Filters = append(input.Filters, NewFilter("group-id", securityGroupIDs))
+
+	return FindNetworkInterfaces(ctx, conn, input)
+}
+
 func FindNetworkInterfacesByAttachmentInstanceOwnerIDAndDescription(ctx context.Context, conn *ec2.EC2, attachmentInstanceOwnerID, description string) ([]*ec2.NetworkInterface, error) {
 	input := &ec2.DescribeNetworkInterfacesInput{
 		Filters: BuildAttributeFilterList(map[string]string{

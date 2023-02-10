@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourcePolicy() *schema.Resource {
@@ -28,19 +29,6 @@ func ResourcePolicy() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-
-			"policy_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-
-			"policy_type_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-
 			"policy_attribute": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -54,7 +42,6 @@ func ResourcePolicy() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-
 						"value": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -66,6 +53,16 @@ func ResourcePolicy() *schema.Resource {
 				// differences caused by additional attributes returned by the API are suppressed.
 				DiffSuppressFunc: suppressPolicyAttributeDiffs,
 			},
+			"policy_name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"policy_type_name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
 		},
 	}
 }
@@ -74,23 +71,27 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBConn()
 
-	lbspOpts := &elb.CreateLoadBalancerPolicyInput{
-		LoadBalancerName: aws.String(d.Get("load_balancer_name").(string)),
-		PolicyName:       aws.String(d.Get("policy_name").(string)),
+	lbName := d.Get("load_balancer_name").(string)
+	policyName := d.Get("policy_name").(string)
+	id := PolicyCreateResourceID(lbName, policyName)
+	input := &elb.CreateLoadBalancerPolicyInput{
+		LoadBalancerName: aws.String(lbName),
+		PolicyName:       aws.String(policyName),
 		PolicyTypeName:   aws.String(d.Get("policy_type_name").(string)),
 	}
 
 	if v, ok := d.GetOk("policy_attribute"); ok && v.(*schema.Set).Len() > 0 {
-		lbspOpts.PolicyAttributes = ExpandPolicyAttributes(v.(*schema.Set).List())
+		input.PolicyAttributes = ExpandPolicyAttributes(v.(*schema.Set).List())
 	}
 
-	if _, err := conn.CreateLoadBalancerPolicyWithContext(ctx, lbspOpts); err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating LoadBalancerPolicy: %s", err)
+	_, err := conn.CreateLoadBalancerPolicyWithContext(ctx, input)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "creating ELB Classic Load Balancer Policy (%s): %s", id, err)
 	}
 
-	d.SetId(fmt.Sprintf("%s:%s",
-		*lbspOpts.LoadBalancerName,
-		*lbspOpts.PolicyName))
+	d.SetId(id)
+
 	return append(diags, resourcePolicyRead(ctx, d, meta)...)
 }
 
@@ -98,44 +99,30 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBConn()
 
-	loadBalancerName, policyName := PolicyParseID(d.Id())
+	lbName, policyName, err := PolicyParseResourceID(d.Id())
 
-	request := &elb.DescribeLoadBalancerPoliciesInput{
-		LoadBalancerName: aws.String(loadBalancerName),
-		PolicyNames:      []*string{aws.String(policyName)},
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "parsing resource ID: %s", err)
 	}
 
-	getResp, err := conn.DescribeLoadBalancerPoliciesWithContext(ctx, request)
+	policy, err := FindLoadBalancerPolicyByTwoPartKey(ctx, conn, lbName, policyName)
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, "LoadBalancerNotFound") {
-		log.Printf("[WARN] Load Balancer (%s) not found, removing from state", loadBalancerName)
-		d.SetId("")
-		return diags
-	}
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, elb.ErrCodePolicyNotFoundException) {
-		log.Printf("[WARN] Load Balancer Policy (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] ELB Classic Load Balancer Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "retrieving policy: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading ELB Classic Load Balancer Policy (%s): %s", d.Id(), err)
 	}
 
-	if len(getResp.PolicyDescriptions) != 1 {
-		return sdkdiag.AppendErrorf(diags, "Unable to find policy %#v", getResp.PolicyDescriptions)
-	}
-
-	policyDesc := getResp.PolicyDescriptions[0]
-	policyTypeName := policyDesc.PolicyTypeName
-	policyAttributes := policyDesc.PolicyAttributeDescriptions
-
-	d.Set("policy_name", policyName)
-	d.Set("policy_type_name", policyTypeName)
-	d.Set("load_balancer_name", loadBalancerName)
-	if err := d.Set("policy_attribute", FlattenPolicyAttributes(policyAttributes)); err != nil {
+	d.Set("load_balancer_name", lbName)
+	if err := d.Set("policy_attribute", FlattenPolicyAttributes(policy.PolicyAttributeDescriptions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting policy_attribute: %s", err)
 	}
+	d.Set("policy_name", policyName)
+	d.Set("policy_type_name", policy.PolicyTypeName)
 
 	return diags
 }
@@ -145,22 +132,26 @@ func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	conn := meta.(*conns.AWSClient).ELBConn()
 	reassignments := Reassignment{}
 
-	loadBalancerName, policyName := PolicyParseID(d.Id())
+	lbName, policyName, err := PolicyParseResourceID(d.Id())
 
-	assigned, err := resourcePolicyAssigned(ctx, policyName, loadBalancerName, conn)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "parsing resource ID: %s", err)
+	}
+
+	assigned, err := resourcePolicyAssigned(ctx, policyName, lbName, conn)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "determining assignment status of Load Balancer Policy %s: %s", policyName, err)
 	}
 
 	if assigned {
-		reassignments, err = resourcePolicyUnassign(ctx, policyName, loadBalancerName, conn)
+		reassignments, err = resourcePolicyUnassign(ctx, policyName, lbName, conn)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "unassigning Load Balancer Policy %s: %s", policyName, err)
 		}
 	}
 
 	request := &elb.DeleteLoadBalancerPolicyInput{
-		LoadBalancerName: aws.String(loadBalancerName),
+		LoadBalancerName: aws.String(lbName),
 		PolicyName:       aws.String(policyName),
 	}
 
@@ -192,35 +183,34 @@ func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBConn()
 
-	loadBalancerName, policyName := PolicyParseID(d.Id())
+	lbName, policyName, err := PolicyParseResourceID(d.Id())
 
-	assigned, err := resourcePolicyAssigned(ctx, policyName, loadBalancerName, conn)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "parsing resource ID: %s", err)
+	}
+
+	assigned, err := resourcePolicyAssigned(ctx, policyName, lbName, conn)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "determining assignment status of Load Balancer Policy %s: %s", policyName, err)
 	}
 
 	if assigned {
-		_, err := resourcePolicyUnassign(ctx, policyName, loadBalancerName, conn)
+		_, err := resourcePolicyUnassign(ctx, policyName, lbName, conn)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "unassigning Load Balancer Policy %s: %s", policyName, err)
 		}
 	}
 
 	request := &elb.DeleteLoadBalancerPolicyInput{
-		LoadBalancerName: aws.String(loadBalancerName),
+		LoadBalancerName: aws.String(lbName),
 		PolicyName:       aws.String(policyName),
 	}
 
 	if _, err := conn.DeleteLoadBalancerPolicyWithContext(ctx, request); err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Load Balancer Policy %s: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting ELB Classic Load Balancer Policy (%s): %s", d.Id(), err)
 	}
 
 	return diags
-}
-
-func PolicyParseID(id string) (string, string) {
-	parts := strings.SplitN(id, ":", 2)
-	return parts[0], parts[1]
 }
 
 func resourcePolicyAssigned(ctx context.Context, policyName, loadBalancerName string, conn *elb.ELB) (bool, error) {
@@ -375,4 +365,23 @@ func suppressPolicyAttributeDiffs(k, old, new string, d *schema.ResourceData) bo
 
 	// Suppress differences if the attributes returned from the API contain those configured
 	return oldAttributes.Intersection(newAttributes).Len() == newAttributes.Len()
+}
+
+const policyResourceIDSeparator = ":"
+
+func PolicyCreateResourceID(lbName, policyName string) string {
+	parts := []string{lbName, policyName}
+	id := strings.Join(parts, policyResourceIDSeparator)
+
+	return id
+}
+
+func PolicyParseResourceID(id string) (string, string, error) {
+	parts := strings.Split(id, backendServerPolicyResourceIDSeparator)
+
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		return parts[0], parts[1], nil
+	}
+
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected LBNAME%[2]sPOLICYNAME", id, policyResourceIDSeparator)
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/networkfirewall"
@@ -110,33 +111,24 @@ func resourceResourcePolicyRead(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceResourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	const (
+		timeout = 2 * time.Minute
+	)
 	conn := meta.(*conns.AWSClient).NetworkFirewallConn()
 
-	log.Printf("[DEBUG] Deleting NetworkFirewall Resource Policy for resource: %s", d.Id())
-
-	input := &networkfirewall.DeleteResourcePolicyInput{
-		ResourceArn: aws.String(d.Id()),
-	}
-
-	_, err := tfresource.RetryWhen(ctx, resourcePolicyDeleteTimeout,
-		func() (interface{}, error) {
-			return conn.DeleteResourcePolicyWithContext(ctx, input)
-		},
-		func(err error) (bool, error) {
-			// RAM managed permissions eventual consistency
-			if tfawserr.ErrMessageContains(err, networkfirewall.ErrCodeInvalidResourcePolicyException, "The supplied policy does not match RAM managed permissions") {
-				return true, err
-			}
-			return false, err
-		},
-	)
+	log.Printf("[DEBUG] Deleting NetworkFirewall Resource Policy: %s", d.Id())
+	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, timeout, func() (interface{}, error) {
+		return conn.DeleteResourcePolicyWithContext(ctx, &networkfirewall.DeleteResourcePolicyInput{
+			ResourceArn: aws.String(d.Id()),
+		})
+	}, networkfirewall.ErrCodeInvalidResourcePolicyException, "The supplied policy does not match RAM managed permissions")
 
 	if tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
 		return nil
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error deleting NetworkFirewall Resource Policy (for resource: %s): %w", d.Id(), err))
+		return diag.Errorf("deleting NetworkFirewall Resource Policy (%s): %s", d.Id(), err)
 	}
 
 	return nil
