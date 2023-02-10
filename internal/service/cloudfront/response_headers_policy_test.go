@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccCloudFrontResponseHeadersPolicy_CorsConfig(t *testing.T) {
+func TestAccCloudFrontResponseHeadersPolicy_cors(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -94,7 +94,7 @@ func TestAccCloudFrontResponseHeadersPolicy_CorsConfig(t *testing.T) {
 	})
 }
 
-func TestAccCloudFrontResponseHeadersPolicy_CustomHeadersConfig(t *testing.T) {
+func TestAccCloudFrontResponseHeadersPolicy_customHeaders(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudfront_response_headers_policy.test"
@@ -139,7 +139,7 @@ func TestAccCloudFrontResponseHeadersPolicy_CustomHeadersConfig(t *testing.T) {
 	})
 }
 
-func TestAccCloudFrontResponseHeadersPolicy_SecurityHeadersConfig(t *testing.T) {
+func TestAccCloudFrontResponseHeadersPolicy_securityHeaders(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudfront_response_headers_policy.test"
@@ -219,7 +219,7 @@ func TestAccCloudFrontResponseHeadersPolicy_SecurityHeadersConfig(t *testing.T) 
 	})
 }
 
-func TestAccCloudFrontResponseHeadersPolicy_ServerTimingHeadersConfig(t *testing.T) {
+func TestAccCloudFrontResponseHeadersPolicy_serverTimingHeaders(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudfront_response_headers_policy.test"
