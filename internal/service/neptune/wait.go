@@ -39,59 +39,6 @@ func WaitEventSubscriptionDeleted(ctx context.Context, conn *neptune.Neptune, su
 	return nil, err
 }
 
-// WaitDBClusterDeleted waits for a Cluster to return Deleted
-func WaitDBClusterDeleted(ctx context.Context, conn *neptune.Neptune, id string, timeout time.Duration) (*neptune.DBCluster, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{
-			"available",
-			"deleting",
-			"backing-up",
-			"modifying",
-		},
-		Target:     []string{ClusterStatusNotFound},
-		Refresh:    StatusCluster(ctx, conn, id),
-		Timeout:    timeout,
-		MinTimeout: 10 * time.Second,
-		Delay:      30 * time.Second,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if v, ok := outputRaw.(*neptune.DBCluster); ok {
-		return v, err
-	}
-
-	return nil, err
-}
-
-// WaitDBClusterAvailable waits for a Cluster to return Available
-func WaitDBClusterAvailable(ctx context.Context, conn *neptune.Neptune, id string, timeout time.Duration) (*neptune.DBCluster, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{
-			"creating",
-			"backing-up",
-			"modifying",
-			"preparing-data-migration",
-			"migrating",
-			"configuring-iam-database-auth",
-			"upgrading",
-		},
-		Target:     []string{"available"},
-		Refresh:    StatusCluster(ctx, conn, id),
-		Timeout:    timeout,
-		MinTimeout: 10 * time.Second,
-		Delay:      30 * time.Second,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if v, ok := outputRaw.(*neptune.DBCluster); ok {
-		return v, err
-	}
-
-	return nil, err
-}
-
 // WaitDBClusterEndpointAvailable waits for a DBClusterEndpoint to return Available
 func WaitDBClusterEndpointAvailable(ctx context.Context, conn *neptune.Neptune, id string) (*neptune.DBClusterEndpoint, error) {
 	stateConf := &resource.StateChangeConf{

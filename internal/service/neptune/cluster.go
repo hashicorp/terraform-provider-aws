@@ -74,10 +74,10 @@ func ResourceCluster() *schema.Resource {
 			"availability_zones": {
 				Type:     schema.TypeSet,
 				MaxItems: 3,
-				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
-				ForceNew: true,
 				Computed: true,
+				ForceNew: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"backup_retention_period": {
 				Type:         schema.TypeInt,
@@ -102,8 +102,8 @@ func ResourceCluster() *schema.Resource {
 			},
 			"cluster_members": {
 				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"cluster_resource_id": {
 				Type:     schema.TypeString,
@@ -134,8 +134,8 @@ func ResourceCluster() *schema.Resource {
 			"engine": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Default:      "neptune",
 				ForceNew:     true,
+				Default:      "neptune",
 				ValidateFunc: validEngine(),
 			},
 			"engine_version": {
@@ -194,17 +194,21 @@ func ResourceCluster() *schema.Resource {
 				Optional: true,
 				Default:  "default.neptune1",
 			},
+			"neptune_instance_parameter_group_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"neptune_subnet_group_name": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"port": {
 				Type:     schema.TypeInt,
 				Optional: true,
-				Default:  DefaultPort,
 				ForceNew: true,
+				Default:  DefaultPort,
 			},
 			"preferred_backup_window": {
 				Type:         schema.TypeString,
@@ -269,8 +273,8 @@ func ResourceCluster() *schema.Resource {
 			"storage_encrypted": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
 				ForceNew: true,
+				Default:  false,
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
@@ -299,20 +303,21 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		restoreDBClusterFromSnapshot = true
 	}
 
+	var clusterID string
 	if v, ok := d.GetOk("cluster_identifier"); ok {
-		d.Set("cluster_identifier", v.(string))
+		clusterID = v.(string)
 	} else {
 		if v, ok := d.GetOk("cluster_identifier_prefix"); ok {
-			d.Set("cluster_identifier", resource.PrefixedUniqueId(v.(string)))
+			clusterID = resource.PrefixedUniqueId(v.(string))
 		} else {
-			d.Set("cluster_identifier", resource.PrefixedUniqueId("tf-"))
+			clusterID = resource.PrefixedUniqueId("tf-")
 		}
 	}
 
 	serverlessConfiguration := expandServerlessConfiguration(d.Get("serverless_v2_scaling_configuration").([]interface{}))
 
 	createDbClusterInput := &neptune.CreateDBClusterInput{
-		DBClusterIdentifier:              aws.String(d.Get("cluster_identifier").(string)),
+		DBClusterIdentifier:              aws.String(clusterID),
 		CopyTagsToSnapshot:               aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
 		Engine:                           aws.String(d.Get("engine").(string)),
 		Port:                             aws.Int64(int64(d.Get("port").(int))),
@@ -322,7 +327,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		ServerlessV2ScalingConfiguration: serverlessConfiguration,
 	}
 	restoreDBClusterFromSnapshotInput := &neptune.RestoreDBClusterFromSnapshotInput{
-		DBClusterIdentifier:              aws.String(d.Get("cluster_identifier").(string)),
+		DBClusterIdentifier:              aws.String(clusterID),
 		CopyTagsToSnapshot:               aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
 		Engine:                           aws.String(d.Get("engine").(string)),
 		Port:                             aws.Int64(int64(d.Get("port").(int))),
@@ -399,53 +404,30 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		restoreDBClusterFromSnapshotInput.VpcSecurityGroupIds = flex.ExpandStringSet(attr)
 	}
 
-	if restoreDBClusterFromSnapshot {
-		log.Printf("[DEBUG] Neptune Cluster restore from snapshot configuration: %s", restoreDBClusterFromSnapshotInput)
-	} else {
-		log.Printf("[DEBUG] Neptune Cluster create options: %s", createDbClusterInput)
-	}
-
-	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
-		var err error
+	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
 		if restoreDBClusterFromSnapshot {
-			_, err = conn.RestoreDBClusterFromSnapshotWithContext(ctx, restoreDBClusterFromSnapshotInput)
-		} else {
-			_, err = conn.CreateDBClusterWithContext(ctx, createDbClusterInput)
+			return conn.RestoreDBClusterFromSnapshotWithContext(ctx, restoreDBClusterFromSnapshotInput)
 		}
-		if err != nil {
-			if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
-				return resource.RetryableError(err)
-			}
-			return resource.NonRetryableError(err)
-		}
-		return nil
-	})
-	if tfresource.TimedOut(err) {
-		if restoreDBClusterFromSnapshot {
-			_, err = conn.RestoreDBClusterFromSnapshotWithContext(ctx, restoreDBClusterFromSnapshotInput)
-		} else {
-			_, err = conn.CreateDBClusterWithContext(ctx, createDbClusterInput)
-		}
-	}
+
+		return conn.CreateDBClusterWithContext(ctx, createDbClusterInput)
+	}, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions")
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Neptune Cluster: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Neptune Cluster (%s): %s", clusterID, err)
 	}
 
-	d.SetId(d.Get("cluster_identifier").(string))
+	d.SetId(clusterID)
 
-	log.Printf("[INFO] Neptune Cluster ID: %s", d.Id())
-	log.Println("[INFO] Waiting for Neptune Cluster to be available")
-
-	_, err = WaitDBClusterAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate))
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Neptune Cluster (%s): waiting for completion: %s", d.Id(), err)
+	if _, err = waitClusterAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Neptune Cluster (%s) create: %s", d.Id(), err)
 	}
 
 	if v, ok := d.GetOk("iam_roles"); ok {
-		for _, role := range v.(*schema.Set).List() {
-			err := addIAMRoleToCluster(ctx, d.Id(), role.(string), conn)
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "creating Neptune Cluster (%s): adding IAM Role (%s): %s", d.Id(), role.(string), err)
+		for _, v := range v.(*schema.Set).List() {
+			v := v.(string)
+
+			if err := addIAMRoleToCluster(ctx, conn, d.Id(), v); err != nil {
+				return sdkdiag.AppendErrorf(diags, "adding IAM Role (%s) to Neptune Cluster (%s): %s", v, d.Id(), err)
 			}
 		}
 	}
@@ -460,40 +442,27 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NeptuneConn()
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	resp, err := conn.DescribeDBClustersWithContext(ctx, &neptune.DescribeDBClustersInput{
-		DBClusterIdentifier: aws.String(d.Id()),
-	})
+	dbc, err := FindClusterByID(ctx, conn, d.Id())
 
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBClusterNotFoundFault) {
-			d.SetId("")
-			log.Printf("[DEBUG] Neptune Cluster (%s) not found", d.Id())
-			return diags
-		}
-		log.Printf("[DEBUG] Error describing Neptune Cluster (%s) when waiting: %s", d.Id(), err)
-		return sdkdiag.AppendErrorf(diags, "reading Neptune Cluster (%s): %s", d.Id(), err)
-	}
-
-	var dbc *neptune.DBCluster
-	for _, v := range resp.DBClusters {
-		if aws.StringValue(v.DBClusterIdentifier) == d.Id() {
-			dbc = v
-		}
-	}
-
-	if dbc == nil {
-		log.Printf("[WARN] Neptune Cluster (%s) not found", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Neptune Cluster (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
-	globalCluster, err := findGlobalClusterByARN(ctx, conn, aws.StringValue(dbc.DBClusterArn))
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Neptune Cluster (%s): %s", d.Id(), err)
+	}
+
+	globalCluster, err := findGlobalClusterByClusterARN(ctx, conn, aws.StringValue(dbc.DBClusterArn))
 
 	// Ignore the following API error for regions/partitions that do not support Neptune Global Clusters:
 	// InvalidParameterValue: Access Denied to API Version: APIGlobalDatabases
 	if err != nil && !tfawserr.ErrMessageContains(err, "InvalidParameterValue", "Access Denied to API Version: APIGlobalDatabases") {
-		return sdkdiag.AppendErrorf(diags, "reading Neptune Global Cluster information for DB Cluster (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Neptune Global Cluster information for Neptune Cluster (%s): %s", d.Id(), err)
 	}
 
 	if globalCluster != nil {
@@ -502,48 +471,30 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 		d.Set("global_cluster_identifier", "")
 	}
 
-	if err := flattenClusterResource(ctx, d, dbc, meta); err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Neptune Cluster (%s): %s", d.Id(), err)
-	}
-	return diags
-}
-
-func flattenServerlessV2ScalingConfigurationInfo(serverlessConfig *neptune.ServerlessV2ScalingConfigurationInfo) []map[string]interface{} {
-	if serverlessConfig == nil {
-		return []map[string]interface{}{}
-	}
-
-	m := map[string]interface{}{
-		"min_capacity": aws.Float64Value(serverlessConfig.MinCapacity),
-		"max_capacity": aws.Float64Value(serverlessConfig.MaxCapacity),
-	}
-
-	return []map[string]interface{}{m}
-}
-
-func flattenClusterResource(ctx context.Context, d *schema.ResourceData, dbc *neptune.DBCluster, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).NeptuneConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-
-	if err := d.Set("availability_zones", aws.StringValueSlice(dbc.AvailabilityZones)); err != nil {
-		return fmt.Errorf("saving AvailabilityZones to state for Neptune Cluster (%s): %w", d.Id(), err)
-	}
-
+	arn := aws.StringValue(dbc.DBClusterArn)
+	d.Set("arn", arn)
+	d.Set("availability_zones", aws.StringValueSlice(dbc.AvailabilityZones))
 	d.Set("backup_retention_period", dbc.BackupRetentionPeriod)
 	d.Set("cluster_identifier", dbc.DBClusterIdentifier)
+	var clusterMembers []string
+	for _, v := range dbc.DBClusterMembers {
+		clusterMembers = append(clusterMembers, aws.StringValue(v.DBInstanceIdentifier))
+	}
+	d.Set("cluster_members", clusterMembers)
 	d.Set("cluster_resource_id", dbc.DbClusterResourceId)
 	d.Set("copy_tags_to_snapshot", dbc.CopyTagsToSnapshot)
-
-	if err := d.Set("enable_cloudwatch_logs_exports", aws.StringValueSlice(dbc.EnabledCloudwatchLogsExports)); err != nil {
-		return fmt.Errorf("saving EnableCloudwatchLogsExports to state for Neptune Cluster (%s): %w", d.Id(), err)
-	}
-
+	d.Set("deletion_protection", dbc.DeletionProtection)
+	d.Set("enable_cloudwatch_logs_exports", aws.StringValueSlice(dbc.EnabledCloudwatchLogsExports))
 	d.Set("endpoint", dbc.Endpoint)
 	d.Set("engine_version", dbc.EngineVersion)
 	d.Set("engine", dbc.Engine)
 	d.Set("hosted_zone_id", dbc.HostedZoneId)
 	d.Set("iam_database_authentication_enabled", dbc.IAMDatabaseAuthenticationEnabled)
+	var iamRoles []string
+	for _, v := range dbc.AssociatedRoles {
+		iamRoles = append(iamRoles, aws.StringValue(v.RoleArn))
+	}
+	d.Set("iam_roles", iamRoles)
 	d.Set("kms_key_arn", dbc.KmsKeyId)
 	d.Set("neptune_cluster_parameter_group_name", dbc.DBClusterParameterGroup)
 	d.Set("neptune_subnet_group_name", dbc.DBSubnetGroup)
@@ -552,59 +503,34 @@ func flattenClusterResource(ctx context.Context, d *schema.ResourceData, dbc *ne
 	d.Set("preferred_maintenance_window", dbc.PreferredMaintenanceWindow)
 	d.Set("reader_endpoint", dbc.ReaderEndpoint)
 	d.Set("replication_source_identifier", dbc.ReplicationSourceIdentifier)
-	d.Set("storage_encrypted", dbc.StorageEncrypted)
-	d.Set("deletion_protection", dbc.DeletionProtection)
-
 	if err := d.Set("serverless_v2_scaling_configuration", flattenServerlessV2ScalingConfigurationInfo(dbc.ServerlessV2ScalingConfiguration)); err != nil {
-		return fmt.Errorf("setting serverless_v2_scaling_configuration: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting serverless_v2_scaling_configuration: %s", err)
 	}
+	d.Set("storage_encrypted", dbc.StorageEncrypted)
+	var securityGroupIDs []string
+	for _, v := range dbc.VpcSecurityGroups {
+		securityGroupIDs = append(securityGroupIDs, aws.StringValue(v.VpcSecurityGroupId))
+	}
+	d.Set("vpc_security_group_ids", securityGroupIDs)
 
-	var sg []string
-	for _, g := range dbc.VpcSecurityGroups {
-		sg = append(sg, aws.StringValue(g.VpcSecurityGroupId))
-	}
-	if err := d.Set("vpc_security_group_ids", sg); err != nil {
-		return fmt.Errorf("saving VPC Security Group IDs to state for Neptune Cluster (%s): %w", d.Id(), err)
-	}
-
-	var cm []string
-	for _, m := range dbc.DBClusterMembers {
-		cm = append(cm, aws.StringValue(m.DBInstanceIdentifier))
-	}
-	if err := d.Set("cluster_members", cm); err != nil {
-		return fmt.Errorf("saving Neptune Cluster Members to state for Neptune Cluster (%s): %w", d.Id(), err)
-	}
-
-	var roles []string
-	for _, r := range dbc.AssociatedRoles {
-		roles = append(roles, aws.StringValue(r.RoleArn))
-	}
-
-	if err := d.Set("iam_roles", roles); err != nil {
-		return fmt.Errorf("saving IAM Roles to state for Neptune Cluster (%s): %w", d.Id(), err)
-	}
-
-	arn := aws.StringValue(dbc.DBClusterArn)
-	d.Set("arn", arn)
-
-	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
+	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("listing tags for Neptune Cluster (%s): %w", d.Get("arn").(string), err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for Neptune Cluster (%s): %s", arn, err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -612,21 +538,29 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).NeptuneConn()
 
 	if d.HasChangesExcept("tags", "tags_all", "iam_roles", "global_cluster_identifier") {
-		req := &neptune.ModifyDBClusterInput{
-			AllowMajorVersionUpgrade: aws.Bool(d.Get("allow_major_version_upgrade").(bool)),
+		allowMajorVersionUpgrade := d.Get("allow_major_version_upgrade").(bool)
+		input := &neptune.ModifyDBClusterInput{
+			AllowMajorVersionUpgrade: aws.Bool(allowMajorVersionUpgrade),
 			ApplyImmediately:         aws.Bool(d.Get("apply_immediately").(bool)),
 			DBClusterIdentifier:      aws.String(d.Id()),
 		}
 
 		if d.HasChange("copy_tags_to_snapshot") {
-			req.CopyTagsToSnapshot = aws.Bool(d.Get("copy_tags_to_snapshot").(bool))
+			input.CopyTagsToSnapshot = aws.Bool(d.Get("copy_tags_to_snapshot").(bool))
+		}
+
+		// The DBInstanceParameterGroupName parameter is only valid in combination with the AllowMajorVersionUpgrade parameter.
+		if allowMajorVersionUpgrade {
+			if v, ok := d.GetOk("neptune_instance_parameter_group_name"); ok {
+				input.DBInstanceParameterGroupName = aws.String(v.(string))
+			}
 		}
 
 		if d.HasChange("vpc_security_group_ids") {
-			if attr := d.Get("vpc_security_group_ids").(*schema.Set); attr.Len() > 0 {
-				req.VpcSecurityGroupIds = flex.ExpandStringSet(attr)
+			if v := d.Get("vpc_security_group_ids").(*schema.Set); v.Len() > 0 {
+				input.VpcSecurityGroupIds = flex.ExpandStringSet(v)
 			} else {
-				req.VpcSecurityGroupIds = []*string{}
+				input.VpcSecurityGroupIds = aws.StringSlice([]string{})
 			}
 		}
 
@@ -647,65 +581,64 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 				logs.SetEnableLogTypes(flex.ExpandStringSet(enableLogTypes))
 			}
 
-			req.CloudwatchLogsExportConfiguration = logs
+			input.CloudwatchLogsExportConfiguration = logs
 		}
 
 		if d.HasChange("preferred_backup_window") {
-			req.PreferredBackupWindow = aws.String(d.Get("preferred_backup_window").(string))
+			input.PreferredBackupWindow = aws.String(d.Get("preferred_backup_window").(string))
 		}
 
 		if d.HasChange("preferred_maintenance_window") {
-			req.PreferredMaintenanceWindow = aws.String(d.Get("preferred_maintenance_window").(string))
+			input.PreferredMaintenanceWindow = aws.String(d.Get("preferred_maintenance_window").(string))
 		}
 
 		if d.HasChange("backup_retention_period") {
-			req.BackupRetentionPeriod = aws.Int64(int64(d.Get("backup_retention_period").(int)))
+			input.BackupRetentionPeriod = aws.Int64(int64(d.Get("backup_retention_period").(int)))
 		}
 
 		if d.HasChange("neptune_cluster_parameter_group_name") {
-			req.DBClusterParameterGroupName = aws.String(d.Get("neptune_cluster_parameter_group_name").(string))
+			input.DBClusterParameterGroupName = aws.String(d.Get("neptune_cluster_parameter_group_name").(string))
 		}
 
 		if d.HasChange("iam_database_authentication_enabled") {
-			req.EnableIAMDatabaseAuthentication = aws.Bool(d.Get("iam_database_authentication_enabled").(bool))
+			input.EnableIAMDatabaseAuthentication = aws.Bool(d.Get("iam_database_authentication_enabled").(bool))
 		}
 
 		if d.HasChange("deletion_protection") {
-			req.DeletionProtection = aws.Bool(d.Get("deletion_protection").(bool))
+			input.DeletionProtection = aws.Bool(d.Get("deletion_protection").(bool))
 		}
 
 		if d.HasChange("engine_version") {
-			req.EngineVersion = aws.String(d.Get("engine_version").(string))
-			req.DBClusterParameterGroupName = aws.String(d.Get("neptune_cluster_parameter_group_name").(string))
+			input.EngineVersion = aws.String(d.Get("engine_version").(string))
+			input.DBClusterParameterGroupName = aws.String(d.Get("neptune_cluster_parameter_group_name").(string))
 		}
 
 		if d.HasChange("serverless_v2_scaling_configuration") {
-			req.ServerlessV2ScalingConfiguration = expandServerlessConfiguration(d.Get("serverless_v2_scaling_configuration").([]interface{}))
+			input.ServerlessV2ScalingConfiguration = expandServerlessConfiguration(d.Get("serverless_v2_scaling_configuration").([]interface{}))
 		}
 
-		err := resource.RetryContext(ctx, 5*time.Minute, func() *resource.RetryError {
-			_, err := conn.ModifyDBClusterWithContext(ctx, req)
-			if err != nil {
+		_, err := tfresource.RetryWhen(ctx, 5*time.Minute,
+			func() (interface{}, error) {
+				return conn.ModifyDBClusterWithContext(ctx, input)
+			},
+			func(err error) (bool, error) {
 				if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
-					return resource.RetryableError(err)
+					return true, err
 				}
+
 				if tfawserr.ErrCodeEquals(err, neptune.ErrCodeInvalidDBClusterStateFault) {
-					return resource.RetryableError(err)
+					return true, err
 				}
-				return resource.NonRetryableError(err)
-			}
-			return nil
-		})
-		if tfresource.TimedOut(err) {
-			_, err = conn.ModifyDBClusterWithContext(ctx, req)
-		}
+
+				return false, err
+			},
+		)
+
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "modifying Neptune Cluster (%s): %s", d.Id(), err)
 		}
 
-		_, err = WaitDBClusterAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
-
-		if err != nil {
+		if _, err = waitClusterAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for Neptune Cluster (%s) update: %s", d.Id(), err)
 		}
 	}
@@ -723,16 +656,8 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			return sdkdiag.AppendErrorf(diags, "existing Neptune Clusters cannot be migrated between existing Neptune Global Clusters")
 		}
 
-		input := &neptune.RemoveFromGlobalClusterInput{
-			DbClusterIdentifier:     aws.String(d.Get("arn").(string)),
-			GlobalClusterIdentifier: aws.String(o),
-		}
-
-		log.Printf("[DEBUG] Removing Neptune Cluster from Neptune Global Cluster: %s", input)
-		_, err := conn.RemoveFromGlobalClusterWithContext(ctx, input)
-
-		if err != nil && !tfawserr.ErrCodeEquals(err, neptune.ErrCodeGlobalClusterNotFoundFault) && !tfawserr.ErrMessageContains(err, "InvalidParameterValue", "is not found in global cluster") {
-			return sdkdiag.AppendErrorf(diags, "removing Neptune Cluster (%s) from Neptune Global Cluster (%s): %s", d.Id(), o, err)
+		if err := removeClusterFromGlobalCluster(ctx, conn, d.Get("arn").(string), o, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return append(diags, diag.FromErr(err)...)
 		}
 	}
 
@@ -747,20 +672,22 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		os := oraw.(*schema.Set)
 		ns := nraw.(*schema.Set)
-		removeRoles := os.Difference(ns)
-		enableRoles := ns.Difference(os)
+		delRoles := os.Difference(ns)
+		addRoles := ns.Difference(os)
 
-		for _, role := range enableRoles.List() {
-			err := addIAMRoleToCluster(ctx, d.Id(), role.(string), conn)
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "updating Neptune Cluster (%s): adding IAM Role (%s): %s", d.Id(), role.(string), err)
+		for _, v := range addRoles.List() {
+			v := v.(string)
+
+			if err := addIAMRoleToCluster(ctx, conn, d.Id(), v); err != nil {
+				return sdkdiag.AppendErrorf(diags, "adding IAM Role (%s) to Neptune Cluster (%s): %s", v, d.Id(), err)
 			}
 		}
 
-		for _, role := range removeRoles.List() {
-			err := removeIAMRoleFromCluster(ctx, d.Id(), role.(string), conn)
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "updating Neptune Cluster (%s): removing IAM Role (%s): %s", d.Id(), role.(string), err)
+		for _, v := range delRoles.List() {
+			v := v.(string)
+
+			if err := removeIAMRoleFromCluster(ctx, conn, d.Id(), v); err != nil {
+				return sdkdiag.AppendErrorf(diags, "removing IAM Role (%s) from Neptune Cluster (%s): %s", v, d.Id(), err)
 			}
 		}
 	}
@@ -779,91 +706,226 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NeptuneConn()
-	log.Printf("[DEBUG] Destroying Neptune Cluster (%s)", d.Id())
-
-	deleteOpts := neptune.DeleteDBClusterInput{
-		DBClusterIdentifier: aws.String(d.Id()),
-	}
 
 	skipFinalSnapshot := d.Get("skip_final_snapshot").(bool)
-	deleteOpts.SkipFinalSnapshot = aws.Bool(skipFinalSnapshot)
+	input := neptune.DeleteDBClusterInput{
+		DBClusterIdentifier: aws.String(d.Id()),
+		SkipFinalSnapshot:   aws.Bool(skipFinalSnapshot),
+	}
 
 	if !skipFinalSnapshot {
-		if name, present := d.GetOk("final_snapshot_identifier"); present {
-			deleteOpts.FinalDBSnapshotIdentifier = aws.String(name.(string))
+		if v, ok := d.GetOk("final_snapshot_identifier"); ok {
+			input.FinalDBSnapshotIdentifier = aws.String(v.(string))
 		} else {
-			return sdkdiag.AppendErrorf(diags, "Neptune Cluster FinalSnapshotIdentifier is required when a final snapshot is required")
+			return sdkdiag.AppendErrorf(diags, "final_snapshot_identifier is required when skip_final_snapshot is false")
 		}
 	}
 
-	log.Printf("[DEBUG] Neptune Cluster delete options: %s", deleteOpts)
-
-	// Automatically remove from global cluster to bypass this error on deletion:
-	// InvalidDBClusterStateFault: This cluster is a part of a global cluster, please remove it from globalcluster first
-	if d.Get("global_cluster_identifier").(string) != "" {
-		input := &neptune.RemoveFromGlobalClusterInput{
-			DbClusterIdentifier:     aws.String(d.Get("arn").(string)),
-			GlobalClusterIdentifier: aws.String(d.Get("global_cluster_identifier").(string)),
-		}
-
-		log.Printf("[DEBUG] Removing Neptune Cluster from Neptune Global Cluster: %s", input)
-		_, err := conn.RemoveFromGlobalClusterWithContext(ctx, input)
-
-		if err != nil && !tfawserr.ErrCodeEquals(err, neptune.ErrCodeGlobalClusterNotFoundFault) && !tfawserr.ErrMessageContains(err, "InvalidParameterValue", "is not found in global cluster") {
-			return sdkdiag.AppendErrorf(diags, "removing Neptune Cluster (%s) from Neptune Global Cluster: %s", d.Id(), err)
+	if v, ok := d.GetOk("global_cluster_identifier"); ok {
+		if err := removeClusterFromGlobalCluster(ctx, conn, d.Get("arn").(string), v.(string), d.Timeout(schema.TimeoutDelete)); err != nil {
+			return append(diags, diag.FromErr(err)...)
 		}
 	}
 
-	err := resource.RetryContext(ctx, 5*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteDBClusterWithContext(ctx, &deleteOpts)
-		if err != nil {
-			if tfawserr.ErrMessageContains(err, neptune.ErrCodeInvalidDBClusterStateFault, "is not currently in the available state") {
-				return resource.RetryableError(err)
-			}
-			if tfawserr.ErrMessageContains(err, neptune.ErrCodeInvalidDBClusterStateFault, "cluster is a part of a global cluster") {
-				return resource.RetryableError(err)
-			}
-			if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBClusterNotFoundFault) {
-				return nil
-			}
-			return resource.NonRetryableError(err)
-		}
+	log.Printf("[DEBUG] Deleting Neptune Cluster: %s", d.Id())
+	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
+		return conn.DeleteDBClusterWithContext(ctx, &input)
+	}, neptune.ErrCodeInvalidDBClusterStateFault, "is not currently in the available state")
+
+	if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBClusterNotFoundFault) {
 		return nil
-	})
-	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteDBClusterWithContext(ctx, &deleteOpts)
-	}
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Neptune Cluster cannot be deleted: %s", err)
 	}
 
-	_, err = WaitDBClusterDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete))
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBClusterNotFoundFault) {
-			return diags
-		}
-		return sdkdiag.AppendErrorf(diags, "waiting for Neptune Cluster (%q) to be Deleted: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Neptune Cluster (%s): %s", d.Id(), err)
+	}
+
+	if _, err := waitClusterDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Neptune Cluster (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func addIAMRoleToCluster(ctx context.Context, clusterIdentifier string, roleArn string, conn *neptune.Neptune) error {
-	params := &neptune.AddRoleToDBClusterInput{
-		DBClusterIdentifier: aws.String(clusterIdentifier),
-		RoleArn:             aws.String(roleArn),
-	}
-	_, err := conn.AddRoleToDBClusterWithContext(ctx, params)
+func addIAMRoleToCluster(ctx context.Context, conn *neptune.Neptune, clusterID, roleARN string) error {
+	_, err := conn.AddRoleToDBClusterWithContext(ctx, &neptune.AddRoleToDBClusterInput{
+		DBClusterIdentifier: aws.String(clusterID),
+		RoleArn:             aws.String(roleARN),
+	})
+
 	return err
 }
 
-func removeIAMRoleFromCluster(ctx context.Context, clusterIdentifier string, roleArn string, conn *neptune.Neptune) error {
-	params := &neptune.RemoveRoleFromDBClusterInput{
-		DBClusterIdentifier: aws.String(clusterIdentifier),
-		RoleArn:             aws.String(roleArn),
-	}
-	_, err := conn.RemoveRoleFromDBClusterWithContext(ctx, params)
+func removeIAMRoleFromCluster(ctx context.Context, conn *neptune.Neptune, clusterID, roleARN string) error {
+	_, err := conn.RemoveRoleFromDBClusterWithContext(ctx, &neptune.RemoveRoleFromDBClusterInput{
+		DBClusterIdentifier: aws.String(clusterID),
+		RoleArn:             aws.String(roleARN),
+	})
+
 	return err
+}
+
+func removeClusterFromGlobalCluster(ctx context.Context, conn *neptune.Neptune, clusterARN, globalClusterID string, timeout time.Duration) error {
+	input := &neptune.RemoveFromGlobalClusterInput{
+		DbClusterIdentifier:     aws.String(clusterARN),
+		GlobalClusterIdentifier: aws.String(globalClusterID),
+	}
+
+	_, err := conn.RemoveFromGlobalClusterWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBClusterNotFoundFault, neptune.ErrCodeGlobalClusterNotFoundFault) || tfawserr.ErrMessageContains(err, "InvalidParameterValue", "is not found in global cluster") {
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("removing Neptune Cluster (%s) from Neptune Global Cluster (%s): %w", clusterARN, globalClusterID, err)
+	}
+
+	_, err = tfresource.RetryUntilNotFound(ctx, timeout, func() (interface{}, error) {
+		return findGlobalClusterByClusterARN(ctx, conn, clusterARN)
+	})
+
+	if err != nil {
+		return fmt.Errorf("waiting for Neptune Cluster (%s) removal from Neptune Global Cluster (%s): %w", clusterARN, globalClusterID, err)
+	}
+
+	return nil
+}
+
+func FindClusterByID(ctx context.Context, conn *neptune.Neptune, id string) (*neptune.DBCluster, error) {
+	input := &neptune.DescribeDBClustersInput{
+		DBClusterIdentifier: aws.String(id),
+	}
+
+	output, err := conn.DescribeDBClustersWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBClusterNotFoundFault) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.DBClusters) == 0 || output.DBClusters[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	dbCluster := output.DBClusters[0]
+
+	// Eventual consistency check.
+	if aws.StringValue(dbCluster.DBClusterIdentifier) != id {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return dbCluster, nil
+}
+
+func findClusterByARN(ctx context.Context, conn *neptune.Neptune, arn string) (*neptune.DBCluster, error) {
+	input := &neptune.DescribeDBClustersInput{}
+	var output *neptune.DBCluster
+
+	err := conn.DescribeDBClustersPagesWithContext(ctx, input, func(page *neptune.DescribeDBClustersOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.DBClusters {
+			if v == nil {
+				continue
+			}
+
+			if aws.StringValue(v.DBClusterArn) == arn {
+				output = v
+
+				return false
+			}
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, &resource.NotFoundError{}
+	}
+
+	return nil, nil
+}
+
+func statusCluster(ctx context.Context, conn *neptune.Neptune, id string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindClusterByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Status), nil
+	}
+}
+
+func waitClusterAvailable(ctx context.Context, conn *neptune.Neptune, id string, timeout time.Duration) (*neptune.DBCluster, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			"creating",
+			"backing-up",
+			"modifying",
+			"preparing-data-migration",
+			"migrating",
+			"configuring-iam-database-auth",
+			"upgrading",
+		},
+		Target:     []string{"available"},
+		Refresh:    statusCluster(ctx, conn, id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*neptune.DBCluster); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitClusterDeleted(ctx context.Context, conn *neptune.Neptune, id string, timeout time.Duration) (*neptune.DBCluster, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			"available",
+			"deleting",
+			"backing-up",
+			"modifying",
+		},
+		Target:     []string{},
+		Refresh:    statusCluster(ctx, conn, id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*neptune.DBCluster); ok {
+		return output, err
+	}
+
+	return nil, err
 }
 
 func expandServerlessConfiguration(l []interface{}) *neptune.ServerlessV2ScalingConfiguration {
@@ -876,4 +938,17 @@ func expandServerlessConfiguration(l []interface{}) *neptune.ServerlessV2Scaling
 		MinCapacity: aws.Float64(tfMap["min_capacity"].(float64)),
 		MaxCapacity: aws.Float64(tfMap["max_capacity"].(float64)),
 	}
+}
+
+func flattenServerlessV2ScalingConfigurationInfo(serverlessConfig *neptune.ServerlessV2ScalingConfigurationInfo) []map[string]interface{} {
+	if serverlessConfig == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"min_capacity": aws.Float64Value(serverlessConfig.MinCapacity),
+		"max_capacity": aws.Float64Value(serverlessConfig.MaxCapacity),
+	}
+
+	return []map[string]interface{}{m}
 }

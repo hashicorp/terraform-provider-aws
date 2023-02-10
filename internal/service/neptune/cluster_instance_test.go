@@ -271,7 +271,7 @@ func testAccCheckClusterAddress(v *neptune.DBInstance, resourceName string, port
 
 func testAccClusterInstanceConfig_basic(instanceName string, n int) string {
 	return acctest.ConfigCompose(
-		testAccClusterBaseConfig(),
+		testAccClusterConfig_base(),
 		fmt.Sprintf(`
 data "aws_neptune_orderable_db_instance" "test" {
   engine        = "neptune"
@@ -314,7 +314,7 @@ resource "aws_neptune_parameter_group" "test" {
 
 func testAccClusterInstanceConfig_modified(instanceName string, n int) string {
 	return acctest.ConfigCompose(
-		testAccClusterBaseConfig(),
+		testAccClusterConfig_base(),
 		fmt.Sprintf(`
 data "aws_neptune_orderable_db_instance" "test" {
   engine        = "neptune"
@@ -358,7 +358,7 @@ resource "aws_neptune_parameter_group" "test" {
 
 func testAccClusterInstanceConfig_az(n int) string {
 	return acctest.ConfigCompose(
-		testAccClusterBaseConfig(),
+		testAccClusterConfig_base(),
 		fmt.Sprintf(`
 data "aws_neptune_orderable_db_instance" "test" {
   engine        = "neptune"
@@ -402,7 +402,7 @@ resource "aws_neptune_parameter_group" "test" {
 
 func testAccClusterInstanceConfig_subnetGroup(n int) string {
 	return acctest.ConfigCompose(
-		testAccClusterBaseConfig(),
+		testAccClusterConfig_base(),
 		fmt.Sprintf(`
 data "aws_neptune_orderable_db_instance" "test" {
   engine        = "neptune"
@@ -462,7 +462,7 @@ resource "aws_neptune_subnet_group" "test" {
 
 func testAccClusterInstanceConfig_namePrefix(namePrefix string, n int) string {
 	return acctest.ConfigCompose(
-		testAccClusterBaseConfig(),
+		testAccClusterConfig_base(),
 		fmt.Sprintf(`
 data "aws_neptune_orderable_db_instance" "test" {
   engine        = "neptune"
@@ -522,7 +522,7 @@ resource "aws_neptune_subnet_group" "test" {
 
 func testAccClusterInstanceConfig_generatedName(n int) string {
 	return acctest.ConfigCompose(
-		testAccClusterBaseConfig(),
+		testAccClusterConfig_base(),
 		fmt.Sprintf(`
 data "aws_neptune_orderable_db_instance" "test" {
   engine        = "neptune"
@@ -581,7 +581,7 @@ resource "aws_neptune_subnet_group" "test" {
 
 func testAccClusterInstanceConfig_kmsKey(n int) string {
 	return acctest.ConfigCompose(
-		testAccClusterBaseConfig(),
+		testAccClusterConfig_base(),
 		fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description = "Terraform acc test %[1]d"
