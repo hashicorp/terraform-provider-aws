@@ -27,9 +27,9 @@ resource "aws_s3_bucket_accelerate_configuration" "example" {
 
 The following arguments are supported:
 
-* `bucket` - (Required, Forces new resource) The name of the bucket.
-* `expected_bucket_owner` - (Optional, Forces new resource) The account ID of the expected bucket owner.
-* `status` - (Required) The transfer acceleration state of the bucket. Valid values: `Enabled`, `Suspended`.
+* `bucket` - (Required, Forces new resource) Name of the bucket.
+* `expected_bucket_owner` - (Optional, Forces new resource) Account ID of the expected bucket owner.
+* `status` - (Required) Transfer acceleration state of the bucket. Valid values: `Enabled`, `Suspended`.
 
 ## Attributes Reference
 
