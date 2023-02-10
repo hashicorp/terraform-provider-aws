@@ -260,7 +260,7 @@ func dataSourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, met
 		var elbVpc string
 		if lb.VPCId != nil {
 			elbVpc = aws.StringValue(lb.VPCId)
-			sg, err := tfec2.FindSecurityGroupByNameAndVPCID(ctx, ec2conn, aws.StringValue(lb.SourceSecurityGroup.GroupName), elbVpc)
+			sg, err := tfec2.FindSecurityGroupByNameAndVPCIDAndOwnerID(ctx, ec2conn, aws.StringValue(lb.SourceSecurityGroup.GroupName), elbVpc, aws.StringValue(lb.SourceSecurityGroup.OwnerAlias))
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "looking up ELB Security Group ID: %s", err)
 			} else {
