@@ -18,7 +18,7 @@ resource "aws_s3_bucket" "hoge" {
 }
 
 resource "aws_s3_bucket_policy" "hoge" {
-  bucket = aws_s3_bucket.hoge.bucket
+  bucket = aws_s3_bucket.hoge.id
 
   policy = <<EOF
 {

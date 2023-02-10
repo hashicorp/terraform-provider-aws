@@ -16,7 +16,7 @@ Provides an [S3 Intelligent-Tiering](https://docs.aws.amazon.com/AmazonS3/latest
 
 ```terraform
 resource "aws_s3_bucket_intelligent_tiering_configuration" "example-entire-bucket" {
-  bucket = aws_s3_bucket.example.bucket
+  bucket = aws_s3_bucket.example.id
   name   = "EntireBucket"
 
   tiering {
@@ -38,7 +38,7 @@ resource "aws_s3_bucket" "example" {
 
 ```terraform
 resource "aws_s3_bucket_intelligent_tiering_configuration" "example-filtered" {
-  bucket = aws_s3_bucket.example.bucket
+  bucket = aws_s3_bucket.example.id
   name   = "ImportantBlueDocuments"
 
   status = "Disabled"

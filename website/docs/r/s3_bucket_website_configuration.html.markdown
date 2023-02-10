@@ -16,7 +16,7 @@ Provides an S3 bucket website configuration resource. For more information, see 
 
 ```terraform
 resource "aws_s3_bucket_website_configuration" "example" {
-  bucket = aws_s3_bucket.example.bucket
+  bucket = aws_s3_bucket.example.id
 
   index_document {
     suffix = "index.html"
@@ -41,7 +41,7 @@ resource "aws_s3_bucket_website_configuration" "example" {
 
 ```terraform
 resource "aws_s3_bucket_website_configuration" "example" {
-  bucket = aws_s3_bucket.example.bucket
+  bucket = aws_s3_bucket.example.id
 
   index_document {
     suffix = "index.html"
