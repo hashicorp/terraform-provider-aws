@@ -269,7 +269,7 @@ func TestAccCloudFrontResponseHeadersPolicy_ServerTimingHeadersConfig(t *testing
 			{
 				Config: testAccResponseHeadersPolicyConfig_serverTiming(rName, true, 0),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResponseHeadersPolicyExists(resourceName),
+					testAccCheckResponseHeadersPolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "comment", ""),
 					resource.TestCheckResourceAttr(resourceName, "cors_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "custom_headers_config.#", "0"),
