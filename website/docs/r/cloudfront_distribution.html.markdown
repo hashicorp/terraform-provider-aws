@@ -139,7 +139,7 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
 }
 ```
 
-The following example below creates a CloudFront distribution with an origin group for failover routing:
+The example below creates a CloudFront distribution with an origin group for failover routing:
 
 ```terraform
 resource "aws_cloudfront_distribution" "s3_distribution" {
