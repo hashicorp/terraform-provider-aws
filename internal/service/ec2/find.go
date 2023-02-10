@@ -1572,6 +1572,24 @@ func FindNetworkInterfaceByID(ctx context.Context, conn *ec2.EC2, id string) (*e
 	return output, nil
 }
 
+func FindLambdaNetworkInterfacesBySecurityGroupIDsAndFunctionName(ctx context.Context, conn *ec2.EC2, securityGroupIDs []string, functionName string) ([]*ec2.NetworkInterface, error) {
+	// lambdaENIDescriptionPrefix is the common prefix used in the description for Lambda function
+	// elastic network interfaces (ENI). This can be used with a function name to filter to only
+	// ENIs associated with a single function.
+	lambdaENIDescriptionPrefix := "AWS Lambda VPC ENI-"
+	description := fmt.Sprintf("%s%s-*", lambdaENIDescriptionPrefix, functionName)
+
+	input := &ec2.DescribeNetworkInterfacesInput{
+		Filters: BuildAttributeFilterList(map[string]string{
+			"interface-type": ec2.NetworkInterfaceTypeLambda,
+			"description":    description,
+		}),
+	}
+	input.Filters = append(input.Filters, NewFilter("group-id", securityGroupIDs))
+
+	return FindNetworkInterfaces(ctx, conn, input)
+}
+
 func FindNetworkInterfacesByAttachmentInstanceOwnerIDAndDescription(ctx context.Context, conn *ec2.EC2, attachmentInstanceOwnerID, description string) ([]*ec2.NetworkInterface, error) {
 	input := &ec2.DescribeNetworkInterfacesInput{
 		Filters: BuildAttributeFilterList(map[string]string{
@@ -5708,6 +5726,38 @@ func FindIPAMPoolCIDRByTwoPartKey(ctx context.Context, conn *ec2.EC2, cidrBlock,
 	// Eventual consistency check.
 	if aws.StringValue(output.Cidr) != cidrBlock {
 		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func FindIPAMPoolCIDRByPoolCIDRId(ctx context.Context, conn *ec2.EC2, poolCidrId, poolID string) (*ec2.IpamPoolCidr, error) {
+	input := &ec2.GetIpamPoolCidrsInput{
+		Filters: BuildAttributeFilterList(map[string]string{
+			"ipam-pool-cidr-id": poolCidrId,
+		}),
+		IpamPoolId: aws.String(poolID),
+	}
+
+	output, err := FindIPAMPoolCIDR(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check
+	cidrBlock := aws.StringValue(output.Cidr)
+	if cidrBlock == "" {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	if state := aws.StringValue(output.State); state == ec2.IpamPoolCidrStateDeprovisioned {
+		return nil, &resource.NotFoundError{
+			Message:     state,
 			LastRequest: input,
 		}
 	}

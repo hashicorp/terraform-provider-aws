@@ -226,8 +226,6 @@ rules:
     paths:
       include:
         - internal/
-      exclude:
-        - internal/service/apigateway/integration.go
     patterns:
       - pattern-either:
           - pattern: |
@@ -833,21 +831,6 @@ rules:
       include:
         - internal/
     pattern: int(*$VALUE)
-    severity: WARNING
-
-  - id: aws-go-sdk-error-code-helper
-    languages: [go]
-    message: "Use `tfawserr` helpers for checking AWS Go SDK errors (e.g. `tfawserr.ErrMessageContains(err, CODE, MESSAGE)`)"
-    paths:
-      include:
-        - internal/
-    patterns:
-      - pattern-either:
-          - pattern: if $AWSERR, $OK := $ORIGINALERR.(awserr.Error); $OK && $AWSERR.Code() == $CODE { $BODY }
-          - pattern: |
-              if $AWSERR, $OK := $ORIGINALERR.(awserr.Error); $OK {
-                if $AWSERR.Code() == $CODE { $BODY }
-              }
     severity: WARNING
 
   - id: fmt-Errorf-awserr-Error-Code

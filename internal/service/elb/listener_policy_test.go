@@ -3,26 +3,23 @@ package elb_test
 import (
 	"context"
 	"fmt"
-	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elb"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfelb "github.com/hashicorp/terraform-provider-aws/internal/service/elb"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccELBListenerPolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rChar := sdkacctest.RandStringFromCharSet(6, sdkacctest.CharSetAlpha)
-	lbName := rChar
-	mcName := rChar
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_load_balancer_listener_policy.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elb.EndpointsID),
@@ -30,36 +27,39 @@ func TestAccELBListenerPolicy_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckListenerPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccListenerPolicyConfig_basic0(lbName, mcName),
+				Config: testAccListenerPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyState(ctx, "aws_elb.test-lb", "aws_load_balancer_policy.magic-cookie-sticky"),
-					testAccCheckListenerPolicyState(ctx, lbName, int64(80), mcName, true),
-				),
-			},
-			{
-				Config: testAccListenerPolicyConfig_basic1(lbName, mcName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyState(ctx, "aws_elb.test-lb", "aws_load_balancer_policy.magic-cookie-sticky"),
-					testAccCheckListenerPolicyState(ctx, lbName, int64(80), mcName, true),
-				),
-			},
-			{
-				Config: testAccListenerPolicyConfig_basic2(lbName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckListenerPolicyState(ctx, lbName, int64(80), mcName, false),
+					testAccCheckListenerPolicyExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_port", "80"),
+					resource.TestCheckResourceAttr(resourceName, "policy_names.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "policy_names.*", "aws_load_balancer_policy.test", "policy_name"),
 				),
 			},
 		},
 	})
 }
 
-func policyInListenerPolicies(str string, list []string) bool {
-	for _, v := range list {
-		if v == str {
-			return true
-		}
-	}
-	return false
+func TestAccELBListenerPolicy_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_load_balancer_listener_policy.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerPolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccListenerPolicyConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckListenerPolicyExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfelb.ResourceListenerPolicy(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
 }
 
 func testAccCheckListenerPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
@@ -67,98 +67,62 @@ func testAccCheckListenerPolicyDestroy(ctx context.Context) resource.TestCheckFu
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn()
 
 		for _, rs := range s.RootModule().Resources {
-			switch {
-			case rs.Type == "aws_load_balancer_policy":
-				loadBalancerName, policyName := tfelb.ListenerPoliciesParseID(rs.Primary.ID)
-				out, err := conn.DescribeLoadBalancerPoliciesWithContext(ctx, &elb.DescribeLoadBalancerPoliciesInput{
-					LoadBalancerName: aws.String(loadBalancerName),
-					PolicyNames:      []*string{aws.String(policyName)},
-				})
-				if err != nil {
-					if ec2err, ok := err.(awserr.Error); ok && (ec2err.Code() == "PolicyNotFound" || ec2err.Code() == "LoadBalancerNotFound") {
-						continue
-					}
-					return err
-				}
-				if len(out.PolicyDescriptions) > 0 {
-					return fmt.Errorf("Policy still exists")
-				}
-			case rs.Type == "aws_load_listener_policy":
-				loadBalancerName, _ := tfelb.ListenerPoliciesParseID(rs.Primary.ID)
-				out, err := conn.DescribeLoadBalancersWithContext(ctx, &elb.DescribeLoadBalancersInput{
-					LoadBalancerNames: []*string{aws.String(loadBalancerName)},
-				})
-
-				if tfawserr.ErrCodeEquals(err, elb.ErrCodeAccessPointNotFoundException) {
-					continue
-				}
-
-				if err != nil {
-					return err
-				}
-
-				policyNames := []string{}
-				for k := range rs.Primary.Attributes {
-					if strings.HasPrefix(k, "policy_names.") && strings.HasSuffix(k, ".name") {
-						value_key := fmt.Sprintf("%s.value", strings.TrimSuffix(k, ".name"))
-						policyNames = append(policyNames, rs.Primary.Attributes[value_key])
-					}
-				}
-				for _, policyName := range policyNames {
-					for _, listener := range out.LoadBalancerDescriptions[0].ListenerDescriptions {
-						policyStrings := []string{}
-						for _, pol := range listener.PolicyNames {
-							policyStrings = append(policyStrings, *pol)
-						}
-						if policyInListenerPolicies(policyName, policyStrings) {
-							return fmt.Errorf("Policy still exists and is assigned")
-						}
-					}
-				}
-			default:
+			if rs.Type != "aws_load_balancer_listener_policy" {
 				continue
 			}
+
+			lbName, lbPort, err := tfelb.ListenerPolicyParseResourceID(rs.Primary.ID)
+
+			if err != nil {
+				return err
+			}
+
+			_, err = tfelb.FindLoadBalancerListenerPolicyByTwoPartKey(ctx, conn, lbName, lbPort)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("ELB Classic Listener Policy %s still exists", rs.Primary.ID)
 		}
+
 		return nil
 	}
 }
 
-func testAccCheckListenerPolicyState(ctx context.Context, loadBalancerName string, loadBalancerListenerPort int64, loadBalancerListenerPolicyName string, assigned bool) resource.TestCheckFunc {
+func testAccCheckListenerPolicyExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn()
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
 
-		loadBalancerDescription, err := conn.DescribeLoadBalancersWithContext(ctx, &elb.DescribeLoadBalancersInput{
-			LoadBalancerNames: []*string{aws.String(loadBalancerName)},
-		})
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No ELB Classic Listener Policy ID is set")
+		}
+
+		lbName, lbPort, err := tfelb.ListenerPolicyParseResourceID(rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		for _, listener := range loadBalancerDescription.LoadBalancerDescriptions[0].ListenerDescriptions {
-			if *listener.Listener.LoadBalancerPort != loadBalancerListenerPort {
-				continue
-			}
-			policyStrings := []string{}
-			for _, pol := range listener.PolicyNames {
-				policyStrings = append(policyStrings, *pol)
-			}
-			if policyInListenerPolicies(loadBalancerListenerPolicyName, policyStrings) != assigned {
-				if assigned {
-					return fmt.Errorf("Policy no longer assigned %s not in %+v", loadBalancerListenerPolicyName, policyStrings)
-				} else {
-					return fmt.Errorf("Policy exists and is assigned")
-				}
-			}
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn()
 
-		return nil
+		_, err = tfelb.FindLoadBalancerListenerPolicyByTwoPartKey(ctx, conn, lbName, lbPort)
+
+		return err
 	}
 }
 
-func testAccListenerPolicyConfig_basic0(lbName, mcName string) string {
+func testAccListenerPolicyConfig_basic(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_elb" "test-lb" {
-  name               = "%s"
+resource "aws_elb" "test" {
+  name               = %[1]q
   availability_zones = [data.aws_availability_zones.available.names[0]]
 
   listener {
@@ -167,90 +131,26 @@ resource "aws_elb" "test-lb" {
     lb_port           = 80
     lb_protocol       = "http"
   }
-
-  tags = {
-    Name = "tf-acc-test"
-  }
 }
 
-resource "aws_load_balancer_policy" "magic-cookie-sticky" {
-  load_balancer_name = aws_elb.test-lb.name
-  policy_name        = "%s"
+resource "aws_load_balancer_policy" "test" {
+  load_balancer_name = aws_elb.test.name
+  policy_name        = %[1]q
   policy_type_name   = "AppCookieStickinessPolicyType"
 
   policy_attribute {
     name  = "CookieName"
-    value = "magic_cookie"
+    value = "wafer"
   }
 }
 
-resource "aws_load_balancer_listener_policy" "test-lb-listener-policies-80" {
-  load_balancer_name = aws_elb.test-lb.name
+resource "aws_load_balancer_listener_policy" "test" {
+  load_balancer_name = aws_elb.test.name
   load_balancer_port = 80
 
   policy_names = [
-    aws_load_balancer_policy.magic-cookie-sticky.policy_name,
+    aws_load_balancer_policy.test.policy_name,
   ]
 }
-`, lbName, mcName))
-}
-
-func testAccListenerPolicyConfig_basic1(lbName, mcName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_elb" "test-lb" {
-  name               = "%s"
-  availability_zones = [data.aws_availability_zones.available.names[0]]
-
-  listener {
-    instance_port     = 80
-    instance_protocol = "http"
-    lb_port           = 80
-    lb_protocol       = "http"
-  }
-
-  tags = {
-    Name = "tf-acc-test"
-  }
-}
-
-resource "aws_load_balancer_policy" "magic-cookie-sticky" {
-  load_balancer_name = aws_elb.test-lb.name
-  policy_name        = "%s"
-  policy_type_name   = "AppCookieStickinessPolicyType"
-
-  policy_attribute {
-    name  = "CookieName"
-    value = "unicorn_cookie"
-  }
-}
-
-resource "aws_load_balancer_listener_policy" "test-lb-listener-policies-80" {
-  load_balancer_name = aws_elb.test-lb.name
-  load_balancer_port = 80
-
-  policy_names = [
-    aws_load_balancer_policy.magic-cookie-sticky.policy_name,
-  ]
-}
-`, lbName, mcName))
-}
-
-func testAccListenerPolicyConfig_basic2(lbName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_elb" "test-lb" {
-  name               = "%s"
-  availability_zones = [data.aws_availability_zones.available.names[0]]
-
-  listener {
-    instance_port     = 80
-    instance_protocol = "http"
-    lb_port           = 80
-    lb_protocol       = "http"
-  }
-
-  tags = {
-    Name = "tf-acc-test"
-  }
-}
-`, lbName))
+`, rName))
 }

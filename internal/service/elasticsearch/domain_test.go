@@ -8,10 +8,8 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	elasticsearch "github.com/aws/aws-sdk-go/service/elasticsearchservice"
-	"github.com/aws/aws-sdk-go/service/elb"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
@@ -1297,7 +1295,7 @@ func TestAccElasticsearchDomain_tags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRole(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticsearch.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckELBDestroy(ctx),
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainConfig_tags1(rName, "key1", "value1"),
@@ -3042,40 +3040,5 @@ func testAccPreCheckCognitoIdentityProvider(ctx context.Context, t *testing.T) {
 
 	if err != nil {
 		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
-}
-
-func testAccCheckELBDestroy(ctx context.Context) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn()
-
-		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_elb" {
-				continue
-			}
-
-			describe, err := conn.DescribeLoadBalancersWithContext(ctx, &elb.DescribeLoadBalancersInput{
-				LoadBalancerNames: []*string{aws.String(rs.Primary.ID)},
-			})
-
-			if err == nil {
-				if len(describe.LoadBalancerDescriptions) != 0 &&
-					*describe.LoadBalancerDescriptions[0].LoadBalancerName == rs.Primary.ID {
-					return fmt.Errorf("ELB still exists")
-				}
-			}
-
-			// Verify the error
-			providerErr, ok := err.(awserr.Error)
-			if !ok {
-				return err
-			}
-
-			if providerErr.Code() != elb.ErrCodeAccessPointNotFoundException {
-				return fmt.Errorf("Unexpected error: %s", err)
-			}
-		}
-
-		return nil
 	}
 }

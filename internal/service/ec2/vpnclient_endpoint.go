@@ -38,7 +38,7 @@ func ResourceClientVPNEndpoint() *schema.Resource {
 				Computed: true,
 			},
 			"authentication_options": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Required: true,
 				ForceNew: true,
 				MaxItems: 2,
@@ -236,8 +236,8 @@ func resourceClientVPNEndpointCreate(ctx context.Context, d *schema.ResourceData
 		VpnPort:              aws.Int64(int64(d.Get("vpn_port").(int))),
 	}
 
-	if v, ok := d.GetOk("authentication_options"); ok && len(v.([]interface{})) > 0 {
-		input.AuthenticationOptions = expandClientVPNAuthenticationRequests(v.([]interface{}))
+	if v, ok := d.GetOk("authentication_options"); ok && v.(*schema.Set).Len() > 0 {
+		input.AuthenticationOptions = expandClientVPNAuthenticationRequests(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("client_connect_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
