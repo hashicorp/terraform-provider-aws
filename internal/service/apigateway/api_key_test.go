@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -15,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfapigateway "github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccAPIGatewayAPIKey_basic(t *testing.T) {
@@ -221,7 +221,7 @@ func TestAccAPIGatewayAPIKey_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAPIKeyExists(ctx context.Context, n string, res *apigateway.ApiKey) resource.TestCheckFunc {
+func testAccCheckAPIKeyExists(ctx context.Context, n string, v *apigateway.ApiKey) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -229,24 +229,18 @@ func testAccCheckAPIKeyExists(ctx context.Context, n string, res *apigateway.Api
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No API Gateway ApiKey ID is set")
+			return fmt.Errorf("No API Gateway API Key ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn()
 
-		req := &apigateway.GetApiKeyInput{
-			ApiKey: aws.String(rs.Primary.ID),
-		}
-		describe, err := conn.GetApiKeyWithContext(ctx, req)
+		output, err := tfapigateway.FindAPIKeyByID(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		if *describe.Id != rs.Primary.ID {
-			return fmt.Errorf("APIGateway ApiKey not found")
-		}
-
-		*res = *describe
+		*v = *output
 
 		return nil
 	}
@@ -261,24 +255,17 @@ func testAccCheckAPIKeyDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			describe, err := conn.GetApiKeysWithContext(ctx, &apigateway.GetApiKeysInput{})
+			_, err := tfapigateway.FindAPIKeyByID(ctx, conn, rs.Primary.ID)
 
-			if err == nil {
-				if len(describe.Items) != 0 &&
-					*describe.Items[0].Id == rs.Primary.ID {
-					return fmt.Errorf("API Gateway ApiKey still exists")
-				}
+			if tfresource.NotFound(err) {
+				continue
 			}
 
-			aws2err, ok := err.(awserr.Error)
-			if !ok {
-				return err
-			}
-			if aws2err.Code() != "NotFoundException" {
+			if err != nil {
 				return err
 			}
 
-			return nil
+			return fmt.Errorf("API Gateway API Key %s still exists", rs.Primary.ID)
 		}
 
 		return nil

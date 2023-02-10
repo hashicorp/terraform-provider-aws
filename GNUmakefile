@@ -6,15 +6,26 @@ SVC_DIR             ?= ./internal/service
 TEST_COUNT          ?= 1
 ACCTEST_TIMEOUT     ?= 180m
 ACCTEST_PARALLELISM ?= 20
+P                   ?= 20
 GO_VER              ?= go
+SWEEP_TIMEOUT       ?= 60m
 
 ifneq ($(origin PKG), undefined)
 	PKG_NAME = internal/service/$(PKG)
 	TEST = ./$(PKG_NAME)/...
 endif
 
+ifneq ($(origin K), undefined)
+	PKG_NAME = internal/service/$(K)
+	TEST = ./$(PKG_NAME)/...
+endif
+
 ifneq ($(origin TESTS), undefined)
 	RUNARGS = -run='$(TESTS)'
+endif
+
+ifneq ($(origin T), undefined)
+	RUNARGS = -run='$(T)'
 endif
 
 ifneq ($(origin SWEEPERS), undefined)
@@ -56,6 +67,10 @@ ifeq ($(PKG_NAME), internal/service/wavelength)
 	TEST = ./$(PKG_NAME)/...
 endif
 
+ifneq ($(P), 20)
+	ACCTEST_PARALLELISM = $(P)
+endif
+
 default: build
 
 build: fmtcheck
@@ -82,7 +97,7 @@ sweep:
 	# make sweep SWEEPARGS=-sweep-run=aws_example_thing
 	# set SWEEPARGS=-sweep-allow-failures to continue after first failure
 	@echo "WARNING: This will destroy infrastructure. Use only in development accounts."
-	$(GO_VER) test $(SWEEP_DIR) -v -tags=sweep -sweep=$(SWEEP) $(SWEEPARGS) -timeout 60m
+	$(GO_VER) test $(SWEEP_DIR) -v -tags=sweep -sweep=$(SWEEP) $(SWEEPARGS) -timeout $(SWEEP_TIMEOUT)
 
 test: fmtcheck
 	$(GO_VER) test $(TEST) $(TESTARGS) -timeout=5m
@@ -98,6 +113,9 @@ testacc: fmtcheck
 		echo "See the contributing guide for more information: https://hashicorp.github.io/terraform-provider-aws/running-and-writing-acceptance-tests"; \
 		exit 1; \
 	fi
+	TF_ACC=1 $(GO_VER) test ./$(PKG_NAME)/... -v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT)
+
+t: fmtcheck
 	TF_ACC=1 $(GO_VER) test ./$(PKG_NAME)/... -v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT)
 
 testacc-lint:
@@ -274,6 +292,7 @@ semall:
 		--config .ci/.semgrep-service-name2.yml \
 		--config .ci/.semgrep-service-name3.yml \
 		--config .ci/semgrep/acctest/ \
+		--config .ci/semgrep/aws/ \
 		--config .ci/semgrep/migrate/ \
 		--config 'r/dgryski.semgrep-go.badnilguard' \
 		--config 'r/dgryski.semgrep-go.errnilcheck' \
@@ -295,6 +314,7 @@ yamllint:
 	build \
 	gen \
 	sweep \
+	t \
 	test \
 	testacc \
 	testacc-lint \

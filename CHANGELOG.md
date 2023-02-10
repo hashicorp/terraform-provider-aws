@@ -1,4 +1,51 @@
-## 4.53.0 (Unreleased)
+## 4.55.0 (Unreleased)
+## 4.54.0 (February  9, 2023)
+
+NOTES:
+
+* provider: Resolves provider crashes reporting `Error: Plugin did not respond` and `fatal error: concurrent map writes` with updated upstream package (`terraform-plugin-log`) ([#29269](https://github.com/hashicorp/terraform-provider-aws/issues/29269))
+* resource/aws_networkmanager_core_network: The `policy_document` attribute is being deprecated in favor of the new `aws_networkmanager_core_network_policy_attachment` resource. ([#29097](https://github.com/hashicorp/terraform-provider-aws/issues/29097))
+
+FEATURES:
+
+* **New Resource:** `aws_evidently_launch` ([#28752](https://github.com/hashicorp/terraform-provider-aws/issues/28752))
+* **New Resource:** `aws_lightsail_bucket_access_key` ([#28699](https://github.com/hashicorp/terraform-provider-aws/issues/28699))
+* **New Resource:** `aws_networkmanager_core_network_policy_attachment` ([#29097](https://github.com/hashicorp/terraform-provider-aws/issues/29097))
+
+ENHANCEMENTS:
+
+* data-source/aws_cloudtrail_service_account: Add service account ID for `ap-southeast-4` AWS Region ([#29103](https://github.com/hashicorp/terraform-provider-aws/issues/29103))
+* data-source/aws_elb_hosted_zone_id: Add hosted zone ID for `ap-southeast-4` AWS Region ([#29103](https://github.com/hashicorp/terraform-provider-aws/issues/29103))
+* data-source/aws_lb_hosted_zone_id: Add hosted zone IDs for `ap-southeast-4` AWS Region ([#29103](https://github.com/hashicorp/terraform-provider-aws/issues/29103))
+* data-source/aws_s3_bucket: Add hosted zone ID for `ap-south-2` AWS Region ([#29103](https://github.com/hashicorp/terraform-provider-aws/issues/29103))
+* data-source/aws_s3_bucket: Add hosted zone ID for `ap-southeast-4` AWS Region ([#29103](https://github.com/hashicorp/terraform-provider-aws/issues/29103))
+* provider: Support `ap-southeast-4` as a valid AWS region ([#29329](https://github.com/hashicorp/terraform-provider-aws/issues/29329))
+* resource/aws_dynamodb_table: Add `arn`, `stream_arn`, and `stream_label` attributes to `replica` to obtain this information for replicas ([#29269](https://github.com/hashicorp/terraform-provider-aws/issues/29269))
+* resource/aws_efs_mount_target: Add configurable timeouts for Create and Delete ([#27991](https://github.com/hashicorp/terraform-provider-aws/issues/27991))
+* resource/aws_lambda_function: Add `replace_security_groups_on_destroy` and `replacement_security_group_ids` attributes ([#29289](https://github.com/hashicorp/terraform-provider-aws/issues/29289))
+* resource/aws_networkfirewall_firewall: Add `ip_address_type` attribute to the `subnet_mapping` configuration block ([#29010](https://github.com/hashicorp/terraform-provider-aws/issues/29010))
+* resource/aws_networkmanager_core_network: Add `base_policy_region` and `create_base_policy` arguments ([#29097](https://github.com/hashicorp/terraform-provider-aws/issues/29097))
+
+BUG FIXES:
+
+* data-source/aws_kms_key: Reinstate support for KMS multi-Region key ID or ARN values for the `key_id` argument ([#29266](https://github.com/hashicorp/terraform-provider-aws/issues/29266))
+* resource/aws_cloudwatch_log_group: Fix IAM eventual consistency error when setting a retention policy ([#29325](https://github.com/hashicorp/terraform-provider-aws/issues/29325))
+* resource/aws_dynamodb_table: Avoid recreating table replicas when enabling PITR on them ([#29269](https://github.com/hashicorp/terraform-provider-aws/issues/29269))
+* resource/aws_ec2_client_vpn_endpoint: Change `authentication_options` from `TypeList` to `TypeSet` as order is not significant ([#29294](https://github.com/hashicorp/terraform-provider-aws/issues/29294))
+* resource/aws_kms_grant: Retries until valid principal ARNs are returned instead of not updating state ([#29245](https://github.com/hashicorp/terraform-provider-aws/issues/29245))
+* resource/aws_opsworks_permission: `stack_id` and `user_arn` are both Required and ForceNew ([#27991](https://github.com/hashicorp/terraform-provider-aws/issues/27991))
+* resource/aws_prometheus_workspace: Create a logging configuration on resource update if none existed previously ([#27472](https://github.com/hashicorp/terraform-provider-aws/issues/27472))
+* resource/aws_s3_bucket: Fix crash when `logging` is empty ([#29243](https://github.com/hashicorp/terraform-provider-aws/issues/29243))
+* resource/aws_sns_topic: Fixes potential race condition when reading policy document. ([#29226](https://github.com/hashicorp/terraform-provider-aws/issues/29226))
+* resource/aws_sns_topic_policy: Fixes potential race condition when reading policy document. ([#29226](https://github.com/hashicorp/terraform-provider-aws/issues/29226))
+
+## 4.53.0 (February  3, 2023)
+
+ENHANCEMENTS:
+
+* provider: Adds structured fields in logging ([#29223](https://github.com/hashicorp/terraform-provider-aws/issues/29223))
+* provider: Masks authentication fields in HTTP header logging ([#29223](https://github.com/hashicorp/terraform-provider-aws/issues/29223))
+
 ## 4.52.0 (January 27, 2023)
 
 NOTES:

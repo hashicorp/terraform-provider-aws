@@ -1223,7 +1223,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return diags
 	}
 
-	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeNoSuchLifecycleConfiguration) {
+	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeNoSuchLifecycleConfiguration, ErrCodeNotImplemented) {
 		return sdkdiag.AppendErrorf(diags, "getting S3 Bucket (%s) Lifecycle Configuration: %s", d.Id(), err)
 	}
 
@@ -1252,7 +1252,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return diags
 	}
 
-	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeReplicationConfigurationNotFound) {
+	if err != nil && !tfawserr.ErrCodeEquals(err, ErrCodeReplicationConfigurationNotFound, ErrCodeNotImplemented) {
 		return sdkdiag.AppendErrorf(diags, "getting S3 Bucket replication: %s", err)
 	}
 
@@ -1893,7 +1893,7 @@ func resourceBucketInternalLoggingUpdate(ctx context.Context, conn *s3.S3, d *sc
 	logging := d.Get("logging").([]interface{})
 	loggingStatus := &s3.BucketLoggingStatus{}
 
-	if len(logging) > 0 {
+	if len(logging) > 0 && logging[0] != nil {
 		c := logging[0].(map[string]interface{})
 
 		loggingEnabled := &s3.LoggingEnabled{}

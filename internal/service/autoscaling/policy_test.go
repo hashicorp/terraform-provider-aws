@@ -174,6 +174,43 @@ func TestAccAutoScalingPolicy_predictiveScalingPredefined(t *testing.T) {
 	})
 }
 
+func TestAccAutoScalingPolicy_predictiveScalingResourceLabel(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v autoscaling.ScalingPolicy
+	resourceSimpleName := "aws_autoscaling_policy.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyConfig_predictiveScalingPredefined_resourceLabel(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckScalingPolicyExists(ctx, resourceSimpleName, &v),
+					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.mode", "ForecastAndScale"),
+					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.scheduling_buffer_time", "10"),
+					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.max_capacity_breach_behavior", "IncreaseMaxCapacity"),
+					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.max_capacity_buffer", "0"),
+					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.metric_specification.0.target_value", "32"),
+					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.metric_specification.0.predefined_scaling_metric_specification.0.predefined_metric_type", "ASGAverageCPUUtilization"),
+					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.metric_specification.0.predefined_scaling_metric_specification.0.resource_label", ""),
+					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.metric_specification.0.predefined_load_metric_specification.0.predefined_metric_type", "ASGTotalCPUUtilization"),
+					resource.TestCheckResourceAttr(resourceSimpleName, "predictive_scaling_configuration.0.metric_specification.0.predefined_load_metric_specification.0.resource_label", ""),
+				),
+			},
+			{
+				ResourceName:      resourceSimpleName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccPolicyImportStateIdFunc(resourceSimpleName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAutoScalingPolicy_predictiveScalingCustom(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v autoscaling.ScalingPolicy
@@ -585,6 +622,31 @@ resource "aws_autoscaling_policy" "test" {
       predefined_load_metric_specification {
         predefined_metric_type = "ASGTotalCPUUtilization"
         resource_label         = "testLabel"
+      }
+    }
+    mode                         = "ForecastAndScale"
+    scheduling_buffer_time       = 10
+    max_capacity_breach_behavior = "IncreaseMaxCapacity"
+    max_capacity_buffer          = 0
+  }
+}
+`, rName))
+}
+
+func testAccPolicyConfig_predictiveScalingPredefined_resourceLabel(rName string) string {
+	return acctest.ConfigCompose(testAccPolicyConfigBase(rName), fmt.Sprintf(`
+resource "aws_autoscaling_policy" "test" {
+  name                   = "%[1]s-predictive"
+  policy_type            = "PredictiveScaling"
+  autoscaling_group_name = aws_autoscaling_group.test.name
+  predictive_scaling_configuration {
+    metric_specification {
+      target_value = 32
+      predefined_scaling_metric_specification {
+        predefined_metric_type = "ASGAverageCPUUtilization"
+      }
+      predefined_load_metric_specification {
+        predefined_metric_type = "ASGTotalCPUUtilization"
       }
     }
     mode                         = "ForecastAndScale"

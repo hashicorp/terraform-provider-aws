@@ -319,7 +319,7 @@ func resourceLocationHDFSUpdate(ctx context.Context, d *schema.ResourceData, met
 			input.AgentArns = flex.ExpandStringSet(d.Get("agent_arns").(*schema.Set))
 		}
 
-		if d.HasChange("name_noode") {
+		if d.HasChange("name_node") {
 			input.NameNodes = expandHDFSNameNodes(d.Get("name_node").(*schema.Set))
 		}
 

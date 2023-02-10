@@ -192,6 +192,7 @@ func TestValidARN(t *testing.T) {
 		"arn:aws:elasticbeanstalk:us-east-1:123456789012:environment/My App/MyEnvironment", // lintignore:AWSAT003,AWSAT005 // Beanstalk
 		"arn:aws:iam::123456789012:user/David",                                             // lintignore:AWSAT005          // IAM User
 		"arn:aws:iam::aws:policy/CloudWatchReadOnlyAccess",                                 // lintignore:AWSAT005          // Managed IAM policy
+		"arn:aws:imagebuilder:us-east-1:third-party:component/my-component",                // lintignore:AWSAT003,AWSAT005 // ImageBuilder Third Party
 		"arn:aws:rds:eu-west-1:123456789012:db:mysql-db",                                   // lintignore:AWSAT003,AWSAT005 // RDS
 		"arn:aws:s3:::my_corporate_bucket/exampleobject.png",                               // lintignore:AWSAT005          // S3 object
 		"arn:aws:events:us-east-1:319201112229:rule/rule_name",                             // lintignore:AWSAT003,AWSAT005 // CloudWatch Rule

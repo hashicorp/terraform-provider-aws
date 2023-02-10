@@ -2,6 +2,7 @@ package acctest
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -37,6 +38,7 @@ import (
 	tforganizations "github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
 	tfsts "github.com/hashicorp/terraform-provider-aws/internal/service/sts"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/jmespath/go-jmespath"
 )
 
 const (
@@ -578,6 +580,52 @@ func CheckResourceAttrEquivalentJSON(resourceName, attributeName, expectedJSON s
 		if vNormal != expectedNormal {
 			return fmt.Errorf("%s: Attribute %q expected\n%s\ngot\n%s", resourceName, attributeName, expectedJSON, v)
 		}
+		return nil
+	}
+}
+
+func CheckResourceAttrJMESPair(nameFirst, keyFirst, jmesPath, nameSecond, keySecond string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		first, err := PrimaryInstanceState(s, nameFirst)
+		if err != nil {
+			return err
+		}
+
+		second, err := PrimaryInstanceState(s, nameSecond)
+		if err != nil {
+			return err
+		}
+
+		vFirst, okFirst := first.Attributes[keyFirst]
+		if !okFirst {
+			return fmt.Errorf("%s: Attribute %q not set", nameFirst, keyFirst)
+		}
+
+		var jsonData any
+		err = json.Unmarshal([]byte(vFirst), &jsonData)
+		if err != nil {
+			return fmt.Errorf("%s: Expected attribute %q to be JSON: %w", nameFirst, keyFirst, err)
+		}
+
+		result, err := jmespath.Search(jmesPath, jsonData)
+		if err != nil {
+			return fmt.Errorf("Invalid JMESPath %q: %w", jmesPath, err)
+		}
+
+		value, ok := result.(string)
+		if !ok {
+			return fmt.Errorf("%s: Attribute %q, JMESPath %q, expected single string, got %#v", nameFirst, keyFirst, jmesPath, result)
+		}
+
+		vSecond, okSecond := second.Attributes[keySecond]
+		if !okSecond {
+			return fmt.Errorf("%s: Attribute %q, JMESPath %q is %q, but %q is not set in %s", nameFirst, keyFirst, jmesPath, value, keySecond, nameSecond)
+		}
+
+		if value != vSecond {
+			return fmt.Errorf("%s: Attribute %q, JMESPath %q, expected %q, got %q", nameFirst, keyFirst, jmesPath, vSecond, value)
+		}
+
 		return nil
 	}
 }

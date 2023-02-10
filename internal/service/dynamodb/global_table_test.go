@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccDynamoDBGlobalTable_basic(t *testing.T) {
@@ -49,9 +50,9 @@ func TestAccDynamoDBGlobalTable_basic(t *testing.T) {
 				Config: testAccGlobalTableConfig_basic(tableName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalTableExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", tableName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, tableName),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "dynamodb", regexp.MustCompile("global-table/[a-z0-9-]+$")),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "dynamodb", regexp.MustCompile("global-table/[a-z0-9-]+$")),
 				),
 			},
 			{
@@ -83,9 +84,9 @@ func TestAccDynamoDBGlobalTable_multipleRegions(t *testing.T) {
 				Config: testAccGlobalTableConfig_multipleRegions1(tableName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalTableExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", tableName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, tableName),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "dynamodb", regexp.MustCompile("global-table/[a-z0-9-]+$")),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "dynamodb", regexp.MustCompile("global-table/[a-z0-9-]+$")),
 				),
 			},
 			{
