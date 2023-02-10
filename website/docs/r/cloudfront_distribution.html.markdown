@@ -186,8 +186,7 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
 }
 ```
 
-CloudFront distribution using managed policies (ex: CachingDisabled):
-https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/using-managed-cache-policies.html
+CloudFront distribution using [managed policies](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/using-managed-cache-policies.html) (ex: CachingDisabled):
 
 ```terraform
 locals {
