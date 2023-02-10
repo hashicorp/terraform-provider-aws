@@ -60,7 +60,7 @@ func ResourceKeyspace() *schema.Resource {
 }
 
 func resourceKeyspaceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KeyspacesConn
+	conn := meta.(*conns.AWSClient).KeyspacesConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -83,7 +83,7 @@ func resourceKeyspaceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	d.SetId(name)
 
-	_, err = tfresource.RetryWhenNotFoundContext(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
 		return FindKeyspaceByName(ctx, conn, d.Id())
 	})
 
@@ -95,7 +95,7 @@ func resourceKeyspaceCreate(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceKeyspaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KeyspacesConn
+	conn := meta.(*conns.AWSClient).KeyspacesConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -114,7 +114,7 @@ func resourceKeyspaceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("arn", keyspace.ResourceArn)
 	d.Set("name", keyspace.KeyspaceName)
 
-	tags, err := ListTags(conn, d.Get("arn").(string))
+	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
 
 	if err != nil {
 		return diag.Errorf("listing tags for Keyspaces Keyspace (%s): %s", d.Id(), err)
@@ -135,12 +135,12 @@ func resourceKeyspaceRead(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceKeyspaceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KeyspacesConn
+	conn := meta.(*conns.AWSClient).KeyspacesConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.Errorf("updating Keyspaces Keyspace (%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -149,10 +149,10 @@ func resourceKeyspaceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceKeyspaceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KeyspacesConn
+	conn := meta.(*conns.AWSClient).KeyspacesConn()
 
 	log.Printf("[DEBUG] Deleting Keyspaces Keyspace: (%s)", d.Id())
-	_, err := tfresource.RetryWhenAWSErrMessageContains(d.Timeout(schema.TimeoutDelete),
+	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, d.Timeout(schema.TimeoutDelete),
 		func() (interface{}, error) {
 			return conn.DeleteKeyspaceWithContext(ctx, &keyspaces.DeleteKeyspaceInput{
 				KeyspaceName: aws.String(d.Id()),
@@ -168,7 +168,7 @@ func resourceKeyspaceDelete(ctx context.Context, d *schema.ResourceData, meta in
 		return diag.Errorf("deleting Keyspaces Keyspace (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFoundContext(ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
 		return FindKeyspaceByName(ctx, conn, d.Id())
 	})
 

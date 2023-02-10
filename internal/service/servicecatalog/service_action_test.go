@@ -1,6 +1,7 @@
 package servicecatalog_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -18,6 +19,7 @@ import (
 // add sweeper to delete known test servicecat service actions
 
 func TestAccServiceCatalogServiceAction_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_servicecatalog_service_action.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -25,12 +27,12 @@ func TestAccServiceCatalogServiceAction_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckServiceActionDestroy,
+		CheckDestroy:             testAccCheckServiceActionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceActionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceActionExists(resourceName),
+					testAccCheckServiceActionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "accept_language", tfservicecatalog.AcceptLanguageEnglish),
 					resource.TestCheckResourceAttr(resourceName, "definition.0.name", "AWS-RestartEC2Instance"),
 					resource.TestCheckResourceAttr(resourceName, "definition.0.version", "1"),
@@ -51,6 +53,7 @@ func TestAccServiceCatalogServiceAction_basic(t *testing.T) {
 }
 
 func TestAccServiceCatalogServiceAction_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_servicecatalog_service_action.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -58,13 +61,13 @@ func TestAccServiceCatalogServiceAction_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckServiceActionDestroy,
+		CheckDestroy:             testAccCheckServiceActionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceActionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceActionExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfservicecatalog.ResourceServiceAction(), resourceName),
+					testAccCheckServiceActionExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfservicecatalog.ResourceServiceAction(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -73,6 +76,7 @@ func TestAccServiceCatalogServiceAction_disappears(t *testing.T) {
 }
 
 func TestAccServiceCatalogServiceAction_update(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_servicecatalog_service_action.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -81,12 +85,12 @@ func TestAccServiceCatalogServiceAction_update(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckServiceActionDestroy,
+		CheckDestroy:             testAccCheckServiceActionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceActionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceActionExists(resourceName),
+					testAccCheckServiceActionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "accept_language", tfservicecatalog.AcceptLanguageEnglish),
 					resource.TestCheckResourceAttr(resourceName, "definition.0.name", "AWS-RestartEC2Instance"),
 					resource.TestCheckResourceAttr(resourceName, "definition.0.version", "1"),
@@ -97,7 +101,7 @@ func TestAccServiceCatalogServiceAction_update(t *testing.T) {
 			{
 				Config: testAccServiceActionConfig_update(rName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceActionExists(resourceName),
+					testAccCheckServiceActionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "accept_language", tfservicecatalog.AcceptLanguageEnglish),
 					resource.TestCheckResourceAttrPair(resourceName, "definition.0.assume_role", "aws_iam_role.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "description", rName2),
@@ -107,37 +111,39 @@ func TestAccServiceCatalogServiceAction_update(t *testing.T) {
 	})
 }
 
-func testAccCheckServiceActionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn
+func testAccCheckServiceActionDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_servicecatalog_service_action" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_servicecatalog_service_action" {
+				continue
+			}
+
+			input := &servicecatalog.DescribeServiceActionInput{
+				Id: aws.String(rs.Primary.ID),
+			}
+
+			output, err := conn.DescribeServiceActionWithContext(ctx, input)
+
+			if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
+				continue
+			}
+
+			if err != nil {
+				return fmt.Errorf("error getting Service Catalog Service Action (%s): %w", rs.Primary.ID, err)
+			}
+
+			if output != nil {
+				return fmt.Errorf("Service Catalog Service Action (%s) still exists", rs.Primary.ID)
+			}
 		}
 
-		input := &servicecatalog.DescribeServiceActionInput{
-			Id: aws.String(rs.Primary.ID),
-		}
-
-		output, err := conn.DescribeServiceAction(input)
-
-		if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
-			continue
-		}
-
-		if err != nil {
-			return fmt.Errorf("error getting Service Catalog Service Action (%s): %w", rs.Primary.ID, err)
-		}
-
-		if output != nil {
-			return fmt.Errorf("Service Catalog Service Action (%s) still exists", rs.Primary.ID)
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckServiceActionExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckServiceActionExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 
@@ -145,13 +151,13 @@ func testAccCheckServiceActionExists(resourceName string) resource.TestCheckFunc
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn()
 
 		input := &servicecatalog.DescribeServiceActionInput{
 			Id: aws.String(rs.Primary.ID),
 		}
 
-		_, err := conn.DescribeServiceAction(input)
+		_, err := conn.DescribeServiceActionWithContext(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("error describing Service Catalog Service Action (%s): %w", rs.Primary.ID, err)

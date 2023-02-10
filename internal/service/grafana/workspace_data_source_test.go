@@ -10,6 +10,7 @@ import (
 )
 
 func testAccWorkspaceDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_grafana_workspace.test"
 	dataSourceName := "data.aws_grafana_workspace.test"
@@ -23,7 +24,7 @@ func testAccWorkspaceDataSource_basic(t *testing.T) {
 			{
 				Config: testAccWorkspaceDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkspaceExists(dataSourceName),
+					testAccCheckWorkspaceExists(ctx, dataSourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "account_access_type", dataSourceName, "account_access_type"),
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "authentication_providers.#", dataSourceName, "authentication_providers.#"),

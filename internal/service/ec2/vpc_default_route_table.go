@@ -1,7 +1,7 @@
 package ec2
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"strings"
 	"time"
@@ -9,21 +9,23 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceDefaultRouteTable() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceDefaultRouteTableCreate,
-		Read:   resourceDefaultRouteTableRead,
-		Update: resourceRouteTableUpdate,
-		Delete: resourceDefaultRouteTableDelete,
+		CreateWithoutTimeout: resourceDefaultRouteTableCreate,
+		ReadWithoutTimeout:   resourceDefaultRouteTableRead,
+		UpdateWithoutTimeout: resourceRouteTableUpdate,
+		DeleteWithoutTimeout: resourceDefaultRouteTableDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: resourceDefaultRouteTableImport,
+			StateContext: resourceDefaultRouteTableImport,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -142,25 +144,26 @@ func ResourceDefaultRouteTable() *schema.Resource {
 	}
 }
 
-func resourceDefaultRouteTableCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceDefaultRouteTableCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	routeTableID := d.Get("default_route_table_id").(string)
 
-	routeTable, err := FindRouteTableByID(conn, routeTableID)
+	routeTable, err := FindRouteTableByID(ctx, conn, routeTableID)
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 Default Route Table (%s): %w", routeTableID, err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Default Route Table (%s): %s", routeTableID, err)
 	}
 
 	d.SetId(aws.StringValue(routeTable.RouteTableId))
 
 	// Remove all existing VGW associations.
 	for _, v := range routeTable.PropagatingVgws {
-		if err := routeTableDisableVGWRoutePropagation(conn, d.Id(), aws.StringValue(v.GatewayId)); err != nil {
-			return err
+		if err := routeTableDisableVGWRoutePropagation(ctx, conn, d.Id(), aws.StringValue(v.GatewayId)); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
@@ -203,20 +206,20 @@ func resourceDefaultRouteTableCreate(d *schema.ResourceData, meta interface{}) e
 		}
 
 		log.Printf("[DEBUG] Deleting Route: %s", input)
-		_, err := conn.DeleteRoute(input)
+		_, err := conn.DeleteRouteWithContext(ctx, input)
 
 		if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteNotFound) {
 			continue
 		}
 
 		if err != nil {
-			return fmt.Errorf("error deleting Route in EC2 Default Route Table (%s) with destination (%s): %w", d.Id(), destination, err)
+			return sdkdiag.AppendErrorf(diags, "deleting Route in EC2 Default Route Table (%s) with destination (%s): %s", d.Id(), destination, err)
 		}
 
-		_, err = WaitRouteDeleted(conn, routeFinder, routeTableID, destination, d.Timeout(schema.TimeoutCreate))
+		_, err = WaitRouteDeleted(ctx, conn, routeFinder, routeTableID, destination, d.Timeout(schema.TimeoutCreate))
 
 		if err != nil {
-			return fmt.Errorf("error waiting for Route in EC2 Default Route Table (%s) with destination (%s) to delete: %w", d.Id(), destination, err)
+			return sdkdiag.AppendErrorf(diags, "waiting for Route in EC2 Default Route Table (%s) with destination (%s) to delete: %s", d.Id(), destination, err)
 		}
 	}
 
@@ -225,8 +228,8 @@ func resourceDefaultRouteTableCreate(d *schema.ResourceData, meta interface{}) e
 		for _, v := range v.(*schema.Set).List() {
 			v := v.(string)
 
-			if err := routeTableEnableVGWRoutePropagation(conn, d.Id(), v, d.Timeout(schema.TimeoutCreate)); err != nil {
-				return err
+			if err := routeTableEnableVGWRoutePropagation(ctx, conn, d.Id(), v, d.Timeout(schema.TimeoutCreate)); err != nil {
+				return sdkdiag.AppendFromErr(diags, err)
 			}
 		}
 	}
@@ -236,38 +239,39 @@ func resourceDefaultRouteTableCreate(d *schema.ResourceData, meta interface{}) e
 		for _, v := range v.(*schema.Set).List() {
 			v := v.(map[string]interface{})
 
-			if err := routeTableAddRoute(conn, d.Id(), v, d.Timeout(schema.TimeoutCreate)); err != nil {
-				return err
+			if err := routeTableAddRoute(ctx, conn, d.Id(), v, d.Timeout(schema.TimeoutCreate)); err != nil {
+				return sdkdiag.AppendFromErr(diags, err)
 			}
 		}
 	}
 
 	if len(tags) > 0 {
-		if err := CreateTags(conn, d.Id(), tags); err != nil {
-			return fmt.Errorf("error adding tags: %w", err)
+		if err := CreateTags(ctx, conn, d.Id(), tags); err != nil {
+			return sdkdiag.AppendErrorf(diags, "adding tags: %s", err)
 		}
 	}
 
-	return resourceDefaultRouteTableRead(d, meta)
+	return append(diags, resourceDefaultRouteTableRead(ctx, d, meta)...)
 }
 
-func resourceDefaultRouteTableRead(d *schema.ResourceData, meta interface{}) error {
+func resourceDefaultRouteTableRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	d.Set("default_route_table_id", d.Id())
 
 	// re-use regular AWS Route Table READ. This is an extra API call but saves us
 	// from trying to manually keep parity
-	return resourceRouteTableRead(d, meta)
+	return resourceRouteTableRead(ctx, d, meta)
 }
 
-func resourceDefaultRouteTableDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceDefaultRouteTableDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	log.Printf("[WARN] Cannot destroy Default Route Table. Terraform will remove this resource from the state file, however resources may remain.")
-	return nil
+	return diags
 }
 
-func resourceDefaultRouteTableImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceDefaultRouteTableImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
-	routeTable, err := FindMainRouteTableByVPCID(conn, d.Id())
+	routeTable, err := FindMainRouteTableByVPCID(ctx, conn, d.Id())
 
 	if err != nil {
 		return nil, err

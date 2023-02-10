@@ -1,17 +1,19 @@
 package storagegateway
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"regexp"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -20,13 +22,13 @@ import (
 
 func ResourceSMBFileShare() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceSMBFileShareCreate,
-		Read:   resourceSMBFileShareRead,
-		Update: resourceSMBFileShareUpdate,
-		Delete: resourceSMBFileShareDelete,
+		CreateWithoutTimeout: resourceSMBFileShareCreate,
+		ReadWithoutTimeout:   resourceSMBFileShareRead,
+		UpdateWithoutTimeout: resourceSMBFileShareUpdate,
+		DeleteWithoutTimeout: resourceSMBFileShareDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -200,8 +202,9 @@ func ResourceSMBFileShare() *schema.Resource {
 	}
 }
 
-func resourceSMBFileShareCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).StorageGatewayConn
+func resourceSMBFileShareCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).StorageGatewayConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -283,36 +286,37 @@ func resourceSMBFileShareCreate(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	log.Printf("[DEBUG] Creating Storage Gateway SMB File Share: %s", input)
-	output, err := conn.CreateSMBFileShare(input)
+	output, err := conn.CreateSMBFileShareWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating Storage Gateway SMB File Share: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating Storage Gateway SMB File Share: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.FileShareARN))
 
-	if _, err = waitSMBFileShareCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("error waiting for Storage Gateway SMB File Share (%s) to create: %w", d.Id(), err)
+	if _, err = waitSMBFileShareCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Storage Gateway SMB File Share (%s) to create: %s", d.Id(), err)
 	}
 
-	return resourceSMBFileShareRead(d, meta)
+	return append(diags, resourceSMBFileShareRead(ctx, d, meta)...)
 }
 
-func resourceSMBFileShareRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).StorageGatewayConn
+func resourceSMBFileShareRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).StorageGatewayConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	fileshare, err := FindSMBFileShareByARN(conn, d.Id())
+	fileshare, err := FindSMBFileShareByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Storage Gateway SMB File Share (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Storage Gateway SMB File Share (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Storage Gateway SMB File Share (%s): %s", d.Id(), err)
 	}
 
 	d.Set("access_based_enumeration", fileshare.AccessBasedEnumeration)
@@ -324,7 +328,7 @@ func resourceSMBFileShareRead(d *schema.ResourceData, meta interface{}) error {
 
 	if fileshare.CacheAttributes != nil {
 		if err := d.Set("cache_attributes", []interface{}{flattenCacheAttributes(fileshare.CacheAttributes)}); err != nil {
-			return fmt.Errorf("error setting cache_attributes: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting cache_attributes: %s", err)
 		}
 	} else {
 		d.Set("cache_attributes", nil)
@@ -355,18 +359,19 @@ func resourceSMBFileShareRead(d *schema.ResourceData, meta interface{}) error {
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceSMBFileShareUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).StorageGatewayConn
+func resourceSMBFileShareUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).StorageGatewayConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &storagegateway.UpdateSMBFileShareInput{
@@ -429,48 +434,49 @@ func resourceSMBFileShareUpdate(d *schema.ResourceData, meta interface{}) error 
 		}
 
 		log.Printf("[DEBUG] Updating Storage Gateway SMB File Share: %s", input)
-		_, err := conn.UpdateSMBFileShare(input)
+		_, err := conn.UpdateSMBFileShareWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error updating Storage Gateway SMB File Share (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Storage Gateway SMB File Share (%s): %s", d.Id(), err)
 		}
 
-		if _, err = waitSMBFileShareUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return fmt.Errorf("error waiting for Storage Gateway SMB File Share (%s) to update: %w", d.Id(), err)
+		if _, err = waitSMBFileShareUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for Storage Gateway SMB File Share (%s) to update: %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %w", err)
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
 		}
 	}
 
-	return resourceSMBFileShareRead(d, meta)
+	return append(diags, resourceSMBFileShareRead(ctx, d, meta)...)
 }
 
-func resourceSMBFileShareDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).StorageGatewayConn
+func resourceSMBFileShareDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).StorageGatewayConn()
 
 	log.Printf("[DEBUG] Deleting Storage Gateway SMB File Share: %s", d.Id())
-	_, err := conn.DeleteFileShare(&storagegateway.DeleteFileShareInput{
+	_, err := conn.DeleteFileShareWithContext(ctx, &storagegateway.DeleteFileShareInput{
 		FileShareARN: aws.String(d.Id()),
 	})
 
 	if operationErrorCode(err) == operationErrCodeFileShareNotFound {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Storage Gateway SMB File Share (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Storage Gateway SMB File Share (%s): %s", d.Id(), err)
 	}
 
-	if _, err = waitSMBFileShareDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("error waiting for Storage Gateway SMB File Share (%s) to delete: %w", d.Id(), err)
+	if _, err = waitSMBFileShareDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Storage Gateway SMB File Share (%s) to delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandCacheAttributes(tfMap map[string]interface{}) *storagegateway.CacheAttributes {

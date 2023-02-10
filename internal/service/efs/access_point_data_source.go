@@ -1,20 +1,23 @@
 package efs
 
 import (
+	"context"
 	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/efs"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceAccessPoint() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAccessPointRead,
+		ReadWithoutTimeout: dataSourceAccessPointRead,
 
 		Schema: map[string]*schema.Schema{
 			"access_point_id": {
@@ -96,18 +99,19 @@ func DataSourceAccessPoint() *schema.Resource {
 	}
 }
 
-func dataSourceAccessPointRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EFSConn
+func dataSourceAccessPointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EFSConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	resp, err := conn.DescribeAccessPoints(&efs.DescribeAccessPointsInput{
+	resp, err := conn.DescribeAccessPointsWithContext(ctx, &efs.DescribeAccessPointsInput{
 		AccessPointId: aws.String(d.Get("access_point_id").(string)),
 	})
 	if err != nil {
-		return fmt.Errorf("Error reading EFS access point %s: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading EFS access point %s: %s", d.Id(), err)
 	}
 	if len(resp.AccessPoints) != 1 {
-		return fmt.Errorf("Search returned %d results, please revise so only one is returned", len(resp.AccessPoints))
+		return sdkdiag.AppendErrorf(diags, "Search returned %d results, please revise so only one is returned", len(resp.AccessPoints))
 	}
 
 	ap := resp.AccessPoints[0]
@@ -130,16 +134,16 @@ func dataSourceAccessPointRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("owner_id", ap.OwnerId)
 
 	if err := d.Set("posix_user", flattenAccessPointPOSIXUser(ap.PosixUser)); err != nil {
-		return fmt.Errorf("error setting posix user: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting posix user: %s", err)
 	}
 
 	if err := d.Set("root_directory", flattenAccessPointRootDirectory(ap.RootDirectory)); err != nil {
-		return fmt.Errorf("error setting root directory: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting root directory: %s", err)
 	}
 
 	if err := d.Set("tags", KeyValueTags(ap.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

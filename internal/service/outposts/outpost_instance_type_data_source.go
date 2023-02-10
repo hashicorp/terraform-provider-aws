@@ -1,18 +1,20 @@
 package outposts
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/outposts"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func DataSourceOutpostInstanceType() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceOutpostInstanceTypeRead,
+		ReadWithoutTimeout: dataSourceOutpostInstanceTypeRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -36,8 +38,9 @@ func DataSourceOutpostInstanceType() *schema.Resource {
 	}
 }
 
-func dataSourceOutpostInstanceTypeRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OutpostsConn
+func dataSourceOutpostInstanceTypeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).OutpostsConn()
 
 	input := &outposts.GetOutpostInstanceTypesInput{
 		OutpostId: aws.String(d.Get("arn").(string)), // Accepts both ARN and ID; prefer ARN which is more common
@@ -47,10 +50,10 @@ func dataSourceOutpostInstanceTypeRead(d *schema.ResourceData, meta interface{})
 	var foundInstanceTypes []string
 
 	for {
-		output, err := conn.GetOutpostInstanceTypes(input)
+		output, err := conn.GetOutpostInstanceTypesWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error getting Outpost Instance Types: %w", err)
+			return sdkdiag.AppendErrorf(diags, "getting Outpost Instance Types: %s", err)
 		}
 
 		if output == nil {
@@ -71,7 +74,7 @@ func dataSourceOutpostInstanceTypeRead(d *schema.ResourceData, meta interface{})
 	}
 
 	if len(foundInstanceTypes) == 0 {
-		return fmt.Errorf("no Outpost Instance Types found matching criteria; try different search")
+		return sdkdiag.AppendErrorf(diags, "no Outpost Instance Types found matching criteria; try different search")
 	}
 
 	var resultInstanceType string
@@ -110,7 +113,7 @@ func dataSourceOutpostInstanceTypeRead(d *schema.ResourceData, meta interface{})
 	}
 
 	if resultInstanceType == "" && len(foundInstanceTypes) > 1 {
-		return fmt.Errorf("multiple Outpost Instance Types found matching criteria; try different search")
+		return sdkdiag.AppendErrorf(diags, "multiple Outpost Instance Types found matching criteria; try different search")
 	}
 
 	if resultInstanceType == "" && len(foundInstanceTypes) == 1 {
@@ -118,12 +121,12 @@ func dataSourceOutpostInstanceTypeRead(d *schema.ResourceData, meta interface{})
 	}
 
 	if resultInstanceType == "" {
-		return fmt.Errorf("no Outpost Instance Types found matching criteria; try different search")
+		return sdkdiag.AppendErrorf(diags, "no Outpost Instance Types found matching criteria; try different search")
 	}
 
 	d.Set("instance_type", resultInstanceType)
 
 	d.SetId(outpostID)
 
-	return nil
+	return diags
 }

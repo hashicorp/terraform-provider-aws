@@ -405,6 +405,7 @@ The following arguments are supported:
 * `desired_capacity` - (Optional) Number of Amazon EC2 instances that
     should be running in the group. (See also [Waiting for
     Capacity](#waiting-for-capacity) below.)
+* `desired_capacity_type` - (Optional) The unit of measurement for the value specified for `desired_capacity`. Supported for attribute-based instance type selection only. Valid values: `"units"`, `"vcpu"`, `"memory-mib"`.
 * `force_delete` - (Optional) Allows deleting the Auto Scaling Group without waiting
    for all instances in the pool to terminate.  You can force an Auto Scaling Group to delete
    even if it's in the process of scaling a resource. Normally, Terraform
@@ -468,7 +469,7 @@ The top-level `launch_template` block supports the following:
 
 This configuration block supports the following:
 
-* `on_demand_allocation_strategy` - (Optional) Strategy to use when launching on-demand instances. Valid values: `prioritized`. Default: `prioritized`.
+* `on_demand_allocation_strategy` - (Optional) Strategy to use when launching on-demand instances. Valid values: `prioritized`, `lowest-price`. Default: `prioritized`.
 * `on_demand_base_capacity` - (Optional) Absolute minimum amount of desired capacity that must be fulfilled by on-demand instances. Default: `0`.
 * `on_demand_percentage_above_base_capacity` - (Optional) Percentage split between on-demand and Spot instances above the base on-demand capacity. Default: `100`.
 * `spot_allocation_strategy` - (Optional) How to allocate capacity across the Spot pools. Valid values: `lowest-price`, `capacity-optimized`, `capacity-optimized-prioritized`, and `price-capacity-optimized`. Default: `lowest-price`.

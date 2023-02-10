@@ -21,11 +21,13 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -36,13 +38,13 @@ import (
 
 func ResourceBucketObject() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceBucketObjectCreate,
-		Read:   resourceBucketObjectRead,
-		Update: resourceBucketObjectUpdate,
-		Delete: resourceBucketObjectDelete,
+		CreateWithoutTimeout: resourceBucketObjectCreate,
+		ReadWithoutTimeout:   resourceBucketObjectRead,
+		UpdateWithoutTimeout: resourceBucketObjectUpdate,
+		DeleteWithoutTimeout: resourceBucketObjectDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: resourceBucketObjectImport,
+			StateContext: resourceBucketObjectImport,
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -190,12 +192,14 @@ func ResourceBucketObject() *schema.Resource {
 	}
 }
 
-func resourceBucketObjectCreate(d *schema.ResourceData, meta interface{}) error {
-	return resourceBucketObjectUpload(d, meta)
+func resourceBucketObjectCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	return append(diags, resourceBucketObjectUpload(ctx, d, meta)...)
 }
 
-func resourceBucketObjectRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+func resourceBucketObjectRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).S3Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -209,10 +213,10 @@ func resourceBucketObjectRead(d *schema.ResourceData, meta interface{}) error {
 
 	var resp *s3.HeadObjectOutput
 
-	err := resource.Retry(objectCreationTimeout, func() *resource.RetryError {
+	err := resource.RetryContext(ctx, objectCreationTimeout, func() *resource.RetryError {
 		var err error
 
-		resp, err = conn.HeadObject(input)
+		resp, err = conn.HeadObjectWithContext(ctx, input)
 
 		if d.IsNewResource() && tfawserr.ErrStatusCodeEquals(err, http.StatusNotFound) {
 			return resource.RetryableError(err)
@@ -226,17 +230,17 @@ func resourceBucketObjectRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if tfresource.TimedOut(err) {
-		resp, err = conn.HeadObject(input)
+		resp, err = conn.HeadObjectWithContext(ctx, input)
 	}
 
 	if !d.IsNewResource() && tfawserr.ErrStatusCodeEquals(err, http.StatusNotFound) {
 		log.Printf("[WARN] S3 Object (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading S3 Object (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading S3 Object (%s): %s", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Reading S3 Object meta: %s", resp)
@@ -256,7 +260,7 @@ func resourceBucketObjectRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err := d.Set("metadata", metadata); err != nil {
-		return fmt.Errorf("error setting metadata: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting metadata: %s", err)
 	}
 	d.Set("version_id", resp.VersionId)
 	d.Set("server_side_encryption", resp.ServerSideEncryption)
@@ -265,8 +269,8 @@ func resourceBucketObjectRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("object_lock_mode", resp.ObjectLockMode)
 	d.Set("object_lock_retain_until_date", flattenObjectDate(resp.ObjectLockRetainUntilDate))
 
-	if err := resourceBucketObjectSetKMS(d, meta, resp.SSEKMSKeyId); err != nil {
-		return fmt.Errorf("object KMS: %w", err)
+	if err := resourceBucketObjectSetKMS(ctx, d, meta, resp.SSEKMSKeyId); err != nil {
+		return sdkdiag.AppendErrorf(diags, "object KMS: %s", err)
 	}
 
 	// See https://forums.aws.amazon.com/thread.jspa?threadID=44003
@@ -275,62 +279,63 @@ func resourceBucketObjectRead(d *schema.ResourceData, meta interface{}) error {
 	// The "STANDARD" (which is also the default) storage
 	// class when set would not be included in the results.
 	d.Set("storage_class", s3.StorageClassStandard)
-	if resp.StorageClass != nil {
+	if resp.StorageClass != nil { // nosemgrep: ci.helper-schema-ResourceData-Set-extraneous-nil-check
 		d.Set("storage_class", resp.StorageClass)
 	}
 
 	// Retry due to S3 eventual consistency
-	tagsRaw, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
-		return ObjectListTags(conn, bucket, key)
+	tagsRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
+		return ObjectListTags(ctx, conn, bucket, key)
 	}, s3.ErrCodeNoSuchBucket)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for S3 Bucket (%s) Object (%s): %s", bucket, key, err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for S3 Bucket (%s) Object (%s): %s", bucket, key, err)
 	}
 
 	tags, ok := tagsRaw.(tftags.KeyValueTags)
 
 	if !ok {
-		return fmt.Errorf("error listing tags for S3 Bucket (%s) Object (%s): unable to convert tags", bucket, key)
+		return sdkdiag.AppendErrorf(diags, "listing tags for S3 Bucket (%s) Object (%s): unable to convert tags", bucket, key)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceBucketObjectUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceBucketObjectUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	if hasBucketObjectContentChanges(d) {
-		return resourceBucketObjectUpload(d, meta)
+		return append(diags, resourceBucketObjectUpload(ctx, d, meta)...)
 	}
 
-	conn := meta.(*conns.AWSClient).S3Conn
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket := d.Get("bucket").(string)
 	key := d.Get("key").(string)
 
 	if d.HasChange("acl") {
-		_, err := conn.PutObjectAcl(&s3.PutObjectAclInput{
+		_, err := conn.PutObjectAclWithContext(ctx, &s3.PutObjectAclInput{
 			Bucket: aws.String(bucket),
 			Key:    aws.String(key),
 			ACL:    aws.String(d.Get("acl").(string)),
 		})
 		if err != nil {
-			return fmt.Errorf("error putting S3 object ACL: %s", err)
+			return sdkdiag.AppendErrorf(diags, "putting S3 object ACL: %s", err)
 		}
 	}
 
 	if d.HasChange("object_lock_legal_hold_status") {
-		_, err := conn.PutObjectLegalHold(&s3.PutObjectLegalHoldInput{
+		_, err := conn.PutObjectLegalHoldWithContext(ctx, &s3.PutObjectLegalHoldInput{
 			Bucket: aws.String(bucket),
 			Key:    aws.String(key),
 			LegalHold: &s3.ObjectLockLegalHold{
@@ -338,7 +343,7 @@ func resourceBucketObjectUpdate(d *schema.ResourceData, meta interface{}) error 
 			},
 		})
 		if err != nil {
-			return fmt.Errorf("error putting S3 object lock legal hold: %s", err)
+			return sdkdiag.AppendErrorf(diags, "putting S3 object lock legal hold: %s", err)
 		}
 	}
 
@@ -362,25 +367,26 @@ func resourceBucketObjectUpdate(d *schema.ResourceData, meta interface{}) error 
 			}
 		}
 
-		_, err := conn.PutObjectRetention(req)
+		_, err := conn.PutObjectRetentionWithContext(ctx, req)
 		if err != nil {
-			return fmt.Errorf("error putting S3 object lock retention: %s", err)
+			return sdkdiag.AppendErrorf(diags, "putting S3 object lock retention: %s", err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := ObjectUpdateTags(conn, bucket, key, o, n); err != nil {
-			return fmt.Errorf("error updating tags: %s", err)
+		if err := ObjectUpdateTags(ctx, conn, bucket, key, o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
 		}
 	}
 
-	return resourceBucketObjectRead(d, meta)
+	return append(diags, resourceBucketObjectRead(ctx, d, meta)...)
 }
 
-func resourceBucketObjectDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+func resourceBucketObjectDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket := d.Get("bucket").(string)
 	key := d.Get("key").(string)
@@ -391,19 +397,19 @@ func resourceBucketObjectDelete(d *schema.ResourceData, meta interface{}) error 
 
 	var err error
 	if _, ok := d.GetOk("version_id"); ok {
-		_, err = DeleteAllObjectVersions(conn, bucket, key, d.Get("force_destroy").(bool), false)
+		_, err = DeleteAllObjectVersions(ctx, conn, bucket, key, d.Get("force_destroy").(bool), false)
 	} else {
-		err = deleteObjectVersion(conn, bucket, key, "", false)
+		err = deleteObjectVersion(ctx, conn, bucket, key, "", false)
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting S3 Bucket (%s) Object (%s): %s", bucket, key, err)
+		return sdkdiag.AppendErrorf(diags, "deleting S3 Bucket (%s) Object (%s): %s", bucket, key, err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceBucketObjectImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceBucketObjectImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	id := d.Id()
 	id = strings.TrimPrefix(id, "s3://")
 	parts := strings.Split(id, "/")
@@ -422,8 +428,9 @@ func resourceBucketObjectImport(d *schema.ResourceData, meta interface{}) ([]*sc
 	return []*schema.ResourceData{d}, nil
 }
 
-func resourceBucketObjectUpload(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+func resourceBucketObjectUpload(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).S3Conn()
 	uploader := s3manager.NewUploaderWithClient(conn)
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
@@ -434,11 +441,11 @@ func resourceBucketObjectUpload(d *schema.ResourceData, meta interface{}) error 
 		source := v.(string)
 		path, err := homedir.Expand(source)
 		if err != nil {
-			return fmt.Errorf("Error expanding homedir in source (%s): %s", source, err)
+			return sdkdiag.AppendErrorf(diags, "Error expanding homedir in source (%s): %s", source, err)
 		}
 		file, err := os.Open(path)
 		if err != nil {
-			return fmt.Errorf("Error opening S3 object source (%s): %s", path, err)
+			return sdkdiag.AppendErrorf(diags, "Error opening S3 object source (%s): %s", path, err)
 		}
 
 		body = file
@@ -457,7 +464,7 @@ func resourceBucketObjectUpload(d *schema.ResourceData, meta interface{}) error 
 		// the AWS SDK requires an io.ReadSeeker but a base64 decoder can't seek.
 		contentRaw, err := base64.StdEncoding.DecodeString(content)
 		if err != nil {
-			return fmt.Errorf("error decoding content_base64: %s", err)
+			return sdkdiag.AppendErrorf(diags, "decoding content_base64: %s", err)
 		}
 		body = bytes.NewReader(contentRaw)
 	} else {
@@ -537,20 +544,20 @@ func resourceBucketObjectUpload(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	if _, err := uploader.Upload(input); err != nil {
-		return fmt.Errorf("Error uploading object to S3 bucket (%s): %s", bucket, err)
+		return sdkdiag.AppendErrorf(diags, "Error uploading object to S3 bucket (%s): %s", bucket, err)
 	}
 
 	d.SetId(key)
 
-	return resourceBucketObjectRead(d, meta)
+	return append(diags, resourceBucketObjectRead(ctx, d, meta)...)
 }
 
-func resourceBucketObjectSetKMS(d *schema.ResourceData, meta interface{}, sseKMSKeyId *string) error {
+func resourceBucketObjectSetKMS(ctx context.Context, d *schema.ResourceData, meta interface{}, sseKMSKeyId *string) error {
 	// Only set non-default KMS key ID (one that doesn't match default)
 	if sseKMSKeyId != nil {
 		// retrieve S3 KMS Default Master Key
-		conn := meta.(*conns.AWSClient).KMSConn
-		keyMetadata, err := kms.FindKeyByID(conn, DefaultKMSKeyAlias)
+		conn := meta.(*conns.AWSClient).KMSConn()
+		keyMetadata, err := kms.FindKeyByID(ctx, conn, DefaultKMSKeyAlias)
 		if err != nil {
 			return fmt.Errorf("Failed to describe default S3 KMS key (%s): %s", DefaultKMSKeyAlias, err)
 		}

@@ -1,7 +1,7 @@
 package sagemaker
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"regexp"
 	"time"
@@ -9,9 +9,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -20,13 +22,13 @@ import (
 
 func ResourceWorkteam() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceWorkteamCreate,
-		Read:   resourceWorkteamRead,
-		Update: resourceWorkteamUpdate,
-		Delete: resourceWorkteamDelete,
+		CreateWithoutTimeout: resourceWorkteamCreate,
+		ReadWithoutTimeout:   resourceWorkteamRead,
+		UpdateWithoutTimeout: resourceWorkteamUpdate,
+		DeleteWithoutTimeout: resourceWorkteamDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -129,8 +131,9 @@ func ResourceWorkteam() *schema.Resource {
 	}
 }
 
-func resourceWorkteamCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+func resourceWorkteamCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -151,34 +154,35 @@ func resourceWorkteamCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Updating SageMaker Workteam: %s", input)
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
-		return conn.CreateWorkteam(input)
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
+		return conn.CreateWorkteamWithContext(ctx, input)
 	}, "ValidationException")
 
 	if err != nil {
-		return fmt.Errorf("creating SageMaker Workteam (%s): %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker Workteam (%s): %s", name, err)
 	}
 
 	d.SetId(name)
 
-	return resourceWorkteamRead(d, meta)
+	return append(diags, resourceWorkteamRead(ctx, d, meta)...)
 }
 
-func resourceWorkteamRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+func resourceWorkteamRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	workteam, err := FindWorkteamByName(conn, d.Id())
+	workteam, err := FindWorkteamByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SageMaker Workteam (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading SageMaker Workteam (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker Workteam (%s): %s", d.Id(), err)
 	}
 
 	arn := aws.StringValue(workteam.WorkteamArn)
@@ -188,35 +192,36 @@ func resourceWorkteamRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("workteam_name", workteam.WorkteamName)
 
 	if err := d.Set("member_definition", flattenWorkteamMemberDefinition(workteam.MemberDefinitions)); err != nil {
-		return fmt.Errorf("setting member_definition: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting member_definition: %s", err)
 	}
 
 	if err := d.Set("notification_configuration", flattenWorkteamNotificationConfiguration(workteam.NotificationConfiguration)); err != nil {
-		return fmt.Errorf("setting notification_configuration: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting notification_configuration: %s", err)
 	}
 
-	tags, err := ListTags(conn, arn)
+	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("listing tags for SageMaker Workteam (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for SageMaker Workteam (%s): %s", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceWorkteamUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+func resourceWorkteamUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &sagemaker.UpdateWorkteamInput{
@@ -233,41 +238,42 @@ func resourceWorkteamUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		log.Printf("[DEBUG] Updating SageMaker Workteam: %s", input)
-		_, err := conn.UpdateWorkteam(input)
+		_, err := conn.UpdateWorkteamWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("updating SageMaker Workteam (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating SageMaker Workteam (%s): %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("updating SageMaker Workteam (%s) tags: %w", d.Id(), err)
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating SageMaker Workteam (%s) tags: %s", d.Id(), err)
 		}
 	}
 
-	return resourceWorkteamRead(d, meta)
+	return append(diags, resourceWorkteamRead(ctx, d, meta)...)
 }
 
-func resourceWorkteamDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+func resourceWorkteamDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	log.Printf("[DEBUG] Deleting SageMaker Workteam: %s", d.Id())
-	_, err := conn.DeleteWorkteam(&sagemaker.DeleteWorkteamInput{
+	_, err := conn.DeleteWorkteamWithContext(ctx, &sagemaker.DeleteWorkteamInput{
 		WorkteamName: aws.String(d.Id()),
 	})
 
 	if tfawserr.ErrMessageContains(err, "ValidationException", "The work team") {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("deleting SageMaker Workteam (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting SageMaker Workteam (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandWorkteamMemberDefinition(l []interface{}) []*sagemaker.MemberDefinition {

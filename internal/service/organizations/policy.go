@@ -21,10 +21,10 @@ import (
 
 func ResourcePolicy() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourcePolicyCreate,
-		ReadContext:   resourcePolicyRead,
-		UpdateContext: resourcePolicyUpdate,
-		DeleteContext: resourcePolicyDelete,
+		CreateWithoutTimeout: resourcePolicyCreate,
+		ReadWithoutTimeout:   resourcePolicyRead,
+		UpdateWithoutTimeout: resourcePolicyUpdate,
+		DeleteWithoutTimeout: resourcePolicyDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: resourcePolicyImport,
 		},
@@ -64,7 +64,7 @@ func ResourcePolicy() *schema.Resource {
 }
 
 func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).OrganizationsConn
+	conn := meta.(*conns.AWSClient).OrganizationsConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -82,8 +82,8 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	var err error
 	var resp *organizations.CreatePolicyOutput
-	err = resource.Retry(4*time.Minute, func() *resource.RetryError {
-		resp, err = conn.CreatePolicy(input)
+	err = resource.RetryContext(ctx, 4*time.Minute, func() *resource.RetryError {
+		resp, err = conn.CreatePolicyWithContext(ctx, input)
 
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, organizations.ErrCodeFinalizingOrganizationException) {
@@ -97,7 +97,7 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		resp, err = conn.CreatePolicy(input)
+		resp, err = conn.CreatePolicyWithContext(ctx, input)
 	}
 
 	if err != nil {
@@ -110,7 +110,7 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).OrganizationsConn
+	conn := meta.(*conns.AWSClient).OrganizationsConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -119,7 +119,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	log.Printf("[DEBUG] Reading Organizations policy: %s", input)
-	resp, err := conn.DescribePolicy(input)
+	resp, err := conn.DescribePolicyWithContext(ctx, input)
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, organizations.ErrCodePolicyNotFoundException) {
 			log.Printf("[WARN] Organizations policy does not exist, removing from state: %s", d.Id())
@@ -151,7 +151,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 	}
 
-	tags, err := ListTags(conn, d.Id())
+	tags, err := ListTags(ctx, conn, d.Id())
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error listing tags for Organizations policy (%s): %w", d.Id(), err))
 	}
@@ -171,7 +171,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).OrganizationsConn
+	conn := meta.(*conns.AWSClient).OrganizationsConn()
 
 	input := &organizations.UpdatePolicyInput{
 		PolicyId: aws.String(d.Id()),
@@ -190,14 +190,14 @@ func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	log.Printf("[DEBUG] Updating Organizations Policy: %s", input)
-	_, err := conn.UpdatePolicy(input)
+	_, err := conn.UpdatePolicyWithContext(ctx, input)
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error updating Organizations policy (%s): %w", d.Id(), err))
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
 			return diag.FromErr(fmt.Errorf("error updating tags for Organizations policy (%s): %w", d.Id(), err))
 		}
 	}
@@ -206,14 +206,14 @@ func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).OrganizationsConn
+	conn := meta.(*conns.AWSClient).OrganizationsConn()
 
 	input := &organizations.DeletePolicyInput{
 		PolicyId: aws.String(d.Id()),
 	}
 
 	log.Printf("[DEBUG] Deleting Organizations Policy: %s", input)
-	_, err := conn.DeletePolicy(input)
+	_, err := conn.DeletePolicyWithContext(ctx, input)
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, organizations.ErrCodePolicyNotFoundException) {
 			return nil
@@ -224,7 +224,7 @@ func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourcePolicyImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	conn := meta.(*conns.AWSClient).OrganizationsConn
+	conn := meta.(*conns.AWSClient).OrganizationsConn()
 
 	input := &organizations.DescribePolicyInput{
 		PolicyId: aws.String(d.Id()),

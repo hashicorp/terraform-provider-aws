@@ -1,6 +1,7 @@
 package glue
 
 import (
+	"context"
 	"fmt"
 	"log"
 
@@ -8,9 +9,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -19,12 +22,12 @@ import (
 
 func ResourceJob() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceJobCreate,
-		Read:   resourceJobRead,
-		Update: resourceJobUpdate,
-		Delete: resourceJobDelete,
+		CreateWithoutTimeout: resourceJobCreate,
+		ReadWithoutTimeout:   resourceJobRead,
+		UpdateWithoutTimeout: resourceJobUpdate,
+		DeleteWithoutTimeout: resourceJobDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -168,8 +171,9 @@ func ResourceJob() *schema.Resource {
 	}
 }
 
-func resourceJobCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+func resourceJobCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlueConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -240,32 +244,33 @@ func resourceJobCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Creating Glue Job: %s", input)
-	output, err := conn.CreateJob(input)
+	output, err := conn.CreateJobWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("creating Glue Job (%s): %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating Glue Job (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.Name))
 
-	return resourceJobRead(d, meta)
+	return append(diags, resourceJobRead(ctx, d, meta)...)
 }
 
-func resourceJobRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+func resourceJobRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlueConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	job, err := FindJobByName(conn, d.Id())
+	job, err := FindJobByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Glue Job (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading Glue Job (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Glue Job (%s): %s", d.Id(), err)
 	}
 
 	jobARN := arn.ARN{
@@ -277,16 +282,16 @@ func resourceJobRead(d *schema.ResourceData, meta interface{}) error {
 	}.String()
 	d.Set("arn", jobARN)
 	if err := d.Set("command", flattenJobCommand(job.Command)); err != nil {
-		return fmt.Errorf("setting command: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting command: %s", err)
 	}
 	if err := d.Set("connections", flattenConnectionsList(job.Connections)); err != nil {
-		return fmt.Errorf("setting connections: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting connections: %s", err)
 	}
 	d.Set("default_arguments", aws.StringValueMap(job.DefaultArguments))
 	d.Set("description", job.Description)
 	d.Set("execution_class", job.ExecutionClass)
 	if err := d.Set("execution_property", flattenExecutionProperty(job.ExecutionProperty)); err != nil {
-		return fmt.Errorf("setting execution_property: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting execution_property: %s", err)
 	}
 	d.Set("glue_version", job.GlueVersion)
 	d.Set("max_capacity", job.MaxCapacity)
@@ -294,7 +299,7 @@ func resourceJobRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", job.Name)
 	d.Set("non_overridable_arguments", aws.StringValueMap(job.NonOverridableArguments))
 	if err := d.Set("notification_property", flattenNotificationProperty(job.NotificationProperty)); err != nil {
-		return fmt.Errorf("setting notification_property: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting notification_property: %s", err)
 	}
 	d.Set("number_of_workers", job.NumberOfWorkers)
 	d.Set("role_arn", job.Role)
@@ -302,28 +307,29 @@ func resourceJobRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("timeout", job.Timeout)
 	d.Set("worker_type", job.WorkerType)
 
-	tags, err := ListTags(conn, jobARN)
+	tags, err := ListTags(ctx, conn, jobARN)
 
 	if err != nil {
-		return fmt.Errorf("listing tags for Glue Job (%s): %w", jobARN, err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for Glue Job (%s): %s", jobARN, err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceJobUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+func resourceJobUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlueConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		jobUpdate := &glue.JobUpdate{
@@ -395,40 +401,41 @@ func resourceJobUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		log.Printf("[DEBUG] Updating Glue Job: %s", input)
-		_, err := conn.UpdateJob(input)
+		_, err := conn.UpdateJobWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("updating Glue Job (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Glue Job (%s): %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("updating tags: %w", err)
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
 		}
 	}
 
-	return resourceJobRead(d, meta)
+	return append(diags, resourceJobRead(ctx, d, meta)...)
 }
 
-func resourceJobDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+func resourceJobDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlueConn()
 
 	log.Printf("[DEBUG] Deleting Glue Job: %s", d.Id())
-	_, err := conn.DeleteJob(&glue.DeleteJobInput{
+	_, err := conn.DeleteJobWithContext(ctx, &glue.DeleteJobInput{
 		JobName: aws.String(d.Id()),
 	})
 
 	if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("deleting Glue Job (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Glue Job (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandExecutionProperty(l []interface{}) *glue.ExecutionProperty {

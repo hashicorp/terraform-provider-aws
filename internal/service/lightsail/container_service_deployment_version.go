@@ -20,9 +20,9 @@ import (
 
 func ResourceContainerServiceDeploymentVersion() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceContainerServiceDeploymentVersionCreate,
-		ReadContext:   resourceContainerServiceDeploymentVersionRead,
-		DeleteContext: resourceContainerServiceDeploymentVersionDelete,
+		CreateWithoutTimeout: resourceContainerServiceDeploymentVersionCreate,
+		ReadWithoutTimeout:   resourceContainerServiceDeploymentVersionRead,
+		DeleteWithoutTimeout: resourceContainerServiceDeploymentVersionDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -165,7 +165,7 @@ func ResourceContainerServiceDeploymentVersion() *schema.Resource {
 }
 
 func resourceContainerServiceDeploymentVersionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn
+	conn := meta.(*conns.AWSClient).LightsailConn()
 	serviceName := d.Get("service_name").(string)
 
 	input := &lightsail.CreateContainerServiceDeploymentInput{
@@ -201,7 +201,7 @@ func resourceContainerServiceDeploymentVersionCreate(ctx context.Context, d *sch
 }
 
 func resourceContainerServiceDeploymentVersionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn
+	conn := meta.(*conns.AWSClient).LightsailConn()
 
 	serviceName, version, err := ContainerServiceDeploymentVersionParseResourceID(d.Id())
 	if err != nil {

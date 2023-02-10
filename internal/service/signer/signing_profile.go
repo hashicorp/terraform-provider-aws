@@ -1,7 +1,7 @@
 package signer
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"regexp"
 	"strings"
@@ -10,23 +10,25 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/signer"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceSigningProfile() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceSigningProfileCreate,
-		Read:   resourceSigningProfileRead,
-		Update: resourceSigningProfileUpdate,
-		Delete: resourceSigningProfileDelete,
+		CreateWithoutTimeout: resourceSigningProfileCreate,
+		ReadWithoutTimeout:   resourceSigningProfileRead,
+		UpdateWithoutTimeout: resourceSigningProfileUpdate,
+		DeleteWithoutTimeout: resourceSigningProfileDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -123,8 +125,9 @@ func ResourceSigningProfile() *schema.Resource {
 	}
 }
 
-func resourceSigningProfileCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SignerConn
+func resourceSigningProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SignerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -150,37 +153,38 @@ func resourceSigningProfileCreate(d *schema.ResourceData, meta interface{}) erro
 		signingProfileInput.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	_, err := conn.PutSigningProfile(signingProfileInput)
+	_, err := conn.PutSigningProfileWithContext(ctx, signingProfileInput)
 	if err != nil {
-		return fmt.Errorf("error creating Signer signing profile: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Signer signing profile: %s", err)
 	}
 
 	d.SetId(profileName)
 
-	return resourceSigningProfileRead(d, meta)
+	return append(diags, resourceSigningProfileRead(ctx, d, meta)...)
 }
 
-func resourceSigningProfileRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SignerConn
+func resourceSigningProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SignerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	signingProfileOutput, err := conn.GetSigningProfile(&signer.GetSigningProfileInput{
+	signingProfileOutput, err := conn.GetSigningProfileWithContext(ctx, &signer.GetSigningProfileInput{
 		ProfileName: aws.String(d.Id()),
 	})
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, signer.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Signer Signing Profile (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Signer signing profile (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Signer signing profile (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("platform_id", signingProfileOutput.PlatformId); err != nil {
-		return fmt.Errorf("error setting signer signing profile platform id: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting signer signing profile platform id: %s", err)
 	}
 
 	if err := d.Set("signature_validity_period", []interface{}{
@@ -189,82 +193,84 @@ func resourceSigningProfileRead(d *schema.ResourceData, meta interface{}) error 
 			"type":  signingProfileOutput.SignatureValidityPeriod.Type,
 		},
 	}); err != nil {
-		return fmt.Errorf("error setting signer signing profile signature validity period: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting signer signing profile signature validity period: %s", err)
 	}
 
 	if err := d.Set("platform_display_name", signingProfileOutput.PlatformDisplayName); err != nil {
-		return fmt.Errorf("error setting signer signing profile platform display name: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting signer signing profile platform display name: %s", err)
 	}
 
 	if err := d.Set("name", signingProfileOutput.ProfileName); err != nil {
-		return fmt.Errorf("error setting signer signing profile name: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting signer signing profile name: %s", err)
 	}
 
 	if err := d.Set("arn", signingProfileOutput.Arn); err != nil {
-		return fmt.Errorf("error setting signer signing profile arn: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting signer signing profile arn: %s", err)
 	}
 
 	if err := d.Set("version", signingProfileOutput.ProfileVersion); err != nil {
-		return fmt.Errorf("error setting signer signing profile version: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting signer signing profile version: %s", err)
 	}
 
 	if err := d.Set("version_arn", signingProfileOutput.ProfileVersionArn); err != nil {
-		return fmt.Errorf("error setting signer signing profile version arn: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting signer signing profile version arn: %s", err)
 	}
 
 	if err := d.Set("status", signingProfileOutput.Status); err != nil {
-		return fmt.Errorf("error setting signer signing profile status: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting signer signing profile status: %s", err)
 	}
 
 	tags := KeyValueTags(signingProfileOutput.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
 	if err := d.Set("revocation_record", flattenSigningProfileRevocationRecord(signingProfileOutput.RevocationRecord)); err != nil {
-		return fmt.Errorf("error setting signer signing profile revocation record: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting signer signing profile revocation record: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceSigningProfileUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SignerConn
+func resourceSigningProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SignerConn()
 
 	arn := d.Get("arn").(string)
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, arn, o, n); err != nil {
-			return fmt.Errorf("error updating Signer signing profile (%s) tags: %s", arn, err)
+		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Signer signing profile (%s) tags: %s", arn, err)
 		}
 	}
 
-	return resourceSigningProfileRead(d, meta)
+	return append(diags, resourceSigningProfileRead(ctx, d, meta)...)
 }
 
-func resourceSigningProfileDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SignerConn
+func resourceSigningProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SignerConn()
 
-	_, err := conn.CancelSigningProfile(&signer.CancelSigningProfileInput{
+	_, err := conn.CancelSigningProfileWithContext(ctx, &signer.CancelSigningProfileInput{
 		ProfileName: aws.String(d.Id()),
 	})
 
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, signer.ErrCodeResourceNotFoundException) {
-			return nil
+			return diags
 		}
-		return fmt.Errorf("error canceling Signer signing profile (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "canceling Signer signing profile (%s): %s", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Signer signing profile %q canceled", d.Id())
-	return nil
+	return diags
 }
 
 func flattenSigningProfileRevocationRecord(apiObject *signer.SigningProfileRevocationRecord) interface{} {

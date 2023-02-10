@@ -1,17 +1,20 @@
 package lakeformation
 
 import (
+	"context"
 	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lakeformation"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -19,12 +22,12 @@ import (
 
 func ResourceDataLakeSettings() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceDataLakeSettingsCreate,
-		Update: resourceDataLakeSettingsCreate,
-		Read:   resourceDataLakeSettingsRead,
-		Delete: resourceDataLakeSettingsDelete,
+		CreateWithoutTimeout: resourceDataLakeSettingsCreate,
+		UpdateWithoutTimeout: resourceDataLakeSettingsCreate,
+		ReadWithoutTimeout:   resourceDataLakeSettingsRead,
+		DeleteWithoutTimeout: resourceDataLakeSettingsDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -105,8 +108,9 @@ func ResourceDataLakeSettings() *schema.Resource {
 	}
 }
 
-func resourceDataLakeSettingsCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LakeFormationConn
+func resourceDataLakeSettingsCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).LakeFormationConn()
 
 	input := &lakeformation.PutDataLakeSettingsInput{}
 
@@ -135,9 +139,9 @@ func resourceDataLakeSettingsCreate(d *schema.ResourceData, meta interface{}) er
 	input.DataLakeSettings = settings
 
 	var output *lakeformation.PutDataLakeSettingsOutput
-	err := resource.Retry(IAMPropagationTimeout, func() *resource.RetryError {
+	err := resource.RetryContext(ctx, IAMPropagationTimeout, func() *resource.RetryError {
 		var err error
-		output, err = conn.PutDataLakeSettings(input)
+		output, err = conn.PutDataLakeSettingsWithContext(ctx, input)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, lakeformation.ErrCodeInvalidInputException, "Invalid principal") {
 				return resource.RetryableError(err)
@@ -152,24 +156,25 @@ func resourceDataLakeSettingsCreate(d *schema.ResourceData, meta interface{}) er
 	})
 
 	if tfresource.TimedOut(err) {
-		output, err = conn.PutDataLakeSettings(input)
+		output, err = conn.PutDataLakeSettingsWithContext(ctx, input)
 	}
 
 	if err != nil {
-		return fmt.Errorf("error creating Lake Formation data lake settings: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating Lake Formation data lake settings: %s", err)
 	}
 
 	if output == nil {
-		return fmt.Errorf("error creating Lake Formation data lake settings: empty response")
+		return sdkdiag.AppendErrorf(diags, "creating Lake Formation data lake settings: empty response")
 	}
 
 	d.SetId(fmt.Sprintf("%d", create.StringHashcode(input.String())))
 
-	return resourceDataLakeSettingsRead(d, meta)
+	return append(diags, resourceDataLakeSettingsRead(ctx, d, meta)...)
 }
 
-func resourceDataLakeSettingsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LakeFormationConn
+func resourceDataLakeSettingsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).LakeFormationConn()
 
 	input := &lakeformation.GetDataLakeSettingsInput{}
 
@@ -177,20 +182,20 @@ func resourceDataLakeSettingsRead(d *schema.ResourceData, meta interface{}) erro
 		input.CatalogId = aws.String(v.(string))
 	}
 
-	output, err := conn.GetDataLakeSettings(input)
+	output, err := conn.GetDataLakeSettingsWithContext(ctx, input)
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, lakeformation.ErrCodeEntityNotFoundException) {
 		log.Printf("[WARN] Lake Formation data lake settings (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading Lake Formation data lake settings (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Lake Formation data lake settings (%s): %s", d.Id(), err)
 	}
 
 	if output == nil || output.DataLakeSettings == nil {
-		return fmt.Errorf("reading Lake Formation data lake settings (%s): empty response", d.Id())
+		return sdkdiag.AppendErrorf(diags, "reading Lake Formation data lake settings (%s): empty response", d.Id())
 	}
 
 	settings := output.DataLakeSettings
@@ -200,11 +205,12 @@ func resourceDataLakeSettingsRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("admins", flattenDataLakeSettingsAdmins(settings.DataLakeAdmins))
 	d.Set("trusted_resource_owners", flex.FlattenStringList(settings.TrustedResourceOwners))
 
-	return nil
+	return diags
 }
 
-func resourceDataLakeSettingsDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LakeFormationConn
+func resourceDataLakeSettingsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).LakeFormationConn()
 
 	input := &lakeformation.PutDataLakeSettingsInput{
 		DataLakeSettings: &lakeformation.DataLakeSettings{
@@ -219,18 +225,18 @@ func resourceDataLakeSettingsDelete(d *schema.ResourceData, meta interface{}) er
 		input.CatalogId = aws.String(v.(string))
 	}
 
-	_, err := conn.PutDataLakeSettings(input)
+	_, err := conn.PutDataLakeSettingsWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, lakeformation.ErrCodeEntityNotFoundException) {
 		log.Printf("[WARN] Lake Formation data lake settings (%s) not found, removing from state", d.Id())
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("deleting Lake Formation data lake settings (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Lake Formation data lake settings (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandDataLakeSettingsCreateDefaultPermissions(tfMaps []interface{}) []*lakeformation.PrincipalPermissions {

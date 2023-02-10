@@ -1,19 +1,21 @@
 package imagebuilder
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func DataSourceImageRecipe() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceImageRecipeRead,
+		ReadWithoutTimeout: dataSourceImageRecipeRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -150,8 +152,9 @@ func DataSourceImageRecipe() *schema.Resource {
 	}
 }
 
-func dataSourceImageRecipeRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ImageBuilderConn
+func dataSourceImageRecipeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ImageBuilderConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &imagebuilder.GetImageRecipeInput{}
@@ -160,14 +163,14 @@ func dataSourceImageRecipeRead(d *schema.ResourceData, meta interface{}) error {
 		input.ImageRecipeArn = aws.String(v.(string))
 	}
 
-	output, err := conn.GetImageRecipe(input)
+	output, err := conn.GetImageRecipeWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error reading Image Builder Image Recipe (%s): %w", aws.StringValue(input.ImageRecipeArn), err)
+		return sdkdiag.AppendErrorf(diags, "reading Image Builder Image Recipe (%s): %s", aws.StringValue(input.ImageRecipeArn), err)
 	}
 
 	if output == nil || output.ImageRecipe == nil {
-		return fmt.Errorf("error reading Image Builder Image Recipe (%s): empty response", aws.StringValue(input.ImageRecipeArn))
+		return sdkdiag.AppendErrorf(diags, "reading Image Builder Image Recipe (%s): empty response", aws.StringValue(input.ImageRecipeArn))
 	}
 
 	imageRecipe := output.ImageRecipe
@@ -191,5 +194,5 @@ func dataSourceImageRecipeRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("version", imageRecipe.Version)
 	d.Set("working_directory", imageRecipe.WorkingDirectory)
 
-	return nil
+	return diags
 }

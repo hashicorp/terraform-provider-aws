@@ -1,19 +1,21 @@
 package imagebuilder
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func DataSourceDistributionConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceDistributionConfigurationRead,
+		ReadWithoutTimeout: dataSourceDistributionConfigurationRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -232,8 +234,9 @@ func DataSourceDistributionConfiguration() *schema.Resource {
 	}
 }
 
-func dataSourceDistributionConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ImageBuilderConn
+func dataSourceDistributionConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ImageBuilderConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &imagebuilder.GetDistributionConfigurationInput{}
@@ -242,14 +245,14 @@ func dataSourceDistributionConfigurationRead(d *schema.ResourceData, meta interf
 		input.DistributionConfigurationArn = aws.String(v.(string))
 	}
 
-	output, err := conn.GetDistributionConfiguration(input)
+	output, err := conn.GetDistributionConfigurationWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error getting Image Builder Distribution Configuration (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "getting Image Builder Distribution Configuration (%s): %s", d.Id(), err)
 	}
 
 	if output == nil || output.DistributionConfiguration == nil {
-		return fmt.Errorf("error getting Image Builder Distribution Configuration (%s): empty response", d.Id())
+		return sdkdiag.AppendErrorf(diags, "getting Image Builder Distribution Configuration (%s): empty response", d.Id())
 	}
 
 	distributionConfiguration := output.DistributionConfiguration
@@ -263,5 +266,5 @@ func dataSourceDistributionConfigurationRead(d *schema.ResourceData, meta interf
 	d.Set("name", distributionConfiguration.Name)
 	d.Set("tags", KeyValueTags(distributionConfiguration.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
 
-	return nil
+	return diags
 }

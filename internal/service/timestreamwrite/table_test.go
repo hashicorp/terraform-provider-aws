@@ -17,20 +17,21 @@ import (
 )
 
 func TestAccTimestreamWriteTable_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_timestreamwrite_table.test"
 	dbResourceName := "aws_timestreamwrite_database.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, timestreamwrite.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableDestroy,
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTableExists(resourceName),
+					testAccCheckTableExists(ctx, resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "timestream", fmt.Sprintf("database/%[1]s/table/%[1]s", rName)),
 					resource.TestCheckResourceAttrPair(resourceName, "database_name", dbResourceName, "database_name"),
 					resource.TestCheckResourceAttr(resourceName, "retention_properties.#", "1"),
@@ -51,19 +52,20 @@ func TestAccTimestreamWriteTable_basic(t *testing.T) {
 }
 
 func TestAccTimestreamWriteTable_magneticStoreWriteProperties(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_timestreamwrite_table.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, timestreamwrite.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableDestroy,
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableConfig_magneticStoreWriteProperties(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTableExists(resourceName),
+					testAccCheckTableExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "magnetic_store_write_properties.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "magnetic_store_write_properties.0.enable_magnetic_store_writes", "true"),
 					resource.TestCheckResourceAttr(resourceName, "magnetic_store_write_properties.0.magnetic_store_rejected_data_location.#", "0"),
@@ -77,7 +79,7 @@ func TestAccTimestreamWriteTable_magneticStoreWriteProperties(t *testing.T) {
 			{
 				Config: testAccTableConfig_magneticStoreWriteProperties(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTableExists(resourceName),
+					testAccCheckTableExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "magnetic_store_write_properties.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "magnetic_store_write_properties.0.enable_magnetic_store_writes", "false"),
 				),
@@ -85,7 +87,7 @@ func TestAccTimestreamWriteTable_magneticStoreWriteProperties(t *testing.T) {
 			{
 				Config: testAccTableConfig_magneticStoreWriteProperties(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTableExists(resourceName),
+					testAccCheckTableExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "magnetic_store_write_properties.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "magnetic_store_write_properties.0.enable_magnetic_store_writes", "true"),
 				),
@@ -95,21 +97,22 @@ func TestAccTimestreamWriteTable_magneticStoreWriteProperties(t *testing.T) {
 }
 
 func TestAccTimestreamWriteTable_magneticStoreWriteProperties_s3Config(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rNameUpdated := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resourceName := "aws_timestreamwrite_table.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, timestreamwrite.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableDestroy,
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableConfig_magneticStoreWritePropertiesS3(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTableExists(resourceName),
+					testAccCheckTableExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "magnetic_store_write_properties.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "magnetic_store_write_properties.0.enable_magnetic_store_writes", "true"),
 					resource.TestCheckResourceAttr(resourceName, "magnetic_store_write_properties.0.magnetic_store_rejected_data_location.#", "1"),
@@ -126,7 +129,7 @@ func TestAccTimestreamWriteTable_magneticStoreWriteProperties_s3Config(t *testin
 			{
 				Config: testAccTableConfig_magneticStoreWritePropertiesS3(rName, rNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTableExists(resourceName),
+					testAccCheckTableExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "magnetic_store_write_properties.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "magnetic_store_write_properties.0.enable_magnetic_store_writes", "true"),
 					resource.TestCheckResourceAttr(resourceName, "magnetic_store_write_properties.0.magnetic_store_rejected_data_location.#", "1"),
@@ -140,20 +143,21 @@ func TestAccTimestreamWriteTable_magneticStoreWriteProperties_s3Config(t *testin
 }
 
 func TestAccTimestreamWriteTable_magneticStoreWriteProperties_s3KMSConfig(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resourceName := "aws_timestreamwrite_table.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, timestreamwrite.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableDestroy,
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableConfig_magneticStoreWritePropertiesS3KMS(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTableExists(resourceName),
+					testAccCheckTableExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "magnetic_store_write_properties.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "magnetic_store_write_properties.0.enable_magnetic_store_writes", "true"),
 					resource.TestCheckResourceAttr(resourceName, "magnetic_store_write_properties.0.magnetic_store_rejected_data_location.#", "1"),
@@ -174,21 +178,22 @@ func TestAccTimestreamWriteTable_magneticStoreWriteProperties_s3KMSConfig(t *tes
 }
 
 func TestAccTimestreamWriteTable_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_timestreamwrite_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, timestreamwrite.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableDestroy,
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTableExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tftimestreamwrite.ResourceTable(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tftimestreamwrite.ResourceTable(), resourceName),
+					testAccCheckTableExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tftimestreamwrite.ResourceTable(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tftimestreamwrite.ResourceTable(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -197,19 +202,20 @@ func TestAccTimestreamWriteTable_disappears(t *testing.T) {
 }
 
 func TestAccTimestreamWriteTable_retentionProperties(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_timestreamwrite_table.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, timestreamwrite.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableDestroy,
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableConfig_retentionProperties(rName, 30, 120),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTableExists(resourceName),
+					testAccCheckTableExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "retention_properties.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "retention_properties.0.magnetic_store_retention_period_in_days", "30"),
 					resource.TestCheckResourceAttr(resourceName, "retention_properties.0.memory_store_retention_period_in_hours", "120"),
@@ -223,7 +229,7 @@ func TestAccTimestreamWriteTable_retentionProperties(t *testing.T) {
 			{
 				Config: testAccTableConfig_retentionProperties(rName, 300, 7),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTableExists(resourceName),
+					testAccCheckTableExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "retention_properties.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "retention_properties.0.magnetic_store_retention_period_in_days", "300"),
 					resource.TestCheckResourceAttr(resourceName, "retention_properties.0.memory_store_retention_period_in_hours", "7"),
@@ -237,7 +243,7 @@ func TestAccTimestreamWriteTable_retentionProperties(t *testing.T) {
 			{
 				Config: testAccTableConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTableExists(resourceName),
+					testAccCheckTableExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "retention_properties.#", "1"),
 				),
 			},
@@ -246,19 +252,20 @@ func TestAccTimestreamWriteTable_retentionProperties(t *testing.T) {
 }
 
 func TestAccTimestreamWriteTable_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_timestreamwrite_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, timestreamwrite.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableDestroy,
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTableExists(resourceName),
+					testAccCheckTableExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
@@ -268,7 +275,7 @@ func TestAccTimestreamWriteTable_tags(t *testing.T) {
 			{
 				Config: testAccTableConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTableExists(resourceName),
+					testAccCheckTableExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -280,7 +287,7 @@ func TestAccTimestreamWriteTable_tags(t *testing.T) {
 			{
 				Config: testAccTableConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTableExists(resourceName),
+					testAccCheckTableExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
@@ -296,45 +303,46 @@ func TestAccTimestreamWriteTable_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckTableDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).TimestreamWriteConn
-	ctx := context.Background()
+func testAccCheckTableDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).TimestreamWriteConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_timestreamwrite_table" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_timestreamwrite_table" {
+				continue
+			}
+
+			tableName, dbName, err := tftimestreamwrite.TableParseID(rs.Primary.ID)
+
+			if err != nil {
+				return err
+			}
+
+			input := &timestreamwrite.DescribeTableInput{
+				DatabaseName: aws.String(dbName),
+				TableName:    aws.String(tableName),
+			}
+
+			output, err := conn.DescribeTableWithContext(ctx, input)
+
+			if tfawserr.ErrCodeEquals(err, timestreamwrite.ErrCodeResourceNotFoundException) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			if output != nil && output.Table != nil {
+				return fmt.Errorf("Timestream Table (%s) still exists", rs.Primary.ID)
+			}
 		}
 
-		tableName, dbName, err := tftimestreamwrite.TableParseID(rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		input := &timestreamwrite.DescribeTableInput{
-			DatabaseName: aws.String(dbName),
-			TableName:    aws.String(tableName),
-		}
-
-		output, err := conn.DescribeTableWithContext(ctx, input)
-
-		if tfawserr.ErrCodeEquals(err, timestreamwrite.ErrCodeResourceNotFoundException) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		if output != nil && output.Table != nil {
-			return fmt.Errorf("Timestream Table (%s) still exists", rs.Primary.ID)
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckTableExists(n string) resource.TestCheckFunc {
+func testAccCheckTableExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -351,14 +359,14 @@ func testAccCheckTableExists(n string) resource.TestCheckFunc {
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).TimestreamWriteConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).TimestreamWriteConn()
 
 		input := &timestreamwrite.DescribeTableInput{
 			DatabaseName: aws.String(dbName),
 			TableName:    aws.String(tableName),
 		}
 
-		output, err := conn.DescribeTableWithContext(context.Background(), input)
+		output, err := conn.DescribeTableWithContext(ctx, input)
 
 		if err != nil {
 			return err

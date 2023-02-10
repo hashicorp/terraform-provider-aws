@@ -1,28 +1,30 @@
 package kinesis
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kinesis"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceStreamConsumer() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceStreamConsumerCreate,
-		Read:   resourceStreamConsumerRead,
-		Delete: resourceStreamConsumerDelete,
+		CreateWithoutTimeout: resourceStreamConsumerCreate,
+		ReadWithoutTimeout:   resourceStreamConsumerRead,
+		DeleteWithoutTimeout: resourceStreamConsumerDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -49,8 +51,9 @@ func ResourceStreamConsumer() *schema.Resource {
 	}
 }
 
-func resourceStreamConsumerCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KinesisConn
+func resourceStreamConsumerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).KinesisConn()
 
 	name := d.Get("name").(string)
 	input := &kinesis.RegisterStreamConsumerInput{
@@ -59,34 +62,35 @@ func resourceStreamConsumerCreate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	log.Printf("[DEBUG] Registering Kinesis Stream Consumer: %s", input)
-	output, err := conn.RegisterStreamConsumer(input)
+	output, err := conn.RegisterStreamConsumerWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating Kinesis Stream Consumer (%s): %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating Kinesis Stream Consumer (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.Consumer.ConsumerARN))
 
-	if _, err := waitStreamConsumerCreated(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for Kinesis Stream Consumer (%s) create: %w", d.Id(), err)
+	if _, err := waitStreamConsumerCreated(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Kinesis Stream Consumer (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceStreamConsumerRead(d, meta)
+	return append(diags, resourceStreamConsumerRead(ctx, d, meta)...)
 }
 
-func resourceStreamConsumerRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KinesisConn
+func resourceStreamConsumerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).KinesisConn()
 
-	consumer, err := FindStreamConsumerByARN(conn, d.Id())
+	consumer, err := FindStreamConsumerByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Kinesis Stream Consumer (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Kinesis Stream Consumer (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Kinesis Stream Consumer (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", consumer.ConsumerARN)
@@ -94,38 +98,39 @@ func resourceStreamConsumerRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("name", consumer.ConsumerName)
 	d.Set("stream_arn", consumer.StreamARN)
 
-	return nil
+	return diags
 }
 
-func resourceStreamConsumerDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KinesisConn
+func resourceStreamConsumerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).KinesisConn()
 
 	log.Printf("[DEBUG] Deregistering Kinesis Stream Consumer: (%s)", d.Id())
-	_, err := conn.DeregisterStreamConsumer(&kinesis.DeregisterStreamConsumerInput{
+	_, err := conn.DeregisterStreamConsumerWithContext(ctx, &kinesis.DeregisterStreamConsumerInput{
 		ConsumerARN: aws.String(d.Id()),
 	})
 
 	if tfawserr.ErrCodeEquals(err, kinesis.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Kinesis Stream Consumer (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Kinesis Stream Consumer (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitStreamConsumerDeleted(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for Kinesis Stream Consumer (%s) delete: %w", d.Id(), err)
+	if _, err := waitStreamConsumerDeleted(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Kinesis Stream Consumer (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func FindStreamConsumerByARN(conn *kinesis.Kinesis, arn string) (*kinesis.ConsumerDescription, error) {
+func FindStreamConsumerByARN(ctx context.Context, conn *kinesis.Kinesis, arn string) (*kinesis.ConsumerDescription, error) {
 	input := &kinesis.DescribeStreamConsumerInput{
 		ConsumerARN: aws.String(arn),
 	}
 
-	output, err := conn.DescribeStreamConsumer(input)
+	output, err := conn.DescribeStreamConsumerWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, kinesis.ErrCodeResourceNotFoundException) {
 		return nil, &resource.NotFoundError{
@@ -145,9 +150,9 @@ func FindStreamConsumerByARN(conn *kinesis.Kinesis, arn string) (*kinesis.Consum
 	return output.ConsumerDescription, nil
 }
 
-func statusStreamConsumer(conn *kinesis.Kinesis, arn string) resource.StateRefreshFunc {
+func statusStreamConsumer(ctx context.Context, conn *kinesis.Kinesis, arn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindStreamConsumerByARN(conn, arn)
+		output, err := FindStreamConsumerByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -166,15 +171,15 @@ const (
 	streamConsumerDeletedTimeout = 5 * time.Minute
 )
 
-func waitStreamConsumerCreated(conn *kinesis.Kinesis, arn string) (*kinesis.ConsumerDescription, error) {
+func waitStreamConsumerCreated(ctx context.Context, conn *kinesis.Kinesis, arn string) (*kinesis.ConsumerDescription, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{kinesis.ConsumerStatusCreating},
 		Target:  []string{kinesis.ConsumerStatusActive},
-		Refresh: statusStreamConsumer(conn, arn),
+		Refresh: statusStreamConsumer(ctx, conn, arn),
 		Timeout: streamConsumerCreatedTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*kinesis.ConsumerDescription); ok {
 		return output, err
@@ -183,15 +188,15 @@ func waitStreamConsumerCreated(conn *kinesis.Kinesis, arn string) (*kinesis.Cons
 	return nil, err
 }
 
-func waitStreamConsumerDeleted(conn *kinesis.Kinesis, arn string) (*kinesis.ConsumerDescription, error) {
+func waitStreamConsumerDeleted(ctx context.Context, conn *kinesis.Kinesis, arn string) (*kinesis.ConsumerDescription, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{kinesis.ConsumerStatusDeleting},
 		Target:  []string{},
-		Refresh: statusStreamConsumer(conn, arn),
+		Refresh: statusStreamConsumer(ctx, conn, arn),
 		Timeout: streamConsumerDeletedTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*kinesis.ConsumerDescription); ok {
 		return output, err

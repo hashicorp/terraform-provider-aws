@@ -82,7 +82,7 @@ func ResourceAttachmentAccepter() *schema.Resource {
 }
 
 func resourceAttachmentAccepterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn
+	conn := meta.(*conns.AWSClient).NetworkManagerConn()
 
 	var state string
 	attachmentID := d.Get("attachment_id").(string)
@@ -159,7 +159,7 @@ func resourceAttachmentAccepterCreate(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceAttachmentAccepterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn
+	conn := meta.(*conns.AWSClient).NetworkManagerConn()
 
 	var a *networkmanager.Attachment
 

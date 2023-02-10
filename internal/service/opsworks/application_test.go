@@ -1,6 +1,7 @@
 package opsworks_test
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"testing"
@@ -16,6 +17,7 @@ import (
 )
 
 func TestAccOpsWorksApplication_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var opsapp opsworks.App
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -25,12 +27,12 @@ func TestAccOpsWorksApplication_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckApplicationDestroy,
+		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationConfig_create(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationExists(resourceName, &opsapp),
+					testAccCheckApplicationExists(ctx, resourceName, &opsapp),
 					testAccCheckCreateAppAttributes(&opsapp),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "type", "other"),
@@ -57,7 +59,7 @@ func TestAccOpsWorksApplication_basic(t *testing.T) {
 			{
 				Config: testAccApplicationConfig_update(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationExists(resourceName, &opsapp),
+					testAccCheckApplicationExists(ctx, resourceName, &opsapp),
 					testAccCheckUpdateAppAttributes(&opsapp),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "type", "rails"),
@@ -91,7 +93,7 @@ func TestAccOpsWorksApplication_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckApplicationExists(
+func testAccCheckApplicationExists(ctx context.Context,
 	n string, opsapp *opsworks.App) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -103,12 +105,12 @@ func testAccCheckApplicationExists(
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn()
 
 		params := &opsworks.DescribeAppsInput{
 			AppIds: []*string{&rs.Primary.ID},
 		}
-		resp, err := conn.DescribeApps(params)
+		resp, err := conn.DescribeAppsWithContext(ctx, params)
 
 		if err != nil {
 			return err
@@ -233,33 +235,35 @@ func testAccCheckUpdateAppAttributes(
 	}
 }
 
-func testAccCheckApplicationDestroy(s *terraform.State) error {
-	client := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn
+func testAccCheckApplicationDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		client := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_opsworks_application" {
-			continue
-		}
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_opsworks_application" {
+				continue
+			}
 
-		req := &opsworks.DescribeAppsInput{
-			AppIds: []*string{
-				aws.String(rs.Primary.ID),
-			},
-		}
+			req := &opsworks.DescribeAppsInput{
+				AppIds: []*string{
+					aws.String(rs.Primary.ID),
+				},
+			}
 
-		resp, err := client.DescribeApps(req)
-		if err == nil {
-			if len(resp.Apps) > 0 {
-				return fmt.Errorf("OpsWorks App still exist.")
+			resp, err := client.DescribeAppsWithContext(ctx, req)
+			if err == nil {
+				if len(resp.Apps) > 0 {
+					return fmt.Errorf("OpsWorks App still exist.")
+				}
+			}
+
+			if !tfawserr.ErrCodeEquals(err, opsworks.ErrCodeResourceNotFoundException) {
+				return err
 			}
 		}
 
-		if !tfawserr.ErrCodeEquals(err, opsworks.ErrCodeResourceNotFoundException) {
-			return err
-		}
+		return nil
 	}
-
-	return nil
 }
 
 func testAccApplicationConfig_create(rName string) string {

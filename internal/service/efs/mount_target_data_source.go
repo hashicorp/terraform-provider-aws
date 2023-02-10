@@ -1,20 +1,23 @@
 package efs
 
 import (
+	"context"
 	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/efs"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
 func DataSourceMountTarget() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceMountTargetRead,
+		ReadWithoutTimeout: dataSourceMountTargetRead,
 
 		Schema: map[string]*schema.Schema{
 			"access_point_id": {
@@ -76,8 +79,9 @@ func DataSourceMountTarget() *schema.Resource {
 	}
 }
 
-func dataSourceMountTargetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EFSConn
+func dataSourceMountTargetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EFSConn()
 
 	input := &efs.DescribeMountTargetsInput{}
 
@@ -94,14 +98,14 @@ func dataSourceMountTargetRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Reading EFS Mount Target: %s", input)
-	output, err := conn.DescribeMountTargets(input)
+	output, err := conn.DescribeMountTargetsWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("Error retrieving EFS Mount Target: %w", err)
+		return sdkdiag.AppendErrorf(diags, "retrieving EFS Mount Target: %s", err)
 	}
 
 	if len(output.MountTargets) != 1 {
-		return fmt.Errorf("Search returned %d results, please revise so only one is returned", len(output.MountTargets))
+		return sdkdiag.AppendErrorf(diags, "Search returned %d results, please revise so only one is returned", len(output.MountTargets))
 	}
 
 	mt := output.MountTargets[0]
@@ -128,16 +132,16 @@ func dataSourceMountTargetRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("owner_id", mt.OwnerId)
 	d.Set("subnet_id", mt.SubnetId)
 
-	sgResp, err := conn.DescribeMountTargetSecurityGroups(&efs.DescribeMountTargetSecurityGroupsInput{
+	sgResp, err := conn.DescribeMountTargetSecurityGroupsWithContext(ctx, &efs.DescribeMountTargetSecurityGroupsInput{
 		MountTargetId: aws.String(d.Id()),
 	})
 	if err != nil {
-		return fmt.Errorf("reading EFS Mount Target (%s) security groups: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading EFS Mount Target (%s) security groups: %s", d.Id(), err)
 	}
 	err = d.Set("security_groups", flex.FlattenStringSet(sgResp.SecurityGroups))
 	if err != nil {
-		return fmt.Errorf("setting security_groups: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting security_groups: %s", err)
 	}
 
-	return nil
+	return diags
 }

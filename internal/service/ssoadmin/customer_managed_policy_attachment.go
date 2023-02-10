@@ -1,6 +1,7 @@
 package ssoadmin
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -9,9 +10,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssoadmin"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -22,12 +25,12 @@ const (
 
 func ResourceCustomerManagedPolicyAttachment() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceCustomerManagedPolicyAttachmentCreate,
-		Read:   resourceCustomerManagedPolicyAttachmentRead,
-		Delete: resourceCustomerManagedPolicyAttachmentDelete,
+		CreateWithoutTimeout: resourceCustomerManagedPolicyAttachmentCreate,
+		ReadWithoutTimeout:   resourceCustomerManagedPolicyAttachmentRead,
+		DeleteWithoutTimeout: resourceCustomerManagedPolicyAttachmentDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -70,8 +73,9 @@ func ResourceCustomerManagedPolicyAttachment() *schema.Resource {
 	}
 }
 
-func resourceCustomerManagedPolicyAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSOAdminConn
+func resourceCustomerManagedPolicyAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SSOAdminConn()
 
 	tfMap := d.Get("customer_managed_policy_reference").([]interface{})[0].(map[string]interface{})
 	policyName := tfMap["name"].(string)
@@ -86,61 +90,63 @@ func resourceCustomerManagedPolicyAttachmentCreate(d *schema.ResourceData, meta 
 	}
 
 	log.Printf("[INFO] Attaching customer managed policy reference to permission set: %s", input)
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(customerPolicyAttachmentTimeout, func() (interface{}, error) {
-		return conn.AttachCustomerManagedPolicyReferenceToPermissionSet(input)
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, customerPolicyAttachmentTimeout, func() (interface{}, error) {
+		return conn.AttachCustomerManagedPolicyReferenceToPermissionSetWithContext(ctx, input)
 	}, ssoadmin.ErrCodeConflictException, ssoadmin.ErrCodeThrottlingException)
 
 	if err != nil {
-		return fmt.Errorf("creating SSO Customer Managed Policy Attachment (%s): %w", id, err)
+		return sdkdiag.AppendErrorf(diags, "creating SSO Customer Managed Policy Attachment (%s): %s", id, err)
 	}
 
 	d.SetId(id)
 
 	// After the policy has been attached to the permission set, provision in all accounts that use this permission set.
-	if err := provisionPermissionSet(conn, permissionSetARN, instanceARN); err != nil {
-		return err
+	if err := provisionPermissionSet(ctx, conn, permissionSetARN, instanceARN); err != nil {
+		return sdkdiag.AppendErrorf(diags, "creating SSO Customer Managed Policy Attachment (%s): %s", d.Id(), err)
 	}
 
-	return resourceCustomerManagedPolicyAttachmentRead(d, meta)
+	return append(diags, resourceCustomerManagedPolicyAttachmentRead(ctx, d, meta)...)
 }
 
-func resourceCustomerManagedPolicyAttachmentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSOAdminConn
+func resourceCustomerManagedPolicyAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SSOAdminConn()
 
 	policyName, policyPath, permissionSetARN, instanceARN, err := CustomerManagedPolicyAttachmentParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading SSO Customer Managed Policy Attachment (%s): %s", d.Id(), err)
 	}
 
-	policy, err := FindCustomerManagedPolicy(conn, policyName, policyPath, permissionSetARN, instanceARN)
+	policy, err := FindCustomerManagedPolicy(ctx, conn, policyName, policyPath, permissionSetARN, instanceARN)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SSO Customer Managed Policy Attachment (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading SSO Customer Managed Policy Attachment (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SSO Customer Managed Policy Attachment (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("customer_managed_policy_reference", []interface{}{flattenCustomerManagedPolicyReference(policy)}); err != nil {
-		return fmt.Errorf("setting customer_managed_policy_reference: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting customer_managed_policy_reference: %s", err)
 	}
 	d.Set("instance_arn", instanceARN)
 	d.Set("permission_set_arn", permissionSetARN)
 
-	return nil
+	return diags
 }
 
-func resourceCustomerManagedPolicyAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSOAdminConn
+func resourceCustomerManagedPolicyAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SSOAdminConn()
 
 	policyName, policyPath, permissionSetARN, instanceARN, err := CustomerManagedPolicyAttachmentParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "deleting SSO Customer Managed Policy Attachment (%s): %s", d.Id(), err)
 	}
 
 	input := &ssoadmin.DetachCustomerManagedPolicyReferenceFromPermissionSetInput{
@@ -153,24 +159,24 @@ func resourceCustomerManagedPolicyAttachmentDelete(d *schema.ResourceData, meta 
 	}
 
 	log.Printf("[INFO] Detaching customer managed policy reference from permission set: %s", input)
-	_, err = tfresource.RetryWhenAWSErrCodeEquals(customerPolicyAttachmentTimeout, func() (interface{}, error) {
-		return conn.DetachCustomerManagedPolicyReferenceFromPermissionSet(input)
+	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, customerPolicyAttachmentTimeout, func() (interface{}, error) {
+		return conn.DetachCustomerManagedPolicyReferenceFromPermissionSetWithContext(ctx, input)
 	}, ssoadmin.ErrCodeConflictException, ssoadmin.ErrCodeThrottlingException)
 
 	if tfawserr.ErrCodeEquals(err, ssoadmin.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("deleting SSO Customer Managed Policy Attachment (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting SSO Customer Managed Policy Attachment (%s): %s", d.Id(), err)
 	}
 
 	// After the policy has been detached from the permission set, provision in all accounts that use this permission set.
-	if err := provisionPermissionSet(conn, permissionSetARN, instanceARN); err != nil {
-		return err
+	if err := provisionPermissionSet(ctx, conn, permissionSetARN, instanceARN); err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting SSO Customer Managed Policy Attachment (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 const customerManagedPolicyAttachmentIDSeparator = ","

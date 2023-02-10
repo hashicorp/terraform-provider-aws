@@ -1,18 +1,21 @@
 package iam
 
 import (
+	"context"
 	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func DataSourceInstanceProfile() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceInstanceProfileRead,
+		ReadWithoutTimeout: dataSourceInstanceProfileRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -47,8 +50,9 @@ func DataSourceInstanceProfile() *schema.Resource {
 	}
 }
 
-func dataSourceInstanceProfileRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+func dataSourceInstanceProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	name := d.Get("name").(string)
 
@@ -57,12 +61,12 @@ func dataSourceInstanceProfileRead(d *schema.ResourceData, meta interface{}) err
 	}
 
 	log.Printf("[DEBUG] Reading IAM Instance Profile: %s", req)
-	resp, err := conn.GetInstanceProfile(req)
+	resp, err := conn.GetInstanceProfileWithContext(ctx, req)
 	if err != nil {
-		return fmt.Errorf("Error getting instance profiles: %w", err)
+		return sdkdiag.AppendErrorf(diags, "getting instance profiles: %s", err)
 	}
 	if resp == nil {
-		return fmt.Errorf("no IAM instance profile found")
+		return sdkdiag.AppendErrorf(diags, "no IAM instance profile found")
 	}
 
 	instanceProfile := resp.InstanceProfile
@@ -79,5 +83,5 @@ func dataSourceInstanceProfileRead(d *schema.ResourceData, meta interface{}) err
 		d.Set("role_name", role.RoleName)
 	}
 
-	return nil
+	return diags
 }

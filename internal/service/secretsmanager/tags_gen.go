@@ -43,10 +43,7 @@ func KeyValueTags(tags []*secretsmanager.Tag) tftags.KeyValueTags {
 // UpdateTags updates secretsmanager service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn secretsmanageriface.SecretsManagerAPI, identifier string, oldTags interface{}, newTags interface{}) error {
-	return UpdateTagsWithContext(context.Background(), conn, identifier, oldTags, newTags)
-}
-func UpdateTagsWithContext(ctx context.Context, conn secretsmanageriface.SecretsManagerAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(ctx context.Context, conn secretsmanageriface.SecretsManagerAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 

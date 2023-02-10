@@ -1,6 +1,7 @@
 package gamelift_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -17,6 +18,8 @@ import (
 )
 
 func TestDiffPortSettings(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		Old           []interface{}
 		New           []interface{}
@@ -150,6 +153,7 @@ func TestDiffPortSettings(t *testing.T) {
 }
 
 func TestAccGameLiftFleet_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -183,16 +187,16 @@ func TestAccGameLiftFleet_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(gamelift.EndpointsID, t)
-			testAccPreCheck(t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, gamelift.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFleetDestroy,
+		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetConfig_basic(rName, launchPath, params, bucketName, key, roleArn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFleetExists(resourceName, &conf),
+					testAccCheckFleetExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "build_id", "aws_gamelift_build.test", "id"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "gamelift", regexp.MustCompile(`fleet/fleet-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "certificate_configuration.#", "1"),
@@ -220,7 +224,7 @@ func TestAccGameLiftFleet_basic(t *testing.T) {
 			{
 				Config: testAccFleetConfig_basicUpdated(rNameUpdated, launchPath, params, bucketName, key, roleArn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFleetExists(resourceName, &conf),
+					testAccCheckFleetExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "build_id", "aws_gamelift_build.test", "id"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "gamelift", regexp.MustCompile(`fleet/fleet-.+`)), resource.TestCheckResourceAttr(resourceName, "ec2_instance_type", "c4.large"),
 					resource.TestCheckResourceAttr(resourceName, "log_paths.#", "0"),
@@ -244,6 +248,7 @@ func TestAccGameLiftFleet_basic(t *testing.T) {
 }
 
 func TestAccGameLiftFleet_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -276,16 +281,16 @@ func TestAccGameLiftFleet_tags(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(gamelift.EndpointsID, t)
-			testAccPreCheck(t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, gamelift.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFleetDestroy,
+		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetConfig_basicTags1(rName, launchPath, params, bucketName, key, roleArn, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFleetExists(resourceName, &conf),
+					testAccCheckFleetExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -299,7 +304,7 @@ func TestAccGameLiftFleet_tags(t *testing.T) {
 			{
 				Config: testAccFleetConfig_basicTags2(rName, launchPath, params, bucketName, key, roleArn, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFleetExists(resourceName, &conf),
+					testAccCheckFleetExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -308,7 +313,7 @@ func TestAccGameLiftFleet_tags(t *testing.T) {
 			{
 				Config: testAccFleetConfig_basicTags1(rName, launchPath, params, bucketName, key, roleArn, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFleetExists(resourceName, &conf),
+					testAccCheckFleetExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -318,6 +323,7 @@ func TestAccGameLiftFleet_tags(t *testing.T) {
 }
 
 func TestAccGameLiftFleet_allFields(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -356,16 +362,16 @@ func TestAccGameLiftFleet_allFields(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(gamelift.EndpointsID, t)
-			testAccPreCheck(t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, gamelift.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFleetDestroy,
+		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetConfig_allFields(rName, desc, launchPath, params[0], bucketName, key, roleArn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFleetExists(resourceName, &conf),
+					testAccCheckFleetExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "build_id", "aws_gamelift_build.test", "id"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "gamelift", regexp.MustCompile(`fleet/fleet-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "ec2_instance_type", "c4.large"),
@@ -417,7 +423,7 @@ func TestAccGameLiftFleet_allFields(t *testing.T) {
 			{
 				Config: testAccFleetConfig_allFieldsUpdated(rNameUpdated, desc, launchPath, params[1], bucketName, key, roleArn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFleetExists(resourceName, &conf),
+					testAccCheckFleetExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "build_id", "aws_gamelift_build.test", "id"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "gamelift", regexp.MustCompile(`fleet/fleet-.+`)), resource.TestCheckResourceAttr(resourceName, "ec2_instance_type", "c4.large"),
 					resource.TestCheckResourceAttr(resourceName, "fleet_type", "ON_DEMAND"),
@@ -464,6 +470,7 @@ func TestAccGameLiftFleet_allFields(t *testing.T) {
 }
 
 func TestAccGameLiftFleet_cert(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -496,16 +503,16 @@ func TestAccGameLiftFleet_cert(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(gamelift.EndpointsID, t)
-			testAccPreCheck(t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, gamelift.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFleetDestroy,
+		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetConfig_cert(rName, launchPath, params, bucketName, key, roleArn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFleetExists(resourceName, &conf),
+					testAccCheckFleetExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "certificate_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "certificate_configuration.0.certificate_type", "GENERATED"),
 				),
@@ -521,6 +528,7 @@ func TestAccGameLiftFleet_cert(t *testing.T) {
 }
 
 func TestAccGameLiftFleet_script(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -535,16 +543,16 @@ func TestAccGameLiftFleet_script(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(gamelift.EndpointsID, t)
-			testAccPreCheck(t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, gamelift.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFleetDestroy,
+		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetConfig_script(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFleetExists(resourceName, &conf),
+					testAccCheckFleetExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "script_id", "aws_gamelift_script.test", "id"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "gamelift", regexp.MustCompile(`fleet/fleet-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "certificate_configuration.#", "1"),
@@ -574,6 +582,7 @@ func TestAccGameLiftFleet_script(t *testing.T) {
 }
 
 func TestAccGameLiftFleet_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -606,18 +615,18 @@ func TestAccGameLiftFleet_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(gamelift.EndpointsID, t)
-			testAccPreCheck(t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, gamelift.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFleetDestroy,
+		CheckDestroy:             testAccCheckFleetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetConfig_basic(rName, launchPath, params, bucketName, key, roleArn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFleetExists(resourceName, &conf),
-					acctest.CheckResourceDisappears(acctest.Provider, tfgamelift.ResourceFleet(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfgamelift.ResourceFleet(), resourceName),
+					testAccCheckFleetExists(ctx, resourceName, &conf),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfgamelift.ResourceFleet(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfgamelift.ResourceFleet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -625,7 +634,7 @@ func TestAccGameLiftFleet_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckFleetExists(n string, res *gamelift.FleetAttributes) resource.TestCheckFunc {
+func testAccCheckFleetExists(ctx context.Context, n string, res *gamelift.FleetAttributes) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -636,9 +645,9 @@ func testAccCheckFleetExists(n string, res *gamelift.FleetAttributes) resource.T
 			return fmt.Errorf("No GameLift Fleet ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn()
 
-		fleet, err := tfgamelift.FindFleetByID(conn, rs.Primary.ID)
+		fleet, err := tfgamelift.FindFleetByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -653,24 +662,26 @@ func testAccCheckFleetExists(n string, res *gamelift.FleetAttributes) resource.T
 	}
 }
 
-func testAccCheckFleetDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn
+func testAccCheckFleetDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_gamelift_fleet" {
-			continue
-		}
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_gamelift_fleet" {
+				continue
+			}
 
-		_, err := tfgamelift.FindFleetByID(conn, rs.Primary.ID)
+			_, err := tfgamelift.FindFleetByID(ctx, conn, rs.Primary.ID)
 
-		if tfresource.NotFound(err) {
-			continue
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			return nil
 		}
 
 		return nil
 	}
-
-	return nil
 }
 
 func testAccFleetConfig_basic(rName, launchPath, params, bucketName, key, roleArn string) string {

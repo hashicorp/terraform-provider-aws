@@ -16,6 +16,7 @@ import (
 )
 
 func TestAccServiceDiscoveryInstance_private(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_service_discovery_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domainName := acctest.RandomDomainName()
@@ -24,16 +25,16 @@ func TestAccServiceDiscoveryInstance_private(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t)
-			testAccPreCheck(t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, servicediscovery.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_private(rName, domainName, "AWS_INSTANCE_IPV4 = \"10.0.0.1\" \n    AWS_INSTANCE_IPV6 = \"2001:0db8:85a3:0000:0000:abcd:0001:2345\""),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resourceName),
+					testAccCheckInstanceExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "service_id"),
 					resource.TestCheckResourceAttr(resourceName, "instance_id", rName),
 					resource.TestCheckResourceAttr(resourceName, "attributes.AWS_INSTANCE_IPV4", "10.0.0.1"),
@@ -43,7 +44,7 @@ func TestAccServiceDiscoveryInstance_private(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_private(rName, domainName, "AWS_INSTANCE_IPV4 = \"10.0.0.2\" \n    AWS_INSTANCE_IPV6 = \"2001:0db8:85a3:0000:0000:abcd:0001:2345\""),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resourceName),
+					testAccCheckInstanceExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "service_id"),
 					resource.TestCheckResourceAttr(resourceName, "instance_id", rName),
 					resource.TestCheckResourceAttr(resourceName, "attributes.AWS_INSTANCE_IPV4", "10.0.0.2"),
@@ -61,6 +62,7 @@ func TestAccServiceDiscoveryInstance_private(t *testing.T) {
 }
 
 func TestAccServiceDiscoveryInstance_public(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_service_discovery_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domainName := acctest.RandomDomainName()
@@ -69,16 +71,16 @@ func TestAccServiceDiscoveryInstance_public(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t)
-			testAccPreCheck(t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, servicediscovery.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_public(rName, domainName, "AWS_INSTANCE_IPV4 = \"52.18.0.2\" \n    CUSTOM_KEY = \"this is a custom value\""),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resourceName),
+					testAccCheckInstanceExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "service_id"),
 					resource.TestCheckResourceAttr(resourceName, "instance_id", rName),
 					resource.TestCheckResourceAttr(resourceName, "attributes.AWS_INSTANCE_IPV4", "52.18.0.2"),
@@ -88,7 +90,7 @@ func TestAccServiceDiscoveryInstance_public(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_public(rName, domainName, "AWS_INSTANCE_IPV4 = \"52.18.0.2\" \n    CUSTOM_KEY = \"this is a custom value updated\""),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resourceName),
+					testAccCheckInstanceExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "service_id"),
 					resource.TestCheckResourceAttr(resourceName, "instance_id", rName),
 					resource.TestCheckResourceAttr(resourceName, "attributes.AWS_INSTANCE_IPV4", "52.18.0.2"),
@@ -106,6 +108,7 @@ func TestAccServiceDiscoveryInstance_public(t *testing.T) {
 }
 
 func TestAccServiceDiscoveryInstance_http(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_service_discovery_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domainName := acctest.RandomDomainName()
@@ -114,16 +117,16 @@ func TestAccServiceDiscoveryInstance_http(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t)
-			testAccPreCheck(t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, servicediscovery.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_http(rName, domainName, "AWS_EC2_INSTANCE_ID = aws_instance.test.id"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resourceName),
+					testAccCheckInstanceExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "service_id"),
 					resource.TestCheckResourceAttr(resourceName, "instance_id", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "attributes.AWS_EC2_INSTANCE_ID"),
@@ -132,7 +135,7 @@ func TestAccServiceDiscoveryInstance_http(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_http(rName, domainName, "AWS_INSTANCE_IPV4 = \"172.18.0.12\""),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resourceName),
+					testAccCheckInstanceExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "service_id"),
 					resource.TestCheckResourceAttr(resourceName, "instance_id", rName),
 					resource.TestCheckResourceAttr(resourceName, "attributes.AWS_INSTANCE_IPV4", "172.18.0.12"),
@@ -148,7 +151,7 @@ func TestAccServiceDiscoveryInstance_http(t *testing.T) {
 	})
 }
 
-func testAccCheckInstanceExists(n string) resource.TestCheckFunc {
+func testAccCheckInstanceExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -159,9 +162,9 @@ func testAccCheckInstanceExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("No Service Discovery Instance ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceDiscoveryConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceDiscoveryConn()
 
-		_, err := tfservicediscovery.FindInstanceByServiceIDAndInstanceID(context.Background(), conn, rs.Primary.Attributes["service_id"], rs.Primary.Attributes["instance_id"])
+		_, err := tfservicediscovery.FindInstanceByServiceIDAndInstanceID(ctx, conn, rs.Primary.Attributes["service_id"], rs.Primary.Attributes["instance_id"])
 
 		return err
 	}
@@ -178,28 +181,30 @@ func testAccInstanceImportStateIdFunc(resourceName string) resource.ImportStateI
 	}
 }
 
-func testAccCheckInstanceDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceDiscoveryConn
+func testAccCheckInstanceDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceDiscoveryConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_service_discovery_instance" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_service_discovery_instance" {
+				continue
+			}
+
+			_, err := tfservicediscovery.FindInstanceByServiceIDAndInstanceID(ctx, conn, rs.Primary.Attributes["service_id"], rs.Primary.Attributes["instance_id"])
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Service Discovery Instance %s still exists", rs.Primary.ID)
 		}
 
-		_, err := tfservicediscovery.FindInstanceByServiceIDAndInstanceID(context.Background(), conn, rs.Primary.Attributes["service_id"], rs.Primary.Attributes["instance_id"])
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("Service Discovery Instance %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
 func testAccInstanceConfig_base(rName string) string {

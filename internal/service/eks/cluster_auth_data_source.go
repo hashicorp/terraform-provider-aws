@@ -1,16 +1,18 @@
 package eks
 
 import (
-	"fmt"
+	"context"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func DataSourceClusterAuth() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceClusterAuthRead,
+		ReadWithoutTimeout: dataSourceClusterAuthRead,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -28,20 +30,21 @@ func DataSourceClusterAuth() *schema.Resource {
 	}
 }
 
-func dataSourceClusterAuthRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).STSConn
+func dataSourceClusterAuthRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).STSConn()
 	name := d.Get("name").(string)
 	generator, err := NewGenerator(false, false)
 	if err != nil {
-		return fmt.Errorf("error getting token generator: %w", err)
+		return sdkdiag.AppendErrorf(diags, "getting token generator: %s", err)
 	}
-	toke, err := generator.GetWithSTS(name, conn)
+	toke, err := generator.GetWithSTS(ctx, name, conn)
 	if err != nil {
-		return fmt.Errorf("error getting token: %w", err)
+		return sdkdiag.AppendErrorf(diags, "getting token: %s", err)
 	}
 
 	d.SetId(name)
 	d.Set("token", toke.Token)
 
-	return nil
+	return diags
 }

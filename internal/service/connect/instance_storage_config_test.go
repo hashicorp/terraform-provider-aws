@@ -1,6 +1,7 @@
 package connect_test
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"testing"
@@ -17,6 +18,7 @@ import (
 )
 
 func testAccInstanceStorageConfig_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v connect.DescribeInstanceStorageConfigOutput
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
@@ -26,12 +28,12 @@ func testAccInstanceStorageConfig_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceStorageConfigDestroy,
+		CheckDestroy:             testAccCheckInstanceStorageConfigDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceStorageConfigConfig_basic(rName, rName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceStorageConfigExists(resourceName, &v),
+					testAccCheckInstanceStorageConfigExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "association_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_id", "aws_connect_instance.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "resource_type", connect.InstanceStorageResourceTypeChatTranscripts),
@@ -52,6 +54,7 @@ func testAccInstanceStorageConfig_basic(t *testing.T) {
 }
 
 func testAccInstanceStorageConfig_KinesisFirehoseConfig_FirehoseARN(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v connect.DescribeInstanceStorageConfigOutput
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
@@ -63,12 +66,12 @@ func testAccInstanceStorageConfig_KinesisFirehoseConfig_FirehoseARN(t *testing.T
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceStorageConfigDestroy,
+		CheckDestroy:             testAccCheckInstanceStorageConfigDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceStorageConfigConfig_kinesisFirehoseConfig_firehoseARN(rName, rName2, rName3, rName4, "first"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceStorageConfigExists(resourceName, &v),
+					testAccCheckInstanceStorageConfigExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "resource_type", connect.InstanceStorageResourceTypeContactTraceRecords),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.0.kinesis_firehose_config.#", "1"),
@@ -84,7 +87,7 @@ func testAccInstanceStorageConfig_KinesisFirehoseConfig_FirehoseARN(t *testing.T
 			{
 				Config: testAccInstanceStorageConfigConfig_kinesisFirehoseConfig_firehoseARN(rName, rName2, rName3, rName4, "second"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceStorageConfigExists(resourceName, &v),
+					testAccCheckInstanceStorageConfigExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "resource_type", connect.InstanceStorageResourceTypeContactTraceRecords),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.0.kinesis_firehose_config.#", "1"),
@@ -97,6 +100,7 @@ func testAccInstanceStorageConfig_KinesisFirehoseConfig_FirehoseARN(t *testing.T
 }
 
 func testAccInstanceStorageConfig_KinesisStreamConfig_StreamARN(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v connect.DescribeInstanceStorageConfigOutput
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
@@ -107,12 +111,12 @@ func testAccInstanceStorageConfig_KinesisStreamConfig_StreamARN(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceStorageConfigDestroy,
+		CheckDestroy:             testAccCheckInstanceStorageConfigDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceStorageConfigConfig_kinesisStreamConfig_streamARN(rName, rName2, rName3, "first"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceStorageConfigExists(resourceName, &v),
+					testAccCheckInstanceStorageConfigExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "resource_type", connect.InstanceStorageResourceTypeContactTraceRecords),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.0.kinesis_stream_config.#", "1"),
@@ -128,7 +132,7 @@ func testAccInstanceStorageConfig_KinesisStreamConfig_StreamARN(t *testing.T) {
 			{
 				Config: testAccInstanceStorageConfigConfig_kinesisStreamConfig_streamARN(rName, rName2, rName3, "second"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceStorageConfigExists(resourceName, &v),
+					testAccCheckInstanceStorageConfigExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "resource_type", connect.InstanceStorageResourceTypeContactTraceRecords),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.0.kinesis_stream_config.#", "1"),
@@ -141,6 +145,7 @@ func testAccInstanceStorageConfig_KinesisStreamConfig_StreamARN(t *testing.T) {
 }
 
 func testAccInstanceStorageConfig_KinesisVideoStreamConfig_Prefix(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v connect.DescribeInstanceStorageConfigOutput
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_instance_storage_config.test"
@@ -154,12 +159,12 @@ func testAccInstanceStorageConfig_KinesisVideoStreamConfig_Prefix(t *testing.T) 
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceStorageConfigDestroy,
+		CheckDestroy:             testAccCheckInstanceStorageConfigDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceStorageConfigConfig_kinesisVideoStreamConfig_prefixRetention(rName, originalPrefix, retention),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceStorageConfigExists(resourceName, &v),
+					testAccCheckInstanceStorageConfigExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "resource_type", connect.InstanceStorageResourceTypeMediaStreams),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.0.kinesis_video_stream_config.#", "1"),
@@ -179,7 +184,7 @@ func testAccInstanceStorageConfig_KinesisVideoStreamConfig_Prefix(t *testing.T) 
 			{
 				Config: testAccInstanceStorageConfigConfig_kinesisVideoStreamConfig_prefixRetention(rName, updatedPrefix, retention),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceStorageConfigExists(resourceName, &v),
+					testAccCheckInstanceStorageConfigExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "resource_type", connect.InstanceStorageResourceTypeMediaStreams),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.0.kinesis_video_stream_config.#", "1"),
@@ -196,6 +201,7 @@ func testAccInstanceStorageConfig_KinesisVideoStreamConfig_Prefix(t *testing.T) 
 }
 
 func testAccInstanceStorageConfig_KinesisVideoStreamConfig_Retention(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v connect.DescribeInstanceStorageConfigOutput
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_instance_storage_config.test"
@@ -209,12 +215,12 @@ func testAccInstanceStorageConfig_KinesisVideoStreamConfig_Retention(t *testing.
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceStorageConfigDestroy,
+		CheckDestroy:             testAccCheckInstanceStorageConfigDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceStorageConfigConfig_kinesisVideoStreamConfig_prefixRetention(rName, prefix, originalRetention),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceStorageConfigExists(resourceName, &v),
+					testAccCheckInstanceStorageConfigExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "resource_type", connect.InstanceStorageResourceTypeMediaStreams),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.0.kinesis_video_stream_config.#", "1"),
@@ -234,7 +240,7 @@ func testAccInstanceStorageConfig_KinesisVideoStreamConfig_Retention(t *testing.
 			{
 				Config: testAccInstanceStorageConfigConfig_kinesisVideoStreamConfig_prefixRetention(rName, prefix, updatedRetention),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceStorageConfigExists(resourceName, &v),
+					testAccCheckInstanceStorageConfigExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "resource_type", connect.InstanceStorageResourceTypeMediaStreams),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.0.kinesis_video_stream_config.#", "1"),
@@ -251,6 +257,7 @@ func testAccInstanceStorageConfig_KinesisVideoStreamConfig_Retention(t *testing.
 }
 
 func testAccInstanceStorageConfig_KinesisVideoStreamConfig_EncryptionConfig(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v connect.DescribeInstanceStorageConfigOutput
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_instance_storage_config.test"
@@ -259,12 +266,12 @@ func testAccInstanceStorageConfig_KinesisVideoStreamConfig_EncryptionConfig(t *t
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceStorageConfigDestroy,
+		CheckDestroy:             testAccCheckInstanceStorageConfigDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceStorageConfigConfig_kinesisVideoStreamConfig_encryptionConfig(rName, "first"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceStorageConfigExists(resourceName, &v),
+					testAccCheckInstanceStorageConfigExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "resource_type", connect.InstanceStorageResourceTypeMediaStreams),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.0.kinesis_video_stream_config.#", "1"),
@@ -282,7 +289,7 @@ func testAccInstanceStorageConfig_KinesisVideoStreamConfig_EncryptionConfig(t *t
 			{
 				Config: testAccInstanceStorageConfigConfig_kinesisVideoStreamConfig_encryptionConfig(rName, "second"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceStorageConfigExists(resourceName, &v),
+					testAccCheckInstanceStorageConfigExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "resource_type", connect.InstanceStorageResourceTypeMediaStreams),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.0.kinesis_video_stream_config.#", "1"),
@@ -297,6 +304,7 @@ func testAccInstanceStorageConfig_KinesisVideoStreamConfig_EncryptionConfig(t *t
 }
 
 func testAccInstanceStorageConfig_S3Config_BucketName(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v connect.DescribeInstanceStorageConfigOutput
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
@@ -307,12 +315,12 @@ func testAccInstanceStorageConfig_S3Config_BucketName(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceStorageConfigDestroy,
+		CheckDestroy:             testAccCheckInstanceStorageConfigDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceStorageConfigConfig_S3Config_bucketName(rName, rName2, rName3, "first"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceStorageConfigExists(resourceName, &v),
+					testAccCheckInstanceStorageConfigExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.0.s3_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "storage_config.0.s3_config.0.bucket_name", "aws_s3_bucket.test", "id"),
@@ -328,7 +336,7 @@ func testAccInstanceStorageConfig_S3Config_BucketName(t *testing.T) {
 			{
 				Config: testAccInstanceStorageConfigConfig_S3Config_bucketName(rName, rName2, rName3, "second"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceStorageConfigExists(resourceName, &v),
+					testAccCheckInstanceStorageConfigExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.0.s3_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "storage_config.0.s3_config.0.bucket_name", "aws_s3_bucket.test2", "id"),
@@ -341,6 +349,7 @@ func testAccInstanceStorageConfig_S3Config_BucketName(t *testing.T) {
 }
 
 func testAccInstanceStorageConfig_S3Config_BucketPrefix(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v connect.DescribeInstanceStorageConfigOutput
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
@@ -353,12 +362,12 @@ func testAccInstanceStorageConfig_S3Config_BucketPrefix(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceStorageConfigDestroy,
+		CheckDestroy:             testAccCheckInstanceStorageConfigDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceStorageConfigConfig_S3Config_bucketPrefix(rName, rName2, originalBucketPrefix),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceStorageConfigExists(resourceName, &v),
+					testAccCheckInstanceStorageConfigExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.0.s3_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "storage_config.0.s3_config.0.bucket_name", "aws_s3_bucket.test", "id"),
@@ -374,7 +383,7 @@ func testAccInstanceStorageConfig_S3Config_BucketPrefix(t *testing.T) {
 			{
 				Config: testAccInstanceStorageConfigConfig_S3Config_bucketPrefix(rName, rName2, updatedBucketPrefix),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceStorageConfigExists(resourceName, &v),
+					testAccCheckInstanceStorageConfigExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.0.s3_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "storage_config.0.s3_config.0.bucket_name", "aws_s3_bucket.test", "id"),
@@ -387,6 +396,7 @@ func testAccInstanceStorageConfig_S3Config_BucketPrefix(t *testing.T) {
 }
 
 func testAccInstanceStorageConfig_S3Config_EncryptionConfig(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v connect.DescribeInstanceStorageConfigOutput
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
@@ -396,12 +406,12 @@ func testAccInstanceStorageConfig_S3Config_EncryptionConfig(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceStorageConfigDestroy,
+		CheckDestroy:             testAccCheckInstanceStorageConfigDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceStorageConfigConfig_S3Config_encryptionConfig(rName, rName2, "first"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceStorageConfigExists(resourceName, &v),
+					testAccCheckInstanceStorageConfigExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.0.s3_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "storage_config.0.s3_config.0.bucket_name", "aws_s3_bucket.test", "id"),
@@ -420,7 +430,7 @@ func testAccInstanceStorageConfig_S3Config_EncryptionConfig(t *testing.T) {
 			{
 				Config: testAccInstanceStorageConfigConfig_S3Config_encryptionConfig(rName, rName2, "second"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceStorageConfigExists(resourceName, &v),
+					testAccCheckInstanceStorageConfigExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_config.0.s3_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "storage_config.0.s3_config.0.bucket_name", "aws_s3_bucket.test", "id"),
@@ -436,6 +446,7 @@ func testAccInstanceStorageConfig_S3Config_EncryptionConfig(t *testing.T) {
 }
 
 func testAccInstanceStorageConfig_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v connect.DescribeInstanceStorageConfigOutput
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
@@ -445,13 +456,13 @@ func testAccInstanceStorageConfig_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceStorageConfigDestroy,
+		CheckDestroy:             testAccCheckInstanceStorageConfigDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceStorageConfigConfig_basic(rName, rName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceStorageConfigExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfconnect.ResourceInstanceStorageConfig(), resourceName),
+					testAccCheckInstanceStorageConfigExists(ctx, resourceName, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfconnect.ResourceInstanceStorageConfig(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -459,7 +470,7 @@ func testAccInstanceStorageConfig_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckInstanceStorageConfigExists(resourceName string, function *connect.DescribeInstanceStorageConfigOutput) resource.TestCheckFunc {
+func testAccCheckInstanceStorageConfigExists(ctx context.Context, resourceName string, function *connect.DescribeInstanceStorageConfigOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -475,7 +486,7 @@ func testAccCheckInstanceStorageConfigExists(resourceName string, function *conn
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn()
 
 		params := &connect.DescribeInstanceStorageConfigInput{
 			AssociationId: aws.String(associationId),
@@ -483,7 +494,7 @@ func testAccCheckInstanceStorageConfigExists(resourceName string, function *conn
 			ResourceType:  aws.String(resourceType),
 		}
 
-		getFunction, err := conn.DescribeInstanceStorageConfig(params)
+		getFunction, err := conn.DescribeInstanceStorageConfigWithContext(ctx, params)
 		if err != nil {
 			return err
 		}
@@ -494,38 +505,40 @@ func testAccCheckInstanceStorageConfigExists(resourceName string, function *conn
 	}
 }
 
-func testAccCheckInstanceStorageConfigDestroy(s *terraform.State) error {
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_connect_instance_storage_config" {
-			continue
+func testAccCheckInstanceStorageConfigDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_connect_instance_storage_config" {
+				continue
+			}
+
+			conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn()
+
+			instanceId, associationId, resourceType, err := tfconnect.InstanceStorageConfigParseId(rs.Primary.ID)
+
+			if err != nil {
+				return err
+			}
+
+			params := &connect.DescribeInstanceStorageConfigInput{
+				AssociationId: aws.String(associationId),
+				InstanceId:    aws.String(instanceId),
+				ResourceType:  aws.String(resourceType),
+			}
+
+			_, err = conn.DescribeInstanceStorageConfigWithContext(ctx, params)
+
+			if tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn
-
-		instanceId, associationId, resourceType, err := tfconnect.InstanceStorageConfigParseId(rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		params := &connect.DescribeInstanceStorageConfigInput{
-			AssociationId: aws.String(associationId),
-			InstanceId:    aws.String(instanceId),
-			ResourceType:  aws.String(resourceType),
-		}
-
-		_, err = conn.DescribeInstanceStorageConfig(params)
-
-		if tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
+		return nil
 	}
-
-	return nil
 }
 
 func testAccInstanceStorageConfigConfig_base(rName string) string {

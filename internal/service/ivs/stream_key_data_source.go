@@ -38,7 +38,7 @@ const (
 )
 
 func dataSourceStreamKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IVSConn
+	conn := meta.(*conns.AWSClient).IVSConn()
 
 	channelArn := d.Get("channel_arn").(string)
 

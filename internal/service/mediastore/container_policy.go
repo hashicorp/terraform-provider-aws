@@ -1,26 +1,28 @@
 package mediastore
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mediastore"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceContainerPolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceContainerPolicyPut,
-		Read:   resourceContainerPolicyRead,
-		Update: resourceContainerPolicyPut,
-		Delete: resourceContainerPolicyDelete,
+		CreateWithoutTimeout: resourceContainerPolicyPut,
+		ReadWithoutTimeout:   resourceContainerPolicyRead,
+		UpdateWithoutTimeout: resourceContainerPolicyPut,
+		DeleteWithoutTimeout: resourceContainerPolicyDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -43,84 +45,87 @@ func ResourceContainerPolicy() *schema.Resource {
 	}
 }
 
-func resourceContainerPolicyPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).MediaStoreConn
+func resourceContainerPolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).MediaStoreConn()
 
+	name := d.Get("container_name").(string)
 	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
 
 	if err != nil {
-		return fmt.Errorf("policy (%s) is invalid JSON: %w", policy, err)
+		return sdkdiag.AppendErrorf(diags, "putting MediaStore Container Policy (%s): %s", name, err)
 	}
 
 	input := &mediastore.PutContainerPolicyInput{
-		ContainerName: aws.String(d.Get("container_name").(string)),
+		ContainerName: aws.String(name),
 		Policy:        aws.String(policy),
 	}
 
-	_, err = conn.PutContainerPolicy(input)
+	_, err = conn.PutContainerPolicyWithContext(ctx, input)
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "putting MediaStore Container Policy (%s): %s", name, err)
 	}
 
-	d.SetId(d.Get("container_name").(string))
-	return resourceContainerPolicyRead(d, meta)
+	d.SetId(name)
+	return append(diags, resourceContainerPolicyRead(ctx, d, meta)...)
 }
 
-func resourceContainerPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).MediaStoreConn
+func resourceContainerPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).MediaStoreConn()
 
 	input := &mediastore.GetContainerPolicyInput{
 		ContainerName: aws.String(d.Id()),
 	}
 
-	resp, err := conn.GetContainerPolicy(input)
+	resp, err := conn.GetContainerPolicyWithContext(ctx, input)
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, mediastore.ErrCodeContainerNotFoundException) {
-			log.Printf("[WARN] MediaContainer Policy %q not found, removing from state", d.Id())
+			log.Printf("[WARN] MediaStore Container Policy (%s) not found, removing from state", d.Id())
 			d.SetId("")
-			return nil
+			return diags
 		}
 		if tfawserr.ErrCodeEquals(err, mediastore.ErrCodePolicyNotFoundException) {
-			log.Printf("[WARN] MediaContainer Policy %q not found, removing from state", d.Id())
+			log.Printf("[WARN] MediaStore Container Policy (%s) not found, removing from state", d.Id())
 			d.SetId("")
-			return nil
+			return diags
 		}
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading MediaStore Container Policy (%s): %s", d.Id(), err)
 	}
 
 	d.Set("container_name", d.Id())
 
 	policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.StringValue(resp.Policy))
-
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading MediaStore Container Policy (%s): %s", d.Id(), err)
 	}
 
 	d.Set("policy", policyToSet)
 
-	return nil
+	return diags
 }
 
-func resourceContainerPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).MediaStoreConn
+func resourceContainerPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).MediaStoreConn()
 
 	input := &mediastore.DeleteContainerPolicyInput{
 		ContainerName: aws.String(d.Id()),
 	}
 
-	_, err := conn.DeleteContainerPolicy(input)
+	_, err := conn.DeleteContainerPolicyWithContext(ctx, input)
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, mediastore.ErrCodeContainerNotFoundException) {
-			return nil
+			return diags
 		}
 		if tfawserr.ErrCodeEquals(err, mediastore.ErrCodePolicyNotFoundException) {
-			return nil
+			return diags
 		}
 		// if isAWSErr(err, mediastore.ErrCodeContainerInUseException, "Container must be ACTIVE in order to perform this operation") {
 		// 	return nil
 		// }
-		return err
+		return sdkdiag.AppendErrorf(diags, "deleting MediaStore Container Policy (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

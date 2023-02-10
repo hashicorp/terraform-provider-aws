@@ -1,20 +1,22 @@
 package rds
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"sort"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func DataSourceSnapshot() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceSnapshotRead,
+		ReadWithoutTimeout: dataSourceSnapshotRead,
 
 		Schema: map[string]*schema.Schema{
 			//selection criteria
@@ -123,14 +125,15 @@ func DataSourceSnapshot() *schema.Resource {
 	}
 }
 
-func dataSourceSnapshotRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+func dataSourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	instanceIdentifier, instanceIdentifierOk := d.GetOk("db_instance_identifier")
 	snapshotIdentifier, snapshotIdentifierOk := d.GetOk("db_snapshot_identifier")
 
 	if !instanceIdentifierOk && !snapshotIdentifierOk {
-		return fmt.Errorf("One of db_snapshot_identifier or db_instance_identifier must be assigned")
+		return sdkdiag.AppendErrorf(diags, "One of db_snapshot_identifier or db_instance_identifier must be assigned")
 	}
 
 	params := &rds.DescribeDBSnapshotsInput{
@@ -147,14 +150,13 @@ func dataSourceSnapshotRead(d *schema.ResourceData, meta interface{}) error {
 		params.DBSnapshotIdentifier = aws.String(snapshotIdentifier.(string))
 	}
 
-	log.Printf("[DEBUG] Reading DB Snapshot: %s", params)
-	resp, err := conn.DescribeDBSnapshots(params)
+	resp, err := conn.DescribeDBSnapshotsWithContext(ctx, params)
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading RDS Snapshot: %s", err)
 	}
 
 	if len(resp.DBSnapshots) < 1 {
-		return fmt.Errorf("Your query returned no results. Please change your search criteria and try again.")
+		return sdkdiag.AppendErrorf(diags, "Your query returned no results. Please change your search criteria and try again.")
 	}
 
 	var snapshot *rds.DBSnapshot
@@ -164,13 +166,15 @@ func dataSourceSnapshotRead(d *schema.ResourceData, meta interface{}) error {
 		if recent {
 			snapshot = mostRecentDBSnapshot(resp.DBSnapshots)
 		} else {
-			return fmt.Errorf("Your query returned more than one result. Please try a more specific search criteria.")
+			return sdkdiag.AppendErrorf(diags, "Your query returned more than one result. Please try a more specific search criteria.")
 		}
 	} else {
 		snapshot = resp.DBSnapshots[0]
 	}
 
-	return dbSnapshotDescriptionAttributes(d, snapshot)
+	dbSnapshotDescriptionAttributes(d, snapshot)
+
+	return diags
 }
 
 type rdsSnapshotSort []*rds.DBSnapshot
@@ -195,7 +199,7 @@ func mostRecentDBSnapshot(snapshots []*rds.DBSnapshot) *rds.DBSnapshot {
 	return sortedSnapshots[len(sortedSnapshots)-1]
 }
 
-func dbSnapshotDescriptionAttributes(d *schema.ResourceData, snapshot *rds.DBSnapshot) error {
+func dbSnapshotDescriptionAttributes(d *schema.ResourceData, snapshot *rds.DBSnapshot) {
 	d.SetId(aws.StringValue(snapshot.DBSnapshotIdentifier))
 	d.Set("db_instance_identifier", snapshot.DBInstanceIdentifier)
 	d.Set("db_snapshot_identifier", snapshot.DBSnapshotIdentifier)
@@ -219,6 +223,4 @@ func dbSnapshotDescriptionAttributes(d *schema.ResourceData, snapshot *rds.DBSna
 	if snapshot.SnapshotCreateTime != nil {
 		d.Set("snapshot_create_time", snapshot.SnapshotCreateTime.Format(time.RFC3339))
 	}
-
-	return nil
 }

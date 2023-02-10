@@ -12,6 +12,7 @@ import (
 )
 
 func TestAccCURReportDefinitionDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_cur_report_definition.test"
 	datasourceName := "data.aws_cur_report_definition.test"
 
@@ -19,10 +20,10 @@ func TestAccCURReportDefinitionDataSource_basic(t *testing.T) {
 	bucketName := fmt.Sprintf("tf-test-bucket-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, costandusagereportservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReportDefinitionDestroy,
+		CheckDestroy:             testAccCheckReportDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReportDefinitionDataSourceConfig_basic(reportName, bucketName),
@@ -43,6 +44,7 @@ func TestAccCURReportDefinitionDataSource_basic(t *testing.T) {
 }
 
 func TestAccCURReportDefinitionDataSource_additional(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_cur_report_definition.test"
 	datasourceName := "data.aws_cur_report_definition.test"
 
@@ -50,10 +52,10 @@ func TestAccCURReportDefinitionDataSource_additional(t *testing.T) {
 	bucketName := fmt.Sprintf("tf-test-bucket-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, costandusagereportservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReportDefinitionDestroy,
+		CheckDestroy:             testAccCheckReportDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReportDefinitionDataSourceConfig_additional(reportName, bucketName),

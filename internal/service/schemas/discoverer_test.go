@@ -1,6 +1,7 @@
 package schemas_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -15,6 +16,7 @@ import (
 )
 
 func TestAccSchemasDiscoverer_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v schemas.DescribeDiscovererOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_schemas_discoverer.test"
@@ -23,12 +25,12 @@ func TestAccSchemasDiscoverer_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(schemas.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, schemas.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDiscovererDestroy,
+		CheckDestroy:             testAccCheckDiscovererDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDiscovererConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDiscovererExists(resourceName, &v),
+					testAccCheckDiscovererExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "schemas", fmt.Sprintf("discoverer/events-event-bus-%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -44,6 +46,7 @@ func TestAccSchemasDiscoverer_basic(t *testing.T) {
 }
 
 func TestAccSchemasDiscoverer_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v schemas.DescribeDiscovererOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_schemas_discoverer.test"
@@ -52,13 +55,13 @@ func TestAccSchemasDiscoverer_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(schemas.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, schemas.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDiscovererDestroy,
+		CheckDestroy:             testAccCheckDiscovererDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDiscovererConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDiscovererExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfschemas.ResourceDiscoverer(), resourceName),
+					testAccCheckDiscovererExists(ctx, resourceName, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfschemas.ResourceDiscoverer(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -67,6 +70,7 @@ func TestAccSchemasDiscoverer_disappears(t *testing.T) {
 }
 
 func TestAccSchemasDiscoverer_description(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v schemas.DescribeDiscovererOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_schemas_discoverer.test"
@@ -75,12 +79,12 @@ func TestAccSchemasDiscoverer_description(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(schemas.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, schemas.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDiscovererDestroy,
+		CheckDestroy:             testAccCheckDiscovererDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDiscovererConfig_description(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDiscovererExists(resourceName, &v),
+					testAccCheckDiscovererExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
 				),
 			},
@@ -92,14 +96,14 @@ func TestAccSchemasDiscoverer_description(t *testing.T) {
 			{
 				Config: testAccDiscovererConfig_description(rName, "description2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDiscovererExists(resourceName, &v),
+					testAccCheckDiscovererExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
 				),
 			},
 			{
 				Config: testAccDiscovererConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDiscovererExists(resourceName, &v),
+					testAccCheckDiscovererExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 				),
 			},
@@ -108,6 +112,7 @@ func TestAccSchemasDiscoverer_description(t *testing.T) {
 }
 
 func TestAccSchemasDiscoverer_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v schemas.DescribeDiscovererOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_schemas_discoverer.test"
@@ -116,12 +121,12 @@ func TestAccSchemasDiscoverer_tags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(schemas.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, schemas.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDiscovererDestroy,
+		CheckDestroy:             testAccCheckDiscovererDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDiscovererConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDiscovererExists(resourceName, &v),
+					testAccCheckDiscovererExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -134,7 +139,7 @@ func TestAccSchemasDiscoverer_tags(t *testing.T) {
 			{
 				Config: testAccDiscovererConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDiscovererExists(resourceName, &v),
+					testAccCheckDiscovererExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -143,7 +148,7 @@ func TestAccSchemasDiscoverer_tags(t *testing.T) {
 			{
 				Config: testAccDiscovererConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDiscovererExists(resourceName, &v),
+					testAccCheckDiscovererExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -152,31 +157,33 @@ func TestAccSchemasDiscoverer_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckDiscovererDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SchemasConn
+func testAccCheckDiscovererDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SchemasConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_schemas_discoverer" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_schemas_discoverer" {
+				continue
+			}
+
+			_, err := tfschemas.FindDiscovererByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("EventBridge Schemas Discoverer %s still exists", rs.Primary.ID)
 		}
 
-		_, err := tfschemas.FindDiscovererByID(conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("EventBridge Schemas Discoverer %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckDiscovererExists(n string, v *schemas.DescribeDiscovererOutput) resource.TestCheckFunc {
+func testAccCheckDiscovererExists(ctx context.Context, n string, v *schemas.DescribeDiscovererOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -187,9 +194,9 @@ func testAccCheckDiscovererExists(n string, v *schemas.DescribeDiscovererOutput)
 			return fmt.Errorf("No EventBridge Schemas Discoverer ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SchemasConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SchemasConn()
 
-		output, err := tfschemas.FindDiscovererByID(conn, rs.Primary.ID)
+		output, err := tfschemas.FindDiscovererByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

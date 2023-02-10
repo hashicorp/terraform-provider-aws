@@ -1,6 +1,7 @@
 package codestarconnections_test
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"regexp"
@@ -17,6 +18,7 @@ import (
 )
 
 func TestAccCodeStarConnectionsHost_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v codestarconnections.GetHostOutput
 	resourceName := "aws_codestarconnections_host.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -25,12 +27,12 @@ func TestAccCodeStarConnectionsHost_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, codestarconnections.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckHostDestroy,
+		CheckDestroy:             testAccCheckHostDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHostConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckHostExists(resourceName, &v),
+					testAccCheckHostExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "id", "codestar-connections", regexp.MustCompile("host/.+")),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codestar-connections", regexp.MustCompile("host/.+")),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -48,6 +50,7 @@ func TestAccCodeStarConnectionsHost_basic(t *testing.T) {
 }
 
 func TestAccCodeStarConnectionsHost_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v codestarconnections.GetHostOutput
 	resourceName := "aws_codestarconnections_host.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -56,13 +59,13 @@ func TestAccCodeStarConnectionsHost_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, codestarconnections.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckHostDestroy,
+		CheckDestroy:             testAccCheckHostDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHostConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckHostExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcodestarconnections.ResourceHost(), resourceName),
+					testAccCheckHostExists(ctx, resourceName, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcodestarconnections.ResourceHost(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -71,6 +74,7 @@ func TestAccCodeStarConnectionsHost_disappears(t *testing.T) {
 }
 
 func TestAccCodeStarConnectionsHost_vpc(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v codestarconnections.GetHostOutput
 	resourceName := "aws_codestarconnections_host.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -79,12 +83,12 @@ func TestAccCodeStarConnectionsHost_vpc(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, codestarconnections.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckHostDestroy,
+		CheckDestroy:             testAccCheckHostDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHostConfig_vpc(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckHostExists(resourceName, &v),
+					testAccCheckHostExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "id", "codestar-connections", regexp.MustCompile("host/.+")),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codestar-connections", regexp.MustCompile("host/.+")),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -106,7 +110,7 @@ func TestAccCodeStarConnectionsHost_vpc(t *testing.T) {
 	})
 }
 
-func testAccCheckHostExists(n string, v *codestarconnections.GetHostOutput) resource.TestCheckFunc {
+func testAccCheckHostExists(ctx context.Context, n string, v *codestarconnections.GetHostOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -117,9 +121,9 @@ func testAccCheckHostExists(n string, v *codestarconnections.GetHostOutput) reso
 			return errors.New("No CodeStar Connections Host ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeStarConnectionsConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeStarConnectionsConn()
 
-		output, err := tfcodestarconnections.FindHostByARN(conn, rs.Primary.ID)
+		output, err := tfcodestarconnections.FindHostByARN(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -131,28 +135,30 @@ func testAccCheckHostExists(n string, v *codestarconnections.GetHostOutput) reso
 	}
 }
 
-func testAccCheckHostDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CodeStarConnectionsConn
+func testAccCheckHostDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeStarConnectionsConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_codestarconnections_host" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_codestarconnections_host" {
+				continue
+			}
+
+			_, err := tfcodestarconnections.FindHostByARN(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("CodeStar Connections Host %s still exists", rs.Primary.ID)
 		}
 
-		_, err := tfcodestarconnections.FindHostByARN(conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("CodeStar Connections Host %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
 func testAccHostVPCBaseConfig(rName string) string {

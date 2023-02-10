@@ -1,24 +1,26 @@
 package directconnect
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceHostedConnection() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceHostedConnectionCreate,
-		Read:   resourceHostedConnectionRead,
-		Delete: resourceHostedConnectionDelete,
+		CreateWithoutTimeout: resourceHostedConnectionCreate,
+		ReadWithoutTimeout:   resourceHostedConnectionRead,
+		DeleteWithoutTimeout: resourceHostedConnectionDelete,
 
 		Schema: map[string]*schema.Schema{
 			"aws_device": {
@@ -93,8 +95,9 @@ func ResourceHostedConnection() *schema.Resource {
 	}
 }
 
-func resourceHostedConnectionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+func resourceHostedConnectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
 	name := d.Get("name").(string)
 	input := &directconnect.AllocateHostedConnectionInput{
@@ -106,30 +109,31 @@ func resourceHostedConnectionCreate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	log.Printf("[DEBUG] Creating Direct Connect Hosted Connection: %s", input)
-	output, err := conn.AllocateHostedConnection(input)
+	output, err := conn.AllocateHostedConnectionWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating Direct Connect Hosted Connection (%s): %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating Direct Connect Hosted Connection (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.ConnectionId))
 
-	return resourceHostedConnectionRead(d, meta)
+	return append(diags, resourceHostedConnectionRead(ctx, d, meta)...)
 }
 
-func resourceHostedConnectionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+func resourceHostedConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
-	connection, err := FindHostedConnectionByID(conn, d.Id())
+	connection, err := FindHostedConnectionByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Direct Connect Hosted Connection (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Direct Connect Hosted Connection (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Direct Connect Hosted Connection (%s): %s", d.Id(), err)
 	}
 
 	// Cannot set the following attributes from the response:
@@ -149,11 +153,15 @@ func resourceHostedConnectionRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("state", connection.ConnectionState)
 	d.Set("vlan", connection.Vlan)
 
-	return nil
+	return diags
 }
 
-func resourceHostedConnectionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+func resourceHostedConnectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
-	return deleteConnection(conn, d.Id(), waitHostedConnectionDeleted)
+	if err := deleteConnection(ctx, conn, d.Id(), waitHostedConnectionDeleted); err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting Direct Connect Hosted Connection (%s): %s", d.Id(), err)
+	}
+	return diags
 }

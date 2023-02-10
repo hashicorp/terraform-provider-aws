@@ -99,7 +99,7 @@ func ResourceAddon() *schema.Resource {
 }
 
 func resourceAddonCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EKSConn
+	conn := meta.(*conns.AWSClient).EKSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -181,7 +181,7 @@ func resourceAddonCreate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceAddonRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EKSConn
+	conn := meta.(*conns.AWSClient).EKSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -227,7 +227,7 @@ func resourceAddonRead(ctx context.Context, d *schema.ResourceData, meta interfa
 }
 
 func resourceAddonUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EKSConn
+	conn := meta.(*conns.AWSClient).EKSConn()
 
 	clusterName, addonName, err := AddonParseResourceID(d.Id())
 
@@ -285,7 +285,7 @@ func resourceAddonUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.FromErr(fmt.Errorf("error updating tags: %w", err))
 		}
 	}
@@ -294,7 +294,7 @@ func resourceAddonUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceAddonDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EKSConn
+	conn := meta.(*conns.AWSClient).EKSConn()
 
 	clusterName, addonName, err := AddonParseResourceID(d.Id())
 

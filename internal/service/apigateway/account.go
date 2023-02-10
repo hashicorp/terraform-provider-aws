@@ -1,26 +1,28 @@
 package apigateway
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourceAccount() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAccountUpdate,
-		Read:   resourceAccountRead,
-		Update: resourceAccountUpdate,
-		Delete: resourceAccountDelete,
+		CreateWithoutTimeout: resourceAccountUpdate,
+		ReadWithoutTimeout:   resourceAccountRead,
+		UpdateWithoutTimeout: resourceAccountUpdate,
+		DeleteWithoutTimeout: resourceAccountDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -48,13 +50,13 @@ func ResourceAccount() *schema.Resource {
 	}
 }
 
-func resourceAccountRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 
-	log.Printf("[INFO] Reading API Gateway Account %s", d.Id())
-	account, err := conn.GetAccount(&apigateway.GetAccountInput{})
+	account, err := conn.GetAccountWithContext(ctx, &apigateway.GetAccountInput{})
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading API Gateway Account: %s", err)
 	}
 
 	log.Printf("[DEBUG] Received API Gateway Account: %s", account)
@@ -65,13 +67,16 @@ func resourceAccountRead(d *schema.ResourceData, meta interface{}) error {
 		// (e.g. for referencing throttle_settings)
 		d.Set("cloudwatch_role_arn", account.CloudwatchRoleArn)
 	}
-	d.Set("throttle_settings", FlattenThrottleSettings(account.ThrottleSettings))
+	if err := d.Set("throttle_settings", FlattenThrottleSettings(account.ThrottleSettings)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading API Gateway Account: %s", err)
+	}
 
-	return nil
+	return diags
 }
 
-func resourceAccountUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+func resourceAccountUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 
 	input := apigateway.UpdateAccountInput{}
 	operations := make([]*apigateway.PatchOperation, 0)
@@ -98,8 +103,8 @@ func resourceAccountUpdate(d *schema.ResourceData, meta interface{}) error {
 	otherErrMsg := "API Gateway could not successfully write to CloudWatch Logs using the ARN specified"
 	var out *apigateway.Account
 	var err error
-	err = resource.Retry(propagationTimeout, func() *resource.RetryError {
-		out, err = conn.UpdateAccount(&input)
+	err = resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
+		out, err = conn.UpdateAccountWithContext(ctx, &input)
 
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, "BadRequestException", expectedErrMsg) ||
@@ -113,18 +118,21 @@ func resourceAccountUpdate(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		out, err = conn.UpdateAccount(&input)
+		out, err = conn.UpdateAccountWithContext(ctx, &input)
 	}
 	if err != nil {
-		return fmt.Errorf("Updating API Gateway Account failed: %s", err)
+		return sdkdiag.AppendErrorf(diags, "Updating API Gateway Account failed: %s", err)
 	}
 	log.Printf("[DEBUG] API Gateway Account updated: %s", out)
 
 	d.SetId("api-gateway-account")
-	return resourceAccountRead(d, meta)
+	return append(diags, resourceAccountRead(ctx, d, meta)...)
 }
 
-func resourceAccountDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAccountDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var
 	// There is no API for "deleting" account or resetting it to "default" settings
-	return nil
+	diags diag.Diagnostics
+
+	return diags
 }

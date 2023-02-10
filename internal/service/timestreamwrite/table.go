@@ -138,7 +138,7 @@ func ResourceTable() *schema.Resource {
 }
 
 func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).TimestreamWriteConn
+	conn := meta.(*conns.AWSClient).TimestreamWriteConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -176,7 +176,7 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).TimestreamWriteConn
+	conn := meta.(*conns.AWSClient).TimestreamWriteConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -219,7 +219,7 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	d.Set("table_name", table.TableName)
 
-	tags, err := ListTags(conn, arn)
+	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error listing tags for Timestream Table (%s): %w", arn, err))
@@ -240,7 +240,7 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 }
 
 func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).TimestreamWriteConn
+	conn := meta.(*conns.AWSClient).TimestreamWriteConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		tableName, databaseName, err := TableParseID(d.Id())
@@ -272,7 +272,7 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.FromErr(fmt.Errorf("error updating Timestream Table (%s) tags: %w", d.Get("arn").(string), err))
 		}
 	}
@@ -281,7 +281,7 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceTableDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).TimestreamWriteConn
+	conn := meta.(*conns.AWSClient).TimestreamWriteConn()
 
 	tableName, databaseName, err := TableParseID(d.Id())
 
@@ -289,12 +289,11 @@ func resourceTableDelete(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.FromErr(err)
 	}
 
-	input := &timestreamwrite.DeleteTableInput{
+	log.Printf("[INFO] Deleting Timestream Table: %s", d.Id())
+	_, err = conn.DeleteTableWithContext(ctx, &timestreamwrite.DeleteTableInput{
 		DatabaseName: aws.String(databaseName),
 		TableName:    aws.String(tableName),
-	}
-
-	_, err = conn.DeleteTableWithContext(ctx, input)
+	})
 
 	if tfawserr.ErrCodeEquals(err, timestreamwrite.ErrCodeResourceNotFoundException) {
 		return nil

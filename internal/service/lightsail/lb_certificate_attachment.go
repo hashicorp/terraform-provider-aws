@@ -49,7 +49,7 @@ func ResourceLoadBalancerCertificateAttachment() *schema.Resource {
 }
 
 func resourceLoadBalancerCertificateAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn
+	conn := meta.(*conns.AWSClient).LightsailConn()
 
 	req := lightsail.AttachLoadBalancerTlsCertificateInput{
 		LoadBalancerName: aws.String(d.Get("lb_name").(string)),
@@ -68,7 +68,7 @@ func resourceLoadBalancerCertificateAttachmentCreate(ctx context.Context, d *sch
 
 	op := out.Operations[0]
 
-	err = waitOperation(conn, op.Id)
+	err = waitOperation(ctx, conn, op.Id)
 
 	if err != nil {
 		return create.DiagError(names.Lightsail, lightsail.OperationTypeAttachLoadBalancerTlsCertificate, ResLoadBalancerCertificateAttachment, d.Get("certificate_name").(string), errors.New("Error waiting for Attach Load Balancer Certificate to Load Balancer request operation"))
@@ -86,7 +86,7 @@ func resourceLoadBalancerCertificateAttachmentCreate(ctx context.Context, d *sch
 }
 
 func resourceLoadBalancerCertificateAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LightsailConn
+	conn := meta.(*conns.AWSClient).LightsailConn()
 
 	out, err := FindLoadBalancerCertificateAttachmentById(ctx, conn, d.Id())
 

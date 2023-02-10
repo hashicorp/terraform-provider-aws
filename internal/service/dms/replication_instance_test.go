@@ -1,6 +1,7 @@
 package dms_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -15,6 +16,8 @@ import (
 )
 
 func TestAccDMSReplicationInstance_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+
 	// NOTE: Using larger dms.c4.large here for AWS GovCloud (US) support
 	replicationInstanceClass := "dms.c4.large"
 	resourceName := "aws_dms_replication_instance.test"
@@ -24,12 +27,12 @@ func TestAccDMSReplicationInstance_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReplicationInstanceDestroy,
+		CheckDestroy:             testAccCheckReplicationInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationInstanceConfig_class(rName, replicationInstanceClass),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationInstanceExists(resourceName),
+					testAccCheckReplicationInstanceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "100"),
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
 					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
@@ -56,6 +59,7 @@ func TestAccDMSReplicationInstance_basic(t *testing.T) {
 }
 
 func TestAccDMSReplicationInstance_allocatedStorage(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_dms_replication_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -63,12 +67,12 @@ func TestAccDMSReplicationInstance_allocatedStorage(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReplicationInstanceDestroy,
+		CheckDestroy:             testAccCheckReplicationInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationInstanceConfig_allocatedStorage(rName, 5),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationInstanceExists(resourceName),
+					testAccCheckReplicationInstanceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "5"),
 				),
 			},
@@ -81,7 +85,7 @@ func TestAccDMSReplicationInstance_allocatedStorage(t *testing.T) {
 			{
 				Config: testAccReplicationInstanceConfig_allocatedStorage(rName, 6),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationInstanceExists(resourceName),
+					testAccCheckReplicationInstanceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "6"),
 				),
 			},
@@ -90,6 +94,7 @@ func TestAccDMSReplicationInstance_allocatedStorage(t *testing.T) {
 }
 
 func TestAccDMSReplicationInstance_autoMinorVersionUpgrade(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_dms_replication_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -97,12 +102,12 @@ func TestAccDMSReplicationInstance_autoMinorVersionUpgrade(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReplicationInstanceDestroy,
+		CheckDestroy:             testAccCheckReplicationInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationInstanceConfig_autoMinorVersionUpgrade(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationInstanceExists(resourceName),
+					testAccCheckReplicationInstanceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
 				),
 			},
@@ -115,14 +120,14 @@ func TestAccDMSReplicationInstance_autoMinorVersionUpgrade(t *testing.T) {
 			{
 				Config: testAccReplicationInstanceConfig_autoMinorVersionUpgrade(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationInstanceExists(resourceName),
+					testAccCheckReplicationInstanceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
 				),
 			},
 			{
 				Config: testAccReplicationInstanceConfig_autoMinorVersionUpgrade(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationInstanceExists(resourceName),
+					testAccCheckReplicationInstanceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
 				),
 			},
@@ -131,6 +136,7 @@ func TestAccDMSReplicationInstance_autoMinorVersionUpgrade(t *testing.T) {
 }
 
 func TestAccDMSReplicationInstance_availabilityZone(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_availability_zones.available"
 	resourceName := "aws_dms_replication_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -139,12 +145,12 @@ func TestAccDMSReplicationInstance_availabilityZone(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReplicationInstanceDestroy,
+		CheckDestroy:             testAccCheckReplicationInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationInstanceConfig_availabilityZone(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationInstanceExists(resourceName),
+					testAccCheckReplicationInstanceExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "availability_zone", dataSourceName, "names.0"),
 				),
 			},
@@ -216,6 +222,7 @@ func TestAccDMSReplicationInstance_engineVersion(t *testing.T) {
 */
 
 func TestAccDMSReplicationInstance_kmsKeyARN(t *testing.T) {
+	ctx := acctest.Context(t)
 	kmsKeyResourceName := "aws_kms_key.test"
 	resourceName := "aws_dms_replication_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -224,12 +231,12 @@ func TestAccDMSReplicationInstance_kmsKeyARN(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReplicationInstanceDestroy,
+		CheckDestroy:             testAccCheckReplicationInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationInstanceConfig_kmsKeyARN(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationInstanceExists(resourceName),
+					testAccCheckReplicationInstanceExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "kms_key_arn", kmsKeyResourceName, "arn"),
 				),
 			},
@@ -244,6 +251,7 @@ func TestAccDMSReplicationInstance_kmsKeyARN(t *testing.T) {
 }
 
 func TestAccDMSReplicationInstance_multiAz(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_dms_replication_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -251,12 +259,12 @@ func TestAccDMSReplicationInstance_multiAz(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReplicationInstanceDestroy,
+		CheckDestroy:             testAccCheckReplicationInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationInstanceConfig_multiAz(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationInstanceExists(resourceName),
+					testAccCheckReplicationInstanceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "multi_az", "true"),
 				),
 			},
@@ -269,14 +277,14 @@ func TestAccDMSReplicationInstance_multiAz(t *testing.T) {
 			{
 				Config: testAccReplicationInstanceConfig_multiAz(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationInstanceExists(resourceName),
+					testAccCheckReplicationInstanceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "multi_az", "false"),
 				),
 			},
 			{
 				Config: testAccReplicationInstanceConfig_multiAz(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationInstanceExists(resourceName),
+					testAccCheckReplicationInstanceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "multi_az", "true"),
 				),
 			},
@@ -285,6 +293,7 @@ func TestAccDMSReplicationInstance_multiAz(t *testing.T) {
 }
 
 func TestAccDMSReplicationInstance_preferredMaintenanceWindow(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_dms_replication_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -292,12 +301,12 @@ func TestAccDMSReplicationInstance_preferredMaintenanceWindow(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReplicationInstanceDestroy,
+		CheckDestroy:             testAccCheckReplicationInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationInstanceConfig_preferredMaintenanceWindow(rName, "sun:00:30-sun:02:30"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationInstanceExists(resourceName),
+					testAccCheckReplicationInstanceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "preferred_maintenance_window", "sun:00:30-sun:02:30"),
 				),
 			},
@@ -310,7 +319,7 @@ func TestAccDMSReplicationInstance_preferredMaintenanceWindow(t *testing.T) {
 			{
 				Config: testAccReplicationInstanceConfig_preferredMaintenanceWindow(rName, "mon:00:30-mon:02:30"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationInstanceExists(resourceName),
+					testAccCheckReplicationInstanceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "preferred_maintenance_window", "mon:00:30-mon:02:30"),
 				),
 			},
@@ -319,6 +328,7 @@ func TestAccDMSReplicationInstance_preferredMaintenanceWindow(t *testing.T) {
 }
 
 func TestAccDMSReplicationInstance_publiclyAccessible(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_dms_replication_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -326,12 +336,12 @@ func TestAccDMSReplicationInstance_publiclyAccessible(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReplicationInstanceDestroy,
+		CheckDestroy:             testAccCheckReplicationInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationInstanceConfig_publiclyAccessible(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationInstanceExists(resourceName),
+					testAccCheckReplicationInstanceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "true"),
 					resource.TestCheckResourceAttr(resourceName, "replication_instance_public_ips.#", "1"),
 				),
@@ -347,6 +357,8 @@ func TestAccDMSReplicationInstance_publiclyAccessible(t *testing.T) {
 }
 
 func TestAccDMSReplicationInstance_replicationInstanceClass(t *testing.T) {
+	ctx := acctest.Context(t)
+
 	// NOTE: Using larger dms.c4.(x)?large here for AWS GovCloud (US) support
 	replicationInstanceClass1 := "dms.c4.large"
 	replicationInstanceClass2 := "dms.c4.xlarge"
@@ -357,12 +369,12 @@ func TestAccDMSReplicationInstance_replicationInstanceClass(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReplicationInstanceDestroy,
+		CheckDestroy:             testAccCheckReplicationInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationInstanceConfig_class(rName, replicationInstanceClass1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationInstanceExists(resourceName),
+					testAccCheckReplicationInstanceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "replication_instance_class", replicationInstanceClass1),
 				),
 			},
@@ -375,7 +387,7 @@ func TestAccDMSReplicationInstance_replicationInstanceClass(t *testing.T) {
 			{
 				Config: testAccReplicationInstanceConfig_class(rName, replicationInstanceClass2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationInstanceExists(resourceName),
+					testAccCheckReplicationInstanceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "replication_instance_class", replicationInstanceClass2),
 				),
 			},
@@ -384,6 +396,7 @@ func TestAccDMSReplicationInstance_replicationInstanceClass(t *testing.T) {
 }
 
 func TestAccDMSReplicationInstance_replicationSubnetGroupID(t *testing.T) {
+	ctx := acctest.Context(t)
 	dmsReplicationSubnetGroupResourceName := "aws_dms_replication_subnet_group.test"
 	resourceName := "aws_dms_replication_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -392,12 +405,12 @@ func TestAccDMSReplicationInstance_replicationSubnetGroupID(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReplicationInstanceDestroy,
+		CheckDestroy:             testAccCheckReplicationInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationInstanceConfig_subnetGroupID(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationInstanceExists(resourceName),
+					testAccCheckReplicationInstanceExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "replication_subnet_group_id", dmsReplicationSubnetGroupResourceName, "replication_subnet_group_id"),
 				),
 			},
@@ -412,6 +425,7 @@ func TestAccDMSReplicationInstance_replicationSubnetGroupID(t *testing.T) {
 }
 
 func TestAccDMSReplicationInstance_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_dms_replication_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -419,12 +433,12 @@ func TestAccDMSReplicationInstance_tags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReplicationInstanceDestroy,
+		CheckDestroy:             testAccCheckReplicationInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationInstanceConfig_tagsOne(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationInstanceExists(resourceName),
+					testAccCheckReplicationInstanceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -438,7 +452,7 @@ func TestAccDMSReplicationInstance_tags(t *testing.T) {
 			{
 				Config: testAccReplicationInstanceConfig_tagsTwo(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationInstanceExists(resourceName),
+					testAccCheckReplicationInstanceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -447,7 +461,7 @@ func TestAccDMSReplicationInstance_tags(t *testing.T) {
 			{
 				Config: testAccReplicationInstanceConfig_tagsOne(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationInstanceExists(resourceName),
+					testAccCheckReplicationInstanceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -457,6 +471,7 @@ func TestAccDMSReplicationInstance_tags(t *testing.T) {
 }
 
 func TestAccDMSReplicationInstance_vpcSecurityGroupIDs(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_dms_replication_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -464,12 +479,12 @@ func TestAccDMSReplicationInstance_vpcSecurityGroupIDs(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReplicationInstanceDestroy,
+		CheckDestroy:             testAccCheckReplicationInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationInstanceConfig_vpcSecurityGroupIDs(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationInstanceExists(resourceName),
+					testAccCheckReplicationInstanceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "1"),
 				),
 			},
@@ -483,7 +498,7 @@ func TestAccDMSReplicationInstance_vpcSecurityGroupIDs(t *testing.T) {
 	})
 }
 
-func testAccCheckReplicationInstanceExists(n string) resource.TestCheckFunc {
+func testAccCheckReplicationInstanceExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -493,8 +508,8 @@ func testAccCheckReplicationInstanceExists(n string) resource.TestCheckFunc {
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("No ID is set")
 		}
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn
-		resp, err := conn.DescribeReplicationInstances(&dms.DescribeReplicationInstancesInput{
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn()
+		resp, err := conn.DescribeReplicationInstancesWithContext(ctx, &dms.DescribeReplicationInstancesInput{
 			Filters: []*dms.Filter{
 				{
 					Name:   aws.String("replication-instance-id"),
@@ -514,41 +529,43 @@ func testAccCheckReplicationInstanceExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckReplicationInstanceDestroy(s *terraform.State) error {
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_dms_replication_instance" {
-			continue
-		}
+func testAccCheckReplicationInstanceDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_dms_replication_instance" {
+				continue
+			}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn
+			conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn()
 
-		resp, err := conn.DescribeReplicationInstances(&dms.DescribeReplicationInstancesInput{
-			Filters: []*dms.Filter{
-				{
-					Name:   aws.String("replication-instance-id"),
-					Values: []*string{aws.String(rs.Primary.ID)},
+			resp, err := conn.DescribeReplicationInstancesWithContext(ctx, &dms.DescribeReplicationInstancesInput{
+				Filters: []*dms.Filter{
+					{
+						Name:   aws.String("replication-instance-id"),
+						Values: []*string{aws.String(rs.Primary.ID)},
+					},
 				},
-			},
-		})
+			})
 
-		if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
-			continue
-		}
+			if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
+				continue
+			}
 
-		if err != nil {
-			return err
-		}
+			if err != nil {
+				return err
+			}
 
-		if resp != nil {
-			for _, replicationInstance := range resp.ReplicationInstances {
-				if aws.StringValue(replicationInstance.ReplicationInstanceIdentifier) == rs.Primary.ID {
-					return fmt.Errorf("DMS Replication Instance (%s) still exists", rs.Primary.ID)
+			if resp != nil {
+				for _, replicationInstance := range resp.ReplicationInstances {
+					if aws.StringValue(replicationInstance.ReplicationInstanceIdentifier) == rs.Primary.ID {
+						return fmt.Errorf("DMS Replication Instance (%s) still exists", rs.Primary.ID)
+					}
 				}
 			}
 		}
-	}
 
-	return nil
+		return nil
+	}
 }
 
 /*
@@ -556,7 +573,7 @@ func testAccCheckReplicationInstanceDestroy(s *terraform.State) error {
 
 // Ensure at least two engine versions of the replication instance class are available
 func testAccReplicationInstanceEngineVersionsPreCheck(t *testing.T) []string {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn()
 
 	// Gather all orderable DMS replication instances of the instance class
 	// used in the acceptance testing. Not currently available as an input

@@ -1,28 +1,30 @@
 package pinpoint
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/pinpoint"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceApp() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAppCreate,
-		Read:   resourceAppRead,
-		Update: resourceAppUpdate,
-		Delete: resourceAppDelete,
+		CreateWithoutTimeout: resourceAppCreate,
+		ReadWithoutTimeout:   resourceAppRead,
+		UpdateWithoutTimeout: resourceAppUpdate,
+		DeleteWithoutTimeout: resourceAppDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -148,8 +150,9 @@ func ResourceApp() *schema.Resource {
 	}
 }
 
-func resourceAppCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).PinpointConn
+func resourceAppCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).PinpointConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -175,19 +178,20 @@ func resourceAppCreate(d *schema.ResourceData, meta interface{}) error {
 		req.CreateApplicationRequest.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	output, err := conn.CreateApp(req)
+	output, err := conn.CreateAppWithContext(ctx, req)
 	if err != nil {
-		return fmt.Errorf("error creating Pinpoint app: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Pinpoint app: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.ApplicationResponse.Id))
 	d.Set("arn", output.ApplicationResponse.Arn)
 
-	return resourceAppUpdate(d, meta)
+	return append(diags, resourceAppUpdate(ctx, d, meta)...)
 }
 
-func resourceAppUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).PinpointConn
+func resourceAppUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).PinpointConn()
 
 	appSettings := &pinpoint.WriteApplicationSettingsRequest{}
 
@@ -212,9 +216,9 @@ func resourceAppUpdate(d *schema.ResourceData, meta interface{}) error {
 		WriteApplicationSettingsRequest: appSettings,
 	}
 
-	_, err := conn.UpdateApplicationSettings(&req)
+	_, err := conn.UpdateApplicationSettingsWithContext(ctx, &req)
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "updating Pinpoint Application (%s): %s", d.Id(), err)
 	}
 
 	if !d.IsNewResource() {
@@ -222,46 +226,47 @@ func resourceAppUpdate(d *schema.ResourceData, meta interface{}) error {
 		if d.HasChange("tags_all") {
 			o, n := d.GetChange("tags_all")
 
-			if err := UpdateTags(conn, arn, o, n); err != nil {
-				return fmt.Errorf("error updating PinPoint Application (%s) tags: %s", arn, err)
+			if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating PinPoint Application (%s) tags: %s", arn, err)
 			}
 		}
 	}
 
-	return resourceAppRead(d, meta)
+	return append(diags, resourceAppRead(ctx, d, meta)...)
 }
 
-func resourceAppRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).PinpointConn
+func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).PinpointConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	log.Printf("[INFO] Reading Pinpoint App Attributes for %s", d.Id())
 
-	app, err := conn.GetApp(&pinpoint.GetAppInput{
+	app, err := conn.GetAppWithContext(ctx, &pinpoint.GetAppInput{
 		ApplicationId: aws.String(d.Id()),
 	})
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, pinpoint.ErrCodeNotFoundException) {
-			log.Printf("[WARN] Pinpoint App (%s) not found, error code (404)", d.Id())
+			log.Printf("[WARN] Pinpoint App (%s) not found, removing from state", d.Id())
 			d.SetId("")
-			return nil
+			return diags
 		}
 
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading Pinpoint Application (%s): %s", d.Id(), err)
 	}
 
-	settings, err := conn.GetApplicationSettings(&pinpoint.GetApplicationSettingsInput{
+	settings, err := conn.GetApplicationSettingsWithContext(ctx, &pinpoint.GetApplicationSettingsInput{
 		ApplicationId: aws.String(d.Id()),
 	})
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, pinpoint.ErrCodeNotFoundException) {
-			log.Printf("[WARN] Pinpoint App (%s) not found, error code (404)", d.Id())
+			log.Printf("[WARN] Pinpoint App (%s) not found, removing from state", d.Id())
 			d.SetId("")
-			return nil
+			return diags
 		}
 
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading Pinpoint Application (%s) settings: %s", d.Id(), err)
 	}
 
 	arn := aws.StringValue(app.ApplicationResponse.Arn)
@@ -270,48 +275,49 @@ func resourceAppRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", arn)
 
 	if err := d.Set("campaign_hook", flattenCampaignHook(settings.ApplicationSettingsResource.CampaignHook)); err != nil {
-		return fmt.Errorf("error setting campaign_hook: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting campaign_hook: %s", err)
 	}
 	if err := d.Set("limits", flattenCampaignLimits(settings.ApplicationSettingsResource.Limits)); err != nil {
-		return fmt.Errorf("error setting limits: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting limits: %s", err)
 	}
 	if err := d.Set("quiet_time", flattenQuietTime(settings.ApplicationSettingsResource.QuietTime)); err != nil {
-		return fmt.Errorf("error setting quiet_time: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting quiet_time: %s", err)
 	}
 
-	tags, err := ListTags(conn, arn)
+	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for PinPoint Application (%s): %s", arn, err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for PinPoint Application (%s): %s", arn, err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceAppDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).PinpointConn
+func resourceAppDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).PinpointConn()
 
 	log.Printf("[DEBUG] Pinpoint Delete App: %s", d.Id())
-	_, err := conn.DeleteApp(&pinpoint.DeleteAppInput{
+	_, err := conn.DeleteAppWithContext(ctx, &pinpoint.DeleteAppInput{
 		ApplicationId: aws.String(d.Id()),
 	})
 
 	if tfawserr.ErrCodeEquals(err, pinpoint.ErrCodeNotFoundException) {
-		return nil
+		return diags
 	}
 
-	return err
+	return sdkdiag.AppendErrorf(diags, "deleting Pinpoint Application (%s): %s", d.Id(), err)
 }
 
 func expandCampaignHook(configs []interface{}) *pinpoint.CampaignHook {

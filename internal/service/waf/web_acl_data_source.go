@@ -1,17 +1,19 @@
 package waf
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/waf"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func DataSourceWebACL() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceWebACLRead,
+		ReadWithoutTimeout: dataSourceWebACLRead,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -22,17 +24,18 @@ func DataSourceWebACL() *schema.Resource {
 	}
 }
 
-func dataSourceWebACLRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFConn
+func dataSourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).WAFConn()
 	name := d.Get("name").(string)
 
 	acls := make([]*waf.WebACLSummary, 0)
 	// ListWebACLsInput does not have a name parameter for filtering
 	input := &waf.ListWebACLsInput{}
 	for {
-		output, err := conn.ListWebACLs(input)
+		output, err := conn.ListWebACLsWithContext(ctx, input)
 		if err != nil {
-			return fmt.Errorf("error reading web ACLs: %w", err)
+			return sdkdiag.AppendErrorf(diags, "reading web ACLs: %s", err)
 		}
 		for _, acl := range output.WebACLs {
 			if aws.StringValue(acl.Name) == name {
@@ -47,16 +50,16 @@ func dataSourceWebACLRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if len(acls) == 0 {
-		return fmt.Errorf("web ACLs not found for name: %s", name)
+		return sdkdiag.AppendErrorf(diags, "web ACLs not found for name: %s", name)
 	}
 
 	if len(acls) > 1 {
-		return fmt.Errorf("multiple web ACLs found for name: %s", name)
+		return sdkdiag.AppendErrorf(diags, "multiple web ACLs found for name: %s", name)
 	}
 
 	acl := acls[0]
 
 	d.SetId(aws.StringValue(acl.WebACLId))
 
-	return nil
+	return diags
 }

@@ -50,6 +50,7 @@ func TestAccVPCRouteDataSource_basic(t *testing.T) {
 }
 
 func TestAccVPCRouteDataSource_transitGatewayID(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -62,7 +63,7 @@ func TestAccVPCRouteDataSource_transitGatewayID(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRouteDestroy,
+		CheckDestroy:             testAccCheckRouteDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCRouteDataSourceConfig_ipv4TransitGateway(rName),
@@ -77,6 +78,7 @@ func TestAccVPCRouteDataSource_transitGatewayID(t *testing.T) {
 }
 
 func TestAccVPCRouteDataSource_ipv6DestinationCIDR(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_route.test"
 	resourceName := "aws_route.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -85,7 +87,7 @@ func TestAccVPCRouteDataSource_ipv6DestinationCIDR(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRouteDestroy,
+		CheckDestroy:             testAccCheckRouteDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCRouteDataSourceConfig_ipv6EgressOnlyInternetGateway(rName),
@@ -99,6 +101,7 @@ func TestAccVPCRouteDataSource_ipv6DestinationCIDR(t *testing.T) {
 }
 
 func TestAccVPCRouteDataSource_localGatewayID(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_route.by_local_gateway_id"
 	resourceName := "aws_route.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -107,7 +110,7 @@ func TestAccVPCRouteDataSource_localGatewayID(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRouteDestroy,
+		CheckDestroy:             testAccCheckRouteDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCRouteDataSourceConfig_ipv4LocalGateway(rName),
@@ -122,15 +125,16 @@ func TestAccVPCRouteDataSource_localGatewayID(t *testing.T) {
 }
 
 func TestAccVPCRouteDataSource_carrierGatewayID(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_route.test"
 	resourceName := "aws_route.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckWavelengthZoneAvailable(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckWavelengthZoneAvailable(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRouteDestroy,
+		CheckDestroy:             testAccCheckRouteDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCRouteDataSourceConfig_ipv4CarrierGateway(rName),
@@ -145,15 +149,16 @@ func TestAccVPCRouteDataSource_carrierGatewayID(t *testing.T) {
 }
 
 func TestAccVPCRouteDataSource_destinationPrefixListID(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_route.test"
 	resourceName := "aws_route.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckManagedPrefixList(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckManagedPrefixList(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRouteDestroy,
+		CheckDestroy:             testAccCheckRouteDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCRouteDataSourceConfig_prefixListNATGateway(rName),
@@ -168,6 +173,7 @@ func TestAccVPCRouteDataSource_destinationPrefixListID(t *testing.T) {
 }
 
 func TestAccVPCRouteDataSource_gatewayVPCEndpoint(t *testing.T) {
+	ctx := acctest.Context(t)
 	var routeTable ec2.RouteTable
 	var vpce ec2.VpcEndpoint
 	rtResourceName := "aws_route_table.test"
@@ -178,14 +184,14 @@ func TestAccVPCRouteDataSource_gatewayVPCEndpoint(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRouteDestroy,
+		CheckDestroy:             testAccCheckRouteDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCRouteDataSourceConfig_gatewayEndpointNo(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRouteTableExists(rtResourceName, &routeTable),
-					testAccCheckVPCEndpointExists(vpceResourceName, &vpce),
-					testAccCheckRouteTableWaitForVPCEndpointRoute(&routeTable, &vpce),
+					testAccCheckRouteTableExists(ctx, rtResourceName, &routeTable),
+					testAccCheckVPCEndpointExists(ctx, vpceResourceName, &vpce),
+					testAccCheckRouteTableWaitForVPCEndpointRoute(ctx, &routeTable, &vpce),
 				),
 			},
 			{

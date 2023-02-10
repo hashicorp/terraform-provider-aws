@@ -1,17 +1,19 @@
 package workspaces
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/workspaces"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func FindDirectoryByID(conn *workspaces.WorkSpaces, id string) (*workspaces.WorkspaceDirectory, error) {
+func FindDirectoryByID(ctx context.Context, conn *workspaces.WorkSpaces, id string) (*workspaces.WorkspaceDirectory, error) {
 	input := &workspaces.DescribeWorkspaceDirectoriesInput{
 		DirectoryIds: aws.StringSlice([]string{id}),
 	}
 
-	output, err := conn.DescribeWorkspaceDirectories(input)
+	output, err := conn.DescribeWorkspaceDirectoriesWithContext(ctx, input)
 
 	if err != nil {
 		return nil, err

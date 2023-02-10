@@ -31,13 +31,14 @@ func init() {
 }
 
 func sweepApplications(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).ElasticBeanstalkConn
+	conn := client.(*conns.AWSClient).ElasticBeanstalkConn()
 
-	resp, err := conn.DescribeApplications(&elasticbeanstalk.DescribeApplicationsInput{})
+	resp, err := conn.DescribeApplicationsWithContext(ctx, &elasticbeanstalk.DescribeApplicationsInput{})
 	if err != nil {
 		if sweep.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping Elastic Beanstalk Application sweep for %s: %s", region, err)
@@ -54,10 +55,9 @@ func sweepApplications(region string) error {
 	var errors error
 	for _, bsa := range resp.Applications {
 		applicationName := aws.StringValue(bsa.ApplicationName)
-		_, err := conn.DeleteApplication(
-			&elasticbeanstalk.DeleteApplicationInput{
-				ApplicationName: bsa.ApplicationName,
-			})
+		_, err := conn.DeleteApplicationWithContext(ctx, &elasticbeanstalk.DeleteApplicationInput{
+			ApplicationName: bsa.ApplicationName,
+		})
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, "InvalidConfiguration.NotFound") || tfawserr.ErrCodeEquals(err, "ValidationError") {
 				log.Printf("[DEBUG] beanstalk application %q not found", applicationName)
@@ -72,13 +72,14 @@ func sweepApplications(region string) error {
 }
 
 func sweepEnvironments(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).ElasticBeanstalkConn
+	conn := client.(*conns.AWSClient).ElasticBeanstalkConn()
 
-	resp, err := conn.DescribeEnvironments(&elasticbeanstalk.DescribeEnvironmentsInput{
+	resp, err := conn.DescribeEnvironmentsWithContext(ctx, &elasticbeanstalk.DescribeEnvironmentsInput{
 		IncludeDeleted: aws.Bool(false),
 	})
 
@@ -101,7 +102,7 @@ func sweepEnvironments(region string) error {
 		environmentID := aws.StringValue(bse.EnvironmentId)
 		log.Printf("Trying to terminate (%s) (%s)", environmentName, environmentID)
 
-		err := DeleteEnvironment(conn, environmentID, 5*time.Minute, 10*time.Second) //nolint:gomnd
+		err := DeleteEnvironment(ctx, conn, environmentID, 5*time.Minute, 10*time.Second) //nolint:gomnd
 		if err != nil {
 			errors = multierror.Append(fmt.Errorf("error deleting Elastic Beanstalk Environment %q: %w", environmentID, err))
 		}

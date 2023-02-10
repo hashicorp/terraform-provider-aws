@@ -35,10 +35,10 @@ const (
 
 func ResourceIndex() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceIndexCreate,
-		ReadContext:   resourceIndexRead,
-		UpdateContext: resourceIndexUpdate,
-		DeleteContext: resourceIndexDelete,
+		CreateWithoutTimeout: resourceIndexCreate,
+		ReadWithoutTimeout:   resourceIndexRead,
+		UpdateWithoutTimeout: resourceIndexUpdate,
+		DeleteWithoutTimeout: resourceIndexDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -372,7 +372,7 @@ func ResourceIndex() *schema.Resource {
 }
 
 func resourceIndexCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraClient
+	conn := meta.(*conns.AWSClient).KendraClient()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -414,8 +414,7 @@ func resourceIndexCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	log.Printf("[DEBUG] Creating Kendra Index %#v", input)
 
-	outputRaw, err := tfresource.RetryWhen(
-		propagationTimeout,
+	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
 		func() (interface{}, error) {
 			return conn.CreateIndex(ctx, input)
 		},
@@ -467,7 +466,7 @@ func resourceIndexCreate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceIndexRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraClient
+	conn := meta.(*conns.AWSClient).KendraClient()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -545,7 +544,7 @@ func resourceIndexRead(ctx context.Context, d *schema.ResourceData, meta interfa
 }
 
 func resourceIndexUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraClient
+	conn := meta.(*conns.AWSClient).KendraClient()
 
 	id := d.Id()
 
@@ -578,8 +577,7 @@ func resourceIndexUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			input.UserTokenConfigurations = expandUserTokenConfigurations(d.Get("user_token_configurations").([]interface{}))
 		}
 
-		_, err := tfresource.RetryWhen(
-			propagationTimeout,
+		_, err := tfresource.RetryWhen(ctx, propagationTimeout,
 			func() (interface{}, error) {
 				return conn.UpdateIndex(ctx, input)
 			},
@@ -615,7 +613,7 @@ func resourceIndexUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceIndexDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraClient
+	conn := meta.(*conns.AWSClient).KendraClient()
 
 	id := d.Id()
 

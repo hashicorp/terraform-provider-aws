@@ -1,6 +1,7 @@
 package ecr_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -12,21 +13,18 @@ import (
 )
 
 func TestAccECRScanningConfiguration_serial(t *testing.T) {
-	testFuncs := map[string]func(t *testing.T){
+	t.Parallel()
+
+	testCases := map[string]func(t *testing.T){
 		"basic":  testAccRegistryScanningConfiguration_basic,
 		"update": testAccRegistryScanningConfiguration_update,
 	}
 
-	for name, testFunc := range testFuncs {
-		testFunc := testFunc
-
-		t.Run(name, func(t *testing.T) {
-			testFunc(t)
-		})
-	}
+	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
 func testAccRegistryScanningConfiguration_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v ecr.GetRegistryScanningConfigurationOutput
 	resourceName := "aws_ecr_registry_scanning_configuration.test"
 
@@ -34,12 +32,12 @@ func testAccRegistryScanningConfiguration_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ecr.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccRegistryScanningConfigurationDestroy,
+		CheckDestroy:             testAccCheckRegistryScanningConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRegistryScanningConfigurationConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccRegistryScanningConfigurationExists(resourceName, &v),
+					testAccRegistryScanningConfigurationExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "scan_type", "BASIC"),
@@ -55,6 +53,7 @@ func testAccRegistryScanningConfiguration_basic(t *testing.T) {
 }
 
 func testAccRegistryScanningConfiguration_update(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v ecr.GetRegistryScanningConfigurationOutput
 	resourceName := "aws_ecr_registry_scanning_configuration.test"
 
@@ -62,12 +61,12 @@ func testAccRegistryScanningConfiguration_update(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ecr.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccRegistryScanningConfigurationDestroy,
+		CheckDestroy:             testAccCheckRegistryScanningConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRegistryScanningConfigurationConfig_oneRule(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccRegistryScanningConfigurationExists(resourceName, &v),
+					testAccRegistryScanningConfigurationExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
@@ -88,7 +87,7 @@ func testAccRegistryScanningConfiguration_update(t *testing.T) {
 			{
 				Config: testAccRegistryScanningConfigurationConfig_twoRules(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccRegistryScanningConfigurationExists(resourceName, &v),
+					testAccRegistryScanningConfigurationExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"scan_frequency": "CONTINUOUS_SCAN",
@@ -111,25 +110,27 @@ func testAccRegistryScanningConfiguration_update(t *testing.T) {
 	})
 }
 
-func testAccRegistryScanningConfigurationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn
+func testAccCheckRegistryScanningConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_ecr_registry_scanning_configuration" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_ecr_registry_scanning_configuration" {
+				continue
+			}
+
+			_, err := conn.GetRegistryScanningConfigurationWithContext(ctx, &ecr.GetRegistryScanningConfigurationInput{})
+
+			if err != nil {
+				return err
+			}
 		}
 
-		_, err := conn.GetRegistryScanningConfiguration(&ecr.GetRegistryScanningConfigurationInput{})
-
-		if err != nil {
-			return err
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func testAccRegistryScanningConfigurationExists(name string, v *ecr.GetRegistryScanningConfigurationOutput) resource.TestCheckFunc {
+func testAccRegistryScanningConfigurationExists(ctx context.Context, name string, v *ecr.GetRegistryScanningConfigurationOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -140,9 +141,9 @@ func testAccRegistryScanningConfigurationExists(name string, v *ecr.GetRegistryS
 			return fmt.Errorf("No ECR Registry Scanning Configuration ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn()
 
-		output, err := conn.GetRegistryScanningConfiguration(&ecr.GetRegistryScanningConfigurationInput{})
+		output, err := conn.GetRegistryScanningConfigurationWithContext(ctx, &ecr.GetRegistryScanningConfigurationInput{})
 
 		if err != nil {
 			return err

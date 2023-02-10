@@ -1,23 +1,24 @@
 package elbv2
 
 import (
-	"errors"
-	"fmt"
+	"context"
 	"log"
 	"sort"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func DataSourceListener() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceListenerRead,
+		ReadWithoutTimeout: dataSourceListenerRead,
 
 		Timeouts: &schema.ResourceTimeout{
 			Read: schema.DefaultTimeout(20 * time.Minute),
@@ -270,8 +271,9 @@ func DataSourceListener() *schema.Resource {
 	}
 }
 
-func dataSourceListenerRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBV2Conn
+func dataSourceListenerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ELBV2Conn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &elbv2.DescribeListenersInput{}
@@ -283,7 +285,7 @@ func dataSourceListenerRead(d *schema.ResourceData, meta interface{}) error {
 		_, portOk := d.GetOk("port")
 
 		if !lbOk || !portOk {
-			return errors.New("both load_balancer_arn and port must be set")
+			return sdkdiag.AppendErrorf(diags, "both load_balancer_arn and port must be set")
 		}
 
 		input.LoadBalancerArn = aws.String(lbArn.(string))
@@ -291,7 +293,7 @@ func dataSourceListenerRead(d *schema.ResourceData, meta interface{}) error {
 
 	var results []*elbv2.Listener
 
-	err := conn.DescribeListenersPages(input, func(page *elbv2.DescribeListenersOutput, lastPage bool) bool {
+	err := conn.DescribeListenersPagesWithContext(ctx, input, func(page *elbv2.DescribeListenersOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -312,11 +314,11 @@ func dataSourceListenerRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if err != nil {
-		return fmt.Errorf("reading Listener: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading Listener: %s", err)
 	}
 
 	if len(results) != 1 {
-		return fmt.Errorf("Search returned %d results, please revise so only one is returned", len(results))
+		return sdkdiag.AppendErrorf(diags, "Search returned %d results, please revise so only one is returned", len(results))
 	}
 
 	listener := results[0]
@@ -341,23 +343,23 @@ func dataSourceListenerRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if err := d.Set("default_action", flattenLbListenerActions(d, listener.DefaultActions)); err != nil {
-		return fmt.Errorf("setting default_action: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting default_action: %s", err)
 	}
 
-	tags, err := ListTags(conn, d.Id())
+	tags, err := ListTags(ctx, conn, d.Id())
 
 	if verify.ErrorISOUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] Unable to list tags for ELBv2 Listener %s: %s", d.Id(), err)
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("listing tags for (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

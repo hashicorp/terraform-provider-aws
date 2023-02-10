@@ -296,6 +296,8 @@ func viewerCertificateConfSetACM() map[string]interface{} {
 }
 
 func TestStructure_expandDefaultCacheBehavior(t *testing.T) {
+	t.Parallel()
+
 	data := defaultCacheBehaviorConf()
 	dcb := tfcloudfront.ExpandDefaultCacheBehavior(data)
 	if dcb == nil {
@@ -343,6 +345,8 @@ func TestStructure_expandDefaultCacheBehavior(t *testing.T) {
 }
 
 func TestStructure_expandTrustedSigners(t *testing.T) {
+	t.Parallel()
+
 	data := trustedSignersConf()
 	ts := tfcloudfront.ExpandTrustedSigners(data)
 	if *ts.Quantity != 2 {
@@ -357,6 +361,8 @@ func TestStructure_expandTrustedSigners(t *testing.T) {
 }
 
 func TestStructure_flattenTrustedSigners(t *testing.T) {
+	t.Parallel()
+
 	in := trustedSignersConf()
 	ts := tfcloudfront.ExpandTrustedSigners(in)
 	out := tfcloudfront.FlattenTrustedSigners(ts)
@@ -367,6 +373,8 @@ func TestStructure_flattenTrustedSigners(t *testing.T) {
 }
 
 func TestStructure_expandTrustedSigners_empty(t *testing.T) {
+	t.Parallel()
+
 	data := []interface{}{}
 	ts := tfcloudfront.ExpandTrustedSigners(data)
 	if *ts.Quantity != 0 {
@@ -381,6 +389,8 @@ func TestStructure_expandTrustedSigners_empty(t *testing.T) {
 }
 
 func TestStructure_expandLambdaFunctionAssociations(t *testing.T) {
+	t.Parallel()
+
 	data := lambdaFunctionAssociationsConf()
 	lfa := tfcloudfront.ExpandLambdaFunctionAssociations(data.List())
 	if *lfa.Quantity != 2 {
@@ -398,6 +408,8 @@ func TestStructure_expandLambdaFunctionAssociations(t *testing.T) {
 }
 
 func TestStructure_flattenlambdaFunctionAssociations(t *testing.T) {
+	t.Parallel()
+
 	in := lambdaFunctionAssociationsConf()
 	lfa := tfcloudfront.ExpandLambdaFunctionAssociations(in.List())
 	out := tfcloudfront.FlattenLambdaFunctionAssociations(lfa)
@@ -408,6 +420,8 @@ func TestStructure_flattenlambdaFunctionAssociations(t *testing.T) {
 }
 
 func TestStructure_expandlambdaFunctionAssociations_empty(t *testing.T) {
+	t.Parallel()
+
 	data := new(schema.Set)
 	lfa := tfcloudfront.ExpandLambdaFunctionAssociations(data.List())
 	if *lfa.Quantity != 0 {
@@ -422,6 +436,8 @@ func TestStructure_expandlambdaFunctionAssociations_empty(t *testing.T) {
 }
 
 func TestStructure_expandFunctionAssociations(t *testing.T) {
+	t.Parallel()
+
 	data := functionAssociationsConf()
 	lfa := tfcloudfront.ExpandFunctionAssociations(data.List())
 	if *lfa.Quantity != 2 {
@@ -439,6 +455,8 @@ func TestStructure_expandFunctionAssociations(t *testing.T) {
 }
 
 func TestStructure_flattenFunctionAssociations(t *testing.T) {
+	t.Parallel()
+
 	in := functionAssociationsConf()
 	lfa := tfcloudfront.ExpandFunctionAssociations(in.List())
 	out := tfcloudfront.FlattenFunctionAssociations(lfa)
@@ -449,6 +467,8 @@ func TestStructure_flattenFunctionAssociations(t *testing.T) {
 }
 
 func TestStructure_expandFunctionAssociations_empty(t *testing.T) {
+	t.Parallel()
+
 	data := new(schema.Set)
 	lfa := tfcloudfront.ExpandFunctionAssociations(data.List())
 	if *lfa.Quantity != 0 {
@@ -463,6 +483,8 @@ func TestStructure_expandFunctionAssociations_empty(t *testing.T) {
 }
 
 func TestStructure_expandForwardedValues(t *testing.T) {
+	t.Parallel()
+
 	data := forwardedValuesConf()
 	fv := tfcloudfront.ExpandForwardedValues(data)
 	if !*fv.QueryString {
@@ -477,6 +499,8 @@ func TestStructure_expandForwardedValues(t *testing.T) {
 }
 
 func TestStructure_flattenForwardedValues(t *testing.T) {
+	t.Parallel()
+
 	in := forwardedValuesConf()
 	fv := tfcloudfront.ExpandForwardedValues(in)
 	out := tfcloudfront.FlattenForwardedValues(fv)
@@ -487,6 +511,8 @@ func TestStructure_flattenForwardedValues(t *testing.T) {
 }
 
 func TestStructure_expandHeaders(t *testing.T) {
+	t.Parallel()
+
 	data := headersConf()
 	h := tfcloudfront.ExpandHeaders(data.List())
 	if *h.Quantity != 2 {
@@ -498,6 +524,8 @@ func TestStructure_expandHeaders(t *testing.T) {
 }
 
 func TestStructure_flattenHeaders(t *testing.T) {
+	t.Parallel()
+
 	in := headersConf()
 	h := tfcloudfront.ExpandHeaders(in.List())
 	out := schema.NewSet(schema.HashString, tfcloudfront.FlattenHeaders(h))
@@ -508,6 +536,8 @@ func TestStructure_flattenHeaders(t *testing.T) {
 }
 
 func TestStructure_expandQueryStringCacheKeys(t *testing.T) {
+	t.Parallel()
+
 	data := queryStringCacheKeysConf()
 	k := tfcloudfront.ExpandQueryStringCacheKeys(data)
 	if *k.Quantity != 2 {
@@ -519,6 +549,8 @@ func TestStructure_expandQueryStringCacheKeys(t *testing.T) {
 }
 
 func TestStructure_flattenQueryStringCacheKeys(t *testing.T) {
+	t.Parallel()
+
 	in := queryStringCacheKeysConf()
 	k := tfcloudfront.ExpandQueryStringCacheKeys(in)
 	out := tfcloudfront.FlattenQueryStringCacheKeys(k)
@@ -529,6 +561,8 @@ func TestStructure_flattenQueryStringCacheKeys(t *testing.T) {
 }
 
 func TestStructure_expandCookiePreference(t *testing.T) {
+	t.Parallel()
+
 	data := cookiePreferenceConf()
 	cp := tfcloudfront.ExpandCookiePreference(data)
 	if *cp.Forward != "whitelist" {
@@ -540,6 +574,8 @@ func TestStructure_expandCookiePreference(t *testing.T) {
 }
 
 func TestStructure_flattenCookiePreference(t *testing.T) {
+	t.Parallel()
+
 	in := cookiePreferenceConf()
 	cp := tfcloudfront.ExpandCookiePreference(in)
 	out := tfcloudfront.FlattenCookiePreference(cp)
@@ -550,6 +586,8 @@ func TestStructure_flattenCookiePreference(t *testing.T) {
 }
 
 func TestStructure_expandCookieNames(t *testing.T) {
+	t.Parallel()
+
 	data := cookieNamesConf()
 	cn := tfcloudfront.ExpandCookieNames(data.List())
 	if *cn.Quantity != 2 {
@@ -561,6 +599,8 @@ func TestStructure_expandCookieNames(t *testing.T) {
 }
 
 func TestStructure_flattenCookieNames(t *testing.T) {
+	t.Parallel()
+
 	in := cookieNamesConf()
 	cn := tfcloudfront.ExpandCookieNames(in.List())
 	out := schema.NewSet(schema.HashString, tfcloudfront.FlattenCookieNames(cn))
@@ -571,6 +611,8 @@ func TestStructure_flattenCookieNames(t *testing.T) {
 }
 
 func TestStructure_expandAllowedMethods(t *testing.T) {
+	t.Parallel()
+
 	data := allowedMethodsConf()
 	am := tfcloudfront.ExpandAllowedMethods(data)
 	if *am.Quantity != 7 {
@@ -582,6 +624,8 @@ func TestStructure_expandAllowedMethods(t *testing.T) {
 }
 
 func TestStructure_flattenAllowedMethods(t *testing.T) {
+	t.Parallel()
+
 	in := allowedMethodsConf()
 	am := tfcloudfront.ExpandAllowedMethods(in)
 	out := tfcloudfront.FlattenAllowedMethods(am)
@@ -592,6 +636,8 @@ func TestStructure_flattenAllowedMethods(t *testing.T) {
 }
 
 func TestStructure_expandCachedMethods(t *testing.T) {
+	t.Parallel()
+
 	data := cachedMethodsConf()
 	cm := tfcloudfront.ExpandCachedMethods(data)
 	if *cm.Quantity != 3 {
@@ -603,6 +649,8 @@ func TestStructure_expandCachedMethods(t *testing.T) {
 }
 
 func TestStructure_flattenCachedMethods(t *testing.T) {
+	t.Parallel()
+
 	in := cachedMethodsConf()
 	cm := tfcloudfront.ExpandCachedMethods(in)
 	out := tfcloudfront.FlattenCachedMethods(cm)
@@ -613,6 +661,8 @@ func TestStructure_flattenCachedMethods(t *testing.T) {
 }
 
 func TestStructure_expandOrigins(t *testing.T) {
+	t.Parallel()
+
 	data := multiOriginConf()
 	origins := tfcloudfront.ExpandOrigins(data)
 	if *origins.Quantity != 2 {
@@ -624,6 +674,8 @@ func TestStructure_expandOrigins(t *testing.T) {
 }
 
 func TestStructure_flattenOrigins(t *testing.T) {
+	t.Parallel()
+
 	in := multiOriginConf()
 	origins := tfcloudfront.ExpandOrigins(in)
 	out := tfcloudfront.FlattenOrigins(origins)
@@ -635,6 +687,8 @@ func TestStructure_flattenOrigins(t *testing.T) {
 }
 
 func TestStructure_expandOriginGroups(t *testing.T) {
+	t.Parallel()
+
 	in := originGroupsConf()
 	groups := tfcloudfront.ExpandOriginGroups(in)
 
@@ -671,6 +725,8 @@ func TestStructure_expandOriginGroups(t *testing.T) {
 }
 
 func TestStructure_flattenOriginGroups(t *testing.T) {
+	t.Parallel()
+
 	in := originGroupsConf()
 	groups := tfcloudfront.ExpandOriginGroups(in)
 	out := tfcloudfront.FlattenOriginGroups(groups)
@@ -682,6 +738,8 @@ func TestStructure_flattenOriginGroups(t *testing.T) {
 }
 
 func TestStructure_expandOrigin(t *testing.T) {
+	t.Parallel()
+
 	data := originWithCustomConf()
 	or := tfcloudfront.ExpandOrigin(data)
 	if *or.Id != "CustomOrigin" {
@@ -702,6 +760,8 @@ func TestStructure_expandOrigin(t *testing.T) {
 }
 
 func TestStructure_flattenOrigin(t *testing.T) {
+	t.Parallel()
+
 	in := originWithCustomConf()
 	or := tfcloudfront.ExpandOrigin(in)
 	out := tfcloudfront.FlattenOrigin(or)
@@ -718,6 +778,8 @@ func TestStructure_flattenOrigin(t *testing.T) {
 }
 
 func TestStructure_expandCustomHeaders(t *testing.T) {
+	t.Parallel()
+
 	in := originCustomHeadersConf()
 	chs := tfcloudfront.ExpandCustomHeaders(in)
 	if *chs.Quantity != 2 {
@@ -729,6 +791,8 @@ func TestStructure_expandCustomHeaders(t *testing.T) {
 }
 
 func TestStructure_flattenCustomHeaders(t *testing.T) {
+	t.Parallel()
+
 	in := originCustomHeadersConf()
 	chs := tfcloudfront.ExpandCustomHeaders(in)
 	out := tfcloudfront.FlattenCustomHeaders(chs)
@@ -740,6 +804,8 @@ func TestStructure_flattenCustomHeaders(t *testing.T) {
 }
 
 func TestStructure_flattenOriginCustomHeader(t *testing.T) {
+	t.Parallel()
+
 	in := originCustomHeaderConf1()
 	och := tfcloudfront.ExpandOriginCustomHeader(in)
 	out := tfcloudfront.FlattenOriginCustomHeader(och)
@@ -753,6 +819,8 @@ func TestStructure_flattenOriginCustomHeader(t *testing.T) {
 }
 
 func TestStructure_expandOriginCustomHeader(t *testing.T) {
+	t.Parallel()
+
 	in := originCustomHeaderConf1()
 	och := tfcloudfront.ExpandOriginCustomHeader(in)
 
@@ -765,6 +833,8 @@ func TestStructure_expandOriginCustomHeader(t *testing.T) {
 }
 
 func TestStructure_expandCustomOriginConfig(t *testing.T) {
+	t.Parallel()
+
 	data := customOriginConf()
 	co := tfcloudfront.ExpandCustomOriginConfig(data)
 	if *co.OriginProtocolPolicy != "http-only" {
@@ -785,6 +855,8 @@ func TestStructure_expandCustomOriginConfig(t *testing.T) {
 }
 
 func TestStructure_flattenCustomOriginConfig(t *testing.T) {
+	t.Parallel()
+
 	in := customOriginConf()
 	co := tfcloudfront.ExpandCustomOriginConfig(in)
 	out := tfcloudfront.FlattenCustomOriginConfig(co)
@@ -810,6 +882,8 @@ func TestStructure_flattenCustomOriginConfig(t *testing.T) {
 }
 
 func TestStructure_expandCustomOriginConfigSSL(t *testing.T) {
+	t.Parallel()
+
 	in := customOriginSSLProtocolsConf()
 	ocs := tfcloudfront.ExpandCustomOriginConfigSSL(in.List())
 	if *ocs.Quantity != 4 {
@@ -818,6 +892,8 @@ func TestStructure_expandCustomOriginConfigSSL(t *testing.T) {
 }
 
 func TestStructure_flattenCustomOriginConfigSSL(t *testing.T) {
+	t.Parallel()
+
 	in := customOriginSSLProtocolsConf()
 	ocs := tfcloudfront.ExpandCustomOriginConfigSSL(in.List())
 	out := tfcloudfront.FlattenCustomOriginConfigSSL(ocs)
@@ -828,6 +904,8 @@ func TestStructure_flattenCustomOriginConfigSSL(t *testing.T) {
 }
 
 func TestStructure_expandOriginShield(t *testing.T) {
+	t.Parallel()
+
 	data := originShield()
 	o := tfcloudfront.ExpandOriginShield(data)
 	if *o.Enabled != true {
@@ -839,6 +917,8 @@ func TestStructure_expandOriginShield(t *testing.T) {
 }
 
 func TestStructure_flattenOriginShield(t *testing.T) {
+	t.Parallel()
+
 	in := originShield()
 	o := tfcloudfront.ExpandOriginShield(in)
 	out := tfcloudfront.FlattenOriginShield(o)
@@ -849,6 +929,8 @@ func TestStructure_flattenOriginShield(t *testing.T) {
 }
 
 func TestStructure_expandS3OriginConfig(t *testing.T) {
+	t.Parallel()
+
 	data := s3OriginConf()
 	s3o := tfcloudfront.ExpandS3OriginConfig(data)
 	if *s3o.OriginAccessIdentity != "origin-access-identity/cloudfront/E127EXAMPLE51Z" {
@@ -857,6 +939,8 @@ func TestStructure_expandS3OriginConfig(t *testing.T) {
 }
 
 func TestStructure_flattenS3OriginConfig(t *testing.T) {
+	t.Parallel()
+
 	in := s3OriginConf()
 	s3o := tfcloudfront.ExpandS3OriginConfig(in)
 	out := tfcloudfront.FlattenS3OriginConfig(s3o)
@@ -867,6 +951,8 @@ func TestStructure_flattenS3OriginConfig(t *testing.T) {
 }
 
 func TestStructure_expandCustomErrorResponses(t *testing.T) {
+	t.Parallel()
+
 	data := customErrorResponsesConfSet()
 	ers := tfcloudfront.ExpandCustomErrorResponses(data)
 	if *ers.Quantity != 2 {
@@ -878,6 +964,8 @@ func TestStructure_expandCustomErrorResponses(t *testing.T) {
 }
 
 func TestStructure_flattenCustomErrorResponses(t *testing.T) {
+	t.Parallel()
+
 	in := customErrorResponsesConfSet()
 	ers := tfcloudfront.ExpandCustomErrorResponses(in)
 	out := tfcloudfront.FlattenCustomErrorResponses(ers)
@@ -888,6 +976,8 @@ func TestStructure_flattenCustomErrorResponses(t *testing.T) {
 }
 
 func TestStructure_expandCustomErrorResponse(t *testing.T) {
+	t.Parallel()
+
 	data := customErrorResponsesConfFirst()
 	er := tfcloudfront.ExpandCustomErrorResponse(data)
 	if *er.ErrorCode != 404 {
@@ -905,6 +995,8 @@ func TestStructure_expandCustomErrorResponse(t *testing.T) {
 }
 
 func TestStructure_expandCustomErrorResponse_emptyResponseCode(t *testing.T) {
+	t.Parallel()
+
 	data := customErrorResponseConfNoResponseCode()
 	er := tfcloudfront.ExpandCustomErrorResponse(data)
 	if *er.ResponseCode != "" {
@@ -916,6 +1008,8 @@ func TestStructure_expandCustomErrorResponse_emptyResponseCode(t *testing.T) {
 }
 
 func TestStructure_flattenCustomErrorResponse(t *testing.T) {
+	t.Parallel()
+
 	in := customErrorResponsesConfFirst()
 	er := tfcloudfront.ExpandCustomErrorResponse(in)
 	out := tfcloudfront.FlattenCustomErrorResponse(er)
@@ -926,6 +1020,8 @@ func TestStructure_flattenCustomErrorResponse(t *testing.T) {
 }
 
 func TestStructure_expandLoggingConfig(t *testing.T) {
+	t.Parallel()
+
 	data := loggingConfigConf()
 
 	lc := tfcloudfront.ExpandLoggingConfig(data)
@@ -944,6 +1040,8 @@ func TestStructure_expandLoggingConfig(t *testing.T) {
 }
 
 func TestStructure_expandLoggingConfig_nilValue(t *testing.T) {
+	t.Parallel()
+
 	lc := tfcloudfront.ExpandLoggingConfig(nil)
 	if *lc.Enabled {
 		t.Fatalf("Expected Enabled to be false, got %v", *lc.Enabled)
@@ -960,6 +1058,8 @@ func TestStructure_expandLoggingConfig_nilValue(t *testing.T) {
 }
 
 func TestStructure_expandAliases(t *testing.T) {
+	t.Parallel()
+
 	data := aliasesConf()
 	a := tfcloudfront.ExpandAliases(data)
 	if *a.Quantity != 2 {
@@ -971,6 +1071,8 @@ func TestStructure_expandAliases(t *testing.T) {
 }
 
 func TestStructure_flattenAliases(t *testing.T) {
+	t.Parallel()
+
 	in := aliasesConf()
 	a := tfcloudfront.ExpandAliases(in)
 	out := tfcloudfront.FlattenAliases(a)
@@ -982,6 +1084,8 @@ func TestStructure_flattenAliases(t *testing.T) {
 }
 
 func TestStructure_expandRestrictions(t *testing.T) {
+	t.Parallel()
+
 	data := geoRestrictionsConf()
 	r := tfcloudfront.ExpandRestrictions(data)
 	if *r.GeoRestriction.RestrictionType != "whitelist" {
@@ -990,6 +1094,8 @@ func TestStructure_expandRestrictions(t *testing.T) {
 }
 
 func TestStructure_expandGeoRestriction_whitelist(t *testing.T) {
+	t.Parallel()
+
 	data := geoRestrictionWhitelistConf()
 	gr := tfcloudfront.ExpandGeoRestriction(data)
 	if *gr.RestrictionType != "whitelist" {
@@ -1004,6 +1110,8 @@ func TestStructure_expandGeoRestriction_whitelist(t *testing.T) {
 }
 
 func TestStructure_flattenGeoRestriction_whitelist(t *testing.T) {
+	t.Parallel()
+
 	in := geoRestrictionWhitelistConf()
 	gr := tfcloudfront.ExpandGeoRestriction(in)
 	out := tfcloudfront.FlattenGeoRestriction(gr)
@@ -1017,6 +1125,8 @@ func TestStructure_flattenGeoRestriction_whitelist(t *testing.T) {
 }
 
 func TestStructure_expandGeoRestriction_no_items(t *testing.T) {
+	t.Parallel()
+
 	data := geoRestrictionConfNoItems()
 	gr := tfcloudfront.ExpandGeoRestriction(data)
 	if *gr.RestrictionType != "none" {
@@ -1031,6 +1141,8 @@ func TestStructure_expandGeoRestriction_no_items(t *testing.T) {
 }
 
 func TestStructure_flattenGeoRestriction_no_items(t *testing.T) {
+	t.Parallel()
+
 	in := geoRestrictionConfNoItems()
 	gr := tfcloudfront.ExpandGeoRestriction(in)
 	out := tfcloudfront.FlattenGeoRestriction(gr)
@@ -1044,6 +1156,8 @@ func TestStructure_flattenGeoRestriction_no_items(t *testing.T) {
 }
 
 func TestStructure_expandViewerCertificateDefaultCertificate(t *testing.T) {
+	t.Parallel()
+
 	data := viewerCertificateConfSetDefault()
 	vc := tfcloudfront.ExpandViewerCertificate(data)
 	if vc.ACMCertificateArn != nil {
@@ -1064,6 +1178,8 @@ func TestStructure_expandViewerCertificateDefaultCertificate(t *testing.T) {
 }
 
 func TestStructure_expandViewerCertificate_iam_certificate_id(t *testing.T) {
+	t.Parallel()
+
 	data := viewerCertificateConfSetIAM()
 	vc := tfcloudfront.ExpandViewerCertificate(data)
 	if vc.ACMCertificateArn != nil {
@@ -1084,6 +1200,8 @@ func TestStructure_expandViewerCertificate_iam_certificate_id(t *testing.T) {
 }
 
 func TestStructure_expandViewerCertificate_acm_certificate_arn(t *testing.T) {
+	t.Parallel()
+
 	data := viewerCertificateConfSetACM()
 	vc := tfcloudfront.ExpandViewerCertificate(data)
 

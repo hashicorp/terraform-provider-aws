@@ -1,6 +1,7 @@
 package redshift_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -15,6 +16,7 @@ import (
 )
 
 func TestAccRedshiftAuthenticationProfile_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_redshift_authentication_profile.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rNameUpdated := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -23,12 +25,12 @@ func TestAccRedshiftAuthenticationProfile_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, redshift.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAuthenticationProfileDestroy,
+		CheckDestroy:             testAccCheckAuthenticationProfileDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAuthenticationProfileConfig_basic(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAuthenticationProfileExists(resourceName),
+					testAccCheckAuthenticationProfileExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "authentication_profile_name", rName),
 				),
 			},
@@ -40,7 +42,7 @@ func TestAccRedshiftAuthenticationProfile_basic(t *testing.T) {
 			{
 				Config: testAccAuthenticationProfileConfig_basic(rName, rNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAuthenticationProfileExists(resourceName),
+					testAccCheckAuthenticationProfileExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "authentication_profile_name", rName),
 				),
 			},
@@ -49,6 +51,7 @@ func TestAccRedshiftAuthenticationProfile_basic(t *testing.T) {
 }
 
 func TestAccRedshiftAuthenticationProfile_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_redshift_authentication_profile.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -56,13 +59,13 @@ func TestAccRedshiftAuthenticationProfile_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, redshift.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAuthenticationProfileDestroy,
+		CheckDestroy:             testAccCheckAuthenticationProfileDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAuthenticationProfileConfig_basic(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAuthenticationProfileExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfredshift.ResourceAuthenticationProfile(), resourceName),
+					testAccCheckAuthenticationProfileExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfredshift.ResourceAuthenticationProfile(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -70,31 +73,33 @@ func TestAccRedshiftAuthenticationProfile_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAuthenticationProfileDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn
+func testAccCheckAuthenticationProfileDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_redshift_authentication_profile" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_redshift_authentication_profile" {
+				continue
+			}
+
+			_, err := tfredshift.FindAuthenticationProfileByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Redshift Authentication Profile %s still exists", rs.Primary.ID)
 		}
 
-		_, err := tfredshift.FindAuthenticationProfileByID(conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("Redshift Authentication Profile %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckAuthenticationProfileExists(name string) resource.TestCheckFunc {
+func testAccCheckAuthenticationProfileExists(ctx context.Context, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -105,9 +110,9 @@ func testAccCheckAuthenticationProfileExists(name string) resource.TestCheckFunc
 			return fmt.Errorf("Authentication Profile ID is not set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn()
 
-		_, err := tfredshift.FindAuthenticationProfileByID(conn, rs.Primary.ID)
+		_, err := tfredshift.FindAuthenticationProfileByID(ctx, conn, rs.Primary.ID)
 
 		return err
 	}

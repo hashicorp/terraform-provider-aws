@@ -1,21 +1,23 @@
 package ec2
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"sort"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func DataSourceAvailabilityZones() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAvailabilityZonesRead,
+		ReadWithoutTimeout: dataSourceAvailabilityZonesRead,
 
 		Timeouts: &schema.ResourceTimeout{
 			Read: schema.DefaultTimeout(20 * time.Minute),
@@ -66,8 +68,9 @@ func DataSourceAvailabilityZones() *schema.Resource {
 	}
 }
 
-func dataSourceAvailabilityZonesRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func dataSourceAvailabilityZonesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	log.Printf("[DEBUG] Reading Availability Zones.")
 
@@ -98,9 +101,9 @@ func dataSourceAvailabilityZonesRead(d *schema.ResourceData, meta interface{}) e
 	}
 
 	log.Printf("[DEBUG] Reading Availability Zones: %s", request)
-	resp, err := conn.DescribeAvailabilityZones(request)
+	resp, err := conn.DescribeAvailabilityZonesWithContext(ctx, request)
 	if err != nil {
-		return fmt.Errorf("Error fetching Availability Zones: %w", err)
+		return sdkdiag.AppendErrorf(diags, "Error fetching Availability Zones: %s", err)
 	}
 
 	sort.Slice(resp.AvailabilityZones, func(i, j int) bool {
@@ -137,14 +140,14 @@ func dataSourceAvailabilityZonesRead(d *schema.ResourceData, meta interface{}) e
 	d.SetId(meta.(*conns.AWSClient).Region)
 
 	if err := d.Set("group_names", groupNames); err != nil {
-		return fmt.Errorf("error setting group_names: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting group_names: %s", err)
 	}
 	if err := d.Set("names", names); err != nil {
-		return fmt.Errorf("Error setting Availability Zone names: %w", err)
+		return sdkdiag.AppendErrorf(diags, "Error setting Availability Zone names: %s", err)
 	}
 	if err := d.Set("zone_ids", zoneIds); err != nil {
-		return fmt.Errorf("Error setting Availability Zone IDs: %w", err)
+		return sdkdiag.AppendErrorf(diags, "Error setting Availability Zone IDs: %s", err)
 	}
 
-	return nil
+	return diags
 }

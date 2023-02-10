@@ -1,19 +1,21 @@
 package ec2
 
 import (
-	"fmt"
+	"context"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceCoIPPools() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceCoIPPoolsRead,
+		ReadWithoutTimeout: dataSourceCoIPPoolsRead,
 
 		Timeouts: &schema.ResourceTimeout{
 			Read: schema.DefaultTimeout(20 * time.Minute),
@@ -31,8 +33,9 @@ func DataSourceCoIPPools() *schema.Resource {
 	}
 }
 
-func dataSourceCoIPPoolsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func dataSourceCoIPPoolsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	input := &ec2.DescribeCoipPoolsInput{}
 
@@ -48,10 +51,10 @@ func dataSourceCoIPPoolsRead(d *schema.ResourceData, meta interface{}) error {
 		input.Filters = nil
 	}
 
-	output, err := FindCOIPPools(conn, input)
+	output, err := FindCOIPPools(ctx, conn, input)
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 COIP Pools: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 COIP Pools: %s", err)
 	}
 
 	var poolIDs []string
@@ -63,5 +66,5 @@ func dataSourceCoIPPoolsRead(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(meta.(*conns.AWSClient).Region)
 	d.Set("pool_ids", poolIDs)
 
-	return nil
+	return diags
 }

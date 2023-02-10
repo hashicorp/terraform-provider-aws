@@ -1,6 +1,7 @@
 package ec2
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strconv"
@@ -9,8 +10,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -18,13 +21,13 @@ import (
 
 func ResourceVPNGateway() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceVPNGatewayCreate,
-		Read:   resourceVPNGatewayRead,
-		Update: resourceVPNGatewayUpdate,
-		Delete: resourceVPNGatewayDelete,
+		CreateWithoutTimeout: resourceVPNGatewayCreate,
+		ReadWithoutTimeout:   resourceVPNGatewayRead,
+		UpdateWithoutTimeout: resourceVPNGatewayUpdate,
+		DeleteWithoutTimeout: resourceVPNGatewayDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -57,8 +60,9 @@ func ResourceVPNGateway() *schema.Resource {
 	}
 }
 
-func resourceVPNGatewayCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceVPNGatewayCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -72,47 +76,48 @@ func resourceVPNGatewayCreate(d *schema.ResourceData, meta interface{}) error {
 		v, err := strconv.ParseInt(v.(string), 10, 64)
 
 		if err != nil {
-			return err
+			return sdkdiag.AppendErrorf(diags, "creating EC2 VPN Gateway: %s", err)
 		}
 
 		input.AmazonSideAsn = aws.Int64(v)
 	}
 
 	log.Printf("[DEBUG] Creating EC2 VPN Gateway: %s", input)
-	output, err := conn.CreateVpnGateway(input)
+	output, err := conn.CreateVpnGatewayWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating EC2 VPN Gateway: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating EC2 VPN Gateway: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.VpnGateway.VpnGatewayId))
 
 	if v, ok := d.GetOk("vpc_id"); ok {
-		if err := attachVPNGatewayToVPC(conn, d.Id(), v.(string)); err != nil {
-			return err
+		if err := attachVPNGatewayToVPC(ctx, conn, d.Id(), v.(string)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "creating EC2 VPN Gateway: %s", err)
 		}
 	}
 
-	return resourceVPNGatewayRead(d, meta)
+	return append(diags, resourceVPNGatewayRead(ctx, d, meta)...)
 }
 
-func resourceVPNGatewayRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceVPNGatewayRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(propagationTimeout, func() (interface{}, error) {
-		return FindVPNGatewayByID(conn, d.Id())
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+		return FindVPNGatewayByID(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 VPN Gateway (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 VPN Gateway (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 VPN Gateway (%s): %s", d.Id(), err)
 	}
 
 	vpnGateway := outputRaw.(*ec2.VpnGateway)
@@ -141,31 +146,32 @@ func resourceVPNGatewayRead(d *schema.ResourceData, meta interface{}) error {
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceVPNGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceVPNGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	if d.HasChange("vpc_id") {
 		o, n := d.GetChange("vpc_id")
 
 		if vpcID, ok := o.(string); ok && vpcID != "" {
-			if err := detachVPNGatewayFromVPC(conn, d.Id(), vpcID); err != nil {
-				return err
+			if err := detachVPNGatewayFromVPC(ctx, conn, d.Id(), vpcID); err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating EC2 VPN Gateway (%s): %s", d.Id(), err)
 			}
 		}
 
 		if vpcID, ok := n.(string); ok && vpcID != "" {
-			if err := attachVPNGatewayToVPC(conn, d.Id(), vpcID); err != nil {
-				return err
+			if err := attachVPNGatewayToVPC(ctx, conn, d.Id(), vpcID); err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating EC2 VPN Gateway (%s): %s", d.Id(), err)
 			}
 		}
 	}
@@ -173,86 +179,87 @@ func resourceVPNGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating EC2 VPN Gateway (%s) tags: %w", d.Id(), err)
+		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating EC2 VPN Gateway (%s) tags: %s", d.Id(), err)
 		}
 	}
 
-	return resourceVPNGatewayRead(d, meta)
+	return append(diags, resourceVPNGatewayRead(ctx, d, meta)...)
 }
 
-func resourceVPNGatewayDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceVPNGatewayDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	if v, ok := d.GetOk("vpc_id"); ok {
-		if err := detachVPNGatewayFromVPC(conn, d.Id(), v.(string)); err != nil {
-			return err
+		if err := detachVPNGatewayFromVPC(ctx, conn, d.Id(), v.(string)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "deleting EC2 VPN Gateway (%s): %s", d.Id(), err)
 		}
 	}
 
 	log.Printf("[INFO] Deleting EC2 VPN Gateway: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(VPNGatewayDeletedTimeout, func() (interface{}, error) {
-		return conn.DeleteVpnGateway(&ec2.DeleteVpnGatewayInput{
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, VPNGatewayDeletedTimeout, func() (interface{}, error) {
+		return conn.DeleteVpnGatewayWithContext(ctx, &ec2.DeleteVpnGatewayInput{
 			VpnGatewayId: aws.String(d.Id()),
 		})
 	}, errCodeIncorrectState)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPNGatewayIDNotFound) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting EC2 VPN Gateway (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting EC2 VPN Gateway (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func attachVPNGatewayToVPC(conn *ec2.EC2, vpnGatewayID, vpcID string) error {
+func attachVPNGatewayToVPC(ctx context.Context, conn *ec2.EC2, vpnGatewayID, vpcID string) error {
 	input := &ec2.AttachVpnGatewayInput{
 		VpcId:        aws.String(vpcID),
 		VpnGatewayId: aws.String(vpnGatewayID),
 	}
 
 	log.Printf("[INFO] Attaching EC2 VPN Gateway (%s) to VPC (%s)", vpnGatewayID, vpcID)
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(propagationTimeout, func() (interface{}, error) {
-		return conn.AttachVpnGateway(input)
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (interface{}, error) {
+		return conn.AttachVpnGatewayWithContext(ctx, input)
 	}, errCodeInvalidVPNGatewayIDNotFound)
 
 	if err != nil {
-		return fmt.Errorf("error attaching EC2 VPN Gateway (%s) to VPC (%s): %w", vpnGatewayID, vpcID, err)
+		return fmt.Errorf("attaching to VPC (%s): %w", vpcID, err)
 	}
 
-	_, err = WaitVPNGatewayVPCAttachmentAttached(conn, vpnGatewayID, vpcID)
+	_, err = WaitVPNGatewayVPCAttachmentAttached(ctx, conn, vpnGatewayID, vpcID)
 
 	if err != nil {
-		return fmt.Errorf("error waiting for EC2 VPN Gateway (%s) to attach to VPC (%s): %w", vpnGatewayID, vpcID, err)
+		return fmt.Errorf("attaching to VPC (%s): waiting for completion: %w", vpcID, err)
 	}
 
 	return nil
 }
 
-func detachVPNGatewayFromVPC(conn *ec2.EC2, vpnGatewayID, vpcID string) error {
+func detachVPNGatewayFromVPC(ctx context.Context, conn *ec2.EC2, vpnGatewayID, vpcID string) error {
 	input := &ec2.DetachVpnGatewayInput{
 		VpcId:        aws.String(vpcID),
 		VpnGatewayId: aws.String(vpnGatewayID),
 	}
 
 	log.Printf("[INFO] Detaching EC2 VPN Gateway (%s) from VPC (%s)", vpnGatewayID, vpcID)
-	_, err := conn.DetachVpnGateway(input)
+	_, err := conn.DetachVpnGatewayWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPNGatewayAttachmentNotFound, errCodeInvalidVPNGatewayIDNotFound) {
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error detaching EC2 VPN Gateway (%s) from VPC (%s): %w", vpnGatewayID, vpcID, err)
+		return fmt.Errorf("detaching from VPC (%s): %w", vpcID, err)
 	}
 
-	_, err = WaitVPNGatewayVPCAttachmentDetached(conn, vpnGatewayID, vpcID)
+	_, err = WaitVPNGatewayVPCAttachmentDetached(ctx, conn, vpnGatewayID, vpcID)
 
 	if err != nil {
-		return fmt.Errorf("error waiting for EC2 VPN Gateway (%s) to detach from VPC (%s): %w", vpnGatewayID, vpcID, err)
+		return fmt.Errorf("detaching from VPC (%s): waiting for completion: %w", vpcID, err)
 	}
 
 	return nil

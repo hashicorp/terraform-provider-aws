@@ -32,7 +32,7 @@ func ResourceTarget() *schema.Resource {
 		DeleteWithoutTimeout: resourceTargetDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: resourceTargetImport,
+			StateContext: resourceTargetImport,
 		},
 
 		SchemaVersion: 1,
@@ -421,7 +421,7 @@ func ResourceTarget() *schema.Resource {
 }
 
 func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EventsConn
+	conn := meta.(*conns.AWSClient).EventsConn()
 
 	rule := d.Get("rule").(string)
 
@@ -457,7 +457,7 @@ func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceTargetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EventsConn
+	conn := meta.(*conns.AWSClient).EventsConn()
 
 	busName := d.Get("event_bus_name").(string)
 
@@ -546,7 +546,7 @@ func resourceTargetRead(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceTargetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EventsConn
+	conn := meta.(*conns.AWSClient).EventsConn()
 
 	input := buildPutTargetInputStruct(d)
 
@@ -565,7 +565,7 @@ func resourceTargetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceTargetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EventsConn
+	conn := meta.(*conns.AWSClient).EventsConn()
 
 	input := &eventbridge.RemoveTargetsInput{
 		Ids:  []*string{aws.String(d.Get("target_id").(string))},
@@ -1200,7 +1200,7 @@ func flattenTargetCapacityProviderStrategy(cps []*eventbridge.CapacityProviderSt
 	return results
 }
 
-func resourceTargetImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceTargetImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	busName, ruleName, targetID, err := TargetParseImportID(d.Id())
 	if err != nil {
 		return []*schema.ResourceData{}, err

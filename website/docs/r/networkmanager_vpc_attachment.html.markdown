@@ -37,7 +37,8 @@ The following arguments are optional:
 
 ### options
 
-* `ipv6_support` - (Required) Indicates whether IPv6 is supported.
+* `appliance_mode_support` - (Optional) Indicates whether appliance mode is supported. If enabled, traffic flow between a source and destination use the same Availability Zone for the VPC attachment for the lifetime of that flow.
+* `ipv6_support` - (Optional) Indicates whether IPv6 is supported.
 
 ## Attributes Reference
 

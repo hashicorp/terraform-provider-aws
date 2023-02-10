@@ -17,12 +17,12 @@ import (
 // If the error is not retryable, returns a bool value of `false` and either no error (success state) or an error (not necessarily the error passed as the argument).
 type Retryable func(error) (bool, error)
 
-// RetryWhenContext retries the function `f` when the error it returns satisfies `predicate`.
+// RetryWhen retries the function `f` when the error it returns satisfies `predicate`.
 // `f` is retried until `timeout` expires.
-func RetryWhenContext(ctx context.Context, timeout time.Duration, f func() (interface{}, error), retryable Retryable) (interface{}, error) {
+func RetryWhen(ctx context.Context, timeout time.Duration, f func() (interface{}, error), retryable Retryable) (interface{}, error) {
 	var output interface{}
 
-	err := RetryContext(ctx, timeout, func() *resource.RetryError { // nosemgrep:ci.helper-schema-resource-Retry-without-TimeoutError-check
+	err := Retry(ctx, timeout, func() *resource.RetryError { // nosemgrep:ci.helper-schema-resource-Retry-without-TimeoutError-check
 		var err error
 		var retry bool
 
@@ -51,15 +51,9 @@ func RetryWhenContext(ctx context.Context, timeout time.Duration, f func() (inte
 	return output, nil
 }
 
-// RetryWhen retries the function `f` when the error it returns satisfies `predicate`.
-// `f` is retried until `timeout` expires.
-func RetryWhen(timeout time.Duration, f func() (interface{}, error), retryable Retryable) (interface{}, error) {
-	return RetryWhenContext(context.Background(), timeout, f, retryable)
-}
-
-// RetryWhenAWSErrCodeEqualsContext retries the specified function when it returns one of the specified AWS error code.
-func RetryWhenAWSErrCodeEqualsContext(ctx context.Context, timeout time.Duration, f func() (interface{}, error), codes ...string) (interface{}, error) { // nosemgrep:ci.aws-in-func-name
-	return RetryWhenContext(ctx, timeout, f, func(err error) (bool, error) {
+// RetryWhenAWSErrCodeEquals retries the specified function when it returns one of the specified AWS error code.
+func RetryWhenAWSErrCodeEquals(ctx context.Context, timeout time.Duration, f func() (interface{}, error), codes ...string) (interface{}, error) { // nosemgrep:ci.aws-in-func-name
+	return RetryWhen(ctx, timeout, f, func(err error) (bool, error) {
 		if tfawserr.ErrCodeEquals(err, codes...) {
 			return true, err
 		}
@@ -68,14 +62,9 @@ func RetryWhenAWSErrCodeEqualsContext(ctx context.Context, timeout time.Duration
 	})
 }
 
-// RetryWhenAWSErrCodeEquals retries the specified function when it returns one of the specified AWS error code.
-func RetryWhenAWSErrCodeEquals(timeout time.Duration, f func() (interface{}, error), codes ...string) (interface{}, error) { // nosemgrep:ci.aws-in-func-name
-	return RetryWhenAWSErrCodeEqualsContext(context.Background(), timeout, f, codes...)
-}
-
-// RetryWhenAWSErrMessageContainsContext retries the specified function when it returns an AWS error containing the specified message.
-func RetryWhenAWSErrMessageContainsContext(ctx context.Context, timeout time.Duration, f func() (interface{}, error), code, message string) (interface{}, error) { // nosemgrep:ci.aws-in-func-name
-	return RetryWhenContext(ctx, timeout, f, func(err error) (bool, error) {
+// RetryWhenAWSErrMessageContains retries the specified function when it returns an AWS error containing the specified message.
+func RetryWhenAWSErrMessageContains(ctx context.Context, timeout time.Duration, f func() (interface{}, error), code, message string) (interface{}, error) { // nosemgrep:ci.aws-in-func-name
+	return RetryWhen(ctx, timeout, f, func(err error) (bool, error) {
 		if tfawserr.ErrMessageContains(err, code, message) {
 			return true, err
 		}
@@ -84,16 +73,11 @@ func RetryWhenAWSErrMessageContainsContext(ctx context.Context, timeout time.Dur
 	})
 }
 
-// RetryWhenAWSErrMessageContains retries the specified function when it returns an AWS error containing the specified message.
-func RetryWhenAWSErrMessageContains(timeout time.Duration, f func() (interface{}, error), code, message string) (interface{}, error) { // nosemgrep:ci.aws-in-func-name
-	return RetryWhenAWSErrMessageContainsContext(context.Background(), timeout, f, code, message)
-}
-
 var errFoundResource = errors.New(`found resource`)
 
-// RetryUntilNotFoundContext retries the specified function until it returns a resource.NotFoundError.
-func RetryUntilNotFoundContext(ctx context.Context, timeout time.Duration, f func() (interface{}, error)) (interface{}, error) {
-	return RetryWhenContext(ctx, timeout, f, func(err error) (bool, error) {
+// RetryUntilNotFound retries the specified function until it returns a resource.NotFoundError.
+func RetryUntilNotFound(ctx context.Context, timeout time.Duration, f func() (interface{}, error)) (interface{}, error) {
+	return RetryWhen(ctx, timeout, f, func(err error) (bool, error) {
 		if NotFound(err) {
 			return false, nil
 		}
@@ -106,14 +90,9 @@ func RetryUntilNotFoundContext(ctx context.Context, timeout time.Duration, f fun
 	})
 }
 
-// RetryUntilNotFound retries the specified function until it returns a resource.NotFoundError.
-func RetryUntilNotFound(timeout time.Duration, f func() (interface{}, error)) (interface{}, error) {
-	return RetryUntilNotFoundContext(context.Background(), timeout, f)
-}
-
-// RetryWhenNotFoundContext retries the specified function when it returns a resource.NotFoundError.
-func RetryWhenNotFoundContext(ctx context.Context, timeout time.Duration, f func() (interface{}, error)) (interface{}, error) {
-	return RetryWhenContext(ctx, timeout, f, func(err error) (bool, error) {
+// RetryWhenNotFound retries the specified function when it returns a resource.NotFoundError.
+func RetryWhenNotFound(ctx context.Context, timeout time.Duration, f func() (interface{}, error)) (interface{}, error) {
+	return RetryWhen(ctx, timeout, f, func(err error) (bool, error) {
 		if NotFound(err) {
 			return true, err
 		}
@@ -122,25 +101,15 @@ func RetryWhenNotFoundContext(ctx context.Context, timeout time.Duration, f func
 	})
 }
 
-// RetryWhenNotFound retries the specified function when it returns a resource.NotFoundError.
-func RetryWhenNotFound(timeout time.Duration, f func() (interface{}, error)) (interface{}, error) {
-	return RetryWhenNotFoundContext(context.Background(), timeout, f)
-}
-
-// RetryWhenNewResourceNotFoundContext retries the specified function when it returns a resource.NotFoundError and `isNewResource` is true.
-func RetryWhenNewResourceNotFoundContext(ctx context.Context, timeout time.Duration, f func() (interface{}, error), isNewResource bool) (interface{}, error) {
-	return RetryWhenContext(ctx, timeout, f, func(err error) (bool, error) {
+// RetryWhenNewResourceNotFound retries the specified function when it returns a resource.NotFoundError and `isNewResource` is true.
+func RetryWhenNewResourceNotFound(ctx context.Context, timeout time.Duration, f func() (interface{}, error), isNewResource bool) (interface{}, error) {
+	return RetryWhen(ctx, timeout, f, func(err error) (bool, error) {
 		if isNewResource && NotFound(err) {
 			return true, err
 		}
 
 		return false, err
 	})
-}
-
-// RetryWhenNewResourceNotFound retries the specified function when it returns a resource.NotFoundError and `isNewResource` is true.
-func RetryWhenNewResourceNotFound(timeout time.Duration, f func() (interface{}, error), isNewResource bool) (interface{}, error) {
-	return RetryWhenNewResourceNotFoundContext(context.Background(), timeout, f, isNewResource)
 }
 
 type Options struct {
@@ -212,10 +181,10 @@ func WithContinuousTargetOccurence(continuousTargetOccurence int) OptionsFunc {
 	}
 }
 
-// RetryContext allows configuration of StateChangeConf's various time arguments.
+// Retry allows configuration of StateChangeConf's various time arguments.
 // This is especially useful for AWS services that are prone to throttling, such as Route53, where
 // the default durations cause problems.
-func RetryContext(ctx context.Context, timeout time.Duration, f resource.RetryFunc, optFns ...OptionsFunc) error {
+func Retry(ctx context.Context, timeout time.Duration, f resource.RetryFunc, optFns ...OptionsFunc) error {
 	// These are used to pull the error out of the function; need a mutex to
 	// avoid a data race.
 	var resultErr error

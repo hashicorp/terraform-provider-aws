@@ -15,7 +15,7 @@ import (
 
 func DataSourceRoutingProfile() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceRoutingProfileRead,
+		ReadWithoutTimeout: dataSourceRoutingProfileRead,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -100,7 +100,7 @@ func DataSourceRoutingProfile() *schema.Resource {
 }
 
 func dataSourceRoutingProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	instanceID := d.Get("instance_id").(string)

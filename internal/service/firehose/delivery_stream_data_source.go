@@ -1,16 +1,18 @@
 package firehose
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func DataSourceDeliveryStream() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceDeliveryStreamRead,
+		ReadWithoutTimeout: dataSourceDeliveryStreamRead,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -24,19 +26,20 @@ func DataSourceDeliveryStream() *schema.Resource {
 	}
 }
 
-func dataSourceDeliveryStreamRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FirehoseConn
+func dataSourceDeliveryStreamRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).FirehoseConn()
 
 	sn := d.Get("name").(string)
-	output, err := FindDeliveryStreamByName(conn, sn)
+	output, err := FindDeliveryStreamByName(ctx, conn, sn)
 
 	if err != nil {
-		return fmt.Errorf("error reading Kinesis Firehose Delivery Stream (%s): %w", sn, err)
+		return sdkdiag.AppendErrorf(diags, "reading Kinesis Firehose Delivery Stream (%s): %s", sn, err)
 	}
 
 	d.SetId(aws.StringValue(output.DeliveryStreamARN))
 	d.Set("arn", output.DeliveryStreamARN)
 	d.Set("name", output.DeliveryStreamName)
 
-	return nil
+	return diags
 }

@@ -69,7 +69,7 @@ func DataSourceCertificate() *schema.Resource {
 }
 
 func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ACMConn
+	conn := meta.(*conns.AWSClient).ACMConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	params := &acm.ListCertificatesInput{}
@@ -202,7 +202,7 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("arn", matchedCertificate.CertificateArn)
 	d.Set("status", matchedCertificate.Status)
 
-	tags, err := ListTagsWithContext(ctx, conn, aws.StringValue(matchedCertificate.CertificateArn))
+	tags, err := ListTags(ctx, conn, aws.StringValue(matchedCertificate.CertificateArn))
 
 	if err != nil {
 		return diag.Errorf("listing tags for ACM Certificate (%s): %s", d.Id(), err)

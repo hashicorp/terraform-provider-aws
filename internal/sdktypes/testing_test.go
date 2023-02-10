@@ -22,6 +22,8 @@ func runTestCases(t *testing.T, cases map[string]testCase) {
 	for name, tc := range cases {
 		tc := tc
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			diags := tc.f(tc.val, cty.Path{cty.GetAttrStep{Name: "test_property"}})
 
 			if !diags.HasError() && tc.expectedSummary == nil && tc.expectedDetail == nil {

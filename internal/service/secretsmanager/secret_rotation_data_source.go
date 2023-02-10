@@ -1,19 +1,21 @@
 package secretsmanager
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func DataSourceSecretRotation() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceSecretRotationRead,
+		ReadWithoutTimeout: dataSourceSecretRotationRead,
 
 		Schema: map[string]*schema.Schema{
 			"secret_id": {
@@ -45,8 +47,9 @@ func DataSourceSecretRotation() *schema.Resource {
 	}
 }
 
-func dataSourceSecretRotationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecretsManagerConn
+func dataSourceSecretRotationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SecretsManagerConn()
 	secretID := d.Get("secret_id").(string)
 
 	input := &secretsmanager.DescribeSecretInput{
@@ -54,13 +57,13 @@ func dataSourceSecretRotationRead(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	log.Printf("[DEBUG] Reading Secrets Manager Secret: %s", input)
-	output, err := conn.DescribeSecret(input)
+	output, err := conn.DescribeSecretWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("error reading Secrets Manager Secret: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading Secrets Manager Secret: %s", err)
 	}
 
 	if output.ARN == nil {
-		return fmt.Errorf("Secrets Manager Secret %q not found", secretID)
+		return sdkdiag.AppendErrorf(diags, "Secrets Manager Secret %q not found", secretID)
 	}
 
 	d.SetId(aws.StringValue(output.ARN))
@@ -68,8 +71,8 @@ func dataSourceSecretRotationRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("rotation_lambda_arn", output.RotationLambdaARN)
 
 	if err := d.Set("rotation_rules", flattenRotationRules(output.RotationRules)); err != nil {
-		return fmt.Errorf("error setting rotation_rules: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting rotation_rules: %s", err)
 	}
 
-	return nil
+	return diags
 }

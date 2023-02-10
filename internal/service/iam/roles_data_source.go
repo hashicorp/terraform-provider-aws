@@ -1,19 +1,21 @@
 package iam
 
 import (
-	"fmt"
+	"context"
 	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func DataSourceRoles() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceRolesRead,
+		ReadWithoutTimeout: dataSourceRolesRead,
 
 		Schema: map[string]*schema.Schema{
 			"arns": {
@@ -39,8 +41,9 @@ func DataSourceRoles() *schema.Resource {
 	}
 }
 
-func dataSourceRolesRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+func dataSourceRolesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	input := &iam.ListRolesInput{}
 
@@ -50,7 +53,7 @@ func dataSourceRolesRead(d *schema.ResourceData, meta interface{}) error {
 
 	var results []*iam.Role
 
-	err := conn.ListRolesPages(input, func(page *iam.ListRolesOutput, lastPage bool) bool {
+	err := conn.ListRolesPagesWithContext(ctx, input, func(page *iam.ListRolesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -71,7 +74,7 @@ func dataSourceRolesRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if err != nil {
-		return fmt.Errorf("error reading IAM roles: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading IAM roles: %s", err)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
@@ -84,12 +87,12 @@ func dataSourceRolesRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err := d.Set("arns", arns); err != nil {
-		return fmt.Errorf("error setting arns: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting arns: %s", err)
 	}
 
 	if err := d.Set("names", names); err != nil {
-		return fmt.Errorf("error setting names: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting names: %s", err)
 	}
 
-	return nil
+	return diags
 }

@@ -23,12 +23,12 @@ const (
 
 func ResourceSharedDirectoryAccepter() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceSharedDirectoryAccepterCreate,
-		ReadContext:   resourceSharedDirectoryAccepterRead,
-		DeleteContext: resourceSharedDirectoryAccepterDelete,
+		CreateWithoutTimeout: resourceSharedDirectoryAccepterCreate,
+		ReadWithoutTimeout:   resourceSharedDirectoryAccepterRead,
+		DeleteWithoutTimeout: resourceSharedDirectoryAccepterDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -63,7 +63,7 @@ func ResourceSharedDirectoryAccepter() *schema.Resource {
 }
 
 func resourceSharedDirectoryAccepterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DSConn
+	conn := meta.(*conns.AWSClient).DSConn()
 
 	input := directoryservice.AcceptSharedDirectoryInput{
 		SharedDirectoryId: aws.String(d.Get("shared_directory_id").(string)),
@@ -95,9 +95,9 @@ func resourceSharedDirectoryAccepterCreate(ctx context.Context, d *schema.Resour
 }
 
 func resourceSharedDirectoryAccepterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DSConn
+	conn := meta.(*conns.AWSClient).DSConn()
 
-	dir, err := FindDirectoryByID(conn, d.Id())
+	dir, err := FindDirectoryByID(ctx, conn, d.Id())
 
 	if err != nil {
 		return create.DiagError(names.DS, create.ErrActionReading, ResNameSharedDirectoryAccepter, d.Id(), err)
@@ -112,11 +112,11 @@ func resourceSharedDirectoryAccepterRead(ctx context.Context, d *schema.Resource
 }
 
 func resourceSharedDirectoryAccepterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DSConn
+	conn := meta.(*conns.AWSClient).DSConn()
 
 	log.Printf("[DEBUG] Deleting Directory Service Directory: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrMessageContains(directoryApplicationDeauthorizedPropagationTimeout, func() (interface{}, error) {
-		return conn.DeleteDirectory(&directoryservice.DeleteDirectoryInput{
+	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, directoryApplicationDeauthorizedPropagationTimeout, func() (interface{}, error) {
+		return conn.DeleteDirectoryWithContext(ctx, &directoryservice.DeleteDirectoryInput{
 			DirectoryId: aws.String(d.Id()),
 		})
 	}, directoryservice.ErrCodeClientException, "authorized applications")
@@ -129,7 +129,7 @@ func resourceSharedDirectoryAccepterDelete(ctx context.Context, d *schema.Resour
 		return create.DiagError(names.DS, create.ErrActionDeleting, ResNameSharedDirectoryAccepter, d.Id(), err)
 	}
 
-	if _, err := waitDirectoryDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err := waitDirectoryDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return create.DiagError(names.DS, create.ErrActionWaitingForDeletion, ResNameSharedDirectoryAccepter, d.Id(), err)
 	}
 

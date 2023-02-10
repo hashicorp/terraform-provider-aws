@@ -1,6 +1,7 @@
 package grafana_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -15,6 +16,7 @@ import (
 )
 
 func testAccLicenseAssociation_freeTrial(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_grafana_license_association.test"
 	workspaceResourceName := "aws_grafana_workspace.test"
@@ -22,13 +24,13 @@ func testAccLicenseAssociation_freeTrial(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(managedgrafana.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, managedgrafana.EndpointsID),
-		CheckDestroy:             testAccCheckLicenseAssociationDestroy,
+		CheckDestroy:             testAccCheckLicenseAssociationDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLicenseAssociationConfig_basic(rName, managedgrafana.LicenseTypeEnterpriseFreeTrial),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLicenseAssociationExists(resourceName),
+					testAccCheckLicenseAssociationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "free_trial_expiration"),
 					resource.TestCheckResourceAttr(resourceName, "license_type", managedgrafana.LicenseTypeEnterpriseFreeTrial),
 					resource.TestCheckResourceAttrPair(resourceName, "workspace_id", workspaceResourceName, "id"),
@@ -47,7 +49,7 @@ resource "aws_grafana_license_association" "test" {
 `, licenseType))
 }
 
-func testAccCheckLicenseAssociationExists(name string) resource.TestCheckFunc {
+func testAccCheckLicenseAssociationExists(ctx context.Context, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -58,33 +60,35 @@ func testAccCheckLicenseAssociationExists(name string) resource.TestCheckFunc {
 			return fmt.Errorf("No Grafana Workspace ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GrafanaConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GrafanaConn()
 
-		_, err := tfgrafana.FindLicensedWorkspaceByID(conn, rs.Primary.ID)
+		_, err := tfgrafana.FindLicensedWorkspaceByID(ctx, conn, rs.Primary.ID)
 
 		return err
 	}
 }
 
-func testAccCheckLicenseAssociationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).GrafanaConn
+func testAccCheckLicenseAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GrafanaConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_grafana_license_association" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_grafana_license_association" {
+				continue
+			}
+
+			_, err := tfgrafana.FindLicensedWorkspaceByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Grafana License Association %s still exists", rs.Primary.ID)
 		}
-
-		_, err := tfgrafana.FindLicensedWorkspaceByID(conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("Grafana License Association %s still exists", rs.Primary.ID)
+		return nil
 	}
-	return nil
 }

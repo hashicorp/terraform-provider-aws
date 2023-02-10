@@ -5,17 +5,19 @@ package s3
 // INSTEAD, apply fixes and enhancements to the data source in "objects_data_source.go".
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func DataSourceBucketObjects() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceBucketObjectsRead,
+		ReadWithoutTimeout: dataSourceBucketObjectsRead,
 
 		Schema: map[string]*schema.Schema{
 			"bucket": {
@@ -67,8 +69,9 @@ func DataSourceBucketObjects() *schema.Resource {
 	}
 }
 
-func dataSourceBucketObjectsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+func dataSourceBucketObjectsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket := d.Get("bucket").(string)
 	prefix := d.Get("prefix").(string)
@@ -109,7 +112,7 @@ func dataSourceBucketObjectsRead(d *schema.ResourceData, meta interface{}) error
 	var keys []string
 	var owners []string
 
-	err := conn.ListObjectsV2Pages(&listInput, func(page *s3.ListObjectsV2Output, lastPage bool) bool {
+	err := conn.ListObjectsV2PagesWithContext(ctx, &listInput, func(page *s3.ListObjectsV2Output, lastPage bool) bool {
 		for _, commonPrefix := range page.CommonPrefixes {
 			commonPrefixes = append(commonPrefixes, aws.StringValue(commonPrefix.Prefix))
 		}
@@ -132,22 +135,22 @@ func dataSourceBucketObjectsRead(d *schema.ResourceData, meta interface{}) error
 	})
 
 	if err != nil {
-		return fmt.Errorf("error listing S3 Bucket (%s) Objects: %w", bucket, err)
+		return sdkdiag.AppendErrorf(diags, "listing S3 Bucket (%s) Objects: %s", bucket, err)
 	}
 
 	d.SetId(bucket)
 
 	if err := d.Set("common_prefixes", commonPrefixes); err != nil {
-		return fmt.Errorf("error setting common_prefixes: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting common_prefixes: %s", err)
 	}
 
 	if err := d.Set("keys", keys); err != nil {
-		return fmt.Errorf("error setting keys: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting keys: %s", err)
 	}
 
 	if err := d.Set("owners", owners); err != nil {
-		return fmt.Errorf("error setting owners: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting owners: %s", err)
 	}
 
-	return nil
+	return diags
 }

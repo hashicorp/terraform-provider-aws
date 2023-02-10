@@ -13,7 +13,7 @@ import (
 
 func DataSourcePrompt() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourcePromptRead,
+		ReadWithoutTimeout: dataSourcePromptRead,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -36,7 +36,7 @@ func DataSourcePrompt() *schema.Resource {
 }
 
 func dataSourcePromptRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 
 	instanceID := d.Get("instance_id").(string)
 	name := d.Get("name").(string)

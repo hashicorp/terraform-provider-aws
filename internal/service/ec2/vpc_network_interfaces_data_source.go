@@ -2,19 +2,20 @@ package ec2
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceNetworkInterfaces() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceNetworkInterfacesRead,
+		ReadWithoutTimeout: dataSourceNetworkInterfacesRead,
 
 		Timeouts: &schema.ResourceTimeout{
 			Read: schema.DefaultTimeout(20 * time.Minute),
@@ -32,8 +33,9 @@ func DataSourceNetworkInterfaces() *schema.Resource {
 	}
 }
 
-func dataSourceNetworkInterfacesRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func dataSourceNetworkInterfacesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	input := &ec2.DescribeNetworkInterfacesInput{}
 
@@ -51,10 +53,10 @@ func dataSourceNetworkInterfacesRead(d *schema.ResourceData, meta interface{}) e
 
 	networkInterfaceIDs := []string{}
 
-	output, err := FindNetworkInterfacesWithContext(context.TODO(), conn, input)
+	output, err := FindNetworkInterfaces(ctx, conn, input)
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 Network Interfaces: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Network Interfaces: %s", err)
 	}
 
 	for _, v := range output {
@@ -64,5 +66,5 @@ func dataSourceNetworkInterfacesRead(d *schema.ResourceData, meta interface{}) e
 	d.SetId(meta.(*conns.AWSClient).Region)
 	d.Set("ids", networkInterfaceIDs)
 
-	return nil
+	return diags
 }

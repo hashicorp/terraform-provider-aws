@@ -2,6 +2,7 @@ package backup
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"log"
 	"regexp"
@@ -10,11 +11,13 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/backup"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -22,11 +25,11 @@ import (
 
 func ResourceSelection() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceSelectionCreate,
-		Read:   resourceSelectionRead,
-		Delete: resourceSelectionDelete,
+		CreateWithoutTimeout: resourceSelectionCreate,
+		ReadWithoutTimeout:   resourceSelectionRead,
+		DeleteWithoutTimeout: resourceSelectionDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceSelectionImportState,
+			StateContext: resourceSelectionImportState,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -180,8 +183,9 @@ func ResourceSelection() *schema.Resource {
 	}
 }
 
-func resourceSelectionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BackupConn
+func resourceSelectionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).BackupConn()
 
 	selection := &backup.Selection{
 		Conditions:    expandConditions(d.Get("condition").(*schema.Set).List()),
@@ -199,9 +203,9 @@ func resourceSelectionCreate(d *schema.ResourceData, meta interface{}) error {
 
 	// Retry for IAM eventual consistency
 	var output *backup.CreateBackupSelectionOutput
-	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
+	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
 		var err error
-		output, err = conn.CreateBackupSelection(input)
+		output, err = conn.CreateBackupSelectionWithContext(ctx, input)
 
 		// Retry on the following error:
 		// InvalidParameterValueException: IAM Role arn:aws:iam::123456789012:role/XXX cannot be assumed by AWS Backup
@@ -225,20 +229,21 @@ func resourceSelectionCreate(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if tfresource.TimedOut(err) {
-		output, err = conn.CreateBackupSelection(input)
+		output, err = conn.CreateBackupSelectionWithContext(ctx, input)
 	}
 
 	if err != nil {
-		return fmt.Errorf("error creating Backup Selection: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Backup Selection: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.SelectionId))
 
-	return resourceSelectionRead(d, meta)
+	return append(diags, resourceSelectionRead(ctx, d, meta)...)
 }
 
-func resourceSelectionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BackupConn
+func resourceSelectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).BackupConn()
 
 	input := &backup.GetBackupSelectionInput{
 		BackupPlanId: aws.String(d.Get("plan_id").(string)),
@@ -247,10 +252,10 @@ func resourceSelectionRead(d *schema.ResourceData, meta interface{}) error {
 
 	var resp *backup.GetBackupSelectionOutput
 
-	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
+	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
 		var err error
 
-		resp, err = conn.GetBackupSelection(input)
+		resp, err = conn.GetBackupSelectionWithContext(ctx, input)
 
 		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, backup.ErrCodeResourceNotFoundException) {
 			return resource.RetryableError(err)
@@ -268,27 +273,27 @@ func resourceSelectionRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if tfresource.TimedOut(err) {
-		resp, err = conn.GetBackupSelection(input)
+		resp, err = conn.GetBackupSelectionWithContext(ctx, input)
 	}
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, backup.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Backup Selection (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if !d.IsNewResource() && tfawserr.ErrMessageContains(err, backup.ErrCodeInvalidParameterValueException, "Cannot find Backup plan") {
 		log.Printf("[WARN] Backup Selection (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Backup Selection (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Backup Selection (%s): %s", d.Id(), err)
 	}
 
 	if resp == nil {
-		return fmt.Errorf("error reading Backup Selection (%s): empty response", d.Id())
+		return sdkdiag.AppendErrorf(diags, "reading Backup Selection (%s): empty response", d.Id())
 	}
 
 	d.Set("plan_id", resp.BackupPlanId)
@@ -297,7 +302,7 @@ func resourceSelectionRead(d *schema.ResourceData, meta interface{}) error {
 
 	if conditions := resp.BackupSelection.Conditions; conditions != nil {
 		if err := d.Set("condition", flattenConditions(conditions)); err != nil {
-			return fmt.Errorf("error setting conditions: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting conditions: %s", err)
 		}
 	}
 
@@ -315,42 +320,43 @@ func resourceSelectionRead(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if err := d.Set("selection_tag", tags); err != nil {
-			return fmt.Errorf("error setting selection tag: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting selection tag: %s", err)
 		}
 	}
 
 	if resp.BackupSelection.Resources != nil {
 		if err := d.Set("resources", aws.StringValueSlice(resp.BackupSelection.Resources)); err != nil {
-			return fmt.Errorf("error setting resources: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting resources: %s", err)
 		}
 	}
 
 	if resp.BackupSelection.NotResources != nil {
 		if err := d.Set("not_resources", aws.StringValueSlice(resp.BackupSelection.NotResources)); err != nil {
-			return fmt.Errorf("error setting not resources: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting not resources: %s", err)
 		}
 	}
 
-	return nil
+	return diags
 }
 
-func resourceSelectionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BackupConn
+func resourceSelectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).BackupConn()
 
 	input := &backup.DeleteBackupSelectionInput{
 		BackupPlanId: aws.String(d.Get("plan_id").(string)),
 		SelectionId:  aws.String(d.Id()),
 	}
 
-	_, err := conn.DeleteBackupSelection(input)
+	_, err := conn.DeleteBackupSelectionWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("error deleting Backup Selection: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting Backup Selection: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceSelectionImportState(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceSelectionImportState(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	idParts := strings.Split(d.Id(), "|")
 	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
 		return nil, fmt.Errorf("unexpected format of ID (%q), expected <plan-id>|<selection-id>", d.Id())

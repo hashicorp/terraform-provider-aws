@@ -1,19 +1,21 @@
 package ec2
 
 import (
-	"fmt"
+	"context"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceLocalGatewayRouteTables() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceLocalGatewayRouteTablesRead,
+		ReadWithoutTimeout: dataSourceLocalGatewayRouteTablesRead,
 
 		Timeouts: &schema.ResourceTimeout{
 			Read: schema.DefaultTimeout(20 * time.Minute),
@@ -31,8 +33,9 @@ func DataSourceLocalGatewayRouteTables() *schema.Resource {
 	}
 }
 
-func dataSourceLocalGatewayRouteTablesRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func dataSourceLocalGatewayRouteTablesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	input := &ec2.DescribeLocalGatewayRouteTablesInput{}
 
@@ -48,10 +51,10 @@ func dataSourceLocalGatewayRouteTablesRead(d *schema.ResourceData, meta interfac
 		input.Filters = nil
 	}
 
-	output, err := FindLocalGatewayRouteTables(conn, input)
+	output, err := FindLocalGatewayRouteTables(ctx, conn, input)
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 Local Gateway Route Tables: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Local Gateway Route Tables: %s", err)
 	}
 
 	var routeTableIDs []string
@@ -63,5 +66,5 @@ func dataSourceLocalGatewayRouteTablesRead(d *schema.ResourceData, meta interfac
 	d.SetId(meta.(*conns.AWSClient).Region)
 	d.Set("ids", routeTableIDs)
 
-	return nil
+	return diags
 }

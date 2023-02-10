@@ -55,7 +55,7 @@ resource "aws_medialive_channel" "example" {
     }
 
     video_descriptions {
-      name = "example-vidoe"
+      name = "example-video"
     }
 
     output_groups {
@@ -69,7 +69,7 @@ resource "aws_medialive_channel" "example" {
 
       outputs {
         output_name             = "example-name"
-        video_description_name  = "example-vidoe"
+        video_description_name  = "example-video"
         audio_description_names = ["audio-selector"]
         output_settings {
           archive_output_settings {

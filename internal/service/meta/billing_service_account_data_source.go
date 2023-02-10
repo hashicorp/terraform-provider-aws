@@ -11,12 +11,15 @@ import (
 )
 
 func init() {
-	registerFrameworkDataSourceFactory(newDataSourceBillingServiceAccount)
+	_sp.registerFrameworkDataSourceFactory(newDataSourceBillingServiceAccount)
 }
 
 // newDataSourceBillingServiceAccount instantiates a new DataSource for the aws_billing_service_account data source.
 func newDataSourceBillingServiceAccount(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceBillingServiceAccount{}, nil
+	d := &dataSourceBillingServiceAccount{}
+	d.SetMigratedFromPluginSDK(true)
+
+	return d, nil
 }
 
 type dataSourceBillingServiceAccount struct {

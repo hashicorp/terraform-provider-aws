@@ -1,6 +1,7 @@
 package directconnect_test
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"testing"
@@ -17,6 +18,7 @@ import (
 )
 
 func TestAccDirectConnectConnectionConfirmation_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	env, err := testAccCheckHostedConnectionEnv()
 	if err != nil {
 		acctest.Skip(t, err.Error())
@@ -36,17 +38,17 @@ func TestAccDirectConnectConnectionConfirmation_basic(t *testing.T) {
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, directconnect.EndpointsID),
 		ProviderFactories: acctest.FactoriesAlternate(t, &providers),
-		CheckDestroy:      testAccCheckHostedConnectionDestroy(altProviderFunc),
+		CheckDestroy:      testAccCheckHostedConnectionDestroy(ctx, altProviderFunc),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectionConfirmationConfig_basic(connectionName, env.ConnectionId, env.OwnerAccountId),
-				Check:  testAccCheckConnectionConfirmationExists(resourceName, providerFunc),
+				Check:  testAccCheckConnectionConfirmationExists(ctx, resourceName, providerFunc),
 			},
 		},
 	})
 }
 
-func testAccCheckConnectionConfirmationExists(name string, providerFunc func() *schema.Provider) resource.TestCheckFunc {
+func testAccCheckConnectionConfirmationExists(ctx context.Context, name string, providerFunc func() *schema.Provider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -58,9 +60,9 @@ func testAccCheckConnectionConfirmationExists(name string, providerFunc func() *
 		}
 
 		provider := providerFunc()
-		conn := provider.Meta().(*conns.AWSClient).DirectConnectConn
+		conn := provider.Meta().(*conns.AWSClient).DirectConnectConn()
 
-		connection, err := tfdirectconnect.FindConnectionByID(conn, rs.Primary.ID)
+		connection, err := tfdirectconnect.FindConnectionByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

@@ -1,6 +1,7 @@
 package appmesh
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -9,10 +10,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appmesh"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -21,12 +24,12 @@ import (
 func ResourceVirtualNode() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
-		Create: resourceVirtualNodeCreate,
-		Read:   resourceVirtualNodeRead,
-		Update: resourceVirtualNodeUpdate,
-		Delete: resourceVirtualNodeDelete,
+		CreateWithoutTimeout: resourceVirtualNodeCreate,
+		ReadWithoutTimeout:   resourceVirtualNodeRead,
+		UpdateWithoutTimeout: resourceVirtualNodeUpdate,
+		DeleteWithoutTimeout: resourceVirtualNodeDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceVirtualNodeImport,
+			StateContext: resourceVirtualNodeImport,
 		},
 
 		SchemaVersion: 1,
@@ -105,7 +108,6 @@ func ResourceVirtualNode() *schema.Resource {
 							Type:     schema.TypeList,
 							Optional: true,
 							MinItems: 0,
-							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"connection_pool": {
@@ -129,19 +131,12 @@ func ResourceVirtualNode() *schema.Resource {
 															},
 														},
 													},
-													ExactlyOneOf: []string{
-														"spec.0.listener.0.connection_pool.0.grpc",
-														"spec.0.listener.0.connection_pool.0.http",
-														"spec.0.listener.0.connection_pool.0.http2",
-														"spec.0.listener.0.connection_pool.0.tcp",
-													},
 												},
 
 												"http": {
 													Type:     schema.TypeList,
 													Optional: true,
 													MinItems: 0,
-													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"max_connections": {
@@ -157,19 +152,12 @@ func ResourceVirtualNode() *schema.Resource {
 															},
 														},
 													},
-													ExactlyOneOf: []string{
-														"spec.0.listener.0.connection_pool.0.grpc",
-														"spec.0.listener.0.connection_pool.0.http",
-														"spec.0.listener.0.connection_pool.0.http2",
-														"spec.0.listener.0.connection_pool.0.tcp",
-													},
 												},
 
 												"http2": {
 													Type:     schema.TypeList,
 													Optional: true,
 													MinItems: 0,
-													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"max_requests": {
@@ -179,19 +167,12 @@ func ResourceVirtualNode() *schema.Resource {
 															},
 														},
 													},
-													ExactlyOneOf: []string{
-														"spec.0.listener.0.connection_pool.0.grpc",
-														"spec.0.listener.0.connection_pool.0.http",
-														"spec.0.listener.0.connection_pool.0.http2",
-														"spec.0.listener.0.connection_pool.0.tcp",
-													},
 												},
 
 												"tcp": {
 													Type:     schema.TypeList,
 													Optional: true,
 													MinItems: 0,
-													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"max_connections": {
@@ -200,12 +181,6 @@ func ResourceVirtualNode() *schema.Resource {
 																ValidateFunc: validation.IntAtLeast(1),
 															},
 														},
-													},
-													ExactlyOneOf: []string{
-														"spec.0.listener.0.connection_pool.0.grpc",
-														"spec.0.listener.0.connection_pool.0.http",
-														"spec.0.listener.0.connection_pool.0.http2",
-														"spec.0.listener.0.connection_pool.0.tcp",
 													},
 												},
 											},
@@ -407,12 +382,6 @@ func ResourceVirtualNode() *schema.Resource {
 															},
 														},
 													},
-													ExactlyOneOf: []string{
-														"spec.0.listener.0.timeout.0.grpc",
-														"spec.0.listener.0.timeout.0.http",
-														"spec.0.listener.0.timeout.0.http2",
-														"spec.0.listener.0.timeout.0.tcp",
-													},
 												},
 
 												"http": {
@@ -464,12 +433,6 @@ func ResourceVirtualNode() *schema.Resource {
 																},
 															},
 														},
-													},
-													ExactlyOneOf: []string{
-														"spec.0.listener.0.timeout.0.grpc",
-														"spec.0.listener.0.timeout.0.http",
-														"spec.0.listener.0.timeout.0.http2",
-														"spec.0.listener.0.timeout.0.tcp",
 													},
 												},
 
@@ -523,12 +486,6 @@ func ResourceVirtualNode() *schema.Resource {
 															},
 														},
 													},
-													ExactlyOneOf: []string{
-														"spec.0.listener.0.timeout.0.grpc",
-														"spec.0.listener.0.timeout.0.http",
-														"spec.0.listener.0.timeout.0.http2",
-														"spec.0.listener.0.timeout.0.tcp",
-													},
 												},
 
 												"tcp": {
@@ -559,12 +516,6 @@ func ResourceVirtualNode() *schema.Resource {
 																},
 															},
 														},
-													},
-													ExactlyOneOf: []string{
-														"spec.0.listener.0.timeout.0.grpc",
-														"spec.0.listener.0.timeout.0.http",
-														"spec.0.listener.0.timeout.0.http2",
-														"spec.0.listener.0.timeout.0.tcp",
 													},
 												},
 											},
@@ -599,11 +550,6 @@ func ResourceVirtualNode() *schema.Resource {
 																		},
 																	},
 																},
-																ExactlyOneOf: []string{
-																	"spec.0.listener.0.tls.0.certificate.0.acm",
-																	"spec.0.listener.0.tls.0.certificate.0.file",
-																	"spec.0.listener.0.tls.0.certificate.0.sds",
-																},
 															},
 
 															"file": {
@@ -626,11 +572,6 @@ func ResourceVirtualNode() *schema.Resource {
 																		},
 																	},
 																},
-																ExactlyOneOf: []string{
-																	"spec.0.listener.0.tls.0.certificate.0.acm",
-																	"spec.0.listener.0.tls.0.certificate.0.file",
-																	"spec.0.listener.0.tls.0.certificate.0.sds",
-																},
 															},
 
 															"sds": {
@@ -645,11 +586,6 @@ func ResourceVirtualNode() *schema.Resource {
 																			Required: true,
 																		},
 																	},
-																},
-																ExactlyOneOf: []string{
-																	"spec.0.listener.0.tls.0.certificate.0.acm",
-																	"spec.0.listener.0.tls.0.certificate.0.file",
-																	"spec.0.listener.0.tls.0.certificate.0.sds",
 																},
 															},
 														},
@@ -717,10 +653,6 @@ func ResourceVirtualNode() *schema.Resource {
 																					},
 																				},
 																			},
-																			ExactlyOneOf: []string{
-																				"spec.0.listener.0.tls.0.validation.0.trust.0.file",
-																				"spec.0.listener.0.tls.0.validation.0.trust.0.sds",
-																			},
 																		},
 
 																		"sds": {
@@ -736,10 +668,6 @@ func ResourceVirtualNode() *schema.Resource {
 																						ValidateFunc: validation.StringLenBetween(1, 255),
 																					},
 																				},
-																			},
-																			ExactlyOneOf: []string{
-																				"spec.0.listener.0.tls.0.validation.0.trust.0.file",
-																				"spec.0.listener.0.tls.0.validation.0.trust.0.sds",
 																			},
 																		},
 																	},
@@ -1058,8 +986,9 @@ func VirtualNodeClientPolicySchema() *schema.Schema {
 	}
 }
 
-func resourceVirtualNodeCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppMeshConn
+func resourceVirtualNodeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppMeshConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -1074,19 +1003,20 @@ func resourceVirtualNodeCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Creating App Mesh virtual node: %s", req)
-	resp, err := conn.CreateVirtualNode(req)
+	resp, err := conn.CreateVirtualNodeWithContext(ctx, req)
 
 	if err != nil {
-		return fmt.Errorf("creating App Mesh virtual node: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating App Mesh virtual node: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resp.VirtualNode.Metadata.Uid))
 
-	return resourceVirtualNodeRead(d, meta)
+	return append(diags, resourceVirtualNodeRead(ctx, d, meta)...)
 }
 
-func resourceVirtualNodeRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppMeshConn
+func resourceVirtualNodeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppMeshConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -1100,10 +1030,10 @@ func resourceVirtualNodeRead(d *schema.ResourceData, meta interface{}) error {
 
 	var resp *appmesh.DescribeVirtualNodeOutput
 
-	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
+	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
 		var err error
 
-		resp, err = conn.DescribeVirtualNode(req)
+		resp, err = conn.DescribeVirtualNodeWithContext(ctx, req)
 
 		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
 			return resource.RetryableError(err)
@@ -1117,31 +1047,31 @@ func resourceVirtualNodeRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if tfresource.TimedOut(err) {
-		resp, err = conn.DescribeVirtualNode(req)
+		resp, err = conn.DescribeVirtualNodeWithContext(ctx, req)
 	}
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
 		log.Printf("[WARN] App Mesh Virtual Node (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading App Mesh Virtual Node: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading App Mesh Virtual Node: %s", err)
 	}
 
 	if resp == nil || resp.VirtualNode == nil {
-		return fmt.Errorf("reading App Mesh Virtual Node: empty response")
+		return sdkdiag.AppendErrorf(diags, "reading App Mesh Virtual Node: empty response")
 	}
 
 	if aws.StringValue(resp.VirtualNode.Status.Status) == appmesh.VirtualNodeStatusCodeDeleted {
 		if d.IsNewResource() {
-			return fmt.Errorf("reading App Mesh Virtual Node: %s after creation", aws.StringValue(resp.VirtualNode.Status.Status))
+			return sdkdiag.AppendErrorf(diags, "reading App Mesh Virtual Node: %s after creation", aws.StringValue(resp.VirtualNode.Status.Status))
 		}
 
 		log.Printf("[WARN] App Mesh Virtual Node (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	arn := aws.StringValue(resp.VirtualNode.Metadata.Arn)
@@ -1154,31 +1084,32 @@ func resourceVirtualNodeRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("resource_owner", resp.VirtualNode.Metadata.ResourceOwner)
 	err = d.Set("spec", flattenVirtualNodeSpec(resp.VirtualNode.Spec))
 	if err != nil {
-		return fmt.Errorf("setting spec: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting spec: %s", err)
 	}
 
-	tags, err := ListTags(conn, arn)
+	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("listing tags for App Mesh virtual node (%s): %w", arn, err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for App Mesh virtual node (%s): %s", arn, err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceVirtualNodeUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppMeshConn
+func resourceVirtualNodeUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppMeshConn()
 
 	if d.HasChange("spec") {
 		_, v := d.GetChange("spec")
@@ -1192,10 +1123,10 @@ func resourceVirtualNodeUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		log.Printf("[DEBUG] Updating App Mesh virtual node: %s", req)
-		_, err := conn.UpdateVirtualNode(req)
+		_, err := conn.UpdateVirtualNodeWithContext(ctx, req)
 
 		if err != nil {
-			return fmt.Errorf("updating App Mesh virtual node (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating App Mesh virtual node (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -1203,35 +1134,36 @@ func resourceVirtualNodeUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, arn, o, n); err != nil {
-			return fmt.Errorf("updating App Mesh virtual node (%s) tags: %w", arn, err)
+		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating App Mesh virtual node (%s) tags: %s", arn, err)
 		}
 	}
 
-	return resourceVirtualNodeRead(d, meta)
+	return append(diags, resourceVirtualNodeRead(ctx, d, meta)...)
 }
 
-func resourceVirtualNodeDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppMeshConn
+func resourceVirtualNodeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppMeshConn()
 
-	log.Printf("[DEBUG] Deleting App Mesh virtual node: %s", d.Id())
-	_, err := conn.DeleteVirtualNode(&appmesh.DeleteVirtualNodeInput{
+	log.Printf("[DEBUG] Deleting App Mesh Virtual Node: %s", d.Id())
+	_, err := conn.DeleteVirtualNodeWithContext(ctx, &appmesh.DeleteVirtualNodeInput{
 		MeshName:        aws.String(d.Get("mesh_name").(string)),
 		VirtualNodeName: aws.String(d.Get("name").(string)),
 	})
 
 	if tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("deleting App Mesh virtual node (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting App Mesh virtual node (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceVirtualNodeImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceVirtualNodeImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), "/")
 	if len(parts) != 2 {
 		return []*schema.ResourceData{}, fmt.Errorf("wrong format of import ID (%s), use: 'mesh-name/virtual-node-name'", d.Id())
@@ -1241,9 +1173,9 @@ func resourceVirtualNodeImport(d *schema.ResourceData, meta interface{}) ([]*sch
 	name := parts[1]
 	log.Printf("[DEBUG] Importing App Mesh virtual node %s from mesh %s", name, mesh)
 
-	conn := meta.(*conns.AWSClient).AppMeshConn
+	conn := meta.(*conns.AWSClient).AppMeshConn()
 
-	resp, err := conn.DescribeVirtualNode(&appmesh.DescribeVirtualNodeInput{
+	resp, err := conn.DescribeVirtualNodeWithContext(ctx, &appmesh.DescribeVirtualNodeInput{
 		MeshName:        aws.String(mesh),
 		VirtualNodeName: aws.String(name),
 	})
