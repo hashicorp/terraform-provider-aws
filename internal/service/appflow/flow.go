@@ -17,6 +17,11 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+const (
+	AttrObjectPath = "object_path"
 )
 
 func ResourceFlow() *schema.Resource {
@@ -30,17 +35,17 @@ func ResourceFlow() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`[a-zA-Z0-9][\w!@#.-]+`), "must contain only alphanumeric, exclamation point (!), at sign (@), number sign (#), period (.), and hyphen (-) characters"), validation.StringLenBetween(1, 256)),
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringMatch(regexp.MustCompile(`[\w!@#\-.?,\s]*`), "must contain only alphanumeric, underscore (_), exclamation point (!), at sign (@), number sign (#), hyphen (-), period (.), question mark (?), comma (,), and whitespace characters"),
@@ -471,7 +476,7 @@ func ResourceFlow() *schema.Resource {
 														ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(0, 128)),
 													},
 												},
-												"object_path": {
+												AttrObjectPath: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
@@ -891,7 +896,7 @@ func ResourceFlow() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"object": {
+												AttrObjectPath: {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: validation.All(validation.StringMatch(regexp.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
@@ -1196,8 +1201,8 @@ func ResourceFlow() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -1208,14 +1213,14 @@ func resourceFlowCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	conn := meta.(*conns.AWSClient).AppFlowConn()
 
 	in := &appflow.CreateFlowInput{
-		FlowName:                  aws.String(d.Get("name").(string)),
+		FlowName:                  aws.String(d.Get(names.AttrName).(string)),
 		DestinationFlowConfigList: expandDestinationFlowConfigs(d.Get("destination_flow_config").(*schema.Set).List()),
 		SourceFlowConfig:          expandSourceFlowConfig(d.Get("source_flow_config").([]interface{})[0].(map[string]interface{})),
 		Tasks:                     expandTasks(d.Get("task").(*schema.Set).List()),
 		TriggerConfig:             expandTriggerConfig(d.Get("trigger_config").([]interface{})[0].(map[string]interface{})),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		in.Description = aws.String(v.(string))
 	}
 
@@ -1224,7 +1229,7 @@ func resourceFlowCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get(names.AttrTags).(map[string]interface{})))
 	if len(tags) > 0 {
 		in.Tags = Tags(tags.IgnoreAWS())
 	}
@@ -1232,11 +1237,11 @@ func resourceFlowCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	out, err := conn.CreateFlowWithContext(ctx, in)
 
 	if err != nil {
-		return diag.Errorf("creating Appflow Flow (%s): %s", d.Get("name").(string), err)
+		return diag.Errorf("creating Appflow Flow (%s): %s", d.Get(names.AttrName).(string), err)
 	}
 
 	if out == nil || out.FlowArn == nil {
-		return diag.Errorf("creating Appflow Flow (%s): empty output", d.Get("name").(string))
+		return diag.Errorf("creating Appflow Flow (%s): empty output", d.Get(names.AttrName).(string))
 	}
 
 	d.SetId(aws.StringValue(out.FlowArn))
@@ -1269,9 +1274,9 @@ func resourceFlowRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		return diag.Errorf("reading AppFlow Flow (%s): %s", d.Id(), err)
 	}
 
-	d.Set("name", out.FlowName)
-	d.Set("arn", out2.FlowArn)
-	d.Set("description", out2.Description)
+	d.Set(names.AttrName, out.FlowName)
+	d.Set(names.AttrARN, out2.FlowArn)
+	d.Set(names.AttrDescription, out2.Description)
 
 	if err := d.Set("destination_flow_config", flattenDestinationFlowConfigs(out2.DestinationFlowConfigList)); err != nil {
 		return diag.Errorf("error setting destination_flow_config: %s", err)
@@ -1310,11 +1315,11 @@ func resourceFlowRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+	if err := d.Set(names.AttrTags, tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return diag.Errorf("setting tags: %s", err)
 	}
 
-	if err := d.Set("tags_all", tags.Map()); err != nil {
+	if err := d.Set(names.AttrTagsAll, tags.Map()); err != nil {
 		return diag.Errorf("setting tags_all: %s", err)
 	}
 
@@ -1325,15 +1330,15 @@ func resourceFlowUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	conn := meta.(*conns.AWSClient).AppFlowConn()
 
 	in := &appflow.UpdateFlowInput{
-		FlowName:                  aws.String(d.Get("name").(string)),
+		FlowName:                  aws.String(d.Get(names.AttrName).(string)),
 		DestinationFlowConfigList: expandDestinationFlowConfigs(d.Get("destination_flow_config").(*schema.Set).List()),
 		SourceFlowConfig:          expandSourceFlowConfig(d.Get("source_flow_config").([]interface{})[0].(map[string]interface{})),
 		Tasks:                     expandTasks(d.Get("task").(*schema.Set).List()),
 		TriggerConfig:             expandTriggerConfig(d.Get("trigger_config").([]interface{})[0].(map[string]interface{})),
 	}
 
-	if d.HasChange("description") {
-		in.Description = aws.String(d.Get("description").(string))
+	if d.HasChange(names.AttrDescription) {
+		in.Description = aws.String(d.Get(names.AttrDescription).(string))
 	}
 
 	log.Printf("[DEBUG] Updating AppFlow Flow (%s): %#v", d.Id(), in)
@@ -1343,10 +1348,10 @@ func resourceFlowUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		return diag.Errorf("updating AppFlow Flow (%s): %s", d.Id(), err)
 	}
 
-	arn := d.Get("arn").(string)
+	arn := d.Get(names.AttrARN).(string)
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
+	if d.HasChange(names.AttrTagsAll) {
+		o, n := d.GetChange(names.AttrTagsAll)
 		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
 			return diag.Errorf("error updating tags: %s", err)
 		}
@@ -1764,7 +1769,7 @@ func expandSAPODataDestinationProperties(tfMap map[string]interface{}) *appflow.
 		a.IdFieldNames = flex.ExpandStringList(v)
 	}
 
-	if v, ok := tfMap["object_path"].(string); ok && v != "" {
+	if v, ok := tfMap[AttrObjectPath].(string); ok && v != "" {
 		a.ObjectPath = aws.String(v)
 	}
 
@@ -2178,7 +2183,7 @@ func expandSAPODataSourceProperties(tfMap map[string]interface{}) *appflow.SAPOD
 
 	a := &appflow.SAPODataSourceProperties{}
 
-	if v, ok := tfMap["object_path"].(string); ok && v != "" {
+	if v, ok := tfMap[AttrObjectPath].(string); ok && v != "" {
 		a.ObjectPath = aws.String(v)
 	}
 
@@ -2869,7 +2874,7 @@ func flattenSAPODataDestinationProperties(SAPODataDestinationProperties *appflow
 	}
 
 	if v := SAPODataDestinationProperties.ObjectPath; v != nil {
-		m["object_path"] = aws.StringValue(v)
+		m[AttrObjectPath] = aws.StringValue(v)
 	}
 
 	if v := SAPODataDestinationProperties.SuccessResponseHandlingConfig; v != nil {
@@ -3283,7 +3288,7 @@ func flattenSAPODataSourceProperties(sapoDataSourceProperties *appflow.SAPODataS
 	m := map[string]interface{}{}
 
 	if v := sapoDataSourceProperties.ObjectPath; v != nil {
-		m["object_path"] = aws.StringValue(v)
+		m[AttrObjectPath] = aws.StringValue(v)
 	}
 
 	return m
