@@ -225,7 +225,7 @@ The CloudFront distribution argument layout is a complex structure composed of s
 * `function_association` (Optional) - A [config block](#function-association) that triggers a cloudfront function with specific actions (maximum 2).
 * `max_ttl` (Optional) - Maximum amount of time (in seconds) that an object is in a CloudFront cache before CloudFront forwards another request to your origin to determine whether the object has been updated. Only effective in the presence of `Cache-Control max-age`, `Cache-Control s-maxage`, and `Expires` headers.
 * `min_ttl` (Optional) - Minimum amount of time that you want objects to stay in CloudFront caches before CloudFront queries your origin to see whether the object has been updated. Defaults to 0 seconds.
-* `origin_request_policy_id` (Optional) - Unique identifier of the origin request policy.
+* `origin_request_policy_id` (Optional) - Unique identifier of the origin request policy that is attached to the behavior.
 * `path_pattern` (Required) - Pattern (for example, `images/*.jpg`) that specifies which requests you want this cache behavior to apply to.
 * `realtime_log_config_arn` (Optional) - ARN of the [real-time log configuration](cloudfront_realtime_log_config.html) that is attached to this cache behavior.
 * `response_headers_policy_id` (Optional) - Identifier for a response headers policy.
@@ -233,10 +233,8 @@ The CloudFront distribution argument layout is a complex structure composed of s
 * `target_origin_id` (Required) - Value of ID for the origin that you want CloudFront to route requests to when a request matches the path pattern either for a cache behavior or for the default cache behavior.
 * `trusted_key_groups` (Optional) - List of key group IDs that CloudFront can use to validate signed URLs or signed cookies.
 See the [CloudFront User Guide](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-trusted-signers.html) for more information about this feature.
-
 * `trusted_signers` (Optional) - List of AWS account IDs (or `self`) that you want to allow to create signed URLs for private content.
 See the [CloudFront User Guide](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-trusted-signers.html) for more information about this feature.
-
 * `viewer_protocol_policy` (Required) - Use this element to specify the protocol that users can use to access the files in the origin specified by TargetOriginId when a request matches the path pattern in PathPattern. One of `allow-all`, `https-only`, or `redirect-to-https`.
 
 ##### Forwarded Values Arguments
