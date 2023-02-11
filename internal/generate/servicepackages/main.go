@@ -211,16 +211,12 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 			} else {
 				v.frameworkDataSources = append(v.frameworkDataSources, v.functionName)
 			}
-
-			break
 		} else if m := frameworkResourceAnnotation.FindStringSubmatch(line); len(m) > 0 {
 			if slices.Contains(v.frameworkResources, v.functionName) {
 				v.err = multierror.Append(v.err, fmt.Errorf("duplicate Framework Resource: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 			} else {
 				v.frameworkResources = append(v.frameworkResources, v.functionName)
 			}
-
-			break
 		} else if m := sdkDataSourceAnnotation.FindStringSubmatch(line); len(m) > 0 {
 			name := m[1]
 
@@ -229,8 +225,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 			} else {
 				v.sdkDataSources[name] = v.functionName
 			}
-
-			break
 		} else if m := sdkResourceAnnotation.FindStringSubmatch(line); len(m) > 0 {
 			name := m[1]
 
@@ -239,8 +233,6 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 			} else {
 				v.sdkResources[name] = v.functionName
 			}
-
-			break
 		}
 	}
 
