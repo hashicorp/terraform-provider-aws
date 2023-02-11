@@ -258,7 +258,7 @@ resource "aws_s3_bucket_acl" "bucket_acl" {
 }
 
 resource "aws_s3_bucket_lifecycle_configuration" "bucket-config" {
-  bucket = aws_s3_bucket.bucket.bucket
+  bucket = aws_s3_bucket.bucket.id
 
   rule {
     id = "log"
@@ -358,9 +358,9 @@ resource "aws_s3_bucket_lifecycle_configuration" "versioning-bucket-config" {
 
 The following arguments are supported:
 
-* `bucket` - (Required) The name of the source S3 bucket you want Amazon S3 to monitor.
-* `expected_bucket_owner` - (Optional) The account ID of the expected bucket owner. If the bucket is owned by a different account, the request will fail with an HTTP 403 (Access Denied) error.
-* `rule` - (Required) List of configuration blocks describing the rules managing the replication [documented below](#rule).
+* `bucket` - (Required) Name of the source S3 bucket you want Amazon S3 to monitor.
+* `expected_bucket_owner` - (Optional) Account ID of the expected bucket owner. If the bucket is owned by a different account, the request will fail with an HTTP 403 (Access Denied) error.
+* `rule` - (Required) List of configuration blocks describing the rules managing the replication. [See below](#rule).
 
 ### rule
 
@@ -373,28 +373,28 @@ Since `prefix` is deprecated by Amazon S3 and will be removed in the next major 
 
 The `rule` configuration block supports the following arguments:
 
-* `abort_incomplete_multipart_upload` - (Optional) Configuration block that specifies the days since the initiation of an incomplete multipart upload that Amazon S3 will wait before permanently removing all parts of the upload [documented below](#abort_incomplete_multipart_upload).
-* `expiration` - (Optional) Configuration block that specifies the expiration for the lifecycle of the object in the form of date, days and, whether the object has a delete marker [documented below](#expiration).
-* `filter` - (Optional) Configuration block used to identify objects that a Lifecycle Rule applies to [documented below](#filter). If not specified, the `rule` will default to using `prefix`.
+* `abort_incomplete_multipart_upload` - (Optional) Configuration block that specifies the days since the initiation of an incomplete multipart upload that Amazon S3 will wait before permanently removing all parts of the upload. [See below](#abort_incomplete_multipart_upload).
+* `expiration` - (Optional) Configuration block that specifies the expiration for the lifecycle of the object in the form of date, days and, whether the object has a delete marker. [See below](#expiration).
+* `filter` - (Optional) Configuration block used to identify objects that a Lifecycle Rule applies to. [See below](#filter). If not specified, the `rule` will default to using `prefix`.
 * `id` - (Required) Unique identifier for the rule. The value cannot be longer than 255 characters.
-* `noncurrent_version_expiration` - (Optional) Configuration block that specifies when noncurrent object versions expire [documented below](#noncurrent_version_expiration).
-* `noncurrent_version_transition` - (Optional) Set of configuration blocks that specify the transition rule for the lifecycle rule that describes when noncurrent objects transition to a specific storage class [documented below](#noncurrent_version_transition).
+* `noncurrent_version_expiration` - (Optional) Configuration block that specifies when noncurrent object versions expire. [See below](#noncurrent_version_expiration).
+* `noncurrent_version_transition` - (Optional) Set of configuration blocks that specify the transition rule for the lifecycle rule that describes when noncurrent objects transition to a specific storage class. [See below](#noncurrent_version_transition).
 * `prefix` - (Optional) **DEPRECATED** Use `filter` instead. This has been deprecated by Amazon S3. Prefix identifying one or more objects to which the rule applies. Defaults to an empty string (`""`) if `filter` is not specified.
 * `status` - (Required) Whether the rule is currently being applied. Valid values: `Enabled` or `Disabled`.
-* `transition` - (Optional) Set of configuration blocks that specify when an Amazon S3 object transitions to a specified storage class [documented below](#transition).
+* `transition` - (Optional) Set of configuration blocks that specify when an Amazon S3 object transitions to a specified storage class. [See below](#transition).
 
 ### abort_incomplete_multipart_upload
 
 The `abort_incomplete_multipart_upload` configuration block supports the following arguments:
 
-* `days_after_initiation` - The number of days after which Amazon S3 aborts an incomplete multipart upload.
+* `days_after_initiation` - Number of days after which Amazon S3 aborts an incomplete multipart upload.
 
 ### expiration
 
 The `expiration` configuration block supports the following arguments:
 
-* `date` - (Optional) The date the object is to be moved or deleted. Should be in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8).
-* `days` - (Optional) The lifetime, in days, of the objects that are subject to the rule. The value must be a non-zero positive integer.
+* `date` - (Optional) Date the object is to be moved or deleted. Should be in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8).
+* `days` - (Optional) Lifetime, in days, of the objects that are subject to the rule. The value must be a non-zero positive integer.
 * `expired_object_delete_marker` - (Optional, Conflicts with `date` and `days`) Indicates whether Amazon S3 will remove a delete marker with no noncurrent versions. If set to `true`, the delete marker will be expired; if set to `false` the policy takes no action.
 
 ### filter
@@ -403,26 +403,26 @@ The `expiration` configuration block supports the following arguments:
 
 The `filter` configuration block supports the following arguments:
 
-* `and`- (Optional) Configuration block used to apply a logical `AND` to two or more predicates [documented below](#and). The Lifecycle Rule will apply to any object matching all the predicates configured inside the `and` block.
+* `and`- (Optional) Configuration block used to apply a logical `AND` to two or more predicates. [See below](#and). The Lifecycle Rule will apply to any object matching all the predicates configured inside the `and` block.
 * `object_size_greater_than` - (Optional) Minimum object size (in bytes) to which the rule applies.
 * `object_size_less_than` - (Optional) Maximum object size (in bytes) to which the rule applies.
 * `prefix` - (Optional) Prefix identifying one or more objects to which the rule applies. Defaults to an empty string (`""`) if not specified.
-* `tag` - (Optional) A configuration block for specifying a tag key and value [documented below](#tag).
+* `tag` - (Optional) Configuration block for specifying a tag key and value. [See below](#tag).
 
 ### noncurrent_version_expiration
 
 The `noncurrent_version_expiration` configuration block supports the following arguments:
 
-* `newer_noncurrent_versions` - (Optional) The number of noncurrent versions Amazon S3 will retain. Must be a non-zero positive integer.
-* `noncurrent_days` - (Optional) The number of days an object is noncurrent before Amazon S3 can perform the associated action. Must be a positive integer.
+* `newer_noncurrent_versions` - (Optional) Number of noncurrent versions Amazon S3 will retain. Must be a non-zero positive integer.
+* `noncurrent_days` - (Optional) Number of days an object is noncurrent before Amazon S3 can perform the associated action. Must be a positive integer.
 
 ### noncurrent_version_transition
 
 The `noncurrent_version_transition` configuration block supports the following arguments:
 
-* `newer_noncurrent_versions` - (Optional) The number of noncurrent versions Amazon S3 will retain. Must be a non-zero positive integer.
-* `noncurrent_days` - (Optional) The number of days an object is noncurrent before Amazon S3 can perform the associated action.
-* `storage_class` - (Required) The class of storage used to store the object. Valid Values: `GLACIER`, `STANDARD_IA`, `ONEZONE_IA`, `INTELLIGENT_TIERING`, `DEEP_ARCHIVE`, `GLACIER_IR`.
+* `newer_noncurrent_versions` - (Optional) Number of noncurrent versions Amazon S3 will retain. Must be a non-zero positive integer.
+* `noncurrent_days` - (Optional) Number of days an object is noncurrent before Amazon S3 can perform the associated action.
+* `storage_class` - (Required) Class of storage used to store the object. Valid Values: `GLACIER`, `STANDARD_IA`, `ONEZONE_IA`, `INTELLIGENT_TIERING`, `DEEP_ARCHIVE`, `GLACIER_IR`.
 
 ### transition
 
@@ -430,9 +430,9 @@ The `transition` configuration block supports the following arguments:
 
 ~> **Note:** Only one of `date` or `days` should be specified. If neither are specified, the `transition` will default to 0 `days`.
 
-* `date` - (Optional, Conflicts with `days`) The date objects are transitioned to the specified storage class. The date value must be in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) and set to midnight UTC e.g. `2023-01-13T00:00:00Z`.
-* `days` - (Optional, Conflicts with `date`) The number of days after creation when objects are transitioned to the specified storage class. The value must be a positive integer. If both `days` and `date` are not specified, defaults to `0`. Valid values depend on `storage_class`, see [Transition objects using Amazon S3 Lifecycle](https://docs.aws.amazon.com/AmazonS3/latest/userguide/lifecycle-transition-general-considerations.html) for more details.
-* `storage_class` - The class of storage used to store the object. Valid Values: `GLACIER`, `STANDARD_IA`, `ONEZONE_IA`, `INTELLIGENT_TIERING`, `DEEP_ARCHIVE`, `GLACIER_IR`.
+* `date` - (Optional, Conflicts with `days`) Date objects are transitioned to the specified storage class. The date value must be in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) and set to midnight UTC e.g. `2023-01-13T00:00:00Z`.
+* `days` - (Optional, Conflicts with `date`) Number of days after creation when objects are transitioned to the specified storage class. The value must be a positive integer. If both `days` and `date` are not specified, defaults to `0`. Valid values depend on `storage_class`, see [Transition objects using Amazon S3 Lifecycle](https://docs.aws.amazon.com/AmazonS3/latest/userguide/lifecycle-transition-general-considerations.html) for more details.
+* `storage_class` - Class of storage used to store the object. Valid Values: `GLACIER`, `STANDARD_IA`, `ONEZONE_IA`, `INTELLIGENT_TIERING`, `DEEP_ARCHIVE`, `GLACIER_IR`.
 
 ### and
 

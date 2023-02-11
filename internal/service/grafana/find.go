@@ -1,6 +1,8 @@
 package grafana
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/managedgrafana"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -8,8 +10,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindLicensedWorkspaceByID(conn *managedgrafana.ManagedGrafana, id string) (*managedgrafana.WorkspaceDescription, error) {
-	output, err := FindWorkspaceByID(conn, id)
+func FindLicensedWorkspaceByID(ctx context.Context, conn *managedgrafana.ManagedGrafana, id string) (*managedgrafana.WorkspaceDescription, error) {
+	output, err := FindWorkspaceByID(ctx, conn, id)
 
 	if err != nil {
 		return nil, err
@@ -22,12 +24,12 @@ func FindLicensedWorkspaceByID(conn *managedgrafana.ManagedGrafana, id string) (
 	return output, nil
 }
 
-func FindWorkspaceByID(conn *managedgrafana.ManagedGrafana, id string) (*managedgrafana.WorkspaceDescription, error) {
+func FindWorkspaceByID(ctx context.Context, conn *managedgrafana.ManagedGrafana, id string) (*managedgrafana.WorkspaceDescription, error) {
 	input := &managedgrafana.DescribeWorkspaceInput{
 		WorkspaceId: aws.String(id),
 	}
 
-	output, err := conn.DescribeWorkspace(input)
+	output, err := conn.DescribeWorkspaceWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, managedgrafana.ErrCodeResourceNotFoundException) {
 		return nil, &resource.NotFoundError{
@@ -47,12 +49,12 @@ func FindWorkspaceByID(conn *managedgrafana.ManagedGrafana, id string) (*managed
 	return output.Workspace, nil
 }
 
-func FindSamlConfigurationByID(conn *managedgrafana.ManagedGrafana, id string) (*managedgrafana.SamlAuthentication, error) {
+func FindSamlConfigurationByID(ctx context.Context, conn *managedgrafana.ManagedGrafana, id string) (*managedgrafana.SamlAuthentication, error) {
 	input := &managedgrafana.DescribeWorkspaceAuthenticationInput{
 		WorkspaceId: aws.String(id),
 	}
 
-	output, err := conn.DescribeWorkspaceAuthentication(input)
+	output, err := conn.DescribeWorkspaceAuthenticationWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, managedgrafana.ErrCodeResourceNotFoundException) {
 		return nil, &resource.NotFoundError{
@@ -79,13 +81,13 @@ func FindSamlConfigurationByID(conn *managedgrafana.ManagedGrafana, id string) (
 	return output.Authentication.Saml, nil
 }
 
-func FindRoleAssociationsByRoleAndWorkspaceID(conn *managedgrafana.ManagedGrafana, role string, workspaceID string) (map[string][]string, error) {
+func FindRoleAssociationsByRoleAndWorkspaceID(ctx context.Context, conn *managedgrafana.ManagedGrafana, role string, workspaceID string) (map[string][]string, error) {
 	input := &managedgrafana.ListPermissionsInput{
 		WorkspaceId: aws.String(workspaceID),
 	}
 	output := make(map[string][]string, 0)
 
-	err := conn.ListPermissionsPages(input, func(page *managedgrafana.ListPermissionsOutput, lastPage bool) bool {
+	err := conn.ListPermissionsPagesWithContext(ctx, input, func(page *managedgrafana.ListPermissionsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}

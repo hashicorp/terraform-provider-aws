@@ -7,6 +7,8 @@ import (
 )
 
 func TestValidName(t *testing.T) {
+	t.Parallel()
+
 	validNames := []string{
 		"tf-test-elb",
 	}
@@ -35,6 +37,8 @@ func TestValidName(t *testing.T) {
 }
 
 func TestValidNamePrefix(t *testing.T) {
+	t.Parallel()
+
 	validNamePrefixes := []string{
 		"test-",
 	}
@@ -62,6 +66,8 @@ func TestValidNamePrefix(t *testing.T) {
 }
 
 func TestValidTargetGroupName(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Value    string
 		ErrCount int
@@ -92,6 +98,8 @@ func TestValidTargetGroupName(t *testing.T) {
 }
 
 func TestValidTargetGroupNamePrefix(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Value    string
 		ErrCount int

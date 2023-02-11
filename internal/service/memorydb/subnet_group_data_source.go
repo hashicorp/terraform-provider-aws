@@ -68,7 +68,7 @@ func dataSourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("name", group.Name)
 	d.Set("vpc_id", group.VpcId)
 
-	tags, err := ListTags(conn, d.Get("arn").(string))
+	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
 
 	if err != nil {
 		return diag.Errorf("error listing tags for MemoryDB Subnet Group (%s): %s", d.Id(), err)

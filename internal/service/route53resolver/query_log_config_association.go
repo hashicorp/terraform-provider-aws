@@ -23,7 +23,7 @@ func ResourceQueryLogConfigAssociation() *schema.Resource {
 		DeleteWithoutTimeout: resourceQueryLogConfigAssociationDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{

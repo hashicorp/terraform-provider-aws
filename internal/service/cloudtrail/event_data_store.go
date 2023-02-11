@@ -232,7 +232,7 @@ func resourceEventDataStoreRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("retention_period", eventDataStore.RetentionPeriod)
 	d.Set("termination_protection_enabled", eventDataStore.TerminationProtectionEnabled)
 
-	tags, err := ListTags(conn, d.Id())
+	tags, err := ListTags(ctx, conn, d.Id())
 
 	if err != nil {
 		return diag.Errorf("error listing tags for CloudTrail Event Data Store (%s): %s", d.Id(), err)
@@ -300,7 +300,7 @@ func resourceEventDataStoreUpdate(ctx context.Context, d *schema.ResourceData, m
 		o, n := d.GetChange("tags_all")
 
 		log.Printf("[DEBUG] Updating CloudTrail Event Data Store (%s) tags", d.Id())
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.Errorf("error updating CloudTrail Event Data Store (%s) tags: %s", d.Id(), err)
 		}
 	}

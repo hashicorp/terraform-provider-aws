@@ -1,6 +1,7 @@
 package cognitoidp
 
 import (
+	"context"
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
@@ -13,18 +14,18 @@ const (
 )
 
 // waitUserPoolDomainDeleted waits for an Operation to return Success
-func waitUserPoolDomainDeleted(conn *cognitoidentityprovider.CognitoIdentityProvider, domain string) (*cognitoidentityprovider.DescribeUserPoolDomainOutput, error) {
+func waitUserPoolDomainDeleted(ctx context.Context, conn *cognitoidentityprovider.CognitoIdentityProvider, domain string) (*cognitoidentityprovider.DescribeUserPoolDomainOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			cognitoidentityprovider.DomainStatusTypeUpdating,
 			cognitoidentityprovider.DomainStatusTypeDeleting,
 		},
 		Target:  []string{""},
-		Refresh: statusUserPoolDomain(conn, domain),
+		Refresh: statusUserPoolDomain(ctx, conn, domain),
 		Timeout: userPoolDomainDeleteTimeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*cognitoidentityprovider.DescribeUserPoolDomainOutput); ok {
 		return output, err
@@ -33,7 +34,7 @@ func waitUserPoolDomainDeleted(conn *cognitoidentityprovider.CognitoIdentityProv
 	return nil, err
 }
 
-func waitUserPoolDomainCreated(conn *cognitoidentityprovider.CognitoIdentityProvider, domain string, timeout time.Duration) (*cognitoidentityprovider.DescribeUserPoolDomainOutput, error) {
+func waitUserPoolDomainCreated(ctx context.Context, conn *cognitoidentityprovider.CognitoIdentityProvider, domain string, timeout time.Duration) (*cognitoidentityprovider.DescribeUserPoolDomainOutput, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			cognitoidentityprovider.DomainStatusTypeCreating,
@@ -42,11 +43,11 @@ func waitUserPoolDomainCreated(conn *cognitoidentityprovider.CognitoIdentityProv
 		Target: []string{
 			cognitoidentityprovider.DomainStatusTypeActive,
 		},
-		Refresh: statusUserPoolDomain(conn, domain),
+		Refresh: statusUserPoolDomain(ctx, conn, domain),
 		Timeout: timeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*cognitoidentityprovider.DescribeUserPoolDomainOutput); ok {
 		return output, err

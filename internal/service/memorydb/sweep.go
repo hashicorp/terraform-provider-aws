@@ -63,6 +63,7 @@ func init() {
 }
 
 func sweepACLs(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -71,7 +72,7 @@ func sweepACLs(region string) error {
 	input := &memorydb.DescribeACLsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = describeACLsPages(conn, input, func(page *memorydb.DescribeACLsOutput, lastPage bool) bool {
+	err = describeACLsPages(ctx, conn, input, func(page *memorydb.DescribeACLsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -102,7 +103,7 @@ func sweepACLs(region string) error {
 		return fmt.Errorf("error listing MemoryDB ACLs (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping MemoryDB ACLs (%s): %w", region, err)
@@ -112,6 +113,7 @@ func sweepACLs(region string) error {
 }
 
 func sweepClusters(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -120,7 +122,7 @@ func sweepClusters(region string) error {
 	input := &memorydb.DescribeClustersInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = describeClustersPages(conn, input, func(page *memorydb.DescribeClustersOutput, lastPage bool) bool {
+	err = describeClustersPages(ctx, conn, input, func(page *memorydb.DescribeClustersOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -145,7 +147,7 @@ func sweepClusters(region string) error {
 		return fmt.Errorf("error listing MemoryDB Clusters (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping MemoryDB Clusters (%s): %w", region, err)
@@ -155,6 +157,7 @@ func sweepClusters(region string) error {
 }
 
 func sweepParameterGroups(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -163,7 +166,7 @@ func sweepParameterGroups(region string) error {
 	input := &memorydb.DescribeParameterGroupsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = describeParameterGroupsPages(conn, input, func(page *memorydb.DescribeParameterGroupsOutput, lastPage bool) bool {
+	err = describeParameterGroupsPages(ctx, conn, input, func(page *memorydb.DescribeParameterGroupsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -194,7 +197,7 @@ func sweepParameterGroups(region string) error {
 		return fmt.Errorf("error listing MemoryDB Parameter Groups (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping MemoryDB Parameter Groups (%s): %w", region, err)
@@ -204,6 +207,7 @@ func sweepParameterGroups(region string) error {
 }
 
 func sweepSnapshots(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -212,7 +216,7 @@ func sweepSnapshots(region string) error {
 	input := &memorydb.DescribeSnapshotsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = describeSnapshotsPages(conn, input, func(page *memorydb.DescribeSnapshotsOutput, lastPage bool) bool {
+	err = describeSnapshotsPages(ctx, conn, input, func(page *memorydb.DescribeSnapshotsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -237,7 +241,7 @@ func sweepSnapshots(region string) error {
 		return fmt.Errorf("error listing MemoryDB Snapshots (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping MemoryDB Snapshots (%s): %w", region, err)
@@ -247,6 +251,7 @@ func sweepSnapshots(region string) error {
 }
 
 func sweepSubnetGroups(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -255,7 +260,7 @@ func sweepSubnetGroups(region string) error {
 	input := &memorydb.DescribeSubnetGroupsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = describeSubnetGroupsPages(conn, input, func(page *memorydb.DescribeSubnetGroupsOutput, lastPage bool) bool {
+	err = describeSubnetGroupsPages(ctx, conn, input, func(page *memorydb.DescribeSubnetGroupsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -286,7 +291,7 @@ func sweepSubnetGroups(region string) error {
 		return fmt.Errorf("error listing MemoryDB Subnet Groups (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping MemoryDB Subnet Groups (%s): %w", region, err)
@@ -296,6 +301,7 @@ func sweepSubnetGroups(region string) error {
 }
 
 func sweepUsers(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
@@ -304,7 +310,7 @@ func sweepUsers(region string) error {
 	input := &memorydb.DescribeUsersInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = describeUsersPages(conn, input, func(page *memorydb.DescribeUsersOutput, lastPage bool) bool {
+	err = describeUsersPages(ctx, conn, input, func(page *memorydb.DescribeUsersOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -335,7 +341,7 @@ func sweepUsers(region string) error {
 		return fmt.Errorf("error listing MemoryDB Users (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping MemoryDB Users (%s): %w", region, err)

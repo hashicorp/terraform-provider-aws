@@ -149,7 +149,7 @@ func resourceBucketACLCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.AccessControlPolicy = expandBucketACLAccessControlPolicy(v.([]interface{}))
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
 		return conn.PutBucketAclWithContext(ctx, input)
 	}, s3.ErrCodeNoSuchBucket)
 

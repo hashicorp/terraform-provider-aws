@@ -115,7 +115,7 @@ func resourceBucketVersioningCreate(ctx context.Context, d *schema.ResourceData,
 			input.MFA = aws.String(v.(string))
 		}
 
-		_, err := tfresource.RetryWhenAWSErrCodeEquals(2*time.Minute, func() (interface{}, error) {
+		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
 			return conn.PutBucketVersioningWithContext(ctx, input)
 		}, s3.ErrCodeNoSuchBucket)
 

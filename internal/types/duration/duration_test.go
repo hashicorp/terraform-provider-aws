@@ -7,6 +7,8 @@ import (
 )
 
 func TestParse(t *testing.T) {
+	t.Parallel()
+
 	testcases := map[string]struct {
 		input       string
 		expected    Duration
@@ -72,6 +74,8 @@ func TestParse(t *testing.T) {
 	for name, tc := range testcases {
 		tc := tc
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			duration, err := Parse(tc.input)
 
 			if tc.expectedErr == nil && err != nil {
@@ -91,6 +95,8 @@ func TestParse(t *testing.T) {
 }
 
 func TestSub(t *testing.T) {
+	t.Parallel()
+
 	now := time.Now()
 	tz, err := time.LoadLocation("America/Vancouver")
 	if err != nil {
@@ -142,6 +148,8 @@ func TestSub(t *testing.T) {
 	for name, tc := range testcases {
 		tc := tc
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			actual := Sub(tc.startTime, tc.duration)
 
 			if !actual.Equal(tc.expected) {

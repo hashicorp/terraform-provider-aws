@@ -12,6 +12,7 @@ import (
 )
 
 func TestAccTransferTag_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_transfer_tag.test"
 
@@ -19,12 +20,12 @@ func TestAccTransferTag_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, transfer.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTagDestroy,
+		CheckDestroy:             testAccCheckTagDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTagConfig_basic(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTagExists(resourceName),
+					testAccCheckTagExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "key", "key1"),
 					resource.TestCheckResourceAttr(resourceName, "value", "value1"),
 				),
@@ -39,6 +40,7 @@ func TestAccTransferTag_basic(t *testing.T) {
 }
 
 func TestAccTransferTag_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_transfer_tag.test"
 
@@ -46,13 +48,13 @@ func TestAccTransferTag_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, transfer.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTagDestroy,
+		CheckDestroy:             testAccCheckTagDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTagConfig_basic(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTagExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tftransfer.ResourceTag(), resourceName),
+					testAccCheckTagExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tftransfer.ResourceTag(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -61,6 +63,7 @@ func TestAccTransferTag_disappears(t *testing.T) {
 }
 
 func TestAccTransferTag_value(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_transfer_tag.test"
 
@@ -68,12 +71,12 @@ func TestAccTransferTag_value(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, transfer.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTagDestroy,
+		CheckDestroy:             testAccCheckTagDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTagConfig_basic(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTagExists(resourceName),
+					testAccCheckTagExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "key", "key1"),
 					resource.TestCheckResourceAttr(resourceName, "value", "value1"),
 				),
@@ -86,7 +89,7 @@ func TestAccTransferTag_value(t *testing.T) {
 			{
 				Config: testAccTagConfig_basic(rName, "key1", "value1updated"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTagExists(resourceName),
+					testAccCheckTagExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "key", "key1"),
 					resource.TestCheckResourceAttr(resourceName, "value", "value1updated"),
 				),
@@ -96,6 +99,7 @@ func TestAccTransferTag_value(t *testing.T) {
 }
 
 func TestAccTransferTag_system(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_transfer_tag.test"
 
@@ -103,12 +107,12 @@ func TestAccTransferTag_system(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, transfer.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTagDestroy,
+		CheckDestroy:             testAccCheckTagDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTagConfig_basic(rName, "aws:transfer:customHostname", "abc.example.com"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTagExists(resourceName),
+					testAccCheckTagExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "key", "aws:transfer:customHostname"),
 					resource.TestCheckResourceAttr(resourceName, "value", "abc.example.com"),
 				),

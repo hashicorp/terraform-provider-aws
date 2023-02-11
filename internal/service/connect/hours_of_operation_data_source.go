@@ -135,7 +135,7 @@ func dataSourceHoursOfOperationRead(ctx context.Context, d *schema.ResourceData,
 		input.HoursOfOperationId = hoursOfOperationSummary.Id
 	}
 
-	resp, err := conn.DescribeHoursOfOperation(input)
+	resp, err := conn.DescribeHoursOfOperationWithContext(ctx, input)
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error getting Connect Hours of Operation: %w", err))

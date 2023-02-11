@@ -8,6 +8,8 @@ import (
 )
 
 func TestNullableBool(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		val           string
 		expectNull    bool
@@ -63,6 +65,8 @@ func TestNullableBool(t *testing.T) {
 }
 
 func TestValidationBool(t *testing.T) {
+	t.Parallel()
+
 	runTestCases(t, []testCase{
 		{
 			val: "true",

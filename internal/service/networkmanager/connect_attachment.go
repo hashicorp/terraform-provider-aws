@@ -29,7 +29,7 @@ func ResourceConnectAttachment() *schema.Resource {
 		DeleteWithoutTimeout: resourceConnectAttachmentDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -147,7 +147,7 @@ func resourceConnectAttachmentCreate(ctx context.Context, d *schema.ResourceData
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	outputRaw, err := tfresource.RetryWhenContext(ctx, d.Timeout(schema.TimeoutCreate),
+	outputRaw, err := tfresource.RetryWhen(ctx, d.Timeout(schema.TimeoutCreate),
 		func() (interface{}, error) {
 			return conn.CreateConnectAttachmentWithContext(ctx, input)
 		},
@@ -253,7 +253,7 @@ func resourceConnectAttachmentUpdate(ctx context.Context, d *schema.ResourceData
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.FromErr(fmt.Errorf("updating Network Manager Connect Attachment (%s) tags: %s", d.Get("arn").(string), err))
 		}
 	}

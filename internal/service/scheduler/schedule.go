@@ -21,13 +21,18 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceSchedule() *schema.Resource {
+func init() {
+	_sp.registerSDKResourceFactory("aws_scheduler_schedule", resourceSchedule)
+}
+
+func resourceSchedule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceScheduleCreate,
 		ReadWithoutTimeout:   resourceScheduleRead,
@@ -512,7 +517,7 @@ func resourceScheduleRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return create.DiagError(names.Scheduler, create.ErrActionReading, ResNameSchedule, d.Id(), fmt.Errorf("invalid resource id: %w", err))
 	}
 
-	out, err := findScheduleByGroupAndName(ctx, conn, groupName, scheduleName)
+	out, err := findScheduleByTwoPartKey(ctx, conn, groupName, scheduleName)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EventBridge Scheduler Schedule (%s) not found, removing from state", d.Id())
@@ -635,6 +640,32 @@ func resourceScheduleDelete(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	return nil
+}
+
+func findScheduleByTwoPartKey(ctx context.Context, conn *scheduler.Client, groupName, scheduleName string) (*scheduler.GetScheduleOutput, error) {
+	in := &scheduler.GetScheduleInput{
+		GroupName: aws.String(groupName),
+		Name:      aws.String(scheduleName),
+	}
+
+	out, err := conn.GetSchedule(ctx, in)
+
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if out == nil || out.Arn == nil {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return out, nil
 }
 
 // ResourceScheduleIDFromARN constructs a string of the form "group_name/schedule_name"
