@@ -1246,7 +1246,7 @@ resource "aws_neptune_cluster" "secondary" {
   engine_version                       = aws_neptune_global_cluster.test.engine_version
   neptune_cluster_parameter_group_name = "default.neptune1.2"
 
-  depends_on                           = [aws_neptune_cluster_instance.primary]
+  depends_on = [aws_neptune_cluster_instance.primary]
 
   lifecycle {
     ignore_changes = [replication_source_identifier]
