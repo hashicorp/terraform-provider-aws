@@ -874,7 +874,7 @@ func statusCluster(ctx context.Context, conn *neptune.Neptune, id string) resour
 	}
 }
 
-func waitClusterAvailable(ctx context.Context, conn *neptune.Neptune, id string, timeout time.Duration) (*neptune.DBCluster, error) {
+func waitClusterAvailable(ctx context.Context, conn *neptune.Neptune, id string, timeout time.Duration) (*neptune.DBCluster, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			"creating",

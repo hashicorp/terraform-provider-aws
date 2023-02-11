@@ -471,7 +471,7 @@ func statusClusterInstance(ctx context.Context, conn *neptune.Neptune, id string
 	}
 }
 
-func waitClusterInstanceAvailable(ctx context.Context, conn *neptune.Neptune, id string, timeout time.Duration) (*neptune.DBInstance, error) {
+func waitClusterInstanceAvailable(ctx context.Context, conn *neptune.Neptune, id string, timeout time.Duration) (*neptune.DBInstance, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			"backing-up",
