@@ -65,12 +65,14 @@ func dynamicPartitioningConfigurationSchema() *schema.Schema {
 		Type:     schema.TypeList,
 		MaxItems: 1,
 		Optional: true,
+		ForceNew: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"enabled": {
 					Type:     schema.TypeBool,
 					Optional: true,
 					Default:  false,
+					ForceNew: true,
 				},
 				"retry_duration": {
 					Type:         schema.TypeInt,

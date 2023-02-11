@@ -256,8 +256,15 @@ func isContentTypeAllowed(contentType *string) bool {
 	}
 
 	allowedContentTypes := []*regexp.Regexp{
-		regexp.MustCompile("^text/.+"),
-		regexp.MustCompile("^application/json$"),
+		regexp.MustCompile(`^application/atom\+xml$`),
+		regexp.MustCompile(`^application/json$`),
+		regexp.MustCompile(`^application/ld\+json$`),
+		regexp.MustCompile(`^application/x-csh$`),
+		regexp.MustCompile(`^application/x-httpd-php$`),
+		regexp.MustCompile(`^application/x-sh$`),
+		regexp.MustCompile(`^application/xhtml\+xml$`),
+		regexp.MustCompile(`^application/xml$`),
+		regexp.MustCompile(`^text/.+`),
 	}
 
 	for _, r := range allowedContentTypes {

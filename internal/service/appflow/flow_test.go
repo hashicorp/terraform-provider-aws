@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfappflow "github.com/hashicorp/terraform-provider-aws/internal/service/appflow"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccAppFlowFlow_basic(t *testing.T) {
@@ -36,8 +37,8 @@ func TestAccAppFlowFlow_basic(t *testing.T) {
 				Config: testAccFlowConfig_basic(rSourceName, rDestinationName, rFlowName, scheduleStartTime),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFlowExists(ctx, resourceName, &flowOutput),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "appflow", regexp.MustCompile(`flow/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "name", rFlowName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "appflow", regexp.MustCompile(`flow/.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rFlowName),
 					resource.TestCheckResourceAttrSet(resourceName, "destination_flow_config.#"),
 					resource.TestCheckResourceAttrSet(resourceName, "destination_flow_config.0.connector_type"),
 					resource.TestCheckResourceAttrSet(resourceName, "destination_flow_config.0.destination_connector_properties.#"),
@@ -93,7 +94,7 @@ func TestAccAppFlowFlow_update(t *testing.T) {
 				Config: testAccFlowConfig_update(rSourceName, rDestinationName, rFlowName, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowExists(ctx, resourceName, &flowOutput),
-					resource.TestCheckResourceAttr(resourceName, "description", description),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					resource.TestCheckResourceAttr(resourceName, "trigger_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "trigger_config.0.trigger_type", "Scheduled"),
 					resource.TestCheckResourceAttr(resourceName, "trigger_config.0.trigger_properties.#", "1"),

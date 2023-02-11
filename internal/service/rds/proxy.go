@@ -41,7 +41,7 @@ func ResourceProxy() *schema.Resource {
 				Computed: true,
 			},
 			"auth": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -49,6 +49,12 @@ func ResourceProxy() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringInSlice(rds.AuthScheme_Values(), false),
+						},
+						"client_password_auth_type": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.StringInSlice(rds.ClientPasswordAuthType_Values(), false),
 						},
 						"description": {
 							Type:     schema.TypeString,
@@ -133,7 +139,7 @@ func resourceProxyCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	input := rds.CreateDBProxyInput{
-		Auth:         expandProxyAuth(d.Get("auth").(*schema.Set).List()),
+		Auth:         expandProxyAuth(d.Get("auth").([]interface{})),
 		DBProxyName:  aws.String(d.Get("name").(string)),
 		EngineFamily: aws.String(d.Get("engine_family").(string)),
 		RoleArn:      aws.String(d.Get("role_arn").(string)),
@@ -230,7 +236,7 @@ func resourceProxyUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChangesExcept("tags", "tags_all") {
 		oName, nName := d.GetChange("name")
 		input := &rds.ModifyDBProxyInput{
-			Auth:           expandProxyAuth(d.Get("auth").(*schema.Set).List()),
+			Auth:           expandProxyAuth(d.Get("auth").([]interface{})),
 			DBProxyName:    aws.String(oName.(string)),
 			DebugLogging:   aws.Bool(d.Get("debug_logging").(bool)),
 			NewDBProxyName: aws.String(nName.(string)),
@@ -317,6 +323,10 @@ func expandProxyAuth(l []interface{}) []*rds.UserAuthConfig {
 			userAuthConfig.AuthScheme = aws.String(v)
 		}
 
+		if v, ok := m["client_password_auth_type"].(string); ok && v != "" {
+			userAuthConfig.ClientPasswordAuthType = aws.String(v)
+		}
+
 		if v, ok := m["description"].(string); ok && v != "" {
 			userAuthConfig.Description = aws.String(v)
 		}
@@ -343,6 +353,7 @@ func flattenProxyAuth(userAuthConfig *rds.UserAuthConfigInfo) map[string]interfa
 	m := make(map[string]interface{})
 
 	m["auth_scheme"] = aws.StringValue(userAuthConfig.AuthScheme)
+	m["client_password_auth_type"] = aws.StringValue(userAuthConfig.ClientPasswordAuthType)
 	m["description"] = aws.StringValue(userAuthConfig.Description)
 	m["iam_auth"] = aws.StringValue(userAuthConfig.IAMAuth)
 	m["secret_arn"] = aws.StringValue(userAuthConfig.SecretArn)

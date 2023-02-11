@@ -43,6 +43,160 @@ func ResourceLoadBalancer() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
+			"access_logs": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"bucket": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"bucket_prefix": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  true,
+						},
+						"interval": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      60,
+							ValidateFunc: ValidAccessLogsInterval,
+						},
+					},
+				},
+			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"availability_zones": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"connection_draining": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"connection_draining_timeout": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Default:  300,
+			},
+			"cross_zone_load_balancing": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+			},
+			"desync_mitigation_mode": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "defensive",
+				ValidateFunc: validation.StringInSlice([]string{
+					"monitor",
+					"defensive",
+					"strictest",
+				}, false),
+			},
+			"dns_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"health_check": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"healthy_threshold": {
+							Type:         schema.TypeInt,
+							Required:     true,
+							ValidateFunc: validation.IntBetween(2, 10),
+						},
+						"interval": {
+							Type:         schema.TypeInt,
+							Required:     true,
+							ValidateFunc: validation.IntBetween(5, 300),
+						},
+						"target": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: ValidHeathCheckTarget,
+						},
+						"timeout": {
+							Type:         schema.TypeInt,
+							Required:     true,
+							ValidateFunc: validation.IntBetween(2, 60),
+						},
+						"unhealthy_threshold": {
+							Type:         schema.TypeInt,
+							Required:     true,
+							ValidateFunc: validation.IntBetween(2, 10),
+						},
+					},
+				},
+			},
+			"idle_timeout": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      60,
+				ValidateFunc: validation.IntBetween(1, 4000),
+			},
+			"instances": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"internal": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				ForceNew: true,
+				Computed: true,
+			},
+			"listener": {
+				Type:     schema.TypeSet,
+				Required: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"instance_port": {
+							Type:         schema.TypeInt,
+							Required:     true,
+							ValidateFunc: validation.IntBetween(1, 65535),
+						},
+						"instance_protocol": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validateListenerProtocol(),
+						},
+						"lb_port": {
+							Type:         schema.TypeInt,
+							Required:     true,
+							ValidateFunc: validation.IntBetween(1, 65535),
+						},
+						"lb_protocol": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validateListenerProtocol(),
+						},
+						"ssl_certificate_id": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+					},
+				},
+				Set: ListenerHash,
+			},
 			"name": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -58,225 +212,40 @@ func ResourceLoadBalancer() *schema.Resource {
 				ConflictsWith: []string{"name"},
 				ValidateFunc:  validNamePrefix,
 			},
-
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"internal": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-				Computed: true,
-			},
-
-			"cross_zone_load_balancing": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-
-			"availability_zones": {
-				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Optional: true,
-				Computed: true,
-				Set:      schema.HashString,
-			},
-
-			"instances": {
-				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Optional: true,
-				Computed: true,
-				Set:      schema.HashString,
-			},
-
 			"security_groups": {
 				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
 				Optional: true,
 				Computed: true,
-				Set:      schema.HashString,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-
 			"source_security_group": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-
 			"source_security_group_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"subnets": {
 				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				Optional: true,
-				Computed: true,
-				Set:      schema.HashString,
 			},
-
-			"idle_timeout": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      60,
-				ValidateFunc: validation.IntBetween(1, 4000),
-			},
-
-			"connection_draining": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-
-			"connection_draining_timeout": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  300,
-			},
-
-			"access_logs": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"interval": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      60,
-							ValidateFunc: ValidAccessLogsInterval,
-						},
-						"bucket": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"bucket_prefix": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"enabled": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  true,
-						},
-					},
-				},
-			},
-
-			"listener": {
-				Type:     schema.TypeSet,
-				Required: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"instance_port": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ValidateFunc: validation.IntBetween(1, 65535),
-						},
-
-						"instance_protocol": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validateListenerProtocol(),
-						},
-
-						"lb_port": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ValidateFunc: validation.IntBetween(1, 65535),
-						},
-
-						"lb_protocol": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validateListenerProtocol(),
-						},
-
-						"ssl_certificate_id": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-					},
-				},
-				Set: ListenerHash,
-			},
-
-			"health_check": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"healthy_threshold": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ValidateFunc: validation.IntBetween(2, 10),
-						},
-
-						"unhealthy_threshold": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ValidateFunc: validation.IntBetween(2, 10),
-						},
-
-						"target": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: ValidHeathCheckTarget,
-						},
-
-						"interval": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ValidateFunc: validation.IntBetween(5, 300),
-						},
-
-						"timeout": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ValidateFunc: validation.IntBetween(2, 60),
-						},
-					},
-				},
-			},
-
-			"dns_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 			"zone_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"desync_mitigation_mode": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "defensive",
-				ValidateFunc: validation.StringInSlice([]string{
-					"monitor",
-					"defensive",
-					"strictest",
-				}, false),
-			},
-
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
 func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	elbconn := meta.(*conns.AWSClient).ELBConn()
+	conn := meta.(*conns.AWSClient).ELBConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -323,22 +292,10 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 		elbOpts.Subnets = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	err = resource.RetryContext(ctx, 5*time.Minute, func() *resource.RetryError {
-		_, err := elbconn.CreateLoadBalancerWithContext(ctx, elbOpts)
+	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, 5*time.Minute, func() (interface{}, error) {
+		return conn.CreateLoadBalancerWithContext(ctx, elbOpts)
+	}, elb.ErrCodeCertificateNotFoundException)
 
-		if tfawserr.ErrCodeEquals(err, elb.ErrCodeCertificateNotFoundException) {
-			return resource.RetryableError(fmt.Errorf("creating ELB Listener with SSL Cert, retrying: %w", err))
-		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-	if tfresource.TimedOut(err) {
-		_, err = elbconn.CreateLoadBalancerWithContext(ctx, elbOpts)
-	}
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating ELB Classic Load Balancer (%s): %s", elbName, err)
 	}
@@ -352,11 +309,21 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	elbconn := meta.(*conns.AWSClient).ELBConn()
+	conn := meta.(*conns.AWSClient).ELBConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	elbName := d.Id()
+	lb, err := FindLoadBalancerByName(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] ELB Classic Load Balancer (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading ELB Classic Load Balancer (%s): %s", d.Id(), err)
+	}
 
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
@@ -367,26 +334,7 @@ func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 	d.Set("arn", arn.String())
 
-	// Retrieve the ELB properties for updating the state
-	describeElbOpts := &elb.DescribeLoadBalancersInput{
-		LoadBalancerNames: []*string{aws.String(elbName)},
-	}
-
-	describeResp, err := elbconn.DescribeLoadBalancersWithContext(ctx, describeElbOpts)
-	if err != nil {
-		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, elb.ErrCodeAccessPointNotFoundException) {
-			log.Printf("[WARN] ELB Classic LB (%s) not found, removing from state", elbName)
-			d.SetId("")
-			return diags
-		}
-
-		return sdkdiag.AppendErrorf(diags, "retrieving ELB Classic LB (%s): %s", elbName, err)
-	}
-	if len(describeResp.LoadBalancerDescriptions) != 1 {
-		return sdkdiag.AppendErrorf(diags, "Unable to find ELB: %#v", describeResp.LoadBalancerDescriptions)
-	}
-
-	if err := flattenLoadBalancerResource(ctx, d, meta.(*conns.AWSClient).EC2Conn(), elbconn, describeResp.LoadBalancerDescriptions[0], ignoreTagsConfig, defaultTagsConfig); err != nil {
+	if err := flattenLoadBalancerResource(ctx, d, meta.(*conns.AWSClient).EC2Conn(), conn, lb, ignoreTagsConfig, defaultTagsConfig); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 	return diags
@@ -427,7 +375,7 @@ func flattenLoadBalancerResource(ctx context.Context, d *schema.ResourceData, ec
 
 		// Manually look up the ELB Security Group ID, since it's not provided
 		if lb.VPCId != nil {
-			sg, err := tfec2.FindSecurityGroupByNameAndVPCID(ctx, ec2conn, aws.StringValue(lb.SourceSecurityGroup.GroupName), aws.StringValue(lb.VPCId))
+			sg, err := tfec2.FindSecurityGroupByNameAndVPCIDAndOwnerID(ctx, ec2conn, aws.StringValue(lb.SourceSecurityGroup.GroupName), aws.StringValue(lb.VPCId), aws.StringValue(lb.SourceSecurityGroup.OwnerAlias))
 			if err != nil {
 				return fmt.Errorf("Error looking up ELB Security Group ID: %w", err)
 			} else {
@@ -502,7 +450,7 @@ func flattenLoadBalancerResource(ctx context.Context, d *schema.ResourceData, ec
 
 func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	elbconn := meta.(*conns.AWSClient).ELBConn()
+	conn := meta.(*conns.AWSClient).ELBConn()
 
 	if d.HasChange("listener") {
 		o, n := d.GetChange("listener")
@@ -527,7 +475,7 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 			}
 
 			log.Printf("[DEBUG] ELB Delete Listeners opts: %s", deleteListenersOpts)
-			_, err := elbconn.DeleteLoadBalancerListenersWithContext(ctx, deleteListenersOpts)
+			_, err := conn.DeleteLoadBalancerListenersWithContext(ctx, deleteListenersOpts)
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "Failure removing outdated ELB listeners: %s", err)
 			}
@@ -542,7 +490,7 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 			// Occasionally AWS will error with a 'duplicate listener', without any
 			// other listeners on the ELB. Retry here to eliminate that.
 			err := resource.RetryContext(ctx, 5*time.Minute, func() *resource.RetryError {
-				_, err := elbconn.CreateLoadBalancerListenersWithContext(ctx, input)
+				_, err := conn.CreateLoadBalancerListenersWithContext(ctx, input)
 				if err != nil {
 					if tfawserr.ErrCodeEquals(err, elb.ErrCodeDuplicateListenerException) {
 						log.Printf("[DEBUG] Duplicate listener found for ELB (%s), retrying", d.Id())
@@ -560,7 +508,7 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 				return nil
 			})
 			if tfresource.TimedOut(err) {
-				_, err = elbconn.CreateLoadBalancerListenersWithContext(ctx, input)
+				_, err = conn.CreateLoadBalancerListenersWithContext(ctx, input)
 			}
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "Failure adding new or updated ELB listeners: %s", err)
@@ -584,7 +532,7 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 				Instances:        add,
 			}
 
-			_, err := elbconn.RegisterInstancesWithLoadBalancerWithContext(ctx, &registerInstancesOpts)
+			_, err := conn.RegisterInstancesWithLoadBalancerWithContext(ctx, &registerInstancesOpts)
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "Failure registering instances with ELB: %s", err)
 			}
@@ -595,7 +543,7 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 				Instances:        remove,
 			}
 
-			_, err := elbconn.DeregisterInstancesFromLoadBalancerWithContext(ctx, &deRegisterInstancesOpts)
+			_, err := conn.DeregisterInstancesFromLoadBalancerWithContext(ctx, &deRegisterInstancesOpts)
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "Failure deregistering instances from ELB: %s", err)
 			}
@@ -638,7 +586,7 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 
 		log.Printf("[DEBUG] ELB Modify Load Balancer Attributes Request: %#v", attrs)
-		_, err := elbconn.ModifyLoadBalancerAttributesWithContext(ctx, &attrs)
+		_, err := conn.ModifyLoadBalancerAttributesWithContext(ctx, &attrs)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "Failure configuring ELB attributes: %s", err)
 		}
@@ -662,7 +610,7 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 				},
 			}
 
-			_, err := elbconn.ModifyLoadBalancerAttributesWithContext(ctx, &attrs)
+			_, err := conn.ModifyLoadBalancerAttributesWithContext(ctx, &attrs)
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "Failure configuring ELB attributes: %s", err)
 			}
@@ -680,7 +628,7 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 			},
 		}
 
-		_, err := elbconn.ModifyLoadBalancerAttributesWithContext(ctx, &attrs)
+		_, err := conn.ModifyLoadBalancerAttributesWithContext(ctx, &attrs)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "Failure configuring ELB attributes: %s", err)
 		}
@@ -700,7 +648,7 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 					Timeout:            aws.Int64(int64(check["timeout"].(int))),
 				},
 			}
-			_, err := elbconn.ConfigureHealthCheckWithContext(ctx, &configureHealthCheckOpts)
+			_, err := conn.ConfigureHealthCheckWithContext(ctx, &configureHealthCheckOpts)
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "Failure configuring health check for ELB: %s", err)
 			}
@@ -713,7 +661,7 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 			SecurityGroups:   flex.ExpandStringSet(d.Get("security_groups").(*schema.Set)),
 		}
 
-		_, err := elbconn.ApplySecurityGroupsToLoadBalancerWithContext(ctx, &applySecurityGroupsOpts)
+		_, err := conn.ApplySecurityGroupsToLoadBalancerWithContext(ctx, &applySecurityGroupsOpts)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "Failure applying security groups to ELB: %s", err)
 		}
@@ -734,7 +682,7 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 			}
 
 			log.Printf("[DEBUG] ELB enable availability zones opts: %s", enableOpts)
-			_, err := elbconn.EnableAvailabilityZonesForLoadBalancerWithContext(ctx, enableOpts)
+			_, err := conn.EnableAvailabilityZonesForLoadBalancerWithContext(ctx, enableOpts)
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "Failure enabling ELB availability zones: %s", err)
 			}
@@ -747,7 +695,7 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 			}
 
 			log.Printf("[DEBUG] ELB disable availability zones opts: %s", disableOpts)
-			_, err := elbconn.DisableAvailabilityZonesForLoadBalancerWithContext(ctx, disableOpts)
+			_, err := conn.DisableAvailabilityZonesForLoadBalancerWithContext(ctx, disableOpts)
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "Failure disabling ELB availability zones: %s", err)
 			}
@@ -769,7 +717,7 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 			}
 
 			log.Printf("[DEBUG] ELB detach subnets opts: %s", detachOpts)
-			_, err := elbconn.DetachLoadBalancerFromSubnetsWithContext(ctx, detachOpts)
+			_, err := conn.DetachLoadBalancerFromSubnetsWithContext(ctx, detachOpts)
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "Failure removing ELB subnets: %s", err)
 			}
@@ -783,7 +731,7 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 
 			log.Printf("[DEBUG] ELB attach subnets opts: %s", attachOpts)
 			err := resource.RetryContext(ctx, 5*time.Minute, func() *resource.RetryError {
-				_, err := elbconn.AttachLoadBalancerToSubnetsWithContext(ctx, attachOpts)
+				_, err := conn.AttachLoadBalancerToSubnetsWithContext(ctx, attachOpts)
 				if err != nil {
 					if tfawserr.ErrMessageContains(err, elb.ErrCodeInvalidConfigurationRequestException, "cannot be attached to multiple subnets in the same AZ") {
 						// eventually consistent issue with removing a subnet in AZ1 and
@@ -796,7 +744,7 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 				return nil
 			})
 			if tfresource.TimedOut(err) {
-				_, err = elbconn.AttachLoadBalancerToSubnetsWithContext(ctx, attachOpts)
+				_, err = conn.AttachLoadBalancerToSubnetsWithContext(ctx, attachOpts)
 			}
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "Failure adding ELB subnets: %s", err)
@@ -807,7 +755,7 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(ctx, elbconn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating ELB(%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -817,26 +765,60 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceLoadBalancerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	elbconn := meta.(*conns.AWSClient).ELBConn()
+	conn := meta.(*conns.AWSClient).ELBConn()
 
-	log.Printf("[INFO] Deleting ELB: %s", d.Id())
-
-	// Destroy the load balancer
-	deleteElbOpts := elb.DeleteLoadBalancerInput{
+	log.Printf("[INFO] Deleting ELB Classic Load Balancer: %s", d.Id())
+	_, err := conn.DeleteLoadBalancerWithContext(ctx, &elb.DeleteLoadBalancerInput{
 		LoadBalancerName: aws.String(d.Id()),
-	}
-	if _, err := elbconn.DeleteLoadBalancerWithContext(ctx, &deleteElbOpts); err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting ELB: %s", err)
-	}
+	})
 
-	name := d.Get("name").(string)
-
-	err := CleanupNetworkInterfaces(ctx, meta.(*conns.AWSClient).EC2Conn(), name)
 	if err != nil {
-		log.Printf("[WARN] Failed to cleanup ENIs for ELB %q: %#v", name, err)
+		return sdkdiag.AppendErrorf(diags, "deleting ELB Classic Load Balancer (%s): %s", d.Id(), err)
+	}
+
+	err = cleanupNetworkInterfaces(ctx, meta.(*conns.AWSClient).EC2Conn(), d.Id())
+
+	if err != nil {
+		diags = sdkdiag.AppendWarningf(diags, "cleaning up ELB Classic Load Balancer (%s) ENIs: %s", d.Id(), err)
 	}
 
 	return diags
+}
+
+func FindLoadBalancerByName(ctx context.Context, conn *elb.ELB, name string) (*elb.LoadBalancerDescription, error) {
+	input := &elb.DescribeLoadBalancersInput{
+		LoadBalancerNames: aws.StringSlice([]string{name}),
+	}
+
+	output, err := conn.DescribeLoadBalancersWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, elb.ErrCodeAccessPointNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.LoadBalancerDescriptions) == 0 || output.LoadBalancerDescriptions[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.LoadBalancerDescriptions); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.LoadBalancerDescriptions[0].LoadBalancerName) != name {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output.LoadBalancerDescriptions[0], nil
 }
 
 func ListenerHash(v interface{}) int {
@@ -963,7 +945,7 @@ func validateListenerProtocol() schema.SchemaValidateFunc {
 // but the cleanup is asynchronous and may take time
 // which then blocks IGW, SG or VPC on deletion
 // So we make the cleanup "synchronous" here
-func CleanupNetworkInterfaces(ctx context.Context, conn *ec2.EC2, name string) error {
+func cleanupNetworkInterfaces(ctx context.Context, conn *ec2.EC2, name string) error {
 	// https://aws.amazon.com/premiumsupport/knowledge-center/elb-find-load-balancer-IP/.
 	networkInterfaces, err := tfec2.FindNetworkInterfacesByAttachmentInstanceOwnerIDAndDescription(ctx, conn, "amazon-elb", "ELB "+name)
 

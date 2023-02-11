@@ -159,7 +159,7 @@ func ResourcePolicy() *schema.Resource {
 												},
 												"resource_label": {
 													Type:     schema.TypeString,
-													Required: true,
+													Optional: true,
 												},
 											},
 										},
@@ -177,7 +177,7 @@ func ResourcePolicy() *schema.Resource {
 												},
 												"resource_label": {
 													Type:     schema.TypeString,
-													Required: true,
+													Optional: true,
 												},
 											},
 										},
@@ -196,13 +196,13 @@ func ResourcePolicy() *schema.Resource {
 												},
 												"resource_label": {
 													Type:     schema.TypeString,
-													Required: true,
+													Optional: true,
 												},
 											},
 										},
 									},
 									"target_value": {
-										Type:     schema.TypeInt,
+										Type:     schema.TypeFloat,
 										Required: true,
 									},
 								},
@@ -771,7 +771,7 @@ func expandPredictiveScalingMetricSpecifications(metricSpecificationsSlice []int
 		PredefinedLoadMetricSpecification:     expandPredefinedLoadMetricSpecification(metricSpecificationsFlat["predefined_load_metric_specification"].([]interface{})),
 		PredefinedMetricPairSpecification:     expandPredefinedMetricPairSpecification(metricSpecificationsFlat["predefined_metric_pair_specification"].([]interface{})),
 		PredefinedScalingMetricSpecification:  expandPredefinedScalingMetricSpecification(metricSpecificationsFlat["predefined_scaling_metric_specification"].([]interface{})),
-		TargetValue:                           aws.Float64(float64(metricSpecificationsFlat["target_value"].(int))),
+		TargetValue:                           aws.Float64(metricSpecificationsFlat["target_value"].(float64)),
 	}
 	return []*autoscaling.PredictiveScalingMetricSpecification{metricSpecification}
 }
@@ -783,7 +783,9 @@ func expandPredefinedLoadMetricSpecification(predefinedLoadMetricSpecificationSl
 	predefinedLoadMetricSpecificationFlat := predefinedLoadMetricSpecificationSlice[0].(map[string]interface{})
 	predefinedLoadMetricSpecification := &autoscaling.PredictiveScalingPredefinedLoadMetric{
 		PredefinedMetricType: aws.String(predefinedLoadMetricSpecificationFlat["predefined_metric_type"].(string)),
-		ResourceLabel:        aws.String(predefinedLoadMetricSpecificationFlat["resource_label"].(string)),
+	}
+	if label, ok := predefinedLoadMetricSpecificationFlat["resource_label"].(string); ok && label != "" {
+		predefinedLoadMetricSpecification.ResourceLabel = aws.String(label)
 	}
 	return predefinedLoadMetricSpecification
 }
@@ -795,7 +797,9 @@ func expandPredefinedMetricPairSpecification(predefinedMetricPairSpecificationSl
 	predefinedMetricPairSpecificationFlat := predefinedMetricPairSpecificationSlice[0].(map[string]interface{})
 	predefinedMetricPairSpecification := &autoscaling.PredictiveScalingPredefinedMetricPair{
 		PredefinedMetricType: aws.String(predefinedMetricPairSpecificationFlat["predefined_metric_type"].(string)),
-		ResourceLabel:        aws.String(predefinedMetricPairSpecificationFlat["resource_label"].(string)),
+	}
+	if label, ok := predefinedMetricPairSpecificationFlat["resource_label"].(string); ok && label != "" {
+		predefinedMetricPairSpecification.ResourceLabel = aws.String(label)
 	}
 	return predefinedMetricPairSpecification
 }
@@ -807,7 +811,9 @@ func expandPredefinedScalingMetricSpecification(predefinedScalingMetricSpecifica
 	predefinedScalingMetricSpecificationFlat := predefinedScalingMetricSpecificationSlice[0].(map[string]interface{})
 	predefinedScalingMetricSpecification := &autoscaling.PredictiveScalingPredefinedScalingMetric{
 		PredefinedMetricType: aws.String(predefinedScalingMetricSpecificationFlat["predefined_metric_type"].(string)),
-		ResourceLabel:        aws.String(predefinedScalingMetricSpecificationFlat["resource_label"].(string)),
+	}
+	if label, ok := predefinedScalingMetricSpecificationFlat["resource_label"].(string); ok && label != "" {
+		predefinedScalingMetricSpecification.ResourceLabel = aws.String(label)
 	}
 	return predefinedScalingMetricSpecification
 }

@@ -1572,6 +1572,24 @@ func FindNetworkInterfaceByID(ctx context.Context, conn *ec2.EC2, id string) (*e
 	return output, nil
 }
 
+func FindLambdaNetworkInterfacesBySecurityGroupIDsAndFunctionName(ctx context.Context, conn *ec2.EC2, securityGroupIDs []string, functionName string) ([]*ec2.NetworkInterface, error) {
+	// lambdaENIDescriptionPrefix is the common prefix used in the description for Lambda function
+	// elastic network interfaces (ENI). This can be used with a function name to filter to only
+	// ENIs associated with a single function.
+	lambdaENIDescriptionPrefix := "AWS Lambda VPC ENI-"
+	description := fmt.Sprintf("%s%s-*", lambdaENIDescriptionPrefix, functionName)
+
+	input := &ec2.DescribeNetworkInterfacesInput{
+		Filters: BuildAttributeFilterList(map[string]string{
+			"interface-type": ec2.NetworkInterfaceTypeLambda,
+			"description":    description,
+		}),
+	}
+	input.Filters = append(input.Filters, NewFilter("group-id", securityGroupIDs))
+
+	return FindNetworkInterfaces(ctx, conn, input)
+}
+
 func FindNetworkInterfacesByAttachmentInstanceOwnerIDAndDescription(ctx context.Context, conn *ec2.EC2, attachmentInstanceOwnerID, description string) ([]*ec2.NetworkInterface, error) {
 	input := &ec2.DescribeNetworkInterfacesInput{
 		Filters: BuildAttributeFilterList(map[string]string{
@@ -2011,13 +2029,27 @@ func FindSecurityGroupByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.
 	return output, nil
 }
 
-// FindSecurityGroupByNameAndVPCID looks up a security group by name and VPC ID. Returns a resource.NotFoundError if not found.
+// FindSecurityGroupByNameAndVPCID looks up a security group by name, VPC ID. Returns a resource.NotFoundError if not found.
 func FindSecurityGroupByNameAndVPCID(ctx context.Context, conn *ec2.EC2, name, vpcID string) (*ec2.SecurityGroup, error) {
 	input := &ec2.DescribeSecurityGroupsInput{
 		Filters: BuildAttributeFilterList(
 			map[string]string{
 				"group-name": name,
 				"vpc-id":     vpcID,
+			},
+		),
+	}
+	return FindSecurityGroup(ctx, conn, input)
+}
+
+// FindSecurityGroupByNameAndVPCIDAndOwnerID looks up a security group by name, VPC ID and owner ID. Returns a resource.NotFoundError if not found.
+func FindSecurityGroupByNameAndVPCIDAndOwnerID(ctx context.Context, conn *ec2.EC2, name, vpcID, ownerID string) (*ec2.SecurityGroup, error) {
+	input := &ec2.DescribeSecurityGroupsInput{
+		Filters: BuildAttributeFilterList(
+			map[string]string{
+				"group-name": name,
+				"vpc-id":     vpcID,
+				"owner-id":   ownerID,
 			},
 		),
 	}

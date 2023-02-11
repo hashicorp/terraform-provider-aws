@@ -19,7 +19,7 @@ resource "aws_s3_bucket" "example" {
 
 resource "aws_athena_database" "example" {
   name   = "database_name"
-  bucket = aws_s3_bucket.example.bucket
+  bucket = aws_s3_bucket.example.id
 }
 ```
 
@@ -66,7 +66,7 @@ Certain resource arguments, like `encryption_configuration` and `bucket`, do not
 ```terraform
 resource "aws_athena_database" "example" {
   name   = "database_name"
-  bucket = aws_s3_bucket.example.bucket
+  bucket = aws_s3_bucket.example.id
 
   # There is no API for reading bucket
   lifecycle {

@@ -1,13 +1,64 @@
-## 4.54.0 (Unreleased)
+## 4.55.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/aws_autoscaling_policy: Make `resource_label` optional in `predefined_load_metric_specification`, `predefined_metric_pair_specification`, and `predefined_scaling_metric_specification` ([#29277](https://github.com/hashicorp/terraform-provider-aws/issues/29277))
+* resource/aws_db_proxy: Add `auth.client_password_auth_type` attribute ([#28432](https://github.com/hashicorp/terraform-provider-aws/issues/28432))
+* resource/aws_firehose_delivery_stream: Add `ForceNew` to `dynamic_partitioning_configuration` attribute ([#29093](https://github.com/hashicorp/terraform-provider-aws/issues/29093))
+* resource/aws_s3_bucket: Add error handling for `NotImplemented` errors when reading `lifecycle_rule` or `replication_configuration` into terraform state. ([#28790](https://github.com/hashicorp/terraform-provider-aws/issues/28790))
+
+BUG FIXES:
+
+* data-source/aws_elb: Fix errors caused by multiple security groups with the same name but different owners ([#29202](https://github.com/hashicorp/terraform-provider-aws/issues/29202))
+* resource/aws_appflow_connector_profile: Fix bug in connector_profile_config.0.connector_profile_properties.0.sapo_data.0.logon_language validation regex ([#28550](https://github.com/hashicorp/terraform-provider-aws/issues/28550))
+* resource/aws_appflow_flow: Fix misspelled `source_connector_properties.0.sapo_data.0.object`, which never worked, to be `object_path` ([#28600](https://github.com/hashicorp/terraform-provider-aws/issues/28600))
+* resource/aws_appmesh_route: Fix RequiredWith setting for `spec.0.grpc_route.0.match.0.method_name` attribute ([#29217](https://github.com/hashicorp/terraform-provider-aws/issues/29217))
+* resource/aws_cloudfront_response_headers_policy: Allow `server_timing_headers_config.0.sampling_rate` to be `0` ([#27778](https://github.com/hashicorp/terraform-provider-aws/issues/27778))
+* resource/aws_codebuild_project: Fix err check on delete ([#29042](https://github.com/hashicorp/terraform-provider-aws/issues/29042))
+* resource/aws_ecs_service: Allow multiple `service` blocks within `service_connect_configuration` ([#28813](https://github.com/hashicorp/terraform-provider-aws/issues/28813))
+* resource/aws_ecs_service: Mark `service_connect_configuration.service.client_alias` as optional and ensure that only 1 such block can be provided ([#28813](https://github.com/hashicorp/terraform-provider-aws/issues/28813))
+* resource/aws_ecs_service: Require `service_connect_configuration.log_configuration.log_driver` to be provided ([#28813](https://github.com/hashicorp/terraform-provider-aws/issues/28813))
+* resource/aws_elb: Fix errors caused by multiple security groups with the same name but different owners ([#29202](https://github.com/hashicorp/terraform-provider-aws/issues/29202))
+* resource/aws_emr_cluster: Fix errors caused by multiple security groups with the same name but different owners ([#29202](https://github.com/hashicorp/terraform-provider-aws/issues/29202))
+* resource/aws_globalaccelerator_endpoint_group: Fix errors caused by multiple security groups with the same name but different owners ([#29202](https://github.com/hashicorp/terraform-provider-aws/issues/29202))
+* resource/aws_kms_key: Increase `policy propagation` eventual consistency timeouts from 5 minutes to 10 minutes ([#28636](https://github.com/hashicorp/terraform-provider-aws/issues/28636))
+* resource/aws_sagemaker_user_profile: Change `user_settings.0.jupyter_server_app_settings.0.default_resource_spec` to be optional ([#28581](https://github.com/hashicorp/terraform-provider-aws/issues/28581))
+
+## 4.54.0 (February  9, 2023)
+
+NOTES:
+
+* provider: Resolves provider crashes reporting `Error: Plugin did not respond` and `fatal error: concurrent map writes` with updated upstream package (`terraform-plugin-log`) ([#29269](https://github.com/hashicorp/terraform-provider-aws/issues/29269))
+* resource/aws_networkmanager_core_network: The `policy_document` attribute is being deprecated in favor of the new `aws_networkmanager_core_network_policy_attachment` resource. ([#29097](https://github.com/hashicorp/terraform-provider-aws/issues/29097))
 
 FEATURES:
 
+* **New Resource:** `aws_evidently_launch` ([#28752](https://github.com/hashicorp/terraform-provider-aws/issues/28752))
 * **New Resource:** `aws_lightsail_bucket_access_key` ([#28699](https://github.com/hashicorp/terraform-provider-aws/issues/28699))
+* **New Resource:** `aws_networkmanager_core_network_policy_attachment` ([#29097](https://github.com/hashicorp/terraform-provider-aws/issues/29097))
+
+ENHANCEMENTS:
+
+* data-source/aws_cloudtrail_service_account: Add service account ID for `ap-southeast-4` AWS Region ([#29103](https://github.com/hashicorp/terraform-provider-aws/issues/29103))
+* data-source/aws_elb_hosted_zone_id: Add hosted zone ID for `ap-southeast-4` AWS Region ([#29103](https://github.com/hashicorp/terraform-provider-aws/issues/29103))
+* data-source/aws_lb_hosted_zone_id: Add hosted zone IDs for `ap-southeast-4` AWS Region ([#29103](https://github.com/hashicorp/terraform-provider-aws/issues/29103))
+* data-source/aws_s3_bucket: Add hosted zone ID for `ap-south-2` AWS Region ([#29103](https://github.com/hashicorp/terraform-provider-aws/issues/29103))
+* data-source/aws_s3_bucket: Add hosted zone ID for `ap-southeast-4` AWS Region ([#29103](https://github.com/hashicorp/terraform-provider-aws/issues/29103))
+* provider: Support `ap-southeast-4` as a valid AWS region ([#29329](https://github.com/hashicorp/terraform-provider-aws/issues/29329))
+* resource/aws_dynamodb_table: Add `arn`, `stream_arn`, and `stream_label` attributes to `replica` to obtain this information for replicas ([#29269](https://github.com/hashicorp/terraform-provider-aws/issues/29269))
+* resource/aws_efs_mount_target: Add configurable timeouts for Create and Delete ([#27991](https://github.com/hashicorp/terraform-provider-aws/issues/27991))
+* resource/aws_lambda_function: Add `replace_security_groups_on_destroy` and `replacement_security_group_ids` attributes ([#29289](https://github.com/hashicorp/terraform-provider-aws/issues/29289))
+* resource/aws_networkfirewall_firewall: Add `ip_address_type` attribute to the `subnet_mapping` configuration block ([#29010](https://github.com/hashicorp/terraform-provider-aws/issues/29010))
+* resource/aws_networkmanager_core_network: Add `base_policy_region` and `create_base_policy` arguments ([#29097](https://github.com/hashicorp/terraform-provider-aws/issues/29097))
 
 BUG FIXES:
 
 * data-source/aws_kms_key: Reinstate support for KMS multi-Region key ID or ARN values for the `key_id` argument ([#29266](https://github.com/hashicorp/terraform-provider-aws/issues/29266))
+* resource/aws_cloudwatch_log_group: Fix IAM eventual consistency error when setting a retention policy ([#29325](https://github.com/hashicorp/terraform-provider-aws/issues/29325))
+* resource/aws_dynamodb_table: Avoid recreating table replicas when enabling PITR on them ([#29269](https://github.com/hashicorp/terraform-provider-aws/issues/29269))
+* resource/aws_ec2_client_vpn_endpoint: Change `authentication_options` from `TypeList` to `TypeSet` as order is not significant ([#29294](https://github.com/hashicorp/terraform-provider-aws/issues/29294))
 * resource/aws_kms_grant: Retries until valid principal ARNs are returned instead of not updating state ([#29245](https://github.com/hashicorp/terraform-provider-aws/issues/29245))
+* resource/aws_opsworks_permission: `stack_id` and `user_arn` are both Required and ForceNew ([#27991](https://github.com/hashicorp/terraform-provider-aws/issues/27991))
 * resource/aws_prometheus_workspace: Create a logging configuration on resource update if none existed previously ([#27472](https://github.com/hashicorp/terraform-provider-aws/issues/27472))
 * resource/aws_s3_bucket: Fix crash when `logging` is empty ([#29243](https://github.com/hashicorp/terraform-provider-aws/issues/29243))
 * resource/aws_sns_topic: Fixes potential race condition when reading policy document. ([#29226](https://github.com/hashicorp/terraform-provider-aws/issues/29226))

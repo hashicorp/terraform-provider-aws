@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ses"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -15,12 +14,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfses "github.com/hashicorp/terraform-provider-aws/internal/service/ses"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccSESReceiptRule_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var rule ses.ReceiptRule
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ses_receipt_rule.test"
 
@@ -67,7 +66,6 @@ func TestAccSESReceiptRule_basic(t *testing.T) {
 func TestAccSESReceiptRule_s3Action(t *testing.T) {
 	ctx := acctest.Context(t)
 	var rule ses.ReceiptRule
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ses_receipt_rule.test"
 
@@ -105,7 +103,6 @@ func TestAccSESReceiptRule_s3Action(t *testing.T) {
 func TestAccSESReceiptRule_snsAction(t *testing.T) {
 	ctx := acctest.Context(t)
 	var rule ses.ReceiptRule
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ses_receipt_rule.test"
 
@@ -143,7 +140,6 @@ func TestAccSESReceiptRule_snsAction(t *testing.T) {
 func TestAccSESReceiptRule_snsActionEncoding(t *testing.T) {
 	ctx := acctest.Context(t)
 	var rule ses.ReceiptRule
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ses_receipt_rule.test"
 
@@ -181,7 +177,6 @@ func TestAccSESReceiptRule_snsActionEncoding(t *testing.T) {
 func TestAccSESReceiptRule_lambdaAction(t *testing.T) {
 	ctx := acctest.Context(t)
 	var rule ses.ReceiptRule
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ses_receipt_rule.test"
 
@@ -219,7 +214,6 @@ func TestAccSESReceiptRule_lambdaAction(t *testing.T) {
 func TestAccSESReceiptRule_stopAction(t *testing.T) {
 	ctx := acctest.Context(t)
 	var rule ses.ReceiptRule
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ses_receipt_rule.test"
 
@@ -256,7 +250,6 @@ func TestAccSESReceiptRule_stopAction(t *testing.T) {
 func TestAccSESReceiptRule_order(t *testing.T) {
 	ctx := acctest.Context(t)
 	var rule ses.ReceiptRule
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ses_receipt_rule.test"
 
@@ -290,7 +283,6 @@ func TestAccSESReceiptRule_order(t *testing.T) {
 func TestAccSESReceiptRule_actions(t *testing.T) {
 	ctx := acctest.Context(t)
 	var rule ses.ReceiptRule
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ses_receipt_rule.test"
 
@@ -332,10 +324,8 @@ func TestAccSESReceiptRule_actions(t *testing.T) {
 func TestAccSESReceiptRule_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var rule ses.ReceiptRule
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ses_receipt_rule.test"
-
 	ruleSetResourceName := "aws_ses_receipt_rule_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -377,51 +367,43 @@ func testAccCheckReceiptRuleDestroy(ctx context.Context) resource.TestCheckFunc 
 				continue
 			}
 
-			params := &ses.DescribeReceiptRuleInput{
-				RuleName:    aws.String(rs.Primary.Attributes["name"]),
-				RuleSetName: aws.String(rs.Primary.Attributes["rule_set_name"]),
+			_, err := tfses.FindReceiptRuleByTwoPartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["rule_set_name"])
+
+			if tfresource.NotFound(err) {
+				continue
 			}
 
-			_, err := conn.DescribeReceiptRuleWithContext(ctx, params)
-			if err == nil {
-				return fmt.Errorf("Receipt rule %s still exists. Failing!", rs.Primary.ID)
-			}
-
-			// Verify the error is what we want
-			_, ok := err.(awserr.Error)
-			if !ok {
+			if err != nil {
 				return err
 			}
+
+			return fmt.Errorf("SES Receipt Rule %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckReceiptRuleExists(ctx context.Context, n string, rule *ses.ReceiptRule) resource.TestCheckFunc {
+func testAccCheckReceiptRuleExists(ctx context.Context, n string, v *ses.ReceiptRule) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("SES Receipt Rule not found: %s", n)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("SES Receipt Rule name not set")
+			return fmt.Errorf("No SES Receipt Rule ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn()
 
-		params := &ses.DescribeReceiptRuleInput{
-			RuleName:    aws.String(rs.Primary.Attributes["name"]),
-			RuleSetName: aws.String(rs.Primary.Attributes["rule_set_name"]),
-		}
+		output, err := tfses.FindReceiptRuleByTwoPartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["rule_set_name"])
 
-		resp, err := conn.DescribeReceiptRuleWithContext(ctx, params)
 		if err != nil {
 			return err
 		}
 
-		*rule = *resp.Rule
+		*v = *output
 
 		return nil
 	}

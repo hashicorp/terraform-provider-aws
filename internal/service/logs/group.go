@@ -103,10 +103,14 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	d.SetId(name)
 
 	if v, ok := d.GetOk("retention_in_days"); ok {
-		_, err := conn.PutRetentionPolicyWithContext(ctx, &cloudwatchlogs.PutRetentionPolicyInput{
+		input := &cloudwatchlogs.PutRetentionPolicyInput{
 			LogGroupName:    aws.String(d.Id()),
 			RetentionInDays: aws.Int64(int64(v.(int))),
-		})
+		}
+
+		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+			return conn.PutRetentionPolicyWithContext(ctx, input)
+		}, "AccessDeniedException", "no identity-based policy allows the logs:PutRetentionPolicy action")
 
 		if err != nil {
 			return diag.Errorf("setting CloudWatch Logs Log Group (%s) retention policy: %s", d.Id(), err)
@@ -164,10 +168,14 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if d.HasChange("retention_in_days") {
 		if v, ok := d.GetOk("retention_in_days"); ok {
-			_, err := conn.PutRetentionPolicyWithContext(ctx, &cloudwatchlogs.PutRetentionPolicyInput{
+			input := &cloudwatchlogs.PutRetentionPolicyInput{
 				LogGroupName:    aws.String(d.Id()),
 				RetentionInDays: aws.Int64(int64(v.(int))),
-			})
+			}
+
+			_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+				return conn.PutRetentionPolicyWithContext(ctx, input)
+			}, "AccessDeniedException", "no identity-based policy allows the logs:PutRetentionPolicy action")
 
 			if err != nil {
 				return diag.Errorf("setting CloudWatch Logs Log Group (%s) retention policy: %s", d.Id(), err)

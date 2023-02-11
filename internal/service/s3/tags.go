@@ -17,7 +17,8 @@ import (
 )
 
 const (
-	ErrCodeNoSuchTagSet = "NoSuchTagSet"
+	ErrCodeNoSuchTagSet      = "NoSuchTagSet"
+	ErrCodeNoSuchTagSetError = "NoSuchTagSetError"
 )
 
 // Custom S3 tag service update functions using the same format as generated code.
@@ -34,7 +35,7 @@ func BucketListTags(ctx context.Context, conn *s3.S3, identifier string) (tftags
 	// S3 API Reference (https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetBucketTagging.html)
 	// lists the special error as NoSuchTagSetError, however the existing logic used NoSuchTagSet
 	// and the AWS Go SDK has neither as a constant.
-	if tfawserr.ErrCodeEquals(err, ErrCodeNoSuchTagSet) {
+	if tfawserr.ErrCodeEquals(err, ErrCodeNoSuchTagSet, ErrCodeNoSuchTagSetError) {
 		return tftags.New(nil), nil
 	}
 
@@ -115,7 +116,7 @@ func ObjectListTags(ctx context.Context, conn *s3.S3, bucket, key string) (tftag
 		output, err = conn.GetObjectTaggingWithContext(ctx, input)
 	}
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeNoSuchTagSet) {
+	if tfawserr.ErrCodeEquals(err, ErrCodeNoSuchTagSet, ErrCodeNoSuchTagSetError) {
 		return tftags.New(nil), nil
 	}
 
