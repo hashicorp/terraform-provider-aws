@@ -306,12 +306,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	var clusterID string
 	if v, ok := d.GetOk("cluster_identifier"); ok {
 		clusterID = v.(string)
+	} else if v, ok := d.GetOk("cluster_identifier_prefix"); ok {
+		clusterID = resource.PrefixedUniqueId(v.(string))
 	} else {
-		if v, ok := d.GetOk("cluster_identifier_prefix"); ok {
-			clusterID = resource.PrefixedUniqueId(v.(string))
-		} else {
-			clusterID = resource.PrefixedUniqueId("tf-")
-		}
+		clusterID = resource.PrefixedUniqueId("tf-")
 	}
 
 	serverlessConfiguration := expandServerlessConfiguration(d.Get("serverless_v2_scaling_configuration").([]interface{}))
@@ -433,6 +431,9 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if clusterUpdate {
+		// TODO Make ModifyCluster call here.
+		// Only backup_retention_period, neptune_cluster_parameter_group_name, vpc_security_group_ids need modifying.
+		// See https://docs.aws.amazon.com/neptune/latest/userguide/backup-restore-restore-snapshot.html#backup-restore-restore-snapshot-considerations.
 		return append(diags, resourceClusterUpdate(ctx, d, meta)...)
 	}
 
