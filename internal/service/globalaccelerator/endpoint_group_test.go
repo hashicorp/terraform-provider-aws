@@ -482,7 +482,7 @@ func testAccCheckEndpointGroupDeleteSecurityGroup(ctx context.Context, vpc *ec2.
 		meta := acctest.Provider.Meta()
 		conn := meta.(*conns.AWSClient).EC2Conn()
 
-		v, err := tfec2.FindSecurityGroupByNameAndVPCID(ctx, conn, "GlobalAccelerator", aws.StringValue(vpc.VpcId))
+		v, err := tfec2.FindSecurityGroupByNameAndVPCIDAndOwnerID(ctx, conn, "GlobalAccelerator", aws.StringValue(vpc.VpcId), aws.StringValue(vpc.OwnerId))
 
 		if tfresource.NotFound(err) {
 			// Already gone.

@@ -26,7 +26,7 @@ resource "aws_s3_bucket" "example" {
 }
 
 resource "aws_s3_bucket_object_lock_configuration" "example" {
-  bucket = aws_s3_bucket.example.bucket
+  bucket = aws_s3_bucket.example.id
 
   rule {
     default_retention {
@@ -51,7 +51,7 @@ resource "aws_s3_bucket" "example" {
 }
 
 resource "aws_s3_bucket_versioning" "example" {
-  bucket = aws_s3_bucket.example.bucket
+  bucket = aws_s3_bucket.example.id
 
   versioning_configuration {
     status = "Enabled"
@@ -66,7 +66,7 @@ resource "aws_s3_bucket_versioning" "example" {
 <!-- markdownlint-disable MD029 -->
 ```terraform
 resource "aws_s3_bucket_object_lock_configuration" "example" {
-  bucket = aws_s3_bucket.example.bucket
+  bucket = aws_s3_bucket.example.id
 
   rule {
     default_retention {
@@ -84,26 +84,26 @@ resource "aws_s3_bucket_object_lock_configuration" "example" {
 
 The following arguments are supported:
 
-* `bucket` - (Required, Forces new resource) The name of the bucket.
-* `expected_bucket_owner` - (Optional, Forces new resource) The account ID of the expected bucket owner.
+* `bucket` - (Required, Forces new resource) Name of the bucket.
+* `expected_bucket_owner` - (Optional, Forces new resource) Account ID of the expected bucket owner.
 * `object_lock_enabled` - (Optional, Forces new resource) Indicates whether this bucket has an Object Lock configuration enabled. Defaults to `Enabled`. Valid values: `Enabled`.
-* `rule` - (Optional) Configuration block for specifying the Object Lock rule for the specified object [detailed below](#rule).
-* `token` - (Optional) A token to allow Object Lock to be enabled for an existing bucket. You must contact AWS support for the bucket's "Object Lock token".
+* `rule` - (Optional) Configuration block for specifying the Object Lock rule for the specified object. [See below](#rule).
+* `token` - (Optional) Token to allow Object Lock to be enabled for an existing bucket. You must contact AWS support for the bucket's "Object Lock token".
 The token is generated in the back-end when [versioning](https://docs.aws.amazon.com/AmazonS3/latest/userguide/manage-versioning-examples.html) is enabled on a bucket. For more details on versioning, see the [`aws_s3_bucket_versioning` resource](s3_bucket_versioning.html.markdown).
 
 ### rule
 
 The `rule` configuration block supports the following arguments:
 
-* `default_retention` - (Required) A configuration block for specifying the default Object Lock retention settings for new objects placed in the specified bucket [detailed below](#default_retention).
+* `default_retention` - (Required) Configuration block for specifying the default Object Lock retention settings for new objects placed in the specified bucket. [See below](#default_retention).
 
 ### default_retention
 
 The `default_retention` configuration block supports the following arguments:
 
-* `days` - (Optional, Required if `years` is not specified) The number of days that you want to specify for the default retention period.
-* `mode` - (Required) The default Object Lock retention mode you want to apply to new objects placed in the specified bucket. Valid values: `COMPLIANCE`, `GOVERNANCE`.
-* `years` - (Optional, Required if `days` is not specified) The number of years that you want to specify for the default retention period.
+* `days` - (Optional, Required if `years` is not specified) Number of days that you want to specify for the default retention period.
+* `mode` - (Required) Default Object Lock retention mode you want to apply to new objects placed in the specified bucket. Valid values: `COMPLIANCE`, `GOVERNANCE`.
+* `years` - (Optional, Required if `days` is not specified) Number of years that you want to specify for the default retention period.
 
 ## Attributes Reference
 
