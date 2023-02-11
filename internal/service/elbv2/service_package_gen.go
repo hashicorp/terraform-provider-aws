@@ -35,7 +35,20 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_alb":                         ResourceLoadBalancer,
+		"aws_alb_listener":                ResourceListener,
+		"aws_alb_listener_certificate":    ResourceListenerCertificate,
+		"aws_alb_listener_rule":           ResourceListenerRule,
+		"aws_alb_target_group":            ResourceTargetGroup,
+		"aws_alb_target_group_attachment": ResourceTargetGroupAttachment,
+		"aws_lb":                          ResourceLoadBalancer,
+		"aws_lb_listener":                 ResourceListener,
+		"aws_lb_listener_certificate":     ResourceListenerCertificate,
+		"aws_lb_listener_rule":            ResourceListenerRule,
+		"aws_lb_target_group":             ResourceTargetGroup,
+		"aws_lb_target_group_attachment":  ResourceTargetGroupAttachment,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

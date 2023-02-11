@@ -87,7 +87,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/elasticsearch"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/elastictranscoder"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/elb"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/emr"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/emrcontainers"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/emrserverless"
@@ -1495,19 +1494,6 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			"aws_load_balancer_listener_policy":       elb.ResourceListenerPolicy(),
 			"aws_load_balancer_policy":                elb.ResourcePolicy(),
 			"aws_proxy_protocol_policy":               elb.ResourceProxyProtocolPolicy(),
-
-			"aws_alb":                         elbv2.ResourceLoadBalancer(),
-			"aws_alb_listener":                elbv2.ResourceListener(),
-			"aws_alb_listener_certificate":    elbv2.ResourceListenerCertificate(),
-			"aws_alb_listener_rule":           elbv2.ResourceListenerRule(),
-			"aws_alb_target_group":            elbv2.ResourceTargetGroup(),
-			"aws_alb_target_group_attachment": elbv2.ResourceTargetGroupAttachment(),
-			"aws_lb":                          elbv2.ResourceLoadBalancer(),
-			"aws_lb_listener":                 elbv2.ResourceListener(),
-			"aws_lb_listener_certificate":     elbv2.ResourceListenerCertificate(),
-			"aws_lb_listener_rule":            elbv2.ResourceListenerRule(),
-			"aws_lb_target_group":             elbv2.ResourceTargetGroup(),
-			"aws_lb_target_group_attachment":  elbv2.ResourceTargetGroupAttachment(),
 
 			"aws_emr_cluster":                emr.ResourceCluster(),
 			"aws_emr_instance_fleet":         emr.ResourceInstanceFleet(),
