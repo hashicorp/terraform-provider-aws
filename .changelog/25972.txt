@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_neptune_cluster:Fix error when trying to add tags to a Neptune cluster that has been restored from a snapshot.
-```
