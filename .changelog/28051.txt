@@ -5,3 +5,7 @@ resource/aws_neptune_cluster: Fix major version upgrade
 ```release-note:enhancement
 resource/aws_neptune_cluster: Add `neptune_instance_parameter_group_name` argument, used only when upgrading major version
 ```
+
+```release-note:enhancement
+resource/aws_neptune_global_cluster: Increase Update timeout to 120 minutes (per global cluster member)
+```

@@ -1198,7 +1198,6 @@ resource "aws_neptune_cluster" "primary" {
   engine                               = aws_neptune_global_cluster.test.engine
   engine_version                       = aws_neptune_global_cluster.test.engine_version
   neptune_cluster_parameter_group_name = "default.neptune1.2"
-
 }
 
 resource "aws_neptune_cluster_instance" "primary" {

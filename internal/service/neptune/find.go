@@ -2,7 +2,6 @@ package neptune
 
 import (
 	"context"
-	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/neptune"
@@ -50,36 +49,4 @@ func FindEndpointByID(ctx context.Context, conn *neptune.Neptune, id string) (*n
 	}
 
 	return endpoints[0], nil
-}
-
-func FindGlobalClusterById(ctx context.Context, conn *neptune.Neptune, globalClusterID string) (*neptune.GlobalCluster, error) {
-	input := &neptune.DescribeGlobalClustersInput{
-		GlobalClusterIdentifier: aws.String(globalClusterID),
-	}
-
-	for {
-		log.Printf("[DEBUG] Reading Neptune Global Cluster (%s): %s", globalClusterID, input)
-		output, err := conn.DescribeGlobalClustersWithContext(ctx, input)
-		if err != nil {
-			return nil, err
-		}
-
-		for _, gc := range output.GlobalClusters {
-			if gc == nil {
-				continue
-			}
-
-			if aws.StringValue(gc.GlobalClusterIdentifier) == aws.StringValue(input.GlobalClusterIdentifier) {
-				return gc, nil
-			}
-		}
-
-		if output.Marker == nil {
-			break
-		}
-
-		input.Marker = output.Marker
-	}
-
-	return nil, nil
 }
