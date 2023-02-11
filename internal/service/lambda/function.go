@@ -585,40 +585,31 @@ func resourceFunctionCreate(d *schema.ResourceData, meta interface{}) error {
 		params.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	err := resource.Retry(propagationTimeout, func() *resource.RetryError { // nosem: helper-schema-resource-Retry-without-TimeoutError-check
-		_, err := conn.CreateFunction(params)
+	_, err := conn.CreateFunction(params)
+	if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "The role defined for the function cannot be assumed by Lambda") {
+		log.Printf("[DEBUG] Received %s, retrying CreateFunction", err)
+	} else if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "The provided execution role does not have permissions") {
+		log.Printf("[DEBUG] Received %s, retrying CreateFunction", err)
+	} else if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "Lambda was unable to configure access to your environment variables because the KMS key is invalid for CreateGrant") {
+		log.Printf("[DEBUG] Received %s, retrying CreateFunction", err)
+	} else if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceConflictException) {
+		log.Printf("[DEBUG] Received %s, retrying CreateFunction", err)
+	} else {
+		err = resource.Retry(propagationTimeout, func() *resource.RetryError { // nosem: helper-schema-resource-Retry-without-TimeoutError-check
+			_, err := conn.CreateFunction(params)
 
-		if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "The role defined for the function cannot be assumed by Lambda") {
-			log.Printf("[DEBUG] Received %s, retrying CreateFunction", err)
-			return resource.RetryableError(err)
-		}
+			if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "throttled by EC2") {
+				log.Printf("[DEBUG] Received %s, retrying CreateFunction", err)
+				return resource.RetryableError(err)
+			}
 
-		if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "The provided execution role does not have permissions") {
-			log.Printf("[DEBUG] Received %s, retrying CreateFunction", err)
-			return resource.RetryableError(err)
-		}
+			if err != nil {
+				return resource.NonRetryableError(err)
+			}
 
-		if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "throttled by EC2") {
-			log.Printf("[DEBUG] Received %s, retrying CreateFunction", err)
-			return resource.RetryableError(err)
-		}
-
-		if tfawserr.ErrMessageContains(err, lambda.ErrCodeInvalidParameterValueException, "Lambda was unable to configure access to your environment variables because the KMS key is invalid for CreateGrant") {
-			log.Printf("[DEBUG] Received %s, retrying CreateFunction", err)
-			return resource.RetryableError(err)
-		}
-
-		if tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceConflictException) {
-			log.Printf("[DEBUG] Received %s, retrying CreateFunction", err)
-			return resource.RetryableError(err)
-		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
+			return nil
+		})
+	}
 
 	if tfresource.TimedOut(err) {
 		_, err = conn.CreateFunction(params)
