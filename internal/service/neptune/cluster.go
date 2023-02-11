@@ -638,7 +638,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		requestUpdate = true
 	}
 
-	if !d.IsNewResource() && d.HasChange("engine_version") {
+	if d.HasChange("engine_version") {
 		req.EngineVersion = aws.String(d.Get("engine_version").(string))
 		requestUpdate = true
 	}
