@@ -22,7 +22,16 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_alb":               DataSourceLoadBalancer,
+		"aws_alb_listener":      DataSourceListener,
+		"aws_alb_target_group":  DataSourceTargetGroup,
+		"aws_lb":                DataSourceLoadBalancer,
+		"aws_lb_hosted_zone_id": DataSourceHostedZoneID,
+		"aws_lb_listener":       DataSourceListener,
+		"aws_lb_target_group":   DataSourceTargetGroup,
+		"aws_lbs":               DataSourceLoadBalancers,
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
