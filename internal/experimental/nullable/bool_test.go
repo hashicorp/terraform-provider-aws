@@ -67,7 +67,7 @@ func TestNullableBool(t *testing.T) {
 func TestValidationBool(t *testing.T) {
 	t.Parallel()
 
-	runTestCases(t, []testCase{
+	runValidationTestCases(t, []testCase{
 		{
 			val: "true",
 			f:   ValidateTypeStringNullableBool,
