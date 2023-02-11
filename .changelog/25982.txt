@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_neptune_cluster:Fix error when trying to modify the engine version of Neptune cluster that has just been restored from a snapshot.
-```
