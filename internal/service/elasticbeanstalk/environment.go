@@ -21,6 +21,7 @@ import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdktypes"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -130,21 +131,9 @@ func ResourceEnvironment() *schema.Resource {
 				ConflictsWith: []string{"solution_stack_name", "template_name"},
 			},
 			"poll_interval": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					value := v.(string)
-					duration, err := time.ParseDuration(value)
-					if err != nil {
-						errors = append(errors, fmt.Errorf(
-							"%q cannot be parsed as a duration: %s", k, err))
-					}
-					if duration < 10*time.Second || duration > 60*time.Second {
-						errors = append(errors, fmt.Errorf(
-							"%q must be between 10s and 180s", k))
-					}
-					return
-				},
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: sdktypes.ValidateDuration,
 			},
 			"queues": {
 				Type:     schema.TypeList,
@@ -198,22 +187,10 @@ func ResourceEnvironment() *schema.Resource {
 				Computed: true,
 			},
 			"wait_for_ready_timeout": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "20m",
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					value := v.(string)
-					duration, err := time.ParseDuration(value)
-					if err != nil {
-						errors = append(errors, fmt.Errorf(
-							"%q cannot be parsed as a duration: %s", k, err))
-					}
-					if duration < 0 {
-						errors = append(errors, fmt.Errorf(
-							"%q must be greater than zero", k))
-					}
-					return
-				},
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          "20m",
+				ValidateDiagFunc: sdktypes.ValidateDuration,
 			},
 		},
 	}
@@ -297,15 +274,16 @@ func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta
 	// Assign the application name as the resource ID
 	d.SetId(aws.StringValue(resp.EnvironmentId))
 
-	waitForReadyTimeOut, err := time.ParseDuration(d.Get("wait_for_ready_timeout").(string))
+	waitForReadyTimeOut, _, err := sdktypes.Duration(d.Get("wait_for_ready_timeout").(string)).Value()
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Elastic Beanstalk Environment (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "parsing wait_for_ready_timeout: %s", err)
 	}
 
-	pollInterval, err := time.ParseDuration(d.Get("poll_interval").(string))
+	pollInterval, _, err := sdktypes.Duration(d.Get("poll_interval").(string)).Value()
+
 	if err != nil {
 		pollInterval = 0
-		log.Printf("[WARN] Error parsing poll_interval, using default backoff")
 	}
 
 	err = waitForEnvironmentReady(ctx, conn, d.Id(), waitForReadyTimeOut, pollInterval, t)
@@ -441,14 +419,16 @@ func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta
 			return sdkdiag.AppendErrorf(diags, "updating Elastic Beanstalk Environment (%s): %s", d.Id(), err)
 		}
 
-		waitForReadyTimeOut, err := time.ParseDuration(d.Get("wait_for_ready_timeout").(string))
+		waitForReadyTimeOut, _, err := sdktypes.Duration(d.Get("wait_for_ready_timeout").(string)).Value()
+
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Elastic Beanstalk Environment (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "parsing wait_for_ready_timeout: %s", err)
 		}
-		pollInterval, err := time.ParseDuration(d.Get("poll_interval").(string))
+
+		pollInterval, _, err := sdktypes.Duration(d.Get("poll_interval").(string)).Value()
+
 		if err != nil {
 			pollInterval = 0
-			log.Printf("[WARN] Error parsing poll_interval, using default backoff")
 		}
 
 		err = waitForEnvironmentReady(ctx, conn, d.Id(), waitForReadyTimeOut, pollInterval, t)
@@ -475,14 +455,16 @@ func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta
 			return sdkdiag.AppendErrorf(diags, "updating Elastic Beanstalk environment (%s): updating tags: %s", arn, err)
 		}
 
-		waitForReadyTimeOut, err := time.ParseDuration(d.Get("wait_for_ready_timeout").(string))
+		waitForReadyTimeOut, _, err := sdktypes.Duration(d.Get("wait_for_ready_timeout").(string)).Value()
+
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Elastic Beanstalk Environment (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "parsing wait_for_ready_timeout: %s", err)
 		}
-		pollInterval, err := time.ParseDuration(d.Get("poll_interval").(string))
+
+		pollInterval, _, err := sdktypes.Duration(d.Get("poll_interval").(string)).Value()
+
 		if err != nil {
 			pollInterval = 0
-			log.Printf("[WARN] Error parsing poll_interval, using default backoff")
 		}
 
 		err = waitForEnvironmentReady(ctx, conn, d.Id(), waitForReadyTimeOut, pollInterval, t)
@@ -718,14 +700,16 @@ func resourceEnvironmentDelete(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn()
 
-	waitForReadyTimeOut, err := time.ParseDuration(d.Get("wait_for_ready_timeout").(string))
+	waitForReadyTimeOut, _, err := sdktypes.Duration(d.Get("wait_for_ready_timeout").(string)).Value()
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Elastic Beanstalk Environment (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "parsing wait_for_ready_timeout: %s", err)
 	}
-	pollInterval, err := time.ParseDuration(d.Get("poll_interval").(string))
+
+	pollInterval, _, err := sdktypes.Duration(d.Get("poll_interval").(string)).Value()
+
 	if err != nil {
 		pollInterval = 0
-		log.Printf("[WARN] Error parsing poll_interval, using default backoff")
 	}
 
 	// The Environment needs to be in a Ready state before it can be terminated
