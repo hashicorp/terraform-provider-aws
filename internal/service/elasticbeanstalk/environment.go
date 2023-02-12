@@ -25,24 +25,24 @@ import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func resourceOptionSetting() *schema.Resource {
+func settingSchema() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
-			"namespace": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"value": {
+			"namespace": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
 			"resource": {
 				Type:     schema.TypeString,
 				Optional: true,
+			},
+			"value": {
+				Type:     schema.TypeString,
+				Required: true,
 			},
 		},
 	}
@@ -55,6 +55,7 @@ func ResourceEnvironment() *schema.Resource {
 		ReadWithoutTimeout:   resourceEnvironmentRead,
 		UpdateWithoutTimeout: resourceEnvironmentUpdate,
 		DeleteWithoutTimeout: resourceEnvironmentDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -65,27 +66,24 @@ func ResourceEnvironment() *schema.Resource {
 		MigrateState:  EnvironmentMigrateState,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
+			"all_settings": {
+				Type:     schema.TypeSet,
 				Computed: true,
-			},
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Elem:     settingSchema(),
+				Set:      optionSettingValueHash,
 			},
 			"application": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"description": {
+			"arn": {
 				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"version_label": {
-				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
+			},
+			"autoscaling_groups": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"cname": {
 				Type:     schema.TypeString,
@@ -93,17 +91,89 @@ func ResourceEnvironment() *schema.Resource {
 			},
 			"cname_prefix": {
 				Type:     schema.TypeString,
-				Computed: true,
 				Optional: true,
+				Computed: true,
 				ForceNew: true,
+			},
+			"description": {
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"endpoint_url": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"instances": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"launch_configurations": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"load_balancers": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"platform_arn": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"solution_stack_name", "template_name"},
+			},
+			"poll_interval": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
+					value := v.(string)
+					duration, err := time.ParseDuration(value)
+					if err != nil {
+						errors = append(errors, fmt.Errorf(
+							"%q cannot be parsed as a duration: %s", k, err))
+					}
+					if duration < 10*time.Second || duration > 60*time.Second {
+						errors = append(errors, fmt.Errorf(
+							"%q must be between 10s and 180s", k))
+					}
+					return
+				},
+			},
+			"queues": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"setting": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     settingSchema(),
+				Set:      optionSettingValueHash,
+			},
+			"solution_stack_name": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"platform_arn", "template_name"},
+			},
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
+			"template_name": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"solution_stack_name", "platform_arn"},
+			},
 			"tier": {
 				Type:     schema.TypeString,
 				Optional: true,
+				ForceNew: true,
 				Default:  "WebServer",
 				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
 					value := v.(string)
@@ -116,36 +186,16 @@ func ResourceEnvironment() *schema.Resource {
 					errors = append(errors, fmt.Errorf("%s is not a valid tier. Valid options are WebServer or Worker", value))
 					return
 				},
-				ForceNew: true,
 			},
-			"setting": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     resourceOptionSetting(),
-				Set:      optionSettingValueHash,
-			},
-			"all_settings": {
-				Type:     schema.TypeSet,
+			"triggers": {
+				Type:     schema.TypeList,
 				Computed: true,
-				Elem:     resourceOptionSetting(),
-				Set:      optionSettingValueHash,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"solution_stack_name": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"platform_arn", "template_name"},
-			},
-			"platform_arn": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"solution_stack_name", "template_name"},
-			},
-			"template_name": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"solution_stack_name", "platform_arn"},
+			"version_label": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
 			},
 			"wait_for_ready_timeout": {
 				Type:     schema.TypeString,
@@ -165,56 +215,6 @@ func ResourceEnvironment() *schema.Resource {
 					return
 				},
 			},
-			"poll_interval": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					value := v.(string)
-					duration, err := time.ParseDuration(value)
-					if err != nil {
-						errors = append(errors, fmt.Errorf(
-							"%q cannot be parsed as a duration: %s", k, err))
-					}
-					if duration < 10*time.Second || duration > 60*time.Second {
-						errors = append(errors, fmt.Errorf(
-							"%q must be between 10s and 180s", k))
-					}
-					return
-				},
-			},
-			"autoscaling_groups": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"instances": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"launch_configurations": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"load_balancers": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"queues": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"triggers": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
 		},
 	}
 }
