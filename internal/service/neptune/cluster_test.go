@@ -3,13 +3,11 @@ package neptune_test
 import (
 	"context"
 	"fmt"
-	"log"
 	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/neptune"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -32,6 +30,7 @@ func testAccClusterImportStep(n string) resource.TestStep {
 			"final_snapshot_identifier",
 			"neptune_instance_parameter_group_name",
 			"skip_final_snapshot",
+			"snapshot_identifier",
 		},
 	}
 }
@@ -161,14 +160,14 @@ func TestAccNeptuneCluster_serverlessConfiguration(t *testing.T) {
 func TestAccNeptuneCluster_takeFinalSnapshot(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v neptune.DBCluster
-	rName := sdkacctest.RandomWithPrefix("tf-acc")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_neptune_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterSnapshot(ctx, rName),
+		CheckDestroy:             testAccCheckClusterDestroyWithFinalSnapshot(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_finalSnapshot(rName),
@@ -566,6 +565,36 @@ func TestAccNeptuneCluster_disappears(t *testing.T) {
 	})
 }
 
+func TestAccNeptuneCluster_restoreFromSnapshot(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dbCluster neptune.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_neptune_cluster.test"
+	parameterGroupResourceName := "aws_neptune_cluster_parameter_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_restoreFromSnapshot(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "5"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_identifier", rName),
+					resource.TestCheckResourceAttrPair(resourceName, "neptune_cluster_parameter_group_name", parameterGroupResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
+					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "2"),
+				),
+			},
+			testAccClusterImportStep(resourceName),
+		},
+	})
+}
+
 func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		return testAccCheckClusterDestroyWithProvider(ctx)(s, acctest.Provider)
@@ -574,7 +603,7 @@ func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 
 func testAccCheckClusterDestroyWithProvider(ctx context.Context) acctest.TestCheckWithProviderFunc {
 	return func(s *terraform.State, provider *schema.Provider) error {
-		conn := provider.Meta().(*conns.AWSClient).NeptuneConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn()
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_neptune_cluster" {
@@ -627,7 +656,7 @@ func testAccCheckClusterExistsWithProvider(ctx context.Context, n string, v *nep
 	}
 }
 
-func testAccCheckClusterSnapshot(ctx context.Context, rName string) resource.TestCheckFunc {
+func testAccCheckClusterDestroyWithFinalSnapshot(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_neptune_cluster" {
@@ -636,35 +665,32 @@ func testAccCheckClusterSnapshot(ctx context.Context, rName string) resource.Tes
 
 			conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn()
 
-			log.Printf("[INFO] Deleting the Snapshot %s", rName)
-			_, snapDeleteErr := conn.DeleteDBClusterSnapshotWithContext(ctx, &neptune.DeleteDBClusterSnapshotInput{
-				DBClusterSnapshotIdentifier: aws.String(rName),
-			})
-			if snapDeleteErr != nil {
-				return snapDeleteErr
-			}
+			finalSnapshotID := rs.Primary.Attributes["final_snapshot_identifier"]
+			_, err := tfneptune.FindClusterSnapshotByID(ctx, conn, finalSnapshotID)
 
-			// Try to find the Group
-			var err error
-			resp, err := conn.DescribeDBClustersWithContext(ctx, &neptune.DescribeDBClustersInput{
-				DBClusterIdentifier: aws.String(rs.Primary.ID),
-			})
-
-			if err == nil {
-				if len(resp.DBClusters) != 0 &&
-					aws.StringValue(resp.DBClusters[0].DBClusterIdentifier) == rs.Primary.ID {
-					return fmt.Errorf("Neptune Cluster %s still exists", rs.Primary.ID)
-				}
-			}
-
-			// Return nil if the cluster is already destroyed
 			if err != nil {
-				if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBClusterNotFoundFault) {
-					return nil
-				}
+				return err
 			}
 
-			return err
+			_, err = conn.DeleteDBClusterSnapshotWithContext(ctx, &neptune.DeleteDBClusterSnapshotInput{
+				DBClusterSnapshotIdentifier: aws.String(finalSnapshotID),
+			})
+
+			if err != nil {
+				return err
+			}
+
+			_, err = tfneptune.FindClusterByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Neptune Cluster %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -1262,4 +1288,56 @@ resource "aws_neptune_cluster_instance" "secondary" {
   instance_class               = "db.r5.large"
 }
 `, rNameGlobal, rNamePrimary, rNameSecondary))
+}
+
+func testAccClusterConfig_restoreFromSnapshot(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_default_vpc" "test" {}
+
+resource "aws_security_group" "test" {
+  count = 2
+
+  name   = "%[1]s-${count.index}"
+  vpc_id = aws_default_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_neptune_cluster" "source" {
+  cluster_identifier                   = "%[1]s-src"
+  neptune_cluster_parameter_group_name = "default.neptune1.2"
+  skip_final_snapshot                  = true
+}
+
+resource "aws_neptune_cluster_snapshot" "test" {
+  db_cluster_identifier          = aws_neptune_cluster.source.id
+  db_cluster_snapshot_identifier = %[1]q
+}
+
+resource "aws_neptune_cluster_parameter_group" "test" {
+	family = "neptune1.2"
+	name   = %[1]q
+
+	parameter {
+	  name  = "neptune_enable_audit_log"
+	  value = "1"
+	}
+  }
+
+resource "aws_neptune_cluster" "test" {
+  cluster_identifier  = %[1]q
+  skip_final_snapshot = true
+  snapshot_identifier = aws_neptune_cluster_snapshot.test.id
+
+  backup_retention_period              = 5
+  neptune_cluster_parameter_group_name = aws_neptune_cluster_parameter_group.test.id
+  vpc_security_group_ids               = aws_security_group.test[*].id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName)
 }

@@ -24,7 +24,6 @@ import (
 )
 
 const (
-
 	// A constant for the supported CloudwatchLogsExports types
 	// is not currently available in the AWS sdk-for-go
 	// https://docs.aws.amazon.com/sdk-for-go/api/service/neptune/#pkg-constants
@@ -296,7 +295,8 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
-	// Check if any of the parameters that require a cluster modification after creation are set
+	// Check if any of the parameters that require a cluster modification after creation are set.
+	// See https://docs.aws.amazon.com/neptune/latest/userguide/backup-restore-restore-snapshot.html#backup-restore-restore-snapshot-considerations.
 	clusterUpdate := false
 	restoreDBClusterFromSnapshot := false
 	if _, ok := d.GetOk("snapshot_identifier"); ok {
@@ -311,10 +311,8 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	} else {
 		clusterID = resource.PrefixedUniqueId("tf-")
 	}
-
 	serverlessConfiguration := expandServerlessConfiguration(d.Get("serverless_v2_scaling_configuration").([]interface{}))
-
-	createDbClusterInput := &neptune.CreateDBClusterInput{
+	inputC := &neptune.CreateDBClusterInput{
 		DBClusterIdentifier:              aws.String(clusterID),
 		CopyTagsToSnapshot:               aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
 		Engine:                           aws.String(d.Get("engine").(string)),
@@ -324,7 +322,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		Tags:                             Tags(tags.IgnoreAWS()),
 		ServerlessV2ScalingConfiguration: serverlessConfiguration,
 	}
-	restoreDBClusterFromSnapshotInput := &neptune.RestoreDBClusterFromSnapshotInput{
+	inputR := &neptune.RestoreDBClusterFromSnapshotInput{
 		DBClusterIdentifier:              aws.String(clusterID),
 		CopyTagsToSnapshot:               aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
 		Engine:                           aws.String(d.Get("engine").(string)),
@@ -334,80 +332,113 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		Tags:                             Tags(tags.IgnoreAWS()),
 		ServerlessV2ScalingConfiguration: serverlessConfiguration,
 	}
-
-	if attr := d.Get("availability_zones").(*schema.Set); attr.Len() > 0 {
-		createDbClusterInput.AvailabilityZones = flex.ExpandStringSet(attr)
-		restoreDBClusterFromSnapshotInput.AvailabilityZones = flex.ExpandStringSet(attr)
+	inputM := &neptune.ModifyDBClusterInput{
+		ApplyImmediately:    aws.Bool(true),
+		DBClusterIdentifier: aws.String(clusterID),
 	}
 
-	if attr, ok := d.GetOk("backup_retention_period"); ok {
-		createDbClusterInput.BackupRetentionPeriod = aws.Int64(int64(attr.(int)))
+	if v, ok := d.GetOk("availability_zones"); ok && v.(*schema.Set).Len() > 0 {
+		v := v.(*schema.Set)
+
+		inputC.AvailabilityZones = flex.ExpandStringSet(v)
+		inputR.AvailabilityZones = flex.ExpandStringSet(v)
+	}
+
+	if v, ok := d.GetOk("backup_retention_period"); ok {
+		v := int64(v.(int))
+
+		inputC.BackupRetentionPeriod = aws.Int64(v)
 		if restoreDBClusterFromSnapshot {
 			clusterUpdate = true
+			inputM.BackupRetentionPeriod = aws.Int64(v)
 		}
 	}
 
-	if attr, ok := d.GetOk("global_cluster_identifier"); ok {
-		createDbClusterInput.GlobalClusterIdentifier = aws.String(attr.(string))
+	if v, ok := d.GetOk("global_cluster_identifier"); ok {
+		v := v.(string)
+
+		inputC.GlobalClusterIdentifier = aws.String(v)
 	}
 
-	if attr := d.Get("enable_cloudwatch_logs_exports").(*schema.Set); attr.Len() > 0 {
-		createDbClusterInput.EnableCloudwatchLogsExports = flex.ExpandStringSet(attr)
-		restoreDBClusterFromSnapshotInput.EnableCloudwatchLogsExports = flex.ExpandStringSet(attr)
+	if v, ok := d.GetOk("enable_cloudwatch_logs_exports"); ok && v.(*schema.Set).Len() > 0 {
+		v := v.(*schema.Set)
+
+		inputC.EnableCloudwatchLogsExports = flex.ExpandStringSet(v)
+		inputR.EnableCloudwatchLogsExports = flex.ExpandStringSet(v)
 	}
 
-	if attr, ok := d.GetOk("engine_version"); ok {
-		createDbClusterInput.EngineVersion = aws.String(attr.(string))
-		restoreDBClusterFromSnapshotInput.EngineVersion = aws.String(attr.(string))
+	if v, ok := d.GetOk("engine_version"); ok {
+		v := v.(string)
+
+		inputC.EngineVersion = aws.String(v)
+		inputR.EngineVersion = aws.String(v)
 	}
 
-	if attr, ok := d.GetOk("iam_database_authentication_enabled"); ok {
-		createDbClusterInput.EnableIAMDatabaseAuthentication = aws.Bool(attr.(bool))
-		restoreDBClusterFromSnapshotInput.EnableIAMDatabaseAuthentication = aws.Bool(attr.(bool))
+	if v, ok := d.GetOk("iam_database_authentication_enabled"); ok {
+		v := v.(bool)
+
+		inputC.EnableIAMDatabaseAuthentication = aws.Bool(v)
+		inputR.EnableIAMDatabaseAuthentication = aws.Bool(v)
 	}
 
-	if attr, ok := d.GetOk("kms_key_arn"); ok {
-		createDbClusterInput.KmsKeyId = aws.String(attr.(string))
+	if v, ok := d.GetOk("kms_key_arn"); ok {
+		v := v.(string)
+
+		inputC.KmsKeyId = aws.String(v)
 	}
 
-	if attr, ok := d.GetOk("neptune_cluster_parameter_group_name"); ok {
-		createDbClusterInput.DBClusterParameterGroupName = aws.String(attr.(string))
+	if v, ok := d.GetOk("neptune_cluster_parameter_group_name"); ok {
+		v := v.(string)
+
+		inputC.DBClusterParameterGroupName = aws.String(v)
 		if restoreDBClusterFromSnapshot {
 			clusterUpdate = true
+			inputM.DBClusterParameterGroupName = aws.String(v)
 		}
 	}
 
-	if attr, ok := d.GetOk("neptune_subnet_group_name"); ok {
-		createDbClusterInput.DBSubnetGroupName = aws.String(attr.(string))
-		restoreDBClusterFromSnapshotInput.DBSubnetGroupName = aws.String(attr.(string))
+	if v, ok := d.GetOk("neptune_subnet_group_name"); ok {
+		v := v.(string)
+
+		inputC.DBSubnetGroupName = aws.String(v)
+		inputR.DBSubnetGroupName = aws.String(v)
 	}
 
-	if attr, ok := d.GetOk("preferred_backup_window"); ok {
-		createDbClusterInput.PreferredBackupWindow = aws.String(attr.(string))
+	if v, ok := d.GetOk("preferred_backup_window"); ok {
+		v := v.(string)
+
+		inputC.PreferredBackupWindow = aws.String(v)
 	}
 
-	if attr, ok := d.GetOk("preferred_maintenance_window"); ok {
-		createDbClusterInput.PreferredMaintenanceWindow = aws.String(attr.(string))
+	if v, ok := d.GetOk("preferred_maintenance_window"); ok {
+		v := v.(string)
+
+		inputC.PreferredMaintenanceWindow = aws.String(v)
 	}
 
-	if attr, ok := d.GetOk("replication_source_identifier"); ok {
-		createDbClusterInput.ReplicationSourceIdentifier = aws.String(attr.(string))
+	if v, ok := d.GetOk("replication_source_identifier"); ok {
+		v := v.(string)
+
+		inputC.ReplicationSourceIdentifier = aws.String(v)
 	}
 
-	if attr := d.Get("vpc_security_group_ids").(*schema.Set); attr.Len() > 0 {
-		createDbClusterInput.VpcSecurityGroupIds = flex.ExpandStringSet(attr)
+	if v, ok := d.GetOk("vpc_security_group_ids"); ok && v.(*schema.Set).Len() > 0 {
+		v := v.(*schema.Set)
+
+		inputC.VpcSecurityGroupIds = flex.ExpandStringSet(v)
+		inputR.VpcSecurityGroupIds = flex.ExpandStringSet(v)
 		if restoreDBClusterFromSnapshot {
 			clusterUpdate = true
+			inputM.VpcSecurityGroupIds = flex.ExpandStringSet(v)
 		}
-		restoreDBClusterFromSnapshotInput.VpcSecurityGroupIds = flex.ExpandStringSet(attr)
 	}
 
 	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
 		if restoreDBClusterFromSnapshot {
-			return conn.RestoreDBClusterFromSnapshotWithContext(ctx, restoreDBClusterFromSnapshotInput)
+			return conn.RestoreDBClusterFromSnapshotWithContext(ctx, inputR)
 		}
 
-		return conn.CreateDBClusterWithContext(ctx, createDbClusterInput)
+		return conn.CreateDBClusterWithContext(ctx, inputC)
 	}, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions")
 
 	if err != nil {
@@ -431,10 +462,15 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if clusterUpdate {
-		// TODO Make ModifyCluster call here.
-		// Only backup_retention_period, neptune_cluster_parameter_group_name, vpc_security_group_ids need modifying.
-		// See https://docs.aws.amazon.com/neptune/latest/userguide/backup-restore-restore-snapshot.html#backup-restore-restore-snapshot-considerations.
-		return append(diags, resourceClusterUpdate(ctx, d, meta)...)
+		_, err := conn.ModifyDBClusterWithContext(ctx, inputM)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "modifying Neptune Cluster (%s): %s", d.Id(), err)
+		}
+
+		if _, err = waitClusterAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for Neptune Cluster (%s) update: %s", d.Id(), err)
+		}
 	}
 
 	return append(diags, resourceClusterRead(ctx, d, meta)...)
