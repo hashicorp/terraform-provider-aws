@@ -17,3 +17,21 @@ const (
 const (
 	propagationTimeout = 5 * time.Minute
 )
+
+const (
+	lambdaInvocationActionCreate = "create"
+	lambdaInvocationActionDelete = "delete"
+	lambdaInvocationActionUpdate = "update"
+)
+
+const (
+	lambdaLifecycleScopeCreateOnly = "CREATE_ONLY"
+	lambdaLifecycleScopeCrud       = "CRUD"
+)
+
+func lambdaLifecycleScope_Values() []string {
+	return []string{
+		lambdaLifecycleScopeCreateOnly,
+		lambdaLifecycleScopeCrud,
+	}
+}
