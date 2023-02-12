@@ -1317,14 +1317,14 @@ resource "aws_neptune_cluster_snapshot" "test" {
 }
 
 resource "aws_neptune_cluster_parameter_group" "test" {
-	family = "neptune1.2"
-	name   = %[1]q
+  family = "neptune1.2"
+  name   = %[1]q
 
-	parameter {
-	  name  = "neptune_enable_audit_log"
-	  value = "1"
-	}
+  parameter {
+    name  = "neptune_enable_audit_log"
+    value = "1"
   }
+}
 
 resource "aws_neptune_cluster" "test" {
   cluster_identifier  = %[1]q
