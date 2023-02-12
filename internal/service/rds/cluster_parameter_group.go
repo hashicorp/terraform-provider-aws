@@ -362,6 +362,10 @@ func FindDBClusterParameterGroupByName(ctx context.Context, conn *rds.RDS, name 
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
+	if count := len(output.DBClusterParameterGroups); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
 	dbClusterParameterGroup := output.DBClusterParameterGroups[0]
 
 	// Eventual consistency check.
