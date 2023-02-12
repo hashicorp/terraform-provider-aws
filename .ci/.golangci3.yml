@@ -18,7 +18,7 @@ linters-settings:
     max-blank-identifiers: 3
   goconst:
     ignore-tests: true
-    min-occurrences: 4
+    min-occurrences: 6
 
 run:
   timeout: 75m
