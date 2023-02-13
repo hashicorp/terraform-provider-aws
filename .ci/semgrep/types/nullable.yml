@@ -23,3 +23,22 @@ rules:
             Computed: true,
           }
     severity: ERROR
+
+  - id: nullable-bool-parsing
+    languages: [go]
+    message: Prefer using `nullable.Bool(...).Value()` for checking nullable boolean values
+    patterns:
+      - pattern-either:
+        - pattern: |
+            if $V, $OK := $MAP["..."].(string); $OK && $V != "" {
+              $B, _ := strconv.ParseBool($V)
+              ...
+              $X = aws.Bool($B)
+            }
+        - pattern: |
+            if $V, $OK := d.GetOk("..."); $OK {
+              $B, _ := strconv.ParseBool($V.(string))
+              ...
+              $X = aws.Bool($B)
+            }
+    severity: ERROR
