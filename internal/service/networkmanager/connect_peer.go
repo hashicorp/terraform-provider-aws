@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -219,7 +220,7 @@ func resourceConnectPeerCreate(ctx context.Context, d *schema.ResourceData, meta
 			//   Message_: "Connect attachment state is invalid. attachment id: attachment-06cb63ed3fe0008df",
 			//   Reason: "Other"
 			// }
-			if validationException(err, networkmanager.ValidationExceptionReasonOther) {
+			if validationExceptionMessage_Contains(err, networkmanager.ValidationExceptionReasonOther, "Connect attachment state is invalid") {
 				return true, err
 			}
 
@@ -471,4 +472,20 @@ func waitConnectPeerDeleted(ctx context.Context, conn *networkmanager.NetworkMan
 	}
 
 	return nil, err
+}
+
+// validationExceptionMessageContains returns true if the error matches all these conditions:
+//   - err is of type networkmanager.ValidationException
+//   - ValidationException.Reason equals reason
+//   - ValidationException.Message_ contains message
+func validationExceptionMessage_Contains(err error, reason string, message string) bool {
+	var validationException *networkmanager.ValidationException
+
+	if errors.As(err, &validationException) && aws.StringValue(validationException.Reason) == reason {
+		if strings.Contains(aws.StringValue(validationException.Message_), message) {
+			return true
+		}
+	}
+
+	return false
 }
