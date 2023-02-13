@@ -27,11 +27,10 @@ import (
 
 func ResourceGrant() *schema.Resource {
 	return &schema.Resource{
-		// There is no API for updating/modifying grants, hence no Update
-		// Instead changes to most fields will force a new resource
 		CreateWithoutTimeout: resourceGrantCreate,
 		ReadWithoutTimeout:   resourceGrantRead,
 		DeleteWithoutTimeout: resourceGrantDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				keyId, grantId, err := decodeGrantID(d.Id())
@@ -47,36 +46,8 @@ func ResourceGrant() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validGrantName,
-			},
-			"key_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"grantee_principal": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"operations": {
-				Type: schema.TypeSet,
-				Set:  schema.HashString,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice(kms.GrantOperation_Values(), false),
-				},
-				Required: true,
-				ForceNew: true,
-			},
 			"constraints": {
 				Type:     schema.TypeSet,
-				Set:      resourceGrantConstraintsHash,
 				Optional: true,
 				ForceNew: true,
 				Elem: &schema.Resource{
@@ -97,24 +68,14 @@ func ResourceGrant() *schema.Resource {
 						},
 					},
 				},
+				Set: resourceGrantConstraintsHash,
 			},
-			"retiring_principal": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
+
 			"grant_creation_tokens": {
 				Type:     schema.TypeSet,
+				Optional: true,
+				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				Optional: true,
-				ForceNew: true,
-			},
-			"retire_on_delete": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-				ForceNew: true,
 			},
 			"grant_id": {
 				Type:     schema.TypeString,
@@ -123,6 +84,44 @@ func ResourceGrant() *schema.Resource {
 			"grant_token": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"grantee_principal": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidARN,
+			},
+			"key_id": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"name": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validGrantName,
+			},
+			"operations": {
+				Type:     schema.TypeSet,
+				Required: true,
+				ForceNew: true,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.StringInSlice(kms.GrantOperation_Values(), false),
+				},
+			},
+			"retire_on_delete": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+				ForceNew: true,
+			},
+			"retiring_principal": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidARN,
 			},
 		},
 	}
