@@ -66,6 +66,7 @@ func TestAccOrganizations_serial(t *testing.T) {
 			"Account":            testAccPolicyAttachment_Account,
 			"OrganizationalUnit": testAccPolicyAttachment_OrganizationalUnit,
 			"Root":               testAccPolicyAttachment_Root,
+			"SkipDestroy":        testAccPolicyAttachment_skipDestroy,
 			"disappears":         testAccPolicyAttachment_disappears,
 		},
 		"DelegatedAdministrator": {
