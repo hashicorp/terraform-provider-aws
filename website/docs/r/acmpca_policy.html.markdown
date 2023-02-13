@@ -15,46 +15,50 @@ Attaches a resource based policy to a private CA.
 ### Basic
 
 ```terraform
+data "aws_iam_policy_document" "example" {
+  statement {
+    sid    = "1"
+    effect = "Allow"
+
+    principals {
+      type        = "AWS"
+      identifiers = [data.aws_caller_identity.current.account_id]
+    }
+
+    actions = [
+      "acm-pca:DescribeCertificateAuthority",
+      "acm-pca:GetCertificate",
+      "acm-pca:GetCertificateAuthorityCertificate",
+      "acm-pca:ListPermissions",
+      "acm-pca:ListTags",
+    ]
+
+    resources = [aws_acmpca_certificate_authority.example.arn]
+  }
+
+  statement {
+    sid    = "2"
+    effect = Allow
+
+    principals {
+      type        = "AWS"
+      identifiers = [data.aws_caller_identity.current.account_id]
+    }
+
+    actions   = ["acm-pca:IssueCertificate"]
+    resources = [aws_acmpca_certificate_authority.example.arn]
+
+    condition {
+      test     = "StringEquals"
+      variable = "acm-pca:TemplateArn"
+      values   = ["arn:aws:acm-pca:::template/EndEntityCertificate/V1"]
+    }
+  }
+}
+
 resource "aws_acmpca_policy" "example" {
   resource_arn = aws_acmpca_certificate_authority.example.arn
-  policy       = <<EOF
-{                        
-   "Version":"2012-10-17",
-   "Statement":[
-      {    
-         "Sid":"1",
-         "Effect":"Allow",         
-         "Principal":{                                                                                                                                               
-            "AWS":"${data.aws_caller_identity.current.account_id}"                                                                                
-         },
-         "Action":[
-            "acm-pca:DescribeCertificateAuthority",
-            "acm-pca:GetCertificate",
-            "acm-pca:GetCertificateAuthorityCertificate",
-            "acm-pca:ListPermissions",
-            "acm-pca:ListTags"                                                                                   
-         ],                                                                                              
-         "Resource":"${aws_acmpca_certificate_authority.example.arn}"
-      },
-      {
-         "Sid":"1",  
-         "Effect":"Allow",
-         "Principal":{
-            "AWS":"${data.aws_caller_identity.current.account_id}"
-         },
-         "Action":[
-            "acm-pca:IssueCertificate"
-         ],
-         "Resource":"${aws_acmpca_certificate_authority.example.arn}",
-         "Condition":{
-            "StringEquals":{
-               "acm-pca:TemplateArn":"arn:aws:acm-pca:::template/EndEntityCertificate/V1"
-            }
-         }
-      }
-   ]
-}
-EOF
+  policy       = data.aws_iam_policy_document.example.json
 }
 ```
 
