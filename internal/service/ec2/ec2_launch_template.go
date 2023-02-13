@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -57,24 +58,16 @@ func ResourceLaunchTemplate() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"delete_on_termination": {
-										// Use TypeString to allow an "unspecified" value,
-										// since TypeBool only has true/false with false default.
-										// The conversion from bare true/false values in
-										// configurations to TypeString value is currently safe.
-										Type:             schema.TypeString,
+										Type:             nullable.TypeNullableBool,
 										Optional:         true,
-										DiffSuppressFunc: verify.SuppressEquivalentTypeStringBoolean,
-										ValidateFunc:     verify.ValidTypeStringNullableBoolean,
+										DiffSuppressFunc: nullable.DiffSuppressNullableBool,
+										ValidateFunc:     nullable.ValidateTypeStringNullableBool,
 									},
 									"encrypted": {
-										// Use TypeString to allow an "unspecified" value,
-										// since TypeBool only has true/false with false default.
-										// The conversion from bare true/false values in
-										// configurations to TypeString value is currently safe.
-										Type:             schema.TypeString,
+										Type:             nullable.TypeNullableBool,
 										Optional:         true,
-										DiffSuppressFunc: verify.SuppressEquivalentTypeStringBoolean,
-										ValidateFunc:     verify.ValidTypeStringNullableBoolean,
+										DiffSuppressFunc: nullable.DiffSuppressNullableBool,
+										ValidateFunc:     nullable.ValidateTypeStringNullableBool,
 									},
 									"iops": {
 										Type:     schema.TypeInt,
@@ -207,14 +200,10 @@ func ResourceLaunchTemplate() *schema.Resource {
 				Optional: true,
 			},
 			"ebs_optimized": {
-				// Use TypeString to allow an "unspecified" value,
-				// since TypeBool only has true/false with false default.
-				// The conversion from bare true/false values in
-				// configurations to TypeString value is currently safe.
-				Type:             schema.TypeString,
+				Type:             nullable.TypeNullableBool,
 				Optional:         true,
-				DiffSuppressFunc: verify.SuppressEquivalentTypeStringBoolean,
-				ValidateFunc:     verify.ValidTypeStringNullableBoolean,
+				DiffSuppressFunc: nullable.DiffSuppressNullableBool,
+				ValidateFunc:     nullable.ValidateTypeStringNullableBool,
 			},
 			"elastic_gpu_specifications": {
 				Type:     schema.TypeList,
@@ -707,26 +696,22 @@ func ResourceLaunchTemplate() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"associate_carrier_ip_address": {
-							Type:             schema.TypeString,
+							Type:             nullable.TypeNullableBool,
 							Optional:         true,
-							DiffSuppressFunc: verify.SuppressEquivalentTypeStringBoolean,
-							ValidateFunc:     verify.ValidTypeStringNullableBoolean,
+							DiffSuppressFunc: nullable.DiffSuppressNullableBool,
+							ValidateFunc:     nullable.ValidateTypeStringNullableBool,
 						},
 						"associate_public_ip_address": {
-							Type:             schema.TypeString,
+							Type:             nullable.TypeNullableBool,
 							Optional:         true,
-							DiffSuppressFunc: verify.SuppressEquivalentTypeStringBoolean,
-							ValidateFunc:     verify.ValidTypeStringNullableBoolean,
+							DiffSuppressFunc: nullable.DiffSuppressNullableBool,
+							ValidateFunc:     nullable.ValidateTypeStringNullableBool,
 						},
 						"delete_on_termination": {
-							// Use TypeString to allow an "unspecified" value,
-							// since TypeBool only has true/false with false default.
-							// The conversion from bare true/false values in
-							// configurations to TypeString value is currently safe.
-							Type:             schema.TypeString,
+							Type:             nullable.TypeNullableBool,
 							Optional:         true,
-							DiffSuppressFunc: verify.SuppressEquivalentTypeStringBoolean,
-							ValidateFunc:     verify.ValidTypeStringNullableBoolean,
+							DiffSuppressFunc: nullable.DiffSuppressNullableBool,
+							ValidateFunc:     nullable.ValidateTypeStringNullableBool,
 						},
 						"description": {
 							Type:     schema.TypeString,
@@ -1374,15 +1359,11 @@ func expandLaunchTemplateEBSBlockDeviceRequest(tfMap map[string]interface{}) *ec
 
 	apiObject := &ec2.LaunchTemplateEbsBlockDeviceRequest{}
 
-	if v, ok := tfMap["delete_on_termination"].(string); ok && v != "" {
-		v, _ := strconv.ParseBool(v)
-
+	if v, null, _ := nullable.Bool(tfMap["delete_on_termination"].(string)).Value(); !null {
 		apiObject.DeleteOnTermination = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["encrypted"].(string); ok && v != "" {
-		v, _ := strconv.ParseBool(v)
-
+	if v, null, _ := nullable.Bool(tfMap["encrypted"].(string)).Value(); !null {
 		apiObject.Encrypted = aws.Bool(v)
 	}
 
@@ -1945,21 +1926,15 @@ func expandLaunchTemplateInstanceNetworkInterfaceSpecificationRequest(tfMap map[
 
 	apiObject := &ec2.LaunchTemplateInstanceNetworkInterfaceSpecificationRequest{}
 
-	if v, ok := tfMap["associate_carrier_ip_address"].(string); ok && v != "" {
-		v, _ := strconv.ParseBool(v)
-
+	if v, null, _ := nullable.Bool(tfMap["associate_carrier_ip_address"].(string)).Value(); !null {
 		apiObject.AssociateCarrierIpAddress = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["associate_public_ip_address"].(string); ok && v != "" {
-		v, _ := strconv.ParseBool(v)
-
+	if v, null, _ := nullable.Bool(tfMap["associate_public_ip_address"].(string)).Value(); !null {
 		apiObject.AssociatePublicIpAddress = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["delete_on_termination"].(string); ok && v != "" {
-		v, _ := strconv.ParseBool(v)
-
+	if v, null, _ := nullable.Bool(tfMap["delete_on_termination"].(string)).Value(); !null {
 		apiObject.DeleteOnTermination = aws.Bool(v)
 	}
 
