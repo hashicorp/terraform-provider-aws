@@ -1,0 +1,4 @@
+```release-note:enhancement
+resource/aws_dms_endpoint: Add support for secrets manager for IBM DB2 engine
+```
+

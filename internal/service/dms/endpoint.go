@@ -906,13 +906,13 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 	case engineNameDB2:
 		if _, ok := d.GetOk("secrets_manager_arn"); ok {
-			input.SybaseSettings = &dms.SybaseSettings{
+			input.IBMDb2Settings = &dms.IBMDb2Settings{
 				SecretsManagerAccessRoleArn: aws.String(d.Get("secrets_manager_access_role_arn").(string)),
 				SecretsManagerSecretId:      aws.String(d.Get("secrets_manager_arn").(string)),
 				DatabaseName:                aws.String(d.Get("database_name").(string)),
 			}
 		} else {
-			input.SybaseSettings = &dms.SybaseSettings{
+			input.IBMDb2Settings = &dms.IBMDb2Settings{
 				Username:     aws.String(d.Get("username").(string)),
 				Password:     aws.String(d.Get("password").(string)),
 				ServerName:   aws.String(d.Get("server_name").(string)),
@@ -1274,13 +1274,13 @@ func resourceEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta in
 				"username", "password", "server_name", "port", "database_name", "secrets_manager_access_role_arn",
 				"secrets_manager_arn") {
 				if _, ok := d.GetOk("secrets_manager_arn"); ok {
-					input.SybaseSettings = &dms.SybaseSettings{
+					input.IBMDb2Settings = &dms.IBMDb2Settings{
 						DatabaseName:                aws.String(d.Get("database_name").(string)),
 						SecretsManagerAccessRoleArn: aws.String(d.Get("secrets_manager_access_role_arn").(string)),
 						SecretsManagerSecretId:      aws.String(d.Get("secrets_manager_arn").(string)),
 					}
 				} else {
-					input.SybaseSettings = &dms.SybaseSettings{
+					input.IBMDb2Settings = &dms.IBMDb2Settings{
 						Username:     aws.String(d.Get("username").(string)),
 						Password:     aws.String(d.Get("password").(string)),
 						ServerName:   aws.String(d.Get("server_name").(string)),
@@ -1579,13 +1579,13 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *dms.Endpoint) er
 			flattenTopLevelConnectionInfo(d, endpoint)
 		}
 	case engineNameDB2:
-		if endpoint.SybaseSettings != nil {
-			d.Set("username", endpoint.SybaseSettings.Username)
-			d.Set("server_name", endpoint.SybaseSettings.ServerName)
-			d.Set("port", endpoint.SybaseSettings.Port)
-			d.Set("database_name", endpoint.SybaseSettings.DatabaseName)
-			d.Set("secrets_manager_access_role_arn", endpoint.SybaseSettings.SecretsManagerAccessRoleArn)
-			d.Set("secrets_manager_arn", endpoint.SybaseSettings.SecretsManagerSecretId)
+		if endpoint.IBMDb2Settings != nil {
+			d.Set("username", endpoint.IBMDb2Settings.Username)
+			d.Set("server_name", endpoint.IBMDb2Settings.ServerName)
+			d.Set("port", endpoint.IBMDb2Settings.Port)
+			d.Set("database_name", endpoint.IBMDb2Settings.DatabaseName)
+			d.Set("secrets_manager_access_role_arn", endpoint.IBMDb2Settings.SecretsManagerAccessRoleArn)
+			d.Set("secrets_manager_arn", endpoint.IBMDb2Settings.SecretsManagerSecretId)
 		} else {
 			flattenTopLevelConnectionInfo(d, endpoint)
 		}
