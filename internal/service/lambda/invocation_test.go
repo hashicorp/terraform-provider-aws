@@ -175,8 +175,6 @@ func TestAccLambdaInvocation_lifecycle_scopeCRUDCreate(t *testing.T) {
 	inputJSON := `{"key1":"value1","key2":"value2"}`
 	extraResourceArgs := `lifecycle_scope = "CRUD"`
 	resultJSON := `{"key1":"value1","key2":"value2","tf":{"action":"create", "prev_input": null}}`
-	inputJSON2 := `{"key1":"valueB","key2":"value2"}`
-	resultJSON2 := `{"key1":"valueB","key2":"value2","tf":{"action":"update", "prev_input": {"key1":"value1","key2":"value2"}}}`
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -193,15 +191,6 @@ func TestAccLambdaInvocation_lifecycle_scopeCRUDCreate(t *testing.T) {
 					testAccCheckInvocationResult(resourceName, resultJSON),
 				),
 			},
-			{
-				Config: acctest.ConfigCompose(
-					testAccConfigInvocation_function(fName, rName, ""),
-					testAccConfigInvocation_invocation(inputJSON2, extraResourceArgs),
-				),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInvocationResult(resourceName, resultJSON2),
-				),
-			},
 		},
 	})
 }
@@ -214,7 +203,7 @@ func TestAccLambdaInvocation_lifecycle_scopeCRUDUpdateInput(t *testing.T) {
 	extraResourceArgs := `lifecycle_scope = "CRUD"`
 	resultJSON := `{"key1":"value1","key2":"value2","tf":{"action":"create", "prev_input": null}}`
 	inputJSON2 := `{"key1":"valueB","key2":"value2"}`
-	resultJSON2 := `{"key1":"valueB","key2":"value2","tf":{"action":"update", "prev_input": {"key1":"value1","key2":"value2"}}}`
+	resultJSON2 := fmt.Sprintf(`{"key1":"valueB","key2":"value2","tf":{"action":"update", "prev_input": %s}}`, inputJSON)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -257,7 +246,7 @@ func TestAccLambdaInvocation_lifecycle_scopeCRUDDestroy(t *testing.T) {
 	crudLifecycle := `lifecycle_scope = "CRUD"`
 	extraResourceArgs := dependsOnSSMPermissions + "\n" + crudLifecycle
 	resultJSON := `{"key1":"value1","key2":"value2","tf":{"action":"create", "prev_input": null}}`
-	destroyJSON := `{"key1":"value1","key2":"value2","tf":{"action":"delete","prev_input":{"key1":"value1","key2":"value2"}}}`
+	destroyJSON := fmt.Sprintf(`{"key1":"value1","key2":"value2","tf":{"action":"delete","prev_input":%s}}`, inputJSON)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -282,6 +271,46 @@ func TestAccLambdaInvocation_lifecycle_scopeCRUDDestroy(t *testing.T) {
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCRUDDestroyResult(resourceName, destroyJSON, t),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLambdaInvocation_lifecycle_scopeCreateOnlyToCRUD(t *testing.T) {
+	resourceName := "aws_lambda_invocation.test"
+	fName := "lambda_invocation_crud"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	inputJSON := `{"key1":"value1","key2":"value2"}`
+	crudLifecycle := `lifecycle_scope = "CRUD"`
+
+	resultJSON := `{"key1":"value1","key2":"value2"}`
+	resultJSONCRUD := fmt.Sprintf(`{"key1":"value1","key2":"value2","tf":{"action":"update", "prev_input": %s}}`, inputJSON)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccDummyCheckInvocationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: acctest.ConfigCompose(
+					testAccConfigInvocation_function(fName, rName, ""),
+					testAccConfigInvocation_crudAllowSSM(rName),
+					testAccConfigInvocation_invocation(inputJSON, ""),
+				),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInvocationResult(resourceName, resultJSON),
+				),
+			},
+			{
+				Config: acctest.ConfigCompose(
+					testAccConfigInvocation_function(fName, rName, ""),
+					testAccConfigInvocation_crudAllowSSM(rName),
+					testAccConfigInvocation_invocation(inputJSON, crudLifecycle),
+				),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInvocationResult(resourceName, resultJSONCRUD),
 				),
 			},
 		},
