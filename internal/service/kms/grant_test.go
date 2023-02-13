@@ -238,6 +238,42 @@ func TestAccKMSGrant_disappears(t *testing.T) {
 	})
 }
 
+func TestAccKMSGrant_crossAccountARN(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_kms_grant.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(t)
+			acctest.PreCheckAlternateAccount(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, kms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		CheckDestroy:             testAccCheckGrantDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGrantConfig_crossAccountARN(rName, "\"Encrypt\", \"Decrypt\""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGrantExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "operations.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "operations.*", "Encrypt"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "operations.*", "Decrypt"),
+					resource.TestCheckResourceAttrPair(resourceName, "grantee_principal", "aws_iam_role.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "key_id", "aws_kms_key.test", "arn"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"grant_token", "retire_on_delete"},
+			},
+		},
+	})
+}
+
 func testAccCheckGrantDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn()
@@ -285,7 +321,7 @@ func testAccCheckGrantDisappears(ctx context.Context, name string) resource.Test
 	}
 }
 
-func testAccGrantBaseConfig(rName string) string {
+func testAccGrantConfig_base(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = %[1]q
@@ -313,7 +349,7 @@ resource "aws_iam_role" "test" {
 }
 
 func testAccGrantConfig_basic(rName string, operations string) string {
-	return acctest.ConfigCompose(testAccGrantBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccGrantConfig_base(rName), fmt.Sprintf(`
 resource "aws_kms_grant" "test" {
   name              = %[1]q
   key_id            = aws_kms_key.test.key_id
@@ -324,7 +360,7 @@ resource "aws_kms_grant" "test" {
 }
 
 func testAccGrantConfig_constraints(rName string, constraintName string, encryptionContext string) string {
-	return acctest.ConfigCompose(testAccGrantBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccGrantConfig_base(rName), fmt.Sprintf(`
 resource "aws_kms_grant" "test" {
   name              = %[1]q
   key_id            = aws_kms_key.test.key_id
@@ -341,7 +377,7 @@ resource "aws_kms_grant" "test" {
 }
 
 func testAccGrantConfig_retiringPrincipal(rName string) string {
-	return acctest.ConfigCompose(testAccGrantBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccGrantConfig_base(rName), fmt.Sprintf(`
 resource "aws_kms_grant" "test" {
   name               = %[1]q
   key_id             = aws_kms_key.test.key_id
@@ -353,7 +389,7 @@ resource "aws_kms_grant" "test" {
 }
 
 func testAccGrantConfig_bare(rName string) string {
-	return acctest.ConfigCompose(testAccGrantBaseConfig(rName), `
+	return acctest.ConfigCompose(testAccGrantConfig_base(rName), `
 resource "aws_kms_grant" "test" {
   key_id            = aws_kms_key.test.key_id
   grantee_principal = aws_iam_role.test.arn
@@ -363,7 +399,7 @@ resource "aws_kms_grant" "test" {
 }
 
 func testAccGrantConfig_arn(rName string, operations string) string {
-	return acctest.ConfigCompose(testAccGrantBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccGrantConfig_base(rName), fmt.Sprintf(`
 resource "aws_kms_grant" "test" {
   name              = %[1]q
   key_id            = aws_kms_key.test.arn
@@ -408,4 +444,42 @@ resource "aws_iam_role" "test" {
   assume_role_policy = data.aws_iam_policy_document.test.json
 }
 `, rName)
+}
+
+func testAccGrantConfig_crossAccountARN(rName string, operations string) string {
+	return acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider(), fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+}
+
+data "aws_iam_policy_document" "test" {
+  provider = "awsalternate"
+
+  statement {
+    effect  = "Allow"
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["ec2.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role" "test" {
+  provider = "awsalternate"
+
+  name               = %[1]q
+  path               = "/service-role/"
+  assume_role_policy = data.aws_iam_policy_document.test.json
+}
+
+resource "aws_kms_grant" "test" {
+  name              = %[1]q
+  key_id            = aws_kms_key.test.arn
+  grantee_principal = aws_iam_role.test.arn
+  operations        = [%[2]s]
+}
+`, rName, operations))
 }
