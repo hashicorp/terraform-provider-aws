@@ -312,7 +312,7 @@ func FindGrantByTwoPartKey(ctx context.Context, conn *kms.KMS, keyID, grantID st
 func findGrantByTwoPartKeyWithRetry(ctx context.Context, conn *kms.KMS, keyID, grantID string, timeout time.Duration) (*kms.GrantListEntry, error) {
 	var output *kms.GrantListEntry
 
-	err := resource.RetryContext(ctx, 3*time.Minute, func() *resource.RetryError {
+	err := resource.RetryContext(ctx, timeout, func() *resource.RetryError {
 		grant, err := FindGrantByTwoPartKey(ctx, conn, keyID, grantID)
 
 		if tfresource.NotFound(err) {
