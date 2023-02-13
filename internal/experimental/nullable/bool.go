@@ -42,12 +42,13 @@ func ValidateTypeStringNullableBool(v interface{}, k string) (ws []string, es []
 		return
 	}
 
-	switch value {
-	case "", "1", "true", "0", "false":
+	if value == "" {
 		return
 	}
 
-	es = append(es, fmt.Errorf("%s: cannot parse '%s' as boolean", k, value))
+	if _, err := strconv.ParseBool(value); err != nil {
+		es = append(es, fmt.Errorf("%s: cannot parse '%s' as boolean: %w", k, value, err))
+	}
 
 	return
 }
