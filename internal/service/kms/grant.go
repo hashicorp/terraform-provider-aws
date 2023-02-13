@@ -179,6 +179,9 @@ func resourceGrantCreate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceGrantRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	const (
+		timeout = 3 * time.Minute
+	)
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSConn()
 
@@ -188,7 +191,7 @@ func resourceGrantRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "parsing resource ID: %s", err)
 	}
 
-	grant, err := findGrantByTwoPartKeyWithRetry(ctx, conn, keyID, grantID, 3*time.Minute)
+	grant, err := findGrantByTwoPartKeyWithRetry(ctx, conn, keyID, grantID, timeout)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] KMS Grant (%s) not found, removing from state", d.Id())
