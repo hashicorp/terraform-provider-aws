@@ -808,10 +808,15 @@ func resourceVirtualGatewayDelete(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).AppMeshConn()
 
 	log.Printf("[DEBUG] Deleting App Mesh Virtual Gateway: %s", d.Id())
-	_, err := conn.DeleteVirtualGatewayWithContext(ctx, &appmesh.DeleteVirtualGatewayInput{
+	input := &appmesh.DeleteVirtualGatewayInput{
 		MeshName:           aws.String(d.Get("mesh_name").(string)),
 		VirtualGatewayName: aws.String(d.Get("name").(string)),
-	})
+	}
+	if v, ok := d.GetOk("mesh_owner"); ok {
+		input.MeshOwner = aws.String(v.(string))
+	}
+
+	_, err := conn.DeleteVirtualGatewayWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
 		return diags

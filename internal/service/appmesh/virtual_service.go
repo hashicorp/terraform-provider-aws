@@ -296,10 +296,15 @@ func resourceVirtualServiceDelete(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).AppMeshConn()
 
 	log.Printf("[DEBUG] Deleting App Mesh Virtual Service: %s", d.Id())
-	_, err := conn.DeleteVirtualServiceWithContext(ctx, &appmesh.DeleteVirtualServiceInput{
+	req := &appmesh.DeleteVirtualServiceInput{
 		MeshName:           aws.String(d.Get("mesh_name").(string)),
 		VirtualServiceName: aws.String(d.Get("name").(string)),
-	})
+	}
+	if v, ok := d.GetOk("mesh_owner"); ok {
+		req.MeshOwner = aws.String(v.(string))
+	}
+
+	_, err := conn.DeleteVirtualServiceWithContext(ctx, req)
 	if tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
 		return diags
 	}

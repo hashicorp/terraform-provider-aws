@@ -913,11 +913,16 @@ func resourceRouteDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).AppMeshConn()
 
 	log.Printf("[DEBUG] Deleting App Mesh Route: %s", d.Id())
-	_, err := conn.DeleteRouteWithContext(ctx, &appmesh.DeleteRouteInput{
+	req := &appmesh.DeleteRouteInput{
 		MeshName:          aws.String(d.Get("mesh_name").(string)),
 		RouteName:         aws.String(d.Get("name").(string)),
 		VirtualRouterName: aws.String(d.Get("virtual_router_name").(string)),
-	})
+	}
+	if v, ok := d.GetOk("mesh_owner"); ok {
+		req.MeshOwner = aws.String(v.(string))
+	}
+
+	_, err := conn.DeleteRouteWithContext(ctx, req)
 	if tfawserr.ErrCodeEquals(err, appmesh.ErrCodeNotFoundException) {
 		return diags
 	}
@@ -941,11 +946,16 @@ func resourceRouteImport(ctx context.Context, d *schema.ResourceData, meta inter
 
 	conn := meta.(*conns.AWSClient).AppMeshConn()
 
-	resp, err := conn.DescribeRouteWithContext(ctx, &appmesh.DescribeRouteInput{
+	req := &appmesh.DescribeRouteInput{
 		MeshName:          aws.String(mesh),
 		RouteName:         aws.String(name),
 		VirtualRouterName: aws.String(vrName),
-	})
+	}
+	if v, ok := d.GetOk("mesh_owner"); ok {
+		req.MeshOwner = aws.String(v.(string))
+	}
+
+	resp, err := conn.DescribeRouteWithContext(ctx, req)
 	if err != nil {
 		return nil, err
 	}
