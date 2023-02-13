@@ -99,7 +99,8 @@ The following arguments are required:
 The following arguments are optional:
 
 * `app_network_access_type` - (Optional) Specifies the VPC used for non-EFS traffic. The default value is `PublicInternetOnly`. Valid values are `PublicInternetOnly` and `VpcOnly`.
-* `app_security_group_management` - (Optional) The entity that creates and manages the required security groups for inter-app communication in `VPCOnly` mode. Valid values are `Service` and `Customer`.* `domain_settings` - (Optional) The domain settings. See [Domain Settings](#domain_settings) below.
+* `app_security_group_management` - (Optional) The entity that creates and manages the required security groups for inter-app communication in `VPCOnly` mode. Valid values are `Service` and `Customer`.
+* `domain_settings` - (Optional) The domain settings. See [Domain Settings](#domain_settings) below.
 * `domain_settings` - (Optional) The domain's settings.
 * `kms_key_id` - (Optional) The AWS KMS customer managed CMK used to encrypt the EFS volume attached to the domain.
 * `retention_policy` - (Optional) The retention policy for this domain, which specifies whether resources will be retained after the Domain is deleted. By default, all resources are retained. See [Retention Policy](#retention_policy) below.
