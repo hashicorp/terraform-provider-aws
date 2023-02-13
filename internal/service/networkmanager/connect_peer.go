@@ -149,7 +149,10 @@ func ResourceConnectPeer() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 				MaxItems: 2,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.IsCIDR,
+				},
 			},
 			"peer_address": {
 				Type:     schema.TypeString,
