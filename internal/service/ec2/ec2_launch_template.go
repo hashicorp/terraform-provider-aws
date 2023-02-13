@@ -1191,9 +1191,7 @@ func expandRequestLaunchTemplateData(ctx context.Context, conn *ec2.EC2, d *sche
 		apiObject.DisableApiTermination = aws.Bool(v.(bool))
 	}
 
-	if v, ok := d.GetOk("ebs_optimized"); ok {
-		v, _ := strconv.ParseBool(v.(string))
-
+	if v, null, _ := nullable.Bool(d.Get("ebs_optimized").(string)).Value(); !null {
 		apiObject.EbsOptimized = aws.Bool(v)
 	}
 
