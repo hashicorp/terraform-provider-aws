@@ -11,13 +11,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfelasticbeanstalk "github.com/hashicorp/terraform-provider-aws/internal/service/elasticbeanstalk"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccElasticBeanstalkEnvironment_BeanstalkEnv_basic(t *testing.T) {
@@ -508,35 +508,24 @@ func testAccCheckEnvironmentDestroy(ctx context.Context) resource.TestCheckFunc 
 				continue
 			}
 
-			// Try to find the environment
-			describeBeanstalkEnvOpts := &elasticbeanstalk.DescribeEnvironmentsInput{
-				EnvironmentIds: []*string{aws.String(rs.Primary.ID)},
-			}
-			resp, err := conn.DescribeEnvironmentsWithContext(ctx, describeBeanstalkEnvOpts)
-			if err == nil {
-				switch {
-				case len(resp.Environments) > 1:
-					return fmt.Errorf("error %d environments match, expected 1", len(resp.Environments))
-				case len(resp.Environments) == 1:
-					if *resp.Environments[0].Status == "Terminated" {
-						return nil
-					}
-					return fmt.Errorf("Elastic Beanstalk ENV still exists")
-				default:
-					return nil
-				}
+			_, err := tfelasticbeanstalk.FindEnvironmentByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
 			}
 
-			if !tfawserr.ErrCodeEquals(err, "InvalidBeanstalkEnvID.NotFound") {
+			if err != nil {
 				return err
 			}
+
+			return fmt.Errorf("Elastic Beanstalk Environment %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckEnvironmentExists(ctx context.Context, n string, app *elasticbeanstalk.EnvironmentDescription) resource.TestCheckFunc {
+func testAccCheckEnvironmentExists(ctx context.Context, n string, v *elasticbeanstalk.EnvironmentDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -544,15 +533,18 @@ func testAccCheckEnvironmentExists(ctx context.Context, n string, app *elasticbe
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("Elastic Beanstalk ENV is not set")
+			return fmt.Errorf("No Elastic Beanstalk Environment ID is set")
 		}
 
-		env, err := describeEnvironment(ctx, acctest.Provider.Meta().(*conns.AWSClient).ElasticBeanstalkConn(), aws.String(rs.Primary.ID))
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticBeanstalkConn()
+
+		output, err := tfelasticbeanstalk.FindEnvironmentByID(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		*app = *env
+		*v = *output
 
 		return nil
 	}
