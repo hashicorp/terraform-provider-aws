@@ -18,6 +18,7 @@ import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -48,6 +49,23 @@ func settingSchema() *schema.Resource {
 		},
 	}
 }
+
+const (
+	environmentTierWebServer = "WebServer"
+	environmentTierWorker    = "Worker"
+)
+
+func environmentTier_Values() []string {
+	return []string{
+		environmentTierWebServer,
+		environmentTierWorker,
+	}
+}
+
+const (
+	environmentTierTypeSQSHTTP  = "SQS/HTTP"
+	environmentTierTypeStandard = "Standard"
+)
 
 func ResourceEnvironment() *schema.Resource {
 	//lintignore:R011
@@ -160,21 +178,11 @@ func ResourceEnvironment() *schema.Resource {
 				ConflictsWith: []string{"solution_stack_name", "platform_arn"},
 			},
 			"tier": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Default:  "WebServer",
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					value := v.(string)
-					switch value {
-					case
-						"Worker",
-						"WebServer":
-						return
-					}
-					errors = append(errors, fmt.Errorf("%s is not a valid tier. Valid options are WebServer or Worker", value))
-					return
-				},
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Default:      environmentTierWebServer,
+				ValidateFunc: validation.StringInSlice(environmentTier_Values(), false),
 			},
 			"triggers": {
 				Type:     schema.TypeList,
@@ -202,71 +210,60 @@ func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
-	// Get values from config
 	name := d.Get("name").(string)
-	cnamePrefix := d.Get("cname_prefix").(string)
-	tier := d.Get("tier").(string)
-	app := d.Get("application").(string)
-	desc := d.Get("description").(string)
-	version := d.Get("version_label").(string)
-	settings := d.Get("setting").(*schema.Set)
-	solutionStack := d.Get("solution_stack_name").(string)
-	platformArn := d.Get("platform_arn").(string)
-	templateName := d.Get("template_name").(string)
-
-	createOpts := elasticbeanstalk.CreateEnvironmentInput{
+	input := &elasticbeanstalk.CreateEnvironmentInput{
+		ApplicationName: aws.String(d.Get("application").(string)),
 		EnvironmentName: aws.String(name),
-		ApplicationName: aws.String(app),
-		OptionSettings:  extractOptionSettings(settings),
+		OptionSettings:  extractOptionSettings(d.Get("setting").(*schema.Set)),
 		Tags:            Tags(tags.IgnoreElasticbeanstalk()),
 	}
 
-	if desc != "" {
-		createOpts.Description = aws.String(desc)
+	if v := d.Get("description"); v.(string) != "" {
+		input.Description = aws.String(v.(string))
 	}
 
-	if cnamePrefix != "" {
-		if tier != "WebServer" {
-			return sdkdiag.AppendErrorf(diags, "cannot set cname_prefix for tier: %s", tier)
+	if v := d.Get("platform_arn"); v.(string) != "" {
+		input.PlatformArn = aws.String(v.(string))
+	}
+
+	if v := d.Get("solution_stack_name"); v.(string) != "" {
+		input.SolutionStackName = aws.String(v.(string))
+	}
+
+	if v := d.Get("template_name"); v.(string) != "" {
+		input.TemplateName = aws.String(v.(string))
+	}
+
+	if v := d.Get("version_label"); v.(string) != "" {
+		input.VersionLabel = aws.String(v.(string))
+	}
+
+	tier := d.Get("tier").(string)
+	var tierType string
+
+	if v := d.Get("cname_prefix"); v.(string) != "" {
+		if tier != environmentTierWebServer {
+			return sdkdiag.AppendErrorf(diags, "cname_prefix conflicts with tier: %s", tier)
 		}
-		createOpts.CNAMEPrefix = aws.String(cnamePrefix)
+
+		input.CNAMEPrefix = aws.String(v.(string))
 	}
 
-	if tier != "" {
-		var tierType string
-
-		switch tier {
-		case "WebServer":
-			tierType = "Standard"
-		case "Worker":
-			tierType = "SQS/HTTP"
-		}
-		environmentTier := elasticbeanstalk.EnvironmentTier{
-			Name: aws.String(tier),
-			Type: aws.String(tierType),
-		}
-		createOpts.Tier = &environmentTier
+	switch tier {
+	case environmentTierWebServer:
+		tierType = environmentTierTypeStandard
+	case environmentTierWorker:
+		tierType = environmentTierTypeSQSHTTP
 	}
-
-	if solutionStack != "" {
-		createOpts.SolutionStackName = aws.String(solutionStack)
-	}
-
-	if platformArn != "" {
-		createOpts.PlatformArn = aws.String(platformArn)
-	}
-
-	if templateName != "" {
-		createOpts.TemplateName = aws.String(templateName)
-	}
-
-	if version != "" {
-		createOpts.VersionLabel = aws.String(version)
+	input.Tier = &elasticbeanstalk.EnvironmentTier{
+		Name: aws.String(tier),
+		Type: aws.String(tierType),
 	}
 
 	// Get the current time to filter getEnvironmentErrors messages
 	t := time.Now()
-	resp, err := conn.CreateEnvironmentWithContext(ctx, &createOpts)
+	resp, err := conn.CreateEnvironmentWithContext(ctx, input)
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Elastic Beanstalk Environment (%s): %s", name, err)
 	}
@@ -300,6 +297,128 @@ func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	return append(diags, resourceEnvironmentRead(ctx, d, meta)...)
+}
+
+func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn()
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+
+	envID := d.Id()
+
+	log.Printf("[DEBUG] Elastic Beanstalk environment read %s: id %s", d.Get("name").(string), d.Id())
+
+	resp, err := conn.DescribeEnvironmentsWithContext(ctx, &elasticbeanstalk.DescribeEnvironmentsInput{
+		EnvironmentIds: []*string{aws.String(envID)},
+	})
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Elastic Beanstalk Environment (%s): %s", d.Id(), err)
+	}
+
+	if len(resp.Environments) == 0 {
+		log.Printf("[DEBUG] Elastic Beanstalk environment properties: could not find environment %s", d.Id())
+
+		d.SetId("")
+		return diags
+	} else if len(resp.Environments) != 1 {
+		return sdkdiag.AppendErrorf(diags, "reading application properties: found %d environments, expected 1", len(resp.Environments))
+	}
+
+	env := resp.Environments[0]
+
+	if aws.StringValue(env.Status) == elasticbeanstalk.EnvironmentStatusTerminated {
+		log.Printf("[DEBUG] Elastic Beanstalk environment %s was terminated", d.Id())
+
+		d.SetId("")
+		return diags
+	}
+
+	resources, err := conn.DescribeEnvironmentResourcesWithContext(ctx, &elasticbeanstalk.DescribeEnvironmentResourcesInput{
+		EnvironmentId: aws.String(envID),
+	})
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Elastic Beanstalk Environment (%s): %s", d.Id(), err)
+	}
+
+	arn := aws.StringValue(env.EnvironmentArn)
+	d.Set("arn", arn)
+
+	d.Set("name", env.EnvironmentName)
+
+	d.Set("application", env.ApplicationName)
+
+	d.Set("description", env.Description)
+
+	d.Set("cname", env.CNAME)
+
+	d.Set("version_label", env.VersionLabel)
+
+	d.Set("tier", env.Tier.Name)
+
+	if env.CNAME != nil {
+		beanstalkCnamePrefixRegexp := regexp.MustCompile(`(^[^.]+)(.\w{2}-\w{4,9}-\d)?\.(elasticbeanstalk\.com|eb\.amazonaws\.com\.cn)$`)
+		var cnamePrefix string
+		cnamePrefixMatch := beanstalkCnamePrefixRegexp.FindStringSubmatch(*env.CNAME)
+
+		if cnamePrefixMatch == nil {
+			cnamePrefix = ""
+		} else {
+			cnamePrefix = cnamePrefixMatch[1]
+		}
+
+		d.Set("cname_prefix", cnamePrefix)
+	} else {
+		d.Set("cname_prefix", "")
+	}
+
+	d.Set("solution_stack_name", env.SolutionStackName)
+
+	d.Set("platform_arn", env.PlatformArn)
+
+	if err := d.Set("autoscaling_groups", flattenASG(resources.EnvironmentResources.AutoScalingGroups)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Elastic Beanstalk Environment (%s): %s", d.Id(), err)
+	}
+
+	if err := d.Set("instances", flattenInstances(resources.EnvironmentResources.Instances)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Elastic Beanstalk Environment (%s): %s", d.Id(), err)
+	}
+	if err := d.Set("launch_configurations", flattenLc(resources.EnvironmentResources.LaunchConfigurations)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Elastic Beanstalk Environment (%s): %s", d.Id(), err)
+	}
+	if err := d.Set("load_balancers", flattenELB(resources.EnvironmentResources.LoadBalancers)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Elastic Beanstalk Environment (%s): %s", d.Id(), err)
+	}
+	if err := d.Set("queues", flattenSQS(resources.EnvironmentResources.Queues)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Elastic Beanstalk Environment (%s): %s", d.Id(), err)
+	}
+	if err := d.Set("triggers", flattenTrigger(resources.EnvironmentResources.Triggers)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Elastic Beanstalk Environment (%s): %s", d.Id(), err)
+	}
+	if err := d.Set("endpoint_url", env.EndpointURL); err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Elastic Beanstalk Environment (%s): %s", d.Id(), err)
+	}
+
+	tags, err := ListTags(ctx, conn, arn)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "listing tags for Elastic Beanstalk environment (%s): %s", arn, err)
+	}
+
+	tags = tags.IgnoreElasticbeanstalk().IgnoreConfig(ignoreTagsConfig)
+
+	//lintignore:AWSR002
+	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
+	}
+
+	return append(diags, resourceEnvironmentSettingsRead(ctx, d, meta)...)
 }
 
 func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -484,126 +603,32 @@ func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta
 	return append(diags, resourceEnvironmentRead(ctx, d, meta)...)
 }
 
-func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceEnvironmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn()
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	envID := d.Id()
-
-	log.Printf("[DEBUG] Elastic Beanstalk environment read %s: id %s", d.Get("name").(string), d.Id())
-
-	resp, err := conn.DescribeEnvironmentsWithContext(ctx, &elasticbeanstalk.DescribeEnvironmentsInput{
-		EnvironmentIds: []*string{aws.String(envID)},
-	})
+	waitForReadyTimeOut, _, err := sdktypes.Duration(d.Get("wait_for_ready_timeout").(string)).Value()
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Elastic Beanstalk Environment (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "parsing wait_for_ready_timeout: %s", err)
 	}
 
-	if len(resp.Environments) == 0 {
-		log.Printf("[DEBUG] Elastic Beanstalk environment properties: could not find environment %s", d.Id())
-
-		d.SetId("")
-		return diags
-	} else if len(resp.Environments) != 1 {
-		return sdkdiag.AppendErrorf(diags, "reading application properties: found %d environments, expected 1", len(resp.Environments))
-	}
-
-	env := resp.Environments[0]
-
-	if aws.StringValue(env.Status) == elasticbeanstalk.EnvironmentStatusTerminated {
-		log.Printf("[DEBUG] Elastic Beanstalk environment %s was terminated", d.Id())
-
-		d.SetId("")
-		return diags
-	}
-
-	resources, err := conn.DescribeEnvironmentResourcesWithContext(ctx, &elasticbeanstalk.DescribeEnvironmentResourcesInput{
-		EnvironmentId: aws.String(envID),
-	})
+	pollInterval, _, err := sdktypes.Duration(d.Get("poll_interval").(string)).Value()
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Elastic Beanstalk Environment (%s): %s", d.Id(), err)
+		pollInterval = 0
 	}
 
-	arn := aws.StringValue(env.EnvironmentArn)
-	d.Set("arn", arn)
-
-	d.Set("name", env.EnvironmentName)
-
-	d.Set("application", env.ApplicationName)
-
-	d.Set("description", env.Description)
-
-	d.Set("cname", env.CNAME)
-
-	d.Set("version_label", env.VersionLabel)
-
-	d.Set("tier", env.Tier.Name)
-
-	if env.CNAME != nil {
-		beanstalkCnamePrefixRegexp := regexp.MustCompile(`(^[^.]+)(.\w{2}-\w{4,9}-\d)?\.(elasticbeanstalk\.com|eb\.amazonaws\.com\.cn)$`)
-		var cnamePrefix string
-		cnamePrefixMatch := beanstalkCnamePrefixRegexp.FindStringSubmatch(*env.CNAME)
-
-		if cnamePrefixMatch == nil {
-			cnamePrefix = ""
-		} else {
-			cnamePrefix = cnamePrefixMatch[1]
-		}
-
-		d.Set("cname_prefix", cnamePrefix)
-	} else {
-		d.Set("cname_prefix", "")
-	}
-
-	d.Set("solution_stack_name", env.SolutionStackName)
-
-	d.Set("platform_arn", env.PlatformArn)
-
-	if err := d.Set("autoscaling_groups", flattenASG(resources.EnvironmentResources.AutoScalingGroups)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Elastic Beanstalk Environment (%s): %s", d.Id(), err)
-	}
-
-	if err := d.Set("instances", flattenInstances(resources.EnvironmentResources.Instances)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Elastic Beanstalk Environment (%s): %s", d.Id(), err)
-	}
-	if err := d.Set("launch_configurations", flattenLc(resources.EnvironmentResources.LaunchConfigurations)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Elastic Beanstalk Environment (%s): %s", d.Id(), err)
-	}
-	if err := d.Set("load_balancers", flattenELB(resources.EnvironmentResources.LoadBalancers)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Elastic Beanstalk Environment (%s): %s", d.Id(), err)
-	}
-	if err := d.Set("queues", flattenSQS(resources.EnvironmentResources.Queues)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Elastic Beanstalk Environment (%s): %s", d.Id(), err)
-	}
-	if err := d.Set("triggers", flattenTrigger(resources.EnvironmentResources.Triggers)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Elastic Beanstalk Environment (%s): %s", d.Id(), err)
-	}
-	if err := d.Set("endpoint_url", env.EndpointURL); err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Elastic Beanstalk Environment (%s): %s", d.Id(), err)
-	}
-
-	tags, err := ListTags(ctx, conn, arn)
-
+	// The Environment needs to be in a Ready state before it can be terminated
+	err = waitForEnvironmentReadyIgnoreErrorEvents(ctx, conn, d.Id(), waitForReadyTimeOut, pollInterval)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for Elastic Beanstalk environment (%s): %s", arn, err)
+		return sdkdiag.AppendErrorf(diags, "deleting Elastic Beanstalk Environment (%s): waiting for ready state: %s", d.Id(), err)
 	}
 
-	tags = tags.IgnoreElasticbeanstalk().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
+	if err := DeleteEnvironment(ctx, conn, d.Id(), waitForReadyTimeOut, pollInterval); err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting Elastic Beanstalk Environment (%s): %s", d.Id(), err)
 	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
-	}
-
-	return append(diags, resourceEnvironmentSettingsRead(ctx, d, meta)...)
+	return diags
 }
 
 func fetchEnvironmentSettings(ctx context.Context, d *schema.ResourceData, meta interface{}) (*schema.Set, error) {
@@ -693,34 +718,6 @@ func resourceEnvironmentSettingsRead(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	return diags
-}
-
-func resourceEnvironmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn()
-
-	waitForReadyTimeOut, _, err := sdktypes.Duration(d.Get("wait_for_ready_timeout").(string)).Value()
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "parsing wait_for_ready_timeout: %s", err)
-	}
-
-	pollInterval, _, err := sdktypes.Duration(d.Get("poll_interval").(string)).Value()
-
-	if err != nil {
-		pollInterval = 0
-	}
-
-	// The Environment needs to be in a Ready state before it can be terminated
-	err = waitForEnvironmentReadyIgnoreErrorEvents(ctx, conn, d.Id(), waitForReadyTimeOut, pollInterval)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Elastic Beanstalk Environment (%s): waiting for ready state: %s", d.Id(), err)
-	}
-
-	if err := DeleteEnvironment(ctx, conn, d.Id(), waitForReadyTimeOut, pollInterval); err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Elastic Beanstalk Environment (%s): %s", d.Id(), err)
-	}
 	return diags
 }
 
