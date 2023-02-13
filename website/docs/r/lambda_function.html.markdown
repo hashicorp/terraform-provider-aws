@@ -23,24 +23,22 @@ For a detailed example of setting up Lambda and API Gateway, see [Serverless App
 ### Basic Example
 
 ```terraform
-resource "aws_iam_role" "iam_for_lambda" {
-  name = "iam_for_lambda"
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    effect = "Allow"
 
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "lambda.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
+    principals {
+      type        = "Service"
+      identifiers = ["lambda.amazonaws.com"]
     }
-  ]
+
+    actions = ["sts:AssumeRole"]
+  }
 }
-EOF
+
+resource "aws_iam_role" "iam_for_lambda" {
+  name               = "iam_for_lambda"
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
 }
 
 resource "aws_lambda_function" "test_lambda" {
@@ -86,24 +84,22 @@ resource "aws_lambda_function" "example" {
 Lambda Function Ephemeral Storage(`/tmp`) allows you to configure the storage upto `10` GB. The default value set to `512` MB.
 
 ```terraform
-resource "aws_iam_role" "iam_for_lambda" {
-  name = "iam_for_lambda"
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    effect = "Allow"
 
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "lambda.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
+    principals {
+      type        = "Service"
+      identifiers = ["lambda.amazonaws.com"]
     }
-  ]
+
+    actions = ["sts:AssumeRole"]
+  }
 }
-EOF
+
+resource "aws_iam_role" "iam_for_lambda" {
+  name               = "iam_for_lambda"
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
 }
 
 resource "aws_lambda_function" "test_lambda" {
@@ -212,27 +208,25 @@ resource "aws_cloudwatch_log_group" "example" {
 }
 
 # See also the following AWS managed policy: AWSLambdaBasicExecutionRole
+data "aws_iam_policy_document" "lambda_logging" {
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "logs:CreateLogGroup",
+      "logs:CreateLogStream",
+      "logs:PutLogEvents",
+    ]
+
+    resources = ["arn:aws:logs:*:*:*"]
+  }
+}
+
 resource "aws_iam_policy" "lambda_logging" {
   name        = "lambda_logging"
   path        = "/"
   description = "IAM policy for logging from a lambda"
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": [
-        "logs:CreateLogGroup",
-        "logs:CreateLogStream",
-        "logs:PutLogEvents"
-      ],
-      "Resource": "arn:aws:logs:*:*:*",
-      "Effect": "Allow"
-    }
-  ]
-}
-EOF
+  policy      = data.aws_iam_policy_document.lambda_logging.json
 }
 
 resource "aws_iam_role_policy_attachment" "lambda_logs" {
@@ -354,7 +348,6 @@ In addition to all arguments above, the following attributes are exported:
 * `vpc_config.vpc_id` - ID of the VPC.
 
 [1]: https://docs.aws.amazon.com/lambda/latest/dg/welcome.html
-[2]: https://docs.aws.amazon.com/lambda/latest/dg/walkthrough-s3-events-adminuser-create-test-function-create-function.html
 [3]: https://docs.aws.amazon.com/lambda/latest/dg/walkthrough-custom-events-create-test-function.html
 [4]: https://docs.aws.amazon.com/lambda/latest/dg/intro-permission-model.html
 [5]: https://docs.aws.amazon.com/lambda/latest/dg/limits.html
@@ -365,7 +358,6 @@ In addition to all arguments above, the following attributes are exported:
 [10]: https://docs.aws.amazon.com/lambda/latest/dg/configuration-layers.html
 [11]: https://learn.hashicorp.com/terraform/aws/lambda-api-gateway
 [12]: https://docs.aws.amazon.com/lambda/latest/dg/services-efs.html
-[13]: https://docs.aws.amazon.com/lambda/latest/dg/lambda-images.html
 
 ## Timeouts
 
