@@ -699,7 +699,7 @@ resource "aws_medialive_channel" "test" {
                 audio_buffer_model = "ATSC"
                 buffer_model       = "MULTIPLEX"
                 rate_mode          = "CBR"
-	          }
+              }
             }
           }
         }
