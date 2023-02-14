@@ -28,8 +28,8 @@ const (
 )
 
 var (
-	errNoRecordsFound    = errors.New("No matching records found")
-	errNoHostedZoneFound = errors.New("No matching Hosted Zone found")
+	errNoRecordsFound    = errors.New("no matching records found")
+	errNoHostedZoneFound = errors.New("no matching Hosted Zone found")
 )
 
 func ResourceRecord() *schema.Resource {
@@ -45,63 +45,16 @@ func ResourceRecord() *schema.Resource {
 		SchemaVersion: 2,
 		MigrateState:  RecordMigrateState,
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				StateFunc: func(v interface{}) string {
-					// AWS Provider aws_acm_certification.domain_validation_options.resource_record_name
-					// references (and perhaps others) contain a trailing period, requiring a custom StateFunc
-					// to trim the string to prevent Route53 API error.
-					value := strings.TrimSuffix(v.(string), ".")
-					return strings.ToLower(value)
-				},
-			},
-
-			"fqdn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice(route53.RRType_Values(), false),
-			},
-
-			"zone_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.NoZeroValues,
-			},
-
-			"ttl": {
-				Type:          schema.TypeInt,
-				Optional:      true,
-				ConflictsWith: []string{"alias"},
-				RequiredWith:  []string{"records", "ttl"},
-			},
-
-			"set_identifier": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-
 			"alias": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				MaxItems:      1,
-				ExactlyOneOf:  []string{"alias", "records"},
-				ConflictsWith: []string{"ttl"},
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"zone_id": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 32),
+						"evaluate_target_health": {
+							Type:     schema.TypeBool,
+							Required: true,
 						},
-
 						"name": {
 							Type:      schema.TypeString,
 							Required:  true,
@@ -111,26 +64,25 @@ func ResourceRecord() *schema.Resource {
 							},
 							ValidateFunc: validation.StringLenBetween(1, 1024),
 						},
-
-						"evaluate_target_health": {
-							Type:     schema.TypeBool,
-							Required: true,
+						"zone_id": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringLenBetween(1, 32),
 						},
 					},
 				},
+				ExactlyOneOf:  []string{"alias", "records"},
+				ConflictsWith: []string{"ttl"},
 			},
-
+			"allow_overwrite": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
 			"failover_routing_policy": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Optional: true,
-				ConflictsWith: []string{
-					"geolocation_routing_policy",
-					"latency_routing_policy",
-					"weighted_routing_policy",
-					"multivalue_answer_routing_policy",
-				},
-				RequiredWith: []string{"set_identifier"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"type": {
@@ -146,40 +98,22 @@ func ResourceRecord() *schema.Resource {
 						},
 					},
 				},
-			},
-
-			"latency_routing_policy": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
 				ConflictsWith: []string{
-					"failover_routing_policy",
 					"geolocation_routing_policy",
-					"weighted_routing_policy",
-					"multivalue_answer_routing_policy",
-				},
-				RequiredWith: []string{"set_identifier"},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"region": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-					},
-				},
-			},
-
-			"geolocation_routing_policy": { // AWS Geolocation
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				ConflictsWith: []string{
-					"failover_routing_policy",
 					"latency_routing_policy",
 					"weighted_routing_policy",
 					"multivalue_answer_routing_policy",
 				},
 				RequiredWith: []string{"set_identifier"},
+			},
+			"fqdn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"geolocation_routing_policy": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"continent": {
@@ -196,29 +130,38 @@ func ResourceRecord() *schema.Resource {
 						},
 					},
 				},
-			},
-
-			"weighted_routing_policy": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
 				ConflictsWith: []string{
 					"failover_routing_policy",
-					"geolocation_routing_policy",
 					"latency_routing_policy",
+					"weighted_routing_policy",
 					"multivalue_answer_routing_policy",
 				},
 				RequiredWith: []string{"set_identifier"},
+			},
+			"health_check_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"latency_routing_policy": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"weight": {
-							Type:     schema.TypeInt,
+						"region": {
+							Type:     schema.TypeString,
 							Required: true,
 						},
 					},
 				},
+				ConflictsWith: []string{
+					"failover_routing_policy",
+					"geolocation_routing_policy",
+					"weighted_routing_policy",
+					"multivalue_answer_routing_policy",
+				},
+				RequiredWith: []string{"set_identifier"},
 			},
-
 			"multivalue_answer_routing_policy": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -230,24 +173,64 @@ func ResourceRecord() *schema.Resource {
 				},
 				RequiredWith: []string{"set_identifier"},
 			},
-
-			"health_check_id": { // ID of health check
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				StateFunc: func(v interface{}) string {
+					// AWS Provider aws_acm_certification.domain_validation_options.resource_record_name
+					// references (and perhaps others) contain a trailing period, requiring a custom StateFunc
+					// to trim the string to prevent Route53 API error.
+					value := strings.TrimSuffix(v.(string), ".")
+					return strings.ToLower(value)
+				},
+			},
+			"records": {
+				Type:         schema.TypeSet,
+				Optional:     true,
+				Elem:         &schema.Schema{Type: schema.TypeString},
+				ExactlyOneOf: []string{"alias", "records"},
+			},
+			"set_identifier": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-
-			"records": {
-				Type:         schema.TypeSet,
-				ExactlyOneOf: []string{"alias", "records"},
-				Elem:         &schema.Schema{Type: schema.TypeString},
-				Optional:     true,
-				Set:          schema.HashString,
+			"ttl": {
+				Type:          schema.TypeInt,
+				Optional:      true,
+				ConflictsWith: []string{"alias"},
+				RequiredWith:  []string{"records", "ttl"},
 			},
-
-			"allow_overwrite": {
-				Type:     schema.TypeBool,
+			"type": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice(route53.RRType_Values(), false),
+			},
+			"weighted_routing_policy": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
 				Optional: true,
-				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"weight": {
+							Type:     schema.TypeInt,
+							Required: true,
+						},
+					},
+				},
+				ConflictsWith: []string{
+					"failover_routing_policy",
+					"geolocation_routing_policy",
+					"latency_routing_policy",
+					"multivalue_answer_routing_policy",
+				},
+				RequiredWith: []string{"set_identifier"},
+			},
+			"zone_id": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.NoZeroValues,
 			},
 		},
 	}
