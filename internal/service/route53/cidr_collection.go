@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"regexp"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53"
@@ -80,7 +81,9 @@ func (r *resourceCIDRCollection) Create(ctx context.Context, request resource.Cr
 		Name:            aws.String(name),
 	}
 
-	output, err := conn.CreateCidrCollectionWithContext(ctx, input)
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
+		return conn.CreateCidrCollectionWithContext(ctx, input)
+	}, route53.ErrCodeConcurrentModification)
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("creating Route 53 CIDR Collection (%s)", name), err.Error())
@@ -88,6 +91,7 @@ func (r *resourceCIDRCollection) Create(ctx context.Context, request resource.Cr
 		return
 	}
 
+	output := outputRaw.(*route53.CreateCidrCollectionOutput)
 	data.ARN = flex.StringToFramework(ctx, output.Collection.Arn)
 	data.ID = flex.StringToFramework(ctx, output.Collection.Id)
 	data.Version = flex.Int64ToFramework(ctx, output.Collection.Version)
