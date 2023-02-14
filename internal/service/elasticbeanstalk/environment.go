@@ -733,13 +733,6 @@ func findConfigurationSettingsByTwoPartKey(ctx context.Context, conn *elasticbea
 
 	output, err := conn.DescribeConfigurationSettingsWithContext(ctx, input)
 
-	if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "No Environment found") {
-		return nil, &resource.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
 	if err != nil {
 		return nil, err
 	}
