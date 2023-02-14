@@ -39,11 +39,14 @@ func ResourceRecord() *schema.Resource {
 		ReadWithoutTimeout:   resourceRecordRead,
 		UpdateWithoutTimeout: resourceRecordUpdate,
 		DeleteWithoutTimeout: resourceRecordDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
 		SchemaVersion: 2,
 		MigrateState:  RecordMigrateState,
+
 		Schema: map[string]*schema.Schema{
 			"alias": {
 				Type:     schema.TypeList,
@@ -236,14 +239,187 @@ func ResourceRecord() *schema.Resource {
 	}
 }
 
+func resourceRecordCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).Route53Conn()
+
+	zone := CleanZoneID(d.Get("zone_id").(string))
+
+	zoneRecord, err := FindHostedZoneByID(ctx, conn, zone)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "creating Route 53 Record (%s): getting Hosted Zone (%s): %s", d.Id(), zone, err)
+	}
+
+	// Build the record
+	rec := resourceRecordBuildSet(d, aws.StringValue(zoneRecord.HostedZone.Name))
+
+	// Protect existing DNS records which might be managed in another way.
+	// Use UPSERT only if the overwrite flag is true or if the current action is an update
+	// Else CREATE is used and fail if the same record exists
+	var action string
+	if d.Get("allow_overwrite").(bool) || !d.IsNewResource() {
+		action = route53.ChangeActionUpsert
+	} else {
+		action = route53.ChangeActionCreate
+	}
+
+	// Create the new records. We abuse StateChangeConf for this to
+	// retry for us since Route53 sometimes returns errors about another
+	// operation happening at the same time.
+	changeBatch := &route53.ChangeBatch{
+		Comment: aws.String("Managed by Terraform"),
+		Changes: []*route53.Change{
+			{
+				Action:            aws.String(action),
+				ResourceRecordSet: rec,
+			},
+		},
+	}
+
+	req := &route53.ChangeResourceRecordSetsInput{
+		HostedZoneId: aws.String(CleanZoneID(aws.StringValue(zoneRecord.HostedZone.Id))),
+		ChangeBatch:  changeBatch,
+	}
+
+	log.Printf("[DEBUG] Creating resource records for zone: %s, name: %s\n\n%s",
+		zone, aws.StringValue(rec.Name), req)
+
+	respRaw, err := ChangeRecordSet(ctx, conn, req)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "creating Route 53 Record (%s): updating record set: %s", d.Id(), err)
+	}
+
+	changeInfo := respRaw.(*route53.ChangeResourceRecordSetsOutput).ChangeInfo
+
+	// Generate an ID
+	vars := []string{
+		zone,
+		strings.ToLower(d.Get("name").(string)),
+		d.Get("type").(string),
+	}
+	if v, ok := d.GetOk("set_identifier"); ok {
+		vars = append(vars, v.(string))
+	}
+
+	d.SetId(strings.Join(vars, "_"))
+
+	err = WaitForRecordSetToSync(ctx, conn, CleanChangeID(aws.StringValue(changeInfo.Id)))
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "creating Route 53 Record (%s): updating record set: wating for completion: %s", d.Id(), err)
+	}
+
+	if _, err := findRecord(ctx, d, meta); err != nil {
+		return sdkdiag.AppendErrorf(diags, "creating Route 53 Record (%s): %s", d.Id(), err)
+	}
+	return diags
+}
+
+func resourceRecordRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	if _, ok := d.GetOk("zone_id"); !ok {
+		parts := ParseRecordID(d.Id())
+		// We check that we have parsed the id into the correct number of segments.
+		// We need at least 3 segments!
+		if parts[0] == "" || parts[1] == "" || parts[2] == "" {
+			return sdkdiag.AppendErrorf(diags, "importing aws_route_53 record. Please make sure the record ID is in the form ZONEID_RECORDNAME_TYPE_SET-IDENTIFIER (e.g. Z4KAPRWWNC7JR_dev.example.com_NS_dev), where SET-IDENTIFIER is optional")
+		}
+
+		d.Set("zone_id", parts[0])
+		d.Set("name", parts[1])
+		d.Set("type", parts[2])
+		if parts[3] != "" {
+			d.Set("set_identifier", parts[3])
+		}
+	}
+
+	record, err := findRecord(ctx, d, meta)
+	if err != nil {
+		switch err {
+		case errNoHostedZoneFound, errNoRecordsFound:
+			log.Printf("[WARN] Route 53 Record (%s) not found, removing from state", d.Id())
+			d.SetId("")
+			return diags
+		default:
+			return sdkdiag.AppendErrorf(diags, "reading Route 53 Record (%s): %s", d.Id(), err)
+		}
+	}
+
+	err = d.Set("records", FlattenResourceRecords(record.ResourceRecords, aws.StringValue(record.Type)))
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting records: %s", err)
+	}
+
+	if alias := record.AliasTarget; alias != nil {
+		name := NormalizeAliasName(aws.StringValue(alias.DNSName))
+		d.Set("alias", []interface{}{
+			map[string]interface{}{
+				"zone_id":                aws.StringValue(alias.HostedZoneId),
+				"name":                   name,
+				"evaluate_target_health": aws.BoolValue(alias.EvaluateTargetHealth),
+			},
+		})
+	}
+
+	d.Set("ttl", record.TTL)
+
+	if record.Failover != nil {
+		v := []map[string]interface{}{{
+			"type": aws.StringValue(record.Failover),
+		}}
+		if err := d.Set("failover_routing_policy", v); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting failover records for: %s, error: %s", d.Id(), err)
+		}
+	}
+
+	if record.GeoLocation != nil {
+		v := []map[string]interface{}{{
+			"continent":   aws.StringValue(record.GeoLocation.ContinentCode),
+			"country":     aws.StringValue(record.GeoLocation.CountryCode),
+			"subdivision": aws.StringValue(record.GeoLocation.SubdivisionCode),
+		}}
+		if err := d.Set("geolocation_routing_policy", v); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting gelocation records for: %s, error: %s", d.Id(), err)
+		}
+	}
+
+	if record.Region != nil {
+		v := []map[string]interface{}{{
+			"region": aws.StringValue(record.Region),
+		}}
+		if err := d.Set("latency_routing_policy", v); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting latency records for: %s, error: %s", d.Id(), err)
+		}
+	}
+
+	if record.Weight != nil {
+		v := []map[string]interface{}{{
+			"weight": aws.Int64Value((record.Weight)),
+		}}
+		if err := d.Set("weighted_routing_policy", v); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting weighted records for: %s, error: %s", d.Id(), err)
+		}
+	}
+
+	if err := d.Set("multivalue_answer_routing_policy", record.MultiValueAnswer); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting multivalue answer records for: %s, error: %s", d.Id(), err)
+	}
+
+	d.Set("set_identifier", record.SetIdentifier)
+	d.Set("health_check_id", record.HealthCheckId)
+
+	return diags
+}
+
 func resourceRecordUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).Route53Conn()
+
 	// Route 53 supports CREATE, DELETE, and UPSERT actions. We use UPSERT, and
 	// AWS dynamically determines if a record should be created or updated.
 	// Amazon Route 53 can update an existing resource record set only when all
 	// of the following values match: Name, Type and SetIdentifier
 	// See http://docs.aws.amazon.com/Route53/latest/APIReference/API_ChangeResourceRecordSets.html
-	diags diag.Diagnostics
 
 	if !d.HasChange("type") && !d.HasChange("set_identifier") {
 		// If neither type nor set_identifier changed we use UPSERT,
@@ -254,7 +430,6 @@ func resourceRecordUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	// Otherwise, we delete the existing record and create a new record within
 	// a transactional change.
-	conn := meta.(*conns.AWSClient).Route53Conn()
 	zone := CleanZoneID(d.Get("zone_id").(string))
 
 	zoneRecord, err := FindHostedZoneByID(ctx, conn, zone)
@@ -417,76 +592,52 @@ func resourceRecordUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func resourceRecordCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceRecordDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Conn()
-	zone := CleanZoneID(d.Get("zone_id").(string))
 
-	zoneRecord, err := FindHostedZoneByID(ctx, conn, zone)
+	// Get the records
+	rec, err := findRecord(ctx, d, meta)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Route 53 Record (%s): getting Hosted Zone (%s): %s", d.Id(), zone, err)
+		switch err {
+		case errNoHostedZoneFound, errNoRecordsFound:
+			return diags
+		default:
+			return sdkdiag.AppendErrorf(diags, "deleting Route 53 Record (%s): %s", d.Id(), err)
+		}
 	}
 
-	// Build the record
-	rec := resourceRecordBuildSet(d, aws.StringValue(zoneRecord.HostedZone.Name))
-
-	// Protect existing DNS records which might be managed in another way.
-	// Use UPSERT only if the overwrite flag is true or if the current action is an update
-	// Else CREATE is used and fail if the same record exists
-	var action string
-	if d.Get("allow_overwrite").(bool) || !d.IsNewResource() {
-		action = route53.ChangeActionUpsert
-	} else {
-		action = route53.ChangeActionCreate
-	}
-
-	// Create the new records. We abuse StateChangeConf for this to
-	// retry for us since Route53 sometimes returns errors about another
-	// operation happening at the same time.
+	// Change batch for deleting
 	changeBatch := &route53.ChangeBatch{
-		Comment: aws.String("Managed by Terraform"),
+		Comment: aws.String("Deleted by Terraform"),
 		Changes: []*route53.Change{
 			{
-				Action:            aws.String(action),
+				Action:            aws.String(route53.ChangeActionDelete),
 				ResourceRecordSet: rec,
 			},
 		},
 	}
 
+	zone := CleanZoneID(d.Get("zone_id").(string))
+
 	req := &route53.ChangeResourceRecordSetsInput{
-		HostedZoneId: aws.String(CleanZoneID(aws.StringValue(zoneRecord.HostedZone.Id))),
+		HostedZoneId: aws.String(CleanZoneID(zone)),
 		ChangeBatch:  changeBatch,
 	}
 
-	log.Printf("[DEBUG] Creating resource records for zone: %s, name: %s\n\n%s",
-		zone, aws.StringValue(rec.Name), req)
-
-	respRaw, err := ChangeRecordSet(ctx, conn, req)
+	respRaw, err := DeleteRecordSet(ctx, conn, req)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Route 53 Record (%s): updating record set: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Route 53 Record (%s): deleting record set: %s", d.Id(), err)
 	}
 
 	changeInfo := respRaw.(*route53.ChangeResourceRecordSetsOutput).ChangeInfo
-
-	// Generate an ID
-	vars := []string{
-		zone,
-		strings.ToLower(d.Get("name").(string)),
-		d.Get("type").(string),
-	}
-	if v, ok := d.GetOk("set_identifier"); ok {
-		vars = append(vars, v.(string))
+	if changeInfo == nil {
+		log.Printf("[INFO] No ChangeInfo Found. Waiting for Sync not required")
+		return diags
 	}
 
-	d.SetId(strings.Join(vars, "_"))
-
-	err = WaitForRecordSetToSync(ctx, conn, CleanChangeID(aws.StringValue(changeInfo.Id)))
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Route 53 Record (%s): updating record set: wating for completion: %s", d.Id(), err)
-	}
-
-	if _, err := findRecord(ctx, d, meta); err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Route 53 Record (%s): %s", d.Id(), err)
+	if err := WaitForRecordSetToSync(ctx, conn, CleanChangeID(aws.StringValue(changeInfo.Id))); err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting Route 53 Record (%s): deleting record set: waiting for completion: %s", d.Id(), err)
 	}
 	return diags
 }
@@ -531,105 +682,6 @@ func WaitForRecordSetToSync(ctx context.Context, conn *route53.Route53, requestI
 	}
 	_, err := wait.WaitForStateContext(ctx)
 	return err
-}
-
-func resourceRecordRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var
-	// If we don't have a zone ID, we're doing an import. Parse it from the ID.
-	diags diag.Diagnostics
-
-	if _, ok := d.GetOk("zone_id"); !ok {
-		parts := ParseRecordID(d.Id())
-		// We check that we have parsed the id into the correct number of segments.
-		// We need at least 3 segments!
-		if parts[0] == "" || parts[1] == "" || parts[2] == "" {
-			return sdkdiag.AppendErrorf(diags, "importing aws_route_53 record. Please make sure the record ID is in the form ZONEID_RECORDNAME_TYPE_SET-IDENTIFIER (e.g. Z4KAPRWWNC7JR_dev.example.com_NS_dev), where SET-IDENTIFIER is optional")
-		}
-
-		d.Set("zone_id", parts[0])
-		d.Set("name", parts[1])
-		d.Set("type", parts[2])
-		if parts[3] != "" {
-			d.Set("set_identifier", parts[3])
-		}
-	}
-
-	record, err := findRecord(ctx, d, meta)
-	if err != nil {
-		switch err {
-		case errNoHostedZoneFound, errNoRecordsFound:
-			log.Printf("[WARN] Route 53 Record (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return diags
-		default:
-			return sdkdiag.AppendErrorf(diags, "reading Route 53 Record (%s): %s", d.Id(), err)
-		}
-	}
-
-	err = d.Set("records", FlattenResourceRecords(record.ResourceRecords, aws.StringValue(record.Type)))
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting records: %s", err)
-	}
-
-	if alias := record.AliasTarget; alias != nil {
-		name := NormalizeAliasName(aws.StringValue(alias.DNSName))
-		d.Set("alias", []interface{}{
-			map[string]interface{}{
-				"zone_id":                aws.StringValue(alias.HostedZoneId),
-				"name":                   name,
-				"evaluate_target_health": aws.BoolValue(alias.EvaluateTargetHealth),
-			},
-		})
-	}
-
-	d.Set("ttl", record.TTL)
-
-	if record.Failover != nil {
-		v := []map[string]interface{}{{
-			"type": aws.StringValue(record.Failover),
-		}}
-		if err := d.Set("failover_routing_policy", v); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting failover records for: %s, error: %s", d.Id(), err)
-		}
-	}
-
-	if record.GeoLocation != nil {
-		v := []map[string]interface{}{{
-			"continent":   aws.StringValue(record.GeoLocation.ContinentCode),
-			"country":     aws.StringValue(record.GeoLocation.CountryCode),
-			"subdivision": aws.StringValue(record.GeoLocation.SubdivisionCode),
-		}}
-		if err := d.Set("geolocation_routing_policy", v); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting gelocation records for: %s, error: %s", d.Id(), err)
-		}
-	}
-
-	if record.Region != nil {
-		v := []map[string]interface{}{{
-			"region": aws.StringValue(record.Region),
-		}}
-		if err := d.Set("latency_routing_policy", v); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting latency records for: %s, error: %s", d.Id(), err)
-		}
-	}
-
-	if record.Weight != nil {
-		v := []map[string]interface{}{{
-			"weight": aws.Int64Value((record.Weight)),
-		}}
-		if err := d.Set("weighted_routing_policy", v); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting weighted records for: %s, error: %s", d.Id(), err)
-		}
-	}
-
-	if err := d.Set("multivalue_answer_routing_policy", record.MultiValueAnswer); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting multivalue answer records for: %s, error: %s", d.Id(), err)
-	}
-
-	d.Set("set_identifier", record.SetIdentifier)
-	d.Set("health_check_id", record.HealthCheckId)
-
-	return diags
 }
 
 // findRecord takes a ResourceData struct for aws_resource_route53_record. It
@@ -746,55 +798,6 @@ func findRecord(ctx context.Context, d *schema.ResourceData, meta interface{}) (
 		return nil, errNoRecordsFound
 	}
 	return record, nil
-}
-
-func resourceRecordDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53Conn()
-	// Get the records
-	rec, err := findRecord(ctx, d, meta)
-	if err != nil {
-		switch err {
-		case errNoHostedZoneFound, errNoRecordsFound:
-			return diags
-		default:
-			return sdkdiag.AppendErrorf(diags, "deleting Route 53 Record (%s): %s", d.Id(), err)
-		}
-	}
-
-	// Change batch for deleting
-	changeBatch := &route53.ChangeBatch{
-		Comment: aws.String("Deleted by Terraform"),
-		Changes: []*route53.Change{
-			{
-				Action:            aws.String(route53.ChangeActionDelete),
-				ResourceRecordSet: rec,
-			},
-		},
-	}
-
-	zone := CleanZoneID(d.Get("zone_id").(string))
-
-	req := &route53.ChangeResourceRecordSetsInput{
-		HostedZoneId: aws.String(CleanZoneID(zone)),
-		ChangeBatch:  changeBatch,
-	}
-
-	respRaw, err := DeleteRecordSet(ctx, conn, req)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Route 53 Record (%s): deleting record set: %s", d.Id(), err)
-	}
-
-	changeInfo := respRaw.(*route53.ChangeResourceRecordSetsOutput).ChangeInfo
-	if changeInfo == nil {
-		log.Printf("[INFO] No ChangeInfo Found. Waiting for Sync not required")
-		return diags
-	}
-
-	if err := WaitForRecordSetToSync(ctx, conn, CleanChangeID(aws.StringValue(changeInfo.Id))); err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Route 53 Record (%s): deleting record set: waiting for completion: %s", d.Id(), err)
-	}
-	return diags
 }
 
 func DeleteRecordSet(ctx context.Context, conn *route53.Route53, input *route53.ChangeResourceRecordSetsInput) (interface{}, error) {
