@@ -474,6 +474,7 @@ func ResourceCluster() *schema.Resource {
 					// cluster which is not joined to the provided global cluster).
 					"global_cluster_identifier",
 				},
+				ForceNew: true,
 			},
 			"source_region": {
 				Type:     schema.TypeString,
