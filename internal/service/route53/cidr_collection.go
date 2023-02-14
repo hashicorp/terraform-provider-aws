@@ -56,6 +56,9 @@ func (r *resourceCIDRCollection) Schema(ctx context.Context, req resource.Schema
 					stringvalidator.RegexMatches(regexp.MustCompile(`^[a-zA-Z0-9_\-]+$`), `can include letters, digits, underscore (_) and the dash (-) character`),
 				},
 			},
+			"version": schema.Int64Attribute{
+				Computed: true,
+			},
 		},
 	}
 }
@@ -87,6 +90,7 @@ func (r *resourceCIDRCollection) Create(ctx context.Context, request resource.Cr
 
 	data.ARN = flex.StringToFramework(ctx, output.Collection.Arn)
 	data.ID = flex.StringToFramework(ctx, output.Collection.Id)
+	data.Version = flex.Int64ToFramework(ctx, output.Collection.Version)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -119,6 +123,7 @@ func (r *resourceCIDRCollection) Read(ctx context.Context, request resource.Read
 
 	data.ARN = flex.StringToFramework(ctx, output.Arn)
 	data.Name = flex.StringToFramework(ctx, output.Name)
+	data.Version = flex.Int64ToFramework(ctx, output.Version)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -158,9 +163,10 @@ func (r *resourceCIDRCollection) ImportState(ctx context.Context, request resour
 }
 
 type resourceCIDRCollectionData struct {
-	ARN  types.String `tfsdk:"arn"`
-	ID   types.String `tfsdk:"id"`
-	Name types.String `tfsdk:"name"`
+	ARN     types.String `tfsdk:"arn"`
+	ID      types.String `tfsdk:"id"`
+	Name    types.String `tfsdk:"name"`
+	Version types.Int64  `tfsdk:"version"`
 }
 
 func findCIDRCollectionByID(ctx context.Context, conn *route53.Route53, id string) (*route53.CollectionSummary, error) {

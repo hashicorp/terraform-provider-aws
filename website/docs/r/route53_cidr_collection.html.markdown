@@ -29,7 +29,8 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The Amazon Resource Name (ARN) of the CIDR collection.
-* `id` - The CIDR collection ID
+* `id` - The CIDR collection ID.
+* `version` - The lastest version of the CIDR collection.
 
 ## Import
 
