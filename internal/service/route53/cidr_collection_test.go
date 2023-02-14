@@ -31,7 +31,7 @@ func TestAccRoute53CIDRCollection_basic(t *testing.T) {
 			{
 				Config: testAccCIDRCollection_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterParameterGroupExists(ctx, resourceName, &v),
+					testAccCheckCIDRCollectionExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrGlobalARNNoAccount(resourceName, "arn", "route53", regexp.MustCompile(`cidrcollection/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
@@ -60,7 +60,7 @@ func TestAccRoute53CIDRCollection_disappears(t *testing.T) {
 			{
 				Config: testAccCIDRCollection_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterParameterGroupExists(ctx, resourceName, &v),
+					testAccCheckCIDRCollectionExists(ctx, resourceName, &v),
 					acctest.CheckFrameworkResourceDisappears(acctest.Provider, tfroute53.ResourceCIDRCollection, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -95,7 +95,7 @@ func testAccCheckCIDRCollectionDestroy(ctx context.Context) resource.TestCheckFu
 	}
 }
 
-func testAccCheckClusterParameterGroupExists(ctx context.Context, n string, v *route53.CollectionSummary) resource.TestCheckFunc {
+func testAccCheckCIDRCollectionExists(ctx context.Context, n string, v *route53.CollectionSummary) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -123,7 +123,7 @@ func testAccCheckClusterParameterGroupExists(ctx context.Context, n string, v *r
 func testAccCIDRCollection_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_route53_cidr_collection" "test" {
-  name        = %[1]q
+  name = %[1]q
 }
 `, rName)
 }
