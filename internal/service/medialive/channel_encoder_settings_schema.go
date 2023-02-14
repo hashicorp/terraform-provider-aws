@@ -4104,7 +4104,7 @@ func expandM2tsSettings(tfList []interface{}) *types.M2tsSettings {
 		s.TransportStreamId = int32(v)
 	}
 	if v, ok := m["video_pid"].(string); ok && v != "" {
-		s.TimedMetadataPid = aws.String(v)
+		s.VideoPid = aws.String(v)
 	}
 
 	return &s
