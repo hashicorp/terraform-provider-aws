@@ -841,6 +841,7 @@ service/rolesanywhere:
   - 'website/**/rolesanywhere_*'
 service/route53:
   - 'internal/service/route53/**/*'
+  - 'website/**/route53_cidr_*'
   - 'website/**/route53_delegation_*'
   - 'website/**/route53_health_*'
   - 'website/**/route53_hosted_*'
