@@ -286,66 +286,62 @@ provider "aws" {
   region = "eu-central-1"
 }
 
-resource "aws_iam_role" "replication" {
-  name = "tf-iam-role-replication-12345"
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    effect = "Allow"
 
-  assume_role_policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "s3.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
+    principals {
+      type        = "Service"
+      identifiers = ["s3.amazonaws.com"]
     }
-  ]
+
+    actions = ["sts:AssumeRole"]
+  }
 }
-POLICY
+resource "aws_iam_role" "replication" {
+  name               = "tf-iam-role-replication-12345"
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+}
+
+data "aws_iam_policy_document" "replication" {
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "s3:GetReplicationConfiguration",
+      "s3:ListBucket",
+    ]
+
+    resources = [aws_s3_bucket.source.arn]
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "s3:GetObjectVersionForReplication",
+      "s3:GetObjectVersionAcl",
+      "s3:GetObjectVersionTagging",
+    ]
+
+    resources = ["${aws_s3_bucket.source.arn}/*"]
+  }
+
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "s3:ReplicateObject",
+      "s3:ReplicateDelete",
+      "s3:ReplicateTags",
+    ]
+
+    resources = ["${aws_s3_bucket.destination.arn}/*"]
+  }
 }
 
 resource "aws_iam_policy" "replication" {
-  name = "tf-iam-role-policy-replication-12345"
-
-  policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": [
-        "s3:GetReplicationConfiguration",
-        "s3:ListBucket"
-      ],
-      "Effect": "Allow",
-      "Resource": [
-        "${aws_s3_bucket.source.arn}"
-      ]
-    },
-    {
-      "Action": [
-        "s3:GetObjectVersionForReplication",
-        "s3:GetObjectVersionAcl",
-         "s3:GetObjectVersionTagging"
-      ],
-      "Effect": "Allow",
-      "Resource": [
-        "${aws_s3_bucket.source.arn}/*"
-      ]
-    },
-    {
-      "Action": [
-        "s3:ReplicateObject",
-        "s3:ReplicateDelete",
-        "s3:ReplicateTags"
-      ],
-      "Effect": "Allow",
-      "Resource": "${aws_s3_bucket.destination.arn}/*"
-    }
-  ]
-}
-POLICY
+  name   = "tf-iam-role-policy-replication-12345"
+  policy = data.aws_iam_policy_document.replication.json
 }
 
 resource "aws_iam_role_policy_attachment" "replication" {
@@ -489,7 +485,7 @@ The following arguments are supported:
 
 ### CORS Rule
 
-~> **NOTE:** Currently, changes to the `cors_rule` configuration of _existing_ resources cannot be automatically detected by Terraform. To manage changes of CORS rules to an S3 bucket, use the `aws_s3_bucket_cors_configuration` resource instead. If you use `cors_rule` on an `aws_s3_bucket`, Terraform will assume management over the full set of CORS rules for the S3 bucket, treating additional CORS rules as drift. For this reason, `cors_rule` cannot be mixed with the external `aws_s3_bucket_cors_configuration` resource for a given S3 bucket.
+~> **NOTE:** Currently, changes to the `cors_rule` configuration of *existing* resources cannot be automatically detected by Terraform. To manage changes of CORS rules to an S3 bucket, use the `aws_s3_bucket_cors_configuration` resource instead. If you use `cors_rule` on an `aws_s3_bucket`, Terraform will assume management over the full set of CORS rules for the S3 bucket, treating additional CORS rules as drift. For this reason, `cors_rule` cannot be mixed with the external `aws_s3_bucket_cors_configuration` resource for a given S3 bucket.
 
 The `cors_rule` configuration block supports the following arguments:
 
@@ -501,7 +497,7 @@ The `cors_rule` configuration block supports the following arguments:
 
 ### Grant
 
-~> **NOTE:** Currently, changes to the `grant` configuration of _existing_ resources cannot be automatically detected by Terraform. To manage changes of ACL grants to an S3 bucket, use the `aws_s3_bucket_acl` resource instead. If you use `grant` on an `aws_s3_bucket`, Terraform will assume management over the full set of ACL grants for the S3 bucket, treating additional ACL grants as drift. For this reason, `grant` cannot be mixed with the external `aws_s3_bucket_acl` resource for a given S3 bucket.
+~> **NOTE:** Currently, changes to the `grant` configuration of *existing* resources cannot be automatically detected by Terraform. To manage changes of ACL grants to an S3 bucket, use the `aws_s3_bucket_acl` resource instead. If you use `grant` on an `aws_s3_bucket`, Terraform will assume management over the full set of ACL grants for the S3 bucket, treating additional ACL grants as drift. For this reason, `grant` cannot be mixed with the external `aws_s3_bucket_acl` resource for a given S3 bucket.
 
 The `grant` configuration block supports the following arguments:
 
@@ -512,7 +508,7 @@ The `grant` configuration block supports the following arguments:
 
 ### Lifecycle Rule
 
-~> **NOTE:** Currently, changes to the `lifecycle_rule` configuration of _existing_ resources cannot be automatically detected by Terraform. To manage changes of Lifecycle rules to an S3 bucket, use the `aws_s3_bucket_lifecycle_configuration` resource instead. If you use `lifecycle_rule` on an `aws_s3_bucket`, Terraform will assume management over the full set of Lifecycle rules for the S3 bucket, treating additional Lifecycle rules as drift. For this reason, `lifecycle_rule` cannot be mixed with the external `aws_s3_bucket_lifecycle_configuration` resource for a given S3 bucket.
+~> **NOTE:** Currently, changes to the `lifecycle_rule` configuration of *existing* resources cannot be automatically detected by Terraform. To manage changes of Lifecycle rules to an S3 bucket, use the `aws_s3_bucket_lifecycle_configuration` resource instead. If you use `lifecycle_rule` on an `aws_s3_bucket`, Terraform will assume management over the full set of Lifecycle rules for the S3 bucket, treating additional Lifecycle rules as drift. For this reason, `lifecycle_rule` cannot be mixed with the external `aws_s3_bucket_lifecycle_configuration` resource for a given S3 bucket.
 
 ~> **NOTE:** At least one of `abort_incomplete_multipart_upload_days`, `expiration`, `transition`, `noncurrent_version_expiration`, `noncurrent_version_transition` must be specified.
 
@@ -559,7 +555,7 @@ The `noncurrent_version_transition` configuration supports the following argumen
 
 ### Logging
 
-~> **NOTE:** Currently, changes to the `logging` configuration of _existing_ resources cannot be automatically detected by Terraform. To manage changes of logging parameters to an S3 bucket, use the `aws_s3_bucket_logging` resource instead. If you use `logging` on an `aws_s3_bucket`, Terraform will assume management over the full set of logging parameters for the S3 bucket, treating additional logging parameters as drift. For this reason, `logging` cannot be mixed with the external `aws_s3_bucket_logging` resource for a given S3 bucket.
+~> **NOTE:** Currently, changes to the `logging` configuration of *existing* resources cannot be automatically detected by Terraform. To manage changes of logging parameters to an S3 bucket, use the `aws_s3_bucket_logging` resource instead. If you use `logging` on an `aws_s3_bucket`, Terraform will assume management over the full set of logging parameters for the S3 bucket, treating additional logging parameters as drift. For this reason, `logging` cannot be mixed with the external `aws_s3_bucket_logging` resource for a given S3 bucket.
 
 The `logging` configuration block supports the following arguments:
 
@@ -572,7 +568,7 @@ The `logging` configuration block supports the following arguments:
 When you create a bucket with S3 Object Lock enabled, Amazon S3 automatically enables versioning for the bucket.
 Once you create a bucket with S3 Object Lock enabled, you can't disable Object Lock or suspend versioning for the bucket.
 
-~> **NOTE:** Currently, changes to the `object_lock_configuration` configuration of _existing_ resources cannot be automatically detected by Terraform. To manage changes of Object Lock settings to an S3 bucket, use the `aws_s3_bucket_object_lock_configuration` resource instead. If you use `object_lock_configuration` on an `aws_s3_bucket`, Terraform will assume management over the full set of Object Lock configuration parameters for the S3 bucket, treating additional Object Lock configuration parameters as drift. For this reason, `object_lock_configuration` cannot be mixed with the external `aws_s3_bucket_object_lock_configuration` resource for a given S3 bucket.
+~> **NOTE:** Currently, changes to the `object_lock_configuration` configuration of *existing* resources cannot be automatically detected by Terraform. To manage changes of Object Lock settings to an S3 bucket, use the `aws_s3_bucket_object_lock_configuration` resource instead. If you use `object_lock_configuration` on an `aws_s3_bucket`, Terraform will assume management over the full set of Object Lock configuration parameters for the S3 bucket, treating additional Object Lock configuration parameters as drift. For this reason, `object_lock_configuration` cannot be mixed with the external `aws_s3_bucket_object_lock_configuration` resource for a given S3 bucket.
 
 The `object_lock_configuration` configuration block supports the following arguments:
 
@@ -597,7 +593,7 @@ The `default_retention` configuration block supports the following arguments:
 
 ### Replication Configuration
 
-~> **NOTE:** Currently, changes to the `replication_configuration` configuration of _existing_ resources cannot be automatically detected by Terraform. To manage replication configuration changes to an S3 bucket, use the `aws_s3_bucket_replication_configuration` resource instead. If you use `replication_configuration` on an `aws_s3_bucket`, Terraform will assume management over the full replication configuration for the S3 bucket, treating additional replication configuration rules as drift. For this reason, `replication_configuration` cannot be mixed with the external `aws_s3_bucket_replication_configuration` resource for a given S3 bucket.
+~> **NOTE:** Currently, changes to the `replication_configuration` configuration of *existing* resources cannot be automatically detected by Terraform. To manage replication configuration changes to an S3 bucket, use the `aws_s3_bucket_replication_configuration` resource instead. If you use `replication_configuration` on an `aws_s3_bucket`, Terraform will assume management over the full replication configuration for the S3 bucket, treating additional replication configuration rules as drift. For this reason, `replication_configuration` cannot be mixed with the external `aws_s3_bucket_replication_configuration` resource for a given S3 bucket.
 
 The `replication_configuration` configuration block supports the following arguments:
 
@@ -673,7 +669,7 @@ The `sse_kms_encrypted_objects` configuration block supports the following argum
 
 ### Server Side Encryption Configuration
 
-~> **NOTE:** Currently, changes to the `server_side_encryption_configuration` configuration of _existing_ resources cannot be automatically detected by Terraform. To manage changes in encryption of an S3 bucket, use the `aws_s3_bucket_server_side_encryption_configuration` resource instead. If you use `server_side_encryption_configuration` on an `aws_s3_bucket`, Terraform will assume management over the encryption configuration for the S3 bucket, treating additional encryption changes as drift. For this reason, `server_side_encryption_configuration` cannot be mixed with the external `aws_s3_bucket_server_side_encryption_configuration` resource for a given S3 bucket.
+~> **NOTE:** Currently, changes to the `server_side_encryption_configuration` configuration of *existing* resources cannot be automatically detected by Terraform. To manage changes in encryption of an S3 bucket, use the `aws_s3_bucket_server_side_encryption_configuration` resource instead. If you use `server_side_encryption_configuration` on an `aws_s3_bucket`, Terraform will assume management over the encryption configuration for the S3 bucket, treating additional encryption changes as drift. For this reason, `server_side_encryption_configuration` cannot be mixed with the external `aws_s3_bucket_server_side_encryption_configuration` resource for a given S3 bucket.
 
 The `server_side_encryption_configuration` configuration block supports the following argument:
 
@@ -691,7 +687,7 @@ The `apply_server_side_encryption_by_default` configuration block supports the f
 
 ### Versioning
 
-~> **NOTE:** Currently, changes to the `versioning` configuration of _existing_ resources cannot be automatically detected by Terraform. To manage changes of versioning state to an S3 bucket, use the `aws_s3_bucket_versioning` resource instead. If you use `versioning` on an `aws_s3_bucket`, Terraform will assume management over the versioning state of the S3 bucket, treating additional versioning state changes as drift. For this reason, `versioning` cannot be mixed with the external `aws_s3_bucket_versioning` resource for a given S3 bucket.
+~> **NOTE:** Currently, changes to the `versioning` configuration of *existing* resources cannot be automatically detected by Terraform. To manage changes of versioning state to an S3 bucket, use the `aws_s3_bucket_versioning` resource instead. If you use `versioning` on an `aws_s3_bucket`, Terraform will assume management over the versioning state of the S3 bucket, treating additional versioning state changes as drift. For this reason, `versioning` cannot be mixed with the external `aws_s3_bucket_versioning` resource for a given S3 bucket.
 
 The `versioning` configuration block supports the following arguments:
 
@@ -700,7 +696,7 @@ The `versioning` configuration block supports the following arguments:
 
 ### Website
 
-~> **NOTE:** Currently, changes to the `website` configuration of _existing_ resources cannot be automatically detected by Terraform. To manage changes to the website configuration of an S3 bucket, use the `aws_s3_bucket_website_configuration` resource instead. If you use `website` on an `aws_s3_bucket`, Terraform will assume management over the configuration of the website of the S3 bucket, treating additional website configuration changes as drift. For this reason, `website` cannot be mixed with the external `aws_s3_bucket_website_configuration` resource for a given S3 bucket.
+~> **NOTE:** Currently, changes to the `website` configuration of *existing* resources cannot be automatically detected by Terraform. To manage changes to the website configuration of an S3 bucket, use the `aws_s3_bucket_website_configuration` resource instead. If you use `website` on an `aws_s3_bucket`, Terraform will assume management over the configuration of the website of the S3 bucket, treating additional website configuration changes as drift. For this reason, `website` cannot be mixed with the external `aws_s3_bucket_website_configuration` resource for a given S3 bucket.
 
 The `website` configuration block supports the following arguments:
 
