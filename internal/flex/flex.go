@@ -2,6 +2,7 @@ package flex
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -215,4 +216,10 @@ func FlattenResourceId(idParts []string, partCount int) (string, error) {
 	}
 
 	return strings.Join(idParts, ResourceIdSeparator), nil
+}
+
+// StringToBoolValue converts a string pointer to a Go bool value.
+// Only the string "true" is converted to true, all other values return false.
+func StringToBoolValue(v *string) bool {
+	return aws.StringValue(v) == strconv.FormatBool(true)
 }

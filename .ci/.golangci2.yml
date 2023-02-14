@@ -16,9 +16,12 @@ linters:
   disable-all: true
   enable:
     - asciicheck
+    - dogsled
     - durationcheck
     - errcheck
+    - errname
     - exportloopref
+    - goconst
     - gocritic
     - gofmt
     - gomnd
@@ -44,8 +47,13 @@ linters:
     - whitespace
 
 linters-settings:
+  dogsled:
+    max-blank-identifiers: 3
   errcheck:
     ignore: github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema:ForceNew|Set,fmt:.*,io:Close
+  goconst:
+    ignore-tests: true
+    min-occurrences: 6
   gocritic:
     enabled-tags:
       - diagnostic
