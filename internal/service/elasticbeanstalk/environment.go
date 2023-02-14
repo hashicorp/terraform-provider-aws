@@ -326,7 +326,15 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "reading Elastic Beanstalk Environment (%s) resources: %s", d.Id(), err)
 	}
 
-	d.Set("application", env.ApplicationName)
+	applicationName := aws.StringValue(env.ApplicationName)
+	environmentName := aws.StringValue(env.EnvironmentName)
+	configurationSettings, err := findConfigurationSettingsByTwoPartKey(ctx, conn, applicationName, environmentName)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Elastic Beanstalk Environment (%s) configuration settings: %s", d.Id(), err)
+	}
+
+	d.Set("application", applicationName)
 	arn := aws.StringValue(env.EnvironmentArn)
 	d.Set("arn", arn)
 	if err := d.Set("autoscaling_groups", flattenASG(resources.EnvironmentResources.AutoScalingGroups)); err != nil {
@@ -356,7 +364,7 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta i
 	if err := d.Set("load_balancers", flattenLoadBalancers(resources.EnvironmentResources.LoadBalancers)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting load_balancers: %s", err)
 	}
-	d.Set("name", env.EnvironmentName)
+	d.Set("name", environmentName)
 	d.Set("platform_arn", env.PlatformArn)
 	if err := d.Set("queues", flattenQueues(resources.EnvironmentResources.Queues)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting queues: %s", err)
@@ -367,6 +375,57 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "setting triggers: %s", err)
 	}
 	d.Set("version_label", env.VersionLabel)
+
+	allSettings := &schema.Set{F: optionSettingValueHash}
+	for _, optionSetting := range configurationSettings.OptionSettings {
+		m := map[string]interface{}{}
+
+		if optionSetting.Namespace != nil {
+			m["namespace"] = aws.StringValue(optionSetting.Namespace)
+		}
+
+		if optionSetting.OptionName != nil {
+			m["name"] = aws.StringValue(optionSetting.OptionName)
+		}
+
+		if aws.StringValue(optionSetting.Namespace) == "aws:autoscaling:scheduledaction" && optionSetting.ResourceName != nil {
+			m["resource"] = aws.StringValue(optionSetting.ResourceName)
+		}
+
+		if optionSetting.Value != nil {
+			switch aws.StringValue(optionSetting.OptionName) {
+			case "SecurityGroups":
+				m["value"] = dropGeneratedSecurityGroup(ctx, aws.StringValue(optionSetting.Value), meta)
+			case "Subnets", "ELBSubnets":
+				m["value"] = sortValues(aws.StringValue(optionSetting.Value))
+			default:
+				m["value"] = aws.StringValue(optionSetting.Value)
+			}
+		}
+
+		allSettings.Add(m)
+	}
+	settings := d.Get("setting").(*schema.Set)
+
+	// perform the set operation with only name/namespace as keys, excluding value
+	// this is so we override things in the settings resource data key with updated values
+	// from the api.  we skip values we didn't know about before because there are so many
+	// defaults set by the eb api that we would delete many useful defaults.
+	//
+	// there is likely a better way to do this
+	allSettingsKeySet := schema.NewSet(optionSettingKeyHash, allSettings.List())
+	settingsKeySet := schema.NewSet(optionSettingKeyHash, settings.List())
+	updatedSettingsKeySet := allSettingsKeySet.Intersection(settingsKeySet)
+
+	updatedSettings := schema.NewSet(optionSettingValueHash, updatedSettingsKeySet.List())
+
+	if err := d.Set("all_settings", allSettings.List()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting all_settings: %s", err)
+	}
+
+	if err := d.Set("setting", updatedSettings.List()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting setting: %s", err)
+	}
 
 	tags, err := ListTags(ctx, conn, arn)
 
@@ -385,7 +444,7 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return append(diags, resourceEnvironmentSettingsRead(ctx, d, meta)...)
+	return diags
 }
 
 func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -666,6 +725,36 @@ func findEnvironmentErrorsByID(ctx context.Context, conn *elasticbeanstalk.Elast
 	return errors.ErrorOrNil()
 }
 
+func findConfigurationSettingsByTwoPartKey(ctx context.Context, conn *elasticbeanstalk.ElasticBeanstalk, applicationName, environmentName string) (*elasticbeanstalk.ConfigurationSettingsDescription, error) {
+	input := &elasticbeanstalk.DescribeConfigurationSettingsInput{
+		ApplicationName: aws.String(applicationName),
+		EnvironmentName: aws.String(environmentName),
+	}
+
+	output, err := conn.DescribeConfigurationSettingsWithContext(ctx, input)
+
+	if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "No Environment found") {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.ConfigurationSettings) == 0 || output.ConfigurationSettings[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.ConfigurationSettings); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output.ConfigurationSettings[0], nil
+}
+
 func statusEnvironment(ctx context.Context, conn *elasticbeanstalk.ElasticBeanstalk, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindEnvironmentByID(ctx, conn, id)
@@ -682,7 +771,7 @@ func statusEnvironment(ctx context.Context, conn *elasticbeanstalk.ElasticBeanst
 	}
 }
 
-func waitEnvironmentReady(ctx context.Context, conn *elasticbeanstalk.ElasticBeanstalk, id string, pollInterval, timeout time.Duration) (*elasticbeanstalk.EnvironmentDescription, error) {
+func waitEnvironmentReady(ctx context.Context, conn *elasticbeanstalk.ElasticBeanstalk, id string, pollInterval, timeout time.Duration) (*elasticbeanstalk.EnvironmentDescription, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending:      []string{elasticbeanstalk.EnvironmentStatusLaunching, elasticbeanstalk.EnvironmentStatusUpdating},
 		Target:       []string{elasticbeanstalk.EnvironmentStatusReady},
@@ -720,96 +809,6 @@ func waitEnvironmentDeleted(ctx context.Context, conn *elasticbeanstalk.ElasticB
 	}
 
 	return nil, err
-}
-
-func fetchEnvironmentSettings(ctx context.Context, d *schema.ResourceData, meta interface{}) (*schema.Set, error) {
-	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn()
-
-	app := d.Get("application").(string)
-	name := d.Get("name").(string)
-
-	resp, err := conn.DescribeConfigurationSettingsWithContext(ctx, &elasticbeanstalk.DescribeConfigurationSettingsInput{
-		ApplicationName: aws.String(app),
-		EnvironmentName: aws.String(name),
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	if len(resp.ConfigurationSettings) != 1 {
-		return nil, fmt.Errorf("Error reading environment settings: received %d settings groups, expected 1", len(resp.ConfigurationSettings))
-	}
-
-	settings := &schema.Set{F: optionSettingValueHash}
-	for _, optionSetting := range resp.ConfigurationSettings[0].OptionSettings {
-		m := map[string]interface{}{}
-
-		if optionSetting.Namespace != nil {
-			m["namespace"] = aws.StringValue(optionSetting.Namespace)
-		} else {
-			return nil, fmt.Errorf("Error reading environment settings: option setting with no namespace: %v", optionSetting)
-		}
-
-		if optionSetting.OptionName != nil {
-			m["name"] = aws.StringValue(optionSetting.OptionName)
-		} else {
-			return nil, fmt.Errorf("Error reading environment settings: option setting with no name: %v", optionSetting)
-		}
-
-		if aws.StringValue(optionSetting.Namespace) == "aws:autoscaling:scheduledaction" && optionSetting.ResourceName != nil {
-			m["resource"] = aws.StringValue(optionSetting.ResourceName)
-		}
-
-		if optionSetting.Value != nil {
-			switch *optionSetting.OptionName {
-			case "SecurityGroups":
-				m["value"] = dropGeneratedSecurityGroup(ctx, aws.StringValue(optionSetting.Value), meta)
-			case "Subnets", "ELBSubnets":
-				m["value"] = sortValues(aws.StringValue(optionSetting.Value))
-			default:
-				m["value"] = aws.StringValue(optionSetting.Value)
-			}
-		}
-
-		settings.Add(m)
-	}
-
-	return settings, nil
-}
-
-func resourceEnvironmentSettingsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	log.Printf("[DEBUG] Elastic Beanstalk environment settings read %s: id %s", d.Get("name").(string), d.Id())
-
-	allSettings, err := fetchEnvironmentSettings(ctx, d, meta)
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-
-	settings := d.Get("setting").(*schema.Set)
-
-	// perform the set operation with only name/namespace as keys, excluding value
-	// this is so we override things in the settings resource data key with updated values
-	// from the api.  we skip values we didn't know about before because there are so many
-	// defaults set by the eb api that we would delete many useful defaults.
-	//
-	// there is likely a better way to do this
-	allSettingsKeySet := schema.NewSet(optionSettingKeyHash, allSettings.List())
-	settingsKeySet := schema.NewSet(optionSettingKeyHash, settings.List())
-	updatedSettingsKeySet := allSettingsKeySet.Intersection(settingsKeySet)
-
-	updatedSettings := schema.NewSet(optionSettingValueHash, updatedSettingsKeySet.List())
-
-	if err := d.Set("all_settings", allSettings.List()); err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-
-	if err := d.Set("setting", updatedSettings.List()); err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-
-	return diags
 }
 
 // we use the following two functions to allow us to split out defaults
