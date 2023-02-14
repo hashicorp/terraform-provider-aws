@@ -157,7 +157,7 @@ func ResourceEnvironment() *schema.Resource {
 			"poll_interval": {
 				Type:             schema.TypeString,
 				Optional:         true,
-				ValidateDiagFunc: sdktypes.ValidateDurationBetween(10*time.Second, 3*time.Minute),
+				ValidateDiagFunc: sdktypes.ValidateDurationBetween(10*time.Second, 3*time.Minute), //nolint:gomnd
 			},
 			"queues": {
 				Type:     schema.TypeList,
