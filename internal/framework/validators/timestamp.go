@@ -5,11 +5,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
-<<<<<<< HEAD
 	"github.com/hashicorp/terraform-provider-aws/internal/types/timestamp"
-=======
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
->>>>>>> 3162bca567 (validators: create ValidateOnceADayWindowFormat())
 )
 
 type utcTimestampValidator struct{}
@@ -57,12 +53,8 @@ func (validator onceADayWindowFormatValidator) ValidateString(ctx context.Contex
 		return
 	}
 
-<<<<<<< HEAD
 	t := timestamp.New(request.ConfigValue.ValueString())
 	if err := t.ValidateOnceADayWindowFormat(); err != nil {
-=======
-	if err := verify.ValidateOnceADayWindowFormat(request.ConfigValue.ValueString()); err != nil {
->>>>>>> 3162bca567 (validators: create ValidateOnceADayWindowFormat())
 		response.Diagnostics.Append(diag.NewAttributeErrorDiagnostic(
 			request.Path,
 			validator.Description(ctx),
