@@ -11,18 +11,19 @@ const (
 )
 
 const (
-	ClusterStatusAvailable                  = "available"
-	ClusterStatusBackingUp                  = "backing-up"
-	ClusterStatusConfiguringIAMDatabaseAuth = "configuring-iam-database-auth"
-	ClusterStatusCreating                   = "creating"
-	ClusterStatusDeleting                   = "deleting"
-	ClusterStatusMigrating                  = "migrating"
-	ClusterStatusModifying                  = "modifying"
-	ClusterStatusPreparingDataMigration     = "preparing-data-migration"
-	ClusterStatusRebooting                  = "rebooting"
-	ClusterStatusRenaming                   = "renaming"
-	ClusterStatusResettingMasterCredentials = "resetting-master-credentials"
-	ClusterStatusUpgrading                  = "upgrading"
+	ClusterStatusAvailable                     = "available"
+	ClusterStatusBackingUp                     = "backing-up"
+	ClusterStatusConfiguringIAMDatabaseAuth    = "configuring-iam-database-auth"
+	ClusterStatusConfiguringEnhancedMonitoring = "configuring-enhanced-monitoring"
+	ClusterStatusCreating                      = "creating"
+	ClusterStatusDeleting                      = "deleting"
+	ClusterStatusMigrating                     = "migrating"
+	ClusterStatusModifying                     = "modifying"
+	ClusterStatusPreparingDataMigration        = "preparing-data-migration"
+	ClusterStatusRebooting                     = "rebooting"
+	ClusterStatusRenaming                      = "renaming"
+	ClusterStatusResettingMasterCredentials    = "resetting-master-credentials"
+	ClusterStatusUpgrading                     = "upgrading"
 )
 
 const (

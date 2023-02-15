@@ -2193,6 +2193,98 @@ func TestAccRDSCluster_enableHTTPEndpoint(t *testing.T) {
 	})
 }
 
+func TestAccRDSCluster_performanceInsightsEnabled(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbCluster rds.DBCluster
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_performanceInsightsEnabled(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", "true"),
+				),
+			},
+			{
+				Config: testAccClusterConfig_performanceInsightsEnabled(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", "false"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSCluster_performanceInsightsKMSKeyID(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbCluster rds.DBCluster
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster.test"
+	kmsKeyResourceName := "aws_kms_key.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_performanceInsightsKMSKeyID(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttrPair(resourceName, "performance_insights_kms_key_id", kmsKeyResourceName, "arn"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSCluster_performanceInsightsRetentionPeriod(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbCluster rds.DBCluster
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_performanceInsightsRetentionPeriod(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "performance_insights_retention_period", "62"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		return testAccCheckClusterDestroyWithProvider(ctx)(s, acctest.Provider)
@@ -4160,4 +4252,62 @@ resource "aws_rds_cluster" "test" {
   }
 }
 `, rName, enableHttpEndpoint)
+}
+
+func testAccClusterConfig_performanceInsightsEnabled(rName string, performanceInsightsEnabled bool) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+	cluster_identifier        = "%s"
+	engine                    = "mysql"
+	db_cluster_instance_class = "db.m6gd.large"
+	storage_type              = "io1"
+	allocated_storage         = 100
+	iops                      = 1000
+	master_username           = "foo"
+	master_password           = "Test1234!"
+	skip_final_snapshot 	  = true
+
+	performance_insights_enabled = %t
+}
+`, rName, performanceInsightsEnabled)
+}
+
+func testAccClusterConfig_performanceInsightsKMSKeyID(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {}
+
+resource "aws_rds_cluster" "test" {
+	cluster_identifier        = "%s"
+	engine                    = "mysql"
+	db_cluster_instance_class = "db.m6gd.large"
+	storage_type              = "io1"
+	allocated_storage         = 100
+	iops                      = 1000
+	master_username           = "foo"
+	master_password           = "Test1234!"
+	skip_final_snapshot 	  = true
+
+	performance_insights_enabled = true
+	performance_insights_kms_key_id = aws_kms_key.test.arn
+}
+`, rName)
+}
+
+func testAccClusterConfig_performanceInsightsRetentionPeriod(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+	cluster_identifier        = "%s"
+	engine                    = "mysql"
+	db_cluster_instance_class = "db.m6gd.large"
+	storage_type              = "io1"
+	allocated_storage         = 100
+	iops                      = 1000
+	master_username           = "foo"
+	master_password           = "Test1234!"
+	skip_final_snapshot 	  = true
+
+	performance_insights_enabled = true
+	performance_insights_retention_period = 62
+}
+`, rName)
 }
