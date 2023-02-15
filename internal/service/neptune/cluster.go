@@ -273,6 +273,7 @@ func ResourceCluster() *schema.Resource {
 			"snapshot_identifier": {
 				Type:     schema.TypeString,
 				Optional: true,
+				ForceNew: true,
 			},
 			"storage_encrypted": {
 				Type:     schema.TypeBool,
