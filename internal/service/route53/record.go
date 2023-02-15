@@ -3,7 +3,6 @@ package route53
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log"
 	"math/rand"
 	"strconv"
@@ -89,15 +88,9 @@ func ResourceRecord() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"type": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: func(v interface{}, k string) (ws []string, es []error) {
-								value := v.(string)
-								if value != "PRIMARY" && value != "SECONDARY" {
-									es = append(es, fmt.Errorf("Failover policy type must be PRIMARY or SECONDARY"))
-								}
-								return
-							},
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(route53.ResourceRecordSetFailover_Values(), false),
 						},
 					},
 				},
