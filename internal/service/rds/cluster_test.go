@@ -58,6 +58,8 @@ func TestAccRDSCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "db_cluster_parameter_group_name_actual", "default.aurora5.6"),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "engine", "aurora"),
+					resource.TestCheckNoResourceAttr(resourceName, "engine_version"),
+					resource.TestCheckNoResourceAttr(resourceName, "global_cluster_identifier"),
 					resource.TestCheckResourceAttrSet(resourceName, "hosted_zone_id"),
 					resource.TestCheckResourceAttr(resourceName, "network_type", "IPV4"),
 					resource.TestCheckResourceAttrSet(resourceName, "reader_endpoint"),
