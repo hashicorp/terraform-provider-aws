@@ -242,6 +242,13 @@ func TestAccLogsGroup_retentionPolicy(t *testing.T) {
 				),
 			},
 			{
+				Config: testAccGroupConfig_retentionPolicy(rName, 1096),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "retention_in_days", "1096"),
+				),
+			},
+			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
