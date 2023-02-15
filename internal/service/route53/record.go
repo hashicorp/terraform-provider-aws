@@ -236,15 +236,15 @@ func resourceRecordCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Conn()
 
-	zone := CleanZoneID(d.Get("zone_id").(string))
+	zoneID := CleanZoneID(d.Get("zone_id").(string))
+	zoneRecord, err := FindHostedZoneByID(ctx, conn, zoneID)
 
-	zoneRecord, err := FindHostedZoneByID(ctx, conn, zone)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Route 53 Record (%s): getting Hosted Zone (%s): %s", d.Id(), zone, err)
+		return sdkdiag.AppendErrorf(diags, "reading Route 53 Hosted Zone (%s): %s", d.Id(), zoneID, err)
 	}
 
 	// Build the record
-	rec := resourceRecordBuildSet(d, aws.StringValue(zoneRecord.HostedZone.Name))
+	rec := expandResourceRecordSet(d, aws.StringValue(zoneRecord.HostedZone.Name))
 
 	// Protect existing DNS records which might be managed in another way.
 	// Use UPSERT only if the overwrite flag is true or if the current action is an update
@@ -269,24 +269,20 @@ func resourceRecordCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		},
 	}
 
-	req := &route53.ChangeResourceRecordSetsInput{
-		HostedZoneId: aws.String(CleanZoneID(aws.StringValue(zoneRecord.HostedZone.Id))),
+	input := &route53.ChangeResourceRecordSetsInput{
 		ChangeBatch:  changeBatch,
+		HostedZoneId: aws.String(CleanZoneID(aws.StringValue(zoneRecord.HostedZone.Id))),
 	}
 
-	log.Printf("[DEBUG] Creating resource records for zone: %s, name: %s\n\n%s",
-		zone, aws.StringValue(rec.Name), req)
+	changeInfo, err := ChangeResourceRecordSets(ctx, conn, input)
 
-	respRaw, err := ChangeRecordSet(ctx, conn, req)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Route 53 Record (%s): updating record set: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating Route 53 resource record sets: %s", err)
 	}
-
-	changeInfo := respRaw.(*route53.ChangeResourceRecordSetsOutput).ChangeInfo
 
 	// Generate an ID
 	vars := []string{
-		zone,
+		zoneID,
 		strings.ToLower(d.Get("name").(string)),
 		d.Get("type").(string),
 	}
@@ -530,7 +526,7 @@ func resourceRecordUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	// Build the to be created record
-	rec := resourceRecordBuildSet(d, aws.StringValue(zoneRecord.HostedZone.Name))
+	rec := expandResourceRecordSet(d, aws.StringValue(zoneRecord.HostedZone.Name))
 
 	// Delete the old and create the new records in a single batch. We abuse
 	// StateChangeConf for this to retry for us since Route53 sometimes returns
@@ -556,12 +552,11 @@ func resourceRecordUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	log.Printf("[DEBUG] Updating resource records for zone: %s, name: %s", zone, aws.StringValue(rec.Name))
 
-	respRaw, err := ChangeRecordSet(ctx, conn, input)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating Route 53 Record (%s): updating record set: : %s", d.Id(), err)
-	}
+	changeInfo, err := ChangeResourceRecordSets(ctx, conn, input)
 
-	changeInfo := respRaw.(*route53.ChangeResourceRecordSetsOutput).ChangeInfo
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "updating Route 53 resource record sets: %s", err)
+	}
 
 	// Generate an ID
 	vars := []string{
@@ -635,25 +630,16 @@ func resourceRecordDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func ChangeRecordSet(ctx context.Context, conn *route53.Route53, input *route53.ChangeResourceRecordSetsInput) (interface{}, error) {
-	var out *route53.ChangeResourceRecordSetsOutput
-	err := resource.RetryContext(ctx, 1*time.Minute, func() *resource.RetryError {
-		var err error
-		out, err = conn.ChangeResourceRecordSetsWithContext(ctx, input)
-		if tfawserr.ErrCodeEquals(err, route53.ErrCodeNoSuchHostedZone) {
-			log.Print("[DEBUG] Hosted Zone not found, retrying...")
-			return resource.RetryableError(err)
-		}
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-		return nil
-	})
-	if tfresource.TimedOut(err) {
-		out, err = conn.ChangeResourceRecordSetsWithContext(ctx, input)
+func ChangeResourceRecordSets(ctx context.Context, conn *route53.Route53, input *route53.ChangeResourceRecordSetsInput) (*route53.ChangeInfo, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 1*time.Minute, func() (interface{}, error) {
+		return conn.ChangeResourceRecordSetsWithContext(ctx, input)
+	}, route53.ErrCodeNoSuchHostedZone)
+
+	if err != nil {
+		return nil, err
 	}
 
-	return out, err
+	return outputRaw.(*route53.ChangeResourceRecordSetsOutput).ChangeInfo, nil
 }
 
 func WaitForRecordSetToSync(ctx context.Context, conn *route53.Route53, requestId string) error {
@@ -802,7 +788,7 @@ func DeleteRecordSet(ctx context.Context, conn *route53.Route53, input *route53.
 	return out, err
 }
 
-func resourceRecordBuildSet(d *schema.ResourceData, zoneName string) *route53.ResourceRecordSet {
+func expandResourceRecordSet(d *schema.ResourceData, zoneName string) *route53.ResourceRecordSet {
 	// get expanded name
 	en := ExpandRecordName(d.Get("name").(string), zoneName)
 
