@@ -1,5 +1,10 @@
 ## 4.55.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_route53_cidr_collection` ([#29407](https://github.com/hashicorp/terraform-provider-aws/issues/29407))
+* **New Resource:** `aws_route53_cidr_location` ([#29407](https://github.com/hashicorp/terraform-provider-aws/issues/29407))
+
 ENHANCEMENTS:
 
 * data-source/aws_s3_bucket_object: Expand content types that can be read from S3 to include some human-readable application types (e.g., `application/xml`, `application/atom+xml`) ([#27704](https://github.com/hashicorp/terraform-provider-aws/issues/27704))
@@ -10,6 +15,7 @@ ENHANCEMENTS:
 * resource/aws_firehose_delivery_stream: Add configurable timeouts for create, update, and delete ([#28469](https://github.com/hashicorp/terraform-provider-aws/issues/28469))
 * resource/aws_neptune_cluster: Add `neptune_instance_parameter_group_name` argument, used only when upgrading major version ([#28051](https://github.com/hashicorp/terraform-provider-aws/issues/28051))
 * resource/aws_neptune_global_cluster: Increase Update timeout to 120 minutes (per global cluster member) ([#28051](https://github.com/hashicorp/terraform-provider-aws/issues/28051))
+* resource/aws_route53_cidr_location: Add `cidr_routing_policy` argument ([#29407](https://github.com/hashicorp/terraform-provider-aws/issues/29407))
 * resource/aws_s3_bucket: Accept 'NoSuchTagSetError' responses from S3-compatible services ([#28530](https://github.com/hashicorp/terraform-provider-aws/issues/28530))
 * resource/aws_s3_bucket: Add error handling for `NotImplemented` errors when reading `lifecycle_rule` or `replication_configuration` into terraform state. ([#28790](https://github.com/hashicorp/terraform-provider-aws/issues/28790))
 * resource/aws_s3_object: Accept 'NoSuchTagSetError' responses from S3-compatible services ([#28530](https://github.com/hashicorp/terraform-provider-aws/issues/28530))
