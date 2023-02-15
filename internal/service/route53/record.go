@@ -81,6 +81,31 @@ func ResourceRecord() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"cidr_routing_policy": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"collection_id": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"location_name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
+				ConflictsWith: []string{
+					"failover_routing_policy",
+					"geolocation_routing_policy",
+					"latency_routing_policy",
+					"multivalue_answer_routing_policy",
+					"weighted_routing_policy",
+				},
+				RequiredWith: []string{"set_identifier"},
+			},
 			"failover_routing_policy": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
@@ -95,10 +120,11 @@ func ResourceRecord() *schema.Resource {
 					},
 				},
 				ConflictsWith: []string{
+					"cidr_routing_policy",
 					"geolocation_routing_policy",
 					"latency_routing_policy",
-					"weighted_routing_policy",
 					"multivalue_answer_routing_policy",
+					"weighted_routing_policy",
 				},
 				RequiredWith: []string{"set_identifier"},
 			},
@@ -127,10 +153,11 @@ func ResourceRecord() *schema.Resource {
 					},
 				},
 				ConflictsWith: []string{
+					"cidr_routing_policy",
 					"failover_routing_policy",
 					"latency_routing_policy",
-					"weighted_routing_policy",
 					"multivalue_answer_routing_policy",
+					"weighted_routing_policy",
 				},
 				RequiredWith: []string{"set_identifier"},
 			},
@@ -151,10 +178,11 @@ func ResourceRecord() *schema.Resource {
 					},
 				},
 				ConflictsWith: []string{
+					"cidr_routing_policy",
 					"failover_routing_policy",
 					"geolocation_routing_policy",
-					"weighted_routing_policy",
 					"multivalue_answer_routing_policy",
+					"weighted_routing_policy",
 				},
 				RequiredWith: []string{"set_identifier"},
 			},
@@ -162,6 +190,7 @@ func ResourceRecord() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				ConflictsWith: []string{
+					"cidr_routing_policy",
 					"failover_routing_policy",
 					"geolocation_routing_policy",
 					"latency_routing_policy",
@@ -215,6 +244,7 @@ func ResourceRecord() *schema.Resource {
 					},
 				},
 				ConflictsWith: []string{
+					"cidr_routing_policy",
 					"failover_routing_policy",
 					"geolocation_routing_policy",
 					"latency_routing_policy",

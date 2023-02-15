@@ -130,6 +130,7 @@ The following arguments are supported:
 * `health_check_id` - (Optional) The health check the record should be associated with.
 * `alias` - (Optional) An alias block. Conflicts with `ttl` & `records`.
   [Documented below](#alias).
+* `cidr_routing_policy` - (Optional) A block indicating a routing policy based on the IP network ranges of requestors. Conflicts with any other routing policy. [Documented below](#cidr-routing-policy).
 * `failover_routing_policy` - (Optional) A block indicating the routing behavior when associated health check fails. Conflicts with any other routing policy. [Documented below](#failover-routing-policy).
 * `geolocation_routing_policy` - (Optional) A block indicating a routing policy based on the geolocation of the requestor. Conflicts with any other routing policy. [Documented below](#geolocation-routing-policy).
 * `latency_routing_policy` - (Optional) A block indicating a routing policy based on the latency between the requestor and an AWS region. Conflicts with any other routing policy. [Documented below](#latency-routing-policy).
@@ -147,9 +148,16 @@ Alias records support the following:
 * `zone_id` - (Required) Hosted zone ID for a CloudFront distribution, S3 bucket, ELB, or Route 53 hosted zone. See [`resource_elb.zone_id`](/docs/providers/aws/r/elb.html#zone_id) for example.
 * `evaluate_target_health` - (Required) Set to `true` if you want Route 53 to determine whether to respond to DNS queries using this resource record set by checking the health of the resource record set. Some resources have special requirements, see [related part of documentation](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/resource-record-sets-values.html#rrsets-values-alias-evaluate-target-health).
 
+### CIDR Routing Policy
+
+CIDR routing policies support the following:
+
+* `collection_id` - (Required) The CIDR collection ID. See the [`aws_route53_cidr_collection` resource](route53_cidr_collection.html) for more details.
+* `location_name` - (Required) The CIDR collection location name. See the [`aws_route53_cidr_location` resource](route53_cidr_location.html) for more details. A `location_name` with an asterisk `"*"` can be used to create a default CIDR record. `collection_id` is still required for default record.
+
 ### Failover Routing Policy
 
-Failover routing policiessupport the following:
+Failover routing policies support the following:
 
 * `type` - (Required) `PRIMARY` or `SECONDARY`. A `PRIMARY` record will be served if its healthcheck is passing, otherwise the `SECONDARY` will be served. See http://docs.aws.amazon.com/Route53/latest/DeveloperGuide/dns-failover-configuring-options.html#dns-failover-failover-rrsets
 
