@@ -42,8 +42,8 @@ github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.22 h1:7AwGYXDdqRQYsluvKF
 github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.22/go.mod h1:EqK7gVrIGAHyZItrD1D8B0ilgwMD1GiWAmbU4u/JHNk=
 github.com/aws/aws-sdk-go-v2/internal/ini v1.3.29 h1:J4xhFd6zHhdF9jPP0FQJ6WknzBboGMBNjKOv4iTuw4A=
 github.com/aws/aws-sdk-go-v2/internal/ini v1.3.29/go.mod h1:TwuqRBGzxjQJIwH16/fOZodwXt2Zxa9/cwJC5ke4j7s=
-github.com/aws/aws-sdk-go-v2/service/auditmanager v1.23.1 h1:vdIPTj5X+yapmveP7ddSp2eueb5nWONRd7Db5Cc3WUs=
-github.com/aws/aws-sdk-go-v2/service/auditmanager v1.23.1/go.mod h1:8bt/if6saoOyRqQFXALjwJB5g+h4IcukQHb50BzolGM=
+github.com/aws/aws-sdk-go-v2/service/auditmanager v1.23.2 h1:KLxJsSGUu1/c0DBpwl3RlIM55Hg2KAL+sXXXGjxdVY4=
+github.com/aws/aws-sdk-go-v2/service/auditmanager v1.23.2/go.mod h1:8bt/if6saoOyRqQFXALjwJB5g+h4IcukQHb50BzolGM=
 github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.11.2 h1:+gYE/3/gFqSUOMv2ej3wI6h8eXEYDnlk5nMBwjbhofY=
 github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.11.2/go.mod h1:d294u7in+61LUbf3TQaXhwdXPWW66ySiokUDTKKARoM=
 github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.20.2 h1:u+ntikIxre6+yThsM7A1Ba8duunG8Uw1Pmsa8U+Efuk=
