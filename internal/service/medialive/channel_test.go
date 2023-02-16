@@ -127,6 +127,7 @@ func TestAccMediaLiveChannel_m2ts_settings(t *testing.T) {
 						"rate_mode":          "CBR",
 						"audio_pids":         "200",
 						"dvb_sub_pids":       "300",
+						"arib_captions_pid":  "100",
 					}),
 				),
 			},
@@ -787,6 +788,7 @@ resource "aws_medialive_channel" "test" {
                 rate_mode          = "CBR"
                 audio_pids         = "200"
                 dvb_sub_pids       = "300"
+                arib_captions_pid  = "100"
               }
             }
           }
