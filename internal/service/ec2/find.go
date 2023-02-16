@@ -2220,6 +2220,7 @@ func FindSecurityGroupRulesBySecurityGroupID(ctx context.Context, conn *ec2.EC2,
 
 func FindSpotDatafeedSubscription(ctx context.Context, conn *ec2.EC2) (*ec2.SpotDatafeedSubscription, error) {
 	input := &ec2.DescribeSpotDatafeedSubscriptionInput{}
+
 	output, err := conn.DescribeSpotDatafeedSubscriptionWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidSpotDatafeedNotFound) {
@@ -5779,12 +5780,40 @@ func FindIPAMPoolCIDRByPoolCIDRId(ctx context.Context, conn *ec2.EC2, poolCidrId
 	return output, nil
 }
 
-func FindIPAMResourceDiscoveryByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.IpamResourceDiscovery, error) {
-	input := &ec2.DescribeIpamResourceDiscoveriesInput{
-		IpamResourceDiscoveryIds: aws.StringSlice([]string{id}),
+func FindIPAMResourceDiscovery(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeIpamResourceDiscoveriesInput) (*ec2.IpamResourceDiscovery, error) {
+	output, err := FindIPAMResourceDiscoveries(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
 	}
 
-	output, err := conn.DescribeIpamResourceDiscoveriesWithContext(ctx, input)
+	if len(output) == 0 || output[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
+}
+
+func FindIPAMResourceDiscoveries(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeIpamResourceDiscoveriesInput) ([]*ec2.IpamResourceDiscovery, error) {
+	var output []*ec2.IpamResourceDiscovery
+
+	err := conn.DescribeIpamResourceDiscoveriesPagesWithContext(ctx, input, func(page *ec2.DescribeIpamResourceDiscoveriesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.IpamResourceDiscoveries {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidIPAMResourceDiscoveryIdNotFound) {
 		return nil, &resource.NotFoundError{
@@ -5797,11 +5826,35 @@ func FindIPAMResourceDiscoveryByID(ctx context.Context, conn *ec2.EC2, id string
 		return nil, err
 	}
 
-	if output == nil || len(output.IpamResourceDiscoveries) == 0 || output.IpamResourceDiscoveries[0] == nil {
-		return nil, nil
+	return output, nil
+}
+
+func FindIPAMResourceDiscoveryByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.IpamResourceDiscovery, error) {
+	input := &ec2.DescribeIpamResourceDiscoveriesInput{
+		IpamResourceDiscoveryIds: aws.StringSlice([]string{id}),
 	}
 
-	return output.IpamResourceDiscoveries[0], nil
+	output, err := FindIPAMResourceDiscovery(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := aws.StringValue(output.State); state == ec2.IpamResourceDiscoveryStateDeleteComplete {
+		return nil, &resource.NotFoundError{
+			Message:     state,
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.IpamResourceDiscoveryId) != id {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
 }
 
 func FindIPAMResourceDiscoveryAssociationByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.IpamResourceDiscoveryAssociation, error) {
