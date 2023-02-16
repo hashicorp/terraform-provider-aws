@@ -1,18 +1,20 @@
 package backup
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/backup"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceVault() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceVaultRead,
+		ReadWithoutTimeout: dataSourceVaultRead,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -36,8 +38,9 @@ func DataSourceVault() *schema.Resource {
 	}
 }
 
-func dataSourceVaultRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BackupConn
+func dataSourceVaultRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).BackupConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get("name").(string)
@@ -45,9 +48,9 @@ func dataSourceVaultRead(d *schema.ResourceData, meta interface{}) error {
 		BackupVaultName: aws.String(name),
 	}
 
-	resp, err := conn.DescribeBackupVault(input)
+	resp, err := conn.DescribeBackupVaultWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("Error getting Backup Vault: %w", err)
+		return sdkdiag.AppendErrorf(diags, "Error getting Backup Vault: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resp.BackupVaultName))
@@ -56,13 +59,13 @@ func dataSourceVaultRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", resp.BackupVaultName)
 	d.Set("recovery_points", resp.NumberOfRecoveryPoints)
 
-	tags, err := ListTags(conn, aws.StringValue(resp.BackupVaultArn))
+	tags, err := ListTags(ctx, conn, aws.StringValue(resp.BackupVaultArn))
 	if err != nil {
-		return fmt.Errorf("error listing tags for Backup Vault (%s): %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for Backup Vault (%s): %s", name, err)
 	}
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

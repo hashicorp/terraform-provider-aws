@@ -1,27 +1,29 @@
 package servicecatalog
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourceServiceAction() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceServiceActionCreate,
-		Read:   resourceServiceActionRead,
-		Update: resourceServiceActionUpdate,
-		Delete: resourceServiceActionDelete,
+		CreateWithoutTimeout: resourceServiceActionCreate,
+		ReadWithoutTimeout:   resourceServiceActionRead,
+		UpdateWithoutTimeout: resourceServiceActionUpdate,
+		DeleteWithoutTimeout: resourceServiceActionDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -85,8 +87,9 @@ func ResourceServiceAction() *schema.Resource {
 	}
 }
 
-func resourceServiceActionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn
+func resourceServiceActionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 
 	input := &servicecatalog.CreateServiceActionInput{
 		IdempotencyToken: aws.String(resource.UniqueId()),
@@ -104,10 +107,10 @@ func resourceServiceActionCreate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	var output *servicecatalog.CreateServiceActionOutput
-	err := resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
+	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 		var err error
 
-		output, err = conn.CreateServiceAction(input)
+		output, err = conn.CreateServiceActionWithContext(ctx, input)
 
 		if tfawserr.ErrMessageContains(err, servicecatalog.ErrCodeInvalidParametersException, "profile does not exist") {
 			return resource.RetryableError(err)
@@ -121,39 +124,40 @@ func resourceServiceActionCreate(d *schema.ResourceData, meta interface{}) error
 	})
 
 	if tfresource.TimedOut(err) {
-		output, err = conn.CreateServiceAction(input)
+		output, err = conn.CreateServiceActionWithContext(ctx, input)
 	}
 
 	if err != nil {
-		return fmt.Errorf("error creating Service Catalog Service Action: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating Service Catalog Service Action: %s", err)
 	}
 
 	if output == nil || output.ServiceActionDetail == nil || output.ServiceActionDetail.ServiceActionSummary == nil {
-		return fmt.Errorf("error creating Service Catalog Service Action: empty response")
+		return sdkdiag.AppendErrorf(diags, "creating Service Catalog Service Action: empty response")
 	}
 
 	d.SetId(aws.StringValue(output.ServiceActionDetail.ServiceActionSummary.Id))
 
-	return resourceServiceActionRead(d, meta)
+	return append(diags, resourceServiceActionRead(ctx, d, meta)...)
 }
 
-func resourceServiceActionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn
+func resourceServiceActionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 
-	output, err := WaitServiceActionReady(conn, d.Get("accept_language").(string), d.Id(), d.Timeout(schema.TimeoutRead))
+	output, err := WaitServiceActionReady(ctx, conn, d.Get("accept_language").(string), d.Id(), d.Timeout(schema.TimeoutRead))
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Service Catalog Service Action (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error describing Service Catalog Service Action (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "describing Service Catalog Service Action (%s): %s", d.Id(), err)
 	}
 
 	if output == nil || output.ServiceActionSummary == nil {
-		return fmt.Errorf("error getting Service Catalog Service Action (%s): empty response", d.Id())
+		return sdkdiag.AppendErrorf(diags, "getting Service Catalog Service Action (%s): empty response", d.Id())
 	}
 
 	sas := output.ServiceActionSummary
@@ -167,11 +171,12 @@ func resourceServiceActionRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("definition", nil)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceServiceActionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn
+func resourceServiceActionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 
 	input := &servicecatalog.UpdateServiceActionInput{
 		Id: aws.String(d.Id()),
@@ -193,8 +198,8 @@ func resourceServiceActionUpdate(d *schema.ResourceData, meta interface{}) error
 		input.Name = aws.String(d.Get("name").(string))
 	}
 
-	err := resource.Retry(d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
-		_, err := conn.UpdateServiceAction(input)
+	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
+		_, err := conn.UpdateServiceActionWithContext(ctx, input)
 
 		if tfawserr.ErrMessageContains(err, servicecatalog.ErrCodeInvalidParametersException, "profile does not exist") {
 			return resource.RetryableError(err)
@@ -208,25 +213,26 @@ func resourceServiceActionUpdate(d *schema.ResourceData, meta interface{}) error
 	})
 
 	if tfresource.TimedOut(err) {
-		_, err = conn.UpdateServiceAction(input)
+		_, err = conn.UpdateServiceActionWithContext(ctx, input)
 	}
 
 	if err != nil {
-		return fmt.Errorf("error updating Service Catalog Service Action (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating Service Catalog Service Action (%s): %s", d.Id(), err)
 	}
 
-	return resourceServiceActionRead(d, meta)
+	return append(diags, resourceServiceActionRead(ctx, d, meta)...)
 }
 
-func resourceServiceActionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn
+func resourceServiceActionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 
 	input := &servicecatalog.DeleteServiceActionInput{
 		Id: aws.String(d.Id()),
 	}
 
-	err := resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
-		_, err := conn.DeleteServiceAction(input)
+	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
+		_, err := conn.DeleteServiceActionWithContext(ctx, input)
 
 		if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceInUseException) {
 			return resource.RetryableError(err)
@@ -240,23 +246,23 @@ func resourceServiceActionDelete(d *schema.ResourceData, meta interface{}) error
 	})
 
 	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteServiceAction(input)
+		_, err = conn.DeleteServiceActionWithContext(ctx, input)
 	}
 
 	if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
 		log.Printf("[INFO] Attempted to delete Service Action (%s) but does not exist", d.Id())
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Service Catalog Service Action (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Service Catalog Service Action (%s): %s", d.Id(), err)
 	}
 
-	if err := WaitServiceActionDeleted(conn, d.Get("accept_language").(string), d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("error waiting for Service Catalog Service Action (%s) to be deleted: %w", d.Id(), err)
+	if err := WaitServiceActionDeleted(ctx, conn, d.Get("accept_language").(string), d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Service Catalog Service Action (%s) to be deleted: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandServiceActionDefinition(tfMap map[string]interface{}) map[string]*string {

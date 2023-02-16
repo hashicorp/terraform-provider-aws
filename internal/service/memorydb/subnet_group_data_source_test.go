@@ -44,7 +44,7 @@ func testAccSubnetGroupDataSourceConfig_basic(rName string) string {
 		fmt.Sprintf(`
 resource "aws_memorydb_subnet_group" "test" {
   name       = %[1]q
-  subnet_ids = aws_subnet.test.*.id
+  subnet_ids = aws_subnet.test[*].id
 
   tags = {
     Test = "test"

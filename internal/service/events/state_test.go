@@ -7,6 +7,8 @@ import (
 )
 
 func TestRuleEnabledFromState(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		TestName        string
 		State           string
@@ -35,7 +37,10 @@ func TestRuleEnabledFromState(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.TestName, func(t *testing.T) {
+			t.Parallel()
+
 			gotEnabled, err := tfevents.RuleEnabledFromState(testCase.State)
 
 			if err == nil && testCase.ExpectedError {
@@ -54,6 +59,8 @@ func TestRuleEnabledFromState(t *testing.T) {
 }
 
 func RuleStateFromEnabled(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		TestName      string
 		Enabled       bool
@@ -72,7 +79,10 @@ func RuleStateFromEnabled(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.TestName, func(t *testing.T) {
+			t.Parallel()
+
 			gotState := tfevents.RuleStateFromEnabled(testCase.Enabled)
 
 			if gotState != testCase.ExpectedState {

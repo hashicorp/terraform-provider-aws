@@ -32,6 +32,7 @@ resource "aws_cognito_user_pool" "example" {
   sms_configuration {
     external_id    = "example"
     sns_caller_arn = aws_iam_role.example.arn
+    sns_region     = "us-east-1"
   }
 
   software_token_mfa_configuration {
@@ -72,6 +73,7 @@ The following arguments are optional:
 * `admin_create_user_config` - (Optional) Configuration block for creating a new user profile. [Detailed below](#admin_create_user_config).
 * `alias_attributes` - (Optional) Attributes supported as an alias for this user pool. Valid values: `phone_number`, `email`, or `preferred_username`. Conflicts with `username_attributes`.
 * `auto_verified_attributes` - (Optional) Attributes to be auto-verified. Valid values: `email`, `phone_number`.
+* `deletion_protection` - (Optional) When active, DeletionProtection prevents accidental deletion of your user pool. Before you can delete a user pool that you have protected against deletion, you must deactivate this feature. Valid values are `ACTIVE` and `INACTIVE`, Default value is `INACTIVE`.
 * `device_configuration` - (Optional) Configuration block for the user pool's device tracking. [Detailed below](#device_configuration).
 * `email_configuration` - (Optional) Configuration block for configuring email. [Detailed below](#email_configuration).
 * `email_verification_message` - (Optional) String representing the email verification message. Conflicts with `verification_message_template` configuration block `email_message` argument.
@@ -119,7 +121,7 @@ The following arguments are optional:
 * `email_sending_account` - (Optional) Email delivery method to use. `COGNITO_DEFAULT` for the default email functionality built into Cognito or `DEVELOPER` to use your Amazon SES configuration.
 * `from_email_address` - (Optional) Sender’s email address or sender’s display name with their email address (e.g., `john@example.com`, `John Smith <john@example.com>` or `\"John Smith Ph.D.\" <john@example.com>`). Escaped double quotes are required around display names that contain certain characters as specified in [RFC 5322](https://tools.ietf.org/html/rfc5322).
 * `reply_to_email_address` - (Optional) REPLY-TO email address.
-* `source_arn` - (Optional) ARN of the SES verified email identity to to use. Required if `email_sending_account` is set to `DEVELOPER`.
+* `source_arn` - (Optional) ARN of the SES verified email identity to use. Required if `email_sending_account` is set to `DEVELOPER`.
 
 ### lambda_config
 
@@ -204,6 +206,7 @@ resource "aws_cognito_user_pool" "example" {
 
 * `external_id` - (Required) External ID used in IAM role trust relationships. For more information about using external IDs, see [How to Use an External ID When Granting Access to Your AWS Resources to a Third Party](http://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_create_for-user_externalid.html).
 * `sns_caller_arn` - (Required) ARN of the Amazon SNS caller. This is usually the IAM role that you've given Cognito permission to assume.
+* `sns_region` - (Optional) The AWS Region to use with Amazon SNS integration. You can choose the same Region as your user pool, or a supported Legacy Amazon SNS alternate Region. Amazon Cognito resources in the Asia Pacific (Seoul) AWS Region must use your Amazon SNS configuration in the Asia Pacific (Tokyo) Region. For more information, see [SMS message settings for Amazon Cognito user pools](https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-sms-settings.html).
 
 ### software_token_mfa_configuration
 

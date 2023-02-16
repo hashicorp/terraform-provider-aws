@@ -1,6 +1,7 @@
 package cognitoidp
 
 import (
+	"context"
 	"encoding/base64"
 	"fmt"
 	"log"
@@ -10,19 +11,21 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func ResourceUserPoolUICustomization() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceUserPoolUICustomizationPut,
-		Read:   resourceUserPoolUICustomizationRead,
-		Update: resourceUserPoolUICustomizationPut,
-		Delete: resourceUserPoolUICustomizationDelete,
+		CreateWithoutTimeout: resourceUserPoolUICustomizationPut,
+		ReadWithoutTimeout:   resourceUserPoolUICustomizationRead,
+		UpdateWithoutTimeout: resourceUserPoolUICustomizationPut,
+		DeleteWithoutTimeout: resourceUserPoolUICustomizationDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -72,8 +75,9 @@ func ResourceUserPoolUICustomization() *schema.Resource {
 	}
 }
 
-func resourceUserPoolUICustomizationPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
+func resourceUserPoolUICustomizationPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CognitoIDPConn()
 
 	clientId := d.Get("client_id").(string)
 	userPoolId := d.Get("user_pool_id").(string)
@@ -90,52 +94,53 @@ func resourceUserPoolUICustomizationPut(d *schema.ResourceData, meta interface{}
 	if v, ok := d.GetOk("image_file"); ok {
 		imgFile, err := base64.StdEncoding.DecodeString(v.(string))
 		if err != nil {
-			return fmt.Errorf("error Base64 decoding image file for Cognito User Pool UI customization (UserPoolId: %s, ClientId: %s): %w", userPoolId, clientId, err)
+			return sdkdiag.AppendErrorf(diags, "Base64 decoding image file for Cognito User Pool UI customization (UserPoolId: %s, ClientId: %s): %s", userPoolId, clientId, err)
 		}
 
 		input.ImageFile = imgFile
 	}
 
-	_, err := conn.SetUICustomization(input)
+	_, err := conn.SetUICustomizationWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error setting Cognito User Pool UI customization (UserPoolId: %s, ClientId: %s): %w", userPoolId, clientId, err)
+		return sdkdiag.AppendErrorf(diags, "setting Cognito User Pool UI customization (UserPoolId: %s, ClientId: %s): %s", userPoolId, clientId, err)
 	}
 
 	d.SetId(fmt.Sprintf("%s,%s", userPoolId, clientId))
 
-	return resourceUserPoolUICustomizationRead(d, meta)
+	return append(diags, resourceUserPoolUICustomizationRead(ctx, d, meta)...)
 }
 
-func resourceUserPoolUICustomizationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
+func resourceUserPoolUICustomizationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CognitoIDPConn()
 
 	userPoolId, clientId, err := ParseUserPoolUICustomizationID(d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error parsing Cognito User Pool UI customization ID (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "parsing Cognito User Pool UI customization ID (%s): %s", d.Id(), err)
 	}
 
-	uiCustomization, err := FindCognitoUserPoolUICustomization(conn, userPoolId, clientId)
+	uiCustomization, err := FindCognitoUserPoolUICustomization(ctx, conn, userPoolId, clientId)
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Cognito User Pool UI customization (UserPoolId: %s, ClientId: %s) not found, removing from state", userPoolId, clientId)
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error getting Cognito User Pool UI customization (UserPoolId: %s, ClientId: %s): %w", userPoolId, clientId, err)
+		return sdkdiag.AppendErrorf(diags, "getting Cognito User Pool UI customization (UserPoolId: %s, ClientId: %s): %s", userPoolId, clientId, err)
 	}
 
 	if uiCustomization == nil {
 		if d.IsNewResource() {
-			return fmt.Errorf("error getting Cognito User Pool UI customization (UserPoolId: %s, ClientId: %s): not found", userPoolId, clientId)
+			return sdkdiag.AppendErrorf(diags, "getting Cognito User Pool UI customization (UserPoolId: %s, ClientId: %s): not found", userPoolId, clientId)
 		}
 
 		log.Printf("[WARN] Cognito User Pool UI customization (UserPoolId: %s, ClientId: %s) not found, removing from state", userPoolId, clientId)
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	d.Set("client_id", uiCustomization.ClientId)
@@ -146,16 +151,17 @@ func resourceUserPoolUICustomizationRead(d *schema.ResourceData, meta interface{
 	d.Set("last_modified_date", aws.TimeValue(uiCustomization.LastModifiedDate).Format(time.RFC3339))
 	d.Set("user_pool_id", uiCustomization.UserPoolId)
 
-	return nil
+	return diags
 }
 
-func resourceUserPoolUICustomizationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
+func resourceUserPoolUICustomizationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CognitoIDPConn()
 
 	userPoolId, clientId, err := ParseUserPoolUICustomizationID(d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error parsing Cognito User Pool UI customization ID (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "parsing Cognito User Pool UI customization ID (%s): %s", d.Id(), err)
 	}
 
 	input := &cognitoidentityprovider.SetUICustomizationInput{
@@ -163,17 +169,17 @@ func resourceUserPoolUICustomizationDelete(d *schema.ResourceData, meta interfac
 		UserPoolId: aws.String(userPoolId),
 	}
 
-	_, err = conn.SetUICustomization(input)
+	_, err = conn.SetUICustomizationWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Cognito User Pool UI customization (UserPoolId: %s, ClientId: %s): %w", userPoolId, clientId, err)
+		return sdkdiag.AppendErrorf(diags, "deleting Cognito User Pool UI customization (UserPoolId: %s, ClientId: %s): %s", userPoolId, clientId, err)
 	}
 
-	return nil
+	return diags
 }
 
 func ParseUserPoolUICustomizationID(id string) (string, string, error) {

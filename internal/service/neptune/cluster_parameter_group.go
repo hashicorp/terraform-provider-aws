@@ -1,16 +1,18 @@
 package neptune
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/neptune"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -19,12 +21,12 @@ const clusterParameterGroupMaxParamsBulkEdit = 20
 
 func ResourceClusterParameterGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceClusterParameterGroupCreate,
-		Read:   resourceClusterParameterGroupRead,
-		Update: resourceClusterParameterGroupUpdate,
-		Delete: resourceClusterParameterGroupDelete,
+		CreateWithoutTimeout: resourceClusterParameterGroupCreate,
+		ReadWithoutTimeout:   resourceClusterParameterGroupRead,
+		UpdateWithoutTimeout: resourceClusterParameterGroupUpdate,
+		DeleteWithoutTimeout: resourceClusterParameterGroupDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -93,8 +95,9 @@ func ResourceClusterParameterGroup() *schema.Resource {
 	}
 }
 
-func resourceClusterParameterGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).NeptuneConn
+func resourceClusterParameterGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).NeptuneConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -114,25 +117,26 @@ func resourceClusterParameterGroupCreate(d *schema.ResourceData, meta interface{
 		Tags:                        Tags(tags.IgnoreAWS()),
 	}
 
-	_, err := conn.CreateDBClusterParameterGroup(&createOpts)
+	_, err := conn.CreateDBClusterParameterGroupWithContext(ctx, &createOpts)
 	if err != nil {
-		return fmt.Errorf("creating Neptune Cluster Parameter Group (%s): %w", groupName, err)
+		return sdkdiag.AppendErrorf(diags, "creating Neptune Cluster Parameter Group (%s): %s", groupName, err)
 	}
 
 	d.SetId(aws.StringValue(createOpts.DBClusterParameterGroupName))
 
 	if v, ok := d.GetOk("parameter"); ok && v.(*schema.Set).Len() > 0 {
-		err := modifyClusterParameterGroupParameters(conn, d.Id(), expandParameters(v.(*schema.Set).List()))
+		err := modifyClusterParameterGroupParameters(ctx, conn, d.Id(), expandParameters(v.(*schema.Set).List()))
 		if err != nil {
-			return fmt.Errorf("modifying Neptune Cluster Parameter Group (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "modifying Neptune Cluster Parameter Group (%s): %s", d.Id(), err)
 		}
 	}
 
-	return resourceClusterParameterGroupRead(d, meta)
+	return append(diags, resourceClusterParameterGroupRead(ctx, d, meta)...)
 }
 
-func resourceClusterParameterGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).NeptuneConn
+func resourceClusterParameterGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).NeptuneConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -140,25 +144,25 @@ func resourceClusterParameterGroupRead(d *schema.ResourceData, meta interface{})
 		DBClusterParameterGroupName: aws.String(d.Id()),
 	}
 
-	describeResp, err := conn.DescribeDBClusterParameterGroups(&describeOpts)
+	describeResp, err := conn.DescribeDBClusterParameterGroupsWithContext(ctx, &describeOpts)
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBParameterGroupNotFoundFault) {
 		log.Printf("[WARN] Neptune Cluster Parameter Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading Neptune Cluster Parameter Group (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Neptune Cluster Parameter Group (%s): %s", d.Id(), err)
 	}
 
 	if describeResp == nil || len(describeResp.DBClusterParameterGroups) == 0 {
 		if d.IsNewResource() {
-			return fmt.Errorf("reading Neptune Cluster Parameter Group (%s): not found", d.Id())
+			return sdkdiag.AppendErrorf(diags, "reading Neptune Cluster Parameter Group (%s): not found", d.Id())
 		}
 
 		log.Printf("[WARN] Neptune Cluster Parameter Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	d.Set("name", describeResp.DBClusterParameterGroups[0].DBClusterParameterGroupName)
@@ -173,37 +177,38 @@ func resourceClusterParameterGroupRead(d *schema.ResourceData, meta interface{})
 		Source:                      aws.String("user"),
 	}
 
-	describeParametersResp, err := conn.DescribeDBClusterParameters(&describeParametersOpts)
+	describeParametersResp, err := conn.DescribeDBClusterParametersWithContext(ctx, &describeParametersOpts)
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading Neptune Cluster Parameter Group (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("parameter", flattenParameters(describeParametersResp.Parameters)); err != nil {
-		return fmt.Errorf("setting neptune parameter: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting neptune parameter: %s", err)
 	}
 
-	tags, err := ListTags(conn, d.Get("arn").(string))
+	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
 
 	if err != nil {
-		return fmt.Errorf("listing tags for Neptune Cluster Parameter Group (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for Neptune Cluster Parameter Group (%s): %s", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceClusterParameterGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).NeptuneConn
+func resourceClusterParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).NeptuneConn()
 
 	if d.HasChange("parameter") {
 		o, n := d.GetChange("parameter")
@@ -220,9 +225,9 @@ func resourceClusterParameterGroupUpdate(d *schema.ResourceData, meta interface{
 		parameters := expandParameters(ns.Difference(os).List())
 
 		if len(parameters) > 0 {
-			err := modifyClusterParameterGroupParameters(conn, d.Id(), parameters)
+			err := modifyClusterParameterGroupParameters(ctx, conn, d.Id(), parameters)
 			if err != nil {
-				return fmt.Errorf("updating Neptune Cluster Parameter Group (%s) parameter: %w", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "updating Neptune Cluster Parameter Group (%s) parameter: %s", d.Id(), err)
 			}
 		}
 	}
@@ -230,33 +235,34 @@ func resourceClusterParameterGroupUpdate(d *schema.ResourceData, meta interface{
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("updating Neptune Cluster Parameter Group (%s) tags: %w", d.Id(), err)
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Neptune Cluster Parameter Group (%s) tags: %s", d.Id(), err)
 		}
 	}
 
-	return resourceClusterParameterGroupRead(d, meta)
+	return append(diags, resourceClusterParameterGroupRead(ctx, d, meta)...)
 }
 
-func resourceClusterParameterGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).NeptuneConn
+func resourceClusterParameterGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).NeptuneConn()
 
 	input := neptune.DeleteDBClusterParameterGroupInput{
 		DBClusterParameterGroupName: aws.String(d.Id()),
 	}
 
-	_, err := conn.DeleteDBClusterParameterGroup(&input)
+	_, err := conn.DeleteDBClusterParameterGroupWithContext(ctx, &input)
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBParameterGroupNotFoundFault) {
-			return nil
+			return diags
 		}
-		return fmt.Errorf("deleting Neptune Cluster Parameter Group (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Neptune Cluster Parameter Group (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func modifyClusterParameterGroupParameters(conn *neptune.Neptune, name string, parameters []*neptune.Parameter) error {
+func modifyClusterParameterGroupParameters(ctx context.Context, conn *neptune.Neptune, name string, parameters []*neptune.Parameter) error {
 	// We can only modify 20 parameters at a time, so walk them until
 	// we've got them all.
 	for parameters != nil {
@@ -272,7 +278,7 @@ func modifyClusterParameterGroupParameters(conn *neptune.Neptune, name string, p
 			Parameters:                  paramsToModify,
 		}
 
-		_, err := conn.ModifyDBClusterParameterGroup(&modifyOpts)
+		_, err := conn.ModifyDBClusterParameterGroupWithContext(ctx, &modifyOpts)
 		if err != nil {
 			return err
 		}

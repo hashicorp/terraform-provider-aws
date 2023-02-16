@@ -1,6 +1,7 @@
 package ec2
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"time"
@@ -8,15 +9,17 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func DataSourceVPNGateway() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceVPNGatewayRead,
+		ReadWithoutTimeout: dataSourceVPNGatewayRead,
 
 		Timeouts: &schema.ResourceTimeout{
 			Read: schema.DefaultTimeout(20 * time.Minute),
@@ -58,8 +61,9 @@ func DataSourceVPNGateway() *schema.Resource {
 	}
 }
 
-func dataSourceVPNGatewayRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func dataSourceVPNGatewayRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeVpnGatewaysInput{}
@@ -100,10 +104,10 @@ func dataSourceVPNGatewayRead(d *schema.ResourceData, meta interface{}) error {
 		input.Filters = nil
 	}
 
-	vgw, err := FindVPNGateway(conn, input)
+	vgw, err := FindVPNGateway(ctx, conn, input)
 
 	if err != nil {
-		return tfresource.SingularDataSourceFindError("EC2 VPN Gateway", err)
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 VPN Gateway", err))
 	}
 
 	d.SetId(aws.StringValue(vgw.VpnGatewayId))
@@ -127,8 +131,8 @@ func dataSourceVPNGatewayRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("state", vgw.State)
 
 	if err := d.Set("tags", KeyValueTags(vgw.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

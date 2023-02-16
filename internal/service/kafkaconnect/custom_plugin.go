@@ -23,7 +23,7 @@ func ResourceCustomPlugin() *schema.Resource {
 		DeleteWithoutTimeout: resourceCustomPluginDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -101,7 +101,7 @@ func ResourceCustomPlugin() *schema.Resource {
 }
 
 func resourceCustomPluginCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KafkaConnectConn
+	conn := meta.(*conns.AWSClient).KafkaConnectConn()
 
 	name := d.Get("name").(string)
 	input := &kafkaconnect.CreateCustomPluginInput{
@@ -133,7 +133,7 @@ func resourceCustomPluginCreate(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceCustomPluginRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KafkaConnectConn
+	conn := meta.(*conns.AWSClient).KafkaConnectConn()
 
 	plugin, err := FindCustomPluginByARN(ctx, conn, d.Id())
 
@@ -172,7 +172,7 @@ func resourceCustomPluginRead(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceCustomPluginDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KafkaConnectConn
+	conn := meta.(*conns.AWSClient).KafkaConnectConn()
 
 	log.Printf("[DEBUG] Deleting MSK Connect Custom Plugin: %s", d.Id())
 	_, err := conn.DeleteCustomPluginWithContext(ctx, &kafkaconnect.DeleteCustomPluginInput{

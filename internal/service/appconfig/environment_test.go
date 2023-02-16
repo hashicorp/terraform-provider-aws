@@ -1,6 +1,7 @@
 package appconfig_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -17,6 +18,7 @@ import (
 )
 
 func TestAccAppConfigEnvironment_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appconfig_environment.test"
 	appResourceName := "aws_appconfig_application.test"
@@ -25,12 +27,12 @@ func TestAccAppConfigEnvironment_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, appconfig.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEnvironmentDestroy,
+		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnvironmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEnvironmentExists(resourceName),
+					testAccCheckEnvironmentExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "appconfig", regexp.MustCompile(`application/[a-z0-9]{4,7}/environment/[a-z0-9]{4,7}`)),
 					resource.TestCheckResourceAttrPair(resourceName, "application_id", appResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "monitor.#", "0"),
@@ -49,6 +51,7 @@ func TestAccAppConfigEnvironment_basic(t *testing.T) {
 }
 
 func TestAccAppConfigEnvironment_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appconfig_environment.test"
 
@@ -56,13 +59,13 @@ func TestAccAppConfigEnvironment_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, appconfig.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEnvironmentDestroy,
+		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnvironmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEnvironmentExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfappconfig.ResourceEnvironment(), resourceName),
+					testAccCheckEnvironmentExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappconfig.ResourceEnvironment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -71,6 +74,7 @@ func TestAccAppConfigEnvironment_disappears(t *testing.T) {
 }
 
 func TestAccAppConfigEnvironment_updateName(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rNameUpdated := sdkacctest.RandomWithPrefix("tf-acc-test-update")
 	resourceName := "aws_appconfig_environment.test"
@@ -79,18 +83,18 @@ func TestAccAppConfigEnvironment_updateName(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, appconfig.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEnvironmentDestroy,
+		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnvironmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEnvironmentExists(resourceName),
+					testAccCheckEnvironmentExists(ctx, resourceName),
 				),
 			},
 			{
 				Config: testAccEnvironmentConfig_basic(rNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEnvironmentExists(resourceName),
+					testAccCheckEnvironmentExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rNameUpdated),
 				),
 			},
@@ -104,6 +108,7 @@ func TestAccAppConfigEnvironment_updateName(t *testing.T) {
 }
 
 func TestAccAppConfigEnvironment_updateDescription(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	description := sdkacctest.RandomWithPrefix("tf-acc-test-update")
 	resourceName := "aws_appconfig_environment.test"
@@ -112,12 +117,12 @@ func TestAccAppConfigEnvironment_updateDescription(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, appconfig.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEnvironmentDestroy,
+		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnvironmentConfig_description(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEnvironmentExists(resourceName),
+					testAccCheckEnvironmentExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", rName),
 				),
 			},
@@ -129,7 +134,7 @@ func TestAccAppConfigEnvironment_updateDescription(t *testing.T) {
 			{
 				Config: testAccEnvironmentConfig_description(rName, description),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEnvironmentExists(resourceName),
+					testAccCheckEnvironmentExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
 				),
 			},
@@ -142,7 +147,7 @@ func TestAccAppConfigEnvironment_updateDescription(t *testing.T) {
 				// Test Description Removal
 				Config: testAccEnvironmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEnvironmentExists(resourceName),
+					testAccCheckEnvironmentExists(ctx, resourceName),
 				),
 			},
 		},
@@ -150,6 +155,7 @@ func TestAccAppConfigEnvironment_updateDescription(t *testing.T) {
 }
 
 func TestAccAppConfigEnvironment_monitors(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appconfig_environment.test"
 
@@ -157,12 +163,12 @@ func TestAccAppConfigEnvironment_monitors(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, appconfig.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEnvironmentDestroy,
+		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnvironmentConfig_monitors(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEnvironmentExists(resourceName),
+					testAccCheckEnvironmentExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "monitor.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "monitor.*.alarm_arn", "aws_cloudwatch_metric_alarm.test.0", "arn"),
@@ -178,7 +184,7 @@ func TestAccAppConfigEnvironment_monitors(t *testing.T) {
 			{
 				Config: testAccEnvironmentConfig_monitors(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEnvironmentExists(resourceName),
+					testAccCheckEnvironmentExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "monitor.#", "2"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "monitor.*.alarm_arn", "aws_cloudwatch_metric_alarm.test.0", "arn"),
@@ -197,7 +203,7 @@ func TestAccAppConfigEnvironment_monitors(t *testing.T) {
 				// Test Monitor Removal
 				Config: testAccEnvironmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEnvironmentExists(resourceName),
+					testAccCheckEnvironmentExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "monitor.#", "0"),
 				),
 			},
@@ -206,6 +212,7 @@ func TestAccAppConfigEnvironment_monitors(t *testing.T) {
 }
 
 func TestAccAppConfigEnvironment_multipleEnvironments(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName1 := "aws_appconfig_environment.test"
 	resourceName2 := "aws_appconfig_environment.test2"
@@ -214,13 +221,13 @@ func TestAccAppConfigEnvironment_multipleEnvironments(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, appconfig.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEnvironmentDestroy,
+		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnvironmentConfig_multiple(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEnvironmentExists(resourceName1),
-					testAccCheckEnvironmentExists(resourceName2),
+					testAccCheckEnvironmentExists(ctx, resourceName1),
+					testAccCheckEnvironmentExists(ctx, resourceName2),
 				),
 			},
 			{
@@ -236,7 +243,7 @@ func TestAccAppConfigEnvironment_multipleEnvironments(t *testing.T) {
 			{
 				Config: testAccEnvironmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEnvironmentExists(resourceName1),
+					testAccCheckEnvironmentExists(ctx, resourceName1),
 				),
 			},
 			{
@@ -249,6 +256,7 @@ func TestAccAppConfigEnvironment_multipleEnvironments(t *testing.T) {
 }
 
 func TestAccAppConfigEnvironment_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appconfig_environment.test"
 
@@ -256,12 +264,12 @@ func TestAccAppConfigEnvironment_tags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, appconfig.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEnvironmentDestroy,
+		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEnvironmentConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEnvironmentExists(resourceName),
+					testAccCheckEnvironmentExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -274,7 +282,7 @@ func TestAccAppConfigEnvironment_tags(t *testing.T) {
 			{
 				Config: testAccEnvironmentConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEnvironmentExists(resourceName),
+					testAccCheckEnvironmentExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -283,7 +291,7 @@ func TestAccAppConfigEnvironment_tags(t *testing.T) {
 			{
 				Config: testAccEnvironmentConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEnvironmentExists(resourceName),
+					testAccCheckEnvironmentExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -292,44 +300,46 @@ func TestAccAppConfigEnvironment_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckEnvironmentDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn
+func testAccCheckEnvironmentDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_appconfig_environment" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_appconfig_environment" {
+				continue
+			}
+
+			envID, appID, err := tfappconfig.EnvironmentParseID(rs.Primary.ID)
+
+			if err != nil {
+				return err
+			}
+
+			input := &appconfig.GetEnvironmentInput{
+				ApplicationId: aws.String(appID),
+				EnvironmentId: aws.String(envID),
+			}
+
+			output, err := conn.GetEnvironmentWithContext(ctx, input)
+
+			if tfawserr.ErrCodeEquals(err, appconfig.ErrCodeResourceNotFoundException) {
+				continue
+			}
+
+			if err != nil {
+				return fmt.Errorf("error reading AppConfig Environment (%s) for Application (%s): %w", envID, appID, err)
+			}
+
+			if output != nil {
+				return fmt.Errorf("AppConfig Environment (%s) for Application (%s) still exists", envID, appID)
+			}
 		}
 
-		envID, appID, err := tfappconfig.EnvironmentParseID(rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		input := &appconfig.GetEnvironmentInput{
-			ApplicationId: aws.String(appID),
-			EnvironmentId: aws.String(envID),
-		}
-
-		output, err := conn.GetEnvironment(input)
-
-		if tfawserr.ErrCodeEquals(err, appconfig.ErrCodeResourceNotFoundException) {
-			continue
-		}
-
-		if err != nil {
-			return fmt.Errorf("error reading AppConfig Environment (%s) for Application (%s): %w", envID, appID, err)
-		}
-
-		if output != nil {
-			return fmt.Errorf("AppConfig Environment (%s) for Application (%s) still exists", envID, appID)
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckEnvironmentExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckEnvironmentExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -346,14 +356,14 @@ func testAccCheckEnvironmentExists(resourceName string) resource.TestCheckFunc {
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn()
 
 		input := &appconfig.GetEnvironmentInput{
 			ApplicationId: aws.String(appID),
 			EnvironmentId: aws.String(envID),
 		}
 
-		output, err := conn.GetEnvironment(input)
+		output, err := conn.GetEnvironmentWithContext(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("error reading AppConfig Environment (%s) for Application (%s): %w", envID, appID, err)
@@ -458,7 +468,7 @@ resource "aws_appconfig_environment" "test" {
   application_id = aws_appconfig_application.test.id
 
   dynamic "monitor" {
-    for_each = aws_cloudwatch_metric_alarm.test.*.arn
+    for_each = aws_cloudwatch_metric_alarm.test[*].arn
     content {
       alarm_arn      = monitor.value
       alarm_role_arn = aws_iam_role.test.arn

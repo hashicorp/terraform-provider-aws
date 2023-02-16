@@ -20,10 +20,10 @@ import (
 
 func ResourceAnomalySubscription() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceAnomalySubscriptionCreate,
-		ReadContext:   resourceAnomalySubscriptionRead,
-		UpdateContext: resourceAnomalySubscriptionUpdate,
-		DeleteContext: resourceAnomalySubscriptionDelete,
+		CreateWithoutTimeout: resourceAnomalySubscriptionCreate,
+		ReadWithoutTimeout:   resourceAnomalySubscriptionRead,
+		UpdateWithoutTimeout: resourceAnomalySubscriptionUpdate,
+		DeleteWithoutTimeout: resourceAnomalySubscriptionDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -32,7 +32,7 @@ func ResourceAnomalySubscription() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`[\\S\\s]*`), "Must be a valid AWS Account ID matching expression: [\\S\\s]*"),
+				ValidateFunc: verify.ValidAccountID,
 			},
 			"arn": {
 				Type:     schema.TypeString,
@@ -48,8 +48,16 @@ func ResourceAnomalySubscription() *schema.Resource {
 				Required: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
-					ValidateFunc: validation.StringMatch(regexp.MustCompile(`arn:aws[-a-z0-9]*:[a-z0-9]+:[-a-z0-9]*:[0-9]{12}:[-a-zA-Z0-9/:_]+`), "Must be a valid anomaly monitor ARN"),
+					ValidateFunc: verify.ValidARN,
 				},
+			},
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 1024),
+					validation.StringMatch(regexp.MustCompile(`[\\S\\s]*`), "Must be a valid Anomaly Subscription Name matching expression: [\\S\\s]*")),
 			},
 			"subscriber": {
 				Type:     schema.TypeSet,
@@ -63,23 +71,24 @@ func ResourceAnomalySubscription() *schema.Resource {
 						"type": {
 							Type:         schema.TypeString,
 							Required:     true,
-							ValidateFunc: validation.StringInSlice([]string{costexplorer.SubscriberTypeEmail, costexplorer.SubscriberTypeSns}, false),
+							ValidateFunc: validation.StringInSlice(costexplorer.SubscriberType_Values(), false),
 						},
 					},
 				},
 			},
 			"threshold": {
 				Type:         schema.TypeFloat,
-				Required:     true,
+				Optional:     true,
+				Computed:     true,
 				ValidateFunc: validation.FloatAtLeast(0.0),
+				Deprecated:   "use threshold_expression instead",
 			},
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 1024),
-					validation.StringMatch(regexp.MustCompile(`[\\S\\s]*`), "Must be a valid Anomaly Subscription Name matching expression: [\\S\\s]*")),
+			"threshold_expression": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Computed: true,
+				Optional: true,
+				Elem:     schemaCostCategoryRule(),
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
@@ -90,7 +99,7 @@ func ResourceAnomalySubscription() *schema.Resource {
 }
 
 func resourceAnomalySubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CEConn
+	conn := meta.(*conns.AWSClient).CEConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -100,12 +109,19 @@ func resourceAnomalySubscriptionCreate(ctx context.Context, d *schema.ResourceDa
 			Frequency:        aws.String(d.Get("frequency").(string)),
 			MonitorArnList:   aws.StringSlice(expandAnomalySubscriptionMonitorARNList(d.Get("monitor_arn_list").([]interface{}))),
 			Subscribers:      expandAnomalySubscriptionSubscribers(d.Get("subscriber").(*schema.Set).List()),
-			Threshold:        aws.Float64(d.Get("threshold").(float64)),
 		},
 	}
 
 	if v, ok := d.GetOk("account_id"); ok {
 		input.AnomalySubscription.AccountId = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("threshold"); ok {
+		input.AnomalySubscription.Threshold = aws.Float64(v.(float64))
+	}
+
+	if v, ok := d.GetOk("threshold_expression"); ok {
+		input.AnomalySubscription.ThresholdExpression = expandCostExpression(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if len(tags) > 0 {
@@ -128,7 +144,7 @@ func resourceAnomalySubscriptionCreate(ctx context.Context, d *schema.ResourceDa
 }
 
 func resourceAnomalySubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CEConn
+	conn := meta.(*conns.AWSClient).CEConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -152,7 +168,11 @@ func resourceAnomalySubscriptionRead(ctx context.Context, d *schema.ResourceData
 	d.Set("threshold", subscription.Threshold)
 	d.Set("name", subscription.SubscriptionName)
 
-	tags, err := ListTags(conn, aws.StringValue(subscription.SubscriptionArn))
+	if err = d.Set("threshold_expression", []interface{}{flattenCostCategoryRuleExpression(subscription.ThresholdExpression)}); err != nil {
+		return create.DiagError(names.CE, "setting threshold_expression", ResNameAnomalySubscription, d.Id(), err)
+	}
+
+	tags, err := ListTags(ctx, conn, aws.StringValue(subscription.SubscriptionArn))
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	if err != nil {
@@ -172,37 +192,44 @@ func resourceAnomalySubscriptionRead(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceAnomalySubscriptionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CEConn
-	requestUpdate := false
+	conn := meta.(*conns.AWSClient).CEConn()
 
-	input := &costexplorer.UpdateAnomalySubscriptionInput{
-		SubscriptionArn: aws.String(d.Id()),
-	}
+	if d.HasChangesExcept("tags", "tags_All") {
+		input := &costexplorer.UpdateAnomalySubscriptionInput{
+			SubscriptionArn: aws.String(d.Id()),
+		}
 
-	if d.HasChange("frequency") {
-		input.Frequency = aws.String(d.Get("frequency").(string))
-		requestUpdate = true
-	}
+		if d.HasChange("frequency") {
+			input.Frequency = aws.String(d.Get("frequency").(string))
+		}
 
-	if d.HasChange("monitor_arn_list") {
-		input.MonitorArnList = aws.StringSlice(expandAnomalySubscriptionMonitorARNList(d.Get("monitor_arn_list").([]interface{})))
-		requestUpdate = true
-	}
+		if d.HasChange("monitor_arn_list") {
+			input.MonitorArnList = aws.StringSlice(expandAnomalySubscriptionMonitorARNList(d.Get("monitor_arn_list").([]interface{})))
+		}
 
-	if d.HasChange("subscriber") {
-		input.Subscribers = expandAnomalySubscriptionSubscribers(d.Get("subscriber").(*schema.Set).List())
-		requestUpdate = true
-	}
+		if d.HasChange("subscriber") {
+			input.Subscribers = expandAnomalySubscriptionSubscribers(d.Get("subscriber").(*schema.Set).List())
+		}
 
-	if d.HasChange("threshold") {
-		input.Threshold = aws.Float64(d.Get("threshold").(float64))
-		requestUpdate = true
+		if d.HasChange("threshold") {
+			input.Threshold = aws.Float64(d.Get("threshold").(float64))
+		}
+
+		if d.HasChange("threshold_expression") {
+			input.ThresholdExpression = expandCostExpression(d.Get("threshold_expression").([]interface{})[0].(map[string]interface{}))
+		}
+
+		_, err := conn.UpdateAnomalySubscriptionWithContext(ctx, input)
+
+		if err != nil {
+			return create.DiagError(names.CE, create.ErrActionUpdating, ResNameAnomalySubscription, d.Id(), err)
+		}
 	}
 
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
 
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
 			return create.DiagError(names.CE, create.ErrActionUpdating, ResNameAnomalySubscription, d.Id(), err)
 		}
 	}
@@ -210,15 +237,7 @@ func resourceAnomalySubscriptionUpdate(ctx context.Context, d *schema.ResourceDa
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return create.DiagError(names.CE, create.ErrActionUpdating, ResNameAnomalySubscription, d.Id(), err)
-		}
-	}
-
-	if requestUpdate {
-		_, err := conn.UpdateAnomalySubscriptionWithContext(ctx, input)
-
-		if err != nil {
+		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
 			return create.DiagError(names.CE, create.ErrActionUpdating, ResNameAnomalySubscription, d.Id(), err)
 		}
 	}
@@ -227,7 +246,7 @@ func resourceAnomalySubscriptionUpdate(ctx context.Context, d *schema.ResourceDa
 }
 
 func resourceAnomalySubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CEConn
+	conn := meta.(*conns.AWSClient).CEConn()
 
 	_, err := conn.DeleteAnomalySubscriptionWithContext(ctx, &costexplorer.DeleteAnomalySubscriptionInput{SubscriptionArn: aws.String(d.Id())})
 
@@ -250,7 +269,6 @@ func expandAnomalySubscriptionMonitorARNList(rawMonitorArnList []interface{}) []
 	var monitorArns []string
 
 	for _, arn := range rawMonitorArnList {
-
 		monitorArns = append(monitorArns, arn.(string))
 	}
 

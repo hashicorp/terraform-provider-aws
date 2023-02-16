@@ -20,10 +20,10 @@ import (
 
 func ResourceSubnetGroup() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceSubnetGroupCreate,
-		ReadContext:   resourceSubnetGroupRead,
-		UpdateContext: resourceSubnetGroupUpdate,
-		DeleteContext: resourceSubnetGroupDelete,
+		CreateWithoutTimeout: resourceSubnetGroupCreate,
+		ReadWithoutTimeout:   resourceSubnetGroupRead,
+		UpdateWithoutTimeout: resourceSubnetGroupUpdate,
+		DeleteWithoutTimeout: resourceSubnetGroupDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -74,7 +74,7 @@ func ResourceSubnetGroup() *schema.Resource {
 }
 
 func resourceSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MemoryDBConn
+	conn := meta.(*conns.AWSClient).MemoryDBConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -99,7 +99,7 @@ func resourceSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceSubnetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MemoryDBConn
+	conn := meta.(*conns.AWSClient).MemoryDBConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &memorydb.UpdateSubnetGroupInput{
@@ -119,7 +119,7 @@ func resourceSubnetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.Errorf("error updating MemoryDB Subnet Group (%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -128,7 +128,7 @@ func resourceSubnetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MemoryDBConn
+	conn := meta.(*conns.AWSClient).MemoryDBConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -156,7 +156,7 @@ func resourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(group.Name)))
 	d.Set("vpc_id", group.VpcId)
 
-	tags, err := ListTags(conn, d.Get("arn").(string))
+	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
 
 	if err != nil {
 		return diag.Errorf("error listing tags for MemoryDB Subnet Group (%s): %s", d.Id(), err)
@@ -177,7 +177,7 @@ func resourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceSubnetGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MemoryDBConn
+	conn := meta.(*conns.AWSClient).MemoryDBConn()
 
 	log.Printf("[DEBUG] Deleting MemoryDB Subnet Group: (%s)", d.Id())
 	_, err := conn.DeleteSubnetGroupWithContext(ctx, &memorydb.DeleteSubnetGroupInput{

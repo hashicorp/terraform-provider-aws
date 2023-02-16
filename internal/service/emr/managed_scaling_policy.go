@@ -1,24 +1,26 @@
 package emr
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/emr"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func ResourceManagedScalingPolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceManagedScalingPolicyCreate,
-		Read:   resourceManagedScalingPolicyRead,
-		Delete: resourceManagedScalingPolicyDelete,
+		CreateWithoutTimeout: resourceManagedScalingPolicyCreate,
+		ReadWithoutTimeout:   resourceManagedScalingPolicyRead,
+		DeleteWithoutTimeout: resourceManagedScalingPolicyDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -66,8 +68,9 @@ func ResourceManagedScalingPolicy() *schema.Resource {
 	}
 }
 
-func resourceManagedScalingPolicyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EMRConn
+func resourceManagedScalingPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EMRConn()
 
 	if l := d.Get("compute_limits").(*schema.Set).List(); len(l) > 0 && l[0] != nil {
 		cl := l[0].(map[string]interface{})
@@ -89,44 +92,45 @@ func resourceManagedScalingPolicyCreate(d *schema.ResourceData, meta interface{}
 			ComputeLimits: computeLimits,
 		}
 
-		_, err := conn.PutManagedScalingPolicy(&emr.PutManagedScalingPolicyInput{
+		_, err := conn.PutManagedScalingPolicyWithContext(ctx, &emr.PutManagedScalingPolicyInput{
 			ClusterId:            aws.String(d.Get("cluster_id").(string)),
 			ManagedScalingPolicy: managedScalingPolicy,
 		})
 
 		if err != nil {
 			log.Printf("[ERROR] EMR.PutManagedScalingPolicy %s", err)
-			return fmt.Errorf("error putting EMR Managed Scaling Policy: %w", err)
+			return sdkdiag.AppendErrorf(diags, "putting EMR Managed Scaling Policy: %s", err)
 		}
 	}
 
 	d.SetId(d.Get("cluster_id").(string))
-	return nil
+	return diags
 }
 
-func resourceManagedScalingPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EMRConn
+func resourceManagedScalingPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EMRConn()
 
 	input := &emr.GetManagedScalingPolicyInput{
 		ClusterId: aws.String(d.Id()),
 	}
 
-	resp, err := conn.GetManagedScalingPolicy(input)
+	resp, err := conn.GetManagedScalingPolicyWithContext(ctx, input)
 
 	if tfawserr.ErrMessageContains(err, "ValidationException", "A job flow that is shutting down, terminated, or finished may not be modified") {
 		log.Printf("[WARN] EMR Managed Scaling Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if tfawserr.ErrMessageContains(err, "InvalidRequestException", "does not exist") {
 		log.Printf("[WARN] EMR Managed Scaling Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error getting EMR Managed Scaling Policy (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "getting EMR Managed Scaling Policy (%s): %s", d.Id(), err)
 	}
 
 	// Previously after RemoveManagedScalingPolicy the API returned an error, but now it
@@ -134,37 +138,38 @@ func resourceManagedScalingPolicyRead(d *schema.ResourceData, meta interface{}) 
 	if resp == nil || resp.ManagedScalingPolicy == nil {
 		log.Printf("[WARN] EMR Managed Scaling Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	d.Set("cluster_id", d.Id())
 	d.Set("compute_limits", flattenComputeLimits(resp.ManagedScalingPolicy.ComputeLimits))
 
-	return nil
+	return diags
 }
 
-func resourceManagedScalingPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EMRConn
+func resourceManagedScalingPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EMRConn()
 
 	input := &emr.RemoveManagedScalingPolicyInput{
 		ClusterId: aws.String(d.Get("cluster_id").(string)),
 	}
 
-	_, err := conn.RemoveManagedScalingPolicy(input)
+	_, err := conn.RemoveManagedScalingPolicyWithContext(ctx, input)
 
 	if tfawserr.ErrMessageContains(err, "ValidationException", "A job flow that is shutting down, terminated, or finished may not be modified") {
-		return nil
+		return diags
 	}
 
 	if tfawserr.ErrMessageContains(err, "InvalidRequestException", "does not exist") {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error removing EMR Managed Scaling Policy (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "removing EMR Managed Scaling Policy (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func flattenComputeLimits(apiObject *emr.ComputeLimits) []interface{} {

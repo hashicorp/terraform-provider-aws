@@ -1,0 +1,11 @@
+```release-note:bug
+resource/aws_ecr_repository_policy: Improve refresh to avoid unnecessary diffs in `policy`
+```
+
+```release-note:bug
+resource/aws_ecr_registry_policy: Improve refresh to avoid unnecessary diffs in `policy`
+```
+
+```release-note:bug
+resource/aws_ecrpublic_repository_policy: Improve refresh to avoid unnecessary diffs in `policy`
+```

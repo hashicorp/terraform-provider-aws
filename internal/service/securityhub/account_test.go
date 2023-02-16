@@ -1,6 +1,7 @@
 package securityhub_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -13,16 +14,17 @@ import (
 )
 
 func testAccAccount_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, securityhub.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccountDestroy,
+		CheckDestroy:             testAccCheckAccountDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccountConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccountExists("aws_securityhub_account.example"),
+					testAccCheckAccountExists(ctx, "aws_securityhub_account.example"),
 				),
 			},
 			{
@@ -34,16 +36,16 @@ func testAccAccount_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckAccountExists(n string) resource.TestCheckFunc {
+func testAccCheckAccountExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		_, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn()
 
-		_, err := conn.GetEnabledStandards(&securityhub.GetEnabledStandardsInput{})
+		_, err := conn.GetEnabledStandardsWithContext(ctx, &securityhub.GetEnabledStandardsInput{})
 
 		if err != nil {
 			// Can only read enabled standards if Security Hub is enabled
@@ -57,28 +59,30 @@ func testAccCheckAccountExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckAccountDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn
+func testAccCheckAccountDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_securityhub_account" {
-			continue
-		}
-
-		_, err := conn.GetEnabledStandards(&securityhub.GetEnabledStandardsInput{})
-
-		if err != nil {
-			// Can only read enabled standards if Security Hub is enabled
-			if tfawserr.ErrMessageContains(err, "InvalidAccessException", "not subscribed to AWS Security Hub") {
-				return nil
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_securityhub_account" {
+				continue
 			}
-			return err
+
+			_, err := conn.GetEnabledStandardsWithContext(ctx, &securityhub.GetEnabledStandardsInput{})
+
+			if err != nil {
+				// Can only read enabled standards if Security Hub is enabled
+				if tfawserr.ErrMessageContains(err, "InvalidAccessException", "not subscribed to AWS Security Hub") {
+					return nil
+				}
+				return err
+			}
+
+			return fmt.Errorf("Security Hub account still exists")
 		}
 
-		return fmt.Errorf("Security Hub account still exists")
+		return nil
 	}
-
-	return nil
 }
 
 func testAccAccountConfig_basic() string {

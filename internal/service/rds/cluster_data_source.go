@@ -1,17 +1,20 @@
 package rds
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceCluster() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceClusterRead,
+		ReadWithoutTimeout: dataSourceClusterRead,
+
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -65,6 +68,10 @@ func DataSourceCluster() *schema.Resource {
 				Computed: true,
 			},
 			"engine": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"engine_mode": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -135,15 +142,16 @@ func DataSourceCluster() *schema.Resource {
 	}
 }
 
-func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RDSConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	dbClusterID := d.Get("cluster_identifier").(string)
-	dbc, err := FindDBClusterByID(conn, dbClusterID)
+	dbc, err := FindDBClusterByID(ctx, conn, dbClusterID)
 
 	if err != nil {
-		return fmt.Errorf("reading RDS Cluster (%s): %w", dbClusterID, err)
+		return sdkdiag.AppendErrorf(diags, "reading RDS Cluster (%s): %s", dbClusterID, err)
 	}
 
 	d.SetId(aws.StringValue(dbc.DBClusterIdentifier))
@@ -164,7 +172,7 @@ func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	// RDS accepts a DatabaseName but does not return it, causing a perpetual
 	// diff.
 	//	See https://github.com/hashicorp/terraform/issues/4671 for backstory
-	if dbc.DatabaseName != nil {
+	if dbc.DatabaseName != nil { // nosemgrep: ci.helper-schema-ResourceData-Set-extraneous-nil-check
 		d.Set("database_name", dbc.DatabaseName)
 	}
 	d.Set("db_cluster_parameter_group_name", dbc.DBClusterParameterGroup)
@@ -172,6 +180,7 @@ func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("enabled_cloudwatch_logs_exports", aws.StringValueSlice(dbc.EnabledCloudwatchLogsExports))
 	d.Set("endpoint", dbc.Endpoint)
 	d.Set("engine", dbc.Engine)
+	d.Set("engine_mode", dbc.EngineMode)
 	d.Set("engine_version", dbc.EngineVersion)
 	d.Set("hosted_zone_id", dbc.HostedZoneId)
 	d.Set("iam_database_authentication_enabled", dbc.IAMDatabaseAuthenticationEnabled)
@@ -195,15 +204,15 @@ func dataSourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("vpc_security_group_ids", securityGroupIDs)
 
-	tags, err := ListTags(conn, clusterARN)
+	tags, err := ListTags(ctx, conn, clusterARN)
 
 	if err != nil {
-		return fmt.Errorf("listing tags for RDS Cluster (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for RDS Cluster (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

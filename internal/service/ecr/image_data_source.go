@@ -1,19 +1,21 @@
 package ecr
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func DataSourceImage() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceImageRead,
+		ReadWithoutTimeout: dataSourceImageRead,
 		Schema: map[string]*schema.Schema{
 			"registry_id": {
 				Type:         schema.TypeString,
@@ -51,8 +53,9 @@ func DataSourceImage() *schema.Resource {
 	}
 }
 
-func dataSourceImageRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECRConn
+func dataSourceImageRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ECRConn()
 
 	params := &ecr.DescribeImagesInput{
 		RepositoryName: aws.String(d.Get("repository_name").(string)),
@@ -74,26 +77,26 @@ func dataSourceImageRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if imgId.ImageDigest == nil && imgId.ImageTag == nil {
-		return fmt.Errorf("At least one of either image_digest or image_tag must be defined")
+		return sdkdiag.AppendErrorf(diags, "At least one of either image_digest or image_tag must be defined")
 	}
 
 	params.ImageIds = []*ecr.ImageIdentifier{&imgId}
 
 	var imageDetails []*ecr.ImageDetail
 	log.Printf("[DEBUG] Reading ECR Images: %s", params)
-	err := conn.DescribeImagesPages(params, func(page *ecr.DescribeImagesOutput, lastPage bool) bool {
+	err := conn.DescribeImagesPagesWithContext(ctx, params, func(page *ecr.DescribeImagesOutput, lastPage bool) bool {
 		imageDetails = append(imageDetails, page.ImageDetails...)
 		return true
 	})
 	if err != nil {
-		return fmt.Errorf("Error describing ECR images: %w", err)
+		return sdkdiag.AppendErrorf(diags, "describing ECR images: %s", err)
 	}
 
 	if len(imageDetails) == 0 {
-		return fmt.Errorf("No matching image found")
+		return sdkdiag.AppendErrorf(diags, "No matching image found")
 	}
 	if len(imageDetails) > 1 {
-		return fmt.Errorf("More than one image found for tag/digest combination")
+		return sdkdiag.AppendErrorf(diags, "More than one image found for tag/digest combination")
 	}
 
 	image := imageDetails[0]
@@ -104,8 +107,8 @@ func dataSourceImageRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("image_pushed_at", image.ImagePushedAt.Unix())
 	d.Set("image_size_in_bytes", image.ImageSizeInBytes)
 	if err := d.Set("image_tags", aws.StringValueSlice(image.ImageTags)); err != nil {
-		return fmt.Errorf("failed to set image_tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "to set image_tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

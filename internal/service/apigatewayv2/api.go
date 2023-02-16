@@ -1,6 +1,7 @@
 package apigatewayv2
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"reflect"
@@ -9,9 +10,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -19,12 +22,12 @@ import (
 
 func ResourceAPI() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAPICreate,
-		Read:   resourceAPIRead,
-		Update: resourceAPIUpdate,
-		Delete: resourceAPIDelete,
+		CreateWithoutTimeout: resourceAPICreate,
+		ReadWithoutTimeout:   resourceAPIRead,
+		UpdateWithoutTimeout: resourceAPIUpdate,
+		DeleteWithoutTimeout: resourceAPIDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -154,72 +157,9 @@ func ResourceAPI() *schema.Resource {
 	}
 }
 
-func resourceImportOpenAPI(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-
-	if body, ok := d.GetOk("body"); ok {
-		revertReq := &apigatewayv2.UpdateApiInput{
-			ApiId:       aws.String(d.Id()),
-			Name:        aws.String(d.Get("name").(string)),
-			Description: aws.String(d.Get("description").(string)),
-			Version:     aws.String(d.Get("version").(string)),
-		}
-
-		log.Printf("[DEBUG] Updating API Gateway from OpenAPI spec %s", d.Id())
-		importReq := &apigatewayv2.ReimportApiInput{
-			ApiId: aws.String(d.Id()),
-			Body:  aws.String(body.(string)),
-		}
-
-		if value, ok := d.GetOk("fail_on_warnings"); ok {
-			importReq.FailOnWarnings = aws.Bool(value.(bool))
-		}
-
-		_, err := conn.ReimportApi(importReq)
-
-		if err != nil {
-			return fmt.Errorf("error importing API Gateway v2 API (%s) OpenAPI specification: %s", d.Id(), err)
-		}
-
-		tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
-
-		corsConfiguration := d.Get("cors_configuration")
-
-		if err := resourceAPIRead(d, meta); err != nil {
-			return err
-		}
-
-		if !reflect.DeepEqual(corsConfiguration, d.Get("cors_configuration")) {
-			if len(corsConfiguration.([]interface{})) == 0 {
-				log.Printf("[DEBUG] Deleting CORS configuration for API Gateway v2 API (%s)", d.Id())
-				_, err := conn.DeleteCorsConfiguration(&apigatewayv2.DeleteCorsConfigurationInput{
-					ApiId: aws.String(d.Id()),
-				})
-				if err != nil {
-					return fmt.Errorf("error deleting CORS configuration for API Gateway v2 API (%s): %s", d.Id(), err)
-				}
-			} else {
-				revertReq.CorsConfiguration = expandCORSConfiguration(corsConfiguration.([]interface{}))
-			}
-		}
-
-		if err := UpdateTags(conn, d.Get("arn").(string), d.Get("tags_all"), tags); err != nil {
-			return fmt.Errorf("error updating API Gateway v2 API (%s) tags: %s", d.Id(), err)
-		}
-
-		log.Printf("[DEBUG] Reverting API Gateway v2 API: %s", revertReq)
-		_, err = conn.UpdateApi(revertReq)
-		if err != nil {
-			return fmt.Errorf("error updating API Gateway v2 API (%s): %s", d.Id(), err)
-		}
-	}
-
-	return nil
-}
-
-func resourceAPICreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
+func resourceAPICreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -257,37 +197,37 @@ func resourceAPICreate(d *schema.ResourceData, meta interface{}) error {
 		req.Version = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating API Gateway v2 API: %s", req)
-	resp, err := conn.CreateApi(req)
+	resp, err := conn.CreateApiWithContext(ctx, req)
 	if err != nil {
-		return fmt.Errorf("error creating API Gateway v2 API: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating API Gateway v2 API (%s): %s", d.Get("name").(string), err)
 	}
 
 	d.SetId(aws.StringValue(resp.ApiId))
 
-	err = resourceImportOpenAPI(d, meta)
+	err = resourceImportOpenAPI(ctx, d, meta)
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "creating API Gateway v2 API (%s): %s", d.Get("name").(string), err)
 	}
 
-	return resourceAPIRead(d, meta)
+	return append(diags, resourceAPIRead(ctx, d, meta)...)
 }
 
-func resourceAPIRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
+func resourceAPIRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	resp, err := conn.GetApi(&apigatewayv2.GetApiInput{
+	resp, err := conn.GetApiWithContext(ctx, &apigatewayv2.GetApiInput{
 		ApiId: aws.String(d.Id()),
 	})
 	if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) && !d.IsNewResource() {
 		log.Printf("[WARN] API Gateway v2 API (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 	if err != nil {
-		return fmt.Errorf("error reading API Gateway v2 API (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading API Gateway v2 API (%s): %s", d.Id(), err)
 	}
 
 	d.Set("api_endpoint", resp.ApiEndpoint)
@@ -300,7 +240,7 @@ func resourceAPIRead(d *schema.ResourceData, meta interface{}) error {
 	}.String()
 	d.Set("arn", apiArn)
 	if err := d.Set("cors_configuration", flattenCORSConfiguration(resp.CorsConfiguration)); err != nil {
-		return fmt.Errorf("error setting cors_configuration: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting cors_configuration: %s", err)
 	}
 	d.Set("description", resp.Description)
 	d.Set("disable_execute_api_endpoint", resp.DisableExecuteApiEndpoint)
@@ -320,19 +260,20 @@ func resourceAPIRead(d *schema.ResourceData, meta interface{}) error {
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 	d.Set("version", resp.Version)
 
-	return nil
+	return diags
 }
 
-func resourceAPIUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
+func resourceAPIUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
 
 	deleteCorsConfiguration := false
 	if d.HasChange("cors_configuration") {
@@ -341,11 +282,11 @@ func resourceAPIUpdate(d *schema.ResourceData, meta interface{}) error {
 			deleteCorsConfiguration = true
 
 			log.Printf("[DEBUG] Deleting CORS configuration for API Gateway v2 API (%s)", d.Id())
-			_, err := conn.DeleteCorsConfiguration(&apigatewayv2.DeleteCorsConfigurationInput{
+			_, err := conn.DeleteCorsConfigurationWithContext(ctx, &apigatewayv2.DeleteCorsConfigurationInput{
 				ApiId: aws.String(d.Id()),
 			})
 			if err != nil {
-				return fmt.Errorf("error deleting CORS configuration for API Gateway v2 API (%s): %s", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "deleting CORS configuration for API Gateway v2 API (%s): %s", d.Id(), err)
 			}
 		}
 	}
@@ -379,41 +320,107 @@ func resourceAPIUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		log.Printf("[DEBUG] Updating API Gateway v2 API: %s", req)
-		_, err := conn.UpdateApi(req)
+		_, err := conn.UpdateApiWithContext(ctx, req)
 		if err != nil {
-			return fmt.Errorf("error updating API Gateway v2 API (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating API Gateway v2 API (%s): %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating API Gateway v2 API (%s) tags: %s", d.Id(), err)
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating API Gateway v2 API (%s) tags: %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("body") {
-		err := resourceImportOpenAPI(d, meta)
+		err := resourceImportOpenAPI(ctx, d, meta)
 		if err != nil {
-			return err
+			return sdkdiag.AppendErrorf(diags, "updating API Gateway v2 API (%s): %s", d.Id(), err)
 		}
 	}
 
-	return resourceAPIRead(d, meta)
+	return append(diags, resourceAPIRead(ctx, d, meta)...)
 }
 
-func resourceAPIDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
+func resourceAPIDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
 
-	log.Printf("[DEBUG] Deleting API Gateway v2 API (%s)", d.Id())
-	_, err := conn.DeleteApi(&apigatewayv2.DeleteApiInput{
+	log.Printf("[DEBUG] Deleting API Gateway v2 API: %s", d.Id())
+	_, err := conn.DeleteApiWithContext(ctx, &apigatewayv2.DeleteApiInput{
 		ApiId: aws.String(d.Id()),
 	})
 	if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) {
-		return nil
+		return diags
 	}
 	if err != nil {
-		return fmt.Errorf("error deleting API Gateway v2 API (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting API Gateway v2 API (%s): %s", d.Id(), err)
+	}
+
+	return diags
+}
+
+func resourceImportOpenAPI(ctx context.Context, d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+
+	if body, ok := d.GetOk("body"); ok {
+		revertReq := &apigatewayv2.UpdateApiInput{
+			ApiId:       aws.String(d.Id()),
+			Name:        aws.String(d.Get("name").(string)),
+			Description: aws.String(d.Get("description").(string)),
+			Version:     aws.String(d.Get("version").(string)),
+		}
+
+		log.Printf("[DEBUG] Updating API Gateway from OpenAPI spec %s", d.Id())
+		importReq := &apigatewayv2.ReimportApiInput{
+			ApiId: aws.String(d.Id()),
+			Body:  aws.String(body.(string)),
+		}
+
+		if value, ok := d.GetOk("fail_on_warnings"); ok {
+			importReq.FailOnWarnings = aws.Bool(value.(bool))
+		}
+
+		_, err := conn.ReimportApiWithContext(ctx, importReq)
+
+		if err != nil {
+			return fmt.Errorf("importing API Gateway v2 API (%s) OpenAPI specification: %s", d.Id(), err)
+		}
+
+		tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+
+		corsConfiguration := d.Get("cors_configuration")
+
+		diags := resourceAPIRead(ctx, d, meta)
+		if err := sdkdiag.DiagnosticsError(diags); err != nil {
+			return fmt.Errorf("importing API Gateway v2 API (%s) OpenAPI specification: %s", d.Id(), err)
+		}
+
+		if !reflect.DeepEqual(corsConfiguration, d.Get("cors_configuration")) {
+			if len(corsConfiguration.([]interface{})) == 0 {
+				log.Printf("[DEBUG] Deleting CORS configuration for API Gateway v2 API (%s)", d.Id())
+				_, err := conn.DeleteCorsConfigurationWithContext(ctx, &apigatewayv2.DeleteCorsConfigurationInput{
+					ApiId: aws.String(d.Id()),
+				})
+				if err != nil {
+					return fmt.Errorf("error deleting CORS configuration for API Gateway v2 API (%s): %s", d.Id(), err)
+				}
+			} else {
+				revertReq.CorsConfiguration = expandCORSConfiguration(corsConfiguration.([]interface{}))
+			}
+		}
+
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), d.Get("tags_all"), tags); err != nil {
+			return fmt.Errorf("error updating API Gateway v2 API (%s) tags: %s", d.Id(), err)
+		}
+
+		log.Printf("[DEBUG] Reverting API Gateway v2 API: %s", revertReq)
+		_, err = conn.UpdateApiWithContext(ctx, revertReq)
+		if err != nil {
+			return fmt.Errorf("error updating API Gateway v2 API (%s): %s", d.Id(), err)
+		}
 	}
 
 	return nil

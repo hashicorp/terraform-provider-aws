@@ -1,19 +1,21 @@
 package ec2
 
 import (
-	"fmt"
+	"context"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceEIPs() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceEIPsRead,
+		ReadWithoutTimeout: dataSourceEIPsRead,
 
 		Timeouts: &schema.ResourceTimeout{
 			Read: schema.DefaultTimeout(20 * time.Minute),
@@ -36,8 +38,9 @@ func DataSourceEIPs() *schema.Resource {
 	}
 }
 
-func dataSourceEIPsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func dataSourceEIPsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	input := &ec2.DescribeAddressesInput{}
 
@@ -56,10 +59,10 @@ func dataSourceEIPsRead(d *schema.ResourceData, meta interface{}) error {
 		input.Filters = nil
 	}
 
-	output, err := FindEIPs(conn, input)
+	output, err := FindEIPs(ctx, conn, input)
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 EIPs: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 EIPs: %s", err)
 	}
 
 	var allocationIDs []string
@@ -77,5 +80,5 @@ func dataSourceEIPsRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("allocation_ids", allocationIDs)
 	d.Set("public_ips", publicIPs)
 
-	return nil
+	return diags
 }

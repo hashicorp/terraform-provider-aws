@@ -2,25 +2,31 @@ package elbv2
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+)
+
+const (
+	propagationTimeout = 2 * time.Minute
 )
 
 func ResourceTargetGroup() *schema.Resource {
@@ -31,12 +37,13 @@ func ResourceTargetGroup() *schema.Resource {
 			verify.SetTagsDiff,
 		),
 
-		Create: resourceTargetGroupCreate,
-		Read:   resourceTargetGroupRead,
-		Update: resourceTargetGroupUpdate,
-		Delete: resourceTargetGroupDelete,
+		CreateWithoutTimeout: resourceTargetGroupCreate,
+		ReadWithoutTimeout:   resourceTargetGroupRead,
+		UpdateWithoutTimeout: resourceTargetGroupUpdate,
+		DeleteWithoutTimeout: resourceTargetGroupDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -180,6 +187,7 @@ func ResourceTargetGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 				StateFunc: func(v interface{}) string {
 					return strings.ToUpper(v.(string))
 				},
@@ -229,7 +237,7 @@ func ResourceTargetGroup() *schema.Resource {
 							ValidateFunc: validation.IntBetween(0, 604800),
 							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 								switch d.Get("protocol").(string) {
-								case elbv2.ProtocolEnumTcp, elbv2.ProtocolEnumUdp, elbv2.ProtocolEnumTcpUdp, elbv2.ProtocolEnumTls:
+								case elbv2.ProtocolEnumTcp, elbv2.ProtocolEnumUdp, elbv2.ProtocolEnumTcpUdp, elbv2.ProtocolEnumTls, elbv2.ProtocolEnumGeneve:
 									return true
 								}
 								return false
@@ -248,9 +256,11 @@ func ResourceTargetGroup() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: validation.StringInSlice([]string{
-								"lb_cookie",  // Only for ALBs
-								"app_cookie", // Only for ALBs
-								"source_ip",  // Only for NLBs
+								"lb_cookie",               // Only for ALBs
+								"app_cookie",              // Only for ALBs
+								"source_ip",               // Only for NLBs
+								"source_ip_dest_ip",       // Only for GWLBs
+								"source_ip_dest_ip_proto", // Only for GWLBs
 							}, false),
 						},
 					},
@@ -262,6 +272,31 @@ func ResourceTargetGroup() *schema.Resource {
 				Computed:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(elbv2.TargetGroupIpAddressTypeEnum_Values(), false),
+			},
+			"target_failover": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"on_deregistration": {
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"rebalance",
+								"no_rebalance",
+							}, false),
+						},
+						"on_unhealthy": {
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"rebalance",
+								"no_rebalance",
+							}, false),
+						},
+					},
+				},
 			},
 			"target_type": {
 				Type:         schema.TypeString,
@@ -287,8 +322,9 @@ func suppressIfTargetType(t string) schema.SchemaDiffSuppressFunc {
 	}
 }
 
-func resourceTargetGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBV2Conn
+func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ELBV2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -301,34 +337,44 @@ func resourceTargetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		groupName = resource.PrefixedUniqueId("tf-")
 	}
 
-	params := &elbv2.CreateTargetGroupInput{
+	existingTg, err := FindTargetGroupByName(ctx, conn, groupName)
+
+	if err != nil && !tfresource.NotFound(err) {
+		return sdkdiag.AppendErrorf(diags, "reading ELBv2 Target Group (%s): %s", groupName, err)
+	}
+
+	if existingTg != nil {
+		return sdkdiag.AppendErrorf(diags, "ELBv2 Target Group (%s) already exists", groupName)
+	}
+
+	input := &elbv2.CreateTargetGroupInput{
 		Name:       aws.String(groupName),
 		TargetType: aws.String(d.Get("target_type").(string)),
 	}
 
 	if d.Get("target_type").(string) != elbv2.TargetTypeEnumLambda {
 		if _, ok := d.GetOk("port"); !ok {
-			return fmt.Errorf("port should be set when target type is %s", d.Get("target_type").(string))
+			return sdkdiag.AppendErrorf(diags, "port should be set when target type is %s", d.Get("target_type").(string))
 		}
 
 		if _, ok := d.GetOk("protocol"); !ok {
-			return fmt.Errorf("protocol should be set when target type is %s", d.Get("target_type").(string))
+			return sdkdiag.AppendErrorf(diags, "protocol should be set when target type is %s", d.Get("target_type").(string))
 		}
 
 		if _, ok := d.GetOk("vpc_id"); !ok {
-			return fmt.Errorf("vpc_id should be set when target type is %s", d.Get("target_type").(string))
+			return sdkdiag.AppendErrorf(diags, "vpc_id should be set when target type is %s", d.Get("target_type").(string))
 		}
-		params.Port = aws.Int64(int64(d.Get("port").(int)))
-		params.Protocol = aws.String(d.Get("protocol").(string))
+		input.Port = aws.Int64(int64(d.Get("port").(int)))
+		input.Protocol = aws.String(d.Get("protocol").(string))
 		switch d.Get("protocol").(string) {
 		case elbv2.ProtocolEnumHttp, elbv2.ProtocolEnumHttps:
-			params.ProtocolVersion = aws.String(d.Get("protocol_version").(string))
+			input.ProtocolVersion = aws.String(d.Get("protocol_version").(string))
 		}
-		params.VpcId = aws.String(d.Get("vpc_id").(string))
+		input.VpcId = aws.String(d.Get("vpc_id").(string))
 
 		if d.Get("target_type").(string) == elbv2.TargetTypeEnumIp {
 			if _, ok := d.GetOk("ip_address_type"); ok {
-				params.IpAddressType = aws.String(d.Get("ip_address_type").(string))
+				input.IpAddressType = aws.String(d.Get("ip_address_type").(string))
 			}
 		}
 	}
@@ -336,97 +382,81 @@ func resourceTargetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	if healthChecks := d.Get("health_check").([]interface{}); len(healthChecks) == 1 {
 		healthCheck := healthChecks[0].(map[string]interface{})
 
-		params.HealthCheckEnabled = aws.Bool(healthCheck["enabled"].(bool))
+		input.HealthCheckEnabled = aws.Bool(healthCheck["enabled"].(bool))
 
-		params.HealthCheckIntervalSeconds = aws.Int64(int64(healthCheck["interval"].(int)))
+		input.HealthCheckIntervalSeconds = aws.Int64(int64(healthCheck["interval"].(int)))
 
-		params.HealthyThresholdCount = aws.Int64(int64(healthCheck["healthy_threshold"].(int)))
-		params.UnhealthyThresholdCount = aws.Int64(int64(healthCheck["unhealthy_threshold"].(int)))
+		input.HealthyThresholdCount = aws.Int64(int64(healthCheck["healthy_threshold"].(int)))
+		input.UnhealthyThresholdCount = aws.Int64(int64(healthCheck["unhealthy_threshold"].(int)))
 		t := healthCheck["timeout"].(int)
 		if t != 0 {
-			params.HealthCheckTimeoutSeconds = aws.Int64(int64(t))
+			input.HealthCheckTimeoutSeconds = aws.Int64(int64(t))
 		}
 		healthCheckProtocol := healthCheck["protocol"].(string)
 
 		if healthCheckProtocol != elbv2.ProtocolEnumTcp {
 			p := healthCheck["path"].(string)
 			if p != "" {
-				params.HealthCheckPath = aws.String(p)
+				input.HealthCheckPath = aws.String(p)
 			}
 
 			m := healthCheck["matcher"].(string)
 			protocolVersion := d.Get("protocol_version").(string)
 			if m != "" {
 				if protocolVersion == "GRPC" {
-					params.Matcher = &elbv2.Matcher{
+					input.Matcher = &elbv2.Matcher{
 						GrpcCode: aws.String(m),
 					}
 				} else {
-					params.Matcher = &elbv2.Matcher{
+					input.Matcher = &elbv2.Matcher{
 						HttpCode: aws.String(m),
 					}
 				}
 			}
 		}
 		if d.Get("target_type").(string) != elbv2.TargetTypeEnumLambda {
-			params.HealthCheckPort = aws.String(healthCheck["port"].(string))
-			params.HealthCheckProtocol = aws.String(healthCheckProtocol)
+			input.HealthCheckPort = aws.String(healthCheck["port"].(string))
+			input.HealthCheckProtocol = aws.String(healthCheckProtocol)
 		}
 	}
 
 	if len(tags) > 0 {
-		params.Tags = Tags(tags.IgnoreAWS())
+		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	resp, err := conn.CreateTargetGroup(params)
+	output, err := conn.CreateTargetGroupWithContext(ctx, input)
 
 	// Some partitions may not support tag-on-create
-	if params.Tags != nil && verify.ErrorISOUnsupported(conn.PartitionID, err) {
+	if input.Tags != nil && verify.ErrorISOUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] ELBv2 Target Group (%s) create failed (%s) with tags. Trying create without tags.", groupName, err)
-		params.Tags = nil
-		resp, err = conn.CreateTargetGroup(params)
+		input.Tags = nil
+		output, err = conn.CreateTargetGroupWithContext(ctx, input)
 	}
 
 	// Tags are not supported on creation with some protocol types(i.e. GENEVE)
 	// Retry creation without tags
-	if params.Tags != nil && tfawserr.ErrMessageContains(err, ErrValidationError, TagsOnCreationErrMessage) {
+	if input.Tags != nil && tfawserr.ErrMessageContains(err, ErrValidationError, TagsOnCreationErrMessage) {
 		log.Printf("[WARN] ELBv2 Target Group (%s) create failed (%s) with tags. Trying create without tags.", groupName, err)
-		params.Tags = nil
-		resp, err = conn.CreateTargetGroup(params)
+		input.Tags = nil
+		output, err = conn.CreateTargetGroupWithContext(ctx, input)
 	}
 
 	if err != nil {
-		return fmt.Errorf("creating LB Target Group: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating LB Target Group: %s", err)
 	}
 
-	if len(resp.TargetGroups) == 0 {
-		return errors.New("error creating LB Target Group: no groups returned in response")
+	if len(output.TargetGroups) == 0 {
+		return sdkdiag.AppendErrorf(diags, "creating LB Target Group: no groups returned in response")
 	}
 
-	d.SetId(aws.StringValue(resp.TargetGroups[0].TargetGroupArn))
+	d.SetId(aws.StringValue(output.TargetGroups[0].TargetGroupArn))
 
-	err = resource.Retry(propagationTimeout, func() *resource.RetryError {
-		var err error
-
-		_, err = FindTargetGroupByARN(conn, d.Id())
-
-		if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeTargetGroupNotFoundException) {
-			return resource.RetryableError(err)
-		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
+	_, err = tfresource.RetryWhenNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+		return FindTargetGroupByARN(ctx, conn, d.Id())
 	})
 
-	if tfresource.TimedOut(err) {
-		_, err = FindTargetGroupByARN(conn, d.Id())
-	}
-
 	if err != nil {
-		return fmt.Errorf("waiting for ELBv2 Target Group to create before setting attributes (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for ELBv2 Target Group (%s) create: %s", d.Id(), err)
 	}
 
 	var attrs []*elbv2.TargetGroupAttribute
@@ -475,43 +505,59 @@ func resourceTargetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 			})
 		}
 
-		if v, ok := d.Get("protocol").(string); ok && v != elbv2.ProtocolEnumGeneve {
-			if v, ok := d.GetOk("stickiness"); ok && len(v.([]interface{})) > 0 {
-				stickinessBlocks := v.([]interface{})
-				stickiness := stickinessBlocks[0].(map[string]interface{})
-
+		// Only supported for GWLB
+		if v, ok := d.Get("protocol").(string); ok && v == elbv2.ProtocolEnumGeneve {
+			if v, ok := d.GetOk("target_failover"); ok {
+				failoverBlock := v.([]interface{})
+				failover := failoverBlock[0].(map[string]interface{})
 				attrs = append(attrs,
 					&elbv2.TargetGroupAttribute{
-						Key:   aws.String("stickiness.enabled"),
-						Value: aws.String(strconv.FormatBool(stickiness["enabled"].(bool))),
+						Key:   aws.String("target_failover.on_deregistration"),
+						Value: aws.String(failover["on_deregistration"].(string)),
 					},
 					&elbv2.TargetGroupAttribute{
-						Key:   aws.String("stickiness.type"),
-						Value: aws.String(stickiness["type"].(string)),
-					})
+						Key:   aws.String("target_failover.on_unhealthy"),
+						Value: aws.String(failover["on_unhealthy"].(string)),
+					},
+				)
+			}
+		}
 
-				switch d.Get("protocol").(string) {
-				case elbv2.ProtocolEnumHttp, elbv2.ProtocolEnumHttps:
-					switch stickiness["type"].(string) {
-					case "lb_cookie":
-						attrs = append(attrs,
-							&elbv2.TargetGroupAttribute{
-								Key:   aws.String("stickiness.lb_cookie.duration_seconds"),
-								Value: aws.String(fmt.Sprintf("%d", stickiness["cookie_duration"].(int))),
-							})
-					case "app_cookie":
-						attrs = append(attrs,
-							&elbv2.TargetGroupAttribute{
-								Key:   aws.String("stickiness.app_cookie.duration_seconds"),
-								Value: aws.String(fmt.Sprintf("%d", stickiness["cookie_duration"].(int))),
-							},
-							&elbv2.TargetGroupAttribute{
-								Key:   aws.String("stickiness.app_cookie.cookie_name"),
-								Value: aws.String(stickiness["cookie_name"].(string)),
-							})
-					default:
-						log.Printf("[WARN] Unexpected stickiness type. Expected lb_cookie or app_cookie, got %s", stickiness["type"].(string))
-					}
+		if v, ok := d.GetOk("stickiness"); ok && len(v.([]interface{})) > 0 {
+			stickinessBlocks := v.([]interface{})
+			stickiness := stickinessBlocks[0].(map[string]interface{})
+
+			attrs = append(attrs,
+				&elbv2.TargetGroupAttribute{
+					Key:   aws.String("stickiness.enabled"),
+					Value: aws.String(strconv.FormatBool(stickiness["enabled"].(bool))),
+				},
+				&elbv2.TargetGroupAttribute{
+					Key:   aws.String("stickiness.type"),
+					Value: aws.String(stickiness["type"].(string)),
+				})
+
+			switch d.Get("protocol").(string) {
+			case elbv2.ProtocolEnumHttp, elbv2.ProtocolEnumHttps:
+				switch stickiness["type"].(string) {
+				case "lb_cookie":
+					attrs = append(attrs,
+						&elbv2.TargetGroupAttribute{
+							Key:   aws.String("stickiness.lb_cookie.duration_seconds"),
+							Value: aws.String(fmt.Sprintf("%d", stickiness["cookie_duration"].(int))),
+						})
+				case "app_cookie":
+					attrs = append(attrs,
+						&elbv2.TargetGroupAttribute{
+							Key:   aws.String("stickiness.app_cookie.duration_seconds"),
+							Value: aws.String(fmt.Sprintf("%d", stickiness["cookie_duration"].(int))),
+						},
+						&elbv2.TargetGroupAttribute{
+							Key:   aws.String("stickiness.app_cookie.cookie_name"),
+							Value: aws.String(stickiness["cookie_name"].(string)),
+						})
+				default:
+					log.Printf("[WARN] Unexpected stickiness type. Expected lb_cookie or app_cookie, got %s", stickiness["type"].(string))
 				}
 			}
 		}
@@ -530,87 +576,58 @@ func resourceTargetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 			Attributes:     attrs,
 		}
 
-		_, err := conn.ModifyTargetGroupAttributes(params)
+		_, err := conn.ModifyTargetGroupAttributesWithContext(ctx, params)
 
 		if err != nil {
-			return fmt.Errorf("modifying Target Group Attributes: %w", err)
+			return sdkdiag.AppendErrorf(diags, "modifying Target Group Attributes: %s", err)
 		}
 	}
 
 	// Post-create tagging supported in some partitions
-	if params.Tags == nil && len(tags) > 0 {
-		err := UpdateTags(conn, d.Id(), nil, tags)
+	if input.Tags == nil && len(tags) > 0 {
+		err := UpdateTags(ctx, conn, d.Id(), nil, tags)
 
 		// if default tags only, log and continue (i.e., should error if explicitly setting tags and they can't be)
 		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.ErrorISOUnsupported(conn.PartitionID, err) {
 			log.Printf("[WARN] error adding tags after create for ELBv2 Target Group (%s): %s", d.Id(), err)
-			return resourceTargetGroupRead(d, meta)
+			return append(diags, resourceTargetGroupRead(ctx, d, meta)...)
 		}
 
 		if err != nil {
-			return fmt.Errorf("creating ELBv2 Target Group (%s) tags: %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "creating ELBv2 Target Group (%s) tags: %s", d.Id(), err)
 		}
 	}
 
-	return resourceTargetGroupRead(d, meta)
+	return append(diags, resourceTargetGroupRead(ctx, d, meta)...)
 }
 
-func resourceTargetGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBV2Conn
+func resourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ELBV2Conn()
 
-	var targetGroup *elbv2.TargetGroup
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+		return FindTargetGroupByARN(ctx, conn, d.Id())
+	}, d.IsNewResource())
 
-	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
-		var err error
-
-		targetGroup, err = FindTargetGroupByARN(conn, d.Id())
-
-		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, elbv2.ErrCodeTargetGroupNotFoundException) {
-			return resource.RetryableError(err)
-		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		if d.IsNewResource() && targetGroup == nil {
-			return resource.RetryableError(&resource.NotFoundError{
-				LastError: fmt.Errorf("ELBv2 Target Group (%s) not found", d.Id()),
-			})
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		targetGroup, err = FindTargetGroupByARN(conn, d.Id())
-	}
-
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, elbv2.ErrCodeTargetGroupNotFoundException) {
-		log.Printf("[WARN] ELBv2 Target Group (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] ELBv2 Target Group %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading ELBv2 Target Group (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading ELBv2 Target Group (%s): %s", d.Id(), err)
 	}
 
-	if targetGroup == nil {
-		if d.IsNewResource() {
-			return fmt.Errorf("reading ELBv2 Target Group (%s): not found after creation", d.Id())
-		}
-
-		log.Printf("[WARN] ELBv2 Target Group (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
+	if err := flattenTargetGroupResource(ctx, d, meta, outputRaw.(*elbv2.TargetGroup)); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
-
-	return flattenTargetGroupResource(d, meta, targetGroup)
+	return diags
 }
 
-func resourceTargetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBV2Conn
+func resourceTargetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ELBV2Conn()
 
 	if d.HasChange("health_check") {
 		var params *elbv2.ModifyTargetGroupInput
@@ -619,10 +636,11 @@ func resourceTargetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 			healthCheck := healthChecks[0].(map[string]interface{})
 
 			params = &elbv2.ModifyTargetGroupInput{
-				TargetGroupArn:          aws.String(d.Id()),
-				HealthCheckEnabled:      aws.Bool(healthCheck["enabled"].(bool)),
-				HealthyThresholdCount:   aws.Int64(int64(healthCheck["healthy_threshold"].(int))),
-				UnhealthyThresholdCount: aws.Int64(int64(healthCheck["unhealthy_threshold"].(int))),
+				TargetGroupArn:             aws.String(d.Id()),
+				HealthCheckEnabled:         aws.Bool(healthCheck["enabled"].(bool)),
+				HealthCheckIntervalSeconds: aws.Int64(int64(healthCheck["interval"].(int))),
+				HealthyThresholdCount:      aws.Int64(int64(healthCheck["healthy_threshold"].(int))),
+				UnhealthyThresholdCount:    aws.Int64(int64(healthCheck["unhealthy_threshold"].(int))),
 			}
 
 			t := healthCheck["timeout"].(int)
@@ -643,7 +661,6 @@ func resourceTargetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 					}
 				}
 				params.HealthCheckPath = aws.String(healthCheck["path"].(string))
-				params.HealthCheckIntervalSeconds = aws.Int64(int64(healthCheck["interval"].(int)))
 			}
 			if d.Get("target_type").(string) != elbv2.TargetTypeEnumLambda {
 				params.HealthCheckPort = aws.String(healthCheck["port"].(string))
@@ -652,9 +669,9 @@ func resourceTargetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if params != nil {
-			_, err := conn.ModifyTargetGroup(params)
+			_, err := conn.ModifyTargetGroupWithContext(ctx, params)
 			if err != nil {
-				return fmt.Errorf("modifying Target Group: %w", err)
+				return sdkdiag.AppendErrorf(diags, "modifying Target Group: %s", err)
 			}
 		}
 	}
@@ -700,52 +717,48 @@ func resourceTargetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 			})
 		}
 
-		if v, ok := d.Get("protocol").(string); ok && v != elbv2.ProtocolEnumGeneve {
-
-			if d.HasChange("stickiness") {
-				stickinessBlocks := d.Get("stickiness").([]interface{})
-				if len(stickinessBlocks) == 1 {
-					stickiness := stickinessBlocks[0].(map[string]interface{})
-
-					attrs = append(attrs,
-						&elbv2.TargetGroupAttribute{
-							Key:   aws.String("stickiness.enabled"),
-							Value: aws.String(strconv.FormatBool(stickiness["enabled"].(bool))),
-						},
-						&elbv2.TargetGroupAttribute{
-							Key:   aws.String("stickiness.type"),
-							Value: aws.String(stickiness["type"].(string)),
-						})
-
-					switch d.Get("protocol").(string) {
-					case elbv2.ProtocolEnumHttp, elbv2.ProtocolEnumHttps:
-						switch stickiness["type"].(string) {
-						case "lb_cookie":
-							attrs = append(attrs,
-								&elbv2.TargetGroupAttribute{
-									Key:   aws.String("stickiness.lb_cookie.duration_seconds"),
-									Value: aws.String(fmt.Sprintf("%d", stickiness["cookie_duration"].(int))),
-								})
-						case "app_cookie":
-							attrs = append(attrs,
-								&elbv2.TargetGroupAttribute{
-									Key:   aws.String("stickiness.app_cookie.duration_seconds"),
-									Value: aws.String(fmt.Sprintf("%d", stickiness["cookie_duration"].(int))),
-								},
-								&elbv2.TargetGroupAttribute{
-									Key:   aws.String("stickiness.app_cookie.cookie_name"),
-									Value: aws.String(stickiness["cookie_name"].(string)),
-								})
-						default:
-							log.Printf("[WARN] Unexpected stickiness type. Expected lb_cookie or app_cookie, got %s", stickiness["type"].(string))
-						}
-					}
-				} else if len(stickinessBlocks) == 0 {
-					attrs = append(attrs, &elbv2.TargetGroupAttribute{
+		if d.HasChange("stickiness") {
+			stickinessBlocks := d.Get("stickiness").([]interface{})
+			if len(stickinessBlocks) == 1 {
+				stickiness := stickinessBlocks[0].(map[string]interface{})
+				attrs = append(attrs,
+					&elbv2.TargetGroupAttribute{
 						Key:   aws.String("stickiness.enabled"),
-						Value: aws.String("false"),
+						Value: aws.String(strconv.FormatBool(stickiness["enabled"].(bool))),
+					},
+					&elbv2.TargetGroupAttribute{
+						Key:   aws.String("stickiness.type"),
+						Value: aws.String(stickiness["type"].(string)),
 					})
+
+				switch d.Get("protocol").(string) {
+				case elbv2.ProtocolEnumHttp, elbv2.ProtocolEnumHttps:
+					switch stickiness["type"].(string) {
+					case "lb_cookie":
+						attrs = append(attrs,
+							&elbv2.TargetGroupAttribute{
+								Key:   aws.String("stickiness.lb_cookie.duration_seconds"),
+								Value: aws.String(fmt.Sprintf("%d", stickiness["cookie_duration"].(int))),
+							})
+					case "app_cookie":
+						attrs = append(attrs,
+							&elbv2.TargetGroupAttribute{
+								Key:   aws.String("stickiness.app_cookie.duration_seconds"),
+								Value: aws.String(fmt.Sprintf("%d", stickiness["cookie_duration"].(int))),
+							},
+							&elbv2.TargetGroupAttribute{
+								Key:   aws.String("stickiness.app_cookie.cookie_name"),
+								Value: aws.String(stickiness["cookie_name"].(string)),
+							})
+					default:
+						log.Printf("[WARN] Unexpected stickiness type. Expected lb_cookie or app_cookie, got %s", stickiness["type"].(string))
+					}
 				}
+			} else if len(stickinessBlocks) == 0 {
+				attrs = append(attrs, &elbv2.TargetGroupAttribute{
+					Key:   aws.String("stickiness.enabled"),
+					Value: aws.String("false"),
+				})
 			}
 		}
 
@@ -755,6 +768,24 @@ func resourceTargetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 				Value: aws.String(d.Get("load_balancing_algorithm_type").(string)),
 			})
 		}
+
+		if d.HasChange("target_failover") {
+			failoverBlock := d.Get("target_failover").([]interface{})
+			if len(failoverBlock) == 1 {
+				failover := failoverBlock[0].(map[string]interface{})
+				attrs = append(attrs,
+					&elbv2.TargetGroupAttribute{
+						Key:   aws.String("target_failover.on_deregistration"),
+						Value: aws.String(failover["on_deregistration"].(string)),
+					},
+					&elbv2.TargetGroupAttribute{
+						Key:   aws.String("target_failover.on_unhealthy"),
+						Value: aws.String(failover["on_unhealthy"].(string)),
+					},
+				)
+			}
+		}
+
 	case elbv2.TargetTypeEnumLambda:
 		if d.HasChange("lambda_multi_value_headers_enabled") {
 			attrs = append(attrs, &elbv2.TargetGroupAttribute{
@@ -770,17 +801,17 @@ func resourceTargetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 			Attributes:     attrs,
 		}
 
-		_, err := conn.ModifyTargetGroupAttributes(params)
+		_, err := conn.ModifyTargetGroupAttributesWithContext(ctx, params)
 		if err != nil {
-			return fmt.Errorf("modifying Target Group Attributes: %w", err)
+			return sdkdiag.AppendErrorf(diags, "modifying Target Group Attributes: %s", err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		err := resource.Retry(loadBalancerTagPropagationTimeout, func() *resource.RetryError {
-			err := UpdateTags(conn, d.Id(), o, n)
+		err := resource.RetryContext(ctx, loadBalancerTagPropagationTimeout, func() *resource.RetryError {
+			err := UpdateTags(ctx, conn, d.Id(), o, n)
 
 			if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeTargetGroupNotFoundException) {
 				log.Printf("[DEBUG] Retrying tagging of LB (%s)", d.Id())
@@ -795,33 +826,37 @@ func resourceTargetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 		})
 
 		if tfresource.TimedOut(err) {
-			err = UpdateTags(conn, d.Id(), o, n)
+			err = UpdateTags(ctx, conn, d.Id(), o, n)
 		}
 
 		// ISO partitions may not support tagging, giving error
 		if verify.ErrorISOUnsupported(conn.PartitionID, err) {
 			log.Printf("[WARN] Unable to update tags for ELBv2 Target Group %s: %s", d.Id(), err)
-			return resourceTargetGroupRead(d, meta)
+			return append(diags, resourceTargetGroupRead(ctx, d, meta)...)
 		}
 
 		if err != nil {
-			return fmt.Errorf("updating LB Target Group (%s) tags: %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating LB Target Group (%s) tags: %s", d.Id(), err)
 		}
 	}
 
-	return resourceTargetGroupRead(d, meta)
+	return append(diags, resourceTargetGroupRead(ctx, d, meta)...)
 }
 
-func resourceTargetGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBV2Conn
+func resourceTargetGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	const (
+		targetGroupDeleteTimeout = 2 * time.Minute
+	)
+	conn := meta.(*conns.AWSClient).ELBV2Conn()
 
 	input := &elbv2.DeleteTargetGroupInput{
 		TargetGroupArn: aws.String(d.Id()),
 	}
 
 	log.Printf("[DEBUG] Deleting Target Group (%s): %s", d.Id(), input)
-	err := resource.Retry(targetGroupDeleteTimeout, func() *resource.RetryError {
-		_, err := conn.DeleteTargetGroup(input)
+	err := resource.RetryContext(ctx, targetGroupDeleteTimeout, func() *resource.RetryError {
+		_, err := conn.DeleteTargetGroupWithContext(ctx, input)
 
 		if tfawserr.ErrMessageContains(err, "ResourceInUse", "is currently in use by a listener or a rule") {
 			return resource.RetryableError(err)
@@ -835,14 +870,105 @@ func resourceTargetGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteTargetGroup(input)
+		_, err = conn.DeleteTargetGroupWithContext(ctx, input)
 	}
 
 	if err != nil {
-		return fmt.Errorf("deleting Target Group: %w", err)
+		return sdkdiag.AppendErrorf(diags, "deleting Target Group: %s", err)
 	}
 
-	return nil
+	return diags
+}
+
+func FindTargetGroupByARN(ctx context.Context, conn *elbv2.ELBV2, arn string) (*elbv2.TargetGroup, error) {
+	input := &elbv2.DescribeTargetGroupsInput{
+		TargetGroupArns: aws.StringSlice([]string{arn}),
+	}
+
+	output, err := FindTargetGroup(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.TargetGroupArn) != arn {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func FindTargetGroupByName(ctx context.Context, conn *elbv2.ELBV2, name string) (*elbv2.TargetGroup, error) {
+	input := &elbv2.DescribeTargetGroupsInput{
+		Names: aws.StringSlice([]string{name}),
+	}
+
+	output, err := FindTargetGroup(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.TargetGroupName) != name {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func FindTargetGroups(ctx context.Context, conn *elbv2.ELBV2, input *elbv2.DescribeTargetGroupsInput) ([]*elbv2.TargetGroup, error) {
+	var output []*elbv2.TargetGroup
+
+	err := conn.DescribeTargetGroupsPagesWithContext(ctx, input, func(page *elbv2.DescribeTargetGroupsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.TargetGroups {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeTargetGroupNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func FindTargetGroup(ctx context.Context, conn *elbv2.ELBV2, input *elbv2.DescribeTargetGroupsInput) (*elbv2.TargetGroup, error) {
+	output, err := FindTargetGroups(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
 }
 
 func validTargetGroupHealthCheckPath(v interface{}, k string) (ws []string, errors []error) {
@@ -905,8 +1031,8 @@ func TargetGroupSuffixFromARN(arn *string) string {
 }
 
 // flattenTargetGroupResource takes a *elbv2.TargetGroup and populates all respective resource fields.
-func flattenTargetGroupResource(d *schema.ResourceData, meta interface{}, targetGroup *elbv2.TargetGroup) error {
-	conn := meta.(*conns.AWSClient).ELBV2Conn
+func flattenTargetGroupResource(ctx context.Context, d *schema.ResourceData, meta interface{}, targetGroup *elbv2.TargetGroup) error {
+	conn := meta.(*conns.AWSClient).ELBV2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -914,6 +1040,7 @@ func flattenTargetGroupResource(d *schema.ResourceData, meta interface{}, target
 	d.Set("arn_suffix", TargetGroupSuffixFromARN(targetGroup.TargetGroupArn))
 	d.Set("name", targetGroup.TargetGroupName)
 	d.Set("target_type", targetGroup.TargetType)
+	d.Set("ip_address_type", targetGroup.IpAddressType)
 
 	if err := d.Set("health_check", flattenLbTargetGroupHealthCheck(targetGroup)); err != nil {
 		return fmt.Errorf("setting health_check: %w", err)
@@ -930,7 +1057,7 @@ func flattenTargetGroupResource(d *schema.ResourceData, meta interface{}, target
 		d.Set("protocol_version", targetGroup.ProtocolVersion)
 	}
 
-	attrResp, err := conn.DescribeTargetGroupAttributes(&elbv2.DescribeTargetGroupAttributesInput{
+	attrResp, err := conn.DescribeTargetGroupAttributesWithContext(ctx, &elbv2.DescribeTargetGroupAttributesInput{
 		TargetGroupArn: aws.String(d.Id()),
 	})
 	if err != nil {
@@ -986,7 +1113,17 @@ func flattenTargetGroupResource(d *schema.ResourceData, meta interface{}, target
 		return fmt.Errorf("setting stickiness: %w", err)
 	}
 
-	tags, err := ListTags(conn, d.Id())
+	// Set target failover attributes for GWLB
+	targetFailoverAttr := flattenTargetGroupFailover(attrResp.Attributes)
+	if err != nil {
+		return fmt.Errorf("flattening target failover: %w", err)
+	}
+
+	if err := d.Set("target_failover", targetFailoverAttr); err != nil {
+		return fmt.Errorf("setting target failover: %w", err)
+	}
+
+	tags, err := ListTags(ctx, conn, d.Id())
 
 	if verify.ErrorISOUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] Unable to list tags for ELBv2 Target Group %s: %s", d.Id(), err)
@@ -1009,6 +1146,25 @@ func flattenTargetGroupResource(d *schema.ResourceData, meta interface{}, target
 	}
 
 	return nil
+}
+
+func flattenTargetGroupFailover(attributes []*elbv2.TargetGroupAttribute) []interface{} {
+	if len(attributes) == 0 {
+		return []interface{}{}
+	}
+
+	m := make(map[string]interface{})
+
+	for _, attr := range attributes {
+		switch aws.StringValue(attr.Key) {
+		case "target_failover.on_deregistration":
+			m["on_deregistration"] = aws.StringValue(attr.Value)
+		case "target_failover.on_unhealthy":
+			m["on_unhealthy"] = aws.StringValue(attr.Value)
+		}
+	}
+
+	return []interface{}{m}
 }
 
 func flattenTargetGroupStickiness(attributes []*elbv2.TargetGroupAttribute) ([]interface{}, error) {
@@ -1070,15 +1226,6 @@ func resourceTargetGroupCustomizeDiff(_ context.Context, diff *schema.ResourceDi
 			if m := healthCheck["path"].(string); m != "" {
 				return fmt.Errorf("%s: health_check.path is not supported for target_groups with TCP protocol", diff.Id())
 			}
-			// Cannot set custom timeout on TCP health checks
-			if t := healthCheck["timeout"].(int); t != 0 && diff.Id() == "" {
-				// timeout has a default value, so only check this if this is a network
-				// LB and is a first run
-				return fmt.Errorf("%s: health_check.timeout is not supported for target_groups with TCP protocol", diff.Id())
-			}
-			if healthCheck["healthy_threshold"].(int) != healthCheck["unhealthy_threshold"].(int) {
-				return fmt.Errorf("%s: health_check.healthy_threshold %d and health_check.unhealthy_threshold %d must be the same for target_groups with TCP protocol", diff.Id(), healthCheck["healthy_threshold"].(int), healthCheck["unhealthy_threshold"].(int))
-			}
 		}
 	}
 
@@ -1096,28 +1243,6 @@ func resourceTargetGroupCustomizeDiff(_ context.Context, diff *schema.ResourceDi
 		return nil
 	}
 
-	if protocol == elbv2.ProtocolEnumTcp {
-		if diff.HasChange("health_check.0.interval") {
-			if err := diff.ForceNew("health_check.0.interval"); err != nil {
-				return err
-			}
-		}
-		// The health_check configuration block protocol argument has Default: HTTP, however the block
-		// itself is Computed: true. When not configured, a TLS (Network LB) Target Group will default
-		// to health check protocol TLS. We do not want to trigger recreation in this scenario.
-		// ResourceDiff will show 0 changed keys for the configuration block, which we can use to ensure
-		// there was an actual change to trigger the ForceNew.
-		if diff.HasChange("health_check.0.protocol") && len(diff.GetChangedKeysPrefix("health_check.0")) != 0 {
-			if err := diff.ForceNew("health_check.0.protocol"); err != nil {
-				return err
-			}
-		}
-		if diff.HasChange("health_check.0.timeout") {
-			if err := diff.ForceNew("health_check.0.timeout"); err != nil {
-				return err
-			}
-		}
-	}
 	return nil
 }
 

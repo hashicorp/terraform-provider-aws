@@ -1,20 +1,22 @@
 package iam
 
 import (
-	"fmt"
+	"context"
 	"net/url"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceRole() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceRoleRead,
+		ReadWithoutTimeout: dataSourceRoleRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -58,8 +60,9 @@ func DataSourceRole() *schema.Resource {
 	}
 }
 
-func dataSourceRoleRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+func dataSourceRoleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IAMConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get("name").(string)
@@ -68,14 +71,14 @@ func dataSourceRoleRead(d *schema.ResourceData, meta interface{}) error {
 		RoleName: aws.String(name),
 	}
 
-	output, err := conn.GetRole(input)
+	output, err := conn.GetRoleWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("error reading IAM Role (%s): %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "reading IAM Role (%s): %s", name, err)
 	}
 
 	d.Set("arn", output.Role.Arn)
 	if err := d.Set("create_date", output.Role.CreateDate.Format(time.RFC3339)); err != nil {
-		return fmt.Errorf("error setting create_date: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting create_date: %s", err)
 	}
 	d.Set("description", output.Role.Description)
 	d.Set("max_session_duration", output.Role.MaxSessionDuration)
@@ -89,20 +92,20 @@ func dataSourceRoleRead(d *schema.ResourceData, meta interface{}) error {
 
 	assumRolePolicy, err := url.QueryUnescape(aws.StringValue(output.Role.AssumeRolePolicyDocument))
 	if err != nil {
-		return fmt.Errorf("error parsing assume role policy document: %w", err)
+		return sdkdiag.AppendErrorf(diags, "parsing assume role policy document: %s", err)
 	}
 	if err := d.Set("assume_role_policy", assumRolePolicy); err != nil {
-		return fmt.Errorf("error setting assume_role_policy: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting assume_role_policy: %s", err)
 	}
 
 	tags := KeyValueTags(output.Role.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	d.SetId(name)
 
-	return nil
+	return diags
 }

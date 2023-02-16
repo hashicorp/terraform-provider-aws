@@ -1,17 +1,19 @@
 package fsx
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/fsx"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -19,12 +21,12 @@ import (
 
 func ResourceBackup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceBackupCreate,
-		Read:   resourceBackupRead,
-		Update: resourceBackupUpdate,
-		Delete: resourceBackupDelete,
+		CreateWithoutTimeout: resourceBackupCreate,
+		ReadWithoutTimeout:   resourceBackupRead,
+		UpdateWithoutTimeout: resourceBackupUpdate,
+		DeleteWithoutTimeout: resourceBackupDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -69,8 +71,9 @@ func ResourceBackup() *schema.Resource {
 	}
 }
 
-func resourceBackupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FSxConn
+func resourceBackupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).FSxConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -87,60 +90,62 @@ func resourceBackupCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if input.FileSystemId == nil && input.VolumeId == nil {
-		return fmt.Errorf("error creating FSx Backup: %s", "must specify either file_system_id or volume_id")
+		return sdkdiag.AppendErrorf(diags, "creating FSx Backup: %s", "must specify either file_system_id or volume_id")
 	}
 
 	if input.FileSystemId != nil && input.VolumeId != nil {
-		return fmt.Errorf("error creating FSx Backup: %s", "can only specify either file_system_id or volume_id")
+		return sdkdiag.AppendErrorf(diags, "creating FSx Backup: %s", "can only specify either file_system_id or volume_id")
 	}
 
 	if len(tags) > 0 {
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	result, err := conn.CreateBackup(input)
+	result, err := conn.CreateBackupWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("error creating FSx Backup: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating FSx Backup: %s", err)
 	}
 
 	d.SetId(aws.StringValue(result.Backup.BackupId))
 
 	log.Println("[DEBUG] Waiting for FSx backup to become available")
-	if _, err := waitBackupAvailable(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for FSx Backup (%s) to be available: %w", d.Id(), err)
+	if _, err := waitBackupAvailable(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for FSx Backup (%s) to be available: %s", d.Id(), err)
 	}
 
-	return resourceBackupRead(d, meta)
+	return append(diags, resourceBackupRead(ctx, d, meta)...)
 }
 
-func resourceBackupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FSxConn
+func resourceBackupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).FSxConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating FSx Backup (%s) tags: %w", d.Get("arn").(string), err)
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating FSx Backup (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
 
-	return resourceBackupRead(d, meta)
+	return append(diags, resourceBackupRead(ctx, d, meta)...)
 }
 
-func resourceBackupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FSxConn
+func resourceBackupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).FSxConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	backup, err := FindBackupByID(conn, d.Id())
+	backup, err := FindBackupByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] FSx Backup (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading FSx Backup (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading FSx Backup (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", backup.ResourceARN)
@@ -163,37 +168,38 @@ func resourceBackupRead(d *schema.ResourceData, meta interface{}) error {
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceBackupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FSxConn
+func resourceBackupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).FSxConn()
 
 	request := &fsx.DeleteBackupInput{
 		BackupId: aws.String(d.Id()),
 	}
 
 	log.Printf("[INFO] Deleting FSx Backup: %s", d.Id())
-	_, err := conn.DeleteBackup(request)
+	_, err := conn.DeleteBackupWithContext(ctx, request)
 
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, fsx.ErrCodeBackupNotFound) {
-			return nil
+			return diags
 		}
-		return fmt.Errorf("error deleting FSx Backup (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting FSx Backup (%s): %s", d.Id(), err)
 	}
 
 	log.Println("[DEBUG] Waiting for backup to delete")
-	if _, err := waitBackupDeleted(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for FSx Backup (%s) to deleted: %w", d.Id(), err)
+	if _, err := waitBackupDeleted(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for FSx Backup (%s) to deleted: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

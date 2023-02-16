@@ -1,17 +1,19 @@
 package ssm
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -19,11 +21,11 @@ import (
 
 func ResourceActivation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceActivationCreate,
-		Read:   resourceActivationRead,
-		Delete: resourceActivationDelete,
+		CreateWithoutTimeout: resourceActivationCreate,
+		ReadWithoutTimeout:   resourceActivationRead,
+		DeleteWithoutTimeout: resourceActivationDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -74,8 +76,9 @@ func ResourceActivation() *schema.Resource {
 	}
 }
 
-func resourceActivationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+func resourceActivationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SSMConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -111,10 +114,10 @@ func resourceActivationCreate(d *schema.ResourceData, meta interface{}) error {
 
 	// Retry to allow iam_role to be created and policy attachment to take place
 	var resp *ssm.CreateActivationOutput
-	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
+	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
 		var err error
 
-		resp, err = conn.CreateActivation(activationInput)
+		resp, err = conn.CreateActivationWithContext(ctx, activationInput)
 
 		if tfawserr.ErrMessageContains(err, "ValidationException", "Not existing role") {
 			return resource.RetryableError(err)
@@ -128,24 +131,25 @@ func resourceActivationCreate(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if tfresource.TimedOut(err) {
-		resp, err = conn.CreateActivation(activationInput)
+		resp, err = conn.CreateActivationWithContext(ctx, activationInput)
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error creating SSM activation: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating SSM activation: %s", err)
 	}
 
 	if resp.ActivationId == nil {
-		return fmt.Errorf("ActivationId was nil")
+		return sdkdiag.AppendErrorf(diags, "ActivationId was nil")
 	}
 	d.SetId(aws.StringValue(resp.ActivationId))
 	d.Set("activation_code", resp.ActivationCode)
 
-	return resourceActivationRead(d, meta)
+	return append(diags, resourceActivationRead(ctx, d, meta)...)
 }
 
-func resourceActivationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+func resourceActivationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SSMConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -163,15 +167,15 @@ func resourceActivationRead(d *schema.ResourceData, meta interface{}) error {
 		MaxResults: aws.Int64(1),
 	}
 
-	resp, err := conn.DescribeActivations(params)
+	resp, err := conn.DescribeActivationsWithContext(ctx, params)
 
 	if err != nil {
-		return fmt.Errorf("Error reading SSM activation: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading SSM activation: %s", err)
 	}
 	if !d.IsNewResource() && (resp.ActivationList == nil || len(resp.ActivationList) == 0) {
 		log.Printf("[WARN] SSM Activation (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	activation := resp.ActivationList[0] // Only 1 result as MaxResults is 1 above
@@ -186,18 +190,19 @@ func resourceActivationRead(d *schema.ResourceData, meta interface{}) error {
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceActivationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+func resourceActivationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SSMConn()
 
 	log.Printf("[DEBUG] Deleting SSM Activation: %s", d.Id())
 
@@ -205,11 +210,11 @@ func resourceActivationDelete(d *schema.ResourceData, meta interface{}) error {
 		ActivationId: aws.String(d.Id()),
 	}
 
-	_, err := conn.DeleteActivation(params)
+	_, err := conn.DeleteActivationWithContext(ctx, params)
 
 	if err != nil {
-		return fmt.Errorf("Error deleting SSM activation: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting SSM activation: %s", err)
 	}
 
-	return nil
+	return diags
 }

@@ -11,12 +11,14 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -25,13 +27,13 @@ import (
 
 func ResourceLaunchTemplate() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceLaunchTemplateCreate,
-		Read:   resourceLaunchTemplateRead,
-		Update: resourceLaunchTemplateUpdate,
-		Delete: resourceLaunchTemplateDelete,
+		CreateWithoutTimeout: resourceLaunchTemplateCreate,
+		ReadWithoutTimeout:   resourceLaunchTemplateRead,
+		UpdateWithoutTimeout: resourceLaunchTemplateUpdate,
+		DeleteWithoutTimeout: resourceLaunchTemplateDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -951,8 +953,9 @@ func ResourceLaunchTemplate() *schema.Resource {
 	}
 }
 
-func resourceLaunchTemplateCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceLaunchTemplateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -967,46 +970,47 @@ func resourceLaunchTemplateCreate(d *schema.ResourceData, meta interface{}) erro
 		input.VersionDescription = aws.String(v.(string))
 	}
 
-	if v, err := expandRequestLaunchTemplateData(conn, d); err == nil {
+	if v, err := expandRequestLaunchTemplateData(ctx, conn, d); err == nil {
 		input.LaunchTemplateData = v
 	} else {
-		return err
+		return sdkdiag.AppendErrorf(diags, "creating EC2 Launch Template (%s): %s", name, err)
 	}
 
 	log.Printf("[DEBUG] Creating EC2 Launch Template: %s", input)
-	output, err := conn.CreateLaunchTemplate(input)
+	output, err := conn.CreateLaunchTemplateWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating EC2 Launch Template: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating EC2 Launch Template: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.LaunchTemplate.LaunchTemplateId))
 
-	return resourceLaunchTemplateRead(d, meta)
+	return append(diags, resourceLaunchTemplateRead(ctx, d, meta)...)
 }
 
-func resourceLaunchTemplateRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceLaunchTemplateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	lt, err := FindLaunchTemplateByID(conn, d.Id())
+	lt, err := FindLaunchTemplateByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Launch Template %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 Launch Template (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Launch Template (%s): %s", d.Id(), err)
 	}
 
 	version := strconv.FormatInt(aws.Int64Value(lt.LatestVersionNumber), 10)
-	ltv, err := FindLaunchTemplateVersionByTwoPartKey(conn, d.Id(), version)
+	ltv, err := FindLaunchTemplateVersionByTwoPartKey(ctx, conn, d.Id(), version)
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 Launch Template (%s) Version (%s): %w", d.Id(), version, err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Launch Template (%s) Version (%s): %s", d.Id(), version, err)
 	}
 
 	arn := arn.ARN{
@@ -1023,26 +1027,27 @@ func resourceLaunchTemplateRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("name", lt.LaunchTemplateName)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(lt.LaunchTemplateName)))
 
-	if err := flattenResponseLaunchTemplateData(conn, d, ltv.LaunchTemplateData); err != nil {
-		return err
+	if err := flattenResponseLaunchTemplateData(ctx, conn, d, ltv.LaunchTemplateData); err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Launch Template (%s): %s", d.Id(), err)
 	}
 
 	tags := KeyValueTags(lt.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceLaunchTemplateUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceLaunchTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	updateKeys := []string{
 		"block_device_mappings",
@@ -1089,20 +1094,19 @@ func resourceLaunchTemplateUpdate(d *schema.ResourceData, meta interface{}) erro
 			input.VersionDescription = aws.String(v.(string))
 		}
 
-		if v, err := expandRequestLaunchTemplateData(conn, d); err == nil {
+		if v, err := expandRequestLaunchTemplateData(ctx, conn, d); err == nil {
 			input.LaunchTemplateData = v
 		} else {
-			return err
+			return sdkdiag.AppendErrorf(diags, "updating EC2 Launch Template (%s): %s", d.Id(), err)
 		}
 
-		output, err := conn.CreateLaunchTemplateVersion(input)
+		output, err := conn.CreateLaunchTemplateVersionWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error creating EC2 Launch Template (%s) Version: %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "creating EC2 Launch Template (%s) Version: %s", d.Id(), err)
 		}
 
 		latestVersion = aws.Int64Value(output.LaunchTemplateVersion.VersionNumber)
-
 	}
 
 	if d.Get("update_default_version").(bool) || d.HasChange("default_version") {
@@ -1116,44 +1120,45 @@ func resourceLaunchTemplateUpdate(d *schema.ResourceData, meta interface{}) erro
 			input.DefaultVersion = aws.String(strconv.Itoa(d.Get("default_version").(int)))
 		}
 
-		_, err := conn.ModifyLaunchTemplate(input)
+		_, err := conn.ModifyLaunchTemplateWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error updating EC2 Launch Template (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating EC2 Launch Template (%s): %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating EC2 Launch Template (%s) tags: %w", d.Id(), err)
+		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating EC2 Launch Template (%s) tags: %s", d.Id(), err)
 		}
 	}
 
-	return resourceLaunchTemplateRead(d, meta)
+	return append(diags, resourceLaunchTemplateRead(ctx, d, meta)...)
 }
 
-func resourceLaunchTemplateDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceLaunchTemplateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	log.Printf("[DEBUG] Deleting EC2 Launch Template: %s", d.Id())
-	_, err := conn.DeleteLaunchTemplate(&ec2.DeleteLaunchTemplateInput{
+	_, err := conn.DeleteLaunchTemplateWithContext(ctx, &ec2.DeleteLaunchTemplateInput{
 		LaunchTemplateId: aws.String(d.Id()),
 	})
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidLaunchTemplateIdNotFound) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Launch Template (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Launch Template (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func expandRequestLaunchTemplateData(conn *ec2.EC2, d *schema.ResourceData) (*ec2.RequestLaunchTemplateData, error) {
+func expandRequestLaunchTemplateData(ctx context.Context, conn *ec2.EC2, d *schema.ResourceData) (*ec2.RequestLaunchTemplateData, error) {
 	apiObject := &ec2.RequestLaunchTemplateData{
 		// Always set at least one field.
 		UserData: aws.String(d.Get("user_data").(string)),
@@ -1181,7 +1186,7 @@ func expandRequestLaunchTemplateData(conn *ec2.EC2, d *schema.ResourceData) (*ec
 
 	if v, ok := d.GetOk("credit_specification"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		if instanceType != "" {
-			instanceTypeInfo, err := FindInstanceTypeByName(conn, instanceType)
+			instanceTypeInfo, err := FindInstanceTypeByName(ctx, conn, instanceType)
 
 			if err != nil {
 				return nil, fmt.Errorf("reading EC2 Instance Type (%s): %w", instanceType, err)
@@ -2170,7 +2175,7 @@ func expandLaunchTemplateTagSpecificationRequests(tfList []interface{}) []*ec2.L
 	return apiObjects
 }
 
-func flattenResponseLaunchTemplateData(conn *ec2.EC2, d *schema.ResourceData, apiObject *ec2.ResponseLaunchTemplateData) error {
+func flattenResponseLaunchTemplateData(ctx context.Context, conn *ec2.EC2, d *schema.ResourceData, apiObject *ec2.ResponseLaunchTemplateData) error {
 	instanceType := aws.StringValue(apiObject.InstanceType)
 
 	if err := d.Set("block_device_mappings", flattenLaunchTemplateBlockDeviceMappings(apiObject.BlockDeviceMappings)); err != nil {
@@ -2191,7 +2196,7 @@ func flattenResponseLaunchTemplateData(conn *ec2.EC2, d *schema.ResourceData, ap
 		d.Set("cpu_options", nil)
 	}
 	if apiObject.CreditSpecification != nil && instanceType != "" {
-		instanceTypeInfo, err := FindInstanceTypeByName(conn, instanceType)
+		instanceTypeInfo, err := FindInstanceTypeByName(ctx, conn, instanceType)
 
 		if err != nil {
 			return fmt.Errorf("reading EC2 Instance Type (%s): %w", instanceType, err)

@@ -1,19 +1,21 @@
 package ec2
 
 import (
-	"fmt"
+	"context"
 	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func DataSourceRoute() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceRouteRead,
+		ReadWithoutTimeout: dataSourceRouteRead,
 
 		Timeouts: &schema.ResourceTimeout{
 			Read: schema.DefaultTimeout(20 * time.Minute),
@@ -101,15 +103,16 @@ func DataSourceRoute() *schema.Resource {
 	}
 }
 
-func dataSourceRouteRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func dataSourceRouteRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	routeTableID := d.Get("route_table_id").(string)
 
-	routeTable, err := FindRouteTableByID(conn, routeTableID)
+	routeTable, err := FindRouteTableByID(ctx, conn, routeTableID)
 
 	if err != nil {
-		return fmt.Errorf("error reading Route Table (%s): %w", routeTableID, err)
+		return sdkdiag.AppendErrorf(diags, "reading Route Table (%s): %s", routeTableID, err)
 	}
 
 	routes := []*ec2.Route{}
@@ -181,11 +184,11 @@ func dataSourceRouteRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if len(routes) == 0 {
-		return fmt.Errorf("No routes matching supplied arguments found in Route Table (%s)", routeTableID)
+		return sdkdiag.AppendErrorf(diags, "No routes matching supplied arguments found in Route Table (%s)", routeTableID)
 	}
 
 	if len(routes) > 1 {
-		return fmt.Errorf("%d routes matched in Route Table (%s); use additional constraints to reduce matches to a single route", len(routes), routeTableID)
+		return sdkdiag.AppendErrorf(diags, "%d routes matched in Route Table (%s); use additional constraints to reduce matches to a single route", len(routes), routeTableID)
 	}
 
 	route := routes[0]
@@ -212,5 +215,5 @@ func dataSourceRouteRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("transit_gateway_id", route.TransitGatewayId)
 	d.Set("vpc_peering_connection_id", route.VpcPeeringConnectionId)
 
-	return nil
+	return diags
 }

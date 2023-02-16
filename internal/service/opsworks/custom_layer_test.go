@@ -1,6 +1,7 @@
 package opsworks_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -13,6 +14,7 @@ import (
 )
 
 func TestAccOpsWorksCustomLayer_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v opsworks.Layer
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opsworks_custom_layer.test"
@@ -21,12 +23,12 @@ func TestAccOpsWorksCustomLayer_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCustomLayerDestroy,
+		CheckDestroy:             testAccCheckCustomLayerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomLayerConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLayerExists(resourceName, &v),
+					testAccCheckLayerExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "opsworks", regexp.MustCompile(`layer/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "auto_assign_elastic_ips", "false"),
 					resource.TestCheckResourceAttr(resourceName, "auto_assign_public_ips", "false"),
@@ -75,6 +77,7 @@ func TestAccOpsWorksCustomLayer_basic(t *testing.T) {
 // _disappears and _tags for OpsWorks Layers are tested via aws_opsworks_rails_app_layer.
 
 func TestAccOpsWorksCustomLayer_update(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v opsworks.Layer
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opsworks_custom_layer.test"
@@ -83,12 +86,12 @@ func TestAccOpsWorksCustomLayer_update(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCustomLayerDestroy,
+		CheckDestroy:             testAccCheckCustomLayerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomLayerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLayerExists(resourceName, &v),
+					testAccCheckLayerExists(ctx, resourceName, &v),
 				),
 			},
 			{
@@ -147,6 +150,7 @@ func TestAccOpsWorksCustomLayer_update(t *testing.T) {
 }
 
 func TestAccOpsWorksCustomLayer_cloudWatch(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v opsworks.Layer
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opsworks_custom_layer.test"
@@ -156,12 +160,12 @@ func TestAccOpsWorksCustomLayer_cloudWatch(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCustomLayerDestroy,
+		CheckDestroy:             testAccCheckCustomLayerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomLayerConfig_cloudWatch(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLayerExists(resourceName, &v),
+					testAccCheckLayerExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_configuration.0.enabled", "true"),
@@ -187,7 +191,7 @@ func TestAccOpsWorksCustomLayer_cloudWatch(t *testing.T) {
 			{
 				Config: testAccCustomLayerConfig_cloudWatch(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLayerExists(resourceName, &v),
+					testAccCheckLayerExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_configuration.0.enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_configuration.0.log_streams.#", "1"),
@@ -207,7 +211,7 @@ func TestAccOpsWorksCustomLayer_cloudWatch(t *testing.T) {
 			{
 				Config: testAccCustomLayerConfig_cloudWatchFull(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLayerExists(resourceName, &v),
+					testAccCheckLayerExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_configuration.0.enabled", "true"),
@@ -229,6 +233,7 @@ func TestAccOpsWorksCustomLayer_cloudWatch(t *testing.T) {
 }
 
 func TestAccOpsWorksCustomLayer_loadBasedAutoScaling(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v opsworks.Layer
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opsworks_custom_layer.test"
@@ -237,12 +242,12 @@ func TestAccOpsWorksCustomLayer_loadBasedAutoScaling(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCustomLayerDestroy,
+		CheckDestroy:             testAccCheckCustomLayerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomLayerConfig_loadBasedAutoScaling(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLayerExists(resourceName, &v),
+					testAccCheckLayerExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "load_based_auto_scaling.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "load_based_auto_scaling.0.downscaling.#", "1"),
@@ -272,7 +277,7 @@ func TestAccOpsWorksCustomLayer_loadBasedAutoScaling(t *testing.T) {
 			{
 				Config: testAccCustomLayerConfig_loadBasedAutoScaling(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLayerExists(resourceName, &v),
+					testAccCheckLayerExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "load_based_auto_scaling.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "load_based_auto_scaling.0.downscaling.#", "1"),
@@ -298,8 +303,8 @@ func TestAccOpsWorksCustomLayer_loadBasedAutoScaling(t *testing.T) {
 	})
 }
 
-func testAccCheckCustomLayerDestroy(s *terraform.State) error {
-	return testAccCheckLayerDestroy("aws_opsworks_custom_layer", s)
+func testAccCheckCustomLayerDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error { return testAccCheckLayerDestroy(ctx, "aws_opsworks_custom_layer", s) }
 }
 
 func testAccCustomLayerConfig_basic(rName string) string {

@@ -1,24 +1,26 @@
 package athena
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/athena"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func ResourceNamedQuery() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceNamedQueryCreate,
-		Read:   resourceNamedQueryRead,
-		Delete: resourceNamedQueryDelete,
+		CreateWithoutTimeout: resourceNamedQueryCreate,
+		ReadWithoutTimeout:   resourceNamedQueryRead,
+		DeleteWithoutTimeout: resourceNamedQueryDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -52,8 +54,9 @@ func ResourceNamedQuery() *schema.Resource {
 	}
 }
 
-func resourceNamedQueryCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AthenaConn
+func resourceNamedQueryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AthenaConn()
 
 	input := &athena.CreateNamedQueryInput{
 		Database:    aws.String(d.Get("database").(string)),
@@ -67,29 +70,30 @@ func resourceNamedQueryCreate(d *schema.ResourceData, meta interface{}) error {
 		input.Description = aws.String(raw.(string))
 	}
 
-	resp, err := conn.CreateNamedQuery(input)
+	resp, err := conn.CreateNamedQueryWithContext(ctx, input)
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "creating Athena Named Query (%s): %s", d.Get("name").(string), err)
 	}
 	d.SetId(aws.StringValue(resp.NamedQueryId))
-	return resourceNamedQueryRead(d, meta)
+	return append(diags, resourceNamedQueryRead(ctx, d, meta)...)
 }
 
-func resourceNamedQueryRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AthenaConn
+func resourceNamedQueryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AthenaConn()
 
 	input := &athena.GetNamedQueryInput{
 		NamedQueryId: aws.String(d.Id()),
 	}
 
-	resp, err := conn.GetNamedQuery(input)
+	resp, err := conn.GetNamedQueryWithContext(ctx, input)
 	if tfawserr.ErrMessageContains(err, athena.ErrCodeInvalidRequestException, d.Id()) && !d.IsNewResource() {
 		log.Printf("[WARN] Athena Named Query (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 	if err != nil {
-		return fmt.Errorf("error getting Athena Named Query (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Athena Named Query (%s): %s", d.Id(), err)
 	}
 
 	d.Set("name", resp.NamedQuery.Name)
@@ -97,16 +101,19 @@ func resourceNamedQueryRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("workgroup", resp.NamedQuery.WorkGroup)
 	d.Set("database", resp.NamedQuery.Database)
 	d.Set("description", resp.NamedQuery.Description)
-	return nil
+	return diags
 }
 
-func resourceNamedQueryDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AthenaConn
+func resourceNamedQueryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AthenaConn()
 
 	input := &athena.DeleteNamedQueryInput{
 		NamedQueryId: aws.String(d.Id()),
 	}
 
-	_, err := conn.DeleteNamedQuery(input)
-	return err
+	if _, err := conn.DeleteNamedQueryWithContext(ctx, input); err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting Athena Named Query (%s): %s", d.Id(), err)
+	}
+	return diags
 }

@@ -1,6 +1,7 @@
 package ssm
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -8,15 +9,17 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func ResourcePatchGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourcePatchGroupCreate,
-		Read:   resourcePatchGroupRead,
-		Delete: resourcePatchGroupDelete,
+		CreateWithoutTimeout: resourcePatchGroupCreate,
+		ReadWithoutTimeout:   resourcePatchGroupRead,
+		DeleteWithoutTimeout: resourcePatchGroupDelete,
 
 		SchemaVersion: 1,
 		StateUpgraders: []schema.StateUpgrader{
@@ -42,8 +45,9 @@ func ResourcePatchGroup() *schema.Resource {
 	}
 }
 
-func resourcePatchGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+func resourcePatchGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SSMConn()
 
 	baselineId := d.Get("baseline_id").(string)
 	patchGroup := d.Get("patch_group").(string)
@@ -53,38 +57,39 @@ func resourcePatchGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		PatchGroup: aws.String(patchGroup),
 	}
 
-	resp, err := conn.RegisterPatchBaselineForPatchGroup(params)
+	resp, err := conn.RegisterPatchBaselineForPatchGroupWithContext(ctx, params)
 	if err != nil {
-		return fmt.Errorf("error registering SSM Patch Baseline (%s) for Patch Group (%s): %w", baselineId, patchGroup, err)
+		return sdkdiag.AppendErrorf(diags, "registering SSM Patch Baseline (%s) for Patch Group (%s): %s", baselineId, patchGroup, err)
 	}
 
 	d.SetId(fmt.Sprintf("%s,%s", aws.StringValue(resp.PatchGroup), aws.StringValue(resp.BaselineId)))
 
-	return resourcePatchGroupRead(d, meta)
+	return append(diags, resourcePatchGroupRead(ctx, d, meta)...)
 }
 
-func resourcePatchGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+func resourcePatchGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SSMConn()
 
 	patchGroup, baselineId, err := ParsePatchGroupID(d.Id())
 	if err != nil {
-		return fmt.Errorf("error parsing SSM Patch Group ID (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "parsing SSM Patch Group ID (%s): %s", d.Id(), err)
 	}
 
-	group, err := FindPatchGroup(conn, patchGroup, baselineId)
+	group, err := FindPatchGroup(ctx, conn, patchGroup, baselineId)
 
 	if err != nil {
-		return fmt.Errorf("error reading SSM Patch Group (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SSM Patch Group (%s): %s", d.Id(), err)
 	}
 
 	if group == nil {
 		if d.IsNewResource() {
-			return fmt.Errorf("error reading SSM Patch Group (%s): not found after creation", d.Id())
+			return sdkdiag.AppendErrorf(diags, "reading SSM Patch Group (%s): not found after creation", d.Id())
 		}
 
 		log.Printf("[WARN] SSM Patch Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	var groupBaselineId string
@@ -95,16 +100,16 @@ func resourcePatchGroupRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("baseline_id", groupBaselineId)
 	d.Set("patch_group", group.PatchGroup)
 
-	return nil
-
+	return diags
 }
 
-func resourcePatchGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+func resourcePatchGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SSMConn()
 
 	patchGroup, baselineId, err := ParsePatchGroupID(d.Id())
 	if err != nil {
-		return fmt.Errorf("error parsing SSM Patch Group ID (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "parsing SSM Patch Group ID (%s): %s", d.Id(), err)
 	}
 
 	params := &ssm.DeregisterPatchBaselineForPatchGroupInput{
@@ -112,16 +117,16 @@ func resourcePatchGroupDelete(d *schema.ResourceData, meta interface{}) error {
 		PatchGroup: aws.String(patchGroup),
 	}
 
-	_, err = conn.DeregisterPatchBaselineForPatchGroup(params)
+	_, err = conn.DeregisterPatchBaselineForPatchGroupWithContext(ctx, params)
 
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, ssm.ErrCodeDoesNotExistException) {
-			return nil
+			return diags
 		}
-		return fmt.Errorf("error deregistering SSM Patch Baseline (%s) for Patch Group (%s): %w", baselineId, patchGroup, err)
+		return sdkdiag.AppendErrorf(diags, "deregistering SSM Patch Baseline (%s) for Patch Group (%s): %s", baselineId, patchGroup, err)
 	}
 
-	return nil
+	return diags
 }
 
 func ParsePatchGroupID(id string) (string, string, error) {

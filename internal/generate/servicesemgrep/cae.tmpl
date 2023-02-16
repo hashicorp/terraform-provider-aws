@@ -13,7 +13,9 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)AWS"
+      - focus-metavariable: $NAME
     severity: WARNING
+
   - id: aws-in-const-name
     languages:
       - go

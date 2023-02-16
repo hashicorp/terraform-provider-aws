@@ -1,6 +1,7 @@
 package ec2
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -8,19 +9,21 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceClientVPNRoute() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceClientVPNRouteCreate,
-		Read:   resourceClientVPNRouteRead,
-		Delete: resourceClientVPNRouteDelete,
+		CreateWithoutTimeout: resourceClientVPNRouteCreate,
+		ReadWithoutTimeout:   resourceClientVPNRouteRead,
+		DeleteWithoutTimeout: resourceClientVPNRouteDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -62,8 +65,9 @@ func ResourceClientVPNRoute() *schema.Resource {
 	}
 }
 
-func resourceClientVPNRouteCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceClientVPNRouteCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	endpointID := d.Get("client_vpn_endpoint_id").(string)
 	targetSubnetID := d.Get("target_vpc_subnet_id").(string)
@@ -80,42 +84,43 @@ func resourceClientVPNRouteCreate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	log.Printf("[DEBUG] Creating EC2 Client VPN Route: %s", input)
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(propagationTimeout, func() (interface{}, error) {
-		return conn.CreateClientVpnRoute(input)
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (interface{}, error) {
+		return conn.CreateClientVpnRouteWithContext(ctx, input)
 	}, errCodeInvalidClientVPNActiveAssociationNotFound)
 
 	if err != nil {
-		return fmt.Errorf("error creating EC2 Client VPN Route (%s): %w", id, err)
+		return sdkdiag.AppendErrorf(diags, "creating EC2 Client VPN Route (%s): %s", id, err)
 	}
 
 	d.SetId(id)
 
-	if _, err := WaitClientVPNRouteCreated(conn, endpointID, targetSubnetID, destinationCIDR, d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("error waiting for EC2 Client VPN Route (%s) create: %w", d.Id(), err)
+	if _, err := WaitClientVPNRouteCreated(ctx, conn, endpointID, targetSubnetID, destinationCIDR, d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Client VPN Route (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceClientVPNRouteRead(d, meta)
+	return append(diags, resourceClientVPNRouteRead(ctx, d, meta)...)
 }
 
-func resourceClientVPNRouteRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceClientVPNRouteRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	endpointID, targetSubnetID, destinationCIDR, err := ClientVPNRouteParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Client VPN Route (%s): %s", d.Id(), err)
 	}
 
-	route, err := FindClientVPNRouteByThreePartKey(conn, endpointID, targetSubnetID, destinationCIDR)
+	route, err := FindClientVPNRouteByThreePartKey(ctx, conn, endpointID, targetSubnetID, destinationCIDR)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Client VPN Route (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 Client VPN Route (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Client VPN Route (%s): %s", d.Id(), err)
 	}
 
 	d.Set("client_vpn_endpoint_id", route.ClientVpnEndpointId)
@@ -125,38 +130,39 @@ func resourceClientVPNRouteRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("target_vpc_subnet_id", route.TargetSubnet)
 	d.Set("type", route.Type)
 
-	return nil
+	return diags
 }
 
-func resourceClientVPNRouteDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceClientVPNRouteDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	endpointID, targetSubnetID, destinationCIDR, err := ClientVPNRouteParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "deleting EC2 Client VPN Route (%s): %s", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Deleting EC2 Client VPN Route: %s", d.Id())
-	_, err = conn.DeleteClientVpnRoute(&ec2.DeleteClientVpnRouteInput{
+	_, err = conn.DeleteClientVpnRouteWithContext(ctx, &ec2.DeleteClientVpnRouteInput{
 		ClientVpnEndpointId:  aws.String(endpointID),
 		DestinationCidrBlock: aws.String(destinationCIDR),
 		TargetVpcSubnetId:    aws.String(targetSubnetID),
 	})
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidClientVPNEndpointIdNotFound, errCodeInvalidClientVPNRouteNotFound) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting EC2 Client VPN Route (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting EC2 Client VPN Route (%s): %s", d.Id(), err)
 	}
 
-	if _, err := WaitClientVPNRouteDeleted(conn, endpointID, targetSubnetID, destinationCIDR, d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("error waiting for EC2 Client VPN Route (%s) delete: %w", d.Id(), err)
+	if _, err := WaitClientVPNRouteDeleted(ctx, conn, endpointID, targetSubnetID, destinationCIDR, d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting EC2 Client VPN Route (%s): waiting for completion: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 const clientVPNRouteIDSeparator = ","

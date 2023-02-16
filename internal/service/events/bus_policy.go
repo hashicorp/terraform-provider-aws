@@ -1,29 +1,32 @@
 package events
 
 import (
+	"context"
 	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eventbridge"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceBusPolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceBusPolicyCreate,
-		Read:   resourceBusPolicyRead,
-		Update: resourceBusPolicyUpdate,
-		Delete: resourceBusPolicyDelete,
+		CreateWithoutTimeout: resourceBusPolicyCreate,
+		ReadWithoutTimeout:   resourceBusPolicyRead,
+		UpdateWithoutTimeout: resourceBusPolicyUpdate,
+		DeleteWithoutTimeout: resourceBusPolicyDelete,
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				d.Set("event_bus_name", d.Id())
 				return []*schema.ResourceData{d}, nil
 			},
@@ -38,10 +41,11 @@ func ResourceBusPolicy() *schema.Resource {
 				Default:      DefaultEventBusName,
 			},
 			"policy": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				Type:                  schema.TypeString,
+				Required:              true,
+				ValidateFunc:          validation.StringIsJSON,
+				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+				DiffSuppressOnRefresh: true,
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
@@ -51,15 +55,16 @@ func ResourceBusPolicy() *schema.Resource {
 	}
 }
 
-func resourceBusPolicyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EventsConn
+func resourceBusPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EventsConn()
 
 	eventBusName := d.Get("event_bus_name").(string)
 
 	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
 
 	if err != nil {
-		return fmt.Errorf("policy (%s) is invalid JSON: %w", policy, err)
+		return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", policy, err)
 	}
 
 	input := eventbridge.PutPermissionInput{
@@ -68,19 +73,20 @@ func resourceBusPolicyCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Creating EventBridge policy: %s", input)
-	_, err = conn.PutPermission(&input)
+	_, err = conn.PutPermissionWithContext(ctx, &input)
 	if err != nil {
-		return fmt.Errorf("Creating EventBridge policy failed: %w", err)
+		return sdkdiag.AppendErrorf(diags, "Creating EventBridge policy failed: %s", err)
 	}
 
 	d.SetId(eventBusName)
 
-	return resourceBusPolicyRead(d, meta)
+	return append(diags, resourceBusPolicyRead(ctx, d, meta)...)
 }
 
 // See also: https://docs.aws.amazon.com/eventbridge/latest/APIReference/API_DescribeEventBus.html
-func resourceBusPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EventsConn
+func resourceBusPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EventsConn()
 
 	eventBusName := d.Id()
 
@@ -92,9 +98,9 @@ func resourceBusPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	var policy *string
 
 	// Especially with concurrent PutPermission calls there can be a slight delay
-	err = resource.Retry(propagationTimeout, func() *resource.RetryError {
+	err = resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
 		log.Printf("[DEBUG] Reading EventBridge bus: %s", input)
-		output, err = conn.DescribeEventBus(&input)
+		output, err = conn.DescribeEventBusWithContext(ctx, &input)
 		if err != nil {
 			return resource.NonRetryableError(fmt.Errorf("reading EventBridge permission (%s) failed: %w", d.Id(), err))
 		}
@@ -107,7 +113,7 @@ func resourceBusPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if tfresource.TimedOut(err) {
-		output, err = conn.DescribeEventBus(&input)
+		output, err = conn.DescribeEventBusWithContext(ctx, &input)
 		if output != nil {
 			policy, err = getEventBusPolicy(output)
 		}
@@ -116,10 +122,10 @@ func resourceBusPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Policy on EventBridge Bus (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 	if err != nil {
-		return fmt.Errorf("error reading policy from EventBridge Bus (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading policy from EventBridge Bus (%s): %s", d.Id(), err)
 	}
 
 	busName := aws.StringValue(output.Name)
@@ -129,14 +135,13 @@ func resourceBusPolicyRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("event_bus_name", busName)
 
 	policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.StringValue(policy))
-
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading policy from EventBridge Bus (%s): %s", d.Id(), err)
 	}
 
 	d.Set("policy", policyToSet)
 
-	return nil
+	return diags
 }
 
 func getEventBusPolicy(output *eventbridge.DescribeEventBusOutput) (*string, error) {
@@ -150,15 +155,16 @@ func getEventBusPolicy(output *eventbridge.DescribeEventBusOutput) (*string, err
 	return output.Policy, nil
 }
 
-func resourceBusPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EventsConn
+func resourceBusPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EventsConn()
 
 	eventBusName := d.Id()
 
 	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
 
 	if err != nil {
-		return fmt.Errorf("policy (%s) is invalid JSON: %w", policy, err)
+		return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", policy, err)
 	}
 
 	input := eventbridge.PutPermissionInput{
@@ -167,16 +173,17 @@ func resourceBusPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Update EventBridge Bus policy: %s", input)
-	_, err = conn.PutPermission(&input)
+	_, err = conn.PutPermissionWithContext(ctx, &input)
 	if err != nil {
-		return fmt.Errorf("error updating policy for EventBridge Bus (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating policy for EventBridge Bus (%s): %s", d.Id(), err)
 	}
 
-	return resourceBusPolicyRead(d, meta)
+	return append(diags, resourceBusPolicyRead(ctx, d, meta)...)
 }
 
-func resourceBusPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EventsConn
+func resourceBusPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EventsConn()
 
 	eventBusName := d.Id()
 	removeAllPermissions := true
@@ -187,12 +194,12 @@ func resourceBusPolicyDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Delete EventBridge Bus Policy: %s", input)
-	_, err := conn.RemovePermission(&input)
+	_, err := conn.RemovePermissionWithContext(ctx, &input)
 	if tfawserr.ErrCodeEquals(err, eventbridge.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 	if err != nil {
-		return fmt.Errorf("error deleting policy for EventBridge Bus (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting policy for EventBridge Bus (%s): %s", d.Id(), err)
 	}
-	return nil
+	return diags
 }

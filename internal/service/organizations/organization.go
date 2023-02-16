@@ -9,23 +9,25 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 const policyTypeStatusDisabled = "DISABLED"
 
 func ResourceOrganization() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceOrganizationCreate,
-		Read:   resourceOrganizationRead,
-		Update: resourceOrganizationUpdate,
-		Delete: resourceOrganizationDelete,
+		CreateWithoutTimeout: resourceOrganizationCreate,
+		ReadWithoutTimeout:   resourceOrganizationRead,
+		UpdateWithoutTimeout: resourceOrganizationUpdate,
+		DeleteWithoutTimeout: resourceOrganizationDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -167,17 +169,18 @@ func ResourceOrganization() *schema.Resource {
 	}
 }
 
-func resourceOrganizationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OrganizationsConn
+func resourceOrganizationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).OrganizationsConn()
 
 	createOpts := &organizations.CreateOrganizationInput{
 		FeatureSet: aws.String(d.Get("feature_set").(string)),
 	}
 	log.Printf("[DEBUG] Creating Organization: %#v", createOpts)
 
-	resp, err := conn.CreateOrganization(createOpts)
+	resp, err := conn.CreateOrganizationWithContext(ctx, createOpts)
 	if err != nil {
-		return fmt.Errorf("Error creating organization: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating organization: %s", err)
 	}
 
 	org := resp.Organization
@@ -191,20 +194,20 @@ func resourceOrganizationCreate(d *schema.ResourceData, meta interface{}) error 
 		}
 
 		log.Printf("[DEBUG] Enabling AWS Service Access in Organization: %s", input)
-		_, err := conn.EnableAWSServiceAccess(input)
+		_, err := conn.EnableAWSServiceAccessWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error enabling AWS Service Access (%s) in Organization: %s", principal, err)
+			return sdkdiag.AppendErrorf(diags, "enabling AWS Service Access (%s) in Organization: %s", principal, err)
 		}
 	}
 
 	enabledPolicyTypes := d.Get("enabled_policy_types").(*schema.Set).List()
 
 	if len(enabledPolicyTypes) > 0 {
-		defaultRoot, err := getOrganizationDefaultRoot(conn)
+		defaultRoot, err := getOrganizationDefaultRoot(ctx, conn)
 
 		if err != nil {
-			return fmt.Errorf("error getting AWS Organization (%s) default root: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "getting AWS Organization (%s) default root: %s", d.Id(), err)
 		}
 
 		for _, v := range enabledPolicyTypes {
@@ -214,39 +217,40 @@ func resourceOrganizationCreate(d *schema.ResourceData, meta interface{}) error 
 				RootId:     defaultRoot.Id,
 			}
 
-			if _, err := conn.EnablePolicyType(input); err != nil {
-				return fmt.Errorf("error enabling policy type (%s) in Organization (%s): %s", enabledPolicyType, d.Id(), err)
+			if _, err := conn.EnablePolicyTypeWithContext(ctx, input); err != nil {
+				return sdkdiag.AppendErrorf(diags, "enabling policy type (%s) in Organization (%s): %s", enabledPolicyType, d.Id(), err)
 			}
 
-			if err := waitForOrganizationDefaultRootPolicyTypeEnable(conn, enabledPolicyType); err != nil {
-				return fmt.Errorf("error waiting for policy type (%s) enabling in Organization (%s): %s", enabledPolicyType, d.Id(), err)
+			if err := waitForOrganizationDefaultRootPolicyTypeEnable(ctx, conn, enabledPolicyType); err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for policy type (%s) enabling in Organization (%s): %s", enabledPolicyType, d.Id(), err)
 			}
 		}
 	}
 
-	return resourceOrganizationRead(d, meta)
+	return append(diags, resourceOrganizationRead(ctx, d, meta)...)
 }
 
-func resourceOrganizationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OrganizationsConn
+func resourceOrganizationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).OrganizationsConn()
 
 	log.Printf("[INFO] Reading Organization: %s", d.Id())
-	org, err := conn.DescribeOrganization(&organizations.DescribeOrganizationInput{})
+	org, err := conn.DescribeOrganizationWithContext(ctx, &organizations.DescribeOrganizationInput{})
 
 	if tfawserr.ErrCodeEquals(err, organizations.ErrCodeAWSOrganizationsNotInUseException) {
 		log.Printf("[WARN] Organization does not exist, removing from state: %s", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error describing Organization: %s", err)
+		return sdkdiag.AppendErrorf(diags, "describing Organization: %s", err)
 	}
 
 	log.Printf("[INFO] Listing Accounts for Organization: %s", d.Id())
 	var accounts []*organizations.Account
 	var nonMasterAccounts []*organizations.Account
-	err = conn.ListAccountsPages(&organizations.ListAccountsInput{}, func(page *organizations.ListAccountsOutput, lastPage bool) bool {
+	err = conn.ListAccountsPagesWithContext(ctx, &organizations.ListAccountsInput{}, func(page *organizations.ListAccountsOutput, lastPage bool) bool {
 		for _, account := range page.Accounts {
 			if aws.StringValue(account.Id) != aws.StringValue(org.Organization.MasterAccountId) {
 				nonMasterAccounts = append(nonMasterAccounts, account)
@@ -258,21 +262,21 @@ func resourceOrganizationRead(d *schema.ResourceData, meta interface{}) error {
 		return !lastPage
 	})
 	if err != nil {
-		return fmt.Errorf("error listing AWS Organization (%s) accounts: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing AWS Organization (%s) accounts: %s", d.Id(), err)
 	}
 
 	log.Printf("[INFO] Listing Roots for Organization: %s", d.Id())
 	var roots []*organizations.Root
-	err = conn.ListRootsPages(&organizations.ListRootsInput{}, func(page *organizations.ListRootsOutput, lastPage bool) bool {
+	err = conn.ListRootsPagesWithContext(ctx, &organizations.ListRootsInput{}, func(page *organizations.ListRootsOutput, lastPage bool) bool {
 		roots = append(roots, page.Roots...)
 		return !lastPage
 	})
 	if err != nil {
-		return fmt.Errorf("error listing AWS Organization (%s) roots: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing AWS Organization (%s) roots: %s", d.Id(), err)
 	}
 
 	if err := d.Set("accounts", flattenAccounts(accounts)); err != nil {
-		return fmt.Errorf("error setting accounts: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting accounts: %s", err)
 	}
 
 	d.Set("arn", org.Organization.Arn)
@@ -282,18 +286,18 @@ func resourceOrganizationRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("master_account_id", org.Organization.MasterAccountId)
 
 	if err := d.Set("non_master_accounts", flattenAccounts(nonMasterAccounts)); err != nil {
-		return fmt.Errorf("error setting non_master_accounts: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting non_master_accounts: %s", err)
 	}
 
 	if err := d.Set("roots", FlattenRoots(roots)); err != nil {
-		return fmt.Errorf("error setting roots: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting roots: %s", err)
 	}
 
 	awsServiceAccessPrincipals := make([]string, 0)
 
 	// ConstraintViolationException: The request failed because the organization does not have all features enabled. Please enable all features in your organization and then retry.
 	if aws.StringValue(org.Organization.FeatureSet) == organizations.OrganizationFeatureSetAll {
-		err = conn.ListAWSServiceAccessForOrganizationPages(&organizations.ListAWSServiceAccessForOrganizationInput{}, func(page *organizations.ListAWSServiceAccessForOrganizationOutput, lastPage bool) bool {
+		err = conn.ListAWSServiceAccessForOrganizationPagesWithContext(ctx, &organizations.ListAWSServiceAccessForOrganizationInput{}, func(page *organizations.ListAWSServiceAccessForOrganizationOutput, lastPage bool) bool {
 			for _, enabledServicePrincipal := range page.EnabledServicePrincipals {
 				awsServiceAccessPrincipals = append(awsServiceAccessPrincipals, aws.StringValue(enabledServicePrincipal.ServicePrincipal))
 			}
@@ -301,12 +305,12 @@ func resourceOrganizationRead(d *schema.ResourceData, meta interface{}) error {
 		})
 
 		if err != nil {
-			return fmt.Errorf("error listing AWS Service Access for Organization (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "listing AWS Service Access for Organization (%s): %s", d.Id(), err)
 		}
 	}
 
 	if err := d.Set("aws_service_access_principals", awsServiceAccessPrincipals); err != nil {
-		return fmt.Errorf("error setting aws_service_access_principals: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting aws_service_access_principals: %s", err)
 	}
 
 	enabledPolicyTypes := make([]string, 0)
@@ -318,14 +322,15 @@ func resourceOrganizationRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err := d.Set("enabled_policy_types", enabledPolicyTypes); err != nil {
-		return fmt.Errorf("error setting enabled_policy_types: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting enabled_policy_types: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceOrganizationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OrganizationsConn
+func resourceOrganizationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).OrganizationsConn()
 
 	if d.HasChange("aws_service_access_principals") {
 		oldRaw, newRaw := d.GetChange("aws_service_access_principals")
@@ -339,10 +344,10 @@ func resourceOrganizationUpdate(d *schema.ResourceData, meta interface{}) error 
 			}
 
 			log.Printf("[DEBUG] Disabling AWS Service Access in Organization: %s", input)
-			_, err := conn.DisableAWSServiceAccess(input)
+			_, err := conn.DisableAWSServiceAccessWithContext(ctx, input)
 
 			if err != nil {
-				return fmt.Errorf("error disabling AWS Service Access (%s) in Organization: %s", principal, err)
+				return sdkdiag.AppendErrorf(diags, "disabling AWS Service Access (%s) in Organization: %s", principal, err)
 			}
 		}
 
@@ -353,10 +358,10 @@ func resourceOrganizationUpdate(d *schema.ResourceData, meta interface{}) error 
 			}
 
 			log.Printf("[DEBUG] Enabling AWS Service Access in Organization: %s", input)
-			_, err := conn.EnableAWSServiceAccess(input)
+			_, err := conn.EnableAWSServiceAccessWithContext(ctx, input)
 
 			if err != nil {
-				return fmt.Errorf("error enabling AWS Service Access (%s) in Organization: %s", principal, err)
+				return sdkdiag.AppendErrorf(diags, "enabling AWS Service Access (%s) in Organization: %s", principal, err)
 			}
 		}
 	}
@@ -375,12 +380,12 @@ func resourceOrganizationUpdate(d *schema.ResourceData, meta interface{}) error 
 			}
 
 			log.Printf("[DEBUG] Disabling Policy Type in Organization: %s", input)
-			if _, err := conn.DisablePolicyType(input); err != nil {
-				return fmt.Errorf("error disabling policy type (%s) in Organization (%s) Root (%s): %s", policyType, d.Id(), defaultRootID, err)
+			if _, err := conn.DisablePolicyTypeWithContext(ctx, input); err != nil {
+				return sdkdiag.AppendErrorf(diags, "disabling policy type (%s) in Organization (%s) Root (%s): %s", policyType, d.Id(), defaultRootID, err)
 			}
 
-			if err := waitForOrganizationDefaultRootPolicyTypeDisable(conn, policyType); err != nil {
-				return fmt.Errorf("error waiting for policy type (%s) disabling in Organization (%s) Root (%s): %s", policyType, d.Id(), defaultRootID, err)
+			if err := waitForOrganizationDefaultRootPolicyTypeDisable(ctx, conn, policyType); err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for policy type (%s) disabling in Organization (%s) Root (%s): %s", policyType, d.Id(), defaultRootID, err)
 			}
 		}
 
@@ -392,36 +397,37 @@ func resourceOrganizationUpdate(d *schema.ResourceData, meta interface{}) error 
 			}
 
 			log.Printf("[DEBUG] Enabling Policy Type in Organization: %s", input)
-			if _, err := conn.EnablePolicyType(input); err != nil {
-				return fmt.Errorf("error enabling policy type (%s) in Organization (%s) Root (%s): %s", policyType, d.Id(), defaultRootID, err)
+			if _, err := conn.EnablePolicyTypeWithContext(ctx, input); err != nil {
+				return sdkdiag.AppendErrorf(diags, "enabling policy type (%s) in Organization (%s) Root (%s): %s", policyType, d.Id(), defaultRootID, err)
 			}
 
-			if err := waitForOrganizationDefaultRootPolicyTypeEnable(conn, policyType); err != nil {
-				return fmt.Errorf("error waiting for policy type (%s) enabling in Organization (%s) Root (%s): %s", policyType, d.Id(), defaultRootID, err)
+			if err := waitForOrganizationDefaultRootPolicyTypeEnable(ctx, conn, policyType); err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for policy type (%s) enabling in Organization (%s) Root (%s): %s", policyType, d.Id(), defaultRootID, err)
 			}
 		}
 	}
 
 	if d.HasChange("feature_set") {
-		if _, err := conn.EnableAllFeatures(&organizations.EnableAllFeaturesInput{}); err != nil {
-			return fmt.Errorf("error enabling all features in Organization (%s): %w", d.Id(), err)
+		if _, err := conn.EnableAllFeaturesWithContext(ctx, &organizations.EnableAllFeaturesInput{}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "enabling all features in Organization (%s): %s", d.Id(), err)
 		}
 	}
 
-	return resourceOrganizationRead(d, meta)
+	return append(diags, resourceOrganizationRead(ctx, d, meta)...)
 }
 
-func resourceOrganizationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OrganizationsConn
+func resourceOrganizationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).OrganizationsConn()
 
 	log.Printf("[INFO] Deleting Organization: %s", d.Id())
 
-	_, err := conn.DeleteOrganization(&organizations.DeleteOrganizationInput{})
+	_, err := conn.DeleteOrganizationWithContext(ctx, &organizations.DeleteOrganizationInput{})
 	if err != nil {
-		return fmt.Errorf("Error deleting Organization: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting Organization: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
 func flattenAccounts(accounts []*organizations.Account) []map[string]interface{} {
@@ -471,10 +477,10 @@ func flattenRootPolicyTypeSummaries(summaries []*organizations.PolicyTypeSummary
 	return result
 }
 
-func getOrganizationDefaultRoot(conn *organizations.Organizations) (*organizations.Root, error) {
+func getOrganizationDefaultRoot(ctx context.Context, conn *organizations.Organizations) (*organizations.Root, error) {
 	var roots []*organizations.Root
 
-	err := conn.ListRootsPages(&organizations.ListRootsInput{}, func(page *organizations.ListRootsOutput, lastPage bool) bool {
+	err := conn.ListRootsPagesWithContext(ctx, &organizations.ListRootsInput{}, func(page *organizations.ListRootsOutput, lastPage bool) bool {
 		roots = append(roots, page.Roots...)
 
 		return !lastPage
@@ -491,9 +497,9 @@ func getOrganizationDefaultRoot(conn *organizations.Organizations) (*organizatio
 	return roots[0], nil
 }
 
-func getOrganizationDefaultRootPolicyTypeRefreshFunc(conn *organizations.Organizations, policyType string) resource.StateRefreshFunc {
+func getOrganizationDefaultRootPolicyTypeRefreshFunc(ctx context.Context, conn *organizations.Organizations, policyType string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		defaultRoot, err := getOrganizationDefaultRoot(conn)
+		defaultRoot, err := getOrganizationDefaultRoot(ctx, conn)
 
 		if err != nil {
 			return nil, "", fmt.Errorf("error getting default root: %s", err)
@@ -509,34 +515,34 @@ func getOrganizationDefaultRootPolicyTypeRefreshFunc(conn *organizations.Organiz
 	}
 }
 
-func waitForOrganizationDefaultRootPolicyTypeDisable(conn *organizations.Organizations, policyType string) error {
+func waitForOrganizationDefaultRootPolicyTypeDisable(ctx context.Context, conn *organizations.Organizations, policyType string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			organizations.PolicyTypeStatusEnabled,
 			organizations.PolicyTypeStatusPendingDisable,
 		},
 		Target:  []string{policyTypeStatusDisabled},
-		Refresh: getOrganizationDefaultRootPolicyTypeRefreshFunc(conn, policyType),
+		Refresh: getOrganizationDefaultRootPolicyTypeRefreshFunc(ctx, conn, policyType),
 		Timeout: 5 * time.Minute,
 	}
 
-	_, err := stateConf.WaitForState()
+	_, err := stateConf.WaitForStateContext(ctx)
 
 	return err
 }
 
-func waitForOrganizationDefaultRootPolicyTypeEnable(conn *organizations.Organizations, policyType string) error {
+func waitForOrganizationDefaultRootPolicyTypeEnable(ctx context.Context, conn *organizations.Organizations, policyType string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			policyTypeStatusDisabled,
 			organizations.PolicyTypeStatusPendingEnable,
 		},
 		Target:  []string{organizations.PolicyTypeStatusEnabled},
-		Refresh: getOrganizationDefaultRootPolicyTypeRefreshFunc(conn, policyType),
+		Refresh: getOrganizationDefaultRootPolicyTypeRefreshFunc(ctx, conn, policyType),
 		Timeout: 5 * time.Minute,
 	}
 
-	_, err := stateConf.WaitForState()
+	_, err := stateConf.WaitForStateContext(ctx)
 
 	return err
 }

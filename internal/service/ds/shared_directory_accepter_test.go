@@ -17,6 +17,7 @@ import (
 )
 
 func TestAccDSSharedDirectoryAccepter_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_directory_service_shared_directory_accepter.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domainName := acctest.RandomDomainName()
@@ -33,7 +34,7 @@ func TestAccDSSharedDirectoryAccepter_basic(t *testing.T) {
 			{
 				Config: testAccSharedDirectoryAccepterConfig_basic(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSharedDirectoryAccepterExists(resourceName),
+					testAccCheckSharedDirectoryAccepterExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "method", directoryservice.ShareMethodHandshake),
 					resource.TestCheckResourceAttr(resourceName, "notes", "There were hints and allegations"),
 					resource.TestCheckResourceAttrPair(resourceName, "owner_account_id", "data.aws_caller_identity.current", "account_id"),
@@ -51,10 +52,9 @@ func TestAccDSSharedDirectoryAccepter_basic(t *testing.T) {
 			},
 		},
 	})
-
 }
 
-func testAccCheckSharedDirectoryAccepterExists(n string) resource.TestCheckFunc {
+func testAccCheckSharedDirectoryAccepterExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -65,9 +65,9 @@ func testAccCheckSharedDirectoryAccepterExists(n string) resource.TestCheckFunc 
 			return create.Error(names.DS, create.ErrActionCheckingExistence, tfds.ResNameSharedDirectoryAccepter, n, errors.New("no ID is set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DSConn()
 
-		_, err := tfds.FindSharedDirectory(context.Background(), conn, rs.Primary.Attributes["owner_directory_id"], rs.Primary.Attributes["shared_directory_id"])
+		_, err := tfds.FindSharedDirectory(ctx, conn, rs.Primary.Attributes["owner_directory_id"], rs.Primary.Attributes["shared_directory_id"])
 
 		return err
 	}

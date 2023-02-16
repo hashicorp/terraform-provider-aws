@@ -1,6 +1,7 @@
 package serverlessrepo
 
 import (
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -9,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
-func findApplication(conn *serverlessrepo.ServerlessApplicationRepository, applicationID, version string) (*serverlessrepo.GetApplicationOutput, error) {
+func findApplication(ctx context.Context, conn *serverlessrepo.ServerlessApplicationRepository, applicationID, version string) (*serverlessrepo.GetApplicationOutput, error) {
 	input := &serverlessrepo.GetApplicationInput{
 		ApplicationId: aws.String(applicationID),
 	}
@@ -18,7 +19,7 @@ func findApplication(conn *serverlessrepo.ServerlessApplicationRepository, appli
 	}
 
 	log.Printf("[DEBUG] Getting Serverless findApplication Repository Application: %s", input)
-	resp, err := conn.GetApplication(input)
+	resp, err := conn.GetApplicationWithContext(ctx, input)
 	if tfawserr.ErrCodeEquals(err, serverlessrepo.ErrCodeNotFoundException) {
 		return nil, &resource.NotFoundError{
 			LastError:    err,
@@ -39,5 +40,4 @@ func findApplication(conn *serverlessrepo.ServerlessApplicationRepository, appli
 	}
 
 	return resp, nil
-
 }

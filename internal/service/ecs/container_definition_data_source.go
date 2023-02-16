@@ -1,19 +1,22 @@
 package ecs
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecs"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func DataSourceContainerDefinition() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceContainerDefinitionRead,
+		ReadWithoutTimeout: dataSourceContainerDefinitionRead,
 
 		Schema: map[string]*schema.Schema{
 			"task_definition": {
@@ -63,21 +66,22 @@ func DataSourceContainerDefinition() *schema.Resource {
 	}
 }
 
-func dataSourceContainerDefinitionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECSConn
+func dataSourceContainerDefinitionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ECSConn()
 
 	params := &ecs.DescribeTaskDefinitionInput{
 		TaskDefinition: aws.String(d.Get("task_definition").(string)),
 	}
 	log.Printf("[DEBUG] Reading ECS Container Definition: %s", params)
-	desc, err := conn.DescribeTaskDefinition(params)
+	desc, err := conn.DescribeTaskDefinitionWithContext(ctx, params)
 
 	if err != nil {
-		return fmt.Errorf("error reading ECS Task Definition: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading ECS Task Definition: %s", err)
 	}
 
 	if desc == nil || desc.TaskDefinition == nil {
-		return fmt.Errorf("error reading ECS Task Definition: empty response")
+		return sdkdiag.AppendErrorf(diags, "reading ECS Task Definition: empty response")
 	}
 
 	taskDefinition := desc.TaskDefinition
@@ -106,8 +110,8 @@ func dataSourceContainerDefinitionRead(d *schema.ResourceData, meta interface{})
 	}
 
 	if d.Id() == "" {
-		return fmt.Errorf("container with name %q not found in task definition %q", d.Get("container_name").(string), d.Get("task_definition").(string))
+		return sdkdiag.AppendErrorf(diags, "container with name %q not found in task definition %q", d.Get("container_name").(string), d.Get("task_definition").(string))
 	}
 
-	return nil
+	return diags
 }

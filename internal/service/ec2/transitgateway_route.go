@@ -1,6 +1,7 @@
 package ec2
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -8,20 +9,22 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceTransitGatewayRoute() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceTransitGatewayRouteCreate,
-		Read:   resourceTransitGatewayRouteRead,
-		Delete: resourceTransitGatewayRouteDelete,
+		CreateWithoutTimeout: resourceTransitGatewayRouteCreate,
+		ReadWithoutTimeout:   resourceTransitGatewayRouteRead,
+		DeleteWithoutTimeout: resourceTransitGatewayRouteDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -54,8 +57,9 @@ func ResourceTransitGatewayRoute() *schema.Resource {
 	}
 }
 
-func resourceTransitGatewayRouteCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceTransitGatewayRouteCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	destination := d.Get("destination_cidr_block").(string)
 	transitGatewayRouteTableID := d.Get("transit_gateway_route_table_id").(string)
@@ -68,42 +72,43 @@ func resourceTransitGatewayRouteCreate(d *schema.ResourceData, meta interface{})
 	}
 
 	log.Printf("[DEBUG] Creating EC2 Transit Gateway Route: %s", input)
-	_, err := conn.CreateTransitGatewayRoute(input)
+	_, err := conn.CreateTransitGatewayRouteWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("creating EC2 Transit Gateway Route (%s): %w", id, err)
+		return sdkdiag.AppendErrorf(diags, "creating EC2 Transit Gateway Route (%s): %s", id, err)
 	}
 
 	d.SetId(id)
 
-	if _, err := WaitTransitGatewayRouteCreated(conn, transitGatewayRouteTableID, destination); err != nil {
-		return fmt.Errorf("waiting for EC2 Transit Gateway Route (%s) create: %w", d.Id(), err)
+	if _, err := WaitTransitGatewayRouteCreated(ctx, conn, transitGatewayRouteTableID, destination); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Transit Gateway Route (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceTransitGatewayRouteRead(d, meta)
+	return append(diags, resourceTransitGatewayRouteRead(ctx, d, meta)...)
 }
 
-func resourceTransitGatewayRouteRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceTransitGatewayRouteRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	transitGatewayRouteTableID, destination, err := TransitGatewayRouteParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Transit Gateway Route (%s): %s", d.Id(), err)
 	}
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(propagationTimeout, func() (interface{}, error) {
-		return FindTransitGatewayRoute(conn, transitGatewayRouteTableID, destination)
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+		return FindTransitGatewayRoute(ctx, conn, transitGatewayRouteTableID, destination)
 	}, d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Transit Gateway Route %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading EC2 Transit Gateway Route (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Transit Gateway Route (%s): %s", d.Id(), err)
 	}
 
 	transitGatewayRoute := outputRaw.(*ec2.TransitGatewayRoute)
@@ -118,37 +123,38 @@ func resourceTransitGatewayRouteRead(d *schema.ResourceData, meta interface{}) e
 	}
 	d.Set("transit_gateway_route_table_id", transitGatewayRouteTableID)
 
-	return nil
+	return diags
 }
 
-func resourceTransitGatewayRouteDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceTransitGatewayRouteDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	transitGatewayRouteTableID, destination, err := TransitGatewayRouteParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "deleting EC2 Transit Gateway Route (%s): %s", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Deleting EC2 Transit Gateway Route: %s", d.Id())
-	_, err = conn.DeleteTransitGatewayRoute(&ec2.DeleteTransitGatewayRouteInput{
+	_, err = conn.DeleteTransitGatewayRouteWithContext(ctx, &ec2.DeleteTransitGatewayRouteInput{
 		DestinationCidrBlock:       aws.String(destination),
 		TransitGatewayRouteTableId: aws.String(transitGatewayRouteTableID),
 	})
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidRouteNotFound, errCodeInvalidRouteTableIDNotFound) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("deleting EC2 Transit Gateway Route (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting EC2 Transit Gateway Route (%s): %s", d.Id(), err)
 	}
 
-	if _, err := WaitTransitGatewayRouteDeleted(conn, transitGatewayRouteTableID, destination); err != nil {
-		return fmt.Errorf("waiting for EC2 Transit Gateway Route (%s) delete: %w", d.Id(), err)
+	if _, err := WaitTransitGatewayRouteDeleted(ctx, conn, transitGatewayRouteTableID, destination); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Transit Gateway Route (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 const transitGatewayRouteIDSeparator = "_"

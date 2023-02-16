@@ -1,6 +1,7 @@
 package glue
 
 import (
+	"context"
 	"fmt"
 	"log"
 
@@ -8,21 +9,23 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceMLTransform() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceMLTransformCreate,
-		Read:   resourceMLTransformRead,
-		Update: resourceMLTransformUpdate,
-		Delete: resourceMLTransformDelete,
+		CreateWithoutTimeout: resourceMLTransformCreate,
+		ReadWithoutTimeout:   resourceMLTransformRead,
+		UpdateWithoutTimeout: resourceMLTransformUpdate,
+		DeleteWithoutTimeout: resourceMLTransformDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -175,8 +178,9 @@ func ResourceMLTransform() *schema.Resource {
 	}
 }
 
-func resourceMLTransformCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+func resourceMLTransformCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlueConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -214,18 +218,19 @@ func resourceMLTransformCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Creating Glue ML Transform: %s", input)
-	output, err := conn.CreateMLTransform(input)
+	output, err := conn.CreateMLTransformWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("error creating Glue ML Transform: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating Glue ML Transform: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.TransformId))
 
-	return resourceMLTransformRead(d, meta)
+	return append(diags, resourceMLTransformRead(ctx, d, meta)...)
 }
 
-func resourceMLTransformRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+func resourceMLTransformRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlueConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -234,20 +239,20 @@ func resourceMLTransformRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Reading Glue ML Transform: %s", input)
-	output, err := conn.GetMLTransform(input)
+	output, err := conn.GetMLTransformWithContext(ctx, input)
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 			log.Printf("[WARN] Glue ML Transform (%s) not found, removing from state", d.Id())
 			d.SetId("")
-			return nil
+			return diags
 		}
-		return fmt.Errorf("error reading Glue ML Transform (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Glue ML Transform (%s): %s", d.Id(), err)
 	}
 
 	if output == nil {
 		log.Printf("[WARN] Glue ML Transform (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	log.Printf("[DEBUG] setting Glue ML Transform: %#v", output)
@@ -273,43 +278,43 @@ func resourceMLTransformRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("label_count", output.LabelCount)
 
 	if err := d.Set("input_record_tables", flattenMLTransformInputRecordTables(output.InputRecordTables)); err != nil {
-		return fmt.Errorf("error setting input_record_tables: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting input_record_tables: %s", err)
 	}
 
 	if err := d.Set("parameters", flattenMLTransformParameters(output.Parameters)); err != nil {
-		return fmt.Errorf("error setting parameters: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting parameters: %s", err)
 	}
 
 	if err := d.Set("schema", flattenMLTransformSchemaColumns(output.Schema)); err != nil {
-		return fmt.Errorf("error setting schema: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting schema: %s", err)
 	}
 
-	tags, err := ListTags(conn, mlTransformArn)
+	tags, err := ListTags(ctx, conn, mlTransformArn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for Glue ML Transform (%s): %w", mlTransformArn, err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for Glue ML Transform (%s): %s", mlTransformArn, err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceMLTransformUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+func resourceMLTransformUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlueConn()
 
 	if d.HasChanges("description", "glue_version", "max_capacity", "max_retries", "number_of_workers",
 		"role_arn", "timeout", "worker_type", "parameters") {
-
 		input := &glue.UpdateMLTransformInput{
 			TransformId: aws.String(d.Id()),
 			Role:        aws.String(d.Get("role_arn").(string)),
@@ -345,24 +350,25 @@ func resourceMLTransformUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		log.Printf("[DEBUG] Updating Glue ML Transform: %s", input)
-		_, err := conn.UpdateMLTransform(input)
+		_, err := conn.UpdateMLTransformWithContext(ctx, input)
 		if err != nil {
-			return fmt.Errorf("error updating Glue ML Transform (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Glue ML Transform (%s): %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %w", err)
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
 		}
 	}
 
-	return resourceMLTransformRead(d, meta)
+	return append(diags, resourceMLTransformRead(ctx, d, meta)...)
 }
 
-func resourceMLTransformDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+func resourceMLTransformDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlueConn()
 
 	log.Printf("[DEBUG] Deleting Glue ML Trasform: %s", d.Id())
 
@@ -370,22 +376,22 @@ func resourceMLTransformDelete(d *schema.ResourceData, meta interface{}) error {
 		TransformId: aws.String(d.Id()),
 	}
 
-	_, err := conn.DeleteMLTransform(input)
+	_, err := conn.DeleteMLTransformWithContext(ctx, input)
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
-			return nil
+			return diags
 		}
-		return fmt.Errorf("error deleting Glue ML Transform (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Glue ML Transform (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitMLTransformDeleted(conn, d.Id()); err != nil {
+	if _, err := waitMLTransformDeleted(ctx, conn, d.Id()); err != nil {
 		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
-			return nil
+			return diags
 		}
-		return fmt.Errorf("error waiting for Glue ML Transform (%s) to be Deleted: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Glue ML Transform (%s) to be Deleted: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandMLTransformInputRecordTables(l []interface{}) []*glue.Table {

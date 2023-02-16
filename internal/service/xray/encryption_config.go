@@ -1,25 +1,27 @@
 package xray
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/xray"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceEncryptionConfig() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceEncryptionPutConfig,
-		Read:   resourceEncryptionConfigRead,
-		Update: resourceEncryptionPutConfig,
-		Delete: schema.Noop,
+		CreateWithoutTimeout: resourceEncryptionPutConfig,
+		ReadWithoutTimeout:   resourceEncryptionConfigRead,
+		UpdateWithoutTimeout: resourceEncryptionPutConfig,
+		DeleteWithoutTimeout: schema.NoopContext,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -40,8 +42,9 @@ func ResourceEncryptionConfig() *schema.Resource {
 	}
 }
 
-func resourceEncryptionPutConfig(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).XRayConn
+func resourceEncryptionPutConfig(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).XRayConn()
 
 	input := &xray.PutEncryptionConfigInput{
 		Type: aws.String(d.Get("type").(string)),
@@ -51,31 +54,32 @@ func resourceEncryptionPutConfig(d *schema.ResourceData, meta interface{}) error
 		input.KeyId = aws.String(v.(string))
 	}
 
-	_, err := conn.PutEncryptionConfig(input)
+	_, err := conn.PutEncryptionConfigWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("error creating XRay Encryption Config: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating XRay Encryption Config: %s", err)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
 
-	if _, err := waitEncryptionConfigAvailable(conn); err != nil {
-		return fmt.Errorf("error waiting for Xray Encryption Config (%s) to Available: %w", d.Id(), err)
+	if _, err := waitEncryptionConfigAvailable(ctx, conn); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Xray Encryption Config (%s) to Available: %s", d.Id(), err)
 	}
 
-	return resourceEncryptionConfigRead(d, meta)
+	return append(diags, resourceEncryptionConfigRead(ctx, d, meta)...)
 }
 
-func resourceEncryptionConfigRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).XRayConn
+func resourceEncryptionConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).XRayConn()
 
-	config, err := conn.GetEncryptionConfig(&xray.GetEncryptionConfigInput{})
+	config, err := conn.GetEncryptionConfigWithContext(ctx, &xray.GetEncryptionConfigInput{})
 
 	if err != nil {
-		return fmt.Errorf("error reading XRay Encryption Config: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading XRay Encryption Config: %s", err)
 	}
 
 	d.Set("key_id", config.EncryptionConfig.KeyId)
 	d.Set("type", config.EncryptionConfig.Type)
 
-	return nil
+	return diags
 }

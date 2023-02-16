@@ -15,7 +15,7 @@ import (
 
 func DataSourceCostCategory() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceCostCategoryRead,
+		ReadWithoutTimeout: dataSourceCostCategoryRead,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -312,7 +312,7 @@ func schemaCostCategoryRuleExpressionComputed() *schema.Resource {
 }
 
 func dataSourceCostCategoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CEConn
+	conn := meta.(*conns.AWSClient).CEConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	costCategory, err := FindCostCategoryByARN(ctx, conn, d.Get("cost_category_arn").(string))
@@ -334,7 +334,7 @@ func dataSourceCostCategoryRead(ctx context.Context, d *schema.ResourceData, met
 
 	d.SetId(aws.StringValue(costCategory.CostCategoryArn))
 
-	tags, err := ListTagsWithContext(ctx, conn, d.Id())
+	tags, err := ListTags(ctx, conn, d.Id())
 
 	if err != nil {
 		return create.DiagError(names.CE, "listing tags", ResNameCostCategory, d.Id(), err)

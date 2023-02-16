@@ -1,27 +1,29 @@
 package inspector
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/inspector"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourceAssessmentTarget() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAssessmentTargetCreate,
-		Read:   resourceAssessmentTargetRead,
-		Update: resourceAssessmentTargetUpdate,
-		Delete: resourceAssessmentTargetDelete,
+		CreateWithoutTimeout: resourceAssessmentTargetCreate,
+		ReadWithoutTimeout:   resourceAssessmentTargetRead,
+		UpdateWithoutTimeout: resourceAssessmentTargetUpdate,
+		DeleteWithoutTimeout: resourceAssessmentTargetDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -42,8 +44,9 @@ func ResourceAssessmentTarget() *schema.Resource {
 	}
 }
 
-func resourceAssessmentTargetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).InspectorConn
+func resourceAssessmentTargetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).InspectorConn()
 
 	input := &inspector.CreateAssessmentTargetInput{
 		AssessmentTargetName: aws.String(d.Get("name").(string)),
@@ -53,40 +56,42 @@ func resourceAssessmentTargetCreate(d *schema.ResourceData, meta interface{}) er
 		input.ResourceGroupArn = aws.String(v.(string))
 	}
 
-	resp, err := conn.CreateAssessmentTarget(input)
+	resp, err := conn.CreateAssessmentTargetWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("error creating Inspector Assessment Target: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Inspector Assessment Target: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resp.AssessmentTargetArn))
 
-	return resourceAssessmentTargetRead(d, meta)
+	return append(diags, resourceAssessmentTargetRead(ctx, d, meta)...)
 }
 
-func resourceAssessmentTargetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).InspectorConn
+func resourceAssessmentTargetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).InspectorConn()
 
-	assessmentTarget, err := DescribeAssessmentTarget(conn, d.Id())
+	assessmentTarget, err := DescribeAssessmentTarget(ctx, conn, d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error describing Inspector Assessment Target (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "describing Inspector Assessment Target (%s): %s", d.Id(), err)
 	}
 
 	if assessmentTarget == nil {
 		log.Printf("[WARN] Inspector Assessment Target (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	d.Set("arn", assessmentTarget.Arn)
 	d.Set("name", assessmentTarget.Name)
 	d.Set("resource_group_arn", assessmentTarget.ResourceGroupArn)
 
-	return nil
+	return diags
 }
 
-func resourceAssessmentTargetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).InspectorConn
+func resourceAssessmentTargetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).InspectorConn()
 
 	input := inspector.UpdateAssessmentTargetInput{
 		AssessmentTargetArn:  aws.String(d.Id()),
@@ -97,21 +102,22 @@ func resourceAssessmentTargetUpdate(d *schema.ResourceData, meta interface{}) er
 		input.ResourceGroupArn = aws.String(v.(string))
 	}
 
-	_, err := conn.UpdateAssessmentTarget(&input)
+	_, err := conn.UpdateAssessmentTargetWithContext(ctx, &input)
 	if err != nil {
-		return fmt.Errorf("error updating Inspector Assessment Target (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating Inspector Assessment Target (%s): %s", d.Id(), err)
 	}
 
-	return resourceAssessmentTargetRead(d, meta)
+	return append(diags, resourceAssessmentTargetRead(ctx, d, meta)...)
 }
 
-func resourceAssessmentTargetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).InspectorConn
+func resourceAssessmentTargetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).InspectorConn()
 	input := &inspector.DeleteAssessmentTargetInput{
 		AssessmentTargetArn: aws.String(d.Id()),
 	}
-	err := resource.Retry(60*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteAssessmentTarget(input)
+	err := resource.RetryContext(ctx, 60*time.Minute, func() *resource.RetryError {
+		_, err := conn.DeleteAssessmentTargetWithContext(ctx, input)
 
 		if tfawserr.ErrCodeEquals(err, inspector.ErrCodeAssessmentRunInProgressException) {
 			return resource.RetryableError(err)
@@ -124,20 +130,20 @@ func resourceAssessmentTargetDelete(d *schema.ResourceData, meta interface{}) er
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteAssessmentTarget(input)
+		_, err = conn.DeleteAssessmentTargetWithContext(ctx, input)
 	}
 	if err != nil {
-		return fmt.Errorf("Error deleting Inspector Assessment Target: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting Inspector Assessment Target: %s", err)
 	}
-	return nil
+	return diags
 }
 
-func DescribeAssessmentTarget(conn *inspector.Inspector, arn string) (*inspector.AssessmentTarget, error) {
+func DescribeAssessmentTarget(ctx context.Context, conn *inspector.Inspector, arn string) (*inspector.AssessmentTarget, error) {
 	input := &inspector.DescribeAssessmentTargetsInput{
 		AssessmentTargetArns: []*string{aws.String(arn)},
 	}
 
-	output, err := conn.DescribeAssessmentTargets(input)
+	output, err := conn.DescribeAssessmentTargetsWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, inspector.ErrCodeInvalidInputException) {
 		return nil, nil

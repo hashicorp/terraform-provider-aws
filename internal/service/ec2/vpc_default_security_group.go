@@ -1,10 +1,11 @@
 package ec2
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -14,13 +15,13 @@ import (
 func ResourceDefaultSecurityGroup() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
-		Create: resourceDefaultSecurityGroupCreate,
-		Read:   resourceSecurityGroupRead,
-		Update: resourceSecurityGroupUpdate,
-		Delete: schema.Noop,
+		CreateWithoutTimeout: resourceDefaultSecurityGroupCreate,
+		ReadWithoutTimeout:   resourceSecurityGroupRead,
+		UpdateWithoutTimeout: resourceSecurityGroupUpdate,
+		DeleteWithoutTimeout: schema.NoopContext,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		SchemaVersion: 1, // Keep in sync with aws_security_group's schema version.
@@ -73,8 +74,8 @@ func ResourceDefaultSecurityGroup() *schema.Resource {
 	}
 }
 
-func resourceDefaultSecurityGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceDefaultSecurityGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -100,10 +101,10 @@ func resourceDefaultSecurityGroupCreate(d *schema.ResourceData, meta interface{}
 		)...)
 	}
 
-	sg, err := FindSecurityGroup(conn, input)
+	sg, err := FindSecurityGroup(ctx, conn, input)
 
 	if err != nil {
-		return fmt.Errorf("reading Default Security Group: %w", err)
+		return diag.Errorf("reading Default Security Group: %s", err)
 	}
 
 	d.SetId(aws.StringValue(sg.GroupId))
@@ -112,14 +113,14 @@ func resourceDefaultSecurityGroupCreate(d *schema.ResourceData, meta interface{}
 	nTagsAll := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	if !nTagsAll.Equal(oTagsAll) {
-		if err := UpdateTags(conn, d.Id(), oTagsAll.Map(), nTagsAll.Map()); err != nil {
-			return fmt.Errorf("updating Default Security Group (%s) tags: %w", d.Id(), err)
+		if err := UpdateTags(ctx, conn, d.Id(), oTagsAll.Map(), nTagsAll.Map()); err != nil {
+			return diag.Errorf("updating Default Security Group (%s) tags: %s", d.Id(), err)
 		}
 	}
 
-	if err := forceRevokeSecurityGroupRules(conn, d.Id(), false); err != nil {
-		return err
+	if err := forceRevokeSecurityGroupRules(ctx, conn, d.Id(), false); err != nil {
+		return diag.FromErr(err)
 	}
 
-	return resourceSecurityGroupUpdate(d, meta)
+	return resourceSecurityGroupUpdate(ctx, d, meta)
 }

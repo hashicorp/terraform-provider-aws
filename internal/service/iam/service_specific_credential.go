@@ -1,6 +1,7 @@
 package iam
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -8,20 +9,22 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourceServiceSpecificCredential() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceServiceSpecificCredentialCreate,
-		Read:   resourceServiceSpecificCredentialRead,
-		Update: resourceServiceSpecificCredentialUpdate,
-		Delete: resourceServiceSpecificCredentialDelete,
+		CreateWithoutTimeout: resourceServiceSpecificCredentialCreate,
+		ReadWithoutTimeout:   resourceServiceSpecificCredentialRead,
+		UpdateWithoutTimeout: resourceServiceSpecificCredentialUpdate,
+		DeleteWithoutTimeout: resourceServiceSpecificCredentialDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -59,17 +62,18 @@ func ResourceServiceSpecificCredential() *schema.Resource {
 	}
 }
 
-func resourceServiceSpecificCredentialCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+func resourceServiceSpecificCredentialCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	input := &iam.CreateServiceSpecificCredentialInput{
 		ServiceName: aws.String(d.Get("service_name").(string)),
 		UserName:    aws.String(d.Get("user_name").(string)),
 	}
 
-	out, err := conn.CreateServiceSpecificCredential(input)
+	out, err := conn.CreateServiceSpecificCredentialWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("error creating IAM Service Specific Credential: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating IAM Service Specific Credential: %s", err)
 	}
 
 	cred := out.ServiceSpecificCredential
@@ -84,35 +88,36 @@ func resourceServiceSpecificCredentialCreate(d *schema.ResourceData, meta interf
 			Status:                      aws.String(v.(string)),
 		}
 
-		_, err := conn.UpdateServiceSpecificCredential(updateInput)
+		_, err := conn.UpdateServiceSpecificCredentialWithContext(ctx, updateInput)
 		if err != nil {
-			return fmt.Errorf("error settings IAM Service Specific Credential status: %w", err)
+			return sdkdiag.AppendErrorf(diags, "settings IAM Service Specific Credential status: %s", err)
 		}
 	}
 
-	return resourceServiceSpecificCredentialRead(d, meta)
+	return append(diags, resourceServiceSpecificCredentialRead(ctx, d, meta)...)
 }
 
-func resourceServiceSpecificCredentialRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+func resourceServiceSpecificCredentialRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	serviceName, userName, credID, err := DecodeServiceSpecificCredentialId(d.Id())
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading IAM Service Specific Credential (%s): %s", d.Id(), err)
 	}
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(propagationTimeout, func() (interface{}, error) {
-		return FindServiceSpecificCredential(conn, serviceName, userName, credID)
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+		return FindServiceSpecificCredential(ctx, conn, serviceName, userName, credID)
 	}, d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] IAM Service Specific Credential (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading IAM Service Specific Credential (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading IAM Service Specific Credential (%s): %s", d.Id(), err)
 	}
 
 	cred := outputRaw.(*iam.ServiceSpecificCredentialMetadata)
@@ -123,40 +128,42 @@ func resourceServiceSpecificCredentialRead(d *schema.ResourceData, meta interfac
 	d.Set("user_name", cred.UserName)
 	d.Set("status", cred.Status)
 
-	return nil
+	return diags
 }
 
-func resourceServiceSpecificCredentialUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+func resourceServiceSpecificCredentialUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	request := &iam.UpdateServiceSpecificCredentialInput{
 		ServiceSpecificCredentialId: aws.String(d.Get("service_specific_credential_id").(string)),
 		UserName:                    aws.String(d.Get("user_name").(string)),
 		Status:                      aws.String(d.Get("status").(string)),
 	}
-	_, err := conn.UpdateServiceSpecificCredential(request)
+	_, err := conn.UpdateServiceSpecificCredentialWithContext(ctx, request)
 	if err != nil {
-		return fmt.Errorf("Error updating IAM Service Specific Credential %s: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating IAM Service Specific Credential %s: %s", d.Id(), err)
 	}
 
-	return resourceServiceSpecificCredentialRead(d, meta)
+	return append(diags, resourceServiceSpecificCredentialRead(ctx, d, meta)...)
 }
 
-func resourceServiceSpecificCredentialDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+func resourceServiceSpecificCredentialDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IAMConn()
 
 	request := &iam.DeleteServiceSpecificCredentialInput{
 		ServiceSpecificCredentialId: aws.String(d.Get("service_specific_credential_id").(string)),
 		UserName:                    aws.String(d.Get("user_name").(string)),
 	}
 
-	if _, err := conn.DeleteServiceSpecificCredential(request); err != nil {
+	if _, err := conn.DeleteServiceSpecificCredentialWithContext(ctx, request); err != nil {
 		if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-			return nil
+			return diags
 		}
-		return fmt.Errorf("Error deleting IAM Service Specific Credential %s: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting IAM Service Specific Credential %s: %s", d.Id(), err)
 	}
-	return nil
+	return diags
 }
 
 func DecodeServiceSpecificCredentialId(id string) (string, string, string, error) {

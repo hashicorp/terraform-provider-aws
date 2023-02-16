@@ -14,11 +14,7 @@ import (
 // ListTags lists wafv2 service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn wafv2iface.WAFV2API, identifier string) (tftags.KeyValueTags, error) {
-	return ListTagsWithContext(context.Background(), conn, identifier)
-}
-
-func ListTagsWithContext(ctx context.Context, conn wafv2iface.WAFV2API, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(ctx context.Context, conn wafv2iface.WAFV2API, identifier string) (tftags.KeyValueTags, error) {
 	input := &wafv2.ListTagsForResourceInput{
 		ResourceARN: aws.String(identifier),
 	}
@@ -64,10 +60,7 @@ func KeyValueTags(tags []*wafv2.Tag) tftags.KeyValueTags {
 // UpdateTags updates wafv2 service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn wafv2iface.WAFV2API, identifier string, oldTags interface{}, newTags interface{}) error {
-	return UpdateTagsWithContext(context.Background(), conn, identifier, oldTags, newTags)
-}
-func UpdateTagsWithContext(ctx context.Context, conn wafv2iface.WAFV2API, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(ctx context.Context, conn wafv2iface.WAFV2API, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 

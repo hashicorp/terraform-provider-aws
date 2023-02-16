@@ -1,6 +1,7 @@
 package opsworks_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/opsworks"
@@ -11,6 +12,7 @@ import (
 )
 
 func TestAccOpsWorksMemcachedLayer_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v opsworks.Layer
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opsworks_memcached_layer.test"
@@ -19,12 +21,12 @@ func TestAccOpsWorksMemcachedLayer_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMemcachedLayerDestroy,
+		CheckDestroy:             testAccCheckMemcachedLayerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMemcachedLayerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLayerExists(resourceName, &v),
+					testAccCheckLayerExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "allocated_memory", "512"),
 					resource.TestCheckResourceAttr(resourceName, "name", "Memcached"),
 				),
@@ -35,8 +37,10 @@ func TestAccOpsWorksMemcachedLayer_basic(t *testing.T) {
 
 // _disappears and _tags for OpsWorks Layers are tested via aws_opsworks_rails_app_layer.
 
-func testAccCheckMemcachedLayerDestroy(s *terraform.State) error {
-	return testAccCheckLayerDestroy("aws_opsworks_memcached_layer", s)
+func testAccCheckMemcachedLayerDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		return testAccCheckLayerDestroy(ctx, "aws_opsworks_memcached_layer", s)
+	}
 }
 
 func testAccMemcachedLayerConfig_basic(rName string) string {

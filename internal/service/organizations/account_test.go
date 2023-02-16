@@ -1,6 +1,7 @@
 package organizations_test
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"testing"
@@ -29,6 +30,7 @@ func testAccAccountImportStep(n string) resource.TestStep {
 }
 
 func testAccAccount_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	key := "TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN"
 	orgsEmailDomain := os.Getenv(key)
 	if orgsEmailDomain == "" {
@@ -42,15 +44,15 @@ func testAccAccount_basic(t *testing.T) {
 	email := fmt.Sprintf("tf-acctest+%d@%s", rInt, orgsEmailDomain)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsEnabled(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsEnabled(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccountDestroy,
+		CheckDestroy:             testAccCheckAccountDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccountConfig_basic(name, email),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAccountExists(resourceName, &v),
+					testAccCheckAccountExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "email", email),
 					resource.TestCheckResourceAttrSet(resourceName, "joined_method"),
@@ -67,6 +69,7 @@ func testAccAccount_basic(t *testing.T) {
 }
 
 func testAccAccount_CloseOnDeletion(t *testing.T) {
+	ctx := acctest.Context(t)
 	key := "TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN"
 	orgsEmailDomain := os.Getenv(key)
 	if orgsEmailDomain == "" {
@@ -80,15 +83,15 @@ func testAccAccount_CloseOnDeletion(t *testing.T) {
 	email := fmt.Sprintf("tf-acctest+%d@%s", rInt, orgsEmailDomain)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsEnabled(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsEnabled(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccountDestroy,
+		CheckDestroy:             testAccCheckAccountDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccountConfig_closeOnDeletion(name, email),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAccountExists(resourceName, &v),
+					testAccCheckAccountExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "email", email),
 					resource.TestCheckResourceAttr(resourceName, "govcloud_id", ""),
@@ -106,6 +109,7 @@ func testAccAccount_CloseOnDeletion(t *testing.T) {
 }
 
 func testAccAccount_ParentID(t *testing.T) {
+	ctx := acctest.Context(t)
 	key := "TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN"
 	orgsEmailDomain := os.Getenv(key)
 	if orgsEmailDomain == "" {
@@ -121,15 +125,15 @@ func testAccAccount_ParentID(t *testing.T) {
 	parentIdResourceName2 := "aws_organizations_organizational_unit.test2"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccountDestroy,
+		CheckDestroy:             testAccCheckAccountDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccountConfig_parentId1(name, email),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccountExists(resourceName, &v),
+					testAccCheckAccountExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "parent_id", parentIdResourceName1, "id"),
 				),
 			},
@@ -137,7 +141,7 @@ func testAccAccount_ParentID(t *testing.T) {
 			{
 				Config: testAccAccountConfig_parentId2(name, email),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccountExists(resourceName, &v),
+					testAccCheckAccountExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "parent_id", parentIdResourceName2, "id"),
 				),
 			},
@@ -146,6 +150,7 @@ func testAccAccount_ParentID(t *testing.T) {
 }
 
 func testAccAccount_Tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	key := "TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN"
 	orgsEmailDomain := os.Getenv(key)
 	if orgsEmailDomain == "" {
@@ -159,15 +164,15 @@ func testAccAccount_Tags(t *testing.T) {
 	resourceName := "aws_organizations_account.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccountDestroy,
+		CheckDestroy:             testAccCheckAccountDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccountConfig_tags1(name, email, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccountExists(resourceName, &v),
+					testAccCheckAccountExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -176,7 +181,7 @@ func testAccAccount_Tags(t *testing.T) {
 			{
 				Config: testAccAccountConfig_tags2(name, email, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccountExists(resourceName, &v),
+					testAccCheckAccountExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -185,7 +190,7 @@ func testAccAccount_Tags(t *testing.T) {
 			{
 				Config: testAccAccountConfig_tags1(name, email, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccountExists(resourceName, &v),
+					testAccCheckAccountExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -195,6 +200,7 @@ func testAccAccount_Tags(t *testing.T) {
 }
 
 func testAccAccount_govCloud(t *testing.T) {
+	ctx := acctest.Context(t)
 	key := "TEST_AWS_ORGANIZATION_ACCOUNT_EMAIL_DOMAIN"
 	orgsEmailDomain := os.Getenv(key)
 	if orgsEmailDomain == "" {
@@ -208,15 +214,15 @@ func testAccAccount_govCloud(t *testing.T) {
 	email := fmt.Sprintf("tf-acctest+%d@%s", rInt, orgsEmailDomain)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsEnabled(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsEnabled(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccountDestroy,
+		CheckDestroy:             testAccCheckAccountDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccountConfig_govCloud(name, email),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAccountExists(resourceName, &v),
+					testAccCheckAccountExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "govcloud_id"),
 				),
 			},
@@ -225,32 +231,33 @@ func testAccAccount_govCloud(t *testing.T) {
 	})
 }
 
-func testAccCheckAccountDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn
+func testAccCheckAccountDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_organizations_account" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_organizations_account" {
+				continue
+			}
+
+			_, err := tforganizations.FindAccountByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("AWS Organizations Account %s still exists", rs.Primary.ID)
 		}
 
-		_, err := tforganizations.FindAccountByID(conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("AWS Organizations Account %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
-
 }
 
-func testAccCheckAccountExists(n string, v *organizations.Account) resource.TestCheckFunc {
+func testAccCheckAccountExists(ctx context.Context, n string, v *organizations.Account) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -261,9 +268,9 @@ func testAccCheckAccountExists(n string, v *organizations.Account) resource.Test
 			return fmt.Errorf("No AWS Organizations Account ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn()
 
-		output, err := tforganizations.FindAccountByID(conn, rs.Primary.ID)
+		output, err := tforganizations.FindAccountByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

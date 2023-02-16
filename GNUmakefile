@@ -2,18 +2,30 @@ SWEEP               ?= us-west-2,us-east-1,us-east-2
 TEST                ?= ./...
 SWEEP_DIR           ?= ./internal/sweep
 PKG_NAME            ?= internal
+SVC_DIR             ?= ./internal/service
 TEST_COUNT          ?= 1
 ACCTEST_TIMEOUT     ?= 180m
 ACCTEST_PARALLELISM ?= 20
+P                   ?= 20
 GO_VER              ?= go
+SWEEP_TIMEOUT       ?= 60m
 
 ifneq ($(origin PKG), undefined)
 	PKG_NAME = internal/service/$(PKG)
 	TEST = ./$(PKG_NAME)/...
 endif
 
+ifneq ($(origin K), undefined)
+	PKG_NAME = internal/service/$(K)
+	TEST = ./$(PKG_NAME)/...
+endif
+
 ifneq ($(origin TESTS), undefined)
 	RUNARGS = -run='$(TESTS)'
+endif
+
+ifneq ($(origin T), undefined)
+	RUNARGS = -run='$(T)'
 endif
 
 ifneq ($(origin SWEEPERS), undefined)
@@ -55,6 +67,10 @@ ifeq ($(PKG_NAME), internal/service/wavelength)
 	TEST = ./$(PKG_NAME)/...
 endif
 
+ifneq ($(P), 20)
+	ACCTEST_PARALLELISM = $(P)
+endif
+
 default: build
 
 build: fmtcheck
@@ -65,6 +81,7 @@ gen:
 	rm -f .github/labeler-pr-triage.yml
 	rm -f infrastructure/repository/labels-service.tf
 	rm -f internal/conns/*_gen.go
+	rm -f internal/provider/*_gen.go
 	rm -f internal/service/**/*_gen.go
 	rm -f internal/sweep/sweep_test.go
 	rm -f names/caps.md
@@ -80,7 +97,7 @@ sweep:
 	# make sweep SWEEPARGS=-sweep-run=aws_example_thing
 	# set SWEEPARGS=-sweep-allow-failures to continue after first failure
 	@echo "WARNING: This will destroy infrastructure. Use only in development accounts."
-	$(GO_VER) test $(SWEEP_DIR) -v -tags=sweep -sweep=$(SWEEP) $(SWEEPARGS) -timeout 60m
+	$(GO_VER) test $(SWEEP_DIR) -v -tags=sweep -sweep=$(SWEEP) $(SWEEPARGS) -timeout $(SWEEP_TIMEOUT)
 
 test: fmtcheck
 	$(GO_VER) test $(TEST) $(TESTARGS) -timeout=5m
@@ -98,9 +115,28 @@ testacc: fmtcheck
 	fi
 	TF_ACC=1 $(GO_VER) test ./$(PKG_NAME)/... -v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT)
 
+t: fmtcheck
+	TF_ACC=1 $(GO_VER) test ./$(PKG_NAME)/... -v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT)
+
+testacc-lint:
+	@echo "Checking acceptance tests with terrafmt"
+	find $(SVC_DIR) -type f -name '*_test.go' \
+    | sort -u \
+    | xargs -I {} terrafmt diff --check --fmtcompat {}
+
+testacc-lint-fix:
+	@echo "Fixing acceptance tests with terrafmt"
+	find $(SVC_DIR) -type f -name '*_test.go' \
+	| sort -u \
+	| xargs -I {} terrafmt fmt  --fmtcompat {}
+
 fmt:
 	@echo "==> Fixing source code with gofmt..."
 	gofmt -s -w ./$(PKG_NAME) ./names $(filter-out ./.ci/providerlint/go% ./.ci/providerlint/README.md ./.ci/providerlint/vendor, $(wildcard ./.ci/providerlint/*))
+
+fumpt:
+	@echo "==> Fixing source code with gofumpt..."
+	gofumpt -w ./$(PKG_NAME) ./names $(filter-out ./.ci/providerlint/go% ./.ci/providerlint/README.md ./.ci/providerlint/vendor, $(wildcard ./.ci/providerlint/*))
 
 # Currently required by tf-deploy compile
 fmtcheck:
@@ -142,7 +178,7 @@ docscheck:
 	@tfproviderdocs check \
 		-allowed-resource-subcategories-file website/allowed-subcategories.txt \
 		-enable-contents-check \
-		-ignore-file-missing-data-sources aws_alb,aws_alb_listener,aws_alb_target_group \
+		-ignore-file-missing-data-sources aws_alb,aws_alb_listener,aws_alb_target_group,aws_albs \
 		-ignore-file-missing-resources aws_alb,aws_alb_listener,aws_alb_listener_certificate,aws_alb_listener_rule,aws_alb_target_group,aws_alb_target_group_attachment \
 		-provider-name=aws \
 		-require-resource-subcategory
@@ -156,8 +192,10 @@ gh-workflows-lint:
 
 golangci-lint:
 	@echo "==> Checking source code with golangci-lint..."
-	@golangci-lint -c .ci/.golangci.yml run ./$(PKG_NAME)/...
-	@golangci-lint -c .ci/.golangci2.yml run ./$(PKG_NAME)/...
+	@golangci-lint run \
+		--config .ci/.golangci.yml \
+		--config .ci/.golangci2.yml \
+		./$(PKG_NAME)/...
 
 providerlint:
 	@echo "==> Checking source code with providerlint..."
@@ -184,11 +222,11 @@ providerlint:
 		-XR005=false \
 		-XS001=false \
 		-XS002=false \
-		./$(PKG_NAME)/service/... ./$(PKG_NAME)/provider/...
+		./internal/service/... ./internal/provider/...
 
 importlint:
 	@echo "==> Checking source code with importlint..."
-	@impi --local . --scheme stdThirdPartyLocal ./$(PKG_NAME)/...
+	@impi --local . --scheme stdThirdPartyLocal ./internal/...
 
 tools:
 	cd .ci/providerlint && $(GO_VER) install .
@@ -200,6 +238,7 @@ tools:
 	cd .ci/tools && $(GO_VER) install github.com/pavius/impi/cmd/impi
 	cd .ci/tools && $(GO_VER) install github.com/hashicorp/go-changelog/cmd/changelog-build
 	cd .ci/tools && $(GO_VER) install github.com/rhysd/actionlint/cmd/actionlint
+	cd .ci/tools && $(GO_VER) install mvdan.cc/gofumpt
 
 test-compile:
 	@if [ "$(TEST)" = "./..." ]; then \
@@ -239,11 +278,12 @@ website-lint-fix:
 
 semgrep:
 	@echo "==> Running Semgrep static analysis..."
-	@docker run --rm --volume "${PWD}:/src" returntocorp/semgrep --config .ci/.semgrep.yml
+	@docker run --rm --volume "${PWD}:/src" returntocorp/semgrep semgrep --config .ci/.semgrep.yml
 
 semall:
 	@echo "==> Running Semgrep checks locally (must have semgrep installed)..."
 	@semgrep --error --metrics=off \
+		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
 		--config .ci/.semgrep.yml \
 		--config .ci/.semgrep-caps-aws-ec2.yml \
 		--config .ci/.semgrep-configs.yml \
@@ -251,11 +291,14 @@ semall:
 		--config .ci/.semgrep-service-name1.yml \
 		--config .ci/.semgrep-service-name2.yml \
 		--config .ci/.semgrep-service-name3.yml \
+		--config .ci/semgrep/acctest/ \
+		--config .ci/semgrep/aws/ \
+		--config .ci/semgrep/migrate/ \
 		--config 'r/dgryski.semgrep-go.badnilguard' \
 		--config 'r/dgryski.semgrep-go.errnilcheck' \
-    	--config 'r/dgryski.semgrep-go.marshaljson' \
+		--config 'r/dgryski.semgrep-go.marshaljson' \
 		--config 'r/dgryski.semgrep-go.nilerr' \
-        --config 'r/dgryski.semgrep-go.oddifsequence' \
+		--config 'r/dgryski.semgrep-go.oddifsequence' \
 		--config 'r/dgryski.semgrep-go.oserrors'
 
 skaff:
@@ -267,4 +310,37 @@ tfsdk2fw:
 yamllint:
 	@yamllint .
 
-.PHONY: providerlint build gen generate-changelog gh-workflows-lint golangci-lint sweep test testacc fmt fmtcheck lint tools test-compile website-link-check website-lint website-lint-fix depscheck docscheck semgrep skaff tfsdk2fw
+.PHONY: \
+	build \
+	gen \
+	sweep \
+	t \
+	test \
+	testacc \
+	testacc-lint \
+	testacc-lint-fix \
+	fmt \
+	fumpt \
+	fmtcheck \
+	gencheck \
+	generate-changelog \
+	depscheck \
+	docs-lint \
+	docs-lint-fix \
+	docscheck \
+	lint \
+	gh-workflows-lint \
+	golangci-lint \
+	providerlint \
+	importlint \
+	tools \
+	test-compile \
+	website-link-check \
+	website-link-check-ghrc \
+	website-lint \
+	website-lint-fix \
+	semgrep \
+	semall \
+	skaff \
+	tfsdk2fw \
+	yamllint

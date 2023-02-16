@@ -14,11 +14,7 @@ import (
 // ListTags lists qldb service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn qldbiface.QLDBAPI, identifier string) (tftags.KeyValueTags, error) {
-	return ListTagsWithContext(context.Background(), conn, identifier)
-}
-
-func ListTagsWithContext(ctx context.Context, conn qldbiface.QLDBAPI, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(ctx context.Context, conn qldbiface.QLDBAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &qldb.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
@@ -47,10 +43,7 @@ func KeyValueTags(tags map[string]*string) tftags.KeyValueTags {
 // UpdateTags updates qldb service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn qldbiface.QLDBAPI, identifier string, oldTags interface{}, newTags interface{}) error {
-	return UpdateTagsWithContext(context.Background(), conn, identifier, oldTags, newTags)
-}
-func UpdateTagsWithContext(ctx context.Context, conn qldbiface.QLDBAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(ctx context.Context, conn qldbiface.QLDBAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 

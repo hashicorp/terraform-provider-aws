@@ -1,26 +1,28 @@
 package cloudfront
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourceOriginRequestPolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceOriginRequestPolicyCreate,
-		Read:   resourceOriginRequestPolicyRead,
-		Update: resourceOriginRequestPolicyUpdate,
-		Delete: resourceOriginRequestPolicyDelete,
+		CreateWithoutTimeout: resourceOriginRequestPolicyCreate,
+		ReadWithoutTimeout:   resourceOriginRequestPolicyRead,
+		UpdateWithoutTimeout: resourceOriginRequestPolicyUpdate,
+		DeleteWithoutTimeout: resourceOriginRequestPolicyDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -124,8 +126,9 @@ func ResourceOriginRequestPolicy() *schema.Resource {
 	}
 }
 
-func resourceOriginRequestPolicyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+func resourceOriginRequestPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 
 	name := d.Get("name").(string)
 	apiObject := &cloudfront.OriginRequestPolicyConfig{
@@ -153,37 +156,38 @@ func resourceOriginRequestPolicyCreate(d *schema.ResourceData, meta interface{})
 	}
 
 	log.Printf("[DEBUG] Creating CloudFront Origin Request Policy: (%s)", input)
-	output, err := conn.CreateOriginRequestPolicy(input)
+	output, err := conn.CreateOriginRequestPolicyWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating CloudFront Origin Request Policy (%s): %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating CloudFront Origin Request Policy (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.OriginRequestPolicy.Id))
 
-	return resourceOriginRequestPolicyRead(d, meta)
+	return append(diags, resourceOriginRequestPolicyRead(ctx, d, meta)...)
 }
 
-func resourceOriginRequestPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+func resourceOriginRequestPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 
-	output, err := FindOriginRequestPolicyByID(conn, d.Id())
+	output, err := FindOriginRequestPolicyByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudFront Origin Request Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading CloudFront Origin Request Policy (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading CloudFront Origin Request Policy (%s): %s", d.Id(), err)
 	}
 
 	apiObject := output.OriginRequestPolicy.OriginRequestPolicyConfig
 	d.Set("comment", apiObject.Comment)
 	if apiObject.CookiesConfig != nil {
 		if err := d.Set("cookies_config", []interface{}{flattenOriginRequestPolicyCookiesConfig(apiObject.CookiesConfig)}); err != nil {
-			return fmt.Errorf("error setting cookies_config: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting cookies_config: %s", err)
 		}
 	} else {
 		d.Set("cookies_config", nil)
@@ -191,7 +195,7 @@ func resourceOriginRequestPolicyRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("etag", output.ETag)
 	if apiObject.HeadersConfig != nil {
 		if err := d.Set("headers_config", []interface{}{flattenOriginRequestPolicyHeadersConfig(apiObject.HeadersConfig)}); err != nil {
-			return fmt.Errorf("error setting headers_config: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting headers_config: %s", err)
 		}
 	} else {
 		d.Set("headers_config", nil)
@@ -199,17 +203,18 @@ func resourceOriginRequestPolicyRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("name", apiObject.Name)
 	if apiObject.QueryStringsConfig != nil {
 		if err := d.Set("query_strings_config", []interface{}{flattenOriginRequestPolicyQueryStringsConfig(apiObject.QueryStringsConfig)}); err != nil {
-			return fmt.Errorf("error setting query_strings_config: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting query_strings_config: %s", err)
 		}
 	} else {
 		d.Set("query_strings_config", nil)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceOriginRequestPolicyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+func resourceOriginRequestPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 
 	//
 	// https://docs.aws.amazon.com/cloudfront/latest/APIReference/API_UpdateOriginRequestPolicy.html:
@@ -242,33 +247,34 @@ func resourceOriginRequestPolicyUpdate(d *schema.ResourceData, meta interface{})
 	}
 
 	log.Printf("[DEBUG] Updating CloudFront Origin Request Policy: (%s)", input)
-	_, err := conn.UpdateOriginRequestPolicy(input)
+	_, err := conn.UpdateOriginRequestPolicyWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error updating CloudFront Origin Request Policy (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating CloudFront Origin Request Policy (%s): %s", d.Id(), err)
 	}
 
-	return resourceOriginRequestPolicyRead(d, meta)
+	return append(diags, resourceOriginRequestPolicyRead(ctx, d, meta)...)
 }
 
-func resourceOriginRequestPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+func resourceOriginRequestPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CloudFrontConn()
 
 	log.Printf("[DEBUG] Deleting CloudFront Origin Request Policy: (%s)", d.Id())
-	_, err := conn.DeleteOriginRequestPolicy(&cloudfront.DeleteOriginRequestPolicyInput{
+	_, err := conn.DeleteOriginRequestPolicyWithContext(ctx, &cloudfront.DeleteOriginRequestPolicyInput{
 		Id:      aws.String(d.Id()),
 		IfMatch: aws.String(d.Get("etag").(string)),
 	})
 
 	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchOriginRequestPolicy) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting CloudFront Origin Request Policy (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting CloudFront Origin Request Policy (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandOriginRequestPolicyCookiesConfig(tfMap map[string]interface{}) *cloudfront.OriginRequestPolicyCookiesConfig {

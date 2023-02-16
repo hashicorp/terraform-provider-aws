@@ -1,12 +1,11 @@
 package organizations_test
 
 import (
+	"context"
 	"fmt"
-	"log"
 	"strconv"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -15,9 +14,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tforganizations "github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func testAccPolicyAttachment_Account(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_organizations_policy_attachment.test"
 	policyIdResourceName := "aws_organizations_policy.test"
@@ -27,15 +28,15 @@ func testAccPolicyAttachment_Account(t *testing.T) {
 	tagPolicyContent := `{ "tags": { "Product": { "tag_key": { "@@assign": "Product" }, "enforced_for": { "@@assign": [ "ec2:instance" ] } } } }`
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPolicyAttachmentDestroy,
+		CheckDestroy:             testAccCheckPolicyAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyAttachmentConfig_account(rName, organizations.PolicyTypeServiceControlPolicy, serviceControlPolicyContent),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyAttachmentExists(resourceName),
+					testAccCheckPolicyAttachmentExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "policy_id", policyIdResourceName, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "target_id", targetIdResourceName, "master_account_id"),
 				),
@@ -43,7 +44,7 @@ func testAccPolicyAttachment_Account(t *testing.T) {
 			{
 				Config: testAccPolicyAttachmentConfig_account(rName, organizations.PolicyTypeTagPolicy, tagPolicyContent),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyAttachmentExists(resourceName),
+					testAccCheckPolicyAttachmentExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "policy_id", policyIdResourceName, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "target_id", targetIdResourceName, "master_account_id"),
 				),
@@ -58,21 +59,22 @@ func testAccPolicyAttachment_Account(t *testing.T) {
 }
 
 func testAccPolicyAttachment_OrganizationalUnit(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_organizations_policy_attachment.test"
 	policyIdResourceName := "aws_organizations_policy.test"
 	targetIdResourceName := "aws_organizations_organizational_unit.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPolicyAttachmentDestroy,
+		CheckDestroy:             testAccCheckPolicyAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyAttachmentConfig_organizationalUnit(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyAttachmentExists(resourceName),
+					testAccCheckPolicyAttachmentExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "policy_id", policyIdResourceName, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "target_id", targetIdResourceName, "id"),
 				),
@@ -87,21 +89,22 @@ func testAccPolicyAttachment_OrganizationalUnit(t *testing.T) {
 }
 
 func testAccPolicyAttachment_Root(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_organizations_policy_attachment.test"
 	policyIdResourceName := "aws_organizations_policy.test"
 	targetIdResourceName := "aws_organizations_organization.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPolicyAttachmentDestroy,
+		CheckDestroy:             testAccCheckPolicyAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyAttachmentConfig_root(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyAttachmentExists(resourceName),
+					testAccCheckPolicyAttachmentExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "policy_id", policyIdResourceName, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "target_id", targetIdResourceName, "roots.0.id"),
 				),
@@ -115,98 +118,87 @@ func testAccPolicyAttachment_Root(t *testing.T) {
 	})
 }
 
-func testAccCheckPolicyAttachmentDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn
+func testAccPolicyAttachment_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_organizations_policy_attachment.test"
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_organizations_policy_attachment" {
-			continue
-		}
-
-		targetID, policyID, err := tforganizations.DecodePolicyAttachmentID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
-		input := &organizations.ListPoliciesForTargetInput{
-			Filter:   aws.String(organizations.PolicyTypeServiceControlPolicy),
-			TargetId: aws.String(targetID),
-		}
-
-		log.Printf("[DEBUG] Listing Organizations Policies for Target: %s", input)
-		var output *organizations.PolicySummary
-		err = conn.ListPoliciesForTargetPages(input, func(page *organizations.ListPoliciesForTargetOutput, lastPage bool) bool {
-			for _, policySummary := range page.Policies {
-				if aws.StringValue(policySummary.Id) == policyID {
-					output = policySummary
-					return true
-				}
-			}
-			return !lastPage
-		})
-
-		if tfawserr.ErrCodeEquals(err, organizations.ErrCodeAWSOrganizationsNotInUseException) {
-			continue
-		}
-
-		if tfawserr.ErrCodeEquals(err, organizations.ErrCodeTargetNotFoundException) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		if output == nil {
-			continue
-		}
-
-		return fmt.Errorf("Policy attachment %q still exists", rs.Primary.ID)
-	}
-
-	return nil
-
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOrganizationsAccount(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyAttachmentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyAttachmentConfig_organizationalUnit(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyAttachmentExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tforganizations.ResourcePolicyAttachment(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
 }
 
-func testAccCheckPolicyAttachmentExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckPolicyAttachmentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn()
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn
-
-		targetID, policyID, err := tforganizations.DecodePolicyAttachmentID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
-		input := &organizations.ListTargetsForPolicyInput{
-			PolicyId: aws.String(policyID),
-		}
-
-		log.Printf("[DEBUG] Listing Organizations Policies for Target: %s", input)
-		var output *organizations.PolicyTargetSummary
-		err = conn.ListTargetsForPolicyPages(input, func(page *organizations.ListTargetsForPolicyOutput, lastPage bool) bool {
-			for _, policySummary := range page.Targets {
-				if aws.StringValue(policySummary.TargetId) == targetID {
-					output = policySummary
-					return true
-				}
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_organizations_policy_attachment" {
+				continue
 			}
-			return !lastPage
-		})
 
-		if err != nil {
-			return err
-		}
+			targetID, policyID, err := tforganizations.DecodePolicyAttachmentID(rs.Primary.ID)
 
-		if output == nil {
-			return fmt.Errorf("Policy attachment %q does not exist", rs.Primary.ID)
+			if err != nil {
+				return err
+			}
+
+			_, err = tforganizations.FindPolicyAttachmentByTwoPartKey(ctx, conn, targetID, policyID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if tfawserr.ErrCodeEquals(err, organizations.ErrCodeAWSOrganizationsNotInUseException) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Organizations Policy Attachment %s still exists", rs.Primary.ID)
 		}
 
 		return nil
+	}
+}
+
+func testAccCheckPolicyAttachmentExists(ctx context.Context, n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No Organizations Policy Attachment ID is set")
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn()
+
+		targetID, policyID, err := tforganizations.DecodePolicyAttachmentID(rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		_, err = tforganizations.FindPolicyAttachmentByTwoPartKey(ctx, conn, targetID, policyID)
+
+		return err
 	}
 }
 

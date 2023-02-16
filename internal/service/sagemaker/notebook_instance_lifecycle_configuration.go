@@ -1,26 +1,28 @@
 package sagemaker
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func ResourceNotebookInstanceLifeCycleConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceNotebookInstanceLifeCycleConfigurationCreate,
-		Read:   resourceNotebookInstanceLifeCycleConfigurationRead,
-		Update: resourceNotebookInstanceLifeCycleConfigurationUpdate,
-		Delete: resourceNotebookInstanceLifeCycleConfigurationDelete,
+		CreateWithoutTimeout: resourceNotebookInstanceLifeCycleConfigurationCreate,
+		ReadWithoutTimeout:   resourceNotebookInstanceLifeCycleConfigurationRead,
+		UpdateWithoutTimeout: resourceNotebookInstanceLifeCycleConfigurationUpdate,
+		DeleteWithoutTimeout: resourceNotebookInstanceLifeCycleConfigurationDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -51,8 +53,9 @@ func ResourceNotebookInstanceLifeCycleConfiguration() *schema.Resource {
 	}
 }
 
-func resourceNotebookInstanceLifeCycleConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+func resourceNotebookInstanceLifeCycleConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	var name string
 	if v, ok := d.GetOk("name"); ok {
@@ -78,57 +81,59 @@ func resourceNotebookInstanceLifeCycleConfigurationCreate(d *schema.ResourceData
 	}
 
 	log.Printf("[DEBUG] SageMaker notebook instance lifecycle configuration create config: %#v", *createOpts)
-	_, err := conn.CreateNotebookInstanceLifecycleConfig(createOpts)
+	_, err := conn.CreateNotebookInstanceLifecycleConfigWithContext(ctx, createOpts)
 	if err != nil {
-		return fmt.Errorf("creating SageMaker notebook instance lifecycle configuration: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating SageMaker notebook instance lifecycle configuration: %s", err)
 	}
 	d.SetId(name)
 
-	return resourceNotebookInstanceLifeCycleConfigurationRead(d, meta)
+	return append(diags, resourceNotebookInstanceLifeCycleConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceNotebookInstanceLifeCycleConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+func resourceNotebookInstanceLifeCycleConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	request := &sagemaker.DescribeNotebookInstanceLifecycleConfigInput{
 		NotebookInstanceLifecycleConfigName: aws.String(d.Id()),
 	}
 
-	lifecycleConfig, err := conn.DescribeNotebookInstanceLifecycleConfig(request)
+	lifecycleConfig, err := conn.DescribeNotebookInstanceLifecycleConfigWithContext(ctx, request)
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, "ValidationException") {
 			log.Printf("[INFO] unable to find the SageMaker notebook instance lifecycle configuration (%s); therefore it is removed from the state", d.Id())
 			d.SetId("")
-			return nil
+			return diags
 		}
-		return fmt.Errorf("reading SageMaker notebook instance lifecycle configuration %s: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SageMaker notebook instance lifecycle configuration %s: %s", d.Id(), err)
 	}
 
 	if err := d.Set("name", lifecycleConfig.NotebookInstanceLifecycleConfigName); err != nil {
-		return fmt.Errorf("setting name for SageMaker notebook instance lifecycle configuration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting name for SageMaker notebook instance lifecycle configuration (%s): %s", d.Id(), err)
 	}
 
 	if len(lifecycleConfig.OnCreate) > 0 && lifecycleConfig.OnCreate[0] != nil {
 		if err := d.Set("on_create", lifecycleConfig.OnCreate[0].Content); err != nil {
-			return fmt.Errorf("setting on_create for SageMaker notebook instance lifecycle configuration (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "setting on_create for SageMaker notebook instance lifecycle configuration (%s): %s", d.Id(), err)
 		}
 	}
 
 	if len(lifecycleConfig.OnStart) > 0 && lifecycleConfig.OnStart[0] != nil {
 		if err := d.Set("on_start", lifecycleConfig.OnStart[0].Content); err != nil {
-			return fmt.Errorf("setting on_start for SageMaker notebook instance lifecycle configuration (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "setting on_start for SageMaker notebook instance lifecycle configuration (%s): %s", d.Id(), err)
 		}
 	}
 
 	if err := d.Set("arn", lifecycleConfig.NotebookInstanceLifecycleConfigArn); err != nil {
-		return fmt.Errorf("setting arn for SageMaker notebook instance lifecycle configuration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting arn for SageMaker notebook instance lifecycle configuration (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceNotebookInstanceLifeCycleConfigurationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+func resourceNotebookInstanceLifeCycleConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	updateOpts := &sagemaker.UpdateNotebookInstanceLifecycleConfigInput{
 		NotebookInstanceLifecycleConfigName: aws.String(d.Get("name").(string)),
@@ -144,29 +149,29 @@ func resourceNotebookInstanceLifeCycleConfigurationUpdate(d *schema.ResourceData
 		updateOpts.OnStart = []*sagemaker.NotebookInstanceLifecycleHook{onStartHook}
 	}
 
-	_, err := conn.UpdateNotebookInstanceLifecycleConfig(updateOpts)
+	_, err := conn.UpdateNotebookInstanceLifecycleConfigWithContext(ctx, updateOpts)
 	if err != nil {
-		return fmt.Errorf("updating SageMaker Notebook Instance Lifecycle Configuration: %s", err)
+		return sdkdiag.AppendErrorf(diags, "updating SageMaker Notebook Instance Lifecycle Configuration: %s", err)
 	}
-	return resourceNotebookInstanceLifeCycleConfigurationRead(d, meta)
+	return append(diags, resourceNotebookInstanceLifeCycleConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceNotebookInstanceLifeCycleConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SageMakerConn
+func resourceNotebookInstanceLifeCycleConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SageMakerConn()
 
 	deleteOpts := &sagemaker.DeleteNotebookInstanceLifecycleConfigInput{
 		NotebookInstanceLifecycleConfigName: aws.String(d.Id()),
 	}
 	log.Printf("[INFO] Deleting SageMaker Notebook Instance Lifecycle Configuration: %s", d.Id())
 
-	_, err := conn.DeleteNotebookInstanceLifecycleConfig(deleteOpts)
+	_, err := conn.DeleteNotebookInstanceLifecycleConfigWithContext(ctx, deleteOpts)
 	if err != nil {
-
 		if tfawserr.ErrCodeEquals(err, "ValidationException") {
-			return nil
+			return diags
 		}
 
-		return fmt.Errorf("deleting SageMaker Notebook Instance Lifecycle Configuration: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting SageMaker Notebook Instance Lifecycle Configuration: %s", err)
 	}
-	return nil
+	return diags
 }

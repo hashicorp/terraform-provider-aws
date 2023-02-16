@@ -20,8 +20,8 @@ resource "aws_devicefarm_test_grid_project" "example" {
 
   vpc_config {
     vpc_id             = aws_vpc.example.id
-    subnet_ids         = aws_subnet.example.*.id
-    security_group_ids = aws_security_group.example.*.id
+    subnet_ids         = aws_subnet.example[*].id
+    security_group_ids = aws_security_group.example[*].id
   }
 }
 ```

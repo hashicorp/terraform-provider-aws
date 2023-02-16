@@ -1,6 +1,7 @@
 package ses_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -16,19 +17,20 @@ import (
 )
 
 func TestAccSESReceiptRuleSet_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_ses_receipt_rule_set.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t); testAccPreCheckReceiptRule(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t); testAccPreCheckReceiptRule(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReceiptRuleSetDestroy,
+		CheckDestroy:             testAccCheckReceiptRuleSetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReceiptRuleSetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReceiptRuleSetExists(resourceName),
+					testAccCheckReceiptRuleSetExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "rule_set_name", rName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "ses", fmt.Sprintf("receipt-rule-set/%s", rName)),
 				),
@@ -43,20 +45,21 @@ func TestAccSESReceiptRuleSet_basic(t *testing.T) {
 }
 
 func TestAccSESReceiptRuleSet_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_ses_receipt_rule_set.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t); testAccPreCheckReceiptRule(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t); testAccPreCheckReceiptRule(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReceiptRuleSetDestroy,
+		CheckDestroy:             testAccCheckReceiptRuleSetDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReceiptRuleSetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReceiptRuleSetExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfses.ResourceReceiptRuleSet(), resourceName),
+					testAccCheckReceiptRuleSetExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfses.ResourceReceiptRuleSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -64,36 +67,37 @@ func TestAccSESReceiptRuleSet_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckReceiptRuleSetDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn
+func testAccCheckReceiptRuleSetDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_ses_receipt_rule_set" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_ses_receipt_rule_set" {
+				continue
+			}
+
+			params := &ses.DescribeReceiptRuleSetInput{
+				RuleSetName: aws.String(rs.Primary.ID),
+			}
+
+			_, err := conn.DescribeReceiptRuleSetWithContext(ctx, params)
+
+			if tfawserr.ErrCodeEquals(err, ses.ErrCodeRuleSetDoesNotExistException) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("SES Receipt Rule Set (%s) still exists", rs.Primary.ID)
 		}
 
-		params := &ses.DescribeReceiptRuleSetInput{
-			RuleSetName: aws.String(rs.Primary.ID),
-		}
-
-		_, err := conn.DescribeReceiptRuleSet(params)
-
-		if tfawserr.ErrCodeEquals(err, ses.ErrCodeRuleSetDoesNotExistException) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("SES Receipt Rule Set (%s) still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
-
 }
 
-func testAccCheckReceiptRuleSetExists(n string) resource.TestCheckFunc {
+func testAccCheckReceiptRuleSetExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -104,13 +108,13 @@ func testAccCheckReceiptRuleSetExists(n string) resource.TestCheckFunc {
 			return fmt.Errorf("SES Receipt Rule Set name not set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn()
 
 		params := &ses.DescribeReceiptRuleSetInput{
 			RuleSetName: aws.String(rs.Primary.ID),
 		}
 
-		_, err := conn.DescribeReceiptRuleSet(params)
+		_, err := conn.DescribeReceiptRuleSetWithContext(ctx, params)
 		return err
 	}
 }

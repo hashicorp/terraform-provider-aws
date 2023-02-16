@@ -2,6 +2,7 @@ package ec2
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -9,21 +10,23 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourceVolumeAttachment() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceVolumeAttachmentCreate,
-		Read:   resourceVolumeAttachmentRead,
-		Update: schema.Noop,
-		Delete: resourceVolumeAttachmentDelete,
+		CreateWithoutTimeout: resourceVolumeAttachmentCreate,
+		ReadWithoutTimeout:   resourceVolumeAttachmentRead,
+		UpdateWithoutTimeout: schema.NoopContext,
+		DeleteWithoutTimeout: resourceVolumeAttachmentDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), ":")
 
 				if len(idParts) != 3 || idParts[0] == "" || idParts[1] == "" || idParts[2] == "" {
@@ -79,20 +82,21 @@ func ResourceVolumeAttachment() *schema.Resource {
 	}
 }
 
-func resourceVolumeAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceVolumeAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	deviceName := d.Get("device_name").(string)
 	instanceID := d.Get("instance_id").(string)
 	volumeID := d.Get("volume_id").(string)
 
-	_, err := FindEBSVolumeAttachment(conn, volumeID, instanceID, deviceName)
+	_, err := FindEBSVolumeAttachment(ctx, conn, volumeID, instanceID, deviceName)
 
 	if tfresource.NotFound(err) {
 		// This handles the situation where the instance is created by
 		// a spot request and whilst the request has been fulfilled the
 		// instance is not running yet.
-		if _, err := WaitInstanceReady(conn, instanceID, InstanceReadyTimeout); err != nil {
-			return fmt.Errorf("waiting for EC2 Instance (%s) to be ready: %w", instanceID, err)
+		if _, err := WaitInstanceReady(ctx, conn, instanceID, InstanceReadyTimeout); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for EC2 Instance (%s) to be ready: %s", instanceID, err)
 		}
 
 		input := &ec2.AttachVolumeInput{
@@ -102,50 +106,52 @@ func resourceVolumeAttachmentCreate(d *schema.ResourceData, meta interface{}) er
 		}
 
 		log.Printf("[DEBUG] Create EBS Volume Attachment: %s", input)
-		_, err := conn.AttachVolume(input)
+		_, err := conn.AttachVolumeWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("attaching EBS Volume (%s) to EC2 Instance (%s): %w", volumeID, instanceID, err)
+			return sdkdiag.AppendErrorf(diags, "attaching EBS Volume (%s) to EC2 Instance (%s): %s", volumeID, instanceID, err)
 		}
 	} else if err != nil {
-		return fmt.Errorf("reading EBS Volume (%s) Attachment (%s): %w", volumeID, instanceID, err)
+		return sdkdiag.AppendErrorf(diags, "reading EBS Volume (%s) Attachment (%s): %s", volumeID, instanceID, err)
 	}
 
-	if _, err := WaitVolumeAttachmentCreated(conn, volumeID, instanceID, deviceName, d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("waiting for EBS Volume (%s) Attachment (%s) create: %w", volumeID, instanceID, err)
+	if _, err := WaitVolumeAttachmentCreated(ctx, conn, volumeID, instanceID, deviceName, d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for EBS Volume (%s) Attachment (%s) create: %s", volumeID, instanceID, err)
 	}
 
 	d.SetId(volumeAttachmentID(deviceName, volumeID, instanceID))
 
-	return resourceVolumeAttachmentRead(d, meta)
+	return append(diags, resourceVolumeAttachmentRead(ctx, d, meta)...)
 }
 
-func resourceVolumeAttachmentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceVolumeAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	deviceName := d.Get("device_name").(string)
 	instanceID := d.Get("instance_id").(string)
 	volumeID := d.Get("volume_id").(string)
 
-	_, err := FindEBSVolumeAttachment(conn, volumeID, instanceID, deviceName)
+	_, err := FindEBSVolumeAttachment(ctx, conn, volumeID, instanceID, deviceName)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EBS Volume Attachment %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading EBS Volume (%s) Attachment (%s): %w", volumeID, instanceID, err)
+		return sdkdiag.AppendErrorf(diags, "reading EBS Volume (%s) Attachment (%s): %s", volumeID, instanceID, err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceVolumeAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceVolumeAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	if _, ok := d.GetOk("skip_destroy"); ok {
-		return nil
+		return diags
 	}
 
 	deviceName := d.Get("device_name").(string)
@@ -153,8 +159,8 @@ func resourceVolumeAttachmentDelete(d *schema.ResourceData, meta interface{}) er
 	volumeID := d.Get("volume_id").(string)
 
 	if _, ok := d.GetOk("stop_instance_before_detaching"); ok {
-		if err := StopInstance(conn, instanceID, InstanceStopTimeout); err != nil {
-			return err
+		if err := StopInstance(ctx, conn, instanceID, InstanceStopTimeout); err != nil {
+			return sdkdiag.AppendErrorf(diags, "deleting EBS Volume (%s) Attachment (%s): %s", volumeID, instanceID, err)
 		}
 	}
 
@@ -166,17 +172,17 @@ func resourceVolumeAttachmentDelete(d *schema.ResourceData, meta interface{}) er
 	}
 
 	log.Printf("[DEBUG] Deleting EBS Volume Attachment: %s", d.Id())
-	_, err := conn.DetachVolume(input)
+	_, err := conn.DetachVolumeWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("deleting EBS Volume (%s) Attachment (%s): %w", volumeID, instanceID, err)
+		return sdkdiag.AppendErrorf(diags, "deleting EBS Volume (%s) Attachment (%s): %s", volumeID, instanceID, err)
 	}
 
-	if _, err := WaitVolumeAttachmentDeleted(conn, volumeID, instanceID, deviceName, d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("waiting for EBS Volume (%s) Attachment (%s) delete: %w", volumeID, instanceID, err)
+	if _, err := WaitVolumeAttachmentDeleted(ctx, conn, volumeID, instanceID, deviceName, d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for EBS Volume (%s) Attachment (%s) delete: %s", volumeID, instanceID, err)
 	}
 
-	return nil
+	return diags
 }
 
 func volumeAttachmentID(name, volumeID, instanceID string) string {

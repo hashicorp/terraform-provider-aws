@@ -138,6 +138,7 @@ func TestAccEFSFileSystemDataSource_nonExistent_fileSystemID(t *testing.T) {
 }
 
 func TestAccEFSFileSystemDataSource_nonExistent_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var desc efs.FileSystemDescription
 	resourceName := "aws_efs_file_system.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -150,7 +151,7 @@ func TestAccEFSFileSystemDataSource_nonExistent_tags(t *testing.T) {
 			{
 				Config: testAccFileSystemConfig_dataSourceBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFileSystem(resourceName, &desc),
+					testAccCheckFileSystem(ctx, resourceName, &desc),
 				),
 			},
 			{
@@ -193,6 +194,14 @@ func testAccFileSystemCheckDataSource(dName, rName string) resource.TestCheckFun
 
 		return nil
 	}
+}
+
+func testAccFileSystemConfig_dataSourceBasic(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_efs_file_system" "test" {
+  creation_token = %[1]q
+}
+`, rName)
 }
 
 const testAccFileSystemDataSourceConfig_idNonExistent = `

@@ -36,7 +36,7 @@ func DataSourceQueue() *schema.Resource {
 }
 
 func dataSourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SQSConn
+	conn := meta.(*conns.AWSClient).SQSConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get("name").(string)
@@ -63,7 +63,7 @@ func dataSourceQueueRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("url", queueURL)
 	d.SetId(queueURL)
 
-	tags, err := ListTagsWithContext(ctx, conn, queueURL)
+	tags, err := ListTags(ctx, conn, queueURL)
 
 	if verify.ErrorISOUnsupported(conn.PartitionID, err) {
 		// Some partitions may not support tagging, giving error

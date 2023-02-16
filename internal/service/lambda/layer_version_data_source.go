@@ -1,20 +1,22 @@
 package lambda
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lambda"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
 func DataSourceLayerVersion() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceLayerVersionRead,
+		ReadWithoutTimeout: dataSourceLayerVersionRead,
 
 		Schema: map[string]*schema.Schema{
 			"layer_name": {
@@ -93,8 +95,9 @@ func DataSourceLayerVersion() *schema.Resource {
 	}
 }
 
-func dataSourceLayerVersionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LambdaConn
+func dataSourceLayerVersionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).LambdaConn()
 	layerName := d.Get("layer_name").(string)
 
 	var version int64
@@ -114,13 +117,13 @@ func dataSourceLayerVersionRead(d *schema.ResourceData, meta interface{}) error 
 		}
 
 		log.Printf("[DEBUG] Looking up latest version for lambda layer %s", layerName)
-		listOutput, err := conn.ListLayerVersions(listInput)
+		listOutput, err := conn.ListLayerVersionsWithContext(ctx, listInput)
 		if err != nil {
-			return fmt.Errorf("error listing Lambda Layer Versions (%s): %w", layerName, err)
+			return sdkdiag.AppendErrorf(diags, "listing Lambda Layer Versions (%s): %s", layerName, err)
 		}
 
 		if len(listOutput.LayerVersions) == 0 {
-			return fmt.Errorf("error listing Lambda Layer Versions (%s): empty response", layerName)
+			return sdkdiag.AppendErrorf(diags, "listing Lambda Layer Versions (%s): empty response", layerName)
 		}
 
 		version = aws.Int64Value(listOutput.LayerVersions[0].Version)
@@ -132,54 +135,54 @@ func dataSourceLayerVersionRead(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	log.Printf("[DEBUG] Getting Lambda Layer Version: %s, version %d", layerName, version)
-	output, err := conn.GetLayerVersion(input)
+	output, err := conn.GetLayerVersionWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error getting Lambda Layer Version (%s, version %d): %w", layerName, version, err)
+		return sdkdiag.AppendErrorf(diags, "getting Lambda Layer Version (%s, version %d): %s", layerName, version, err)
 	}
 
 	if output == nil {
-		return fmt.Errorf("error getting Lambda Layer Version (%s, version %d): empty response", layerName, version)
+		return sdkdiag.AppendErrorf(diags, "getting Lambda Layer Version (%s, version %d): empty response", layerName, version)
 	}
 
 	if err := d.Set("version", output.Version); err != nil {
-		return fmt.Errorf("error setting lambda layer version: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting lambda layer version: %s", err)
 	}
 	if err := d.Set("compatible_runtimes", flex.FlattenStringList(output.CompatibleRuntimes)); err != nil {
-		return fmt.Errorf("error setting lambda layer compatible runtimes: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting lambda layer compatible runtimes: %s", err)
 	}
 	if err := d.Set("compatible_architectures", flex.FlattenStringList(output.CompatibleArchitectures)); err != nil {
-		return fmt.Errorf("Error setting lambda layer compatible architectures: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting lambda layer compatible architectures: %s", err)
 	}
 	if err := d.Set("description", output.Description); err != nil {
-		return fmt.Errorf("error setting lambda layer description: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting lambda layer description: %s", err)
 	}
 	if err := d.Set("license_info", output.LicenseInfo); err != nil {
-		return fmt.Errorf("error setting lambda layer license info: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting lambda layer license info: %s", err)
 	}
 	if err := d.Set("arn", output.LayerVersionArn); err != nil {
-		return fmt.Errorf("error setting lambda layer version arn: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting lambda layer version arn: %s", err)
 	}
 	if err := d.Set("layer_arn", output.LayerArn); err != nil {
-		return fmt.Errorf("error setting lambda layer arn: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting lambda layer arn: %s", err)
 	}
 	if err := d.Set("created_date", output.CreatedDate); err != nil {
-		return fmt.Errorf("error setting lambda layer created date: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting lambda layer created date: %s", err)
 	}
 	if err := d.Set("source_code_hash", output.Content.CodeSha256); err != nil {
-		return fmt.Errorf("error setting lambda layer source code hash: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting lambda layer source code hash: %s", err)
 	}
 	if err := d.Set("source_code_size", output.Content.CodeSize); err != nil {
-		return fmt.Errorf("error setting lambda layer source code size: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting lambda layer source code size: %s", err)
 	}
 	if err := d.Set("signing_profile_version_arn", output.Content.SigningProfileVersionArn); err != nil {
-		return fmt.Errorf("Error setting lambda layer signing profile arn: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting lambda layer signing profile arn: %s", err)
 	}
 	if err := d.Set("signing_job_arn", output.Content.SigningJobArn); err != nil {
-		return fmt.Errorf("Error setting lambda layer signing job arn: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting lambda layer signing job arn: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.LayerVersionArn))
 
-	return nil
+	return diags
 }

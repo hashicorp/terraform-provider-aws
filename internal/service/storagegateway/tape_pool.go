@@ -1,26 +1,28 @@
 package storagegateway
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceTapePool() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceTapePoolCreate,
-		Read:   resourceTapePoolRead,
-		Update: resourceTapePoolUpdate,
-		Delete: resourceTapePoolDelete,
+		CreateWithoutTimeout: resourceTapePoolCreate,
+		ReadWithoutTimeout:   resourceTapePoolRead,
+		UpdateWithoutTimeout: resourceTapePoolUpdate,
+		DeleteWithoutTimeout: resourceTapePoolDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -62,8 +64,9 @@ func ResourceTapePool() *schema.Resource {
 	}
 }
 
-func resourceTapePoolCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).StorageGatewayConn
+func resourceTapePoolCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).StorageGatewayConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -76,31 +79,33 @@ func resourceTapePoolCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Creating Storage Gateway Tape Pool: %s", input)
-	output, err := conn.CreateTapePool(input)
+	output, err := conn.CreateTapePoolWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("error creating Storage Gateway Tape Pool: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating Storage Gateway Tape Pool: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.PoolARN))
 
-	return resourceTapePoolRead(d, meta)
+	return append(diags, resourceTapePoolRead(ctx, d, meta)...)
 }
 
-func resourceTapePoolUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).StorageGatewayConn
+func resourceTapePoolUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).StorageGatewayConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %w", err)
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
 		}
 	}
 
-	return resourceTapePoolRead(d, meta)
+	return append(diags, resourceTapePoolRead(ctx, d, meta)...)
 }
 
-func resourceTapePoolRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).StorageGatewayConn
+func resourceTapePoolRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).StorageGatewayConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -109,16 +114,16 @@ func resourceTapePoolRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Reading Storage Gateway Tape Pool: %s", input)
-	output, err := conn.ListTapePools(input)
+	output, err := conn.ListTapePoolsWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("[ERROR] Listing Storage Gateway Tape Pools %w", err)
+		return sdkdiag.AppendErrorf(diags, "listing Storage Gateway Tape Pools: %s", err)
 	}
 
 	if output == nil || len(output.PoolInfos) == 0 || output.PoolInfos[0] == nil || aws.StringValue(output.PoolInfos[0].PoolARN) != d.Id() {
 		log.Printf("[WARN] Storage Gateway Tape Pool %q not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	pool := output.PoolInfos[0]
@@ -130,36 +135,37 @@ func resourceTapePoolRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("retention_lock_type", pool.RetentionLockType)
 	d.Set("storage_class", pool.StorageClass)
 
-	tags, err := ListTags(conn, poolArn)
+	tags, err := ListTags(ctx, conn, poolArn)
 	if err != nil {
-		return fmt.Errorf("error listing tags for resource (%s): %w", poolArn, err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for resource (%s): %s", poolArn, err)
 	}
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceTapePoolDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).StorageGatewayConn
+func resourceTapePoolDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).StorageGatewayConn()
 
 	input := &storagegateway.DeleteTapePoolInput{
 		PoolARN: aws.String(d.Id()),
 	}
 
 	log.Printf("[DEBUG] Deleting Storage Gateway Tape Pool: %s", input)
-	_, err := conn.DeleteTapePool(input)
+	_, err := conn.DeleteTapePoolWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("error deleting Storage Gateway Tape Pool %q: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Storage Gateway Tape Pool %q: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

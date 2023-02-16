@@ -1,6 +1,7 @@
 package grafana
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -8,17 +9,19 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/managedgrafana"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func ResourceWorkspaceAPIKey() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceWorkspaceAPIKeyCreate,
-		Read:   schema.Noop,
-		Update: schema.Noop,
-		Delete: resourceWorkspaceAPIKeyDelete,
+		CreateWithoutTimeout: resourceWorkspaceAPIKeyCreate,
+		ReadWithoutTimeout:   schema.NoopContext,
+		UpdateWithoutTimeout: schema.NoopContext,
+		DeleteWithoutTimeout: resourceWorkspaceAPIKeyDelete,
 
 		Schema: map[string]*schema.Schema{
 			"key": {
@@ -51,8 +54,9 @@ func ResourceWorkspaceAPIKey() *schema.Resource {
 	}
 }
 
-func resourceWorkspaceAPIKeyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GrafanaConn
+func resourceWorkspaceAPIKeyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GrafanaConn()
 
 	keyName := d.Get("key_name").(string)
 	workspaceID := d.Get("workspace_id").(string)
@@ -65,43 +69,43 @@ func resourceWorkspaceAPIKeyCreate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	log.Printf("[DEBUG] Creating Grafana Workspace API Key: %s", input)
-	output, err := conn.CreateWorkspaceApiKey(input)
+	output, err := conn.CreateWorkspaceApiKeyWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("creating Grafana Workspace API Key (%s): %w", id, err)
+		return sdkdiag.AppendErrorf(diags, "creating Grafana Workspace API Key (%s): %s", id, err)
 	}
 
 	d.SetId(id)
 	d.Set("key", output.Key)
 
-	return nil
+	return diags
 }
 
-func resourceWorkspaceAPIKeyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GrafanaConn
+func resourceWorkspaceAPIKeyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GrafanaConn()
 
-	workspaceID, keyName, error := WorkspaceAPIKeyParseResourceID(d.Id())
+	workspaceID, keyName, err := WorkspaceAPIKeyParseResourceID(d.Id())
 
-	if error != nil {
-		return error
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting Grafana Workspace API Key (%s): %s", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Deleting Grafana Workspace API Key: %s", d.Id())
-	_, err := conn.DeleteWorkspaceApiKey(&managedgrafana.DeleteWorkspaceApiKeyInput{
+	_, err = conn.DeleteWorkspaceApiKeyWithContext(ctx, &managedgrafana.DeleteWorkspaceApiKeyInput{
 		KeyName:     aws.String(keyName),
 		WorkspaceId: aws.String(workspaceID),
 	})
 
 	if tfawserr.ErrCodeEquals(err, managedgrafana.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("deleting Grafana Workspace API Key (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Grafana Workspace API Key (%s): %s", d.Id(), err)
 	}
 
-	return nil
-
+	return diags
 }
 
 const workspaceAPIKeyIDSeparator = "/"

@@ -67,7 +67,7 @@ func DataSourceDelegatedAdministrators() *schema.Resource {
 }
 
 func dataSourceDelegatedAdministratorsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).OrganizationsConn
+	conn := meta.(*conns.AWSClient).OrganizationsConn()
 
 	input := &organizations.ListDelegatedAdministratorsInput{}
 

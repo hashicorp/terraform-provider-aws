@@ -10,11 +10,11 @@ import (
 )
 
 func testAccOrganizationalUnitDescendantAccountsDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName1 := "aws_organizations_account.test1"
 	resourceName2 := "aws_organizations_account.test2"
 	resourceName3 := "aws_organizations_account.test3"
 	dataSourceName := "data.aws_organizations_organizational_unit_descendant_accounts.test"
-
 	domain := acctest.RandomDomainName()
 	address1 := acctest.RandomEmailAddress(domain)
 	address2 := acctest.RandomEmailAddress(domain)
@@ -23,7 +23,7 @@ func testAccOrganizationalUnitDescendantAccountsDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckOrganizationsAccount(t)
+			acctest.PreCheckOrganizationsAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

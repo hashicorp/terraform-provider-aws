@@ -10,13 +10,22 @@ description: |-
 
 ## Example Usage
 
-The following example below creates a CloudFront origin request policy.
+### Basic Usage
 
 ```terraform
 data "aws_cloudfront_origin_request_policy" "example" {
   name = "example-policy"
 }
+```
 
+### AWS-Managed Policies
+
+AWS managed origin request policy names are prefixed with `Managed-`:
+
+```terraform
+data "aws_cloudfront_origin_request_policy" "ua_referer" {
+  name = "Managed-UserAgentRefererHeaders"
+}
 ```
 
 ## Argument Reference

@@ -16,7 +16,7 @@ import (
 
 func DataSourceTags() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceTagsRead,
+		ReadWithoutTimeout: dataSourceTagsRead,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -88,7 +88,7 @@ func DataSourceTags() *schema.Resource {
 }
 
 func dataSourceTagsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CEConn
+	conn := meta.(*conns.AWSClient).CEConn()
 
 	input := &costexplorer.GetTagsInput{
 		TimePeriod: expandTagsTimePeriod(d.Get("time_period").([]interface{})[0].(map[string]interface{})),

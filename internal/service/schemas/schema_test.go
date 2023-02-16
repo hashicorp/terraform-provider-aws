@@ -1,6 +1,7 @@
 package schemas_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -67,6 +68,7 @@ const (
 )
 
 func TestAccSchemasSchema_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v schemas.DescribeSchemaOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_schemas_schema.test"
@@ -75,12 +77,12 @@ func TestAccSchemasSchema_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(schemas.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, schemas.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSchemaDestroy,
+		CheckDestroy:             testAccCheckSchemaDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSchemaConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSchemaExists(resourceName, &v),
+					testAccCheckSchemaExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "schemas", fmt.Sprintf("schema/%s/%s", rName, rName)),
 					resource.TestCheckResourceAttrSet(resourceName, "content"),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
@@ -103,6 +105,7 @@ func TestAccSchemasSchema_basic(t *testing.T) {
 }
 
 func TestAccSchemasSchema_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v schemas.DescribeSchemaOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_schemas_schema.test"
@@ -111,13 +114,13 @@ func TestAccSchemasSchema_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(schemas.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, schemas.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSchemaDestroy,
+		CheckDestroy:             testAccCheckSchemaDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSchemaConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSchemaExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfschemas.ResourceSchema(), resourceName),
+					testAccCheckSchemaExists(ctx, resourceName, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfschemas.ResourceSchema(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -126,6 +129,7 @@ func TestAccSchemasSchema_disappears(t *testing.T) {
 }
 
 func TestAccSchemasSchema_contentDescription(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v schemas.DescribeSchemaOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_schemas_schema.test"
@@ -134,12 +138,12 @@ func TestAccSchemasSchema_contentDescription(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(schemas.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, schemas.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSchemaDestroy,
+		CheckDestroy:             testAccCheckSchemaDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSchemaConfig_contentDescription(rName, testAccSchemaContent, "description1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSchemaExists(resourceName, &v),
+					testAccCheckSchemaExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "content", testAccSchemaContent),
 					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
 					resource.TestCheckResourceAttr(resourceName, "version", "1"),
@@ -153,7 +157,7 @@ func TestAccSchemasSchema_contentDescription(t *testing.T) {
 			{
 				Config: testAccSchemaConfig_contentDescription(rName, testAccSchemaContentUpdated, "description2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSchemaExists(resourceName, &v),
+					testAccCheckSchemaExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "content", testAccSchemaContentUpdated),
 					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
 					resource.TestCheckResourceAttr(resourceName, "version", "2"),
@@ -162,7 +166,7 @@ func TestAccSchemasSchema_contentDescription(t *testing.T) {
 			{
 				Config: testAccSchemaConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSchemaExists(resourceName, &v),
+					testAccCheckSchemaExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "version", "3"),
 				),
@@ -172,6 +176,7 @@ func TestAccSchemasSchema_contentDescription(t *testing.T) {
 }
 
 func TestAccSchemasSchema_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v schemas.DescribeSchemaOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_schemas_schema.test"
@@ -180,12 +185,12 @@ func TestAccSchemasSchema_tags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(schemas.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, schemas.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSchemaDestroy,
+		CheckDestroy:             testAccCheckSchemaDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSchemaConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSchemaExists(resourceName, &v),
+					testAccCheckSchemaExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -198,7 +203,7 @@ func TestAccSchemasSchema_tags(t *testing.T) {
 			{
 				Config: testAccSchemaConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSchemaExists(resourceName, &v),
+					testAccCheckSchemaExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -207,7 +212,7 @@ func TestAccSchemasSchema_tags(t *testing.T) {
 			{
 				Config: testAccSchemaConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSchemaExists(resourceName, &v),
+					testAccCheckSchemaExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -216,37 +221,39 @@ func TestAccSchemasSchema_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckSchemaDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SchemasConn
+func testAccCheckSchemaDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SchemasConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_schemas_schema" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_schemas_schema" {
+				continue
+			}
+
+			name, registryName, err := tfschemas.SchemaParseResourceID(rs.Primary.ID)
+
+			if err != nil {
+				return err
+			}
+
+			_, err = tfschemas.FindSchemaByNameAndRegistryName(ctx, conn, name, registryName)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("EventBridge Schemas Schema %s still exists", rs.Primary.ID)
 		}
 
-		name, registryName, err := tfschemas.SchemaParseResourceID(rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		_, err = tfschemas.FindSchemaByNameAndRegistryName(conn, name, registryName)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("EventBridge Schemas Schema %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckSchemaExists(n string, v *schemas.DescribeSchemaOutput) resource.TestCheckFunc {
+func testAccCheckSchemaExists(ctx context.Context, n string, v *schemas.DescribeSchemaOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -263,9 +270,9 @@ func testAccCheckSchemaExists(n string, v *schemas.DescribeSchemaOutput) resourc
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SchemasConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SchemasConn()
 
-		output, err := tfschemas.FindSchemaByNameAndRegistryName(conn, name, registryName)
+		output, err := tfschemas.FindSchemaByNameAndRegistryName(ctx, conn, name, registryName)
 
 		if err != nil {
 			return err

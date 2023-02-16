@@ -1,38 +1,46 @@
 package route53resolver_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfroute53resolver "github.com/hashicorp/terraform-provider-aws/internal/service/route53resolver"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccRoute53ResolverRule_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var rule route53resolver.ResolverRule
-	resourceName := "aws_route53_resolver_rule.example"
+	domainName := acctest.RandomDomainName()
+	resourceName := "aws_route53_resolver_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, route53resolver.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRuleDestroy,
+		CheckDestroy:             testAccCheckRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRuleConfig_basicNoTags,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleExists(resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", "example.com"),
+				Config: testAccRuleConfig_basic(domainName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRuleExists(ctx, resourceName, &rule),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", domainName),
+					resource.TestCheckResourceAttr(resourceName, "name", ""),
+					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
+					resource.TestCheckResourceAttr(resourceName, "resolver_endpoint_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "rule_type", "SYSTEM"),
 					resource.TestCheckResourceAttr(resourceName, "share_status", "NOT_SHARED"),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target_ip.#", "0"),
 				),
 			},
 			{
@@ -44,20 +52,91 @@ func TestAccRoute53ResolverRule_basic(t *testing.T) {
 	})
 }
 
-func TestAccRoute53ResolverRule_justDotDomainName(t *testing.T) {
+func TestAccRoute53ResolverRule_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var rule route53resolver.ResolverRule
-	resourceName := "aws_route53_resolver_rule.example"
+	domainName := acctest.RandomDomainName()
+	resourceName := "aws_route53_resolver_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, route53resolver.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRuleDestroy,
+		CheckDestroy:             testAccCheckRuleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRuleConfig_basic(domainName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRuleExists(ctx, resourceName, &rule),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfroute53resolver.ResourceRule(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccRoute53ResolverRule_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	var rule route53resolver.ResolverRule
+	domainName := acctest.RandomDomainName()
+	resourceName := "aws_route53_resolver_rule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53resolver.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRuleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRuleConfig_tags1(domainName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRuleExists(ctx, resourceName, &rule),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccRuleConfig_tags2(domainName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRuleExists(ctx, resourceName, &rule),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccRuleConfig_tags1(domainName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRuleExists(ctx, resourceName, &rule),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRoute53ResolverRule_justDotDomainName(t *testing.T) {
+	ctx := acctest.Context(t)
+	var rule route53resolver.ResolverRule
+	resourceName := "aws_route53_resolver_rule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53resolver.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleConfig_basic("."),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleExists(resourceName, &rule),
+					testAccCheckRuleExists(ctx, resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", "."),
 					resource.TestCheckResourceAttr(resourceName, "rule_type", "SYSTEM"),
 					resource.TestCheckResourceAttr(resourceName, "share_status", "NOT_SHARED"),
@@ -75,19 +154,20 @@ func TestAccRoute53ResolverRule_justDotDomainName(t *testing.T) {
 }
 
 func TestAccRoute53ResolverRule_trailingDotDomainName(t *testing.T) {
+	ctx := acctest.Context(t)
 	var rule route53resolver.ResolverRule
-	resourceName := "aws_route53_resolver_rule.example"
+	resourceName := "aws_route53_resolver_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, route53resolver.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRuleDestroy,
+		CheckDestroy:             testAccCheckRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRuleConfig_basic("example.com."),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleExists(resourceName, &rule),
+					testAccCheckRuleExists(ctx, resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", "example.com"),
 					resource.TestCheckResourceAttr(resourceName, "rule_type", "SYSTEM"),
 					resource.TestCheckResourceAttr(resourceName, "share_status", "NOT_SHARED"),
@@ -104,76 +184,25 @@ func TestAccRoute53ResolverRule_trailingDotDomainName(t *testing.T) {
 	})
 }
 
-func TestAccRoute53ResolverRule_tags(t *testing.T) {
-	var rule route53resolver.ResolverRule
-	resourceName := "aws_route53_resolver_rule.example"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, route53resolver.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRuleDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccRuleConfig_basicTags,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleExists(resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", "example.com"),
-					resource.TestCheckResourceAttr(resourceName, "rule_type", "SYSTEM"),
-					resource.TestCheckResourceAttr(resourceName, "share_status", "NOT_SHARED"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Usage", "original"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccRuleConfig_basicTagsChanged,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleExists(resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", "example.com"),
-					resource.TestCheckResourceAttr(resourceName, "rule_type", "SYSTEM"),
-					resource.TestCheckResourceAttr(resourceName, "share_status", "NOT_SHARED"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Usage", "changed"),
-				),
-			},
-			{
-				Config: testAccRuleConfig_basicNoTags,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleExists(resourceName, &rule),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", "example.com"),
-					resource.TestCheckResourceAttr(resourceName, "rule_type", "SYSTEM"),
-					resource.TestCheckResourceAttr(resourceName, "share_status", "NOT_SHARED"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-				),
-			},
-		},
-	})
-}
-
 func TestAccRoute53ResolverRule_updateName(t *testing.T) {
+	ctx := acctest.Context(t)
 	var rule1, rule2 route53resolver.ResolverRule
-	resourceName := "aws_route53_resolver_rule.example"
-	name1 := fmt.Sprintf("terraform-testacc-r53-resolver-%d", sdkacctest.RandInt())
-	name2 := fmt.Sprintf("terraform-testacc-r53-resolver-%d", sdkacctest.RandInt())
+	resourceName := "aws_route53_resolver_rule.test"
+	domainName := acctest.RandomDomainName()
+	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, route53resolver.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRuleDestroy,
+		CheckDestroy:             testAccCheckRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRuleConfig_basicName(name1),
+				Config: testAccRuleConfig_name(rName1, domainName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleExists(resourceName, &rule1),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", "example.com"),
-					resource.TestCheckResourceAttr(resourceName, "name", name1),
-					resource.TestCheckResourceAttr(resourceName, "rule_type", "SYSTEM"),
+					testAccCheckRuleExists(ctx, resourceName, &rule1),
+					resource.TestCheckResourceAttr(resourceName, "name", rName1),
 				),
 			},
 			{
@@ -182,13 +211,11 @@ func TestAccRoute53ResolverRule_updateName(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccRuleConfig_basicName(name2),
+				Config: testAccRuleConfig_name(rName2, domainName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleExists(resourceName, &rule2),
+					testAccCheckRuleExists(ctx, resourceName, &rule2),
 					testAccCheckRulesSame(&rule2, &rule1),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", "example.com"),
-					resource.TestCheckResourceAttr(resourceName, "name", name2),
-					resource.TestCheckResourceAttr(resourceName, "rule_type", "SYSTEM"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName2),
 				),
 			},
 		},
@@ -196,26 +223,28 @@ func TestAccRoute53ResolverRule_updateName(t *testing.T) {
 }
 
 func TestAccRoute53ResolverRule_forward(t *testing.T) {
+	ctx := acctest.Context(t)
 	var rule1, rule2, rule3 route53resolver.ResolverRule
-	resourceName := "aws_route53_resolver_rule.example"
-	resourceNameEp1 := "aws_route53_resolver_endpoint.foo"
-	resourceNameEp2 := "aws_route53_resolver_endpoint.bar"
-	name := fmt.Sprintf("terraform-testacc-r53-resolver-%d", sdkacctest.RandInt())
+	resourceName := "aws_route53_resolver_rule.test"
+	ep1ResourceName := "aws_route53_resolver_endpoint.test.0"
+	ep2ResourceName := "aws_route53_resolver_endpoint.test.1"
+	domainName := acctest.RandomDomainName()
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, route53resolver.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRuleDestroy,
+		CheckDestroy:             testAccCheckRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRuleConfig_forward(name),
+				Config: testAccRuleConfig_forward(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleExists(resourceName, &rule1),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", "example.com"),
-					resource.TestCheckResourceAttr(resourceName, "name", name),
+					testAccCheckRuleExists(ctx, resourceName, &rule1),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", domainName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "rule_type", "FORWARD"),
-					resource.TestCheckResourceAttrPair(resourceName, "resolver_endpoint_id", resourceNameEp1, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "resolver_endpoint_id", ep1ResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "target_ip.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target_ip.*", map[string]string{
 						"ip":   "192.0.2.6",
@@ -229,13 +258,13 @@ func TestAccRoute53ResolverRule_forward(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccRuleConfig_forwardTargetIPChanged(name),
+				Config: testAccRuleConfig_forwardTargetIPChanged(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleExists(resourceName, &rule2),
+					testAccCheckRuleExists(ctx, resourceName, &rule2),
 					testAccCheckRulesSame(&rule2, &rule1),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", "example.com"),
-					resource.TestCheckResourceAttr(resourceName, "name", name),
-					resource.TestCheckResourceAttrPair(resourceName, "resolver_endpoint_id", resourceNameEp1, "id"),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", domainName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrPair(resourceName, "resolver_endpoint_id", ep1ResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "rule_type", "FORWARD"),
 					resource.TestCheckResourceAttr(resourceName, "target_ip.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target_ip.*", map[string]string{
@@ -249,13 +278,13 @@ func TestAccRoute53ResolverRule_forward(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRuleConfig_forwardEndpointChanged(name),
+				Config: testAccRuleConfig_forwardEndpointChanged(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleExists(resourceName, &rule3),
+					testAccCheckRuleExists(ctx, resourceName, &rule3),
 					testAccCheckRulesSame(&rule3, &rule2),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", "example.com"),
-					resource.TestCheckResourceAttr(resourceName, "name", name),
-					resource.TestCheckResourceAttrPair(resourceName, "resolver_endpoint_id", resourceNameEp2, "id"),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", domainName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrPair(resourceName, "resolver_endpoint_id", ep2ResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "rule_type", "FORWARD"),
 					resource.TestCheckResourceAttr(resourceName, "target_ip.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target_ip.*", map[string]string{
@@ -273,25 +302,27 @@ func TestAccRoute53ResolverRule_forward(t *testing.T) {
 }
 
 func TestAccRoute53ResolverRule_forwardEndpointRecreate(t *testing.T) {
+	ctx := acctest.Context(t)
 	var rule1, rule2 route53resolver.ResolverRule
-	resourceName := "aws_route53_resolver_rule.example"
-	resourceNameEp := "aws_route53_resolver_endpoint.foo"
-	name := fmt.Sprintf("terraform-testacc-r53-resolver-%d", sdkacctest.RandInt())
+	resourceName := "aws_route53_resolver_rule.test"
+	epResourceName := "aws_route53_resolver_endpoint.test.0"
+	domainName := acctest.RandomDomainName()
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, route53resolver.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRuleDestroy,
+		CheckDestroy:             testAccCheckRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRuleConfig_forward(name),
+				Config: testAccRuleConfig_forward(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleExists(resourceName, &rule1),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", "example.com"),
-					resource.TestCheckResourceAttr(resourceName, "name", name),
+					testAccCheckRuleExists(ctx, resourceName, &rule1),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", domainName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "rule_type", "FORWARD"),
-					resource.TestCheckResourceAttrPair(resourceName, "resolver_endpoint_id", resourceNameEp, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "resolver_endpoint_id", epResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "target_ip.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target_ip.*", map[string]string{
 						"ip":   "192.0.2.6",
@@ -300,14 +331,14 @@ func TestAccRoute53ResolverRule_forwardEndpointRecreate(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRuleConfig_forwardEndpointRecreate(name),
+				Config: testAccRuleConfig_forwardEndpointRecreate(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRuleExists(resourceName, &rule2),
+					testAccCheckRuleExists(ctx, resourceName, &rule2),
 					testAccCheckRulesDifferent(&rule2, &rule1),
-					resource.TestCheckResourceAttr(resourceName, "domain_name", "example.com"),
-					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", domainName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "rule_type", "FORWARD"),
-					resource.TestCheckResourceAttrPair(resourceName, "resolver_endpoint_id", resourceNameEp, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "resolver_endpoint_id", epResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "target_ip.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target_ip.*", map[string]string{
 						"ip":   "192.0.2.6",
@@ -321,47 +352,50 @@ func TestAccRoute53ResolverRule_forwardEndpointRecreate(t *testing.T) {
 
 func testAccCheckRulesSame(before, after *route53resolver.ResolverRule) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if *before.Arn != *after.Arn {
-			return fmt.Errorf("Expected Route 53 Resolver rule ARNs to be the same. But they were: %v, %v", *before.Arn, *after.Arn)
+		if before, after := aws.StringValue(before.Arn), aws.StringValue(after.Arn); before != after {
+			return fmt.Errorf("Expected Route53 Resolver Rule ARNs to be the same. But they were: %s, %s", before, after)
 		}
+
 		return nil
 	}
 }
 
 func testAccCheckRulesDifferent(before, after *route53resolver.ResolverRule) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if *before.Arn == *after.Arn {
-			return fmt.Errorf("Expected Route 53 Resolver rule ARNs to be different. But they were both: %v", *before.Arn)
+		if before, after := aws.StringValue(before.Arn), aws.StringValue(after.Arn); before == after {
+			return fmt.Errorf("Expected Route53 Resolver rule ARNs to be different. But they were both: %s", before)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckRuleDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn()
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_route53_resolver_rule" {
+				continue
+			}
+
+			_, err := tfroute53resolver.FindResolverRuleByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Route53 Resolver Rule still exists: %s", rs.Primary.ID)
 		}
 		return nil
 	}
 }
 
-func testAccCheckRuleDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_route53_resolver_rule" {
-			continue
-		}
-
-		// Try to find the resource
-		_, err := conn.GetResolverRule(&route53resolver.GetResolverRuleInput{
-			ResolverRuleId: aws.String(rs.Primary.ID),
-		})
-		// Verify the error is what we want
-		if tfawserr.ErrCodeEquals(err, route53resolver.ErrCodeResourceNotFoundException) {
-			continue
-		}
-		if err != nil {
-			return err
-		}
-		return fmt.Errorf("Route 53 Resolver rule still exists: %s", rs.Primary.ID)
-	}
-	return nil
-}
-
-func testAccCheckRuleExists(n string, rule *route53resolver.ResolverRule) resource.TestCheckFunc {
+func testAccCheckRuleExists(ctx context.Context, n string, v *route53resolver.ResolverRule) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -369,18 +403,18 @@ func testAccCheckRuleExists(n string, rule *route53resolver.ResolverRule) resour
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Route 53 Resolver rule ID is set")
+			return fmt.Errorf("No Route53 Resolver Rule ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn
-		res, err := conn.GetResolverRule(&route53resolver.GetResolverRuleInput{
-			ResolverRuleId: aws.String(rs.Primary.ID),
-		})
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn()
+
+		output, err := tfroute53resolver.FindResolverRuleByID(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		*rule = *res.ResolverRule
+		*v = *output
 
 		return nil
 	}
@@ -388,81 +422,74 @@ func testAccCheckRuleExists(n string, rule *route53resolver.ResolverRule) resour
 
 func testAccRuleConfig_basic(domainName string) string {
 	return fmt.Sprintf(`
-resource "aws_route53_resolver_rule" "example" {
+resource "aws_route53_resolver_rule" "test" {
   domain_name = %[1]q
   rule_type   = "SYSTEM"
 }
 `, domainName)
 }
 
-const testAccRuleConfig_basicNoTags = `
-resource "aws_route53_resolver_rule" "example" {
-  domain_name = "example.com"
-  rule_type   = "SYSTEM"
-}
-`
-
-const testAccRuleConfig_basicTags = `
-resource "aws_route53_resolver_rule" "example" {
-  domain_name = "example.com"
+func testAccRuleConfig_tags1(domainName, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_route53_resolver_rule" "test" {
+  domain_name = %[1]q
   rule_type   = "SYSTEM"
 
   tags = {
-    Environment = "production"
-    Usage       = "original"
+    %[2]q = %[3]q
   }
 }
-`
+`, domainName, tagKey1, tagValue1)
+}
 
-const testAccRuleConfig_basicTagsChanged = `
-resource "aws_route53_resolver_rule" "example" {
-  domain_name = "example.com"
+func testAccRuleConfig_tags2(domainName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_route53_resolver_rule" "test" {
+  domain_name = %[1]q
   rule_type   = "SYSTEM"
 
   tags = {
-    Usage = "changed"
+    %[2]q = %[3]q
+    %[4]q = %[5]q
   }
 }
-`
+`, domainName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
 
-func testAccRuleConfig_basicName(name string) string {
+func testAccRuleConfig_name(rName, domainName string) string {
 	return fmt.Sprintf(`
-resource "aws_route53_resolver_rule" "example" {
-  domain_name = "example.com"
+resource "aws_route53_resolver_rule" "test" {
+  domain_name = %[2]q
   rule_type   = "SYSTEM"
-  name        = %q
+  name        = %[1]q
 }
-`, name)
+`, rName, domainName)
 }
 
-func testAccRuleConfig_forward(name string) string {
-	return fmt.Sprintf(`
-%s
-
-resource "aws_route53_resolver_rule" "example" {
-  domain_name = "example.com"
+func testAccRuleConfig_forward(rName, domainName string) string {
+	return acctest.ConfigCompose(testAccRuleConfig_resolverEndpointBase(rName), fmt.Sprintf(`
+resource "aws_route53_resolver_rule" "test" {
+  domain_name = %[2]q
   rule_type   = "FORWARD"
-  name        = %q
+  name        = %[1]q
 
-  resolver_endpoint_id = aws_route53_resolver_endpoint.foo.id
+  resolver_endpoint_id = aws_route53_resolver_endpoint.test[0].id
 
   target_ip {
     ip = "192.0.2.6"
   }
 }
-`, testAccRuleConfig_resolverEndpoint(name), name)
+`, rName, domainName))
 }
 
-func testAccRuleConfig_forwardTargetIPChanged(name string) string {
-	return fmt.Sprintf(`
-%s
-
-resource "aws_route53_resolver_rule" "example" {
-  domain_name = "example.com"
+func testAccRuleConfig_forwardTargetIPChanged(rName, domainName string) string {
+	return acctest.ConfigCompose(testAccRuleConfig_resolverEndpointBase(rName), fmt.Sprintf(`
+resource "aws_route53_resolver_rule" "test" {
+  domain_name = %[2]q
   rule_type   = "FORWARD"
-  name        = %q
+  name        = %[1]q
 
-  resolver_endpoint_id = aws_route53_resolver_endpoint.foo.id
+  resolver_endpoint_id = aws_route53_resolver_endpoint.test[0].id
 
   target_ip {
     ip = "192.0.2.7"
@@ -473,19 +500,17 @@ resource "aws_route53_resolver_rule" "example" {
     port = 54
   }
 }
-`, testAccRuleConfig_resolverEndpoint(name), name)
+`, rName, domainName))
 }
 
-func testAccRuleConfig_forwardEndpointChanged(name string) string {
-	return fmt.Sprintf(`
-%s
-
-resource "aws_route53_resolver_rule" "example" {
-  domain_name = "example.com"
+func testAccRuleConfig_forwardEndpointChanged(rName, domainName string) string {
+	return acctest.ConfigCompose(testAccRuleConfig_resolverEndpointBase(rName), fmt.Sprintf(`
+resource "aws_route53_resolver_rule" "test" {
+  domain_name = %[2]q
   rule_type   = "FORWARD"
-  name        = %q
+  name        = %[1]q
 
-  resolver_endpoint_id = aws_route53_resolver_endpoint.bar.id
+  resolver_endpoint_id = aws_route53_resolver_endpoint.test[1].id
 
   target_ip {
     ip = "192.0.2.7"
@@ -496,30 +521,28 @@ resource "aws_route53_resolver_rule" "example" {
     port = 54
   }
 }
-`, testAccRuleConfig_resolverEndpoint(name), name)
+`, rName, domainName))
 }
 
-func testAccRuleConfig_forwardEndpointRecreate(name string) string {
-	return fmt.Sprintf(`
-%s
-
-resource "aws_route53_resolver_rule" "example" {
-  domain_name = "example.com"
+func testAccRuleConfig_forwardEndpointRecreate(rName, domainName string) string {
+	return acctest.ConfigCompose(testAccRuleConfig_resolverEndpointRecreateBase(rName), fmt.Sprintf(`
+resource "aws_route53_resolver_rule" "test" {
+  domain_name = %[2]q
   rule_type   = "FORWARD"
-  name        = %q
+  name        = %[1]q
 
-  resolver_endpoint_id = aws_route53_resolver_endpoint.foo.id
+  resolver_endpoint_id = aws_route53_resolver_endpoint.test[0].id
 
   target_ip {
     ip = "192.0.2.6"
   }
 }
-`, testAccRuleConfig_resolverEndpointRecreate(name), name)
+`, rName, domainName))
 }
 
-func testAccRuleConfig_resolverVPC(name string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "foo" {
+func testAccRuleConfig_vpcBase(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+resource "aws_vpc" "test" {
   cidr_block           = "10.0.0.0/16"
   enable_dns_support   = true
   enable_dns_hostnames = true
@@ -529,141 +552,69 @@ resource "aws_vpc" "foo" {
   }
 }
 
-data "aws_availability_zones" "available" {
-  state = "available"
+resource "aws_subnet" "test" {
+  count = 3
 
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_subnet" "sn1" {
-  vpc_id            = aws_vpc.foo.id
-  cidr_block        = cidrsubnet(aws_vpc.foo.cidr_block, 2, 0)
-  availability_zone = data.aws_availability_zones.available.names[0]
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
 
   tags = {
-    Name = "%[1]s_1"
+    Name = %[1]q
   }
 }
 
-resource "aws_subnet" "sn2" {
-  vpc_id            = aws_vpc.foo.id
-  cidr_block        = cidrsubnet(aws_vpc.foo.cidr_block, 2, 1)
-  availability_zone = data.aws_availability_zones.available.names[1]
+resource "aws_security_group" "test" {
+  count = 2
+
+  vpc_id = aws_vpc.test.id
+  name   = "%[1]s-${count.index}"
 
   tags = {
-    Name = "%[1]s_2"
+    Name = %[1]q
   }
 }
-
-resource "aws_subnet" "sn3" {
-  vpc_id            = aws_vpc.foo.id
-  cidr_block        = cidrsubnet(aws_vpc.foo.cidr_block, 2, 2)
-  availability_zone = data.aws_availability_zones.available.names[2]
-
-  tags = {
-    Name = "%[1]s_3"
-  }
+`, rName))
 }
 
-resource "aws_security_group" "sg1" {
-  vpc_id = aws_vpc.foo.id
-  name   = "%[1]s_1"
+func testAccRuleConfig_resolverEndpointBase(rName string) string {
+	return acctest.ConfigCompose(testAccRuleConfig_vpcBase(rName), fmt.Sprintf(`
+resource "aws_route53_resolver_endpoint" "test" {
+  count = 2
 
-  tags = {
-    Name = "%[1]s_1"
-  }
-}
-
-resource "aws_security_group" "sg2" {
-  vpc_id = aws_vpc.foo.id
-  name   = "%[1]s_2"
-
-  tags = {
-    Name = "%[1]s_2"
-  }
-}
-`, name)
-}
-
-func testAccRuleConfig_resolverEndpoint(name string) string {
-	return fmt.Sprintf(`
-%[1]s
-
-resource "aws_route53_resolver_endpoint" "foo" {
   direction = "OUTBOUND"
-  name      = "%[2]s_1"
+  name      = "%[1]s-${count.index}"
 
-  security_group_ids = [
-    aws_security_group.sg1.id,
-  ]
+  security_group_ids = [aws_security_group.test[0].id]
 
   ip_address {
-    subnet_id = aws_subnet.sn1.id
+    subnet_id = aws_subnet.test[2].id
   }
 
   ip_address {
-    subnet_id = aws_subnet.sn2.id
+    subnet_id = aws_subnet.test[count.index].id
   }
 }
+`, rName))
+}
 
-resource "aws_route53_resolver_endpoint" "bar" {
+func testAccRuleConfig_resolverEndpointRecreateBase(rName string) string {
+	return acctest.ConfigCompose(testAccRuleConfig_vpcBase(rName), fmt.Sprintf(`
+resource "aws_route53_resolver_endpoint" "test" {
+  count = 2
+
   direction = "OUTBOUND"
-  name      = "%[2]s_2"
+  name      = "%[1]s-${count.index}"
 
-  security_group_ids = [
-    aws_security_group.sg1.id,
-  ]
+  security_group_ids = [aws_security_group.test[1].id]
 
   ip_address {
-    subnet_id = aws_subnet.sn1.id
+    subnet_id = aws_subnet.test[2].id
   }
 
   ip_address {
-    subnet_id = aws_subnet.sn3.id
+    subnet_id = aws_subnet.test[count.index].id
   }
 }
-`, testAccRuleConfig_resolverVPC(name), name)
-}
-
-func testAccRuleConfig_resolverEndpointRecreate(name string) string {
-	return fmt.Sprintf(`
-%[1]s
-
-resource "aws_route53_resolver_endpoint" "foo" {
-  direction = "OUTBOUND"
-  name      = "%[2]s_1"
-
-  security_group_ids = [
-    aws_security_group.sg2.id,
-  ]
-
-  ip_address {
-    subnet_id = aws_subnet.sn1.id
-  }
-
-  ip_address {
-    subnet_id = aws_subnet.sn2.id
-  }
-}
-
-resource "aws_route53_resolver_endpoint" "bar" {
-  direction = "OUTBOUND"
-  name      = "%[2]s_2"
-
-  security_group_ids = [
-    aws_security_group.sg1.id,
-  ]
-
-  ip_address {
-    subnet_id = aws_subnet.sn1.id
-  }
-
-  ip_address {
-    subnet_id = aws_subnet.sn3.id
-  }
-}
-`, testAccRuleConfig_resolverVPC(name), name)
+`, rName))
 }

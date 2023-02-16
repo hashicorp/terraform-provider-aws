@@ -1,21 +1,23 @@
 package ecr
 
 import (
+	"context"
 	"encoding/base64"
-	"fmt"
 	"log"
 	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func DataSourceAuthorizationToken() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAuthorizationTokenRead,
+		ReadWithoutTimeout: dataSourceAuthorizationTokenRead,
 
 		Schema: map[string]*schema.Schema{
 			"registry_id": {
@@ -48,16 +50,17 @@ func DataSourceAuthorizationToken() *schema.Resource {
 	}
 }
 
-func dataSourceAuthorizationTokenRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECRConn
+func dataSourceAuthorizationTokenRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ECRConn()
 	params := &ecr.GetAuthorizationTokenInput{}
 	if v, ok := d.GetOk("registry_id"); ok {
 		params.RegistryIds = []*string{aws.String(v.(string))}
 	}
 	log.Printf("[DEBUG] Getting ECR authorization token")
-	out, err := conn.GetAuthorizationToken(params)
+	out, err := conn.GetAuthorizationTokenWithContext(ctx, params)
 	if err != nil {
-		return fmt.Errorf("error getting ECR authorization token: %w", err)
+		return sdkdiag.AppendErrorf(diags, "getting ECR authorization token: %s", err)
 	}
 	log.Printf("[DEBUG] Received ECR AuthorizationData %v", out.AuthorizationData)
 	authorizationData := out.AuthorizationData[0]
@@ -67,11 +70,11 @@ func dataSourceAuthorizationTokenRead(d *schema.ResourceData, meta interface{}) 
 	authBytes, err := base64.URLEncoding.DecodeString(authorizationToken)
 	if err != nil {
 		d.SetId("")
-		return fmt.Errorf("error decoding ECR authorization token: %w", err)
+		return sdkdiag.AppendErrorf(diags, "decoding ECR authorization token: %s", err)
 	}
 	basicAuthorization := strings.Split(string(authBytes), ":")
 	if len(basicAuthorization) != 2 {
-		return fmt.Errorf("unknown ECR authorization token format")
+		return sdkdiag.AppendErrorf(diags, "unknown ECR authorization token format")
 	}
 	userName := basicAuthorization[0]
 	password := basicAuthorization[1]
@@ -81,5 +84,5 @@ func dataSourceAuthorizationTokenRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("expires_at", expiresAt)
 	d.Set("user_name", userName)
 	d.Set("password", password)
-	return nil
+	return diags
 }

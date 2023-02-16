@@ -1,17 +1,19 @@
 package organizations
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/organizations"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func DataSourceOrganization() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceOrganizationRead,
+		ReadWithoutTimeout: dataSourceOrganizationRead,
 
 		Schema: map[string]*schema.Schema{
 			"accounts": {
@@ -142,12 +144,13 @@ func DataSourceOrganization() *schema.Resource {
 	}
 }
 
-func dataSourceOrganizationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OrganizationsConn
+func dataSourceOrganizationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).OrganizationsConn()
 
-	org, err := conn.DescribeOrganization(&organizations.DescribeOrganizationInput{})
+	org, err := conn.DescribeOrganizationWithContext(ctx, &organizations.DescribeOrganizationInput{})
 	if err != nil {
-		return fmt.Errorf("Error describing organization: %w", err)
+		return sdkdiag.AppendErrorf(diags, "describing organization: %s", err)
 	}
 
 	d.SetId(aws.StringValue(org.Organization.Id))
@@ -160,7 +163,7 @@ func dataSourceOrganizationRead(d *schema.ResourceData, meta interface{}) error 
 	if aws.StringValue(org.Organization.MasterAccountId) == meta.(*conns.AWSClient).AccountID {
 		var accounts []*organizations.Account
 		var nonMasterAccounts []*organizations.Account
-		err = conn.ListAccountsPages(&organizations.ListAccountsInput{}, func(page *organizations.ListAccountsOutput, lastPage bool) bool {
+		err = conn.ListAccountsPagesWithContext(ctx, &organizations.ListAccountsInput{}, func(page *organizations.ListAccountsOutput, lastPage bool) bool {
 			for _, account := range page.Accounts {
 				if aws.StringValue(account.Id) != aws.StringValue(org.Organization.MasterAccountId) {
 					nonMasterAccounts = append(nonMasterAccounts, account)
@@ -172,22 +175,22 @@ func dataSourceOrganizationRead(d *schema.ResourceData, meta interface{}) error 
 			return !lastPage
 		})
 		if err != nil {
-			return fmt.Errorf("error listing AWS Organization (%s) accounts: %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "listing AWS Organization (%s) accounts: %s", d.Id(), err)
 		}
 
 		var roots []*organizations.Root
-		err = conn.ListRootsPages(&organizations.ListRootsInput{}, func(page *organizations.ListRootsOutput, lastPage bool) bool {
+		err = conn.ListRootsPagesWithContext(ctx, &organizations.ListRootsInput{}, func(page *organizations.ListRootsOutput, lastPage bool) bool {
 			roots = append(roots, page.Roots...)
 			return !lastPage
 		})
 		if err != nil {
-			return fmt.Errorf("error listing AWS Organization (%s) roots: %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "listing AWS Organization (%s) roots: %s", d.Id(), err)
 		}
 
 		awsServiceAccessPrincipals := make([]string, 0)
 		// ConstraintViolationException: The request failed because the organization does not have all features enabled. Please enable all features in your organization and then retry.
 		if aws.StringValue(org.Organization.FeatureSet) == organizations.OrganizationFeatureSetAll {
-			err = conn.ListAWSServiceAccessForOrganizationPages(&organizations.ListAWSServiceAccessForOrganizationInput{}, func(page *organizations.ListAWSServiceAccessForOrganizationOutput, lastPage bool) bool {
+			err = conn.ListAWSServiceAccessForOrganizationPagesWithContext(ctx, &organizations.ListAWSServiceAccessForOrganizationInput{}, func(page *organizations.ListAWSServiceAccessForOrganizationOutput, lastPage bool) bool {
 				for _, enabledServicePrincipal := range page.EnabledServicePrincipals {
 					awsServiceAccessPrincipals = append(awsServiceAccessPrincipals, aws.StringValue(enabledServicePrincipal.ServicePrincipal))
 				}
@@ -195,7 +198,7 @@ func dataSourceOrganizationRead(d *schema.ResourceData, meta interface{}) error 
 			})
 
 			if err != nil {
-				return fmt.Errorf("error listing AWS Service Access for Organization (%s): %w", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "listing AWS Service Access for Organization (%s): %s", d.Id(), err)
 			}
 		}
 
@@ -207,25 +210,24 @@ func dataSourceOrganizationRead(d *schema.ResourceData, meta interface{}) error 
 		}
 
 		if err := d.Set("accounts", flattenAccounts(accounts)); err != nil {
-			return fmt.Errorf("error setting accounts: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting accounts: %s", err)
 		}
 
 		if err := d.Set("aws_service_access_principals", awsServiceAccessPrincipals); err != nil {
-			return fmt.Errorf("error setting aws_service_access_principals: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting aws_service_access_principals: %s", err)
 		}
 
 		if err := d.Set("enabled_policy_types", enabledPolicyTypes); err != nil {
-			return fmt.Errorf("error setting enabled_policy_types: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting enabled_policy_types: %s", err)
 		}
 
 		if err := d.Set("non_master_accounts", flattenAccounts(nonMasterAccounts)); err != nil {
-			return fmt.Errorf("error setting non_master_accounts: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting non_master_accounts: %s", err)
 		}
 
 		if err := d.Set("roots", FlattenRoots(roots)); err != nil {
-			return fmt.Errorf("error setting roots: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting roots: %s", err)
 		}
-
 	}
-	return nil
+	return diags
 }

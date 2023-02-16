@@ -10,6 +10,7 @@ import (
 )
 
 func testAccOrganizationalUnitChildAccountsDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_organizations_account.test"
 	dataSourceName := "data.aws_organizations_organizational_unit_child_accounts.test"
 
@@ -19,7 +20,7 @@ func testAccOrganizationalUnitChildAccountsDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckOrganizationsAccount(t)
+			acctest.PreCheckOrganizationsAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

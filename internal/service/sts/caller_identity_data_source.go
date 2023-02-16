@@ -1,54 +1,92 @@
 package sts
 
 import (
-	"fmt"
-	"log"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/sts"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 )
 
-func DataSourceCallerIdentity() *schema.Resource {
-	return &schema.Resource{
-		Read: dataSourceCallerIdentityRead,
+func init() {
+	_sp.registerFrameworkDataSourceFactory(newDataSourceCallerIdentity)
+}
 
-		Schema: map[string]*schema.Schema{
-			"account_id": {
-				Type:     schema.TypeString,
+// newDataSourceCallerIdentity instantiates a new DataSource for the aws_caller_identity data source.
+func newDataSourceCallerIdentity(context.Context) (datasource.DataSourceWithConfigure, error) {
+	d := &dataSourceCallerIdentity{}
+	d.SetMigratedFromPluginSDK(true)
+
+	return d, nil
+}
+
+type dataSourceCallerIdentity struct {
+	framework.DataSourceWithConfigure
+}
+
+// Metadata should return the full name of the data source, such as
+// examplecloud_thing.
+func (d *dataSourceCallerIdentity) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
+	response.TypeName = "aws_caller_identity"
+}
+
+// Schema returns the schema for this data source.
+func (d *dataSourceCallerIdentity) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"account_id": schema.StringAttribute{
 				Computed: true,
 			},
-
-			"arn": {
-				Type:     schema.TypeString,
+			"arn": schema.StringAttribute{
 				Computed: true,
 			},
-
-			"user_id": {
-				Type:     schema.TypeString,
+			"id": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+			},
+			"user_id": schema.StringAttribute{
 				Computed: true,
 			},
 		},
 	}
 }
 
-func dataSourceCallerIdentityRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*conns.AWSClient).STSConn
+// Read is called when the provider must read data source values in order to update state.
+// Config values should be read from the ReadRequest and new state values set on the ReadResponse.
+func (d *dataSourceCallerIdentity) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
+	var data dataSourceCallerIdentityData
 
-	log.Printf("[DEBUG] Reading Caller Identity")
-	res, err := client.GetCallerIdentity(&sts.GetCallerIdentityInput{})
+	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
 
-	if err != nil {
-		return fmt.Errorf("getting Caller Identity: %w", err)
+	if response.Diagnostics.HasError() {
+		return
 	}
 
-	log.Printf("[DEBUG] Received Caller Identity: %s", res)
+	conn := d.Meta().STSConn()
 
-	d.SetId(aws.StringValue(res.Account))
-	d.Set("account_id", res.Account)
-	d.Set("arn", res.Arn)
-	d.Set("user_id", res.UserId)
+	output, err := FindCallerIdentity(ctx, conn)
 
-	return nil
+	if err != nil {
+		response.Diagnostics.AddError("reading STS Caller Identity", err.Error())
+
+		return
+	}
+
+	accountID := aws.StringValue(output.Account)
+	data.AccountID = types.StringValue(accountID)
+	data.ARN = flex.StringToFrameworkLegacy(ctx, output.Arn)
+	data.ID = types.StringValue(accountID)
+	data.UserID = flex.StringToFrameworkLegacy(ctx, output.UserId)
+
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
+}
+
+type dataSourceCallerIdentityData struct {
+	AccountID types.String `tfsdk:"account_id"`
+	ARN       types.String `tfsdk:"arn"`
+	ID        types.String `tfsdk:"id"`
+	UserID    types.String `tfsdk:"user_id"`
 }

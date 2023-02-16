@@ -1,25 +1,26 @@
 package pinpoint
 
 import (
-	"errors"
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/pinpoint"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func ResourceAPNSVoIPSandboxChannel() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAPNSVoIPSandboxChannelUpsert,
-		Read:   resourceAPNSVoIPSandboxChannelRead,
-		Update: resourceAPNSVoIPSandboxChannelUpsert,
-		Delete: resourceAPNSVoIPSandboxChannelDelete,
+		CreateWithoutTimeout: resourceAPNSVoIPSandboxChannelUpsert,
+		ReadWithoutTimeout:   resourceAPNSVoIPSandboxChannelRead,
+		UpdateWithoutTimeout: resourceAPNSVoIPSandboxChannelUpsert,
+		DeleteWithoutTimeout: resourceAPNSVoIPSandboxChannelDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -71,7 +72,8 @@ func ResourceAPNSVoIPSandboxChannel() *schema.Resource {
 	}
 }
 
-func resourceAPNSVoIPSandboxChannelUpsert(d *schema.ResourceData, meta interface{}) error {
+func resourceAPNSVoIPSandboxChannelUpsert(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	certificate, certificateOk := d.GetOk("certificate")
 	privateKey, privateKeyOk := d.GetOk("private_key")
 
@@ -81,10 +83,10 @@ func resourceAPNSVoIPSandboxChannelUpsert(d *schema.ResourceData, meta interface
 	tokenKeyId, tokenKeyIdOk := d.GetOk("token_key_id")
 
 	if !(certificateOk && privateKeyOk) && !(bundleIdOk && teamIdOk && tokenKeyOk && tokenKeyIdOk) {
-		return errors.New("At least one set of credentials is required; either [certificate, private_key] or [bundle_id, team_id, token_key, token_key_id]")
+		return sdkdiag.AppendErrorf(diags, "At least one set of credentials is required; either [certificate, private_key] or [bundle_id, team_id, token_key, token_key_id]")
 	}
 
-	conn := meta.(*conns.AWSClient).PinpointConn
+	conn := meta.(*conns.AWSClient).PinpointConn()
 
 	applicationId := d.Get("application_id").(string)
 
@@ -106,32 +108,33 @@ func resourceAPNSVoIPSandboxChannelUpsert(d *schema.ResourceData, meta interface
 		APNSVoipSandboxChannelRequest: params,
 	}
 
-	_, err := conn.UpdateApnsVoipSandboxChannel(&req)
+	_, err := conn.UpdateApnsVoipSandboxChannelWithContext(ctx, &req)
 	if err != nil {
-		return fmt.Errorf("error updating Pinpoint APNs Voip Sandbox Channel for Application %s: %s", applicationId, err)
+		return sdkdiag.AppendErrorf(diags, "updating Pinpoint APNs Voip Sandbox Channel for Application %s: %s", applicationId, err)
 	}
 
 	d.SetId(applicationId)
 
-	return resourceAPNSVoIPSandboxChannelRead(d, meta)
+	return append(diags, resourceAPNSVoIPSandboxChannelRead(ctx, d, meta)...)
 }
 
-func resourceAPNSVoIPSandboxChannelRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).PinpointConn
+func resourceAPNSVoIPSandboxChannelRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).PinpointConn()
 
 	log.Printf("[INFO] Reading Pinpoint APNs Voip Sandbox Channel for Application %s", d.Id())
 
-	output, err := conn.GetApnsVoipSandboxChannel(&pinpoint.GetApnsVoipSandboxChannelInput{
+	output, err := conn.GetApnsVoipSandboxChannelWithContext(ctx, &pinpoint.GetApnsVoipSandboxChannelInput{
 		ApplicationId: aws.String(d.Id()),
 	})
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, pinpoint.ErrCodeNotFoundException) {
-			log.Printf("[WARN] Pinpoint APNs Voip Sandbox Channel for application %s not found, error code (404)", d.Id())
+			log.Printf("[WARN] Pinpoint APNs Voip Sandbox Channel for application %s not found, removing from state", d.Id())
 			d.SetId("")
-			return nil
+			return diags
 		}
 
-		return fmt.Errorf("error getting Pinpoint APNs Voip Sandbox Channel for application %s: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "getting Pinpoint APNs Voip Sandbox Channel for application %s: %s", d.Id(), err)
 	}
 
 	d.Set("application_id", output.APNSVoipSandboxChannelResponse.ApplicationId)
@@ -139,23 +142,24 @@ func resourceAPNSVoIPSandboxChannelRead(d *schema.ResourceData, meta interface{}
 	d.Set("enabled", output.APNSVoipSandboxChannelResponse.Enabled)
 	// Sensitive params are not returned
 
-	return nil
+	return diags
 }
 
-func resourceAPNSVoIPSandboxChannelDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).PinpointConn
+func resourceAPNSVoIPSandboxChannelDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).PinpointConn()
 
 	log.Printf("[DEBUG] Deleting Pinpoint APNs Voip Sandbox Channel: %s", d.Id())
-	_, err := conn.DeleteApnsVoipSandboxChannel(&pinpoint.DeleteApnsVoipSandboxChannelInput{
+	_, err := conn.DeleteApnsVoipSandboxChannelWithContext(ctx, &pinpoint.DeleteApnsVoipSandboxChannelInput{
 		ApplicationId: aws.String(d.Id()),
 	})
 
 	if tfawserr.ErrCodeEquals(err, pinpoint.ErrCodeNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Pinpoint APNs Voip Sandbox Channel for Application %s: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Pinpoint APNs Voip Sandbox Channel for Application %s: %s", d.Id(), err)
 	}
-	return nil
+	return diags
 }

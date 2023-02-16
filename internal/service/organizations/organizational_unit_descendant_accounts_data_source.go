@@ -52,7 +52,7 @@ func DataSourceOrganizationalUnitDescendantAccounts() *schema.Resource {
 
 // Todo: Get all child OUs
 func getDescendantOrganizationalUnitsIDs(parent_id string, meta interface{}) ([]string, error) {
-	conn := meta.(*conns.AWSClient).OrganizationsConn
+	conn := meta.(*conns.AWSClient).OrganizationsConn()
 
 	params := &organizations.ListOrganizationalUnitsForParentInput{
 		ParentId: aws.String(parent_id),
@@ -102,7 +102,7 @@ func getDescendantOrganizationalUnitsIDs(parent_id string, meta interface{}) ([]
 }
 
 func dataSourceOrganizationalUnitDescendantAccountsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OrganizationsConn
+	conn := meta.(*conns.AWSClient).OrganizationsConn()
 
 	parent_id := d.Get("parent_id").(string)
 

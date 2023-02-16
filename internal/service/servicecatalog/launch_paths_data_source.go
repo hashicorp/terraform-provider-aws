@@ -1,19 +1,21 @@
 package servicecatalog
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceLaunchPaths() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceLaunchPathsRead,
+		ReadWithoutTimeout: dataSourceLaunchPathsRead,
 
 		Timeouts: &schema.ResourceTimeout{
 			Read: schema.DefaultTimeout(LaunchPathsReadyTimeout),
@@ -67,23 +69,24 @@ func DataSourceLaunchPaths() *schema.Resource {
 	}
 }
 
-func dataSourceLaunchPathsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn
+func dataSourceLaunchPathsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	summaries, err := WaitLaunchPathsReady(conn, d.Get("accept_language").(string), d.Get("product_id").(string), d.Timeout(schema.TimeoutRead))
+	summaries, err := WaitLaunchPathsReady(ctx, conn, d.Get("accept_language").(string), d.Get("product_id").(string), d.Timeout(schema.TimeoutRead))
 
 	if err != nil {
-		return fmt.Errorf("error describing Service Catalog Launch Paths: %w", err)
+		return sdkdiag.AppendErrorf(diags, "describing Service Catalog Launch Paths: %s", err)
 	}
 
 	if err := d.Set("summaries", flattenLaunchPathSummaries(summaries, ignoreTagsConfig)); err != nil {
-		return fmt.Errorf("error setting summaries: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting summaries: %s", err)
 	}
 
 	d.SetId(d.Get("product_id").(string))
 
-	return nil
+	return diags
 }
 
 func flattenLaunchPathSummary(apiObject *servicecatalog.LaunchPathSummary, ignoreTagsConfig *tftags.IgnoreConfig) map[string]interface{} {
