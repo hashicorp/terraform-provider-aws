@@ -26,7 +26,7 @@ resource "aws_lightsail_instance" "test" {
 }
 
 resource "aws_lightsail_bucket_resource_access" "test" {
-  bucket_name = aws_lightsail_bucket_resource_access.test.id
+  bucket_name   = aws_lightsail_bucket_resource_access.test.id
   resource_name = aws_lightsail_instance.id
 }
 ```
@@ -37,7 +37,6 @@ The following arguments are supported:
 
 * `bucket_name` - (Required) The name of the bucket to grant access to.
 * `resource_name` - (Required) The name of the resource to be granted bucket access.
-
 
 ## Attributes Reference
 
