@@ -5804,7 +5804,7 @@ func FindIPAMResourceDiscoveryByID(ctx context.Context, conn *ec2.EC2, id string
 	return output.IpamResourceDiscoveries[0], nil
 }
 
-func FindIPAMResourceDiscoveryAssociationById(ctx context.Context, conn *ec2.EC2, id string) (*ec2.IpamResourceDiscoveryAssociation, error) {
+func FindIPAMResourceDiscoveryAssociationByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.IpamResourceDiscoveryAssociation, error) {
 	input := &ec2.DescribeIpamResourceDiscoveryAssociationsInput{
 		IpamResourceDiscoveryAssociationIds: aws.StringSlice([]string{id}),
 	}

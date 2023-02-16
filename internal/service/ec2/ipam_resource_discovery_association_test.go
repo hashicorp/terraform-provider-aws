@@ -130,7 +130,7 @@ func testAccCheckIPAMResourceDiscoveryAssociationExists(ctx context.Context, n s
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
-		output, err := tfec2.FindIPAMResourceDiscoveryAssociationById(ctx, conn, rs.Primary.ID)
+		output, err := tfec2.FindIPAMResourceDiscoveryAssociationByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -151,7 +151,7 @@ func testAccCheckIPAMResourceDiscoveryAssociationDestroy(ctx context.Context) re
 				continue
 			}
 
-			_, err := tfec2.FindIPAMResourceDiscoveryAssociationById(ctx, conn, rs.Primary.ID)
+			_, err := tfec2.FindIPAMResourceDiscoveryAssociationByID(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
