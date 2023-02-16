@@ -1741,6 +1741,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 
 			"aws_lightsail_bucket":                               lightsail.ResourceBucket(),
 			"aws_lightsail_bucket_access_key":                    lightsail.ResourceBucketAccessKey(),
+			"aws_lightsail_bucket_resource_access":               lightsail.ResourceBucketResourceAccess(),
 			"aws_lightsail_certificate":                          lightsail.ResourceCertificate(),
 			"aws_lightsail_container_service":                    lightsail.ResourceContainerService(),
 			"aws_lightsail_container_service_deployment_version": lightsail.ResourceContainerServiceDeploymentVersion(),
