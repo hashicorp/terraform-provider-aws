@@ -5811,7 +5811,7 @@ func FindIPAMResourceDiscoveryAssociationById(ctx context.Context, conn *ec2.EC2
 
 	output, err := conn.DescribeIpamResourceDiscoveryAssociationsWithContext(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidIPAMResourceDiscoveryAssociationIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidIPAMResourceDiscoveryAssociationIdNotFound) {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
 			LastRequest: input,

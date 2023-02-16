@@ -173,7 +173,7 @@ func ResourceIPAMResourceDiscoveryAssociationDelete(ctx context.Context, d *sche
 	}
 
 	if _, err = WaiterIPAMResourceDiscoveryAssociationDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		if tfawserr.ErrCodeEquals(err, errCodeInvalidIPAMResourceDiscoveryAssociationIDNotFound) {
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidIPAMResourceDiscoveryAssociationIdNotFound) {
 			return diags
 		}
 		return sdkdiag.AppendErrorf(diags, "error waiting for IPAM Resource Discovery Association (%s) to be dissociated: %s", d.Id(), err)
