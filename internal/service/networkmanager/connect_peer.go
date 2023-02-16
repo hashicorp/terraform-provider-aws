@@ -57,7 +57,7 @@ func ResourceConnectPeer() *schema.Resource {
 						"peer_asn": {
 							Type:         schema.TypeInt,
 							Optional:     true,
-							ValidateFunc: validateASNumber(),
+							ValidateFunc: validation.IntBetween(1, 2147483647),
 						},
 					},
 				},
@@ -426,28 +426,6 @@ func statusConnectPeerState(ctx context.Context, conn *networkmanager.NetworkMan
 		}
 
 		return output, aws.StringValue(output.State), nil
-	}
-}
-
-// ASNumber returns a SchemaValidateFunc which tests if the provided value
-// is a valid AS number
-func validateASNumber() schema.SchemaValidateFunc {
-	return func(i interface{}, k string) (warnings []string, errors []error) {
-		v, ok := i.(int)
-		if !ok {
-			errors = append(errors, fmt.Errorf("expected type of %s to be an integer", k))
-			return warnings, errors
-		}
-
-		asnMin := 1
-		asnMax := 4294967295
-
-		if v < asnMin || v > asnMax {
-			errors = append(errors, fmt.Errorf("expected %s to be in the range (%d - %d), got %d", k, asnMin, asnMax, v))
-			return warnings, errors
-		}
-
-		return warnings, errors
 	}
 }
 
