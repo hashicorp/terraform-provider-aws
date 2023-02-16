@@ -1,0 +1,25 @@
+issues:
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - errorlint
+    - linters:
+        - contextcheck
+      text: "Function `New`"
+  max-per-linter: 0
+  max-same-issues: 0
+
+linters:
+  disable-all: true
+  enable:
+    - asasalint
+    - containedctx
+    # - contextcheck
+    - errorlint
+
+linters-settings:
+  errorlint:
+    errorf: false
+
+run:
+  timeout: 75m
