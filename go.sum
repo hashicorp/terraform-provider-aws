@@ -54,8 +54,8 @@ github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.21.0 h1:w77FXLnmsP8df7t
 github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.21.0/go.mod h1:NzdpULBLSRol5BDNoX4RCYO+84TBl89BbSPxBthOAns=
 github.com/aws/aws-sdk-go-v2/service/ec2 v1.86.0 h1:4dt0Mg5veHbMLcA2JAR9LDxvqXjtG0ZLQdxZG/2wHy4=
 github.com/aws/aws-sdk-go-v2/service/ec2 v1.86.0/go.mod h1:jK4MhMMe6HIe4qnjGaQqQQECcsxRZ0q86oCq06T8IEE=
-github.com/aws/aws-sdk-go-v2/service/fis v1.14.1 h1:vGYXv7PifGi7k3bNGaG0HA3Z5+/01pQnadsHNuzTEqg=
-github.com/aws/aws-sdk-go-v2/service/fis v1.14.1/go.mod h1:RbSy4W2TNF4RxYmMmJoPLzN3+XwM018Ng9en0P0PAEg=
+github.com/aws/aws-sdk-go-v2/service/fis v1.14.2 h1:Xq9JF0Px/YvKnWI4HW/RIRZ5ZDG0RQxsX2dSX/jOh6s=
+github.com/aws/aws-sdk-go-v2/service/fis v1.14.2/go.mod h1:RbSy4W2TNF4RxYmMmJoPLzN3+XwM018Ng9en0P0PAEg=
 github.com/aws/aws-sdk-go-v2/service/iam v1.19.2 h1:3VWoyWLF29SjuazBalLhYM5dtk6zUpvgK/TKvaVBnjg=
 github.com/aws/aws-sdk-go-v2/service/iam v1.19.2/go.mod h1:t/9Drvr/LQZAQGq83FqtuzqP66LpFo+UaMNlAOeixoc=
 github.com/aws/aws-sdk-go-v2/service/identitystore v1.16.1 h1:mKZdVskrttI0i8R5hM9NMQWdh3v9lBKpEga2gR6ZOoU=
