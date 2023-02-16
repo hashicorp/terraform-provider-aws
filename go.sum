@@ -92,8 +92,8 @@ github.com/aws/aws-sdk-go-v2/service/sesv2 v1.16.1 h1:wHSebyUM3Nvbv3Z0Gz/Cx5CDct
 github.com/aws/aws-sdk-go-v2/service/sesv2 v1.16.1/go.mod h1:arL6iI/CG3jvZ44VweHHOmu4MfLpdL6ISkSl6ljK8gM=
 github.com/aws/aws-sdk-go-v2/service/ssm v1.35.2 h1:PtV0g0sHaz8B4FD9M4zhdamFEoOYEo6O5nFv9LaWID8=
 github.com/aws/aws-sdk-go-v2/service/ssm v1.35.2/go.mod h1:VLSz2SHUKYFSOlXB/GlXoLU6KPYQJAbw7I20TDJdyws=
-github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.20.1 h1:5+ONKSepkaNTZtCpEJ2ozGKufGlLUli0OjA0pil3wSs=
-github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.20.1/go.mod h1:VUBaHNAwM0XnbVZC9ag+KoVWlvDWnOomzjcBQKNRaDY=
+github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.20.2 h1:AjsFl3H+Q4O5PneqUvHzb+Ue1N8GqSR1pDoNQDM9nMs=
+github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.20.2/go.mod h1:VUBaHNAwM0XnbVZC9ag+KoVWlvDWnOomzjcBQKNRaDY=
 github.com/aws/aws-sdk-go-v2/service/sso v1.12.1 h1:lQKN/LNa3qqu2cDOQZybP7oL4nMGGiFqob0jZJaR8/4=
 github.com/aws/aws-sdk-go-v2/service/sso v1.12.1/go.mod h1:IgV8l3sj22nQDd5qcAGY0WenwCzCphqdbFOpfktZPrI=
 github.com/aws/aws-sdk-go-v2/service/ssooidc v1.14.1 h1:0bLhH6DRAqox+g0LatcjGKjjhU6Eudyys6HB6DJVPj8=
