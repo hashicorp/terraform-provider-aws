@@ -1391,7 +1391,6 @@ func StatusIPAMResourceDiscoveryAssociationStatus(ctx context.Context, conn *ec2
 			return nil, "", nil
 		}
 
-		// there was an unhandled error in the Finder
 		if err != nil {
 			return nil, "", err
 		}

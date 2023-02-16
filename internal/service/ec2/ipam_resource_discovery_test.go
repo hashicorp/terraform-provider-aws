@@ -57,7 +57,6 @@ func TestAccIPAMResourceDiscovery_modify(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
@@ -101,7 +100,6 @@ func TestAccIPAMResourceDiscovery_modify(t *testing.T) {
 func TestAccIPAMResourceDiscovery_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var rd ec2.IpamResourceDiscovery
-
 	resourceName := "aws_vpc_ipam_resource_discovery.test"
 
 	resource.ParallelTest(t, resource.TestCase{
