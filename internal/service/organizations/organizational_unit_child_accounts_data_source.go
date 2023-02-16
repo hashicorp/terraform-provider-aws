@@ -78,7 +78,7 @@ func findAccountsForParent(ctx context.Context, conn *organizations.Organization
 	}
 	var output []*organizations.Account
 
-	err := conn.ListAccountsForParentPages(input, func(page *organizations.ListAccountsForParentOutput, lastPage bool) bool {
+	err := conn.ListAccountsForParentPagesWithContext(ctx, input, func(page *organizations.ListAccountsForParentOutput, lastPage bool) bool {
 		output = append(output, page.Accounts...)
 
 		return !lastPage
