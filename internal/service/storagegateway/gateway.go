@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -303,13 +304,13 @@ func resourceGatewayCreate(ctx context.Context, d *schema.ResourceData, meta int
 			response, err = client.Do(request)
 
 			if err != nil {
-				if err, ok := err.(net.Error); ok {
-					errMessage := fmt.Errorf("error making HTTP request: %s", err)
+				if errs.IsA[net.Error](err) {
+					errMessage := fmt.Errorf("making HTTP request: %s", err)
 					log.Printf("[DEBUG] retryable %s", errMessage)
 					return resource.RetryableError(errMessage)
 				}
 
-				return resource.NonRetryableError(fmt.Errorf("error making HTTP request: %w", err))
+				return resource.NonRetryableError(fmt.Errorf("making HTTP request: %w", err))
 			}
 
 			for _, retryableStatusCode := range []int{504} {
