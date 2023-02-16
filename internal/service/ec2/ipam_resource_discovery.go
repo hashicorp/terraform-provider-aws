@@ -20,12 +20,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func ResourceIPAM() *schema.Resource {
+func ResourceIPAMResourceDiscovery() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: resourceIPAMCreate,
-		ReadWithoutTimeout:   resourceIPAMRead,
-		UpdateWithoutTimeout: resourceIPAMUpdate,
-		DeleteWithoutTimeout: resourceIPAMDelete,
+		CreateWithoutTimeout: resourceIPAMResourceDiscoveryCreate,
+		ReadWithoutTimeout:   resourceIPAMResourceDiscoveryRead,
+		UpdateWithoutTimeout: resourceIPAMResourceDiscoveryUpdate,
+		DeleteWithoutTimeout: resourceIPAMResourceDiscoveryDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -42,21 +42,17 @@ func ResourceIPAM() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"cascade": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"default_resource_discovery_association_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"default_resource_discovery_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
+			},
+			"ipam_resource_discovery_region": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"is_default": {
+				Type:     schema.TypeBool,
+				Computed: true,
 			},
 			"operating_regions": {
 				Type:     schema.TypeSet,
@@ -71,16 +67,8 @@ func ResourceIPAM() *schema.Resource {
 					},
 				},
 			},
-			"private_default_scope_id": {
+			"owner_id": {
 				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"public_default_scope_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"scope_count": {
-				Type:     schema.TypeInt,
 				Computed: true,
 			},
 			"tags":     tftags.TagsSchema(),
@@ -89,6 +77,7 @@ func ResourceIPAM() *schema.Resource {
 
 		CustomizeDiff: customdiff.Sequence(
 			verify.SetTagsDiff,
+			// user must define authn region within `operating_regions {}`
 			func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
 				if diff.Id() == "" { // Create.
 					currentRegion := meta.(*conns.AWSClient).Region
@@ -98,77 +87,73 @@ func ResourceIPAM() *schema.Resource {
 							return nil
 						}
 					}
-
 					return fmt.Errorf("`operating_regions` must include %s", currentRegion)
 				}
-
 				return nil
 			},
 		),
 	}
 }
 
-func resourceIPAMCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIPAMResourceDiscoveryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
-	input := &ec2.CreateIpamInput{
+	input := &ec2.CreateIpamResourceDiscoveryInput{
 		ClientToken:       aws.String(resource.UniqueId()),
 		OperatingRegions:  expandIPAMOperatingRegions(d.Get("operating_regions").(*schema.Set).List()),
-		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeIpam),
+		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeIpamResourceDiscovery),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateIpamWithContext(ctx, input)
+	output, err := conn.CreateIpamResourceDiscoveryWithContext(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating IPAM: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating IPAM Resource Discovery: %s", err)
 	}
 
-	d.SetId(aws.StringValue(output.Ipam.IpamId))
+	d.SetId(aws.StringValue(output.IpamResourceDiscovery.IpamResourceDiscoveryId))
 
-	if _, err := WaitIPAMCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for IPAM (%s) created: %s", d.Id(), err)
+	if _, err := WaitIPAMResourceDiscoveryAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for IPAM Resource Discovery (%s) create: %s", d.Id(), err)
 	}
 
-	return append(diags, resourceIPAMRead(ctx, d, meta)...)
+	return append(diags, resourceIPAMResourceDiscoveryRead(ctx, d, meta)...)
 }
 
-func resourceIPAMRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIPAMResourceDiscoveryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	ipam, err := FindIPAMByID(ctx, conn, d.Id())
+	rd, err := FindIPAMResourceDiscoveryByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] IPAM (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] IPAM Resource Discovery (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading IPAM (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading IPAM Resource Discovery (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", ipam.IpamArn)
-	d.Set("default_resource_discovery_association_id", ipam.DefaultResourceDiscoveryAssociationId)
-	d.Set("default_resource_discovery_id", ipam.DefaultResourceDiscoveryId)
-	d.Set("description", ipam.Description)
-	if err := d.Set("operating_regions", flattenIPAMOperatingRegions(ipam.OperatingRegions)); err != nil {
+	d.Set("arn", rd.IpamResourceDiscoveryArn)
+	d.Set("description", rd.Description)
+	d.Set("ipam_resource_discovery_region", rd.IpamResourceDiscoveryRegion)
+	d.Set("is_default", rd.IsDefault)
+	if err := d.Set("operating_regions", flattenIPAMResourceDiscoveryOperatingRegions(rd.OperatingRegions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting operating_regions: %s", err)
 	}
-	d.Set("public_default_scope_id", ipam.PublicDefaultScopeId)
-	d.Set("private_default_scope_id", ipam.PrivateDefaultScopeId)
-	d.Set("scope_count", ipam.ScopeCount)
+	d.Set("owner_id", rd.OwnerId)
 
-	tags := KeyValueTags(ipam.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(rd.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -182,13 +167,13 @@ func resourceIPAMRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	return diags
 }
 
-func resourceIPAMUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIPAMResourceDiscoveryUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
-		input := &ec2.ModifyIpamInput{
-			IpamId: aws.String(d.Id()),
+		input := &ec2.ModifyIpamResourceDiscoveryInput{
+			IpamResourceDiscoveryId: aws.String(d.Id()),
 		}
 
 		if d.HasChange("description") {
@@ -206,8 +191,8 @@ func resourceIPAMUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 			os := o.(*schema.Set)
 			ns := n.(*schema.Set)
-			operatingRegionUpdateAdd := expandIPAMOperatingRegionsUpdateAddRegions(ns.Difference(os).List())
-			operatingRegionUpdateRemove := expandIPAMOperatingRegionsUpdateDeleteRegions(os.Difference(ns).List())
+			operatingRegionUpdateAdd := expandIPAMResourceDiscoveryOperatingRegionsUpdateAddRegions(ns.Difference(os).List())
+			operatingRegionUpdateRemove := expandIPAMResourceDiscoveryOperatingRegionsUpdateDeleteRegions(os.Difference(ns).List())
 
 			if len(operatingRegionUpdateAdd) != 0 {
 				input.AddOperatingRegions = operatingRegionUpdateAdd
@@ -218,14 +203,14 @@ func resourceIPAMUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 			}
 		}
 
-		_, err := conn.ModifyIpamWithContext(ctx, input)
+		_, err := conn.ModifyIpamResourceDiscoveryWithContext(ctx, input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating IPAM (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "modifying IPAM Resource Discovery (%s): %s", d.Id(), err)
 		}
 
-		if _, err := WaitIPAMUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for IPAM (%s) update: %s", d.Id(), err)
+		if _, err := WaitIPAMResourceDiscoveryUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for IPAM Resource Discovery (%s) update: %s", d.Id(), err)
 		}
 	}
 
@@ -233,100 +218,77 @@ func resourceIPAMUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating IPAM (%s) tags: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating IPAM Resource Discovery (%s) tags: %s", d.Id(), err)
 		}
 	}
 
 	return diags
 }
 
-func resourceIPAMDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIPAMResourceDiscoveryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
 
-	input := &ec2.DeleteIpamInput{
-		IpamId: aws.String(d.Id()),
-	}
+	log.Printf("[DEBUG] Deleting IPAM Resource Discovery: %s", d.Id())
+	_, err := conn.DeleteIpamResourceDiscoveryWithContext(ctx, &ec2.DeleteIpamResourceDiscoveryInput{
+		IpamResourceDiscoveryId: aws.String(d.Id()),
+	})
 
-	if v, ok := d.GetOk("cascade"); ok {
-		input.Cascade = aws.Bool(v.(bool))
-	}
-
-	log.Printf("[DEBUG] Deleting IPAM: %s", d.Id())
-	_, err := conn.DeleteIpamWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidIPAMIdNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidIPAMResourceDiscoveryIdNotFound) {
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting IPAM: (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting IPAM Resource Discovery: (%s): %s", d.Id(), err)
 	}
 
-	if _, err := WaitIPAMDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for IPAM (%s) delete: %s", d.Id(), err)
+	if _, err := WaitIPAMResourceDiscoveryDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for IPAM Resource Discovery (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func expandIPAMOperatingRegions(operatingRegions []interface{}) []*ec2.AddIpamOperatingRegion {
-	regions := make([]*ec2.AddIpamOperatingRegion, 0, len(operatingRegions))
-	for _, regionRaw := range operatingRegions {
-		region := regionRaw.(map[string]interface{})
-		regions = append(regions, expandIPAMOperatingRegion(region))
-	}
-
-	return regions
-}
-
-func expandIPAMOperatingRegion(operatingRegion map[string]interface{}) *ec2.AddIpamOperatingRegion {
-	region := &ec2.AddIpamOperatingRegion{
-		RegionName: aws.String(operatingRegion["region_name"].(string)),
-	}
-	return region
-}
-
-func flattenIPAMOperatingRegions(operatingRegions []*ec2.IpamOperatingRegion) []interface{} {
+func flattenIPAMResourceDiscoveryOperatingRegions(operatingRegions []*ec2.IpamOperatingRegion) []interface{} {
 	regions := []interface{}{}
 	for _, operatingRegion := range operatingRegions {
-		regions = append(regions, flattenIPAMOperatingRegion(operatingRegion))
+		regions = append(regions, flattenIPAMResourceDiscoveryOperatingRegion(operatingRegion))
 	}
 	return regions
 }
 
-func flattenIPAMOperatingRegion(operatingRegion *ec2.IpamOperatingRegion) map[string]interface{} {
+func flattenIPAMResourceDiscoveryOperatingRegion(operatingRegion *ec2.IpamOperatingRegion) map[string]interface{} {
 	region := make(map[string]interface{})
 	region["region_name"] = aws.StringValue(operatingRegion.RegionName)
 	return region
 }
 
-func expandIPAMOperatingRegionsUpdateAddRegions(operatingRegions []interface{}) []*ec2.AddIpamOperatingRegion {
+func expandIPAMResourceDiscoveryOperatingRegionsUpdateAddRegions(operatingRegions []interface{}) []*ec2.AddIpamOperatingRegion {
 	regionUpdates := make([]*ec2.AddIpamOperatingRegion, 0, len(operatingRegions))
 	for _, regionRaw := range operatingRegions {
 		region := regionRaw.(map[string]interface{})
-		regionUpdates = append(regionUpdates, expandIPAMOperatingRegionsUpdateAddRegion(region))
+		regionUpdates = append(regionUpdates, expandIPAMResourceDiscoveryOperatingRegionsUpdateAddRegion(region))
 	}
 	return regionUpdates
 }
 
-func expandIPAMOperatingRegionsUpdateAddRegion(operatingRegion map[string]interface{}) *ec2.AddIpamOperatingRegion {
+func expandIPAMResourceDiscoveryOperatingRegionsUpdateAddRegion(operatingRegion map[string]interface{}) *ec2.AddIpamOperatingRegion {
 	regionUpdate := &ec2.AddIpamOperatingRegion{
 		RegionName: aws.String(operatingRegion["region_name"].(string)),
 	}
 	return regionUpdate
 }
 
-func expandIPAMOperatingRegionsUpdateDeleteRegions(operatingRegions []interface{}) []*ec2.RemoveIpamOperatingRegion {
+func expandIPAMResourceDiscoveryOperatingRegionsUpdateDeleteRegions(operatingRegions []interface{}) []*ec2.RemoveIpamOperatingRegion {
 	regionUpdates := make([]*ec2.RemoveIpamOperatingRegion, 0, len(operatingRegions))
 	for _, regionRaw := range operatingRegions {
 		region := regionRaw.(map[string]interface{})
-		regionUpdates = append(regionUpdates, expandIPAMOperatingRegionsUpdateDeleteRegion(region))
+		regionUpdates = append(regionUpdates, expandIPAMResourceDiscoveryOperatingRegionsUpdateDeleteRegion(region))
 	}
 	return regionUpdates
 }
 
-func expandIPAMOperatingRegionsUpdateDeleteRegion(operatingRegion map[string]interface{}) *ec2.RemoveIpamOperatingRegion {
+func expandIPAMResourceDiscoveryOperatingRegionsUpdateDeleteRegion(operatingRegion map[string]interface{}) *ec2.RemoveIpamOperatingRegion {
 	regionUpdate := &ec2.RemoveIpamOperatingRegion{
 		RegionName: aws.String(operatingRegion["region_name"].(string)),
 	}
