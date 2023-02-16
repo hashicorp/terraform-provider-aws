@@ -86,6 +86,7 @@ const (
 	TopicAttributeNameHTTPSuccessFeedbackRoleARN           = "HTTPSuccessFeedbackRoleArn"
 	TopicAttributeNameHTTPSuccessFeedbackSampleRate        = "HTTPSuccessFeedbackSampleRate"
 	TopicAttributeNameKMSMasterKeyId                       = "KmsMasterKeyId"
+	TopicAttributeNameSignatureVersion                     = "SignatureVersion"
 	TopicAttributeNameLambdaFailureFeedbackRoleARN         = "LambdaFailureFeedbackRoleArn"
 	TopicAttributeNameLambdaSuccessFeedbackRoleARN         = "LambdaSuccessFeedbackRoleArn"
 	TopicAttributeNameLambdaSuccessFeedbackSampleRate      = "LambdaSuccessFeedbackSampleRate"

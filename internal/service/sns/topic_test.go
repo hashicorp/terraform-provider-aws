@@ -59,6 +59,7 @@ func TestAccSNSTopic_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "http_success_feedback_role_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "http_success_feedback_sample_rate", "0"),
 					resource.TestCheckResourceAttr(resourceName, "kms_master_key_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "signature_version", "1"),
 					resource.TestCheckResourceAttr(resourceName, "lambda_failure_feedback_role_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "lambda_success_feedback_role_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "lambda_success_feedback_sample_rate", "0"),

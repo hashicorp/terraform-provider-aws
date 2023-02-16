@@ -105,6 +105,12 @@ var (
 			Type:     schema.TypeString,
 			Optional: true,
 		},
+		"signature_version": {
+			Type:         schema.TypeInt,
+			Optional:     true,
+			ValidateFunc: validation.IntBetween(1, 2),
+			Default:      1,
+		},
 		"lambda_failure_feedback_role_arn": {
 			Type:         schema.TypeString,
 			Optional:     true,
@@ -185,6 +191,7 @@ var (
 		"http_success_feedback_role_arn":        TopicAttributeNameHTTPSuccessFeedbackRoleARN,
 		"http_success_feedback_sample_rate":     TopicAttributeNameHTTPSuccessFeedbackSampleRate,
 		"kms_master_key_id":                     TopicAttributeNameKMSMasterKeyId,
+		"signature_version":                     TopicAttributeNameSignatureVersion,
 		"lambda_failure_feedback_role_arn":      TopicAttributeNameLambdaFailureFeedbackRoleARN,
 		"lambda_success_feedback_role_arn":      TopicAttributeNameLambdaSuccessFeedbackRoleARN,
 		"lambda_success_feedback_sample_rate":   TopicAttributeNameLambdaSuccessFeedbackSampleRate,
