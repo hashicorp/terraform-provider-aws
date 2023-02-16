@@ -28,7 +28,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.29.2
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.1.1
 	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.16.1
-	github.com/aws/aws-sdk-go-v2/service/ssm v1.35.2
+	github.com/aws/aws-sdk-go-v2/service/ssm v1.35.3
 	github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.20.1
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.25.1
 	github.com/aws/smithy-go v1.13.5
