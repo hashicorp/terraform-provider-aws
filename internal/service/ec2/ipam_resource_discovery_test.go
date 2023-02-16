@@ -178,7 +178,7 @@ func testAccCheckIPAMResourceDiscoveryExists(ctx context.Context, n string, v *e
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
-		output, err := tfec2.FindIPAMResourceDiscoveryById(ctx, conn, rs.Primary.ID)
+		output, err := tfec2.FindIPAMResourceDiscoveryByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -199,7 +199,7 @@ func testAccCheckIPAMResourceDiscoveryDestroy(ctx context.Context) resource.Test
 				continue
 			}
 
-			_, err := tfec2.FindIPAMResourceDiscoveryById(ctx, conn, rs.Primary.ID)
+			_, err := tfec2.FindIPAMResourceDiscoveryByID(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue

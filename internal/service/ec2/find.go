@@ -5779,7 +5779,7 @@ func FindIPAMPoolCIDRByPoolCIDRId(ctx context.Context, conn *ec2.EC2, poolCidrId
 	return output, nil
 }
 
-func FindIPAMResourceDiscoveryById(ctx context.Context, conn *ec2.EC2, id string) (*ec2.IpamResourceDiscovery, error) {
+func FindIPAMResourceDiscoveryByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.IpamResourceDiscovery, error) {
 	input := &ec2.DescribeIpamResourceDiscoveriesInput{
 		IpamResourceDiscoveryIds: aws.StringSlice([]string{id}),
 	}

@@ -131,7 +131,7 @@ func ResourceIPAMResourceDiscoveryRead(ctx context.Context, d *schema.ResourceDa
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	rd, err := FindIPAMResourceDiscoveryById(ctx, conn, d.Id())
+	rd, err := FindIPAMResourceDiscoveryByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] IPAM Resource Discovery (%s) not found, removing from state", d.Id())

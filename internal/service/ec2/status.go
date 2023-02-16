@@ -1369,7 +1369,7 @@ func StatusIPAMPoolCIDRAllocationState(ctx context.Context, conn *ec2.EC2, alloc
 
 func StatusIPAMResourceDiscoveryState(ctx context.Context, conn *ec2.EC2, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindIPAMResourceDiscoveryById(ctx, conn, id)
+		output, err := FindIPAMResourceDiscoveryByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
