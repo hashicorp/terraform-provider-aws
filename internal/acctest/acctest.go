@@ -667,7 +667,7 @@ func Partition() string {
 	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), Region()); ok {
 		return partition.ID()
 	}
-	return "aws"
+	return endpoints.AwsPartitionID
 }
 
 func PartitionDNSSuffix() string {
@@ -689,14 +689,14 @@ func alternateRegionPartition() string {
 	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), AlternateRegion()); ok {
 		return partition.ID()
 	}
-	return "aws"
+	return endpoints.AwsPartitionID
 }
 
 func thirdRegionPartition() string {
 	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), ThirdRegion()); ok {
 		return partition.ID()
 	}
-	return "aws"
+	return endpoints.AwsPartitionID
 }
 
 func PreCheckAlternateAccount(t *testing.T) {

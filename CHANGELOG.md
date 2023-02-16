@@ -1,4 +1,48 @@
-## 4.54.0 (Unreleased)
+## 4.55.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `aws_route53_cidr_collection` ([#29407](https://github.com/hashicorp/terraform-provider-aws/issues/29407))
+* **New Resource:** `aws_route53_cidr_location` ([#29407](https://github.com/hashicorp/terraform-provider-aws/issues/29407))
+
+ENHANCEMENTS:
+
+* data-source/aws_s3_bucket_object: Expand content types that can be read from S3 to include some human-readable application types (e.g., `application/xml`, `application/atom+xml`) ([#27704](https://github.com/hashicorp/terraform-provider-aws/issues/27704))
+* data-source/aws_s3_object: Expand content types that can be read from S3 to include some human-readable application types (e.g., `application/xml`, `application/atom+xml`) ([#27704](https://github.com/hashicorp/terraform-provider-aws/issues/27704))
+* resource/aws_autoscaling_policy: Make `resource_label` optional in `predefined_load_metric_specification`, `predefined_metric_pair_specification`, and `predefined_scaling_metric_specification` ([#29277](https://github.com/hashicorp/terraform-provider-aws/issues/29277))
+* resource/aws_db_proxy: Add `auth.client_password_auth_type` attribute ([#28432](https://github.com/hashicorp/terraform-provider-aws/issues/28432))
+* resource/aws_firehose_delivery_stream: Add `ForceNew` to `dynamic_partitioning_configuration` attribute ([#29093](https://github.com/hashicorp/terraform-provider-aws/issues/29093))
+* resource/aws_firehose_delivery_stream: Add configurable timeouts for create, update, and delete ([#28469](https://github.com/hashicorp/terraform-provider-aws/issues/28469))
+* resource/aws_neptune_cluster: Add `neptune_instance_parameter_group_name` argument, used only when upgrading major version ([#28051](https://github.com/hashicorp/terraform-provider-aws/issues/28051))
+* resource/aws_neptune_global_cluster: Increase Update timeout to 120 minutes (per global cluster member) ([#28051](https://github.com/hashicorp/terraform-provider-aws/issues/28051))
+* resource/aws_route53_cidr_location: Add `cidr_routing_policy` argument ([#29407](https://github.com/hashicorp/terraform-provider-aws/issues/29407))
+* resource/aws_s3_bucket: Accept 'NoSuchTagSetError' responses from S3-compatible services ([#28530](https://github.com/hashicorp/terraform-provider-aws/issues/28530))
+* resource/aws_s3_bucket: Add error handling for `NotImplemented` errors when reading `lifecycle_rule` or `replication_configuration` into terraform state. ([#28790](https://github.com/hashicorp/terraform-provider-aws/issues/28790))
+* resource/aws_s3_object: Accept 'NoSuchTagSetError' responses from S3-compatible services ([#28530](https://github.com/hashicorp/terraform-provider-aws/issues/28530))
+
+BUG FIXES:
+
+* data-source/aws_elb: Fix errors caused by multiple security groups with the same name but different owners ([#29202](https://github.com/hashicorp/terraform-provider-aws/issues/29202))
+* resource/aws_appflow_connector_profile: Fix bug in connector_profile_config.0.connector_profile_properties.0.sapo_data.0.logon_language validation regex ([#28550](https://github.com/hashicorp/terraform-provider-aws/issues/28550))
+* resource/aws_appflow_flow: Fix misspelled `source_connector_properties.0.sapo_data.0.object`, which never worked, to be `object_path` ([#28600](https://github.com/hashicorp/terraform-provider-aws/issues/28600))
+* resource/aws_appmesh_route: Fix RequiredWith setting for `spec.0.grpc_route.0.match.0.method_name` attribute ([#29217](https://github.com/hashicorp/terraform-provider-aws/issues/29217))
+* resource/aws_autoscaling_policy: Fix type of target_value for predictive scaling ([#28444](https://github.com/hashicorp/terraform-provider-aws/issues/28444))
+* resource/aws_cloudfront_response_headers_policy: Allow `server_timing_headers_config.0.sampling_rate` to be `0` ([#27778](https://github.com/hashicorp/terraform-provider-aws/issues/27778))
+* resource/aws_codebuild_project: Fix err check on delete ([#29042](https://github.com/hashicorp/terraform-provider-aws/issues/29042))
+* resource/aws_ecs_service: Allow multiple `service` blocks within `service_connect_configuration` ([#28813](https://github.com/hashicorp/terraform-provider-aws/issues/28813))
+* resource/aws_ecs_service: Mark `service_connect_configuration.service.client_alias` as optional and ensure that only 1 such block can be provided ([#28813](https://github.com/hashicorp/terraform-provider-aws/issues/28813))
+* resource/aws_ecs_service: Require `service_connect_configuration.log_configuration.log_driver` to be provided ([#28813](https://github.com/hashicorp/terraform-provider-aws/issues/28813))
+* resource/aws_elb: Fix errors caused by multiple security groups with the same name but different owners ([#29202](https://github.com/hashicorp/terraform-provider-aws/issues/29202))
+* resource/aws_emr_cluster: Fix errors caused by multiple security groups with the same name but different owners ([#29202](https://github.com/hashicorp/terraform-provider-aws/issues/29202))
+* resource/aws_globalaccelerator_endpoint_group: Fix errors caused by multiple security groups with the same name but different owners ([#29202](https://github.com/hashicorp/terraform-provider-aws/issues/29202))
+* resource/aws_kms_key: Increase `policy propagation` eventual consistency timeouts from 5 minutes to 10 minutes ([#28636](https://github.com/hashicorp/terraform-provider-aws/issues/28636))
+* resource/aws_medialive_channel: Fix issue causing `dbv_sub_pids` attribute to be configured incorrectly in `m2ts_settings` ([#29371](https://github.com/hashicorp/terraform-provider-aws/issues/29371))
+* resource/aws_medialive_channel: Fix issue preventing `audio_pids` attribute from being configured in `m2ts_settings` ([#29371](https://github.com/hashicorp/terraform-provider-aws/issues/29371))
+* resource/aws_neptune_cluster: Fix [restore-from-snapshot functionality](https://docs.aws.amazon.com/neptune/latest/userguide/backup-restore-restore-snapshot.html) using the `snapshot_identifier` argument on resource Create ([#28051](https://github.com/hashicorp/terraform-provider-aws/issues/28051))
+* resource/aws_neptune_cluster: Fix major version upgrade ([#28051](https://github.com/hashicorp/terraform-provider-aws/issues/28051))
+* resource/aws_sagemaker_user_profile: Change `user_settings.0.jupyter_server_app_settings.0.default_resource_spec` to be optional ([#28581](https://github.com/hashicorp/terraform-provider-aws/issues/28581))
+
+## 4.54.0 (February  9, 2023)
 
 NOTES:
 
@@ -13,6 +57,12 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* data-source/aws_cloudtrail_service_account: Add service account ID for `ap-southeast-4` AWS Region ([#29103](https://github.com/hashicorp/terraform-provider-aws/issues/29103))
+* data-source/aws_elb_hosted_zone_id: Add hosted zone ID for `ap-southeast-4` AWS Region ([#29103](https://github.com/hashicorp/terraform-provider-aws/issues/29103))
+* data-source/aws_lb_hosted_zone_id: Add hosted zone IDs for `ap-southeast-4` AWS Region ([#29103](https://github.com/hashicorp/terraform-provider-aws/issues/29103))
+* data-source/aws_s3_bucket: Add hosted zone ID for `ap-south-2` AWS Region ([#29103](https://github.com/hashicorp/terraform-provider-aws/issues/29103))
+* data-source/aws_s3_bucket: Add hosted zone ID for `ap-southeast-4` AWS Region ([#29103](https://github.com/hashicorp/terraform-provider-aws/issues/29103))
+* provider: Support `ap-southeast-4` as a valid AWS region ([#29329](https://github.com/hashicorp/terraform-provider-aws/issues/29329))
 * resource/aws_dynamodb_table: Add `arn`, `stream_arn`, and `stream_label` attributes to `replica` to obtain this information for replicas ([#29269](https://github.com/hashicorp/terraform-provider-aws/issues/29269))
 * resource/aws_efs_mount_target: Add configurable timeouts for Create and Delete ([#27991](https://github.com/hashicorp/terraform-provider-aws/issues/27991))
 * resource/aws_lambda_function: Add `replace_security_groups_on_destroy` and `replacement_security_group_ids` attributes ([#29289](https://github.com/hashicorp/terraform-provider-aws/issues/29289))

@@ -46,7 +46,7 @@ func ResourceConfigurationTemplate() *schema.Resource {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
-				Elem:     resourceOptionSetting(),
+				Elem:     settingSchema(),
 				Set:      optionSettingValueHash,
 			},
 			"solution_stack_name": {

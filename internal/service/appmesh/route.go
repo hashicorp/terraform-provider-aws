@@ -106,7 +106,7 @@ func ResourceRoute() *schema.Resource {
 															"port": {
 																Type:         schema.TypeInt,
 																Optional:     true,
-																ValidateFunc: validation.IntBetween(1, 65535),
+																ValidateFunc: validation.IsPortNumber,
 															},
 														},
 													},
@@ -199,8 +199,9 @@ func ResourceRoute() *schema.Resource {
 												},
 
 												"method_name": {
-													Type:     schema.TypeString,
-													Optional: true,
+													Type:         schema.TypeString,
+													Optional:     true,
+													RequiredWith: []string{"spec.0.grpc_route.0.match.0.service_name"},
 												},
 
 												"prefix": {
@@ -210,15 +211,14 @@ func ResourceRoute() *schema.Resource {
 												},
 
 												"service_name": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													RequiredWith: []string{"spec.0.grpc_route.0.match.0.method_name"},
+													Type:     schema.TypeString,
+													Optional: true,
 												},
 
 												"port": {
 													Type:         schema.TypeInt,
 													Optional:     true,
-													ValidateFunc: validation.IntBetween(1, 65535),
+													ValidateFunc: validation.IsPortNumber,
 												},
 											},
 										},
@@ -394,7 +394,7 @@ func ResourceRoute() *schema.Resource {
 															"port": {
 																Type:         schema.TypeInt,
 																Optional:     true,
-																ValidateFunc: validation.IntBetween(1, 65535),
+																ValidateFunc: validation.IsPortNumber,
 															},
 														},
 													},
@@ -413,7 +413,7 @@ func ResourceRoute() *schema.Resource {
 												"port": {
 													Type:         schema.TypeInt,
 													Optional:     true,
-													ValidateFunc: validation.IntBetween(1, 65535),
+													ValidateFunc: validation.IsPortNumber,
 												},
 											},
 										},
@@ -523,7 +523,7 @@ func RouteHTTPRouteSchema() *schema.Schema {
 										"port": {
 											Type:         schema.TypeInt,
 											Optional:     true,
-											ValidateFunc: validation.IntBetween(1, 65535),
+											ValidateFunc: validation.IsPortNumber,
 										},
 									},
 								},
@@ -636,7 +636,7 @@ func RouteHTTPRouteSchema() *schema.Schema {
 							"port": {
 								Type:         schema.TypeInt,
 								Optional:     true,
-								ValidateFunc: validation.IntBetween(1, 65535),
+								ValidateFunc: validation.IsPortNumber,
 							},
 						},
 					},

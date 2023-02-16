@@ -112,24 +112,22 @@ resource "aws_lambda_function" "lambda" {
 }
 
 # IAM
-resource "aws_iam_role" "role" {
-  name = "myrole"
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    effect = "Allow"
 
-  assume_role_policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "lambda.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
+    principals {
+      type        = "Service"
+      identifiers = ["lambda.amazonaws.com"]
     }
-  ]
+
+    actions = ["sts:AssumeRole"]
+  }
 }
-POLICY
+
+resource "aws_iam_role" "role" {
+  name               = "myrole"
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
 }
 ```
 
