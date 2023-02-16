@@ -54,6 +54,7 @@ func TestAccOrganizations_serial(t *testing.T) {
 			"concurrent":             testAccPolicy_concurrent,
 			"Description":            testAccPolicy_description,
 			"Tags":                   testAccPolicy_tags,
+			"SkipDestroy":            testAccPolicy_skipDestroy,
 			"disappears":             testAccPolicy_disappears,
 			"Type_AI_OPT_OUT":        testAccPolicy_type_AI_OPT_OUT,
 			"Type_Backup":            testAccPolicy_type_Backup,
