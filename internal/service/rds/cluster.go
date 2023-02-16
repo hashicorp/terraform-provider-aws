@@ -1472,8 +1472,16 @@ func FindDBClusterByID(ctx context.Context, conn *rds.RDS, id string) (*rds.DBCl
 		}
 	}
 
+	if err != nil {
+		return nil, err
+	}
+
 	if output == nil || len(output.DBClusters) == 0 || output.DBClusters[0] == nil {
 		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.DBClusters); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
 	}
 
 	dbCluster := output.DBClusters[0]

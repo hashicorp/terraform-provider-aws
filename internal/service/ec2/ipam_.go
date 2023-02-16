@@ -46,6 +46,14 @@ func ResourceIPAM() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
+			"default_resource_discovery_association_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"default_resource_discovery_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -150,8 +158,12 @@ func resourceIPAMRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 
 	d.Set("arn", ipam.IpamArn)
+	d.Set("default_resource_discovery_association_id", ipam.DefaultResourceDiscoveryAssociationId)
+	d.Set("default_resource_discovery_id", ipam.DefaultResourceDiscoveryId)
 	d.Set("description", ipam.Description)
-	d.Set("operating_regions", flattenIPAMOperatingRegions(ipam.OperatingRegions))
+	if err := d.Set("operating_regions", flattenIPAMOperatingRegions(ipam.OperatingRegions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting operating_regions: %s", err)
+	}
 	d.Set("public_default_scope_id", ipam.PublicDefaultScopeId)
 	d.Set("private_default_scope_id", ipam.PrivateDefaultScopeId)
 	d.Set("scope_count", ipam.ScopeCount)

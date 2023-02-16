@@ -321,7 +321,7 @@ data "aws_kms_key" "test" {
 }
 
 func testAccKeyDataSourceConfig_grantToken(rName string) string {
-	return acctest.ConfigCompose(testAccGrantBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccGrantConfig_base(rName), fmt.Sprintf(`
 resource "aws_kms_grant" "test" {
   name              = %[1]q
   key_id            = aws_kms_key.test.key_id

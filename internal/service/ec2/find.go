@@ -2220,6 +2220,7 @@ func FindSecurityGroupRulesBySecurityGroupID(ctx context.Context, conn *ec2.EC2,
 
 func FindSpotDatafeedSubscription(ctx context.Context, conn *ec2.EC2) (*ec2.SpotDatafeedSubscription, error) {
 	input := &ec2.DescribeSpotDatafeedSubscriptionInput{}
+
 	output, err := conn.DescribeSpotDatafeedSubscriptionWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, ErrCodeInvalidSpotDatafeedNotFound) {
@@ -5779,6 +5780,160 @@ func FindIPAMPoolCIDRByPoolCIDRId(ctx context.Context, conn *ec2.EC2, poolCidrId
 	return output, nil
 }
 
+func FindIPAMResourceDiscovery(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeIpamResourceDiscoveriesInput) (*ec2.IpamResourceDiscovery, error) {
+	output, err := FindIPAMResourceDiscoveries(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
+}
+
+func FindIPAMResourceDiscoveries(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeIpamResourceDiscoveriesInput) ([]*ec2.IpamResourceDiscovery, error) {
+	var output []*ec2.IpamResourceDiscovery
+
+	err := conn.DescribeIpamResourceDiscoveriesPagesWithContext(ctx, input, func(page *ec2.DescribeIpamResourceDiscoveriesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.IpamResourceDiscoveries {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidIPAMResourceDiscoveryIdNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func FindIPAMResourceDiscoveryByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.IpamResourceDiscovery, error) {
+	input := &ec2.DescribeIpamResourceDiscoveriesInput{
+		IpamResourceDiscoveryIds: aws.StringSlice([]string{id}),
+	}
+
+	output, err := FindIPAMResourceDiscovery(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := aws.StringValue(output.State); state == ec2.IpamResourceDiscoveryStateDeleteComplete {
+		return nil, &resource.NotFoundError{
+			Message:     state,
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.IpamResourceDiscoveryId) != id {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func FindIPAMResourceDiscoveryAssociation(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeIpamResourceDiscoveryAssociationsInput) (*ec2.IpamResourceDiscoveryAssociation, error) {
+	output, err := FindIPAMResourceDiscoveryAssociations(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output[0], nil
+}
+
+func FindIPAMResourceDiscoveryAssociations(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeIpamResourceDiscoveryAssociationsInput) ([]*ec2.IpamResourceDiscoveryAssociation, error) {
+	var output []*ec2.IpamResourceDiscoveryAssociation
+
+	err := conn.DescribeIpamResourceDiscoveryAssociationsPagesWithContext(ctx, input, func(page *ec2.DescribeIpamResourceDiscoveryAssociationsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.IpamResourceDiscoveryAssociations {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidIPAMResourceDiscoveryAssociationIdNotFound) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func FindIPAMResourceDiscoveryAssociationByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.IpamResourceDiscoveryAssociation, error) {
+	input := &ec2.DescribeIpamResourceDiscoveryAssociationsInput{
+		IpamResourceDiscoveryAssociationIds: aws.StringSlice([]string{id}),
+	}
+
+	output, err := FindIPAMResourceDiscoveryAssociation(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := aws.StringValue(output.State); state == ec2.IpamResourceDiscoveryAssociationStateDisassociateComplete {
+		return nil, &resource.NotFoundError{
+			Message:     state,
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.IpamResourceDiscoveryAssociationId) != id {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
 func FindIPAMScope(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeIpamScopesInput) (*ec2.IpamScope, error) {
 	output, err := FindIPAMScopes(ctx, conn, input)
 
@@ -6688,18 +6843,18 @@ func FindNetworkPerformanceMetricSubscriptionByFourPartKey(ctx context.Context, 
 	return nil, &resource.NotFoundError{}
 }
 
-func FindInstanceStateById(ctx context.Context, conn *ec2.EC2, id string) (*ec2.InstanceState, error) {
-	in := &ec2.DescribeInstanceStatusInput{
+func FindInstanceStateByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.InstanceState, error) {
+	input := &ec2.DescribeInstanceStatusInput{
 		InstanceIds:         aws.StringSlice([]string{id}),
 		IncludeAllInstances: aws.Bool(true),
 	}
 
-	out, err := conn.DescribeInstanceStatusWithContext(ctx, in)
+	output, err := conn.DescribeInstanceStatusWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidInstanceIDNotFound) {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
-			LastRequest: in,
+			LastRequest: input,
 		}
 	}
 
@@ -6707,20 +6862,20 @@ func FindInstanceStateById(ctx context.Context, conn *ec2.EC2, id string) (*ec2.
 		return nil, err
 	}
 
-	if out == nil || len(out.InstanceStatuses) == 0 {
-		return nil, tfresource.NewEmptyResultError(in)
+	if output == nil || len(output.InstanceStatuses) == 0 {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	instanceState := out.InstanceStatuses[0].InstanceState
+	instanceState := output.InstanceStatuses[0].InstanceState
 
 	if instanceState == nil || aws.StringValue(instanceState.Name) == ec2.InstanceStateNameTerminated {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	// Eventual consistency check.
-	if aws.StringValue(out.InstanceStatuses[0].InstanceId) != id {
+	if aws.StringValue(output.InstanceStatuses[0].InstanceId) != id {
 		return nil, &resource.NotFoundError{
-			LastRequest: in,
+			LastRequest: input,
 		}
 	}
 

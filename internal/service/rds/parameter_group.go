@@ -389,6 +389,10 @@ func FindDBParameterGroupByName(ctx context.Context, conn *rds.RDS, name string)
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
+	if count := len(output.DBParameterGroups); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
 	dbParameterGroup := output.DBParameterGroups[0]
 
 	// Eventual consistency check.

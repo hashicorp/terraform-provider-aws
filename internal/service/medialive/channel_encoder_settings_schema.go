@@ -3974,7 +3974,7 @@ func expandM2tsSettings(tfList []interface{}) *types.M2tsSettings {
 	if v, ok := m["audio_frames_per_pes"].(int); ok {
 		s.AudioFramesPerPes = int32(v)
 	}
-	if v, ok := m["audi_pids"].(string); ok && v != "" {
+	if v, ok := m["audio_pids"].(string); ok && v != "" {
 		s.AudioPids = aws.String(v)
 	}
 	if v, ok := m["audio_stream_type"].(string); ok && v != "" {
@@ -3996,7 +3996,7 @@ func expandM2tsSettings(tfList []interface{}) *types.M2tsSettings {
 		s.DvbSdtSettings = expandM2tsDvbSdtSettings(v)
 	}
 	if v, ok := m["dvb_sub_pids"].(string); ok && v != "" {
-		s.AudioPids = aws.String(v)
+		s.DvbSubPids = aws.String(v)
 	}
 	if v, ok := m["dvb_tdt_settings"].([]interface{}); ok && len(v) > 0 {
 		s.DvbTdtSettings = func(tfList []interface{}) *types.DvbTdtSettings {

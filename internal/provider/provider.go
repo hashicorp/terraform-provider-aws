@@ -1417,6 +1417,8 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			"aws_vpc_ipam_pool_cidr_allocation":                    ec2.ResourceIPAMPoolCIDRAllocation(),
 			"aws_vpc_ipam_pool_cidr":                               ec2.ResourceIPAMPoolCIDR(),
 			"aws_vpc_ipam_preview_next_cidr":                       ec2.ResourceIPAMPreviewNextCIDR(),
+			"aws_vpc_ipam_resource_discovery_association":          ec2.ResourceIPAMResourceDiscoveryAssociation(),
+			"aws_vpc_ipam_resource_discovery":                      ec2.ResourceIPAMResourceDiscovery(),
 			"aws_vpc_ipam_scope":                                   ec2.ResourceIPAMScope(),
 			"aws_vpc_ipv4_cidr_block_association":                  ec2.ResourceVPCIPv4CIDRBlockAssociation(),
 			"aws_vpc_ipv6_cidr_block_association":                  ec2.ResourceVPCIPv6CIDRBlockAssociation(),

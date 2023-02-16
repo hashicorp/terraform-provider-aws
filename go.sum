@@ -26,8 +26,8 @@ github.com/apparentlymart/go-textseg/v13 v13.0.0/go.mod h1:ZK2fH7c4NqDTLtiYLvIkE
 github.com/armon/go-radix v0.0.0-20180808171621-7fddfc383310 h1:BUAU3CGlLvorLI26FmByPp2eC2qla6E1Tw+scpcg/to=
 github.com/armon/go-radix v0.0.0-20180808171621-7fddfc383310/go.mod h1:ufUuZ+zHj4x4TnLV4JWEpy2hxWSpsRywHrMgIH9cCH8=
 github.com/armon/go-socks5 v0.0.0-20160902184237-e75332964ef5/go.mod h1:wHh0iHkYZB8zMSxRWpUBQtwG5a7fFgvEO+odwuTv2gs=
-github.com/aws/aws-sdk-go v1.44.198 h1:kgnvxQv4/kP5M0nbxBx0Ac0so9ndr9f8Ti0g+NmPQF8=
-github.com/aws/aws-sdk-go v1.44.198/go.mod h1:aVsgQcEevwlmQ7qHE9I3h+dtQgpqhFB+i8Phjh7fkwI=
+github.com/aws/aws-sdk-go v1.44.201 h1:gKtyFyiVGh/uTW7sCQaoyU6XCUsnI8+WWKmbEaABCfw=
+github.com/aws/aws-sdk-go v1.44.201/go.mod h1:aVsgQcEevwlmQ7qHE9I3h+dtQgpqhFB+i8Phjh7fkwI=
 github.com/aws/aws-sdk-go-v2 v1.17.4 h1:wyC6p9Yfq6V2y98wfDsj6OnNQa4w2BLGCLIxzNhwOGY=
 github.com/aws/aws-sdk-go-v2 v1.17.4/go.mod h1:uzbQtefpm44goOPmdKyAlXSNcwlRgF3ePWVW6EtJvvw=
 github.com/aws/aws-sdk-go-v2/config v1.18.12 h1:fKs/I4wccmfrNRO9rdrbMO1NgLxct6H9rNMiPdBxHWw=
@@ -52,8 +52,8 @@ github.com/aws/aws-sdk-go-v2/service/comprehend v1.21.1 h1:UpI2cM1zfNqiuqSZMx6rY
 github.com/aws/aws-sdk-go-v2/service/comprehend v1.21.1/go.mod h1:PAPxho3J3RjbJK/sKiIfNKPeirFZfxw4LSyonlpWKb0=
 github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.21.0 h1:w77FXLnmsP8df7t+HSoMcLOdxkV2tEDGUBUff0oqMzw=
 github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.21.0/go.mod h1:NzdpULBLSRol5BDNoX4RCYO+84TBl89BbSPxBthOAns=
-github.com/aws/aws-sdk-go-v2/service/ec2 v1.84.1 h1:sJ4Fuz498wBjmL5WQrkYoXHn5JroMVQYqAkLbtYKZcY=
-github.com/aws/aws-sdk-go-v2/service/ec2 v1.84.1/go.mod h1:jK4MhMMe6HIe4qnjGaQqQQECcsxRZ0q86oCq06T8IEE=
+github.com/aws/aws-sdk-go-v2/service/ec2 v1.86.0 h1:4dt0Mg5veHbMLcA2JAR9LDxvqXjtG0ZLQdxZG/2wHy4=
+github.com/aws/aws-sdk-go-v2/service/ec2 v1.86.0/go.mod h1:jK4MhMMe6HIe4qnjGaQqQQECcsxRZ0q86oCq06T8IEE=
 github.com/aws/aws-sdk-go-v2/service/fis v1.14.1 h1:vGYXv7PifGi7k3bNGaG0HA3Z5+/01pQnadsHNuzTEqg=
 github.com/aws/aws-sdk-go-v2/service/fis v1.14.1/go.mod h1:RbSy4W2TNF4RxYmMmJoPLzN3+XwM018Ng9en0P0PAEg=
 github.com/aws/aws-sdk-go-v2/service/iam v1.19.2 h1:3VWoyWLF29SjuazBalLhYM5dtk6zUpvgK/TKvaVBnjg=
@@ -199,8 +199,8 @@ github.com/hashicorp/terraform-json v0.14.0 h1:sh9iZ1Y8IFJLx+xQiKHGud6/TSUCM0N8e
 github.com/hashicorp/terraform-json v0.14.0/go.mod h1:5A9HIWPkk4e5aeeXIBbkcOvaZbIYnAIkEyqP2pNSckM=
 github.com/hashicorp/terraform-plugin-framework v1.1.1 h1:PbnEKHsIU8KTTzoztHQGgjZUWx7Kk8uGtpGMMc1p+oI=
 github.com/hashicorp/terraform-plugin-framework v1.1.1/go.mod h1:DyZPxQA+4OKK5ELxFIIcqggcszqdWWUpTLPHAhS/tkY=
-github.com/hashicorp/terraform-plugin-framework-timeouts v0.3.0 h1:+JyyLOcqpnq3aELxmWWxMH5g55ml8NsyLWmYkcSR2fk=
-github.com/hashicorp/terraform-plugin-framework-timeouts v0.3.0/go.mod h1:ZvvDe5yPEf3lAv9IP6cqwobqFeXsPMJtPXMX3ZYxahQ=
+github.com/hashicorp/terraform-plugin-framework-timeouts v0.3.1 h1:5GhozvHUsrqxqku+yd0UIRTkmDLp2QPX5paL1Kq5uUA=
+github.com/hashicorp/terraform-plugin-framework-timeouts v0.3.1/go.mod h1:ThtYDU8p6sJ9+SI+TYxXrw28vXxgBwYOpoPv1EojSJI=
 github.com/hashicorp/terraform-plugin-framework-validators v0.10.0 h1:4L0tmy/8esP6OcvocVymw52lY0HyQ5OxB7VNl7k4bS0=
 github.com/hashicorp/terraform-plugin-framework-validators v0.10.0/go.mod h1:qdQJCdimB9JeX2YwOpItEu+IrfoJjWQ5PhLpAOMDQAE=
 github.com/hashicorp/terraform-plugin-go v0.14.3 h1:nlnJ1GXKdMwsC8g1Nh05tK2wsC3+3BL/DBBxFEki+j0=

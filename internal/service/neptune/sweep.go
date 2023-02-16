@@ -120,7 +120,7 @@ func sweepClusters(region string) error {
 			d.Set("deletion_protection", false)
 			d.Set("skip_final_snapshot", true)
 
-			globalCluster, err := findGlobalClusterByARN(ctx, conn, arn)
+			globalCluster, err := findGlobalClusterByClusterARN(ctx, conn, arn)
 
 			if err != nil {
 				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("reading Neptune Global Cluster information for Neptune Cluster (%s): %s", id, err))

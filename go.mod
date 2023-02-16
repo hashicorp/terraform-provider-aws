@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20230201104953-d1d05f4e2bfb
-	github.com/aws/aws-sdk-go v1.44.198
+	github.com/aws/aws-sdk-go v1.44.201
 	github.com/aws/aws-sdk-go-v2 v1.17.4
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.22
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.23.1
@@ -12,7 +12,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.20.2
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.21.1
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.21.0
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.84.1
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.86.0
 	github.com/aws/aws-sdk-go-v2/service/fis v1.14.1
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.16.1
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.11.2
@@ -45,7 +45,7 @@ require (
 	github.com/hashicorp/go-version v1.6.0
 	github.com/hashicorp/hcl/v2 v2.15.0
 	github.com/hashicorp/terraform-plugin-framework v1.1.1
-	github.com/hashicorp/terraform-plugin-framework-timeouts v0.3.0
+	github.com/hashicorp/terraform-plugin-framework-timeouts v0.3.1
 	github.com/hashicorp/terraform-plugin-framework-validators v0.10.0
 	github.com/hashicorp/terraform-plugin-go v0.14.3
 	github.com/hashicorp/terraform-plugin-log v0.8.0

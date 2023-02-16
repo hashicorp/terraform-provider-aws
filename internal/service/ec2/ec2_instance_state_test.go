@@ -114,7 +114,7 @@ func testAccCheckInstanceStateExists(ctx context.Context, n string) resource.Tes
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
-		out, err := tfec2.FindInstanceStateById(ctx, conn, rs.Primary.ID)
+		out, err := tfec2.FindInstanceStateByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
