@@ -1,23 +1,21 @@
 package organizations
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/organizations"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func DataSourceOrganizationalUnitDescendantAccounts() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceOrganizationalUnitDescendantAccountsRead,
+		ReadWithoutTimeout: dataSourceOrganizationalUnitDescendantAccountsRead,
 
 		Schema: map[string]*schema.Schema{
-			"parent_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
 			"accounts": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -46,115 +44,61 @@ func DataSourceOrganizationalUnitDescendantAccounts() *schema.Resource {
 					},
 				},
 			},
+			"parent_id": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
 		},
 	}
 }
 
-// Todo: Get all child OUs
-func getDescendantOrganizationalUnitsIDs(parent_id string, meta interface{}) ([]string, error) {
+func dataSourceOrganizationalUnitDescendantAccountsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OrganizationsConn()
 
-	params := &organizations.ListOrganizationalUnitsForParentInput{
-		ParentId: aws.String(parent_id),
-	}
-
-	// Descendants will hold IDs of all generations of OUs under parent_id.
-	var descendants []string
-	// Children will hold immediate child OUs of parent_id.
-	var children []*organizations.OrganizationalUnit
-	// ChildOUIds will hold the OU IDs of child ous.
-	var childOUIds []string
-	// result will hold any descendants of immediate child OUs.
-	var result []string
-
-	// Get all immediate children OUs.
-	err := conn.ListOrganizationalUnitsForParentPages(params,
-		func(page *organizations.ListOrganizationalUnitsForParentOutput, lastPage bool) bool {
-			children = append(children, page.OrganizationalUnits...)
-
-			return !lastPage
-		})
+	parentID := d.Get("parent_id").(string)
+	accounts, err := findAllAccountsForParentAndBelow(ctx, conn, parentID)
 
 	if err != nil {
-		return nil, fmt.Errorf("error listing Organizations Organization Units for parent (%s): %w", parent_id, err)
+		return sdkdiag.AppendErrorf(diags, "listing Organizations Accounts for parent (%s) and descendants: %s", parentID, err)
 	}
 
-	if childOUIds = getIDsFromOUs(children); childOUIds != nil {
-		for _, id := range childOUIds {
-			// Append this child ou Id and all it's descendants Ids.
-			descendants = append(descendants, id)
-
-			result, err = getDescendantOrganizationalUnitsIDs(id, meta)
-			if err != nil {
-				return descendants, err
-			} else if descendants != nil {
-				descendants = append(descendants, result...)
-			} else {
-				return nil, nil
-			}
-		}
-
-		return descendants, nil
-	}
-
-	//Base Case. ParentId has no children.
-	return nil, nil
-}
-
-func dataSourceOrganizationalUnitDescendantAccountsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OrganizationsConn()
-
-	parent_id := d.Get("parent_id").(string)
-
-	// Collect all the OUs of which we need to list children.
-	var organizationalUnitIDs []string
-	organizationalUnitIDs = append(organizationalUnitIDs, parent_id)
-
-	// Get all descendant organizational units.
-	descendantOUs, err := getDescendantOrganizationalUnitsIDs(organizationalUnitIDs[0], meta)
-	if err != nil {
-		return err
-	} else if descendantOUs != nil {
-		// If descendant OUs are found, add them to organizationalUnits.
-		organizationalUnitIDs = append(organizationalUnitIDs, descendantOUs...)
-	}
-
-	var accounts []*organizations.Account
-
-	for _, id := range organizationalUnitIDs {
-		// Get immediate child accounts of ou.
-		params := &organizations.ListAccountsForParentInput{
-			ParentId: aws.String(id),
-		}
-
-		err := conn.ListAccountsForParentPages(params,
-			func(page *organizations.ListAccountsForParentOutput, lastPage bool) bool {
-				accounts = append(accounts, page.Accounts...)
-
-				return !lastPage
-			})
-
-		if err != nil {
-			return fmt.Errorf("error listing Organizations Accounts for parent (%s): %w", id, err)
-		}
-	}
-
-	d.SetId(parent_id)
+	d.SetId(parentID)
 
 	if err := d.Set("accounts", flattenAccounts(accounts)); err != nil {
-		return fmt.Errorf("error setting accounts: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting accounts: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func getIDsFromOUs(ous []*organizations.OrganizationalUnit) []string {
-	if len(ous) == 0 {
-		return nil
+// findAllAccountsForParent recurses down an OU tree, returning all accounts at the specified parent and below.
+func findAllAccountsForParentAndBelow(ctx context.Context, conn *organizations.Organizations, id string) ([]*organizations.Account, error) {
+	var output []*organizations.Account
+
+	accounts, err := findAccountsForParent(ctx, conn, id)
+
+	if err != nil {
+		return nil, err
 	}
-	var result []string
+
+	output = append(output, accounts...)
+
+	ous, err := findOUsForParent(ctx, conn, id)
+
+	if err != nil {
+		return nil, err
+	}
+
 	for _, ou := range ous {
-		result = append(result, aws.StringValue(ou.Id))
+		accounts, err = findAllAccountsForParentAndBelow(ctx, conn, aws.StringValue(ou.Id))
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, accounts...)
 	}
-	return result
+
+	return output, nil
 }

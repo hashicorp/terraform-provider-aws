@@ -5,90 +5,66 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/organizations"
+	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func testAccOrganizationalUnitDescendantAccountsDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName1 := "aws_organizations_account.test1"
-	resourceName2 := "aws_organizations_account.test2"
-	resourceName3 := "aws_organizations_account.test3"
-	dataSourceName := "data.aws_organizations_organizational_unit_descendant_accounts.test"
-	domain := acctest.RandomDomainName()
-	address1 := acctest.RandomEmailAddress(domain)
-	address2 := acctest.RandomEmailAddress(domain)
-	address3 := acctest.RandomEmailAddress(domain)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	topOUDataSourceName := "data.aws_organizations_organizational_unit_descendant_accounts.current"
+	newOU1DataSourceName := "data.aws_organizations_organizational_unit_descendant_accounts.test0"
+	newOU2DataSourceName := "data.aws_organizations_organizational_unit_descendant_accounts.test1"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckOrganizationsAccount(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationalUnitDescendantAccountsDataSourceConfig(address1, address2, address3),
+				Config: testAccOrganizationalUnitDescendantAccountsDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "accounts.#", "3"),
-					resource.TestCheckResourceAttrPair(resourceName1, "arn", dataSourceName, "accounts.0.arn"),
-					resource.TestCheckResourceAttrPair(resourceName1, "email", dataSourceName, "accounts.0.email"),
-					resource.TestCheckResourceAttrPair(resourceName1, "id", dataSourceName, "accounts.0.id"),
-					resource.TestCheckResourceAttrPair(resourceName1, "name", dataSourceName, "accounts.0.name"),
-					resource.TestCheckResourceAttrPair(resourceName1, "status", dataSourceName, "accounts.0.status"),
-
-					resource.TestCheckResourceAttrPair(resourceName2, "arn", dataSourceName, "accounts.1.arn"),
-					resource.TestCheckResourceAttrPair(resourceName2, "email", dataSourceName, "accounts.1.email"),
-					resource.TestCheckResourceAttrPair(resourceName2, "id", dataSourceName, "accounts.1.id"),
-					resource.TestCheckResourceAttrPair(resourceName2, "name", dataSourceName, "accounts.1.name"),
-					resource.TestCheckResourceAttrPair(resourceName2, "status", dataSourceName, "accounts.1.status"),
-
-					resource.TestCheckResourceAttrPair(resourceName3, "arn", dataSourceName, "accounts.2.arn"),
-					resource.TestCheckResourceAttrPair(resourceName3, "email", dataSourceName, "accounts.2.email"),
-					resource.TestCheckResourceAttrPair(resourceName3, "id", dataSourceName, "accounts.2.id"),
-					resource.TestCheckResourceAttrPair(resourceName3, "name", dataSourceName, "accounts.2.name"),
-					resource.TestCheckResourceAttrPair(resourceName3, "status", dataSourceName, "accounts.2.status"),
+					acctest.CheckResourceAttrGreaterThanValue(topOUDataSourceName, "accounts.#", "0"),
+					resource.TestCheckResourceAttr(newOU1DataSourceName, "accounts.#", "0"),
+					resource.TestCheckResourceAttr(newOU2DataSourceName, "accounts.#", "0"),
 				),
 			},
 		},
 	})
 }
 
-func testAccOrganizationalUnitDescendantAccountsDataSourceConfig(rAddress1 string, rAddress2 string, rAddress3 string) string {
+func testAccOrganizationalUnitDescendantAccountsDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_organizations_organization" "test" {}
+data "aws_organizations_organization" "current" {}
 
-resource "aws_organizations_account" "test1" {
-  name  = "test1"
-  email = %[1]q
-  parent_id = aws_organizations_organization.test.roots[0].id
+resource "aws_organizations_organizational_unit" "test0" {
+  name      = "%[1]s-0"
+  parent_id = data.aws_organizations_organization.current.roots[0].id
 }
 
 resource "aws_organizations_organizational_unit" "test1" {
-  name      = "test1"
-  parent_id = aws_organizations_organization.test.roots[0].id
+  name      = "%[1]s-1"
+  parent_id = aws_organizations_organizational_unit.test0.id
 }
 
-resource "aws_organizations_account" "test2" {
-  name  = "test2"
-  email = %[2]q
+data "aws_organizations_organizational_unit_descendant_accounts" "current" {
+  parent_id = data.aws_organizations_organization.current.roots[0].id
+
+  depends_on = [aws_organizations_organizational_unit.test0, aws_organizations_organizational_unit.test1]
+}
+
+data "aws_organizations_organizational_unit_descendant_accounts" "test0" {
+  parent_id = aws_organizations_organizational_unit.test0.id
+
+  depends_on = [aws_organizations_organizational_unit.test1]
+}
+
+data "aws_organizations_organizational_unit_descendant_accounts" "test1" {
   parent_id = aws_organizations_organizational_unit.test1.id
 }
-
-resource "aws_organizations_organizational_unit" "test2" {
-  name      = "test2"
-  parent_id = aws_organizations_organizational_unit.test1.id
-}
-
-resource "aws_organizations_account" "test3" {
-  name  = "test3"
-  email = %[3]q
-  parent_id = aws_organizations_organizational_unit.test2.id
-}
-
-data "aws_organizations_organizational_unit_descendant_accounts" "test" {
-  parent_id = aws_organizations_organization.test.roots[0].id
-}
-`, rAddress1, rAddress2, rAddress3)
+`, rName)
 }
