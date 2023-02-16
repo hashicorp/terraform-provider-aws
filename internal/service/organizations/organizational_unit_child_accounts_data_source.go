@@ -57,16 +57,7 @@ func dataSourceOrganizationalUnitChildAccountsRead(ctx context.Context, d *schem
 	conn := meta.(*conns.AWSClient).OrganizationsConn()
 
 	parentID := d.Get("parent_id").(string)
-	input := &organizations.ListAccountsForParentInput{
-		ParentId: aws.String(parentID),
-	}
-	var accounts []*organizations.Account
-
-	err := conn.ListAccountsForParentPages(input, func(page *organizations.ListAccountsForParentOutput, lastPage bool) bool {
-		accounts = append(accounts, page.Accounts...)
-
-		return !lastPage
-	})
+	accounts, err := findAccountsForParent(ctx, conn, parentID)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing Organizations Accounts for parent (%s): %s", parentID, err)
@@ -79,4 +70,23 @@ func dataSourceOrganizationalUnitChildAccountsRead(ctx context.Context, d *schem
 	}
 
 	return diags
+}
+
+func findAccountsForParent(ctx context.Context, conn *organizations.Organizations, id string) ([]*organizations.Account, error) {
+	input := &organizations.ListAccountsForParentInput{
+		ParentId: aws.String(id),
+	}
+	var output []*organizations.Account
+
+	err := conn.ListAccountsForParentPages(input, func(page *organizations.ListAccountsForParentOutput, lastPage bool) bool {
+		output = append(output, page.Accounts...)
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
 }

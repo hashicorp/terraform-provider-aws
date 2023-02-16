@@ -21,7 +21,7 @@ func testAccOrganizationalUnitChildAccountsDataSource_basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationalUnitChildAccountsDataSourceConfig,
+				Config: testAccOrganizationalUnitChildAccountsDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "accounts.#", "0"),
 				),
@@ -30,7 +30,7 @@ func testAccOrganizationalUnitChildAccountsDataSource_basic(t *testing.T) {
 	})
 }
 
-const testAccOrganizationalUnitChildAccountsDataSourceConfig = `
+const testAccOrganizationalUnitChildAccountsDataSourceConfig_basic = `
 data "aws_organizations_organization" "current" {}
 
 data "aws_organizations_organizational_unit_child_accounts" "test" {
