@@ -3,7 +3,7 @@ subcategory: "Organizations"
 layout: "aws"
 page_title: "AWS: aws_organizations_organizational_unit_child_accounts"
 description: |-
-  Get all direct child accounts under a parent organizational unit. This only provides immediate children, not all children
+  Get all direct child accounts under a parent organizational unit. This only provides immediate children, not all children.
 ---
 
 # Data Source: aws_organizations_organizational_unit_child_accounts

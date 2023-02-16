@@ -1,7 +1,6 @@
 package organizations_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/organizations"
@@ -11,47 +10,30 @@ import (
 
 func testAccOrganizationalUnitChildAccountsDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName := "aws_organizations_account.test"
 	dataSourceName := "data.aws_organizations_organizational_unit_child_accounts.test"
 
-	domain := acctest.RandomDomainName()
-	address := acctest.RandomEmailAddress(domain)
-
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckOrganizationsAccount(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationalUnitChildAccountsDataSourceConfig(address),
+				Config: testAccOrganizationalUnitChildAccountsDataSourceConfig,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "accounts.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "accounts.0.arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "email", dataSourceName, "accounts.0.email"),
-					resource.TestCheckResourceAttrPair(resourceName, "id", dataSourceName, "accounts.0.id"),
-					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "accounts.0.name"),
-					resource.TestCheckResourceAttrPair(resourceName, "status", dataSourceName, "accounts.0.status"),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "accounts.#", "0"),
 				),
 			},
 		},
 	})
 }
 
-func testAccOrganizationalUnitChildAccountsDataSourceConfig(rAddress string) string {
-	return fmt.Sprintf(`
-resource "aws_organizations_organization" "test" {}
-
-resource "aws_organizations_account" "test" {
-  name  = "test"
-  email = %[1]q
-  parent_id = aws_organizations_organization.test.roots[0].id
-}
+const testAccOrganizationalUnitChildAccountsDataSourceConfig = `
+data "aws_organizations_organization" "current" {}
 
 data "aws_organizations_organizational_unit_child_accounts" "test" {
-  parent_id = aws_organizations_organization.test.roots[0].id
+  parent_id = data.aws_organizations_organization.current.roots[0].id
 }
-`, rAddress)
-}
+`

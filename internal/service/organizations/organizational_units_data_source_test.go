@@ -12,7 +12,8 @@ func testAccOrganizationalUnitsDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_organizations_organizational_unit.test"
 	dataSourceName := "data.aws_organizations_organizational_units.test"
-	resource.ParallelTest(t, resource.TestCase{
+
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckOrganizationsAccount(ctx, t)
