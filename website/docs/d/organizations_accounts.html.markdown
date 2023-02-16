@@ -3,12 +3,12 @@ subcategory: "Organizations"
 layout: "aws"
 page_title: "AWS: aws_organizations_accounts"
 description: |-
-  Get all accounts belonging to an organizational unit.
+  Get all direct child organizational units under a parent organizational unit. This only provides immediate children, not all children.
 ---
 
 # Data Source: aws_organizations_accounts
 
-Get all accounts belonging to an organizational unit.
+Get all direct child organizational units under a parent organizational unit. This only provides immediate children, not all children.
 
 ## Example Usage
 
@@ -30,6 +30,5 @@ data "aws_organizations_accounts" "ou" {
     * `arn` - ARN of the organizational account
     * `name` - Name of the organizational account
     * `id` - ID of the organizational account
-    * `email` - Email of the account
-    * `status` - Status of the account (either `ACTIVE` or `SUSPENDED`)
+    * `email` - `email` - Email of the account
 * `id` - Parent identifier of the accounts.
