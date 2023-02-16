@@ -2945,6 +2945,7 @@ func WaitIPAMPoolCIDRAllocationCreated(ctx context.Context, conn *ec2.EC2, alloc
 
 	return nil, err
 }
+
 func WaitIPAMResourceDiscoveryAvailable(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.Ipam, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ec2.IpamResourceDiscoveryStateCreateInProgress},
@@ -2981,7 +2982,7 @@ func WaitIPAMResourceDiscoveryAssociationAvailable(ctx context.Context, conn *ec
 	return nil, err
 }
 
-func WaiterIPAMResourceDiscoveryAssociationDeleted(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.IpamResourceDiscoveryAssociation, error) {
+func WaitIPAMResourceDiscoveryAssociationDeleted(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.IpamResourceDiscoveryAssociation, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ec2.IpamResourceDiscoveryAssociationStateAssociateComplete, ec2.IpamResourceDiscoveryAssociationStateDisassociateInProgress},
 		Target:  []string{},
@@ -2999,7 +3000,7 @@ func WaiterIPAMResourceDiscoveryAssociationDeleted(ctx context.Context, conn *ec
 	return nil, err
 }
 
-func WaiterIPAMResourceDiscoveryDeleted(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.IpamResourceDiscovery, error) {
+func WaitIPAMResourceDiscoveryDeleted(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.IpamResourceDiscovery, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{ec2.IpamResourceDiscoveryStateCreateComplete, ec2.IpamResourceDiscoveryStateModifyComplete, ec2.IpamResourceDiscoveryStateDeleteInProgress},
 		Target:  []string{},

@@ -15,15 +15,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccIPAMResourceDiscoveryAssociation_basic(t *testing.T) {
+func testAccIPAMResourceDiscoveryAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var rda ec2.IpamResourceDiscoveryAssociation
-
 	resourceName := "aws_vpc_ipam_resource_discovery_association.test"
 	ipamName := "aws_vpc_ipam.test"
 	rdName := "aws_vpc_ipam_resource_discovery.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -49,13 +48,12 @@ func TestAccIPAMResourceDiscoveryAssociation_basic(t *testing.T) {
 	})
 }
 
-func TestAccIPAMResourceDiscoveryAssociation_tags(t *testing.T) {
+func testAccIPAMResourceDiscoveryAssociation_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var rda ec2.IpamResourceDiscoveryAssociation
-
 	resourceName := "aws_vpc_ipam_resource_discovery_association.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -93,13 +91,12 @@ func TestAccIPAMResourceDiscoveryAssociation_tags(t *testing.T) {
 	})
 }
 
-func TestAccIPAMResourceDiscoveryAssociation_disappears(t *testing.T) {
+func testAccIPAMResourceDiscoveryAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var rda ec2.IpamResourceDiscoveryAssociation
-
 	resourceName := "aws_vpc_ipam_resource_discovery_association.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -200,6 +197,7 @@ func testAccIPAMResourceDiscoveryAssociationConfig_tags(tagKey1, tagValue1 strin
 resource "aws_vpc_ipam_resource_discovery_association" "test" {
   ipam_id                    = aws_vpc_ipam.test.id
   ipam_resource_discovery_id = aws_vpc_ipam_resource_discovery.test.id
+
   tags = {
     %[1]q = %[2]q
   }
@@ -212,6 +210,7 @@ func testAccIPAMResourceDiscoveryAssociationConfig_tags2(tagKey1, tagValue1, tag
 resource "aws_vpc_ipam_resource_discovery_association" "test" {
   ipam_id                    = aws_vpc_ipam.test.id
   ipam_resource_discovery_id = aws_vpc_ipam_resource_discovery.test.id
+
   tags = {
     %[1]q = %[2]q
     %[3]q = %[4]q

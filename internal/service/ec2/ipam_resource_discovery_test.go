@@ -25,6 +25,11 @@ func TestAccIPAMResourceDiscovery_serial(t *testing.T) {
 			"disappears": testAccIPAMResourceDiscovery_disappears,
 			"tags":       testAccIPAMResourceDiscovery_tags,
 		},
+		"ResourceDiscoveryAssociation": {
+			"basic":      testAccIPAMResourceDiscoveryAssociation_basic,
+			"disappears": testAccIPAMResourceDiscoveryAssociation_disappears,
+			"tags":       testAccIPAMResourceDiscoveryAssociation_tags,
+		},
 	}
 
 	acctest.RunSerialTests2Levels(t, testCases, 0)
