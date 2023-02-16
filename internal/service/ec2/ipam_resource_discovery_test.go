@@ -15,13 +15,28 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccIPAMResourceDiscovery_basic(t *testing.T) {
+func TestAccIPAMResourceDiscovery_serial(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]map[string]func(t *testing.T){
+		"ResourceDiscovery": {
+			"basic":      testAccIPAMResourceDiscovery_basic,
+			"modify":     testAccIPAMResourceDiscovery_modify,
+			"disappears": testAccIPAMResourceDiscovery_disappears,
+			"tags":       testAccIPAMResourceDiscovery_tags,
+		},
+	}
+
+	acctest.RunSerialTests2Levels(t, testCases, 0)
+}
+
+func testAccIPAMResourceDiscovery_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var rd ec2.IpamResourceDiscovery
 	resourceName := "aws_vpc_ipam_resource_discovery.test"
 	dataSourceRegion := "data.aws_region.current"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -49,12 +64,12 @@ func TestAccIPAMResourceDiscovery_basic(t *testing.T) {
 	})
 }
 
-func TestAccIPAMResourceDiscovery_modify(t *testing.T) {
+func testAccIPAMResourceDiscovery_modify(t *testing.T) {
 	ctx := acctest.Context(t)
 	var rd ec2.IpamResourceDiscovery
 	resourceName := "aws_vpc_ipam_resource_discovery.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckMultipleRegion(t, 2)
@@ -97,12 +112,12 @@ func TestAccIPAMResourceDiscovery_modify(t *testing.T) {
 	})
 }
 
-func TestAccIPAMResourceDiscovery_disappears(t *testing.T) {
+func testAccIPAMResourceDiscovery_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var rd ec2.IpamResourceDiscovery
 	resourceName := "aws_vpc_ipam_resource_discovery.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -120,12 +135,12 @@ func TestAccIPAMResourceDiscovery_disappears(t *testing.T) {
 	})
 }
 
-func TestAccIPAMResourceDiscovery_tags(t *testing.T) {
+func testAccIPAMResourceDiscovery_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var rd ec2.IpamResourceDiscovery
 	resourceName := "aws_vpc_ipam_resource_discovery.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
