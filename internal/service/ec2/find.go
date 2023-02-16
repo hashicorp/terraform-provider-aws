@@ -6747,18 +6747,18 @@ func FindNetworkPerformanceMetricSubscriptionByFourPartKey(ctx context.Context, 
 	return nil, &resource.NotFoundError{}
 }
 
-func FindInstanceStateById(ctx context.Context, conn *ec2.EC2, id string) (*ec2.InstanceState, error) {
-	in := &ec2.DescribeInstanceStatusInput{
+func FindInstanceStateByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.InstanceState, error) {
+	input := &ec2.DescribeInstanceStatusInput{
 		InstanceIds:         aws.StringSlice([]string{id}),
 		IncludeAllInstances: aws.Bool(true),
 	}
 
-	out, err := conn.DescribeInstanceStatusWithContext(ctx, in)
+	output, err := conn.DescribeInstanceStatusWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidInstanceIDNotFound) {
 		return nil, &resource.NotFoundError{
 			LastError:   err,
-			LastRequest: in,
+			LastRequest: input,
 		}
 	}
 
@@ -6766,20 +6766,20 @@ func FindInstanceStateById(ctx context.Context, conn *ec2.EC2, id string) (*ec2.
 		return nil, err
 	}
 
-	if out == nil || len(out.InstanceStatuses) == 0 {
-		return nil, tfresource.NewEmptyResultError(in)
+	if output == nil || len(output.InstanceStatuses) == 0 {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	instanceState := out.InstanceStatuses[0].InstanceState
+	instanceState := output.InstanceStatuses[0].InstanceState
 
 	if instanceState == nil || aws.StringValue(instanceState.Name) == ec2.InstanceStateNameTerminated {
-		return nil, tfresource.NewEmptyResultError(in)
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	// Eventual consistency check.
-	if aws.StringValue(out.InstanceStatuses[0].InstanceId) != id {
+	if aws.StringValue(output.InstanceStatuses[0].InstanceId) != id {
 		return nil, &resource.NotFoundError{
-			LastRequest: in,
+			LastRequest: input,
 		}
 	}
 

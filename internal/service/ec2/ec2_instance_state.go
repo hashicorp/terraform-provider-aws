@@ -77,7 +77,7 @@ func resourceInstanceStateCreate(ctx context.Context, d *schema.ResourceData, me
 func resourceInstanceStateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EC2Conn()
 
-	state, err := FindInstanceStateById(ctx, conn, d.Id())
+	state, err := FindInstanceStateByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		create.LogNotFoundRemoveState(names.EC2, create.ErrActionReading, ResInstanceState, d.Id())
