@@ -129,7 +129,7 @@ func expandECSParameters(tfMap map[string]interface{}) *types.EcsParameters {
 		a.ReferenceId = aws.String(v)
 	}
 
-	tags := tftags.New(tfMap["tags"].(map[string]interface{}))
+	tags := tftags.New(ctx, tfMap["tags"].(map[string]interface{}))
 
 	if len(tags) > 0 {
 		for k, v := range tags.IgnoreAWS().Map() {
@@ -235,7 +235,7 @@ func flattenECSParameters(apiObject *types.EcsParameters) map[string]interface{}
 			tags[key] = tagMap["value"]
 		}
 
-		m["tags"] = tftags.New(tags).IgnoreAWS().Map()
+		m["tags"] = tftags.New(ctx, tags).IgnoreAWS().Map()
 	}
 
 	if v := apiObject.TaskCount; v != nil {
