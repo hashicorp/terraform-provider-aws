@@ -7,30 +7,30 @@ require (
 	github.com/aws/aws-sdk-go v1.44.201
 	github.com/aws/aws-sdk-go-v2 v1.17.4
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.22
-	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.23.1
-	github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.11.2
-	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.20.2
-	github.com/aws/aws-sdk-go-v2/service/comprehend v1.21.1
-	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.21.0
+	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.23.2
+	github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.11.3
+	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.20.3
+	github.com/aws/aws-sdk-go-v2/service/comprehend v1.21.2
+	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.21.1
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.86.0
-	github.com/aws/aws-sdk-go-v2/service/fis v1.14.1
-	github.com/aws/aws-sdk-go-v2/service/identitystore v1.16.1
-	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.11.2
-	github.com/aws/aws-sdk-go-v2/service/ivschat v1.3.1
-	github.com/aws/aws-sdk-go-v2/service/kendra v1.38.2
-	github.com/aws/aws-sdk-go-v2/service/medialive v1.29.1
-	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.1.2
-	github.com/aws/aws-sdk-go-v2/service/pipes v1.1.1
-	github.com/aws/aws-sdk-go-v2/service/rds v1.40.2
-	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.2.2
-	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.1.1
-	github.com/aws/aws-sdk-go-v2/service/route53domains v1.14.1
+	github.com/aws/aws-sdk-go-v2/service/fis v1.14.2
+	github.com/aws/aws-sdk-go-v2/service/identitystore v1.16.2
+	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.11.3
+	github.com/aws/aws-sdk-go-v2/service/ivschat v1.3.2
+	github.com/aws/aws-sdk-go-v2/service/kendra v1.38.3
+	github.com/aws/aws-sdk-go-v2/service/medialive v1.29.2
+	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.1.3
+	github.com/aws/aws-sdk-go-v2/service/pipes v1.1.2
+	github.com/aws/aws-sdk-go-v2/service/rds v1.40.3
+	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.2.3
+	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.1.2
+	github.com/aws/aws-sdk-go-v2/service/route53domains v1.14.2
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.29.2
-	github.com/aws/aws-sdk-go-v2/service/scheduler v1.1.1
-	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.16.1
-	github.com/aws/aws-sdk-go-v2/service/ssm v1.35.2
-	github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.20.1
-	github.com/aws/aws-sdk-go-v2/service/transcribe v1.25.1
+	github.com/aws/aws-sdk-go-v2/service/scheduler v1.1.2
+	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.16.2
+	github.com/aws/aws-sdk-go-v2/service/ssm v1.35.3
+	github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.20.2
+	github.com/aws/aws-sdk-go-v2/service/transcribe v1.25.2
 	github.com/aws/smithy-go v1.13.5
 	github.com/beevik/etree v1.1.0
 	github.com/google/go-cmp v0.5.9
@@ -83,8 +83,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/iam v1.19.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.22 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.13.22 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sso v1.12.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.14.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sso v1.12.2 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.14.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.18.3 // indirect
 	github.com/bgentry/speakeasy v0.1.0 // indirect
 	github.com/boombuler/barcode v1.0.1-0.20190219062509-6c824513bacc // indirect
