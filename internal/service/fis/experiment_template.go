@@ -309,7 +309,7 @@ func resourceExperimentTemplateRead(ctx context.Context, d *schema.ResourceData,
 		return create.DiagSettingError(names.FIS, ResNameExperimentTemplate, d.Id(), "target", err)
 	}
 
-	tags := KeyValueTags(experimentTemplate.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, experimentTemplate.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
