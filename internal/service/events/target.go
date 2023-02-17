@@ -438,7 +438,7 @@ func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	id := TargetCreateResourceID(busName, rule, targetID)
 
-	input := buildPutTargetInputStruct(d)
+	input := buildPutTargetInputStruct(ctx, d)
 
 	log.Printf("[DEBUG] Creating EventBridge Target: %s", input)
 	output, err := conn.PutTargetsWithContext(ctx, input)
@@ -501,7 +501,7 @@ func resourceTargetRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if t.EcsParameters != nil {
-		if err := d.Set("ecs_target", flattenTargetECSParameters(t.EcsParameters)); err != nil {
+		if err := d.Set("ecs_target", flattenTargetECSParameters(ctx, t.EcsParameters)); err != nil {
 			return diag.Errorf("setting ecs_target: %s", err)
 		}
 	}
@@ -548,7 +548,7 @@ func resourceTargetRead(ctx context.Context, d *schema.ResourceData, meta interf
 func resourceTargetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EventsConn()
 
-	input := buildPutTargetInputStruct(d)
+	input := buildPutTargetInputStruct(ctx, d)
 
 	log.Printf("[DEBUG] Updating EventBridge Target: %s", input)
 	output, err := conn.PutTargetsWithContext(ctx, input)
@@ -634,7 +634,7 @@ func removeTargetsError(apiObjects []*eventbridge.RemoveTargetsResultEntry) erro
 	return errors.ErrorOrNil()
 }
 
-func buildPutTargetInputStruct(d *schema.ResourceData) *eventbridge.PutTargetsInput {
+func buildPutTargetInputStruct(ctx context.Context, d *schema.ResourceData) *eventbridge.PutTargetsInput {
 	e := &eventbridge.Target{
 		Arn: aws.String(d.Get("arn").(string)),
 		Id:  aws.String(d.Get("target_id").(string)),
@@ -656,7 +656,7 @@ func buildPutTargetInputStruct(d *schema.ResourceData) *eventbridge.PutTargetsIn
 	}
 
 	if v, ok := d.GetOk("ecs_target"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		e.EcsParameters = expandTargetECSParameters(v.([]interface{}))
+		e.EcsParameters = expandTargetECSParameters(ctx, v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("redshift_target"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -748,7 +748,7 @@ func expandTargetRedshiftParameters(config []interface{}) *eventbridge.RedshiftD
 	return redshiftParameters
 }
 
-func expandTargetECSParameters(config []interface{}) *eventbridge.EcsParameters {
+func expandTargetECSParameters(ctx context.Context, config []interface{}) *eventbridge.EcsParameters {
 	ecsParameters := &eventbridge.EcsParameters{}
 	for _, c := range config {
 		param := c.(map[string]interface{})
@@ -948,7 +948,7 @@ func flattenTargetRunParameters(runCommand *eventbridge.RunCommandParameters) []
 	return result
 }
 
-func flattenTargetECSParameters(ecsParameters *eventbridge.EcsParameters) []map[string]interface{} {
+func flattenTargetECSParameters(ctx context.Context, ecsParameters *eventbridge.EcsParameters) []map[string]interface{} {
 	config := make(map[string]interface{})
 	if ecsParameters.Group != nil {
 		config["group"] = aws.StringValue(ecsParameters.Group)
