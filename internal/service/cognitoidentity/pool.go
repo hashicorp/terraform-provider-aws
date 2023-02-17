@@ -201,7 +201,7 @@ func resourcePoolRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("allow_unauthenticated_identities", ip.AllowUnauthenticatedIdentities)
 	d.Set("allow_classic_flow", ip.AllowClassicFlow)
 	d.Set("developer_provider_name", ip.DeveloperProviderName)
-	tags := KeyValueTags(ip.IdentityPoolTags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, ip.IdentityPoolTags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
