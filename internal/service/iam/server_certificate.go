@@ -196,7 +196,7 @@ func resourceServerCertificateRead(ctx context.Context, d *schema.ResourceData, 
 		d.Set("upload_date", nil)
 	}
 
-	tags := KeyValueTags(cert.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, cert.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

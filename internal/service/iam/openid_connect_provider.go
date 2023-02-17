@@ -138,7 +138,7 @@ func resourceOpenIDConnectProviderRead(ctx context.Context, d *schema.ResourceDa
 	d.Set("client_id_list", flex.FlattenStringList(out.ClientIDList))
 	d.Set("thumbprint_list", flex.FlattenStringList(out.ThumbprintList))
 
-	tags := KeyValueTags(out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

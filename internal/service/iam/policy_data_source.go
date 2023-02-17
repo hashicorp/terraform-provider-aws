@@ -108,7 +108,7 @@ func dataSourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("path", policy.Path)
 	d.Set("policy_id", policy.PolicyId)
 
-	if err := d.Set("tags", KeyValueTags(policy.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, policy.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

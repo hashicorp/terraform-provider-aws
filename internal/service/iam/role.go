@@ -330,7 +330,7 @@ func resourceRoleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 	d.Set("managed_policy_arns", managedPolicies)
 
-	tags := KeyValueTags(role.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, role.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

@@ -168,7 +168,7 @@ func resourceServiceLinkedRoleRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("path", role.Path)
 	d.Set("unique_id", role.RoleId)
 
-	tags := KeyValueTags(role.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, role.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

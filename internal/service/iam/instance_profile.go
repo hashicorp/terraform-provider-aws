@@ -326,7 +326,7 @@ func instanceProfileReadResult(d *schema.ResourceData, result *iam.InstanceProfi
 		d.Set("role", result.Roles[0].RoleName) //there will only be 1 role returned
 	}
 
-	tags := KeyValueTags(result.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, result.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

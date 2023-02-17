@@ -148,7 +148,7 @@ func resourceVirtualMFADeviceRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "listing IAM Virtual MFA Device Tags (%s): %s", d.Id(), err)
 	}
 
-	tags := KeyValueTags(mfaTags.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, mfaTags.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

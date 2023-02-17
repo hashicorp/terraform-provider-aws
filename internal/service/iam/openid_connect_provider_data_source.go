@@ -84,7 +84,7 @@ func dataSourceOpenIDConnectProviderRead(ctx context.Context, d *schema.Resource
 	d.Set("client_id_list", flex.FlattenStringList(resp.ClientIDList))
 	d.Set("thumbprint_list", flex.FlattenStringList(resp.ThumbprintList))
 
-	if err := d.Set("tags", KeyValueTags(resp.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, resp.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return diag.Errorf("error setting tags: %s", err)
 	}
 
