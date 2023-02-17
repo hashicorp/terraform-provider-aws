@@ -752,7 +752,7 @@ func expandTargetECSParameters(config []interface{}) *eventbridge.EcsParameters 
 	ecsParameters := &eventbridge.EcsParameters{}
 	for _, c := range config {
 		param := c.(map[string]interface{})
-		tags := tftags.New(param["tags"].(map[string]interface{}))
+		tags := tftags.New(ctx, param["tags"].(map[string]interface{}))
 
 		if v, ok := param["capacity_provider_strategy"].(*schema.Set); ok && v.Len() > 0 {
 			ecsParameters.CapacityProviderStrategy = expandTargetCapacityProviderStrategy(v.List())
