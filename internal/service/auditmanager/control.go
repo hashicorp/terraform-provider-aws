@@ -451,7 +451,7 @@ func (rd *resourceControlData) refreshFromOutput(ctx context.Context, meta *conn
 
 	defaultTagsConfig := meta.DefaultTagsConfig
 	ignoreTagsConfig := meta.IgnoreTagsConfig
-	tags := KeyValueTags(out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 	// AWS APIs often return empty lists of tags when none have been configured.
 	if tags := tags.RemoveDefaultConfig(defaultTagsConfig).Map(); len(tags) == 0 {
 		rd.Tags = tftags.Null
