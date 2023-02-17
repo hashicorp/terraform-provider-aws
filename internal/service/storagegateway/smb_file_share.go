@@ -355,7 +355,7 @@ func resourceSMBFileShareRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("valid_user_list", aws.StringValueSlice(fileshare.ValidUserList))
 	d.Set("vpc_endpoint_dns_name", fileshare.VPCEndpointDNSName)
 
-	tags := KeyValueTags(fileshare.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, fileshare.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
