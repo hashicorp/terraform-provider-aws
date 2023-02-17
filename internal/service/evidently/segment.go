@@ -145,7 +145,7 @@ func resourceSegmentRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("name", segment.Name)
 	d.Set("pattern", segment.Pattern)
 
-	tags := KeyValueTags(segment.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, segment.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return diag.Errorf("setting tags: %s", err)
