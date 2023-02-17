@@ -158,7 +158,7 @@ func resourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("name", resp.Name)
 	d.Set("activate", aws.StringValue(resp.Status) == guardduty.IpSetStatusActive)
 
-	tags := KeyValueTags(resp.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, resp.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
