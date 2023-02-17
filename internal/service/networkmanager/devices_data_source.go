@@ -37,7 +37,7 @@ func DataSourceDevices() *schema.Resource {
 func dataSourceDevicesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).NetworkManagerConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tagsToMatch := tftags.New(d.Get("tags").(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tagsToMatch := tftags.New(ctx, d.Get("tags").(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	input := &networkmanager.GetDevicesInput{
 		GlobalNetworkId: aws.String(d.Get("global_network_id").(string)),

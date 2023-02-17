@@ -86,7 +86,7 @@ func ResourceTransitGatewayPeering() *schema.Resource {
 func resourceTransitGatewayPeeringCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).NetworkManagerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	coreNetworkID := d.Get("core_network_id").(string)
 	transitGatewayARN := d.Get("transit_gateway_arn").(string)

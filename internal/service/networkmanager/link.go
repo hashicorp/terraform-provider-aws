@@ -114,7 +114,7 @@ func ResourceLink() *schema.Resource {
 func resourceLinkCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).NetworkManagerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	globalNetworkID := d.Get("global_network_id").(string)
 	input := &networkmanager.CreateLinkInput{

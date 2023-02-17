@@ -98,7 +98,7 @@ func ResourceTransitGatewayRouteTableAttachment() *schema.Resource {
 func resourceTransitGatewayRouteTableAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).NetworkManagerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	peeringID := d.Get("peering_id").(string)
 	transitGatewayRouteTableARN := d.Get("transit_gateway_route_table_arn").(string)
