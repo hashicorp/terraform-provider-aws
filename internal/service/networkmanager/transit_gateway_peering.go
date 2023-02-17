@@ -149,7 +149,7 @@ func resourceTransitGatewayPeeringRead(ctx context.Context, d *schema.ResourceDa
 	d.Set("transit_gateway_arn", transitGatewayPeering.TransitGatewayArn)
 	d.Set("transit_gateway_peering_attachment_id", transitGatewayPeering.TransitGatewayPeeringAttachmentId)
 
-	tags := KeyValueTags(p.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, p.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

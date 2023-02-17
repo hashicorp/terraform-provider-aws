@@ -233,7 +233,7 @@ func resourceConnectAttachmentRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("state", a.State)
 	d.Set("transport_attachment_id", connectAttachment.TransportAttachmentId)
 
-	tags := KeyValueTags(a.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, a.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

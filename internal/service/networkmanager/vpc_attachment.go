@@ -200,7 +200,7 @@ func resourceVPCAttachmentRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("subnet_arns", aws.StringValueSlice(vpcAttachment.SubnetArns))
 	d.Set("vpc_arn", a.ResourceArn)
 
-	tags := KeyValueTags(a.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, a.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

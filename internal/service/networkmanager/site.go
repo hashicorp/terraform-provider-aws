@@ -170,7 +170,7 @@ func resourceSiteRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		d.Set("location", nil)
 	}
 
-	tags := KeyValueTags(site.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, site.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

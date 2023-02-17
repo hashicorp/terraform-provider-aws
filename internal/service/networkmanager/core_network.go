@@ -257,7 +257,7 @@ func resourceCoreNetworkRead(ctx context.Context, d *schema.ResourceData, meta i
 		d.Set("policy_document", encodedPolicyDocument)
 	}
 
-	tags := KeyValueTags(coreNetwork.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, coreNetwork.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

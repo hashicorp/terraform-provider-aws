@@ -190,7 +190,7 @@ func resourceLinkRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("site_id", link.SiteId)
 	d.Set("type", link.Type)
 
-	tags := KeyValueTags(link.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, link.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
