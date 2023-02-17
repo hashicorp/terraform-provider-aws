@@ -78,7 +78,7 @@ func resourceBucketMetricPut(ctx context.Context, d *schema.ResourceData, meta i
 	if v, ok := d.GetOk("filter"); ok {
 		filterList := v.([]interface{})
 		if filterMap, ok := filterList[0].(map[string]interface{}); ok {
-			metricsConfiguration.Filter = ExpandMetricsFilter(filterMap)
+			metricsConfiguration.Filter = ExpandMetricsFilter(ctx, filterMap)
 		}
 	}
 
@@ -189,7 +189,7 @@ func resourceBucketMetricRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if output.MetricsConfiguration.Filter != nil {
-		if err := d.Set("filter", []interface{}{FlattenMetricsFilter(output.MetricsConfiguration.Filter)}); err != nil {
+		if err := d.Set("filter", []interface{}{FlattenMetricsFilter(ctx, output.MetricsConfiguration.Filter)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting filter")
 		}
 	}
@@ -197,7 +197,7 @@ func resourceBucketMetricRead(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func ExpandMetricsFilter(m map[string]interface{}) *s3.MetricsFilter {
+func ExpandMetricsFilter(ctx context.Context, m map[string]interface{}) *s3.MetricsFilter {
 	var prefix string
 	if v, ok := m["prefix"]; ok {
 		prefix = v.(string)
@@ -226,7 +226,7 @@ func ExpandMetricsFilter(m map[string]interface{}) *s3.MetricsFilter {
 	return metricsFilter
 }
 
-func FlattenMetricsFilter(metricsFilter *s3.MetricsFilter) map[string]interface{} {
+func FlattenMetricsFilter(ctx context.Context, metricsFilter *s3.MetricsFilter) map[string]interface{} {
 	m := make(map[string]interface{})
 
 	if and := metricsFilter.And; and != nil {
