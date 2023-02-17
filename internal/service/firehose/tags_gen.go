@@ -22,10 +22,10 @@ func ListTags(ctx context.Context, conn firehoseiface.FirehoseAPI, identifier st
 	output, err := conn.ListTagsForDeliveryStreamWithContext(ctx, input)
 
 	if err != nil {
-		return tftags.New(nil), err
+		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTags(output.Tags), nil
+	return KeyValueTags(ctx, output.Tags), nil
 }
 
 // []*SERVICE.Tag handling
@@ -47,22 +47,22 @@ func Tags(tags tftags.KeyValueTags) []*firehose.Tag {
 }
 
 // KeyValueTags creates tftags.KeyValueTags from firehose service tags.
-func KeyValueTags(tags []*firehose.Tag) tftags.KeyValueTags {
+func KeyValueTags(ctx context.Context, tags []*firehose.Tag) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
 		m[aws.StringValue(tag.Key)] = tag.Value
 	}
 
-	return tftags.New(m)
+	return tftags.New(ctx, m)
 }
 
 // UpdateTags updates firehose service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
 func UpdateTags(ctx context.Context, conn firehoseiface.FirehoseAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
-	oldTags := tftags.New(oldTagsMap)
-	newTags := tftags.New(newTagsMap)
+	oldTags := tftags.New(ctx, oldTagsMap)
+	newTags := tftags.New(ctx, newTagsMap)
 
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &firehose.UntagDeliveryStreamInput{
