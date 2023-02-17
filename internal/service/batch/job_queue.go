@@ -155,7 +155,7 @@ func resourceJobQueueRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("scheduling_policy_arn", jq.SchedulingPolicyArn)
 	d.Set("state", jq.State)
 
-	tags := KeyValueTags(jq.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, jq.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

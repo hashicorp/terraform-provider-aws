@@ -352,7 +352,7 @@ func resourceComputeEnvironmentRead(ctx context.Context, d *schema.ResourceData,
 		d.Set("eks_configuration", nil)
 	}
 
-	tags := KeyValueTags(computeEnvironment.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, computeEnvironment.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -730,7 +730,7 @@ func flattenComputeResource(apiObject *batch.ComputeResource) map[string]interfa
 	}
 
 	if v := apiObject.Tags; v != nil {
-		tfMap["tags"] = KeyValueTags(v).IgnoreAWS().Map()
+		tfMap["tags"] = KeyValueTags(ctx, v).IgnoreAWS().Map()
 	}
 
 	if v := apiObject.Type; v != nil {
