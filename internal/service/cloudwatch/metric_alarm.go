@@ -306,7 +306,7 @@ func resourceMetricAlarmCreate(ctx context.Context, d *schema.ResourceData, meta
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating CloudWatch Metric Alarm (%s): %s", d.Get("alarm_name").(string), err)
 	}
-	params := getPutMetricAlarmInput(d, meta)
+	params := getPutMetricAlarmInput(ctx, d, meta)
 
 	log.Printf("[DEBUG] Creating CloudWatch Metric Alarm: %#v", params)
 	_, err = conn.PutMetricAlarmWithContext(ctx, &params)
@@ -456,7 +456,7 @@ func resourceMetricAlarmRead(ctx context.Context, d *schema.ResourceData, meta i
 func resourceMetricAlarmUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudWatchConn()
-	params := getPutMetricAlarmInput(d, meta)
+	params := getPutMetricAlarmInput(ctx, d, meta)
 
 	log.Printf("[DEBUG] Updating CloudWatch Metric Alarm: %#v", params)
 	_, err := conn.PutMetricAlarmWithContext(ctx, &params)
@@ -505,7 +505,7 @@ func resourceMetricAlarmDelete(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func getPutMetricAlarmInput(d *schema.ResourceData, meta interface{}) cloudwatch.PutMetricAlarmInput {
+func getPutMetricAlarmInput(ctx context.Context, d *schema.ResourceData, meta interface{}) cloudwatch.PutMetricAlarmInput {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
