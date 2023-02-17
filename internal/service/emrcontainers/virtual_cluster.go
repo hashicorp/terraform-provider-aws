@@ -161,7 +161,7 @@ func resourceVirtualClusterRead(ctx context.Context, d *schema.ResourceData, met
 	}
 	d.Set("name", vc.Name)
 
-	tags := KeyValueTags(vc.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, vc.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
