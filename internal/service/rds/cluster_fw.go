@@ -79,6 +79,7 @@ func (r *resourceCluster) Metadata(_ context.Context, request resource.MetadataR
 // Schema returns the schema for this resource.
 func (r *resourceCluster) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	s := schema.Schema{
+		Version: 1,
 		Attributes: map[string]schema.Attribute{
 			"allocated_storage": schema.Int64Attribute{
 				Optional: true,
@@ -1356,55 +1357,57 @@ func (r *resourceCluster) ImportState(ctx context.Context, request resource.Impo
 // during the apply phase with any unknown values from configuration
 // filled in with their final values.
 func (r *resourceCluster) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	var finalSnapshotIdentifier types.String
-	var skipFinalSnapshot types.Bool
+	if !request.Plan.Raw.IsNull() {
+		var finalSnapshotIdentifier types.String
+		var skipFinalSnapshot types.Bool
 
-	response.Diagnostics.Append(request.Plan.GetAttribute(ctx, path.Root("final_snapshot_identifier"), &finalSnapshotIdentifier)...)
-	response.Diagnostics.Append(request.Plan.GetAttribute(ctx, path.Root("skip_final_snapshot"), &skipFinalSnapshot)...)
+		response.Diagnostics.Append(request.Plan.GetAttribute(ctx, path.Root("final_snapshot_identifier"), &finalSnapshotIdentifier)...)
+		response.Diagnostics.Append(request.Plan.GetAttribute(ctx, path.Root("skip_final_snapshot"), &skipFinalSnapshot)...)
 
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	if skipFinalSnapshot.ValueBool() == false && finalSnapshotIdentifier.IsNull() {
-		response.Diagnostics.AddAttributeWarning(
-			path.Root("final_snapshot_identifier"),
-			"Attribute cannot be null",
-			"Attribute final_snapshot_identifier cannot be null when skip_final_snapshot is set to false. "+
-				"Please include a final_snapshot_identifier",
-		)
-	}
-
-	var engineVersionPlan, engineVersionState types.String
-	response.Diagnostics.Append(request.Plan.GetAttribute(ctx, path.Root("engine_version"), &engineVersionPlan)...)
-	response.Diagnostics.Append(request.State.GetAttribute(ctx, path.Root("engine_version"), &engineVersionState)...)
-
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	if (!engineVersionPlan.IsNull() && !engineVersionPlan.IsUnknown()) && (!engineVersionState.IsNull() && !engineVersionState.IsUnknown()) {
-		if !engineVersionPlan.Equal(engineVersionState) {
-			response.Diagnostics.Append(response.Plan.SetAttribute(ctx, path.Root("db_cluster_parameter_group_name_actual"), types.StringUnknown())...)
-			response.Diagnostics.Append(response.Plan.SetAttribute(ctx, path.Root("engine_version_actual"), types.StringUnknown())...)
+		if response.Diagnostics.HasError() {
+			return
 		}
-	}
 
-	var scalingConfigurationPlan, scalingConfigurationState types.List
-	response.Diagnostics.Append(request.Plan.GetAttribute(ctx, path.Root("scaling_configuration"), &scalingConfigurationPlan)...)
-	response.Diagnostics.Append(request.State.GetAttribute(ctx, path.Root("scaling_configuration"), &scalingConfigurationState)...)
-
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	if (!scalingConfigurationPlan.IsNull() && len(scalingConfigurationPlan.Elements()) > 0) && (!scalingConfigurationState.IsNull() && len(scalingConfigurationState.Elements()) > 0) {
-		if !scalingConfigurationPlan.Equal(scalingConfigurationState) {
-			response.Diagnostics.Append(response.Plan.SetAttribute(ctx, path.Root("scaling_configuration_actual"), types.ListUnknown(types.ObjectType{AttrTypes: scalingConfigurationAttrTypes}))...)
+		if skipFinalSnapshot.ValueBool() == false && finalSnapshotIdentifier.IsNull() {
+			response.Diagnostics.AddAttributeWarning(
+				path.Root("final_snapshot_identifier"),
+				"Attribute cannot be null",
+				"Attribute final_snapshot_identifier cannot be null when skip_final_snapshot is set to false. "+
+					"Please include a final_snapshot_identifier",
+			)
 		}
-	}
 
-	r.SetTagsAll(ctx, request, response)
+		var engineVersionPlan, engineVersionState types.String
+		response.Diagnostics.Append(request.Plan.GetAttribute(ctx, path.Root("engine_version"), &engineVersionPlan)...)
+		response.Diagnostics.Append(request.State.GetAttribute(ctx, path.Root("engine_version"), &engineVersionState)...)
+
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		if (!engineVersionPlan.IsNull() && !engineVersionPlan.IsUnknown()) && (!engineVersionState.IsNull() && !engineVersionState.IsUnknown()) {
+			if !engineVersionPlan.Equal(engineVersionState) {
+				response.Diagnostics.Append(response.Plan.SetAttribute(ctx, path.Root("db_cluster_parameter_group_name_actual"), types.StringUnknown())...)
+				response.Diagnostics.Append(response.Plan.SetAttribute(ctx, path.Root("engine_version_actual"), types.StringUnknown())...)
+			}
+		}
+
+		var scalingConfigurationPlan, scalingConfigurationState types.List
+		response.Diagnostics.Append(request.Plan.GetAttribute(ctx, path.Root("scaling_configuration"), &scalingConfigurationPlan)...)
+		response.Diagnostics.Append(request.State.GetAttribute(ctx, path.Root("scaling_configuration"), &scalingConfigurationState)...)
+
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		if (!scalingConfigurationPlan.IsNull() && len(scalingConfigurationPlan.Elements()) > 0) && (!scalingConfigurationState.IsNull() && len(scalingConfigurationState.Elements()) > 0) {
+			if !scalingConfigurationPlan.Equal(scalingConfigurationState) {
+				response.Diagnostics.Append(response.Plan.SetAttribute(ctx, path.Root("scaling_configuration_actual"), types.ListUnknown(types.ObjectType{AttrTypes: scalingConfigurationAttrTypes}))...)
+			}
+		}
+
+		r.SetTagsAll(ctx, request, response)
+	}
 }
 
 func (r *resourceCluster) ConfigValidators(_ context.Context) []resource.ConfigValidator {
@@ -1461,6 +1464,16 @@ func (r *resourceCluster) ValidateConfig(ctx context.Context, request resource.V
 		}
 	}
 }
+
+//func (r *resourceCluster) UpgradeState(ctx context.Context) map[int64]resource.StateUpgrader {
+//	return map[int64]resource.StateUpgrader{
+//		0: {
+//			StateUpgrader: func(ctx context.Context, req resource.UpgradeStateRequest, resp *resource.UpgradeStateResponse) {
+//				req.
+//			},
+//		},
+//	}
+//}
 
 type resourceClusterData struct {
 	AllocatedStorage                  types.Int64  `tfsdk:"allocated_storage"`

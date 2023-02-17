@@ -2450,7 +2450,7 @@ func TestAccRDSCluster_MigrateFromPluginSDK(t *testing.T) {
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"aws": {
 						Source:            "hashicorp/aws",
-						VersionConstraint: "4.51.0",
+						VersionConstraint: "4.55.0",
 					},
 				},
 				Config: testAccClusterConfig_basic(rName),
