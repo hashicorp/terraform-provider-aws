@@ -296,7 +296,7 @@ func resourceEBSVolumeDelete(ctx context.Context, d *schema.ResourceData, meta i
 
 	if d.Get("final_snapshot").(bool) {
 		input := &ec2.CreateSnapshotInput{
-			TagSpecifications: tagSpecificationsFromMap(d.Get("tags_all").(map[string]interface{}), ec2.ResourceTypeSnapshot),
+			TagSpecifications: tagSpecificationsFromMap(ctx, d.Get("tags_all").(map[string]interface{}), ec2.ResourceTypeSnapshot),
 			VolumeId:          aws.String(d.Id()),
 		}
 

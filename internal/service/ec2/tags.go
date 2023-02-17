@@ -1,6 +1,8 @@
 package ec2
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -22,7 +24,7 @@ func tagSpecificationsFromKeyValueTags(tags tftags.KeyValueTags, t string) []*ec
 }
 
 // tagSpecificationsFromMap returns the tag specifications for the given tag key/value map and resource type.
-func tagSpecificationsFromMap(m map[string]interface{}, t string) []*ec2.TagSpecification {
+func tagSpecificationsFromMap(ctx context.Context, m map[string]interface{}, t string) []*ec2.TagSpecification {
 	if len(m) == 0 {
 		return nil
 	}

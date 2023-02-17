@@ -1850,12 +1850,12 @@ func launchSpecsToSet(ctx context.Context, conn *ec2.EC2, launchSpecs []*ec2.Spo
 			return nil, err
 		}
 
-		specSet.Add(launchSpecToMap(spec, rootDeviceName))
+		specSet.Add(launchSpecToMap(ctx, spec, rootDeviceName))
 	}
 	return specSet, nil
 }
 
-func launchSpecToMap(l *ec2.SpotFleetLaunchSpecification, rootDevName *string) map[string]interface{} {
+func launchSpecToMap(ctx context.Context, l *ec2.SpotFleetLaunchSpecification, rootDevName *string) map[string]interface{} {
 	m := make(map[string]interface{})
 
 	m["root_block_device"] = rootBlockDeviceToSet(l.BlockDeviceMappings, rootDevName)

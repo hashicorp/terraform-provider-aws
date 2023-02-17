@@ -815,7 +815,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	tagSpecifications := tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeInstance)
-	tagSpecifications = append(tagSpecifications, tagSpecificationsFromMap(d.Get("volume_tags").(map[string]interface{}), ec2.ResourceTypeVolume)...)
+	tagSpecifications = append(tagSpecifications, tagSpecificationsFromMap(ctx, d.Get("volume_tags").(map[string]interface{}), ec2.ResourceTypeVolume)...)
 
 	input := &ec2.RunInstancesInput{
 		BlockDeviceMappings:               instanceOpts.BlockDeviceMappings,
