@@ -116,7 +116,7 @@ func resourceCompositeAlarmCreate(ctx context.Context, d *schema.ResourceData, m
 	d.SetId(name)
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	// Some partitions (i.e., ISO) may not support tag-on-create, attempt tag after create
 	if input.Tags == nil && len(tags) > 0 {
@@ -266,7 +266,7 @@ func resourceCompositeAlarmDelete(ctx context.Context, d *schema.ResourceData, m
 
 func expandPutCompositeAlarmInput(d *schema.ResourceData, meta interface{}) cloudwatch.PutCompositeAlarmInput {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	out := cloudwatch.PutCompositeAlarmInput{
 		ActionsEnabled: aws.Bool(d.Get("actions_enabled").(bool)),
