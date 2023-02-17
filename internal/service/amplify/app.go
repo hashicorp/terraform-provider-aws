@@ -459,7 +459,7 @@ func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta interface
 	}
 	d.Set("repository", app.Repository)
 
-	tags := KeyValueTags(app.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, app.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
