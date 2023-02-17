@@ -941,7 +941,7 @@ func resourceUserPoolRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("creation_date", userPool.CreationDate.Format(time.RFC3339))
 	d.Set("last_modified_date", userPool.LastModifiedDate.Format(time.RFC3339))
 	d.Set("name", userPool.Name)
-	tags := KeyValueTags(userPool.UserPoolTags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, userPool.UserPoolTags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
