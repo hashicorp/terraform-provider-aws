@@ -261,7 +261,7 @@ func resourceProvisionedProductCreate(ctx context.Context, d *schema.ResourceDat
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &servicecatalog.ProvisionProductInput{
 		ProvisionToken:         aws.String(resource.UniqueId()),
@@ -521,7 +521,7 @@ func resourceProvisionedProductUpdate(ctx context.Context, d *schema.ResourceDat
 
 	if d.HasChanges("tags", "tags_all") {
 		defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-		tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+		tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 		if len(tags) > 0 {
 			input.Tags = Tags(tags.IgnoreAWS())

@@ -153,7 +153,7 @@ func resourceProductCreate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &servicecatalog.CreateProductInput{
 		IdempotencyToken: aws.String(resource.UniqueId()),

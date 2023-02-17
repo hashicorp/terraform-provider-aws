@@ -73,7 +73,7 @@ func resourcePortfolioCreate(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 	input := &servicecatalog.CreatePortfolioInput{
@@ -169,8 +169,8 @@ func resourcePortfolioUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		input.AddTags = Tags(tftags.New(n).IgnoreAWS())
-		input.RemoveTags = aws.StringSlice(tftags.New(o).IgnoreAWS().Keys())
+		input.AddTags = Tags(tftags.New(ctx, n).IgnoreAWS())
+		input.RemoveTags = aws.StringSlice(tftags.New(ctx, o).IgnoreAWS().Keys())
 	}
 
 	_, err := conn.UpdatePortfolioWithContext(ctx, input)
