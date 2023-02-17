@@ -135,7 +135,7 @@ func resourceFrameworkCreate(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	name := d.Get("name").(string)
 
@@ -361,7 +361,7 @@ func expandControlScope(scope []interface{}) *backup.ControlScope {
 	// A maximum of one key-value pair can be provided.
 	// The tag value is optional, but it cannot be an empty string
 	if v, ok := tfMap["tags"].(map[string]interface{}); ok && len(v) > 0 {
-		controlScope.Tags = Tags(tftags.New(v).IgnoreAWS())
+		controlScope.Tags = Tags(tftags.New(ctx, v).IgnoreAWS())
 	}
 
 	return controlScope

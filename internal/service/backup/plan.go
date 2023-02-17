@@ -172,7 +172,7 @@ func resourcePlanCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &backup.CreateBackupPlanInput{
 		BackupPlan: &backup.PlanInput{
@@ -342,7 +342,7 @@ func expandPlanRules(vRules *schema.Set) []*backup.RuleInput {
 		}
 
 		if vRecoveryPointTags, ok := mRule["recovery_point_tags"].(map[string]interface{}); ok && len(vRecoveryPointTags) > 0 {
-			rule.RecoveryPointTags = Tags(tftags.New(vRecoveryPointTags).IgnoreAWS())
+			rule.RecoveryPointTags = Tags(tftags.New(ctx, vRecoveryPointTags).IgnoreAWS())
 		}
 
 		if vLifecycle, ok := mRule["lifecycle"].([]interface{}); ok && len(vLifecycle) > 0 {
@@ -526,7 +526,7 @@ func planHash(vRule interface{}) int {
 	}
 
 	if vRecoveryPointTags, ok := mRule["recovery_point_tags"].(map[string]interface{}); ok && len(vRecoveryPointTags) > 0 {
-		buf.WriteString(fmt.Sprintf("%d-", tftags.New(vRecoveryPointTags).Hash()))
+		buf.WriteString(fmt.Sprintf("%d-", tftags.New(ctx, vRecoveryPointTags).Hash()))
 	}
 
 	if vLifecycle, ok := mRule["lifecycle"].([]interface{}); ok && len(vLifecycle) > 0 && vLifecycle[0] != nil {
