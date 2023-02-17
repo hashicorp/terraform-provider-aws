@@ -256,7 +256,7 @@ func resourceAPIRead(ctx context.Context, d *schema.ResourceData, meta interface
 	d.Set("protocol_type", resp.ProtocolType)
 	d.Set("route_selection_expression", resp.RouteSelectionExpression)
 
-	tags := KeyValueTags(resp.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, resp.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
