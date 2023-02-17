@@ -363,7 +363,7 @@ func resourceCrawlerCreate(ctx context.Context, d *schema.ResourceData, meta int
 	glueConn := meta.(*conns.AWSClient).GlueConn()
 	name := d.Get("name").(string)
 
-	crawlerInput, err := createCrawlerInput(d, name, meta.(*conns.AWSClient).DefaultTagsConfig)
+	crawlerInput, err := createCrawlerInput(ctx, d, name, meta.(*conns.AWSClient).DefaultTagsConfig)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Glue Crawler (%s): %s", name, err)
 	}
@@ -406,7 +406,7 @@ func resourceCrawlerCreate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceCrawlerRead(ctx, d, meta)...)
 }
 
-func createCrawlerInput(d *schema.ResourceData, crawlerName string, defaultTagsConfig *tftags.DefaultConfig) (*glue.CreateCrawlerInput, error) {
+func createCrawlerInput(ctx context.Context, d *schema.ResourceData, crawlerName string, defaultTagsConfig *tftags.DefaultConfig) (*glue.CreateCrawlerInput, error) {
 	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	crawlerInput := &glue.CreateCrawlerInput{
