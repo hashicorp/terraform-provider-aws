@@ -662,7 +662,7 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 		// Tagging operations are permitted on Lambda functions only.
 		// Tags on aliases and versions are not supported.
-		tags := KeyValueTags(output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+		tags := KeyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 		//lintignore:AWSR002
 		if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
