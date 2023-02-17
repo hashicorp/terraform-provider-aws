@@ -975,7 +975,7 @@ func flattenTargetECSParameters(ecsParameters *eventbridge.EcsParameters) []map[
 		config["capacity_provider_strategy"] = flattenTargetCapacityProviderStrategy(ecsParameters.CapacityProviderStrategy)
 	}
 
-	config["tags"] = KeyValueTags(ecsParameters.Tags).IgnoreAWS().Map()
+	config["tags"] = KeyValueTags(ctx, ecsParameters.Tags).IgnoreAWS().Map()
 	config["enable_execute_command"] = aws.BoolValue(ecsParameters.EnableExecuteCommand)
 	config["enable_ecs_managed_tags"] = aws.BoolValue(ecsParameters.EnableECSManagedTags)
 	config["task_count"] = aws.Int64Value(ecsParameters.TaskCount)
