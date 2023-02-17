@@ -170,7 +170,7 @@ func flattenResourcesTagMappingList(list []*resourcegroupstaggingapi.ResourceTag
 	for _, i := range list {
 		l := map[string]interface{}{
 			"resource_arn": aws.StringValue(i.ResourceARN),
-			"tags":         KeyValueTags(i.Tags).Map(),
+			"tags":         KeyValueTags(ctx, i.Tags).Map(),
 		}
 
 		if i.ComplianceDetails != nil {
