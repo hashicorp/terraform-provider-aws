@@ -94,6 +94,8 @@ gen:
 	$(GO_VER) generate ./...
 
 servicepackages:
+	rm -f internal/service/**/service_package_gen.go
+	rm -f internal/provider/service_packages_gen.go
 	$(GO_VER) generate ./internal/generate/servicepackages
 
 sweep:
