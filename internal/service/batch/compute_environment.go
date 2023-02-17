@@ -275,7 +275,7 @@ func resourceComputeEnvironmentCreate(ctx context.Context, d *schema.ResourceDat
 	}
 
 	if v, ok := d.GetOk("compute_resources"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.ComputeResources = expandComputeResource(v.([]interface{})[0].(map[string]interface{}))
+		input.ComputeResources = expandComputeResource(ctx, v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("eks_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -337,7 +337,7 @@ func resourceComputeEnvironmentRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("type", computeEnvironmentType)
 
 	if computeEnvironment.ComputeResources != nil {
-		if err := d.Set("compute_resources", []interface{}{flattenComputeResource(computeEnvironment.ComputeResources)}); err != nil {
+		if err := d.Set("compute_resources", []interface{}{flattenComputeResource(ctx, computeEnvironment.ComputeResources)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting compute_resources: %s", err)
 		}
 	} else {
@@ -500,7 +500,7 @@ func resourceComputeEnvironmentCustomizeDiff(_ context.Context, diff *schema.Res
 	return nil
 }
 
-func expandComputeResource(tfMap map[string]interface{}) *batch.ComputeResource {
+func expandComputeResource(ctx context.Context, tfMap map[string]interface{}) *batch.ComputeResource {
 	if tfMap == nil {
 		return nil
 	}
@@ -666,7 +666,7 @@ func expandLaunchTemplateSpecification(tfMap map[string]interface{}) *batch.Laun
 	return apiObject
 }
 
-func flattenComputeResource(apiObject *batch.ComputeResource) map[string]interface{} {
+func flattenComputeResource(ctx context.Context, apiObject *batch.ComputeResource) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
