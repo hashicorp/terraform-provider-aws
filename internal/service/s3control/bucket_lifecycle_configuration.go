@@ -517,7 +517,7 @@ func flattenLifecycleRuleFilter(apiObject *s3control.LifecycleRuleFilter) []inte
 		}
 
 		if v := apiObject.And.Tags; v != nil {
-			tfMap["tags"] = KeyValueTags(v).IgnoreAWS().Map()
+			tfMap["tags"] = KeyValueTags(ctx, v).IgnoreAWS().Map()
 		}
 	} else {
 		if v := apiObject.Prefix; v != nil {
@@ -525,7 +525,7 @@ func flattenLifecycleRuleFilter(apiObject *s3control.LifecycleRuleFilter) []inte
 		}
 
 		if v := apiObject.Tag; v != nil {
-			tfMap["tags"] = KeyValueTags([]*s3control.S3Tag{v}).IgnoreAWS().Map()
+			tfMap["tags"] = KeyValueTags(ctx, []*s3control.S3Tag{v}).IgnoreAWS().Map()
 		}
 	}
 

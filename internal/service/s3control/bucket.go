@@ -265,7 +265,7 @@ func bucketListTags(ctx context.Context, conn *s3control.S3Control, identifier s
 		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTags(output.TagSet), nil
+	return KeyValueTags(ctx, output.TagSet), nil
 }
 
 // bucketUpdateTags updates S3control bucket tags.
