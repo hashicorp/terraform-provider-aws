@@ -189,7 +189,7 @@ func resourceLocationSMBRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	d.Set("subdirectory", subdirectory)
 
-	tags := KeyValueTags(tagsOutput.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, tagsOutput.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
