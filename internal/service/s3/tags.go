@@ -43,7 +43,7 @@ func BucketListTags(ctx context.Context, conn *s3.S3, identifier string) (tftags
 		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTags(output.TagSet), nil
+	return KeyValueTags(ctx, output.TagSet), nil
 }
 
 // BucketUpdateTags updates S3 bucket tags.
@@ -124,7 +124,7 @@ func ObjectListTags(ctx context.Context, conn *s3.S3, bucket, key string) (tftag
 		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTags(output.TagSet), nil
+	return KeyValueTags(ctx, output.TagSet), nil
 }
 
 // ObjectUpdateTags updates S3 object tags.

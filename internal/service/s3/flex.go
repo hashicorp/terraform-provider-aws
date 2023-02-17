@@ -967,7 +967,7 @@ func FlattenLifecycleRuleFilterAndOperator(andOp *s3.LifecycleRuleAndOperator) [
 	}
 
 	if andOp.Tags != nil {
-		m["tags"] = KeyValueTags(andOp.Tags).IgnoreAWS().Map()
+		m["tags"] = KeyValueTags(ctx, andOp.Tags).IgnoreAWS().Map()
 	}
 
 	return []interface{}{m}
@@ -1205,7 +1205,7 @@ func FlattenReplicationRuleFilterAndOperator(op *s3.ReplicationRuleAndOperator) 
 	}
 
 	if op.Tags != nil {
-		m["tags"] = KeyValueTags(op.Tags).IgnoreAWS().Map()
+		m["tags"] = KeyValueTags(ctx, op.Tags).IgnoreAWS().Map()
 	}
 
 	return []interface{}{m}

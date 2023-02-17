@@ -341,7 +341,7 @@ func flattenIntelligentTieringFilter(apiObject *s3.IntelligentTieringFilter) map
 		}
 
 		if v := apiObject.Tag; v != nil {
-			tfMap["tags"] = KeyValueTags([]*s3.Tag{v}).Map()
+			tfMap["tags"] = KeyValueTags(ctx, []*s3.Tag{v}).Map()
 		}
 	} else {
 		apiObject := apiObject.And
@@ -351,7 +351,7 @@ func flattenIntelligentTieringFilter(apiObject *s3.IntelligentTieringFilter) map
 		}
 
 		if v := apiObject.Tags; v != nil {
-			tfMap["tags"] = KeyValueTags(v).Map()
+			tfMap["tags"] = KeyValueTags(ctx, v).Map()
 		}
 	}
 

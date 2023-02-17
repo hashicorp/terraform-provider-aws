@@ -234,7 +234,7 @@ func FlattenMetricsFilter(metricsFilter *s3.MetricsFilter) map[string]interface{
 			m["prefix"] = aws.StringValue(and.Prefix)
 		}
 		if and.Tags != nil {
-			m["tags"] = KeyValueTags(and.Tags).IgnoreAWS().Map()
+			m["tags"] = KeyValueTags(ctx, and.Tags).IgnoreAWS().Map()
 		}
 	} else if metricsFilter.Prefix != nil {
 		m["prefix"] = aws.StringValue(metricsFilter.Prefix)
@@ -242,7 +242,7 @@ func FlattenMetricsFilter(metricsFilter *s3.MetricsFilter) map[string]interface{
 		tags := []*s3.Tag{
 			metricsFilter.Tag,
 		}
-		m["tags"] = KeyValueTags(tags).IgnoreAWS().Map()
+		m["tags"] = KeyValueTags(ctx, tags).IgnoreAWS().Map()
 	}
 	return m
 }

@@ -2341,7 +2341,7 @@ func flattenBucketLifecycleRules(lifecycleRules []*s3.LifecycleRule) []interface
 				}
 				// Tag
 				if len(filter.And.Tags) > 0 {
-					rule["tags"] = KeyValueTags(filter.And.Tags).IgnoreAWS().Map()
+					rule["tags"] = KeyValueTags(ctx, filter.And.Tags).IgnoreAWS().Map()
 				}
 			} else {
 				// Prefix
@@ -2350,7 +2350,7 @@ func flattenBucketLifecycleRules(lifecycleRules []*s3.LifecycleRule) []interface
 				}
 				// Tag
 				if filter.Tag != nil {
-					rule["tags"] = KeyValueTags([]*s3.Tag{filter.Tag}).IgnoreAWS().Map()
+					rule["tags"] = KeyValueTags(ctx, []*s3.Tag{filter.Tag}).IgnoreAWS().Map()
 				}
 			}
 		}
@@ -2799,12 +2799,12 @@ func flattenBucketReplicationConfigurationReplicationRuleFilter(filter *s3.Repli
 	}
 
 	if filter.Tag != nil {
-		m["tags"] = KeyValueTags([]*s3.Tag{filter.Tag}).IgnoreAWS().Map()
+		m["tags"] = KeyValueTags(ctx, []*s3.Tag{filter.Tag}).IgnoreAWS().Map()
 	}
 
 	if filter.And != nil {
 		m["prefix"] = aws.StringValue(filter.And.Prefix)
-		m["tags"] = KeyValueTags(filter.And.Tags).IgnoreAWS().Map()
+		m["tags"] = KeyValueTags(ctx, filter.And.Tags).IgnoreAWS().Map()
 	}
 
 	return []interface{}{m}
