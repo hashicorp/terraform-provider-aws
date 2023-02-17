@@ -411,11 +411,11 @@ func expandLifecycleRuleFilter(tfList []interface{}) *s3control.LifecycleRuleFil
 	if v, ok := tfMap["tags"].(map[string]interface{}); ok && len(v) > 0 {
 		// See also aws_s3_bucket ReplicationRule.Filter handling
 		if len(v) == 1 {
-			apiObject.Tag = Tags(tftags.New(v))[0]
+			apiObject.Tag = Tags(tftags.New(ctx, v))[0]
 		} else {
 			apiObject.And = &s3control.LifecycleRuleAndOperator{
 				Prefix: apiObject.Prefix,
-				Tags:   Tags(tftags.New(v)),
+				Tags:   Tags(tftags.New(ctx, v)),
 			}
 			apiObject.Prefix = nil
 		}

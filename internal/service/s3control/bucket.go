@@ -83,7 +83,7 @@ func resourceBucket() *schema.Resource {
 func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).S3ControlConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	bucket := d.Get("bucket").(string)
 	input := &s3control.CreateBucketInput{
@@ -247,7 +247,7 @@ func bucketListTags(ctx context.Context, conn *s3control.S3Control, identifier s
 	parsedArn, err := arn.Parse(identifier)
 
 	if err != nil {
-		return tftags.New(nil), err
+		return tftags.New(ctx, nil), err
 	}
 
 	input := &s3control.GetBucketTaggingInput{
@@ -258,11 +258,11 @@ func bucketListTags(ctx context.Context, conn *s3control.S3Control, identifier s
 	output, err := conn.GetBucketTaggingWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchTagSet) {
-		return tftags.New(nil), nil
+		return tftags.New(ctx, nil), nil
 	}
 
 	if err != nil {
-		return tftags.New(nil), err
+		return tftags.New(ctx, nil), err
 	}
 
 	return KeyValueTags(output.TagSet), nil
@@ -277,8 +277,8 @@ func bucketUpdateTags(ctx context.Context, conn *s3control.S3Control, identifier
 		return err
 	}
 
-	oldTags := tftags.New(oldTagsMap)
-	newTags := tftags.New(newTagsMap)
+	oldTags := tftags.New(ctx, oldTagsMap)
+	newTags := tftags.New(ctx, newTagsMap)
 
 	// We need to also consider any existing ignored tags.
 	allTags, err := bucketListTags(ctx, conn, identifier)
