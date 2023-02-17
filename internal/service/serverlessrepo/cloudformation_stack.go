@@ -150,7 +150,7 @@ func resourceCloudFormationStackRead(ctx context.Context, d *schema.ResourceData
 	stackName := strings.TrimPrefix(aws.StringValue(stack.StackName), CloudFormationStackNamePrefix)
 	d.Set("name", &stackName)
 
-	tags := tfcloudformation.KeyValueTags(stack.Tags)
+	tags := tfcloudformation.KeyValueTags(ctx, stack.Tags)
 	var applicationID, semanticVersion string
 	if v, ok := tags[cloudFormationStackTagApplicationID]; ok {
 		applicationID = aws.StringValue(v.Value)
