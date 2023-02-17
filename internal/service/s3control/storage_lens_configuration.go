@@ -601,7 +601,7 @@ func StorageLensTags(tags tftags.KeyValueTags) []types.StorageLensTag {
 	return result
 }
 
-func KeyValueTagsFromStorageLensTags(tags []types.StorageLensTag) tftags.KeyValueTags {
+func KeyValueTagsFromStorageLensTags(ctx context.Context, tags []types.StorageLensTag) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
@@ -623,7 +623,7 @@ func storageLensConfigurationListTags(ctx context.Context, conn *s3control.Clien
 		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTagsFromStorageLensTags(output.Tags), nil
+	return KeyValueTagsFromStorageLensTags(ctx, output.Tags), nil
 }
 
 func storageLensConfigurationUpdateTags(ctx context.Context, conn *s3control.Client, accountID, configID string, oldTagsMap interface{}, newTagsMap interface{}) error {

@@ -144,7 +144,7 @@ func resourceBucketLifecycleConfigurationCreate(ctx context.Context, d *schema.R
 		AccountId: aws.String(parsedArn.AccountID),
 		Bucket:    aws.String(bucket),
 		LifecycleConfiguration: &s3control.LifecycleConfiguration{
-			Rules: expandLifecycleRules(d.Get("rule").(*schema.Set).List()),
+			Rules: expandLifecycleRules(ctx, d.Get("rule").(*schema.Set).List()),
 		},
 	}
 
@@ -186,7 +186,7 @@ func resourceBucketLifecycleConfigurationRead(ctx context.Context, d *schema.Res
 
 	d.Set("bucket", d.Id())
 
-	if err := d.Set("rule", flattenLifecycleRules(output.Rules)); err != nil {
+	if err := d.Set("rule", flattenLifecycleRules(ctx, output.Rules)); err != nil {
 		return diag.Errorf("setting rule: %s", err)
 	}
 
@@ -210,7 +210,7 @@ func resourceBucketLifecycleConfigurationUpdate(ctx context.Context, d *schema.R
 		AccountId: aws.String(parsedArn.AccountID),
 		Bucket:    aws.String(d.Id()),
 		LifecycleConfiguration: &s3control.LifecycleConfiguration{
-			Rules: expandLifecycleRules(d.Get("rule").(*schema.Set).List()),
+			Rules: expandLifecycleRules(ctx, d.Get("rule").(*schema.Set).List()),
 		},
 	}
 
@@ -331,7 +331,7 @@ func expandLifecycleExpiration(tfList []interface{}) *s3control.LifecycleExpirat
 	return apiObject
 }
 
-func expandLifecycleRules(tfList []interface{}) []*s3control.LifecycleRule {
+func expandLifecycleRules(ctx context.Context, tfList []interface{}) []*s3control.LifecycleRule {
 	var apiObjects []*s3control.LifecycleRule
 
 	for _, tfMapRaw := range tfList {
@@ -341,7 +341,7 @@ func expandLifecycleRules(tfList []interface{}) []*s3control.LifecycleRule {
 			continue
 		}
 
-		apiObject := expandLifecycleRule(tfMap)
+		apiObject := expandLifecycleRule(ctx, tfMap)
 
 		if apiObject == nil {
 			continue
@@ -353,7 +353,7 @@ func expandLifecycleRules(tfList []interface{}) []*s3control.LifecycleRule {
 	return apiObjects
 }
 
-func expandLifecycleRule(tfMap map[string]interface{}) *s3control.LifecycleRule {
+func expandLifecycleRule(ctx context.Context, tfMap map[string]interface{}) *s3control.LifecycleRule {
 	if len(tfMap) == 0 {
 		return nil
 	}
@@ -369,7 +369,7 @@ func expandLifecycleRule(tfMap map[string]interface{}) *s3control.LifecycleRule 
 	}
 
 	if v, ok := tfMap["filter"].([]interface{}); ok && len(v) > 0 {
-		apiObject.Filter = expandLifecycleRuleFilter(v)
+		apiObject.Filter = expandLifecycleRuleFilter(ctx, v)
 	}
 
 	if v, ok := tfMap["id"].(string); ok && v != "" {
@@ -391,7 +391,7 @@ func expandLifecycleRule(tfMap map[string]interface{}) *s3control.LifecycleRule 
 	return apiObject
 }
 
-func expandLifecycleRuleFilter(tfList []interface{}) *s3control.LifecycleRuleFilter {
+func expandLifecycleRuleFilter(ctx context.Context, tfList []interface{}) *s3control.LifecycleRuleFilter {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -460,7 +460,7 @@ func flattenLifecycleExpiration(apiObject *s3control.LifecycleExpiration) []inte
 	return []interface{}{tfMap}
 }
 
-func flattenLifecycleRules(apiObjects []*s3control.LifecycleRule) []interface{} {
+func flattenLifecycleRules(ctx context.Context, apiObjects []*s3control.LifecycleRule) []interface{} {
 	var tfMaps []interface{}
 
 	for _, apiObject := range apiObjects {
@@ -468,13 +468,13 @@ func flattenLifecycleRules(apiObjects []*s3control.LifecycleRule) []interface{} 
 			continue
 		}
 
-		tfMaps = append(tfMaps, flattenLifecycleRule(apiObject))
+		tfMaps = append(tfMaps, flattenLifecycleRule(ctx, apiObject))
 	}
 
 	return tfMaps
 }
 
-func flattenLifecycleRule(apiObject *s3control.LifecycleRule) map[string]interface{} {
+func flattenLifecycleRule(ctx context.Context, apiObject *s3control.LifecycleRule) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -490,7 +490,7 @@ func flattenLifecycleRule(apiObject *s3control.LifecycleRule) map[string]interfa
 	}
 
 	if v := apiObject.Filter; v != nil {
-		tfMap["filter"] = flattenLifecycleRuleFilter(v)
+		tfMap["filter"] = flattenLifecycleRuleFilter(ctx, v)
 	}
 
 	if v := apiObject.ID; v != nil {
@@ -504,7 +504,7 @@ func flattenLifecycleRule(apiObject *s3control.LifecycleRule) map[string]interfa
 	return tfMap
 }
 
-func flattenLifecycleRuleFilter(apiObject *s3control.LifecycleRuleFilter) []interface{} {
+func flattenLifecycleRuleFilter(ctx context.Context, apiObject *s3control.LifecycleRuleFilter) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
