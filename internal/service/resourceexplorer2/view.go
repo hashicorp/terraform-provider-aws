@@ -225,7 +225,7 @@ func (r *resourceView) Read(ctx context.Context, request resource.ReadRequest, r
 	name := parts[1]
 	data.Name = types.StringValue(name)
 
-	apiTags := KeyValueTags(output.Tags)
+	apiTags := KeyValueTags(ctx, output.Tags)
 	data.Tags = r.FlattenTags(ctx, apiTags)
 	data.TagsAll = r.FlattenTagsAll(ctx, apiTags)
 

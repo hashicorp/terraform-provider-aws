@@ -173,7 +173,7 @@ func (r *resourceIndex) Read(ctx context.Context, request resource.ReadRequest, 
 	data.ARN = flex.StringToFramework(ctx, output.Arn)
 	data.Type = flex.StringValueToFramework(ctx, output.Type)
 
-	apiTags := KeyValueTags(output.Tags)
+	apiTags := KeyValueTags(ctx, output.Tags)
 	data.Tags = r.FlattenTags(ctx, apiTags)
 	data.TagsAll = r.FlattenTagsAll(ctx, apiTags)
 
