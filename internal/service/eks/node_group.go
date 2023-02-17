@@ -534,7 +534,7 @@ func resourceNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		input := &eks.UpdateNodegroupConfigInput{
 			ClientRequestToken: aws.String(resource.UniqueId()),
 			ClusterName:        aws.String(clusterName),
-			Labels:             expandUpdateLabelsPayload(oldLabelsRaw, newLabelsRaw),
+			Labels:             expandUpdateLabelsPayload(ctx, oldLabelsRaw, newLabelsRaw),
 			NodegroupName:      aws.String(nodeGroupName),
 			Taints:             expandUpdateTaintsPayload(oldTaintsRaw.(*schema.Set).List(), newTaintsRaw.(*schema.Set).List()),
 		}
@@ -794,7 +794,7 @@ func expandNodegroupUpdateConfig(tfMap map[string]interface{}) *eks.NodegroupUpd
 	return apiObject
 }
 
-func expandUpdateLabelsPayload(oldLabelsMap, newLabelsMap interface{}) *eks.UpdateLabelsPayload {
+func expandUpdateLabelsPayload(ctx context.Context, oldLabelsMap, newLabelsMap interface{}) *eks.UpdateLabelsPayload {
 	// EKS Labels operate similarly to keyvaluetags
 	oldLabels := tftags.New(ctx, oldLabelsMap)
 	newLabels := tftags.New(ctx, newLabelsMap)
