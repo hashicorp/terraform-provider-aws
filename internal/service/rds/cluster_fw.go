@@ -799,111 +799,10 @@ func (r *resourceCluster) Create(ctx context.Context, request resource.CreateReq
 			return
 		}
 	} else {
-		input := &rds.CreateDBClusterInput{
-			CopyTagsToSnapshot:  aws.Bool(data.CopyTagsToSnapshot.ValueBool()),
-			DBClusterIdentifier: aws.String(identifier),
-			DeletionProtection:  aws.Bool(data.DeletionProtection.ValueBool()),
-			Engine:              aws.String(data.Engine.ValueString()),
-			EngineMode:          aws.String(data.EngineMode.ValueString()),
-			Tags:                Tags(tags.IgnoreAWS()),
-		}
+		// create DB cluster
+		input := createClusterInput(ctx, identifier, data)
 
-		if !data.AllocatedStorage.IsUnknown() && !data.AllocatedStorage.IsNull() {
-			input.AllocatedStorage = aws.Int64(data.AllocatedStorage.ValueInt64())
-		}
-
-		if !data.AvailabilityZones.IsUnknown() && !data.AvailabilityZones.IsNull() {
-			input.AvailabilityZones = flex.ExpandFrameworkStringSet(ctx, data.AvailabilityZones)
-		}
-
-		if !data.BacktrackWindow.IsUnknown() && !data.BacktrackWindow.IsNull() {
-			input.BacktrackWindow = aws.Int64(data.BacktrackWindow.ValueInt64())
-		}
-
-		if !data.BackupRetentionPeriod.IsNull() {
-			input.BackupRetentionPeriod = aws.Int64(data.BackupRetentionPeriod.ValueInt64())
-		}
-
-		if !data.DatabaseName.IsUnknown() && !data.DatabaseName.IsNull() {
-			input.DatabaseName = aws.String(data.DatabaseName.ValueString())
-		}
-
-		if !data.DbClusterInstanceClass.IsUnknown() && !data.DbClusterInstanceClass.IsNull() {
-			input.DBClusterInstanceClass = aws.String(data.DbClusterInstanceClass.ValueString())
-		}
-
-		if !data.DbClusterParameterGroupName.IsUnknown() && !data.DbClusterParameterGroupName.IsNull() {
-			input.DBClusterParameterGroupName = aws.String(data.DbClusterParameterGroupName.ValueString())
-		}
-
-		if !data.DbSubnetGroupName.IsUnknown() && !data.DbSubnetGroupName.IsNull() {
-			input.DBSubnetGroupName = aws.String(data.DbSubnetGroupName.ValueString())
-		}
-
-		if !data.EnableHttpEndpoint.IsNull() {
-			input.EnableHttpEndpoint = aws.Bool(data.EnableHttpEndpoint.ValueBool())
-		}
-
-		if !data.EnabledCloudwatchLogsExports.IsNull() {
-			input.EnableCloudwatchLogsExports = flex.ExpandFrameworkStringSet(ctx, data.EnabledCloudwatchLogsExports)
-		}
-
-		if !data.EngineVersion.IsUnknown() && !data.EngineVersion.IsNull() {
-			input.EngineVersion = aws.String(data.EngineVersion.ValueString())
-		}
-
-		if !data.GlobalClusterIdentifier.IsUnknown() && !data.GlobalClusterIdentifier.IsNull() {
-			input.GlobalClusterIdentifier = aws.String(data.GlobalClusterIdentifier.ValueString())
-
-			if data.EnableGlobalWriteForwarding.ValueBool() {
-				input.EnableGlobalWriteForwarding = aws.Bool(data.EnableGlobalWriteForwarding.ValueBool())
-			}
-
-		}
-
-		if !data.IamDatabaseAuthenticationEnabled.IsUnknown() && !data.IamDatabaseAuthenticationEnabled.IsNull() {
-			input.EnableIAMDatabaseAuthentication = aws.Bool(data.IamDatabaseAuthenticationEnabled.ValueBool())
-		}
-
-		if !data.Iops.IsUnknown() && !data.Iops.IsNull() {
-			input.Iops = aws.Int64(data.Iops.ValueInt64())
-		}
-
-		if !data.KmsKeyID.IsUnknown() && !data.KmsKeyID.IsNull() {
-			input.KmsKeyId = aws.String(data.KmsKeyID.ValueString())
-		}
-
-		// Note: Username and password credentials are required and valid
-		// unless the cluster is a read-replica. This also applies to clusters
-		// within a global cluster. Providing a password and/or username for
-		// a replica will result in an InvalidParameterValue error.
-		if !data.MasterPassword.IsNull() {
-			input.MasterUserPassword = aws.String(data.MasterPassword.ValueString())
-		}
-
-		if !data.MasterUsername.IsNull() && !data.MasterUsername.IsUnknown() {
-			input.MasterUsername = aws.String(data.MasterUsername.ValueString())
-		}
-
-		if !data.NetworkType.IsUnknown() && !data.NetworkType.IsNull() {
-			input.NetworkType = aws.String(data.NetworkType.ValueString())
-		}
-
-		if !data.Port.IsUnknown() && !data.Port.IsNull() {
-			input.Port = aws.Int64(data.Port.ValueInt64())
-		}
-
-		if !data.PreferredBackupWindow.IsUnknown() && !data.PreferredBackupWindow.IsNull() {
-			input.PreferredBackupWindow = aws.String(data.PreferredBackupWindow.ValueString())
-		}
-
-		if !data.PreferredMaintenanceWindow.IsUnknown() && !data.PreferredMaintenanceWindow.IsNull() {
-			input.PreferredMaintenanceWindow = aws.String(data.PreferredMaintenanceWindow.ValueString())
-		}
-
-		if !data.ReplicationSourceIdentifier.IsUnknown() && !data.ReplicationSourceIdentifier.IsNull() {
-			input.ReplicationSourceIdentifier = aws.String(data.ReplicationSourceIdentifier.ValueString())
-		}
+		input.Tags = Tags(tags.IgnoreAWS())
 
 		var scalingConfiguration []scalingConfiguration
 		response.Diagnostics.Append(data.ScalingConfiguration.ElementsAs(ctx, &scalingConfiguration, false)...)
@@ -918,22 +817,6 @@ func (r *resourceCluster) Create(ctx context.Context, request resource.CreateReq
 			return
 		}
 		input.ServerlessV2ScalingConfiguration = expandServerlessV2ScalingConfigurationFramework(serverlessV2ScalingConfiguration)
-
-		if !data.SourceRegion.IsNull() {
-			input.SourceRegion = aws.String(data.SourceRegion.ValueString())
-		}
-
-		if !data.StorageEncrypted.IsUnknown() && !data.StorageEncrypted.IsNull() {
-			input.StorageEncrypted = aws.Bool(data.StorageEncrypted.ValueBool())
-		}
-
-		if !data.StorageType.IsUnknown() && !data.StorageType.IsNull() {
-			input.StorageType = aws.String(data.StorageType.ValueString())
-		}
-
-		if !data.VpcSecurityGroupIds.IsUnknown() && !data.VpcSecurityGroupIds.IsNull() {
-			input.VpcSecurityGroupIds = flex.ExpandFrameworkStringSet(ctx, data.VpcSecurityGroupIds)
-		}
 
 		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
 			func() (interface{}, error) {
@@ -2051,6 +1934,130 @@ func restoreToPointInTimeInput(ctx context.Context, identifier string, pointInTi
 
 	if !pointInTimeData.RestoreType.IsNull() {
 		input.RestoreType = aws.String(pointInTimeData.RestoreType.ValueString())
+	}
+
+	if !data.VpcSecurityGroupIds.IsUnknown() && !data.VpcSecurityGroupIds.IsNull() {
+		input.VpcSecurityGroupIds = flex.ExpandFrameworkStringSet(ctx, data.VpcSecurityGroupIds)
+	}
+
+	return input
+}
+
+func createClusterInput(ctx context.Context, identifier string, data resourceClusterData) *rds.CreateDBClusterInput {
+	input := &rds.CreateDBClusterInput{
+		CopyTagsToSnapshot:  aws.Bool(data.CopyTagsToSnapshot.ValueBool()),
+		DBClusterIdentifier: aws.String(identifier),
+		DeletionProtection:  aws.Bool(data.DeletionProtection.ValueBool()),
+		Engine:              aws.String(data.Engine.ValueString()),
+		EngineMode:          aws.String(data.EngineMode.ValueString()),
+	}
+
+	if !data.AllocatedStorage.IsUnknown() && !data.AllocatedStorage.IsNull() {
+		input.AllocatedStorage = aws.Int64(data.AllocatedStorage.ValueInt64())
+	}
+
+	if !data.AvailabilityZones.IsUnknown() && !data.AvailabilityZones.IsNull() {
+		input.AvailabilityZones = flex.ExpandFrameworkStringSet(ctx, data.AvailabilityZones)
+	}
+
+	if !data.BacktrackWindow.IsUnknown() && !data.BacktrackWindow.IsNull() {
+		input.BacktrackWindow = aws.Int64(data.BacktrackWindow.ValueInt64())
+	}
+
+	if !data.BackupRetentionPeriod.IsNull() {
+		input.BackupRetentionPeriod = aws.Int64(data.BackupRetentionPeriod.ValueInt64())
+	}
+
+	if !data.DatabaseName.IsUnknown() && !data.DatabaseName.IsNull() {
+		input.DatabaseName = aws.String(data.DatabaseName.ValueString())
+	}
+
+	if !data.DbClusterInstanceClass.IsUnknown() && !data.DbClusterInstanceClass.IsNull() {
+		input.DBClusterInstanceClass = aws.String(data.DbClusterInstanceClass.ValueString())
+	}
+
+	if !data.DbClusterParameterGroupName.IsUnknown() && !data.DbClusterParameterGroupName.IsNull() {
+		input.DBClusterParameterGroupName = aws.String(data.DbClusterParameterGroupName.ValueString())
+	}
+
+	if !data.DbSubnetGroupName.IsUnknown() && !data.DbSubnetGroupName.IsNull() {
+		input.DBSubnetGroupName = aws.String(data.DbSubnetGroupName.ValueString())
+	}
+
+	if !data.EnableHttpEndpoint.IsNull() {
+		input.EnableHttpEndpoint = aws.Bool(data.EnableHttpEndpoint.ValueBool())
+	}
+
+	if !data.EnabledCloudwatchLogsExports.IsNull() {
+		input.EnableCloudwatchLogsExports = flex.ExpandFrameworkStringSet(ctx, data.EnabledCloudwatchLogsExports)
+	}
+
+	if !data.EngineVersion.IsUnknown() && !data.EngineVersion.IsNull() {
+		input.EngineVersion = aws.String(data.EngineVersion.ValueString())
+	}
+
+	if !data.GlobalClusterIdentifier.IsUnknown() && !data.GlobalClusterIdentifier.IsNull() {
+		input.GlobalClusterIdentifier = aws.String(data.GlobalClusterIdentifier.ValueString())
+
+		if data.EnableGlobalWriteForwarding.ValueBool() {
+			input.EnableGlobalWriteForwarding = aws.Bool(data.EnableGlobalWriteForwarding.ValueBool())
+		}
+	}
+
+	if !data.IamDatabaseAuthenticationEnabled.IsUnknown() && !data.IamDatabaseAuthenticationEnabled.IsNull() {
+		input.EnableIAMDatabaseAuthentication = aws.Bool(data.IamDatabaseAuthenticationEnabled.ValueBool())
+	}
+
+	if !data.Iops.IsUnknown() && !data.Iops.IsNull() {
+		input.Iops = aws.Int64(data.Iops.ValueInt64())
+	}
+
+	if !data.KmsKeyID.IsUnknown() && !data.KmsKeyID.IsNull() {
+		input.KmsKeyId = aws.String(data.KmsKeyID.ValueString())
+	}
+
+	// Note: Username and password credentials are required and valid
+	// unless the cluster is a read-replica. This also applies to clusters
+	// within a global cluster. Providing a password and/or username for
+	// a replica will result in an InvalidParameterValue error.
+	if !data.MasterPassword.IsNull() {
+		input.MasterUserPassword = aws.String(data.MasterPassword.ValueString())
+	}
+
+	if !data.MasterUsername.IsNull() && !data.MasterUsername.IsUnknown() {
+		input.MasterUsername = aws.String(data.MasterUsername.ValueString())
+	}
+
+	if !data.NetworkType.IsUnknown() && !data.NetworkType.IsNull() {
+		input.NetworkType = aws.String(data.NetworkType.ValueString())
+	}
+
+	if !data.Port.IsUnknown() && !data.Port.IsNull() {
+		input.Port = aws.Int64(data.Port.ValueInt64())
+	}
+
+	if !data.PreferredBackupWindow.IsUnknown() && !data.PreferredBackupWindow.IsNull() {
+		input.PreferredBackupWindow = aws.String(data.PreferredBackupWindow.ValueString())
+	}
+
+	if !data.PreferredMaintenanceWindow.IsUnknown() && !data.PreferredMaintenanceWindow.IsNull() {
+		input.PreferredMaintenanceWindow = aws.String(data.PreferredMaintenanceWindow.ValueString())
+	}
+
+	if !data.ReplicationSourceIdentifier.IsUnknown() && !data.ReplicationSourceIdentifier.IsNull() {
+		input.ReplicationSourceIdentifier = aws.String(data.ReplicationSourceIdentifier.ValueString())
+	}
+
+	if !data.SourceRegion.IsNull() {
+		input.SourceRegion = aws.String(data.SourceRegion.ValueString())
+	}
+
+	if !data.StorageEncrypted.IsUnknown() && !data.StorageEncrypted.IsNull() {
+		input.StorageEncrypted = aws.Bool(data.StorageEncrypted.ValueBool())
+	}
+
+	if !data.StorageType.IsUnknown() && !data.StorageType.IsNull() {
+		input.StorageType = aws.String(data.StorageType.ValueString())
 	}
 
 	if !data.VpcSecurityGroupIds.IsUnknown() && !data.VpcSecurityGroupIds.IsNull() {
