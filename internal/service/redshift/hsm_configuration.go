@@ -135,7 +135,7 @@ func resourceHSMConfigurationRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("hsm_partition_password", d.Get("hsm_partition_password").(string))
 	d.Set("hsm_server_public_certificate", d.Get("hsm_server_public_certificate").(string))
 
-	tags := KeyValueTags(hsmConfiguration.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, hsmConfiguration.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

@@ -125,7 +125,7 @@ func resourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("description", subnetgroup.Description)
 	d.Set("name", d.Id())
 	d.Set("subnet_ids", subnetIdsToSlice(subnetgroup.Subnets))
-	tags := KeyValueTags(subnetgroup.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, subnetgroup.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

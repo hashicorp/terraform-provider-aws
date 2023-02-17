@@ -105,7 +105,7 @@ func resourceHSMClientCertificateRead(ctx context.Context, d *schema.ResourceDat
 	d.Set("hsm_client_certificate_identifier", out.HsmClientCertificateIdentifier)
 	d.Set("hsm_client_certificate_public_key", out.HsmClientCertificatePublicKey)
 
-	tags := KeyValueTags(out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
