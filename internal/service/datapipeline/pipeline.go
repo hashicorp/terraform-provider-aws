@@ -96,7 +96,7 @@ func resourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.Set("name", v.Name)
 	d.Set("description", v.Description)
-	tags := KeyValueTags(v.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, v.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
