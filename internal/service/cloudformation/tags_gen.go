@@ -26,12 +26,12 @@ func Tags(tags tftags.KeyValueTags) []*cloudformation.Tag {
 }
 
 // KeyValueTags creates tftags.KeyValueTags from cloudformation service tags.
-func KeyValueTags(tags []*cloudformation.Tag) tftags.KeyValueTags {
+func KeyValueTags(ctx context.Context, tags []*cloudformation.Tag) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
 		m[aws.StringValue(tag.Key)] = tag.Value
 	}
 
-	return tftags.New(m)
+	return tftags.New(ctx, m)
 }
