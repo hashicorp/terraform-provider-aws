@@ -57,7 +57,7 @@ func dataSourceConnectionsRead(ctx context.Context, d *schema.ResourceData, meta
 
 	for _, v := range output {
 		if len(tagsToMatch) > 0 {
-			if !KeyValueTags(v.Tags).ContainsAll(tagsToMatch) {
+			if !KeyValueTags(ctx, v.Tags).ContainsAll(tagsToMatch) {
 				continue
 			}
 		}
