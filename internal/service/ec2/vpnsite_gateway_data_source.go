@@ -94,7 +94,7 @@ func dataSourceVPNGatewayRead(ctx context.Context, d *schema.ResourceData, meta 
 		)...)
 	}
 	input.Filters = append(input.Filters, BuildTagFilterList(
-		Tags(tftags.New(d.Get("tags").(map[string]interface{}))),
+		Tags(tftags.New(ctx, d.Get("tags").(map[string]interface{}))),
 	)...)
 	input.Filters = append(input.Filters, BuildCustomFilterList(
 		d.Get("filter").(*schema.Set),

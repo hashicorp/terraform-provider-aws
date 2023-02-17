@@ -119,7 +119,7 @@ func resourceDefaultNetworkACLCreate(ctx context.Context, d *schema.ResourceData
 	// Configure tags.
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	newTags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{}))).IgnoreConfig(ignoreTagsConfig)
+	newTags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{}))).IgnoreConfig(ignoreTagsConfig)
 	oldTags := KeyValueTags(nacl.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	if !oldTags.Equal(newTags) {

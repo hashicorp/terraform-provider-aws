@@ -62,7 +62,7 @@ func resourceTransitGatewayPeeringAttachmentCreate(ctx context.Context, d *schem
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	peerAccountID := meta.(*conns.AWSClient).AccountID
 	if v, ok := d.GetOk("peer_account_id"); ok {

@@ -314,7 +314,7 @@ func (r *resourceSecurityGroupRule) create(ctx context.Context, request resource
 	conn := r.Meta().EC2Conn()
 	defaultTagsConfig := r.Meta().DefaultTagsConfig
 	ignoreTagsConfig := r.Meta().IgnoreTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(data.Tags))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, data.Tags))
 
 	if len(tags) > 0 {
 		if err := UpdateTags(ctx, conn, data.ID.ValueString(), nil, tags); err != nil {

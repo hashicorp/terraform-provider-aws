@@ -30,7 +30,7 @@ func tagSpecificationsFromMap(m map[string]interface{}, t string) []*ec2.TagSpec
 	return []*ec2.TagSpecification{
 		{
 			ResourceType: aws.String(t),
-			Tags:         Tags(tftags.New(m).IgnoreAWS()),
+			Tags:         Tags(tftags.New(ctx, m).IgnoreAWS()),
 		},
 	}
 }

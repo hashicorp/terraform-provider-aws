@@ -110,7 +110,7 @@ func resourceDefaultSecurityGroupCreate(ctx context.Context, d *schema.ResourceD
 	d.SetId(aws.StringValue(sg.GroupId))
 
 	oTagsAll := KeyValueTags(sg.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-	nTagsAll := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	nTagsAll := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	if !nTagsAll.Equal(oTagsAll) {
 		if err := UpdateTags(ctx, conn, d.Id(), oTagsAll.Map(), nTagsAll.Map()); err != nil {

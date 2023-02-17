@@ -54,7 +54,7 @@ func dataSourceTransitGatewayVPNAttachmentRead(ctx context.Context, d *schema.Re
 
 	if v, ok := d.GetOk("tags"); ok {
 		input.Filters = append(input.Filters, BuildTagFilterList(
-			Tags(tftags.New(v.(map[string]interface{}))),
+			Tags(tftags.New(ctx, v.(map[string]interface{}))),
 		)...)
 	}
 

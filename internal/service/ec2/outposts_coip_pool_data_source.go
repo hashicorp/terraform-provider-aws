@@ -75,7 +75,7 @@ func dataSourceCoIPPoolRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	if tags, tagsOk := d.GetOk("tags"); tagsOk {
 		req.Filters = append(req.Filters, BuildTagFilterList(
-			Tags(tftags.New(tags.(map[string]interface{}))),
+			Tags(tftags.New(ctx, tags.(map[string]interface{}))),
 		)...)
 	}
 

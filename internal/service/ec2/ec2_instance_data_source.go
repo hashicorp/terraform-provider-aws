@@ -399,7 +399,7 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	if tags, tagsOk := d.GetOk("instance_tags"); tagsOk {
 		input.Filters = append(input.Filters, BuildTagFilterList(
-			Tags(tftags.New(tags.(map[string]interface{}))),
+			Tags(tftags.New(ctx, tags.(map[string]interface{}))),
 		)...)
 	}
 

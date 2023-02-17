@@ -88,7 +88,7 @@ func dataSourceNATGatewayRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	if tags, ok := d.GetOk("tags"); ok {
 		input.Filter = append(input.Filter, BuildTagFilterList(
-			Tags(tftags.New(tags.(map[string]interface{}))),
+			Tags(tftags.New(ctx, tags.(map[string]interface{}))),
 		)...)
 	}
 

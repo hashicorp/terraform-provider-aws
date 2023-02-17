@@ -179,7 +179,7 @@ func resourceVPCCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	if _, ok := d.GetOk("enable_classiclink"); ok {
 		return sdkdiag.AppendErrorf(diags, `with the retirement of EC2-Classic no new VPCs can be created with ClassicLink enabled`)

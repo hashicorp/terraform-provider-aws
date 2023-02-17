@@ -103,7 +103,7 @@ func dataSourceEIPRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	input.Filters = append(input.Filters, BuildTagFilterList(
-		Tags(tftags.New(d.Get("tags").(map[string]interface{}))),
+		Tags(tftags.New(ctx, d.Get("tags").(map[string]interface{}))),
 	)...)
 
 	input.Filters = append(input.Filters, BuildCustomFilterList(

@@ -836,7 +836,7 @@ func resourceSpotFleetRequestCreate(ctx context.Context, d *schema.ResourceData,
 
 	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	_, launchSpecificationOk := d.GetOk("launch_specification")
 
@@ -1263,7 +1263,7 @@ func buildSpotFleetLaunchSpecification(ctx context.Context, d map[string]interfa
 	if m, ok := d["tags"].(map[string]interface{}); ok && len(m) > 0 {
 		tagsSpec := make([]*ec2.SpotFleetTagSpecification, 0)
 
-		tags := Tags(tftags.New(m).IgnoreAWS())
+		tags := Tags(tftags.New(ctx, m).IgnoreAWS())
 
 		spec := &ec2.SpotFleetTagSpecification{
 			ResourceType: aws.String(ec2.ResourceTypeInstance),

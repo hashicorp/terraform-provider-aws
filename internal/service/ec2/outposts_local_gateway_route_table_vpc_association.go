@@ -53,7 +53,7 @@ func resourceLocalGatewayRouteTableVPCAssociationCreate(ctx context.Context, d *
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	req := &ec2.CreateLocalGatewayRouteTableVpcAssociationInput{
 		LocalGatewayRouteTableId: aws.String(d.Get("local_gateway_route_table_id").(string)),

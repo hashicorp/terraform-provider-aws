@@ -302,7 +302,7 @@ func resourceDefaultVPCCreate(ctx context.Context, d *schema.ResourceData, meta 
 	// Configure tags.
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	newTags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{}))).IgnoreConfig(ignoreTagsConfig)
+	newTags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{}))).IgnoreConfig(ignoreTagsConfig)
 	oldTags := KeyValueTags(vpc.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	if !oldTags.Equal(newTags) {

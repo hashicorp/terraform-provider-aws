@@ -769,7 +769,7 @@ func dataSourceLaunchTemplateRead(ctx context.Context, d *schema.ResourceData, m
 	)...)
 
 	input.Filters = append(input.Filters, BuildTagFilterList(
-		Tags(tftags.New(d.Get("tags").(map[string]interface{}))),
+		Tags(tftags.New(ctx, d.Get("tags").(map[string]interface{}))),
 	)...)
 
 	if len(input.Filters) == 0 {
