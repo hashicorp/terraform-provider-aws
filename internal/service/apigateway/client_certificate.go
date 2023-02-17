@@ -116,7 +116,7 @@ func resourceClientCertificateRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("expiration_date", cert.ExpirationDate.String())
 	d.Set("pem_encoded_certificate", cert.PemEncodedCertificate)
 
-	tags := KeyValueTags(cert.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, cert.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
