@@ -12,7 +12,7 @@ Manages an inbound (ingress) rule for a security group.
 
 When specifying an inbound rule for your security group in a VPC, the configuration must include a source for the traffic.
 
-~> **NOTE on Security Groups and Security Group Rules:** TODO explain why this is now the prefered resource for managing security group rules.
+~> **NOTE on Security Groups and Security Group Rules:** TODO explain why this is now the preferred resource for managing security group rules.
 
 ## Example Usage
 
