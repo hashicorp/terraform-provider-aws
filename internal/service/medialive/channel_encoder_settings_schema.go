@@ -3965,7 +3965,7 @@ func expandM2tsSettings(tfList []interface{}) *types.M2tsSettings {
 	if v, ok := m["arib_captions_pid"].(string); ok && v != "" {
 		s.AribCaptionsPid = aws.String(v)
 	}
-	if v, ok := m["arib_caption_pid_control"].(string); ok && v != "" {
+	if v, ok := m["arib_captions_pid_control"].(string); ok && v != "" {
 		s.AribCaptionsPidControl = types.M2tsAribCaptionsPidControl(v)
 	}
 	if v, ok := m["audio_buffer_model"].(string); ok && v != "" {
