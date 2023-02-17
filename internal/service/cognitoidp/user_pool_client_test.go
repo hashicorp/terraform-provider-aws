@@ -634,7 +634,7 @@ func testAccUserPoolClientImportStateIDFunc(ctx context.Context, resourceName st
 		userPoolId := rs.Primary.Attributes["user_pool_id"]
 		clientId := rs.Primary.ID
 
-		_, err := tfcognitoidp.FindCognitoUserPoolClient(ctx, conn, userPoolId, clientId)
+		_, err := tfcognitoidp.FindCognitoUserPoolClientByID(ctx, conn, userPoolId, clientId)
 
 		if err != nil {
 			return "", err
@@ -653,7 +653,7 @@ func testAccCheckUserPoolClientDestroy(ctx context.Context) resource.TestCheckFu
 				continue
 			}
 
-			_, err := tfcognitoidp.FindCognitoUserPoolClient(ctx, conn, rs.Primary.Attributes["user_pool_id"], rs.Primary.ID)
+			_, err := tfcognitoidp.FindCognitoUserPoolClientByID(ctx, conn, rs.Primary.Attributes["user_pool_id"], rs.Primary.ID)
 			if tfresource.NotFound(err) {
 				continue
 			}
@@ -680,7 +680,7 @@ func testAccCheckUserPoolClientExists(ctx context.Context, name string, client *
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn()
 
-		resp, err := tfcognitoidp.FindCognitoUserPoolClient(ctx, conn, rs.Primary.Attributes["user_pool_id"], rs.Primary.ID)
+		resp, err := tfcognitoidp.FindCognitoUserPoolClientByID(ctx, conn, rs.Primary.Attributes["user_pool_id"], rs.Primary.ID)
 		if err != nil {
 			return err
 		}

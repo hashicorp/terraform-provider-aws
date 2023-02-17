@@ -40,7 +40,7 @@ func ResourceUserPoolClient() *schema.Resource {
 			"access_token_validity": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				ValidateFunc: validation.IntBetween(0, 86400),
+				ValidateFunc: validation.IntBetween(1, 86400),
 			},
 			"allowed_oauth_flows": {
 				Type:     schema.TypeSet,
@@ -164,7 +164,7 @@ func ResourceUserPoolClient() *schema.Resource {
 			"id_token_validity": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				ValidateFunc: validation.IntBetween(0, 86400),
+				ValidateFunc: validation.IntBetween(1, 86400),
 			},
 			"logout_urls": {
 				Type:     schema.TypeSet,
@@ -369,7 +369,7 @@ func resourceUserPoolClientRead(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPConn()
 
-	userPoolClient, err := FindCognitoUserPoolClient(ctx, conn, d.Get("user_pool_id").(string), d.Id())
+	userPoolClient, err := FindCognitoUserPoolClientByID(ctx, conn, d.Get("user_pool_id").(string), d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		create.LogNotFoundRemoveState(names.CognitoIDP, create.ErrActionReading, ResNameUserPoolClient, d.Id())
@@ -536,14 +536,15 @@ func resourceUserPoolClientDelete(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceUserPoolClientImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	if len(strings.Split(d.Id(), "/")) != 2 || len(d.Id()) < 3 {
+	parts := strings.Split(d.Id(), "/")
+	if len(parts) != 2 {
 		return []*schema.ResourceData{}, fmt.Errorf("wrong format of import ID (%s), use: 'user-pool-id/client-id'", d.Id())
 	}
-	userPoolId := strings.Split(d.Id(), "/")[0]
-	clientId := strings.Split(d.Id(), "/")[1]
+	userPoolId := parts[0]
+	clientId := parts[1]
 	d.SetId(clientId)
 	d.Set("user_pool_id", userPoolId)
-	log.Printf("[DEBUG] Importing client %s for user pool %s", clientId, userPoolId)
+	log.Printf("[DEBUG] Importing Cognito User Pool Client %q for User Pool %q", clientId, userPoolId)
 
 	return []*schema.ResourceData{d}, nil
 }

@@ -78,7 +78,8 @@ func FindCognitoUserInGroup(ctx context.Context, conn *cognitoidentityprovider.C
 	return found, nil
 }
 
-func FindCognitoUserPoolClient(ctx context.Context, conn *cognitoidentityprovider.CognitoIdentityProvider, userPoolId, clientId string) (*cognitoidentityprovider.UserPoolClientType, error) {
+// FindCognitoUserPoolClientByID returns a Cognito User Pool Client using the ClientId
+func FindCognitoUserPoolClientByID(ctx context.Context, conn *cognitoidentityprovider.CognitoIdentityProvider, userPoolId, clientId string) (*cognitoidentityprovider.UserPoolClientType, error) {
 	input := &cognitoidentityprovider.DescribeUserPoolClientInput{
 		ClientId:   aws.String(clientId),
 		UserPoolId: aws.String(userPoolId),
