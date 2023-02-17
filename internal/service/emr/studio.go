@@ -243,7 +243,7 @@ func resourceStudioRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("workspace_security_group_id", studio.WorkspaceSecurityGroupId)
 	d.Set("subnet_ids", flex.FlattenStringSet(studio.SubnetIds))
 
-	tags := KeyValueTags(studio.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, studio.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
