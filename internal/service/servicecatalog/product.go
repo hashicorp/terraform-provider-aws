@@ -279,7 +279,7 @@ func resourceProductRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("support_url", pvs.SupportUrl)
 	d.Set("type", pvs.Type)
 
-	tags := KeyValueTags(output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

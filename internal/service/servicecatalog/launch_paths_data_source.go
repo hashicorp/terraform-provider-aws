@@ -108,7 +108,7 @@ func flattenLaunchPathSummary(apiObject *servicecatalog.LaunchPathSummary, ignor
 		tfMap["name"] = aws.StringValue(apiObject.Name)
 	}
 
-	tags := KeyValueTags(apiObject.Tags)
+	tags := KeyValueTags(ctx, apiObject.Tags)
 
 	tfMap["tags"] = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()
 
