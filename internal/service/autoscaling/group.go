@@ -943,11 +943,11 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if v, ok := d.GetOk("tag"); ok {
-		createInput.Tags = Tags(KeyValueTags(v, asgName, TagResourceTypeGroup).IgnoreAWS())
+		createInput.Tags = Tags(KeyValueTags(ctx, v, asgName, TagResourceTypeGroup).IgnoreAWS())
 	}
 
 	if v, ok := d.GetOk("tags"); ok {
-		createInput.Tags = Tags(KeyValueTags(v, asgName, TagResourceTypeGroup).IgnoreAWS())
+		createInput.Tags = Tags(KeyValueTags(ctx, v, asgName, TagResourceTypeGroup).IgnoreAWS())
 	}
 
 	if v, ok := d.GetOk("target_group_arns"); ok && len(v.(*schema.Set).List()) > 0 {
@@ -1154,7 +1154,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	if v, tagOk = d.GetOk("tag"); tagOk {
 		proposedStateTags := KeyValueTags(ctx, v, d.Id(), TagResourceTypeGroup)
 
-		if err := d.Set("tag", ListOfMap(KeyValueTags(g.Tags, d.Id(), TagResourceTypeGroup).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Only(proposedStateTags))); err != nil {
+		if err := d.Set("tag", ListOfMap(KeyValueTags(ctx, g.Tags, d.Id(), TagResourceTypeGroup).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Only(proposedStateTags))); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting tag: %s", err)
 		}
 	}
@@ -1162,13 +1162,13 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	if v, tagsOk = d.GetOk("tags"); tagsOk {
 		proposedStateTags := KeyValueTags(ctx, v, d.Id(), TagResourceTypeGroup)
 
-		if err := d.Set("tags", ListOfStringMap(KeyValueTags(g.Tags, d.Id(), TagResourceTypeGroup).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Only(proposedStateTags))); err != nil {
+		if err := d.Set("tags", ListOfStringMap(KeyValueTags(ctx, g.Tags, d.Id(), TagResourceTypeGroup).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Only(proposedStateTags))); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 		}
 	}
 
 	if !tagOk && !tagsOk {
-		if err := d.Set("tag", ListOfMap(KeyValueTags(g.Tags, d.Id(), TagResourceTypeGroup).IgnoreAWS().IgnoreConfig(ignoreTagsConfig))); err != nil {
+		if err := d.Set("tag", ListOfMap(KeyValueTags(ctx, g.Tags, d.Id(), TagResourceTypeGroup).IgnoreAWS().IgnoreConfig(ignoreTagsConfig))); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting tag: %s", err)
 		}
 	}
