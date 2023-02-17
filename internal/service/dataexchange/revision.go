@@ -108,7 +108,7 @@ func resourceRevisionRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("arn", revision.Arn)
 	d.Set("revision_id", revision.Id)
 
-	tags := KeyValueTags(revision.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, revision.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
