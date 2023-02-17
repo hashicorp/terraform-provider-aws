@@ -150,7 +150,7 @@ func resourceMapRead(ctx context.Context, d *schema.ResourceData, meta interface
 	d.Set("map_name", output.MapName)
 	d.Set("update_time", aws.TimeValue(output.UpdateTime).Format(time.RFC3339))
 
-	tags := KeyValueTags(output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)

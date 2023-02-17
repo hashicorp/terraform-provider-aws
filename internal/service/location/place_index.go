@@ -160,7 +160,7 @@ func resourcePlaceIndexRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("index_arn", output.IndexArn)
 	d.Set("index_name", output.IndexName)
 
-	tags := KeyValueTags(output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)

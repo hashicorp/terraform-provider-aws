@@ -142,7 +142,7 @@ func resourceTrackerRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("kms_key_id", output.KmsKeyId)
 	d.Set("position_filtering", output.PositionFiltering)
 
-	tags := KeyValueTags(output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
