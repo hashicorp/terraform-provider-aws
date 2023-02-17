@@ -135,7 +135,7 @@ func resourceNATGatewayRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("public_ip", address.PublicIp)
 	d.Set("subnet_id", ng.SubnetId)
 
-	tags := KeyValueTags(ng.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, ng.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

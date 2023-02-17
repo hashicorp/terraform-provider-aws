@@ -143,7 +143,7 @@ func flattenIPAMPool(p *ec2.IpamPool, ignoreTagsConfig *tftags.IgnoreConfig) map
 	pool["allocation_default_netmask_length"] = aws.Int64Value(p.AllocationDefaultNetmaskLength)
 	pool["allocation_max_netmask_length"] = aws.Int64Value(p.AllocationMaxNetmaskLength)
 	pool["allocation_min_netmask_length"] = aws.Int64Value(p.AllocationMinNetmaskLength)
-	pool["allocation_resource_tags"] = KeyValueTags(tagsFromIPAMAllocationTags(p.AllocationResourceTags)).Map()
+	pool["allocation_resource_tags"] = KeyValueTags(ctx, tagsFromIPAMAllocationTags(p.AllocationResourceTags)).Map()
 	pool["arn"] = aws.StringValue(p.IpamPoolArn)
 	pool["auto_import"] = aws.BoolValue(p.AutoImport)
 	pool["aws_service"] = aws.StringValue(p.AwsService)
@@ -157,7 +157,7 @@ func flattenIPAMPool(p *ec2.IpamPool, ignoreTagsConfig *tftags.IgnoreConfig) map
 	pool["state"] = aws.StringValue(p.State)
 
 	if v := p.Tags; v != nil {
-		pool["tags"] = KeyValueTags(v).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()
+		pool["tags"] = KeyValueTags(ctx, v).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()
 	}
 
 	return pool

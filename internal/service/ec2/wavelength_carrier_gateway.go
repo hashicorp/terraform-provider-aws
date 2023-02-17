@@ -109,7 +109,7 @@ func resourceCarrierGatewayRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("owner_id", ownerID)
 	d.Set("vpc_id", carrierGateway.VpcId)
 
-	tags := KeyValueTags(carrierGateway.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, carrierGateway.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

@@ -1031,7 +1031,7 @@ func resourceLaunchTemplateRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Launch Template (%s): %s", d.Id(), err)
 	}
 
-	tags := KeyValueTags(lt.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, lt.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
@@ -3104,7 +3104,7 @@ func flattenLaunchTemplateTagSpecification(apiObject *ec2.LaunchTemplateTagSpeci
 	}
 
 	if v := apiObject.Tags; len(v) > 0 {
-		tfMap["tags"] = KeyValueTags(v).IgnoreAWS().Map()
+		tfMap["tags"] = KeyValueTags(ctx, v).IgnoreAWS().Map()
 	}
 
 	return tfMap

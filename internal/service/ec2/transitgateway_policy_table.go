@@ -110,7 +110,7 @@ func resourceTransitGatewayPolicyTableRead(ctx context.Context, d *schema.Resour
 	d.Set("state", transitGatewayPolicyTable.State)
 	d.Set("transit_gateway_id", transitGatewayPolicyTable.TransitGatewayId)
 
-	tags := KeyValueTags(transitGatewayPolicyTable.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, transitGatewayPolicyTable.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

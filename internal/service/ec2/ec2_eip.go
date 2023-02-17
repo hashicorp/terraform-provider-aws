@@ -248,7 +248,7 @@ func resourceEIPRead(ctx context.Context, d *schema.ResourceData, meta interface
 		d.SetId(aws.StringValue(address.AllocationId))
 	}
 
-	tags := KeyValueTags(address.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, address.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

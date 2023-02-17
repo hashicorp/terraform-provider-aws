@@ -249,7 +249,7 @@ func resourceRouteTableRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	//Ignore the AmazonFSx service tag in addition to standard ignores
-	tags := KeyValueTags(routeTable.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Ignore(tftags.New(ctx, []string{"AmazonFSx"}))
+	tags := KeyValueTags(ctx, routeTable.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Ignore(tftags.New(ctx, []string{"AmazonFSx"}))
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
