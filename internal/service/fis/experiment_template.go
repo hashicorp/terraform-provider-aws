@@ -233,7 +233,7 @@ func ResourceExperimentTemplate() *schema.Resource {
 func resourceExperimentTemplateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).FISClient()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &fis.CreateExperimentTemplateInput{
 		Actions:        expandExperimentTemplateActions(d.Get("action").(*schema.Set)),
