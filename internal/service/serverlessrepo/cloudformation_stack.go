@@ -305,7 +305,7 @@ func createCloudFormationChangeSet(ctx context.Context, d *schema.ResourceData, 
 	serverlessConn := client.ServerlessRepoConn()
 	cfConn := client.CloudFormationConn()
 	defaultTagsConfig := client.DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	stackName := d.Get("name").(string)
 	changeSetRequest := serverlessrepo.CreateCloudFormationChangeSetRequest{
