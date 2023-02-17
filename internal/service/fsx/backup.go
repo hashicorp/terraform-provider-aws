@@ -164,7 +164,7 @@ func resourceBackupRead(ctx context.Context, d *schema.ResourceData, meta interf
 		d.Set("volume_id", backup.Volume.VolumeId)
 	}
 
-	tags := KeyValueTags(backup.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, backup.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

@@ -262,7 +262,7 @@ func resourceDataRepositoryAssociationRead(ctx context.Context, d *schema.Resour
 		return sdkdiag.AppendErrorf(diags, "setting s3 data repository configuration: %s", err)
 	}
 
-	tags := KeyValueTags(association.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, association.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

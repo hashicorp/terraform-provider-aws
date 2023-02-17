@@ -470,7 +470,7 @@ func flattenDataRepositoryAssociations(dataRepositoryAssociations []*fsx.DataRep
 	var flattenedDataRepositoryAssociations []interface{}
 
 	for _, dataRepositoryAssociation := range dataRepositoryAssociations {
-		tags := KeyValueTags(dataRepositoryAssociation.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+		tags := KeyValueTags(ctx, dataRepositoryAssociation.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 		values := map[string]interface{}{
 			"association_id":                 dataRepositoryAssociation.AssociationId,
