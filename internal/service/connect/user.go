@@ -240,7 +240,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		return diag.FromErr(fmt.Errorf("error setting phone_config: %w", err))
 	}
 
-	tags := KeyValueTags(resp.User.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, resp.User.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

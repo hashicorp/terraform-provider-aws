@@ -201,7 +201,7 @@ func resourcePhoneNumberRead(ctx context.Context, d *schema.ResourceData, meta i
 		return diag.Errorf("setting status: %s", err)
 	}
 
-	tags := KeyValueTags(phoneNumberSummary.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, phoneNumberSummary.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

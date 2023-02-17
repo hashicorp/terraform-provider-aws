@@ -160,7 +160,7 @@ func resourceSecurityProfileRead(ctx context.Context, d *schema.ResourceData, me
 		d.Set("permissions", flex.FlattenStringSet(permissions))
 	}
 
-	tags := KeyValueTags(resp.SecurityProfile.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, resp.SecurityProfile.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

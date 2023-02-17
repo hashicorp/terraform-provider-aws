@@ -206,7 +206,7 @@ func resourceHoursOfOperationRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("name", resp.HoursOfOperation.Name)
 	d.Set("time_zone", resp.HoursOfOperation.TimeZone)
 
-	tags := KeyValueTags(resp.HoursOfOperation.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, resp.HoursOfOperation.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

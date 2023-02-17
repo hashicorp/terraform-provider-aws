@@ -246,7 +246,7 @@ func resourceRoutingProfileRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("queue_configs", queueConfigs)
 	d.Set("queue_configs_associated", queueConfigs)
 
-	tags := KeyValueTags(routingProfile.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, routingProfile.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

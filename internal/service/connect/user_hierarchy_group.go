@@ -190,7 +190,7 @@ func resourceUserHierarchyGroupRead(ctx context.Context, d *schema.ResourceData,
 		return diag.FromErr(fmt.Errorf("error setting Connect User Hierarchy Group hierarchy_path (%s): %w", d.Id(), err))
 	}
 
-	tags := KeyValueTags(resp.HierarchyGroup.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, resp.HierarchyGroup.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

@@ -212,7 +212,7 @@ func resourceQuickConnectRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("arn", resp.QuickConnect.QuickConnectARN)
 	d.Set("quick_connect_id", resp.QuickConnect.QuickConnectId)
 
-	tags := KeyValueTags(resp.QuickConnect.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, resp.QuickConnect.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

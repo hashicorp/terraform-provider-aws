@@ -218,7 +218,7 @@ func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("quick_connect_ids", flex.FlattenStringSet(quickConnectIds))
 	d.Set("quick_connect_ids_associated", flex.FlattenStringSet(quickConnectIds))
 
-	tags := KeyValueTags(resp.Queue.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, resp.Queue.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

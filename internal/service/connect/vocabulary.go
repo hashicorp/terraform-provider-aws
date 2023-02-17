@@ -177,7 +177,7 @@ func resourceVocabularyRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("state", vocabulary.State)
 	d.Set("vocabulary_id", vocabulary.Id)
 
-	tags := KeyValueTags(vocabulary.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, vocabulary.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

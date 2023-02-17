@@ -171,7 +171,7 @@ func resourceContactFlowModuleRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("description", resp.ContactFlowModule.Description)
 	d.Set("content", resp.ContactFlowModule.Content)
 
-	tags := KeyValueTags(resp.ContactFlowModule.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, resp.ContactFlowModule.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
