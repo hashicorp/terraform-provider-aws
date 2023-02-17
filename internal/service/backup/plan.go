@@ -177,7 +177,7 @@ func resourcePlanCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	input := &backup.CreateBackupPlanInput{
 		BackupPlan: &backup.PlanInput{
 			BackupPlanName:         aws.String(d.Get("name").(string)),
-			Rules:                  expandPlanRules(d.Get("rule").(*schema.Set)),
+			Rules:                  expandPlanRules(ctx, d.Get("rule").(*schema.Set)),
 			AdvancedBackupSettings: expandPlanAdvancedSettings(d.Get("advanced_backup_setting").(*schema.Set)),
 		},
 		BackupPlanTags: Tags(tags.IgnoreAWS()),
@@ -216,7 +216,7 @@ func resourcePlanRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("name", resp.BackupPlan.BackupPlanName)
 	d.Set("version", resp.VersionId)
 
-	if err := d.Set("rule", flattenPlanRules(resp.BackupPlan.Rules)); err != nil {
+	if err := d.Set("rule", flattenPlanRules(ctx, resp.BackupPlan.Rules)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
 	}
 
@@ -253,7 +253,7 @@ func resourcePlanUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 			BackupPlanId: aws.String(d.Id()),
 			BackupPlan: &backup.PlanInput{
 				BackupPlanName:         aws.String(d.Get("name").(string)),
-				Rules:                  expandPlanRules(d.Get("rule").(*schema.Set)),
+				Rules:                  expandPlanRules(ctx, d.Get("rule").(*schema.Set)),
 				AdvancedBackupSettings: expandPlanAdvancedSettings(d.Get("advanced_backup_setting").(*schema.Set)),
 			},
 		}
@@ -312,7 +312,7 @@ func resourcePlanDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func expandPlanRules(vRules *schema.Set) []*backup.RuleInput {
+func expandPlanRules(ctx context.Context, vRules *schema.Set) []*backup.RuleInput {
 	rules := []*backup.RuleInput{}
 
 	for _, vRule := range vRules.List() {
@@ -421,7 +421,7 @@ func expandPlanLifecycle(l []interface{}) *backup.Lifecycle {
 	return lifecycle
 }
 
-func flattenPlanRules(rules []*backup.Rule) *schema.Set {
+func flattenPlanRules(ctx context.Context, rules []*backup.Rule) *schema.Set {
 	vRules := []interface{}{}
 
 	for _, rule := range rules {
@@ -526,7 +526,7 @@ func planHash(vRule interface{}) int {
 	}
 
 	if vRecoveryPointTags, ok := mRule["recovery_point_tags"].(map[string]interface{}); ok && len(vRecoveryPointTags) > 0 {
-		buf.WriteString(fmt.Sprintf("%d-", tftags.New(ctx, vRecoveryPointTags).Hash()))
+		buf.WriteString(fmt.Sprintf("%d-", tftags.New(context.Background(), vRecoveryPointTags).Hash()))
 	}
 
 	if vLifecycle, ok := mRule["lifecycle"].([]interface{}); ok && len(vLifecycle) > 0 && vLifecycle[0] != nil {
