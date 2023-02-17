@@ -150,7 +150,7 @@ func resourceInfrastructureConfigurationCreate(ctx context.Context, d *schema.Re
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ImageBuilderConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &imagebuilder.CreateInfrastructureConfigurationInput{
 		ClientToken:                aws.String(resource.UniqueId()),
@@ -186,7 +186,7 @@ func resourceInfrastructureConfigurationCreate(ctx context.Context, d *schema.Re
 	}
 
 	if v, ok := d.GetOk("resource_tags"); ok && len(v.(map[string]interface{})) > 0 {
-		input.ResourceTags = Tags(tftags.New(v.(map[string]interface{})))
+		input.ResourceTags = Tags(tftags.New(ctx, v.(map[string]interface{})))
 	}
 
 	if v, ok := d.GetOk("security_group_ids"); ok && v.(*schema.Set).Len() > 0 {
@@ -355,7 +355,7 @@ func resourceInfrastructureConfigurationUpdate(ctx context.Context, d *schema.Re
 		}
 
 		if v, ok := d.GetOk("resource_tags"); ok && len(v.(map[string]interface{})) > 0 {
-			input.ResourceTags = Tags(tftags.New(v.(map[string]interface{})))
+			input.ResourceTags = Tags(tftags.New(ctx, v.(map[string]interface{})))
 		}
 
 		if v, ok := d.GetOk("security_group_ids"); ok && v.(*schema.Set).Len() > 0 {
