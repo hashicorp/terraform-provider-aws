@@ -287,7 +287,7 @@ func ResourceNodeGroup() *schema.Resource {
 func resourceNodeGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).EKSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	clusterName := d.Get("cluster_name").(string)
 	nodeGroupName := create.Name(d.Get("node_group_name").(string), d.Get("node_group_name_prefix").(string))
@@ -796,8 +796,8 @@ func expandNodegroupUpdateConfig(tfMap map[string]interface{}) *eks.NodegroupUpd
 
 func expandUpdateLabelsPayload(oldLabelsMap, newLabelsMap interface{}) *eks.UpdateLabelsPayload {
 	// EKS Labels operate similarly to keyvaluetags
-	oldLabels := tftags.New(oldLabelsMap)
-	newLabels := tftags.New(newLabelsMap)
+	oldLabels := tftags.New(ctx, oldLabelsMap)
+	newLabels := tftags.New(ctx, newLabelsMap)
 
 	removedLabels := oldLabels.Removed(newLabels)
 	updatedLabels := oldLabels.Updated(newLabels)
