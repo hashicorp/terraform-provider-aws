@@ -39,7 +39,7 @@ func productUpdateTags(ctx context.Context, conn *servicecatalog.ServiceCatalog,
 	return nil
 }
 
-func recordKeyValueTags(tags []*servicecatalog.RecordTag) tftags.KeyValueTags {
+func recordKeyValueTags(ctx context.Context, tags []*servicecatalog.RecordTag) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
