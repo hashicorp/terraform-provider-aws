@@ -145,7 +145,7 @@ func resourceEventIntegrationRead(ctx context.Context, d *schema.ResourceData, m
 		return diag.FromErr(fmt.Errorf("error setting event_filter: %w", err))
 	}
 
-	tags := KeyValueTags(resp.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, resp.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
