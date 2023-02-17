@@ -407,7 +407,7 @@ func resourceCrawlerCreate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func createCrawlerInput(d *schema.ResourceData, crawlerName string, defaultTagsConfig *tftags.DefaultConfig) (*glue.CreateCrawlerInput, error) {
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	crawlerInput := &glue.CreateCrawlerInput{
 		Name:         aws.String(crawlerName),
