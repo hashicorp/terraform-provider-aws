@@ -253,7 +253,7 @@ func expandIntelligentTieringFilter(tfMap map[string]interface{}) *s3.Intelligen
 	var tags []*s3.Tag
 
 	if v, ok := tfMap["tags"].(map[string]interface{}); ok {
-		tags = Tags(tftags.New(v))
+		tags = Tags(tftags.New(ctx, v))
 	}
 
 	apiObject := &s3.IntelligentTieringFilter{}

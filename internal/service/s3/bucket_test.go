@@ -3034,7 +3034,7 @@ func testAccCheckBucketCheckTags(ctx context.Context, n string, expectedTags map
 			return err
 		}
 
-		want := tftags.New(expectedTags)
+		want := tftags.New(ctx, expectedTags)
 		if !reflect.DeepEqual(want, got) {
 			return fmt.Errorf("Incorrect tags, want: %v got: %v", want, got)
 		}

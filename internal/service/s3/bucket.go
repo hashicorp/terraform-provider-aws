@@ -1758,7 +1758,7 @@ func resourceBucketInternalLifecycleUpdate(ctx context.Context, conn *s3.S3, d *
 		rule := &s3.LifecycleRule{}
 
 		// Filter
-		tags := Tags(tftags.New(r["tags"]).IgnoreAWS())
+		tags := Tags(tftags.New(ctx, r["tags"]).IgnoreAWS())
 		filter := &s3.LifecycleRuleFilter{}
 		if len(tags) > 0 {
 			lifecycleRuleAndOp := &s3.LifecycleRuleAndOperator{}
@@ -2597,7 +2597,7 @@ func expandBucketReplicationConfigurationRules(l []interface{}) []*s3.Replicatio
 			rcRule.Filter = &s3.ReplicationRuleFilter{}
 
 			filter := v[0].(map[string]interface{})
-			tags := Tags(tftags.New(filter["tags"]).IgnoreAWS())
+			tags := Tags(tftags.New(ctx, filter["tags"]).IgnoreAWS())
 
 			if len(tags) > 0 {
 				rcRule.Filter.And = &s3.ReplicationRuleAndOperator{

@@ -36,11 +36,11 @@ func BucketListTags(ctx context.Context, conn *s3.S3, identifier string) (tftags
 	// lists the special error as NoSuchTagSetError, however the existing logic used NoSuchTagSet
 	// and the AWS Go SDK has neither as a constant.
 	if tfawserr.ErrCodeEquals(err, ErrCodeNoSuchTagSet, ErrCodeNoSuchTagSetError) {
-		return tftags.New(nil), nil
+		return tftags.New(ctx, nil), nil
 	}
 
 	if err != nil {
-		return tftags.New(nil), err
+		return tftags.New(ctx, nil), err
 	}
 
 	return KeyValueTags(output.TagSet), nil
@@ -49,8 +49,8 @@ func BucketListTags(ctx context.Context, conn *s3.S3, identifier string) (tftags
 // BucketUpdateTags updates S3 bucket tags.
 // The identifier is the bucket name.
 func BucketUpdateTags(ctx context.Context, conn *s3.S3, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
-	oldTags := tftags.New(oldTagsMap)
-	newTags := tftags.New(newTagsMap)
+	oldTags := tftags.New(ctx, oldTagsMap)
+	newTags := tftags.New(ctx, newTagsMap)
 
 	// We need to also consider any existing ignored tags.
 	allTags, err := BucketListTags(ctx, conn, identifier)
@@ -117,11 +117,11 @@ func ObjectListTags(ctx context.Context, conn *s3.S3, bucket, key string) (tftag
 	}
 
 	if tfawserr.ErrCodeEquals(err, ErrCodeNoSuchTagSet, ErrCodeNoSuchTagSetError) {
-		return tftags.New(nil), nil
+		return tftags.New(ctx, nil), nil
 	}
 
 	if err != nil {
-		return tftags.New(nil), err
+		return tftags.New(ctx, nil), err
 	}
 
 	return KeyValueTags(output.TagSet), nil
@@ -129,8 +129,8 @@ func ObjectListTags(ctx context.Context, conn *s3.S3, bucket, key string) (tftag
 
 // ObjectUpdateTags updates S3 object tags.
 func ObjectUpdateTags(ctx context.Context, conn *s3.S3, bucket, key string, oldTagsMap interface{}, newTagsMap interface{}) error {
-	oldTags := tftags.New(oldTagsMap)
-	newTags := tftags.New(newTagsMap)
+	oldTags := tftags.New(ctx, oldTagsMap)
+	newTags := tftags.New(ctx, newTagsMap)
 
 	// We need to also consider any existing ignored tags.
 	allTags, err := ObjectListTags(ctx, conn, bucket, key)

@@ -205,7 +205,7 @@ func ExpandMetricsFilter(m map[string]interface{}) *s3.MetricsFilter {
 
 	var tags []*s3.Tag
 	if v, ok := m["tags"]; ok {
-		tags = Tags(tftags.New(v).IgnoreAWS())
+		tags = Tags(tftags.New(ctx, v).IgnoreAWS())
 	}
 
 	metricsFilter := &s3.MetricsFilter{}

@@ -279,7 +279,7 @@ func ExpandLifecycleRuleFilterAndOperator(m map[string]interface{}) *s3.Lifecycl
 	}
 
 	if v, ok := m["tags"].(map[string]interface{}); ok && len(v) > 0 {
-		tags := Tags(tftags.New(v).IgnoreAWS())
+		tags := Tags(tftags.New(ctx, v).IgnoreAWS())
 		if len(tags) > 0 {
 			result.Tags = tags
 		}
@@ -516,7 +516,7 @@ func ExpandReplicationRuleFilterAndOperator(l []interface{}) *s3.ReplicationRule
 	}
 
 	if v, ok := tfMap["tags"].(map[string]interface{}); ok && len(v) > 0 {
-		tags := Tags(tftags.New(v).IgnoreAWS())
+		tags := Tags(tftags.New(ctx, v).IgnoreAWS())
 		if len(tags) > 0 {
 			result.Tags = tags
 		}
