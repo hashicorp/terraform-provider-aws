@@ -116,7 +116,7 @@ func resourceInstanceProfileCreate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if err == nil {
-		err = instanceProfileReadResult(d, response.InstanceProfile, meta) // sets id
+		err = instanceProfileReadResult(ctx, d, response.InstanceProfile, meta) // sets id
 	}
 
 	if err != nil {
@@ -283,7 +283,7 @@ func resourceInstanceProfileRead(ctx context.Context, d *schema.ResourceData, me
 		}
 	}
 
-	if err := instanceProfileReadResult(d, instanceProfile, meta); err != nil {
+	if err := instanceProfileReadResult(ctx, d, instanceProfile, meta); err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading IAM Instance Profile (%s): %s", d.Id(), err)
 	}
 	return diags
@@ -311,7 +311,7 @@ func resourceInstanceProfileDelete(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func instanceProfileReadResult(d *schema.ResourceData, result *iam.InstanceProfile, meta interface{}) error {
+func instanceProfileReadResult(ctx context.Context, d *schema.ResourceData, result *iam.InstanceProfile, meta interface{}) error {
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
