@@ -263,7 +263,7 @@ func resourceComputeEnvironmentCreate(ctx context.Context, d *schema.ResourceDat
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BatchConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	computeEnvironmentName := create.Name(d.Get("compute_environment_name").(string), d.Get("compute_environment_name_prefix").(string))
 	computeEnvironmentType := d.Get("type").(string)
@@ -572,7 +572,7 @@ func expandComputeResource(tfMap map[string]interface{}) *batch.ComputeResource 
 	}
 
 	if v, ok := tfMap["tags"].(map[string]interface{}); ok && len(v) > 0 {
-		apiObject.Tags = Tags(tftags.New(v).IgnoreAWS())
+		apiObject.Tags = Tags(tftags.New(ctx, v).IgnoreAWS())
 	}
 
 	if computeResourceType != "" {

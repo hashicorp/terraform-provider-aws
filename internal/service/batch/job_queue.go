@@ -75,7 +75,7 @@ func resourceJobQueueCreate(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BatchConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 	input := batch.CreateJobQueueInput{
 		ComputeEnvironmentOrder: createComputeEnvironmentOrder(d.Get("compute_environments").([]interface{})),
 		JobQueueName:            aws.String(d.Get("name").(string)),
