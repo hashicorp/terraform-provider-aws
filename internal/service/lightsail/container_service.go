@@ -254,7 +254,7 @@ func resourceContainerServiceRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("state", cs.State)
 	d.Set("url", cs.Url)
 
-	tags := KeyValueTags(cs.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, cs.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
 		return diag.Errorf("error setting tags: %s", err)

@@ -130,7 +130,7 @@ func resourceDiskRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("size_in_gb", out.SizeInGb)
 	d.Set("support_code", out.SupportCode)
 
-	tags := KeyValueTags(out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

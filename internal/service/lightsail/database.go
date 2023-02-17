@@ -308,7 +308,7 @@ func resourceDatabaseRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("secondary_availability_zone", rd.SecondaryAvailabilityZone)
 	d.Set("support_code", rd.SupportCode)
 
-	tags := KeyValueTags(rd.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, rd.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

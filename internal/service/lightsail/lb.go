@@ -157,7 +157,7 @@ func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("name", lb.Name)
 	d.Set("support_code", lb.SupportCode)
 
-	tags := KeyValueTags(lb.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, lb.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

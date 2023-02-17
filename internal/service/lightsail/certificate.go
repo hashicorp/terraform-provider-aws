@@ -191,7 +191,7 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("name", certificate.Name)
 	d.Set("subject_alternative_names", aws.StringValueSlice(certificate.SubjectAlternativeNames))
 
-	tags := KeyValueTags(certificate.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, certificate.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
