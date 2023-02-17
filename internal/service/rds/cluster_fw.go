@@ -711,6 +711,8 @@ func (r *resourceCluster) Create(ctx context.Context, request resource.CreateReq
 		importValues := s3Import[0]
 		input := restoreFromS3ImportInput(ctx, identifier, importValues, data)
 
+		input.Tags = Tags(tags.IgnoreAWS())
+		
 		_, err := tfresource.RetryWhen(ctx, propagationTimeout,
 			func() (interface{}, error) {
 				return conn.RestoreDBClusterFromS3WithContext(ctx, input)
