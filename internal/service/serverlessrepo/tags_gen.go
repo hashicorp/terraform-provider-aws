@@ -2,6 +2,8 @@
 package serverlessrepo
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/serverlessapplicationrepository"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"

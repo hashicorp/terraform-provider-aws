@@ -2,6 +2,8 @@
 package servicecatalog
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"

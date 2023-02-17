@@ -2,6 +2,8 @@
 package macie2
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
