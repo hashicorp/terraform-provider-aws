@@ -409,7 +409,7 @@ func flattenScope(scope *backup.ControlScope) []interface{} {
 	}
 
 	if v := scope.Tags; v != nil {
-		controlScope["tags"] = KeyValueTags(v).IgnoreAWS().Map()
+		controlScope["tags"] = KeyValueTags(ctx, v).IgnoreAWS().Map()
 	}
 
 	return []interface{}{controlScope}

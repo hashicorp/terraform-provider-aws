@@ -432,7 +432,7 @@ func flattenPlanRules(rules []*backup.Rule) *schema.Set {
 			"enable_continuous_backup": aws.BoolValue(rule.EnableContinuousBackup),
 			"start_window":             int(aws.Int64Value(rule.StartWindowMinutes)),
 			"completion_window":        int(aws.Int64Value(rule.CompletionWindowMinutes)),
-			"recovery_point_tags":      KeyValueTags(rule.RecoveryPointTags).IgnoreAWS().Map(),
+			"recovery_point_tags":      KeyValueTags(ctx, rule.RecoveryPointTags).IgnoreAWS().Map(),
 		}
 
 		if lifecycle := rule.Lifecycle; lifecycle != nil {
