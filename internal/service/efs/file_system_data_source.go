@@ -125,7 +125,7 @@ func dataSourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta 
 		var fileSystems []*efs.FileSystemDescription
 
 		for _, fileSystem := range describeResp.FileSystems {
-			tags := KeyValueTags(fileSystem.Tags)
+			tags := KeyValueTags(ctx, fileSystem.Tags)
 
 			if !tags.ContainsAll(tagsToMatch) {
 				continue
@@ -158,7 +158,7 @@ func dataSourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta 
 		d.Set("size_in_bytes", fs.SizeInBytes.Value)
 	}
 
-	if err := d.Set("tags", KeyValueTags(fs.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, fs.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
