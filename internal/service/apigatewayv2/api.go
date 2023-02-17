@@ -161,7 +161,7 @@ func resourceAPICreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	protocolType := d.Get("protocol_type").(string)
 	req := &apigatewayv2.CreateApiInput{
@@ -381,7 +381,7 @@ func resourceImportOpenAPI(ctx context.Context, d *schema.ResourceData, meta int
 			return fmt.Errorf("importing API Gateway v2 API (%s) OpenAPI specification: %w", d.Id(), err)
 		}
 
-		tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+		tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 		corsConfiguration := d.Get("cors_configuration")
 
