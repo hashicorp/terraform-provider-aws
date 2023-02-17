@@ -129,7 +129,7 @@ func resourceResourceShareRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("arn", resourceShare.ResourceShareArn)
 	d.Set("name", resourceShare.Name)
 
-	tags := KeyValueTags(resourceShare.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, resourceShare.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
