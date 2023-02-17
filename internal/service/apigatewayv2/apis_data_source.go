@@ -61,7 +61,7 @@ func dataSourceAPIsRead(ctx context.Context, d *schema.ResourceData, meta interf
 			continue
 		}
 
-		if len(tagsToMatch) > 0 && !KeyValueTags(api.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).ContainsAll(tagsToMatch) {
+		if len(tagsToMatch) > 0 && !KeyValueTags(ctx, api.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).ContainsAll(tagsToMatch) {
 			continue
 		}
 
