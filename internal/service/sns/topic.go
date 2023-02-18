@@ -2,7 +2,6 @@ package sns
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 	"regexp"
@@ -24,7 +23,6 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/jmespath/go-jmespath"
 )
 
 var (
@@ -354,59 +352,6 @@ func resourceTopicRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	}
 
 	return nil
-}
-
-// policyHasValidAWSPrincipals validates that the Principals in an IAM Policy are valid
-// Assumes that non-"AWS" Principals are valid
-// The value can be a single string or a slice of strings
-// Valid strings are either an ARN or an AWS account ID
-func policyHasValidAWSPrincipals(policy string) (bool, error) { // nosemgrep:ci.aws-in-func-name
-	var policyData any
-	err := json.Unmarshal([]byte(policy), &policyData)
-	if err != nil {
-		return false, fmt.Errorf("parsing policy: %w", err)
-	}
-
-	result, err := jmespath.Search("Statement[*].Principal.AWS", policyData)
-	if err != nil {
-		return false, fmt.Errorf("parsing policy: %w", err)
-	}
-
-	principals, ok := result.([]any)
-	if !ok {
-		return false, fmt.Errorf(`parsing policy: unexpected result: (%[1]T) "%[1]v"`, result)
-	}
-
-	for _, principal := range principals {
-		switch x := principal.(type) {
-		case string:
-			if !isValidAWSPrincipal(x) {
-				return false, nil
-			}
-		case []string:
-			for _, s := range x {
-				if !isValidAWSPrincipal(s) {
-					return false, nil
-				}
-			}
-		}
-	}
-
-	return true, nil
-}
-
-// isValidAWSPrincipal returns true if a string is either an ARN, an AWS account ID, or `*`
-func isValidAWSPrincipal(principal string) bool { // nosemgrep:ci.aws-in-func-name
-	if principal == "*" {
-		return true
-	}
-	if arn.IsARN(principal) {
-		return true
-	}
-	if regexp.MustCompile(`^\d{12}$`).MatchString(principal) {
-		return true
-	}
-	return false
 }
 
 func resourceTopicUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

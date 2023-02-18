@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -54,26 +55,18 @@ func ResourceImageRecipe() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"delete_on_termination": {
-										// Use TypeString to allow an "unspecified" value,
-										// since TypeBool only has true/false with false default.
-										// The conversion from bare true/false values in
-										// configurations to TypeString value is currently safe.
-										Type:             schema.TypeString,
+										Type:             nullable.TypeNullableBool,
 										Optional:         true,
 										ForceNew:         true,
-										DiffSuppressFunc: verify.SuppressEquivalentTypeStringBoolean,
-										ValidateFunc:     verify.ValidTypeStringNullableBoolean,
+										DiffSuppressFunc: nullable.DiffSuppressNullableBool,
+										ValidateFunc:     nullable.ValidateTypeStringNullableBool,
 									},
 									"encrypted": {
-										// Use TypeString to allow an "unspecified" value,
-										// since TypeBool only has true/false with false default.
-										// The conversion from bare true/false values in
-										// configurations to TypeString value is currently safe.
-										Type:             schema.TypeString,
+										Type:             nullable.TypeNullableBool,
 										Optional:         true,
 										ForceNew:         true,
-										DiffSuppressFunc: verify.SuppressEquivalentTypeStringBoolean,
-										ValidateFunc:     verify.ValidTypeStringNullableBoolean,
+										DiffSuppressFunc: nullable.DiffSuppressNullableBool,
+										ValidateFunc:     nullable.ValidateTypeStringNullableBool,
 									},
 									"iops": {
 										Type:         schema.TypeInt,
@@ -511,14 +504,12 @@ func expandEBSInstanceBlockDeviceSpecification(tfMap map[string]interface{}) *im
 
 	apiObject := &imagebuilder.EbsInstanceBlockDeviceSpecification{}
 
-	if v, ok := tfMap["delete_on_termination"].(string); ok && v != "" {
-		vBool, _ := strconv.ParseBool(v) // ignore error as previously validatated
-		apiObject.DeleteOnTermination = aws.Bool(vBool)
+	if v, null, _ := nullable.Bool(tfMap["delete_on_termination"].(string)).Value(); !null {
+		apiObject.DeleteOnTermination = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["encrypted"].(string); ok && v != "" {
-		vBool, _ := strconv.ParseBool(v) // ignore error as previously validatated
-		apiObject.Encrypted = aws.Bool(vBool)
+	if v, null, _ := nullable.Bool(tfMap["encrypted"].(string)).Value(); !null {
+		apiObject.Encrypted = aws.Bool(v)
 	}
 
 	if v, ok := tfMap["iops"].(int); ok && v != 0 {

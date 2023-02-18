@@ -279,7 +279,7 @@ func resourceRoleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 
 	role := outputRaw.(*iam.Role)
 
-	// occasionally, immediately after a role is created, AWS will give an ARN like AROAQ7SSZBKHRKPWRZUN6 (unique ID)
+	// occasionally, immediately after a role is created, AWS will give an ARN like AROAQ7SSZBKHREXAMPLE (unique ID)
 	if role, err = waitRoleARNIsNotUniqueID(ctx, conn, d.Id(), role); err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading IAM Role (%s): waiting for valid ARN: %s", d.Id(), err)
 	}

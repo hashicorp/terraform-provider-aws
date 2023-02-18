@@ -167,15 +167,11 @@ func ResourceTargetGroup() *schema.Resource {
 				ValidateFunc: validation.IntBetween(1, 65535),
 			},
 			"preserve_client_ip": {
-				// Use TypeString to allow an "unspecified" value,
-				// since TypeBool only has true/false with false default.
-				// The conversion from bare true/false values in
-				// configurations to TypeString value is currently safe.
-				Type:             schema.TypeString,
+				Type:             nullable.TypeNullableBool,
 				Optional:         true,
 				Computed:         true,
-				DiffSuppressFunc: verify.SuppressEquivalentTypeStringBoolean,
-				ValidateFunc:     verify.ValidTypeStringNullableBoolean,
+				DiffSuppressFunc: nullable.DiffSuppressNullableBool,
+				ValidateFunc:     nullable.ValidateTypeStringNullableBool,
 			},
 			"protocol": {
 				Type:         schema.TypeString,

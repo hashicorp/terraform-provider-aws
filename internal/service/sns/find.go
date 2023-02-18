@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -47,7 +48,7 @@ func FindTopicAttributesByARN(ctx context.Context, conn *sns.SNS, arn string) (m
 			return resource.NonRetryableError(err)
 		}
 
-		valid, err := policyHasValidAWSPrincipals(attributes[TopicAttributeNamePolicy])
+		valid, err := tfiam.PolicyHasValidAWSPrincipals(attributes[TopicAttributeNamePolicy])
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}

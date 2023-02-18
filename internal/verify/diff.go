@@ -75,19 +75,6 @@ func SuppressEquivalentRoundedTime(layout string, d time.Duration) schema.Schema
 	}
 }
 
-// SuppressEquivalentTypeStringBoolean provides custom difference suppression for TypeString booleans
-// Some arguments require three values: true, false, and "" (unspecified), but
-// confusing behavior exists when converting bare true/false values with state.
-func SuppressEquivalentTypeStringBoolean(k, old, new string, d *schema.ResourceData) bool {
-	if old == "false" && new == "0" {
-		return true
-	}
-	if old == "true" && new == "1" {
-		return true
-	}
-	return false
-}
-
 // SuppressMissingOptionalConfigurationBlock handles configuration block attributes in the following scenario:
 //   - The resource schema includes an optional configuration block with defaults
 //   - The API response includes those defaults to refresh into the Terraform state

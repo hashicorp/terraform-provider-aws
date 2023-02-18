@@ -22,10 +22,10 @@ import (
 
 func ResourceIPAMPool() *schema.Resource {
 	return &schema.Resource{
-		CreateWithoutTimeout: ResourceIPAMPoolCreate,
-		ReadWithoutTimeout:   ResourceIPAMPoolRead,
-		UpdateWithoutTimeout: ResourceIPAMPoolUpdate,
-		DeleteWithoutTimeout: ResourceIPAMPoolDelete,
+		CreateWithoutTimeout: resourceIPAMPoolCreate,
+		ReadWithoutTimeout:   resourceIPAMPoolRead,
+		UpdateWithoutTimeout: resourceIPAMPoolUpdate,
+		DeleteWithoutTimeout: resourceIPAMPoolDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -136,7 +136,7 @@ func ResourceIPAMPool() *schema.Resource {
 	}
 }
 
-func ResourceIPAMPoolCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIPAMPoolCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
@@ -210,10 +210,10 @@ func ResourceIPAMPoolCreate(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "waiting for IPAM Pool (%s) create: %s", d.Id(), err)
 	}
 
-	return append(diags, ResourceIPAMPoolRead(ctx, d, meta)...)
+	return append(diags, resourceIPAMPoolRead(ctx, d, meta)...)
 }
 
-func ResourceIPAMPoolRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIPAMPoolRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
@@ -261,7 +261,7 @@ func ResourceIPAMPoolRead(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func ResourceIPAMPoolUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIPAMPoolUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
 
@@ -323,10 +323,10 @@ func ResourceIPAMPoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 	}
 
-	return append(diags, ResourceIPAMPoolRead(ctx, d, meta)...)
+	return append(diags, resourceIPAMPoolRead(ctx, d, meta)...)
 }
 
-func ResourceIPAMPoolDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceIPAMPoolDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn()
 
