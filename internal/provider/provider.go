@@ -643,7 +643,8 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			"aws_elastic_beanstalk_hosted_zone":    elasticbeanstalk.DataSourceHostedZone(),
 			"aws_elastic_beanstalk_solution_stack": elasticbeanstalk.DataSourceSolutionStack(),
 
-			"aws_elasticsearch_domain": elasticsearch.DataSourceDomain(),
+			"aws_elasticsearch_domain":         elasticsearch.DataSourceDomain(),
+			"aws_elasticsearch_engine_version": elasticsearch.DataSourceEngineVersion(),
 
 			"aws_elb":                 elb.DataSourceLoadBalancer(),
 			"aws_elb_hosted_zone_id":  elb.DataSourceHostedZoneID(),
@@ -794,7 +795,8 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			"aws_networkmanager_site":                         networkmanager.DataSourceSite(),
 			"aws_networkmanager_sites":                        networkmanager.DataSourceSites(),
 
-			"aws_opensearch_domain": opensearch.DataSourceDomain(),
+			"aws_opensearch_domain":         opensearch.DataSourceDomain(),
+			"aws_opensearch_engine_version": opensearch.DataSourceEngineVersion(),
 
 			"aws_organizations_delegated_administrators":                organizations.DataSourceDelegatedAdministrators(),
 			"aws_organizations_delegated_services":                      organizations.DataSourceDelegatedServices(),
@@ -1492,10 +1494,6 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			"aws_elastic_beanstalk_application_version":    elasticbeanstalk.ResourceApplicationVersion(),
 			"aws_elastic_beanstalk_configuration_template": elasticbeanstalk.ResourceConfigurationTemplate(),
 			"aws_elastic_beanstalk_environment":            elasticbeanstalk.ResourceEnvironment(),
-
-			"aws_elasticsearch_domain":              elasticsearch.ResourceDomain(),
-			"aws_elasticsearch_domain_policy":       elasticsearch.ResourceDomainPolicy(),
-			"aws_elasticsearch_domain_saml_options": elasticsearch.ResourceDomainSAMLOptions(),
 
 			"aws_elastictranscoder_pipeline": elastictranscoder.ResourcePipeline(),
 			"aws_elastictranscoder_preset":   elastictranscoder.ResourcePreset(),
