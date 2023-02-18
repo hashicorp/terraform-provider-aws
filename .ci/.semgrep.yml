@@ -271,7 +271,7 @@ rules:
 
   - id: helper-schema-ResourceData-Resource-Set-tags
     languages: [go]
-    message: (schema.ResourceData).Set() call with the tags key should be preceded by a call to IgnoreConfig or include IgnoreConfig in the value in the case of ASG
+    message: (schema.ResourceData).Set() call with the tags key should be preceded by a call to IgnoreConfig
     paths:
       include:
         - internal/service/**/*.go
@@ -288,11 +288,6 @@ rules:
               tags = $TAGS
               ...
               if err := d.Set("tags", $TAGSMAP); err != nil { ... }
-          - pattern: |
-              $ASGTAGS := keyvaluetags.AutoscalingKeyValueTags(...)
-              ...
-              if err := d.Set("tags", $TAGSMAP); err != nil { ... }
-      - pattern-not-regex: 'keyvaluetags.AutoscalingKeyValueTags\(.+\).IgnoreAws\(\).IgnoreConfig'
       - pattern-not: |
           tags = $KEYVALUETAGS.IgnoreAws().IgnoreConfig($CONFIG)
           ...
@@ -300,13 +295,7 @@ rules:
           tags = $KEYVALUETAGS.$IGNORESERVICE().IgnoreConfig($CONFIG)
           ...
       - pattern-not: |
-          tags := keyvaluetags.$VALUETAGS($RESOURCETAGS).IgnoreAws().IgnoreConfig($CONFIG)
-          ...
-      - pattern-not: |
-          tags = keyvaluetags.$VALUETAGS($RESOURCETAGS).IgnoreAws().IgnoreConfig($CONFIG)
-          ...
-      - pattern-not: |
-          tags = $VALUETAGS($RESOURCETAGS).IgnoreAWS().IgnoreConfig($CONFIG).Ignore($IGNORE)
+          tags = $KEYVALUETAGS.IgnoreAWS().IgnoreConfig($CONFIG).Ignore($IGNORE)
           ...
     severity: WARNING
 
