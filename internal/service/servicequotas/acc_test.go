@@ -12,9 +12,9 @@ import (
 )
 
 const (
-	setQuotaServiceCode = "vpc"
-	setQuotaQuotaCode   = "L-F678F1CE"
-	setQuotaQuotaName   = "VPCs per Region"
+	setQuotaServiceCode = "autoscaling"
+	setQuotaQuotaCode   = "L-CDE20ADC"
+	setQuotaQuotaName   = "Auto Scaling groups per region"
 
 	unsetQuotaServiceCode = "s3"
 	unsetQuotaQuotaCode   = "L-FAABEEBA"
