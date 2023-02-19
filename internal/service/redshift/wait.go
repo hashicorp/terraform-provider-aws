@@ -216,3 +216,45 @@ func waitEndpointAccessDeleted(ctx context.Context, conn *redshift.Redshift, id 
 
 	return nil, err
 }
+
+func waitClusterSnapshotAvailable(ctx context.Context, conn *redshift.Redshift, id string) (*redshift.Snapshot, error) { //nolint:unparam
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{"creating"},
+		Target:     []string{"available"},
+		Refresh:    statusClusterSnapshot(ctx, conn, id),
+		Timeout:    10 * time.Minute,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*redshift.Snapshot); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.Status)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitClusterSnapshotDeleted(ctx context.Context, conn *redshift.Redshift, id string) (*redshift.Snapshot, error) { //nolint:unparam
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{"available"},
+		Target:     []string{},
+		Refresh:    statusClusterSnapshot(ctx, conn, id),
+		Timeout:    10 * time.Minute,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*redshift.Snapshot); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.Status)))
+
+		return output, err
+	}
+
+	return nil, err
+}

@@ -1892,6 +1892,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			"aws_redshift_authentication_profile":        redshift.ResourceAuthenticationProfile(),
 			"aws_redshift_cluster":                       redshift.ResourceCluster(),
 			"aws_redshift_cluster_iam_roles":             redshift.ResourceClusterIAMRoles(),
+			"aws_redshift_cluster_snapshot":              redshift.ResourceClusterSnapshot(),
 			"aws_redshift_endpoint_access":               redshift.ResourceEndpointAccess(),
 			"aws_redshift_endpoint_authorization":        redshift.ResourceEndpointAuthorization(),
 			"aws_redshift_event_subscription":            redshift.ResourceEventSubscription(),

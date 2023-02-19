@@ -429,3 +429,32 @@ func FindPartnerById(ctx context.Context, conn *redshift.Redshift, id string) (*
 
 	return output.PartnerIntegrationInfoList[0], nil
 }
+
+func FindClusterSnapshotById(ctx context.Context, conn *redshift.Redshift, id string) (*redshift.Snapshot, error) {
+	input := &redshift.DescribeClusterSnapshotsInput{
+		SnapshotIdentifier: aws.String(id),
+	}
+
+	output, err := conn.DescribeClusterSnapshotsWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, redshift.ErrCodeClusterNotFoundFault) || tfawserr.ErrCodeEquals(err, redshift.ErrCodeClusterSnapshotNotFoundFault) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.Snapshots) == 0 || output.Snapshots[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.Snapshots); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output.Snapshots[0], nil
+}
