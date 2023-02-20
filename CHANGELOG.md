@@ -1,15 +1,27 @@
-## 4.55.0 (Unreleased)
+## 4.56.0 (Unreleased)
+## 4.55.0 (February 16, 2023)
+
+FEATURES:
+
+* **New Data Source:** `aws_organizations_organizational_unit_child_accounts` ([#24350](https://github.com/hashicorp/terraform-provider-aws/issues/24350))
+* **New Data Source:** `aws_organizations_organizational_unit_descendant_accounts` ([#24350](https://github.com/hashicorp/terraform-provider-aws/issues/24350))
+* **New Resource:** `aws_route53_cidr_collection` ([#29407](https://github.com/hashicorp/terraform-provider-aws/issues/29407))
+* **New Resource:** `aws_route53_cidr_location` ([#29407](https://github.com/hashicorp/terraform-provider-aws/issues/29407))
+* **New Resource:** `aws_vpc_ipam_resource_discovery` ([#29216](https://github.com/hashicorp/terraform-provider-aws/issues/29216))
+* **New Resource:** `aws_vpc_ipam_resource_discovery_association` ([#29216](https://github.com/hashicorp/terraform-provider-aws/issues/29216))
 
 ENHANCEMENTS:
 
 * data-source/aws_s3_bucket_object: Expand content types that can be read from S3 to include some human-readable application types (e.g., `application/xml`, `application/atom+xml`) ([#27704](https://github.com/hashicorp/terraform-provider-aws/issues/27704))
 * data-source/aws_s3_object: Expand content types that can be read from S3 to include some human-readable application types (e.g., `application/xml`, `application/atom+xml`) ([#27704](https://github.com/hashicorp/terraform-provider-aws/issues/27704))
 * resource/aws_autoscaling_policy: Make `resource_label` optional in `predefined_load_metric_specification`, `predefined_metric_pair_specification`, and `predefined_scaling_metric_specification` ([#29277](https://github.com/hashicorp/terraform-provider-aws/issues/29277))
+* resource/aws_cloudwatch_log_group: Allow `retention_in_days` attribute to accept a three year retention period (1096 days) ([#29426](https://github.com/hashicorp/terraform-provider-aws/issues/29426))
 * resource/aws_db_proxy: Add `auth.client_password_auth_type` attribute ([#28432](https://github.com/hashicorp/terraform-provider-aws/issues/28432))
 * resource/aws_firehose_delivery_stream: Add `ForceNew` to `dynamic_partitioning_configuration` attribute ([#29093](https://github.com/hashicorp/terraform-provider-aws/issues/29093))
 * resource/aws_firehose_delivery_stream: Add configurable timeouts for create, update, and delete ([#28469](https://github.com/hashicorp/terraform-provider-aws/issues/28469))
 * resource/aws_neptune_cluster: Add `neptune_instance_parameter_group_name` argument, used only when upgrading major version ([#28051](https://github.com/hashicorp/terraform-provider-aws/issues/28051))
 * resource/aws_neptune_global_cluster: Increase Update timeout to 120 minutes (per global cluster member) ([#28051](https://github.com/hashicorp/terraform-provider-aws/issues/28051))
+* resource/aws_route53_cidr_location: Add `cidr_routing_policy` argument ([#29407](https://github.com/hashicorp/terraform-provider-aws/issues/29407))
 * resource/aws_s3_bucket: Accept 'NoSuchTagSetError' responses from S3-compatible services ([#28530](https://github.com/hashicorp/terraform-provider-aws/issues/28530))
 * resource/aws_s3_bucket: Add error handling for `NotImplemented` errors when reading `lifecycle_rule` or `replication_configuration` into terraform state. ([#28790](https://github.com/hashicorp/terraform-provider-aws/issues/28790))
 * resource/aws_s3_object: Accept 'NoSuchTagSetError' responses from S3-compatible services ([#28530](https://github.com/hashicorp/terraform-provider-aws/issues/28530))
