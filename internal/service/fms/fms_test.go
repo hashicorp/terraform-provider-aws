@@ -21,6 +21,11 @@ func TestAccFMS_serial(t *testing.T) {
 			"resourceTags":           testAccPolicy_resourceTags,
 			"tags":                   testAccPolicy_tags,
 		},
+		"ProtocolList": {
+			"basic":  TestAccFMSProtocolList_basic,
+			"update": TestAccFMSProtocolList_update,
+			"tags":   TestAccFMSProtocolList_tags,
+		},
 	}
 
 	acctest.RunSerialTests2Levels(t, testCases, 0)
