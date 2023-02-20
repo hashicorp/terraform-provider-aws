@@ -190,6 +190,11 @@ func ResourceGroup() *schema.Resource {
 										Optional: true,
 										Default:  false,
 									},
+									"auto_rollback": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Default:  false,
+									},
 								},
 							},
 						},
@@ -3085,6 +3090,10 @@ func expandRefreshPreferences(tfMap map[string]interface{}) *autoscaling.Refresh
 
 	if v, ok := tfMap["skip_matching"].(bool); ok {
 		apiObject.SkipMatching = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["auto_rollback"].(bool); ok {
+		apiObject.AutoRollback = aws.Bool(v)
 	}
 
 	return apiObject
