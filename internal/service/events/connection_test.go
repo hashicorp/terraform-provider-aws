@@ -244,6 +244,16 @@ func TestAccEventsConnection_oAuth(t *testing.T) {
 		CheckDestroy:             testAccCheckConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
+				Config: testAccConnectionConfig_oauthHTTPParametersEmpty(
+					nameModified,
+					descriptionModified,
+					authorizationType,
+					authorizationEndpointModified,
+					httpMethod,
+				),
+				ExpectError: regexp.MustCompile("Missing required argument"),
+			},
+			{
 				Config: testAccConnectionConfig_oauth(
 					name,
 					description,
@@ -409,6 +419,10 @@ func TestAccEventsConnection_invocationHTTPParameters(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
+			{
+				Config:      testAccConnectionConfig_invocationHTTPParametersEmpty(name, description),
+				ExpectError: regexp.MustCompile("Missing required argument"),
+			},
 			{
 				Config: testAccConnectionConfig_invocationHTTPParameters(
 					name,
@@ -829,4 +843,40 @@ resource "aws_cloudwatch_event_connection" "invocation_http_parameters" {
 		queryStringKey,
 		queryStringValue,
 		queryStringIsSecretValue)
+}
+
+func testAccConnectionConfig_invocationHTTPParametersEmpty(name, description string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_event_connection" "invocation_http_parameters" {
+  name        = %[1]q
+  description = %[2]q
+  auth_parameters {
+    invocation_http_parameters {
+    }
+  }
+}
+`, name, description)
+}
+
+func testAccConnectionConfig_oauthHTTPParametersEmpty(
+	name,
+	description,
+	authorizationType,
+	authorizationEndpoint,
+	httpMethod string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_event_connection" "oauth" {
+  name               = %[1]q
+  description        = %[2]q
+  authorization_type = %[3]q
+  auth_parameters {
+    oauth {
+      authorization_endpoint = %[4]q
+      http_method            = %[5]q
+      oauth_http_parameters {
+      }
+    }
+  }
+}
+`, name, description, authorizationType, authorizationEndpoint, httpMethod)
 }
