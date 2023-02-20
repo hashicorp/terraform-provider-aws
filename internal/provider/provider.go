@@ -993,6 +993,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			"aws_api_gateway_stage":                 apigateway.ResourceStage(),
 			"aws_api_gateway_usage_plan":            apigateway.ResourceUsagePlan(),
 			"aws_api_gateway_usage_plan_key":        apigateway.ResourceUsagePlanKey(),
+			"aws_api_gateway_usage_plan_assocation": apigateway.ResourceUsagePlanAssociation(),
 			"aws_api_gateway_vpc_link":              apigateway.ResourceVPCLink(),
 
 			"aws_apigatewayv2_api":                  apigatewayv2.ResourceAPI(),
