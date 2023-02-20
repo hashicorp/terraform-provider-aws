@@ -583,6 +583,62 @@ The `rule_action_override` block supports the following arguments:
 * `action_to_use` - (Required) Override action to use, in place of the configured action of the rule in the rule group. See [Action](#action) below for details.
 * `name` - (Required) Name of the rule to override. See the [documentation](https://docs.aws.amazon.com/waf/latest/developerguide/aws-managed-rule-groups-list.html) for a list of names in the appropriate rule group in use.
 
+### Action
+
+The `action` block for `rule_action_override` supports the following:
+
+~> **NOTE:** One of `allow`, `block`, or `count`, is required when specifying an `action`.
+
+* `allow` - (Optional) Instructs AWS WAF to allow the web request. See [Allow](#action) below for details.
+* `block` - (Optional) Instructs AWS WAF to block the web request. See [Block](#block) below for details.
+* `captcha` - (Optional) Instructs AWS WAF to run a `CAPTCHA` check against the web request. See [Captcha](#captcha) below for details.
+* `count` - (Optional) Instructs AWS WAF to count the web request and allow it. See [Count](#count) below for details.
+
+### Allow
+
+The `allow` block supports the following arguments:
+
+* `custom_request_handling` - (Optional) Defines custom handling for the web request. See [Custom Request Handling](#custom-request-handling) below for details.
+
+### Block
+
+The `block` block supports the following arguments:
+
+* `custom_response` - (Optional) Defines a custom response for the web request. See [Custom Response](#custom-response) below for details.
+
+### Captcha
+
+The `captcha` block supports the following arguments:
+
+* `custom_request_handling` - (Optional) Defines custom handling for the web request. See [Custom Request Handling](#custom-request-handling) below for details.
+
+### Count
+
+The `count` block supports the following arguments:
+
+* `custom_request_handling` - (Optional) Defines custom handling for the web request. See [Custom Request Handling](#custom-request-handling) below for details.
+
+### Custom Request Handling
+
+The `custom_request_handling` block supports the following arguments:
+
+* `insert_header` - (Required) The `insert_header` blocks used to define HTTP headers added to the request. See [Custom HTTP Header](#custom-http-header) below for details.
+
+### Custom Response
+
+The `custom_response` block supports the following arguments:
+
+* `custom_response_body_key` - (Optional) References the response body that you want AWS WAF to return to the web request client. This must reference a `key` defined in a `custom_response_body` block of this resource.
+* `response_code` - (Required) The HTTP status code to return to the client.
+* `response_header` - (Optional) The `response_header` blocks used to define the HTTP response headers added to the response. See [Custom HTTP Header](#custom-http-header) below for details.
+
+### Custom HTTP Header
+
+Each block supports the following arguments. Duplicate header names are not allowed:
+
+* `name` - The name of the custom header. For custom request header insertion, when AWS WAF inserts the header into the request, it prefixes this name `x-amzn-waf-`, to avoid confusion with the headers that are already in the request. For example, for the header name `sample`, AWS WAF inserts the header `x-amzn-waf-sample`.
+* `value` - The value of the custom header.
+
 ### Field to Match
 
 The part of a web request that you want AWS WAF to inspect. Include the single `field_to_match` type that you want to inspect, with additional specifications as needed, according to the type. You specify a single request component in `field_to_match` for each rule statement that requires it. To inspect more than one component of a web request, create a separate rule statement for each component. See the [documentation](https://docs.aws.amazon.com/waf/latest/developerguide/waf-rule-statement-fields.html#waf-rule-statement-request-component) for more details.
