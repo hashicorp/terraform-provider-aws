@@ -22,7 +22,7 @@ From February - April 2023, we will be prioritizing the following areas of work:
 
 Issue: [#10990]([https://github.com/hashicorp/terraform-provider-aws/issues/17981](https://github.com/hashicorp/terraform-provider-aws/issues/10990))
 
-_[AWS Quicksight](https://aws.amazon.com/quicksight/) has a serverless architecture that automatically scales to hundreds of thousands of users without the need to set up, configure, or manage your own servers. It also ensures that your users don’t have to deal with slow dashboards during peak hours, when multiple business intelligence (BI) users are accessing the same dashboards or datasets. And with pay-per-session pricing, you pay only when your users access the dashboards or reports, which makes it cost effective for deployments with many users. QuickSight is also built with robust security, governance, and global collaboration features for your enterprise workloads.
+[AWS Quicksight](https://aws.amazon.com/quicksight/) has a serverless architecture that automatically scales to hundreds of thousands of users without the need to set up, configure, or manage your own servers. It also ensures that your users don’t have to deal with slow dashboards during peak hours, when multiple business intelligence (BI) users are accessing the same dashboards or datasets. And with pay-per-session pricing, you pay only when your users access the dashboards or reports, which makes it cost effective for deployments with many users. QuickSight is also built with robust security, governance, and global collaboration features for your enterprise workloads.
 
 Support for AWS Quicksight may include:
 
@@ -39,7 +39,7 @@ New Resource(s):
 
 Issue: [#23160](https://github.com/hashicorp/terraform-provider-aws/issues/23160)
 
-_[AWS Recycle Bin](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/recycle-bin.html) is a data recovery feature that enables you to restore accidentally deleted Amazon EBS snapshots and EBS-backed AMIs. When using Recycle Bin, if your resources are deleted, they are retained in the Recycle Bin for a time period that you specify before being permanently deleted.
+[AWS Recycle Bin](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/recycle-bin.html) is a data recovery feature that enables you to restore accidentally deleted Amazon EBS snapshots and EBS-backed AMIs. When using Recycle Bin, if your resources are deleted, they are retained in the Recycle Bin for a time period that you specify before being permanently deleted.
 
 Support for AWS Recycle Bin may include:
 
@@ -51,7 +51,7 @@ New Resource(s):
 
 Issue: [#11901](https://github.com/hashicorp/terraform-provider-aws/issues/11901)
 
-You can easily integrate AWS Managed Microsoft AD with your existing AD by using AD trust relationships. Using trusts enables you to use your existing Active Directory to control which AD users can access your AWS resources.
+Easily integrate AWS Managed Microsoft AD with your existing AD by using AD trust relationships. Using trusts enables you to use your existing Active Directory to control which AD users can access your AWS resources.
 
 Support for AWS Director Service "Trust" may include:
 
