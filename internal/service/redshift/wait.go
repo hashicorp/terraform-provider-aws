@@ -217,7 +217,7 @@ func waitEndpointAccessDeleted(ctx context.Context, conn *redshift.Redshift, id 
 	return nil, err
 }
 
-func waitClusterSnapshotAvailable(ctx context.Context, conn *redshift.Redshift, id string) (*redshift.Snapshot, error) { //nolint:unparam
+func waitClusterSnapshotAvailable(ctx context.Context, conn *redshift.Redshift, id string) (*redshift.Snapshot, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"creating"},
 		Target:     []string{"available"},
@@ -238,7 +238,7 @@ func waitClusterSnapshotAvailable(ctx context.Context, conn *redshift.Redshift, 
 	return nil, err
 }
 
-func waitClusterSnapshotDeleted(ctx context.Context, conn *redshift.Redshift, id string) (*redshift.Snapshot, error) { //nolint:unparam
+func waitClusterSnapshotDeleted(ctx context.Context, conn *redshift.Redshift, id string) (*redshift.Snapshot, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"available"},
 		Target:     []string{},
