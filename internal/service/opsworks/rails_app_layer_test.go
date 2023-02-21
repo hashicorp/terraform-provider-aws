@@ -1,6 +1,7 @@
 package opsworks_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -15,6 +16,7 @@ import (
 )
 
 func TestAccOpsWorksRailsAppLayer_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v opsworks.Layer
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opsworks_rails_app_layer.test"
@@ -23,12 +25,12 @@ func TestAccOpsWorksRailsAppLayer_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRailsAppLayerDestroy,
+		CheckDestroy:             testAccCheckRailsAppLayerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRailsAppLayerConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLayerExists(resourceName, &v),
+					testAccCheckLayerExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "app_server", "apache_passenger"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "opsworks", regexp.MustCompile(`layer/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "auto_assign_elastic_ips", "false"),
@@ -70,6 +72,7 @@ func TestAccOpsWorksRailsAppLayer_basic(t *testing.T) {
 }
 
 func TestAccOpsWorksRailsAppLayer_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v opsworks.Layer
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opsworks_rails_app_layer.test"
@@ -78,13 +81,13 @@ func TestAccOpsWorksRailsAppLayer_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRailsAppLayerDestroy,
+		CheckDestroy:             testAccCheckRailsAppLayerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRailsAppLayerConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLayerExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfopsworks.ResourceRailsAppLayer(), resourceName),
+					testAccCheckLayerExists(ctx, resourceName, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfopsworks.ResourceRailsAppLayer(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -93,6 +96,7 @@ func TestAccOpsWorksRailsAppLayer_disappears(t *testing.T) {
 }
 
 func TestAccOpsWorksRailsAppLayer_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v opsworks.Layer
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opsworks_rails_app_layer.test"
@@ -101,12 +105,12 @@ func TestAccOpsWorksRailsAppLayer_tags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRailsAppLayerDestroy,
+		CheckDestroy:             testAccCheckRailsAppLayerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRailsAppLayerConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLayerExists(resourceName, &v),
+					testAccCheckLayerExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -114,7 +118,7 @@ func TestAccOpsWorksRailsAppLayer_tags(t *testing.T) {
 			{
 				Config: testAccRailsAppLayerConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLayerExists(resourceName, &v),
+					testAccCheckLayerExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -123,7 +127,7 @@ func TestAccOpsWorksRailsAppLayer_tags(t *testing.T) {
 			{
 				Config: testAccRailsAppLayerConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLayerExists(resourceName, &v),
+					testAccCheckLayerExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -133,6 +137,7 @@ func TestAccOpsWorksRailsAppLayer_tags(t *testing.T) {
 }
 
 func TestAccOpsWorksRailsAppLayer_tagsAlternateRegion(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v opsworks.Layer
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opsworks_rails_app_layer.test"
@@ -149,12 +154,12 @@ func TestAccOpsWorksRailsAppLayer_tagsAlternateRegion(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 2),
-		CheckDestroy:             testAccCheckRailsAppLayerDestroy,
+		CheckDestroy:             testAccCheckRailsAppLayerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRailsAppLayerConfig_tags1AlternateRegion(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLayerExists(resourceName, &v),
+					testAccCheckLayerExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -162,7 +167,7 @@ func TestAccOpsWorksRailsAppLayer_tagsAlternateRegion(t *testing.T) {
 			{
 				Config: testAccRailsAppLayerConfig_tags2AlternateRegion(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLayerExists(resourceName, &v),
+					testAccCheckLayerExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -171,7 +176,7 @@ func TestAccOpsWorksRailsAppLayer_tagsAlternateRegion(t *testing.T) {
 			{
 				Config: testAccRailsAppLayerConfig_tags1AlternateRegion(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLayerExists(resourceName, &v),
+					testAccCheckLayerExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -181,6 +186,7 @@ func TestAccOpsWorksRailsAppLayer_tagsAlternateRegion(t *testing.T) {
 }
 
 func TestAccOpsWorksRailsAppLayer_update(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v opsworks.Layer
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opsworks_rails_app_layer.test"
@@ -189,12 +195,12 @@ func TestAccOpsWorksRailsAppLayer_update(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRailsAppLayerDestroy,
+		CheckDestroy:             testAccCheckRailsAppLayerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRailsAppLayerConfig_allAttributes(rName, "nginx_unicorn", "1.12.5", false, "4.0.60", "2.6", "2.5.1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLayerExists(resourceName, &v),
+					testAccCheckLayerExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "app_server", "nginx_unicorn"),
 					resource.TestCheckResourceAttr(resourceName, "bundler_version", "1.12.5"),
 					resource.TestCheckResourceAttr(resourceName, "manage_bundler", "false"),
@@ -212,7 +218,7 @@ func TestAccOpsWorksRailsAppLayer_update(t *testing.T) {
 			{
 				Config: testAccRailsAppLayerConfig_allAttributes(rName, "apache_passenger", "1.15.4", true, "5.1.3", "2.3", "2.7.9"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLayerExists(resourceName, &v),
+					testAccCheckLayerExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "app_server", "apache_passenger"),
 					resource.TestCheckResourceAttr(resourceName, "bundler_version", "1.15.4"),
 					resource.TestCheckResourceAttr(resourceName, "manage_bundler", "true"),
@@ -227,6 +233,7 @@ func TestAccOpsWorksRailsAppLayer_update(t *testing.T) {
 }
 
 func TestAccOpsWorksRailsAppLayer_elb(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v opsworks.Layer
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opsworks_rails_app_layer.test"
@@ -235,12 +242,12 @@ func TestAccOpsWorksRailsAppLayer_elb(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRailsAppLayerDestroy,
+		CheckDestroy:             testAccCheckRailsAppLayerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRailsAppLayerConfig_elb(rName, 0),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLayerExists(resourceName, &v),
+					testAccCheckLayerExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "elastic_load_balancer", "aws_elb.test.0", "name"),
 				),
 			},
@@ -252,7 +259,7 @@ func TestAccOpsWorksRailsAppLayer_elb(t *testing.T) {
 			{
 				Config: testAccRailsAppLayerConfig_elb(rName, 1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLayerExists(resourceName, &v),
+					testAccCheckLayerExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "elastic_load_balancer", "aws_elb.test.1", "name"),
 				),
 			},
@@ -260,8 +267,10 @@ func TestAccOpsWorksRailsAppLayer_elb(t *testing.T) {
 	})
 }
 
-func testAccCheckRailsAppLayerDestroy(s *terraform.State) error {
-	return testAccCheckLayerDestroy("aws_opsworks_rails_app_layer", s)
+func testAccCheckRailsAppLayerDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		return testAccCheckLayerDestroy(ctx, "aws_opsworks_rails_app_layer", s)
+	}
 }
 
 func testAccRailsAppLayerConfig_basic(rName string) string {

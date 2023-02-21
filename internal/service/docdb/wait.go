@@ -210,7 +210,7 @@ func waitEventSubscriptionActive(ctx context.Context, conn *docdb.DocDB, id stri
 		Timeout: timeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*docdb.EventSubscription); ok {
 		return output, err
@@ -227,7 +227,7 @@ func waitEventSubscriptionDeleted(ctx context.Context, conn *docdb.DocDB, id str
 		Timeout: timeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*docdb.EventSubscription); ok {
 		return output, err

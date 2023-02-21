@@ -25,7 +25,7 @@ func ResourceEndpointGroup() *schema.Resource {
 		DeleteWithoutTimeout: resourceEndpointGroupDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{

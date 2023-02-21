@@ -61,7 +61,7 @@ func resourceGroup() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Default:      0,
-				ValidateFunc: validation.IntInSlice([]int{0, 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827, 2192, 2557, 2922, 3288, 3653}),
+				ValidateFunc: validation.IntInSlice([]int{0, 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1096, 1827, 2192, 2557, 2922, 3288, 3653}),
 			},
 			"skip_destroy": {
 				Type:     schema.TypeBool,
@@ -103,10 +103,14 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	d.SetId(name)
 
 	if v, ok := d.GetOk("retention_in_days"); ok {
-		_, err := conn.PutRetentionPolicyWithContext(ctx, &cloudwatchlogs.PutRetentionPolicyInput{
+		input := &cloudwatchlogs.PutRetentionPolicyInput{
 			LogGroupName:    aws.String(d.Id()),
 			RetentionInDays: aws.Int64(int64(v.(int))),
-		})
+		}
+
+		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+			return conn.PutRetentionPolicyWithContext(ctx, input)
+		}, "AccessDeniedException", "no identity-based policy allows the logs:PutRetentionPolicy action")
 
 		if err != nil {
 			return diag.Errorf("setting CloudWatch Logs Log Group (%s) retention policy: %s", d.Id(), err)
@@ -139,7 +143,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(lg.LogGroupName)))
 	d.Set("retention_in_days", lg.RetentionInDays)
 
-	tags, err := ListLogGroupTagsWithContext(ctx, conn, d.Id())
+	tags, err := ListLogGroupTags(ctx, conn, d.Id())
 
 	if err != nil {
 		return diag.Errorf("listing tags for CloudWatch Logs Log Group (%s): %s", d.Id(), err)
@@ -164,10 +168,14 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if d.HasChange("retention_in_days") {
 		if v, ok := d.GetOk("retention_in_days"); ok {
-			_, err := conn.PutRetentionPolicyWithContext(ctx, &cloudwatchlogs.PutRetentionPolicyInput{
+			input := &cloudwatchlogs.PutRetentionPolicyInput{
 				LogGroupName:    aws.String(d.Id()),
 				RetentionInDays: aws.Int64(int64(v.(int))),
-			})
+			}
+
+			_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+				return conn.PutRetentionPolicyWithContext(ctx, input)
+			}, "AccessDeniedException", "no identity-based policy allows the logs:PutRetentionPolicy action")
 
 			if err != nil {
 				return diag.Errorf("setting CloudWatch Logs Log Group (%s) retention policy: %s", d.Id(), err)
@@ -207,7 +215,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateLogGroupTagsWithContext(ctx, conn, d.Id(), o, n); err != nil {
+		if err := UpdateLogGroupTags(ctx, conn, d.Id(), o, n); err != nil {
 			return diag.Errorf("updating CloudWatch Logs Log Group (%s) tags: %s", d.Id(), err)
 		}
 	}

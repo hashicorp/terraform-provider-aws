@@ -214,7 +214,7 @@ func resourceSiteUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTagsWithContext(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.Errorf("error updating Network Manager Site (%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -228,7 +228,7 @@ func resourceSiteDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	globalNetworkID := d.Get("global_network_id").(string)
 
 	log.Printf("[DEBUG] Deleting Network Manager Site: %s", d.Id())
-	_, err := tfresource.RetryWhenContext(ctx, siteValidationExceptionTimeout,
+	_, err := tfresource.RetryWhen(ctx, siteValidationExceptionTimeout,
 		func() (interface{}, error) {
 			return conn.DeleteSiteWithContext(ctx, &networkmanager.DeleteSiteInput{
 				GlobalNetworkId: aws.String(globalNetworkID),

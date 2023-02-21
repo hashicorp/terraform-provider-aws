@@ -1,4 +1,4 @@
-//go:generate go run ../../generate/tags/main.go -ServiceTagsMap -TagInIDElem=Resource -UpdateTags
+//go:generate go run ../../generate/tags/main.go -ServiceTagsMap -TagInIDElem=Resource -UpdateTags -ContextOnly
 // ONLY generate directives and package declaration! Do not add anything else to this file.
 
 package lambda

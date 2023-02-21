@@ -25,13 +25,13 @@ func FindCompositeAlarmByName(ctx context.Context, conn *cloudwatch.CloudWatch, 
 	return output.CompositeAlarms[0], nil
 }
 
-func FindMetricAlarmByName(conn *cloudwatch.CloudWatch, name string) (*cloudwatch.MetricAlarm, error) {
+func FindMetricAlarmByName(ctx context.Context, conn *cloudwatch.CloudWatch, name string) (*cloudwatch.MetricAlarm, error) {
 	input := cloudwatch.DescribeAlarmsInput{
 		AlarmNames: []*string{aws.String(name)},
 		AlarmTypes: aws.StringSlice([]string{cloudwatch.AlarmTypeMetricAlarm}),
 	}
 
-	output, err := conn.DescribeAlarms(&input)
+	output, err := conn.DescribeAlarmsWithContext(ctx, &input)
 	if err != nil {
 		return nil, err
 	}

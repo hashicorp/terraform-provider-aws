@@ -654,6 +654,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			"aws_alb_listener":      elbv2.DataSourceListener(),
 			"aws_alb_target_group":  elbv2.DataSourceTargetGroup(),
 			"aws_lb":                elbv2.DataSourceLoadBalancer(),
+			"aws_lbs":               elbv2.DataSourceLoadBalancers(),
 			"aws_lb_hosted_zone_id": elbv2.DataSourceHostedZoneID(),
 			"aws_lb_listener":       elbv2.DataSourceListener(),
 			"aws_lb_target_group":   elbv2.DataSourceTargetGroup(),
@@ -795,11 +796,13 @@ func New(ctx context.Context) (*schema.Provider, error) {
 
 			"aws_opensearch_domain": opensearch.DataSourceDomain(),
 
-			"aws_organizations_delegated_administrators": organizations.DataSourceDelegatedAdministrators(),
-			"aws_organizations_delegated_services":       organizations.DataSourceDelegatedServices(),
-			"aws_organizations_organization":             organizations.DataSourceOrganization(),
-			"aws_organizations_organizational_units":     organizations.DataSourceOrganizationalUnits(),
-			"aws_organizations_resource_tags":            organizations.DataSourceResourceTags(),
+			"aws_organizations_delegated_administrators":                organizations.DataSourceDelegatedAdministrators(),
+			"aws_organizations_delegated_services":                      organizations.DataSourceDelegatedServices(),
+			"aws_organizations_organization":                            organizations.DataSourceOrganization(),
+			"aws_organizations_organizational_units":                    organizations.DataSourceOrganizationalUnits(),
+			"aws_organizations_organizational_unit_child_accounts":      organizations.DataSourceOrganizationalUnitChildAccounts(),
+			"aws_organizations_organizational_unit_descendant_accounts": organizations.DataSourceOrganizationalUnitDescendantAccounts(),
+			"aws_organizations_resource_tags":                           organizations.DataSourceResourceTags(),
 
 			"aws_outposts_asset":                  outposts.DataSourceOutpostAsset(),
 			"aws_outposts_assets":                 outposts.DataSourceOutpostAssets(),
@@ -1248,6 +1251,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			"aws_datasync_location_fsx_windows_file_system": datasync.ResourceLocationFSxWindowsFileSystem(),
 			"aws_datasync_location_hdfs":                    datasync.ResourceLocationHDFS(),
 			"aws_datasync_location_nfs":                     datasync.ResourceLocationNFS(),
+			"aws_datasync_location_object_storage":          datasync.ResourceLocationObjectStorage(),
 			"aws_datasync_location_s3":                      datasync.ResourceLocationS3(),
 			"aws_datasync_location_smb":                     datasync.ResourceLocationSMB(),
 			"aws_datasync_task":                             datasync.ResourceTask(),
@@ -1347,6 +1351,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			"aws_ec2_client_vpn_route":                             ec2.ResourceClientVPNRoute(),
 			"aws_ec2_fleet":                                        ec2.ResourceFleet(),
 			"aws_ec2_host":                                         ec2.ResourceHost(),
+			"aws_ec2_instance_state":                               ec2.ResourceInstanceState(),
 			"aws_ec2_local_gateway_route":                          ec2.ResourceLocalGatewayRoute(),
 			"aws_ec2_local_gateway_route_table_vpc_association":    ec2.ResourceLocalGatewayRouteTableVPCAssociation(),
 			"aws_ec2_managed_prefix_list":                          ec2.ResourceManagedPrefixList(),
@@ -1425,6 +1430,8 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			"aws_vpc_ipam_pool_cidr_allocation":                    ec2.ResourceIPAMPoolCIDRAllocation(),
 			"aws_vpc_ipam_pool_cidr":                               ec2.ResourceIPAMPoolCIDR(),
 			"aws_vpc_ipam_preview_next_cidr":                       ec2.ResourceIPAMPreviewNextCIDR(),
+			"aws_vpc_ipam_resource_discovery_association":          ec2.ResourceIPAMResourceDiscoveryAssociation(),
+			"aws_vpc_ipam_resource_discovery":                      ec2.ResourceIPAMResourceDiscovery(),
 			"aws_vpc_ipam_scope":                                   ec2.ResourceIPAMScope(),
 			"aws_vpc_ipv4_cidr_block_association":                  ec2.ResourceVPCIPv4CIDRBlockAssociation(),
 			"aws_vpc_ipv6_cidr_block_association":                  ec2.ResourceVPCIPv6CIDRBlockAssociation(),
@@ -1529,6 +1536,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			"aws_emrserverless_application": emrserverless.ResourceApplication(),
 
 			"aws_evidently_feature": evidently.ResourceFeature(),
+			"aws_evidently_launch":  evidently.ResourceLaunch(),
 			"aws_evidently_project": evidently.ResourceProject(),
 			"aws_evidently_segment": evidently.ResourceSegment(),
 
@@ -1598,7 +1606,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			"aws_guardduty_organization_admin_account": guardduty.ResourceOrganizationAdminAccount(),
 			"aws_guardduty_organization_configuration": guardduty.ResourceOrganizationConfiguration(),
 			"aws_guardduty_publishing_destination":     guardduty.ResourcePublishingDestination(),
-			"aws_guardduty_threatintelset":             guardduty.ResourceThreatintelset(),
+			"aws_guardduty_threatintelset":             guardduty.ResourceThreatIntelSet(),
 
 			"aws_iam_access_key":                  iam.ResourceAccessKey(),
 			"aws_iam_account_alias":               iam.ResourceAccountAlias(),
@@ -1733,6 +1741,8 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			"aws_licensemanager_association":           licensemanager.ResourceAssociation(),
 			"aws_licensemanager_license_configuration": licensemanager.ResourceLicenseConfiguration(),
 
+			"aws_lightsail_bucket":                               lightsail.ResourceBucket(),
+			"aws_lightsail_bucket_access_key":                    lightsail.ResourceBucketAccessKey(),
 			"aws_lightsail_certificate":                          lightsail.ResourceCertificate(),
 			"aws_lightsail_container_service":                    lightsail.ResourceContainerService(),
 			"aws_lightsail_container_service_deployment_version": lightsail.ResourceContainerServiceDeploymentVersion(),
@@ -1816,6 +1826,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			"aws_networkmanager_connect_attachment":                       networkmanager.ResourceConnectAttachment(),
 			"aws_networkmanager_connection":                               networkmanager.ResourceConnection(),
 			"aws_networkmanager_core_network":                             networkmanager.ResourceCoreNetwork(),
+			"aws_networkmanager_core_network_policy_attachment":           networkmanager.ResourceCoreNetworkPolicyAttachment(),
 			"aws_networkmanager_customer_gateway_association":             networkmanager.ResourceCustomerGatewayAssociation(),
 			"aws_networkmanager_device":                                   networkmanager.ResourceDevice(),
 			"aws_networkmanager_global_network":                           networkmanager.ResourceGlobalNetwork(),
@@ -2030,7 +2041,6 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			"aws_sagemaker_workforce":                                 sagemaker.ResourceWorkforce(),
 			"aws_sagemaker_workteam":                                  sagemaker.ResourceWorkteam(),
 
-			"aws_scheduler_schedule":       scheduler.ResourceSchedule(),
 			"aws_scheduler_schedule_group": scheduler.ResourceScheduleGroup(),
 
 			"aws_schemas_discoverer":      schemas.ResourceDiscoverer(),
@@ -2095,6 +2105,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			"aws_ses_template":                     ses.ResourceTemplate(),
 
 			"aws_sesv2_configuration_set":                   sesv2.ResourceConfigurationSet(),
+			"aws_sesv2_configuration_set_event_destination": sesv2.ResourceConfigurationSetEventDestination(),
 			"aws_sesv2_dedicated_ip_assignment":             sesv2.ResourceDedicatedIPAssignment(),
 			"aws_sesv2_dedicated_ip_pool":                   sesv2.ResourceDedicatedIPPool(),
 			"aws_sesv2_email_identity":                      sesv2.ResourceEmailIdentity(),
@@ -2138,6 +2149,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 
 			"aws_ssoadmin_account_assignment":                 ssoadmin.ResourceAccountAssignment(),
 			"aws_ssoadmin_customer_managed_policy_attachment": ssoadmin.ResourceCustomerManagedPolicyAttachment(),
+			"aws_ssoadmin_instance_access_control_attributes": ssoadmin.ResourceAccessControlAttributes(),
 			"aws_ssoadmin_managed_policy_attachment":          ssoadmin.ResourceManagedPolicyAttachment(),
 			"aws_ssoadmin_permission_set":                     ssoadmin.ResourcePermissionSet(),
 			"aws_ssoadmin_permission_set_inline_policy":       ssoadmin.ResourcePermissionSetInlinePolicy(),
@@ -2292,9 +2304,14 @@ func New(ctx context.Context) (*schema.Provider, error) {
 	// Set the provider Meta (instance data) here.
 	// It will be overwritten by the result of the call to ConfigureContextFunc,
 	// but can be used pre-configuration by other (non-primary) provider servers.
-	provider.SetMeta(&conns.AWSClient{
-		ServicePackages: servicePackages,
-	})
+	var meta *conns.AWSClient
+	if v, ok := provider.Meta().(*conns.AWSClient); ok {
+		meta = v
+	} else {
+		meta = new(conns.AWSClient)
+	}
+	meta.ServicePackages = servicePackages
+	provider.SetMeta(meta)
 
 	return provider, nil
 }
@@ -2390,7 +2407,13 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 		}
 	}
 
-	meta, diags := config.ConfigureProvider(ctx, provider.Meta().(*conns.AWSClient))
+	var meta *conns.AWSClient
+	if v, ok := provider.Meta().(*conns.AWSClient); ok {
+		meta = v
+	} else {
+		meta = new(conns.AWSClient)
+	}
+	meta, diags := config.ConfigureProvider(ctx, meta)
 
 	if diags.HasError() {
 		return nil, diags

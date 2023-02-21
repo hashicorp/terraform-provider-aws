@@ -5,6 +5,8 @@ import (
 )
 
 func TestValidPlacementConstraint(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		constType string
 		constExpr string
@@ -41,6 +43,8 @@ func TestValidPlacementConstraint(t *testing.T) {
 }
 
 func TestValidPlacementStrategy(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		stratType  string
 		stratField string

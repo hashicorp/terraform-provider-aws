@@ -3,9 +3,13 @@ package guardduty_test
 import (
 	"os"
 	"testing"
+
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccGuardDuty_serial(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]map[string]func(t *testing.T){
 		"Detector": {
 			"basic":                             testAccDetector_basic,
@@ -40,8 +44,8 @@ func TestAccGuardDuty_serial(t *testing.T) {
 			"malwareProtection": testAccOrganizationConfiguration_malwareprotection,
 		},
 		"ThreatIntelSet": {
-			"basic": testAccThreatintelset_basic,
-			"tags":  testAccThreatintelset_tags,
+			"basic": testAccThreatIntelSet_basic,
+			"tags":  testAccThreatIntelSet_tags,
 		},
 		"Member": {
 			"basic":              testAccMember_basic,
@@ -55,17 +59,7 @@ func TestAccGuardDuty_serial(t *testing.T) {
 		},
 	}
 
-	for group, m := range testCases {
-		m := m
-		t.Run(group, func(t *testing.T) {
-			for name, tc := range m {
-				tc := tc
-				t.Run(name, func(t *testing.T) {
-					tc(t)
-				})
-			}
-		})
-	}
+	acctest.RunSerialTests2Levels(t, testCases, 0)
 }
 
 func testAccMemberFromEnv(t *testing.T) (string, string) {

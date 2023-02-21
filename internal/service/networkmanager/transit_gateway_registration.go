@@ -26,7 +26,7 @@ func ResourceTransitGatewayRegistration() *schema.Resource {
 		DeleteWithoutTimeout: resourceTransitGatewayRegistrationDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{

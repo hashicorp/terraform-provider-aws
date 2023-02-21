@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccServiceDiscoveryHTTPNamespaceDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_service_discovery_http_namespace.test"
 	resourceName := "aws_service_discovery_http_namespace.test"
@@ -19,7 +20,7 @@ func TestAccServiceDiscoveryHTTPNamespaceDataSource_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t)
-			testAccPreCheck(t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, servicediscovery.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

@@ -10,6 +10,8 @@ import (
 )
 
 func TestValid4ByteASNString(t *testing.T) {
+	t.Parallel()
+
 	validAsns := []string{
 		"0",
 		"1",
@@ -40,61 +42,9 @@ func TestValid4ByteASNString(t *testing.T) {
 	}
 }
 
-func TestValidTypeStringNullableBoolean(t *testing.T) {
-	testCases := []struct {
-		val         interface{}
-		expectedErr *regexp.Regexp
-	}{
-		{
-			val: "",
-		},
-		{
-			val: "0",
-		},
-		{
-			val: "1",
-		},
-		{
-			val: "true",
-		},
-		{
-			val: "false",
-		},
-		{
-			val:         "invalid",
-			expectedErr: regexp.MustCompile(`to be one of \["", false, true\]`),
-		},
-	}
-
-	matchErr := func(errs []error, r *regexp.Regexp) bool {
-		// err must match one provided
-		for _, err := range errs {
-			if r.MatchString(err.Error()) {
-				return true
-			}
-		}
-
-		return false
-	}
-
-	for i, tc := range testCases {
-		_, errs := ValidTypeStringNullableBoolean(tc.val, "test_property")
-
-		if len(errs) == 0 && tc.expectedErr == nil {
-			continue
-		}
-
-		if len(errs) != 0 && tc.expectedErr == nil {
-			t.Fatalf("expected test case %d to produce no errors, got %v", i, errs)
-		}
-
-		if !matchErr(errs, tc.expectedErr) {
-			t.Fatalf("expected test case %d to produce error matching \"%s\", got %v", i, tc.expectedErr, errs)
-		}
-	}
-}
-
 func TestValidTypeStringNullableFloat(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		val         interface{}
 		expectedErr *regexp.Regexp
@@ -146,6 +96,8 @@ func TestValidTypeStringNullableFloat(t *testing.T) {
 }
 
 func TestValidAccountID(t *testing.T) {
+	t.Parallel()
+
 	validNames := []string{
 		"123456789012",
 		"999999999999",
@@ -172,6 +124,8 @@ func TestValidAccountID(t *testing.T) {
 }
 
 func TestValidARN(t *testing.T) {
+	t.Parallel()
+
 	v := ""
 	_, errors := ValidARN(v, "arn")
 	if len(errors) != 0 {
@@ -182,6 +136,7 @@ func TestValidARN(t *testing.T) {
 		"arn:aws:elasticbeanstalk:us-east-1:123456789012:environment/My App/MyEnvironment", // lintignore:AWSAT003,AWSAT005 // Beanstalk
 		"arn:aws:iam::123456789012:user/David",                                             // lintignore:AWSAT005          // IAM User
 		"arn:aws:iam::aws:policy/CloudWatchReadOnlyAccess",                                 // lintignore:AWSAT005          // Managed IAM policy
+		"arn:aws:imagebuilder:us-east-1:third-party:component/my-component",                // lintignore:AWSAT003,AWSAT005 // ImageBuilder Third Party
 		"arn:aws:rds:eu-west-1:123456789012:db:mysql-db",                                   // lintignore:AWSAT003,AWSAT005 // RDS
 		"arn:aws:s3:::my_corporate_bucket/exampleobject.png",                               // lintignore:AWSAT005          // S3 object
 		"arn:aws:events:us-east-1:319201112229:rule/rule_name",                             // lintignore:AWSAT003,AWSAT005 // CloudWatch Rule
@@ -219,6 +174,8 @@ func TestValidARN(t *testing.T) {
 }
 
 func TestValidateCIDRBlock(t *testing.T) {
+	t.Parallel()
+
 	for _, ts := range []struct {
 		cidr  string
 		valid bool
@@ -243,6 +200,8 @@ func TestValidateCIDRBlock(t *testing.T) {
 }
 
 func TestValidCIDRNetworkAddress(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		CIDR              string
 		ExpectedErrSubstr string
@@ -275,6 +234,8 @@ func TestValidCIDRNetworkAddress(t *testing.T) {
 }
 
 func TestValidIPv4CIDRBlock(t *testing.T) {
+	t.Parallel()
+
 	for _, ts := range []struct {
 		cidr  string
 		valid bool
@@ -298,6 +259,8 @@ func TestValidIPv4CIDRBlock(t *testing.T) {
 }
 
 func TestValidIPv6CIDRBlock(t *testing.T) {
+	t.Parallel()
+
 	for _, ts := range []struct {
 		cidr  string
 		valid bool
@@ -322,6 +285,8 @@ func TestValidIPv6CIDRBlock(t *testing.T) {
 }
 
 func TestIsIPv4CIDRBlockOrIPv6CIDRBlock(t *testing.T) {
+	t.Parallel()
+
 	validator := IsIPv4CIDRBlockOrIPv6CIDRBlock(
 		validation.IsCIDRNetwork(16, 24),
 		validation.IsCIDRNetwork(40, 64),
@@ -365,6 +330,8 @@ func TestIsIPv4CIDRBlockOrIPv6CIDRBlock(t *testing.T) {
 }
 
 func TestValidIAMPolicyJSONString(t *testing.T) {
+	t.Parallel()
+
 	type testCases struct {
 		Value    string
 		ErrCount int
@@ -424,6 +391,8 @@ func TestValidIAMPolicyJSONString(t *testing.T) {
 }
 
 func TestValidStringIsJSONOrYAML(t *testing.T) {
+	t.Parallel()
+
 	type testCases struct {
 		Value    string
 		ErrCount int
@@ -467,6 +436,8 @@ func TestValidStringIsJSONOrYAML(t *testing.T) {
 }
 
 func TestValidOnceAWeekWindowFormat(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Value    string
 		ErrCount int
@@ -518,6 +489,8 @@ func TestValidOnceAWeekWindowFormat(t *testing.T) {
 }
 
 func TestValidOnceADayWindowFormat(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Value    string
 		ErrCount int
@@ -559,6 +532,8 @@ func TestValidOnceADayWindowFormat(t *testing.T) {
 }
 
 func TestValidLaunchTemplateName(t *testing.T) {
+	t.Parallel()
+
 	validNames := []string{
 		"fooBAR123",
 		"(./_)",
@@ -600,6 +575,8 @@ func TestValidLaunchTemplateName(t *testing.T) {
 }
 
 func TestValidLaunchTemplateID(t *testing.T) {
+	t.Parallel()
+
 	validIds := []string{
 		"lt-foobar123456",
 	}
@@ -624,6 +601,8 @@ func TestValidLaunchTemplateID(t *testing.T) {
 }
 
 func TestValidUTCTimestamp(t *testing.T) {
+	t.Parallel()
+
 	validT := []string{
 		"2006-01-02T15:04:05Z",
 	}
@@ -650,6 +629,8 @@ func TestValidUTCTimestamp(t *testing.T) {
 }
 
 func TestValidateTypeStringIsDateOrInt(t *testing.T) {
+	t.Parallel()
+
 	validT := []string{
 		"2006-01-02T15:04:05Z",
 		"2006-01-02T15:04:05-07:00",
@@ -679,6 +660,8 @@ func TestValidateTypeStringIsDateOrInt(t *testing.T) {
 }
 
 func TestFloatGreaterThan(t *testing.T) {
+	t.Parallel()
+
 	cases := map[string]struct {
 		Value                  interface{}
 		ValidateFunc           schema.SchemaValidateFunc

@@ -57,23 +57,13 @@ resource "aws_autoscaling_policy" "example" {
           expression = "SUM(SEARCH('{AWS/EC2,AutoScalingGroupName} MetricName=\"CPUUtilization\" my-test-asg', 'Sum', 3600))"
         }
       }
-      customized_scaling_metric_specification {
+      customized_capacity_metric_specification {
         metric_data_queries {
-          id = "scaling"
-          metric_stat {
-            metric {
-              metric_name = "CPUUtilization"
-              namespace   = "AWS/EC2"
-              dimensions {
-                name  = "AutoScalingGroupName"
-                value = "my-test-asg"
-              }
-            }
-            stat = "Average"
-          }
+          id         = "capacity_sum"
+          expression = "SUM(SEARCH('{AWS/AutoScaling,AutoScalingGroupName} MetricName=\"GroupInServiceIntances\" my-test-asg', 'Average', 300))"
         }
       }
-      customized_capacity_metric_specification {
+      customized_scaling_metric_specification {
         metric_data_queries {
           id          = "capacity_sum"
           expression  = "SUM(SEARCH('{AWS/AutoScaling,AutoScalingGroupName} MetricName=\"GroupInServiceIntances\" my-test-asg', 'Average', 300))"
@@ -86,7 +76,7 @@ resource "aws_autoscaling_policy" "example" {
         }
         metric_data_queries {
           id         = "weighted_average"
-          expression = "load_sum / capacity_sum"
+          expression = "load_sum / (capacity_sum * PERIOD(capacity_sum) / 60)"
         }
       }
     }

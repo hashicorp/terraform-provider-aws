@@ -19,15 +19,19 @@ func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 }
 
 func TestAccOrganizations_serial(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]map[string]func(t *testing.T){
 		"Organization": {
-			"basic":                      testAccOrganization_basic,
-			"AwsServiceAccessPrincipals": testAccOrganization_serviceAccessPrincipals,
-			"EnabledPolicyTypes":         testAccOrganization_EnabledPolicyTypes,
-			"FeatureSet_Basic":           testAccOrganization_FeatureSet,
-			"FeatureSet_Update":          testAccOrganization_FeatureSetUpdate,
-			"FeatureSet_ForcesNew":       testAccOrganization_FeatureSetForcesNew,
-			"DataSource":                 testAccOrganizationDataSource_basic,
+			"basic":                        testAccOrganization_basic,
+			"AwsServiceAccessPrincipals":   testAccOrganization_serviceAccessPrincipals,
+			"EnabledPolicyTypes":           testAccOrganization_EnabledPolicyTypes,
+			"FeatureSet_Basic":             testAccOrganization_FeatureSet,
+			"FeatureSet_Update":            testAccOrganization_FeatureSetUpdate,
+			"FeatureSet_ForcesNew":         testAccOrganization_FeatureSetForcesNew,
+			"DataSource":                   testAccOrganizationDataSource_basic,
+			"ChildAccountsDataSource":      testAccOrganizationalUnitChildAccountsDataSource_basic,
+			"DescendantAccountsDataSource": testAccOrganizationalUnitDescendantAccountsDataSource_basic,
 		},
 		"Account": {
 			"basic":           testAccAccount_basic,
@@ -72,15 +76,5 @@ func TestAccOrganizations_serial(t *testing.T) {
 		},
 	}
 
-	for group, m := range testCases {
-		m := m
-		t.Run(group, func(t *testing.T) {
-			for name, tc := range m {
-				tc := tc
-				t.Run(name, func(t *testing.T) {
-					tc(t)
-				})
-			}
-		})
-	}
+	acctest.RunSerialTests2Levels(t, testCases, 0)
 }

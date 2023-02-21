@@ -15,7 +15,7 @@ Creating this resource will also create a resource of type [`aws_secretsmanager_
 ~> **Note:** All arguments including `ckn` and `cak` will be stored in the raw state as plain-text.
 [Read more about sensitive data in state](https://www.terraform.io/docs/state/sensitive-data.html).
 
-~> **Note:** The `secret_arn` argument can only be used to reference a previously created MACSec key. You cannot associate a Secrets Manager secret created outside of the `aws_dx_macsec_key` resource.
+~> **Note:** The `secret_arn` argument can only be used to reference a previously created MACSec key. You cannot associate a Secrets Manager secret created outside of the `aws_dx_macsec_key_association` resource.
 
 ## Example Usage
 

@@ -35,7 +35,7 @@ func ResourceWebACL() *schema.Resource {
 		DeleteWithoutTimeout: resourceWebACLDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "/")
 				if len(idParts) != 3 || idParts[0] == "" || idParts[1] == "" || idParts[2] == "" {
 					return nil, fmt.Errorf("Unexpected format of ID (%q), expected ID/NAME/SCOPE", d.Id())
@@ -175,8 +175,7 @@ func resourceWebACLCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	log.Printf("[INFO] Creating WAFv2 WebACL: %s", input)
-	outputRaw, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, webACLCreateTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, webACLCreateTimeout, func() (interface{}, error) {
 		return conn.CreateWebACLWithContext(ctx, input)
 	}, wafv2.ErrCodeWAFUnavailableEntityException)
 
@@ -228,7 +227,7 @@ func resourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return diag.Errorf("setting visibility_config: %s", err)
 	}
 
-	tags, err := ListTagsWithContext(ctx, conn, arn)
+	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
 		return diag.Errorf("listing tags for WAFv2 WebACL (%s): %s", arn, err)
@@ -270,8 +269,7 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			input.Description = aws.String(v.(string))
 		}
 
-		log.Printf("[INFO] Updating WAFv2 WebACL: %s", input)
-		_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, webACLUpdateTimeout, func() (interface{}, error) {
+		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, webACLUpdateTimeout, func() (interface{}, error) {
 			return conn.UpdateWebACLWithContext(ctx, input)
 		}, wafv2.ErrCodeWAFUnavailableEntityException)
 
@@ -288,7 +286,7 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		o, n := d.GetChange("tags_all")
 		arn := d.Get("arn").(string)
 
-		if err := UpdateTagsWithContext(ctx, conn, arn, o, n); err != nil {
+		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
 			return diag.Errorf("updating tags for WAFv2 WebACL (%s): %s", arn, err)
 		}
 	}
@@ -307,7 +305,7 @@ func resourceWebACLDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	log.Printf("[INFO] Deleting WAFv2 WebACL: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrCodeEqualsContext(ctx, webACLDeleteTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, webACLDeleteTimeout, func() (interface{}, error) {
 		return conn.DeleteWebACLWithContext(ctx, input)
 	}, wafv2.ErrCodeWAFAssociatedItemException, wafv2.ErrCodeWAFUnavailableEntityException)
 
