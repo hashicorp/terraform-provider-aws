@@ -1,0 +1,2 @@
+```release-note:note
+resource/aws_eks_addon: The resolve_conflicts attribute is being deprecated in favour of separate resolve_conflicts_on_create and resolve_conflicts_on_update attributes
