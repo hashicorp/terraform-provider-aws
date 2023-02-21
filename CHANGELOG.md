@@ -1,5 +1,11 @@
 ## 4.56.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* resource/aws_lb_ssl_negotiation_policy: Add `trigger` attribute to force resource redeployment ([#29482](https://github.com/hashicorp/terraform-provider-aws/issues/29482))
+* resource/aws_load_balancer_listener_policy: Add `trigger` attribute to force resource updates ([#29482](https://github.com/hashicorp/terraform-provider-aws/issues/29482))
+* resource/aws_sns_topic: Add `signature_version` and `tracing_config` arguments ([#29462](https://github.com/hashicorp/terraform-provider-aws/issues/29462))
+
 BUG FIXES:
 
 * resource/aws_medialive_channel: Fix setting of `m2ts_settings` `arib_captions_pid` and `arib_captions_pid_control` attributes ([#29467](https://github.com/hashicorp/terraform-provider-aws/issues/29467))
