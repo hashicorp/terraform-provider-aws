@@ -40,7 +40,7 @@ const (
 	SchedulerEndpointID            = "scheduler"
 	SESV2EndpointID                = "sesv2"
 	SSMEndpointID                  = "ssm"
-	SSMContactsEndpointId		   = "ssm-contacts"
+	SSMContactsEndpointId          = "ssm-contacts"
 	TranscribeEndpointID           = "transcribe"
 )
 
