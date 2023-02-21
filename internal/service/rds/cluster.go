@@ -475,6 +475,10 @@ func ResourceCluster() *schema.Resource {
 					"global_cluster_identifier",
 				},
 				ForceNew: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					// allow snapshot_idenfitier to be removed without forcing re-creation
+					return new == ""
+				},
 			},
 			"source_region": {
 				Type:     schema.TypeString,
