@@ -24,17 +24,15 @@ resource "aws_eks_addon" "example" {
 }
 ```
 
-## Example Update add-on usage with resolve_conflicts and PRESERVE
-`resolve_conflicts` with `PRESERVE` can be used to retain the config changes applied to the add-on with kubectl while upgrading to a newer version of the add-on.
-
-~> **Note:** `resolve_conflicts` with `PRESERVE` can only be used for upgrading the add-ons but not during the creation of add-on.
+## Example Update add-on usage with resolve_conflicts_on_update and PRESERVE
+`resolve_conflicts_on_update` with `PRESERVE` can be used to retain the config changes applied to the add-on with kubectl while upgrading to a newer version of the add-on.
 
 ```terraform
 resource "aws_eks_addon" "example" {
-  cluster_name      = aws_eks_cluster.example.name
-  addon_name        = "coredns"
-  addon_version     = "v1.8.7-eksbuild.3" #e.g., previous version v1.8.7-eksbuild.2 and the new version is v1.8.7-eksbuild.3
-  resolve_conflicts = "PRESERVE"
+  cluster_name                = aws_eks_cluster.example.name
+  addon_name                  = "coredns"
+  addon_version               = "v1.8.7-eksbuild.3" #e.g., previous version v1.8.7-eksbuild.2 and the new version is v1.8.7-eksbuild.3
+  resolve_conflicts_on_update = "PRESERVE"
 }
 ```
 
@@ -56,11 +54,24 @@ Example to create a `coredns` managed addon with custom `configuration_values`.
 
 ```terraform
 resource "aws_eks_addon" "example" {
-  cluster_name         = "mycluster"
-  addon_name           = "coredns"
-  addon_version        = "v1.8.7-eksbuild.3"
-  resolve_conflicts    = "OVERWRITE"
-  configuration_values = "{\"replicaCount\":4,\"resources\":{\"limits\":{\"cpu\":\"100m\",\"memory\":\"150Mi\"},\"requests\":{\"cpu\":\"100m\",\"memory\":\"150Mi\"}}}"
+  cluster_name                = "mycluster"
+  addon_name                  = "coredns"
+  addon_version               = "v1.8.7-eksbuild.3"
+  resolve_conflicts_on_create = "OVERWRITE"
+
+  configuration_values = jsonencode({
+    replicaCount = 4
+    resources = {
+      limits = {
+        cpu    = "100m"
+        memory = "150Mi"
+      }
+      requests = {
+        cpu    = "100m"
+        memory = "150Mi"
+      }
+    }
+  })
 }
 ```
 
@@ -123,9 +134,9 @@ The following arguments are optional:
 * `addon_version` – (Optional) The version of the EKS add-on. The version must
   match one of the versions returned by [describe-addon-versions](https://docs.aws.amazon.com/cli/latest/reference/eks/describe-addon-versions.html).
 * `configuration_values` - (Optional) custom configuration values for addons with single JSON string. This JSON string value must match the JSON schema derived from [describe-addon-configuration](https://docs.aws.amazon.com/cli/latest/reference/eks/describe-addon-configuration.html).
-* `resolve_conflicts` - (Optional) Define how to resolve parameter value conflicts
-  when migrating an existing add-on to an Amazon EKS add-on or when applying
-  version updates to the add-on. Valid values are `NONE`, `OVERWRITE` and `PRESERVE`. For more details check [UpdateAddon](https://docs.aws.amazon.com/eks/latest/APIReference/API_UpdateAddon.html) API Docs.
+* `resolve_conflicts_on_create` - (Optional) How to resolve field value conflicts when migrating a self-managed add-on to an Amazon EKS add-on. Valid values are `NONE` and `OVERWRITE`. For more details see the [CreateAddon](https://docs.aws.amazon.com/eks/latest/APIReference/API_CreateAddon.html) API Docs.
+* `resolve_conflicts_on_update` - (Optional) How to resolve field value conflicts for an Amazon EKS add-on if you've changed a value from the Amazon EKS default value. Valid values are `NONE` and `OVERWRITE`. For more details see the [UpdateAddon](https://docs.aws.amazon.com/eks/latest/APIReference/API_UpdateAddon.html) API Docs.
+* `resolve_conflicts` - (**Deprecated** use the `resolve_conflicts_on_create` and `resolve_conflicts_on_update` attributes instead) Define how to resolve parameter value conflicts when migrating an existing add-on to an Amazon EKS add-on or when applying version updates to the add-on. Valid values are `NONE`, `OVERWRITE` and `PRESERVE`. Note that `PRESERVE` is only valid on addon update, not for initial addon creation. If you need to set this to `PRESERVE`, use the `resolve_conflicts_on_create` and `resolve_conflicts_on_update` attributes instead. For more details check [UpdateAddon](https://docs.aws.amazon.com/eks/latest/APIReference/API_UpdateAddon.html) API Docs.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `preserve` - (Optional) Indicates if you want to preserve the created resources when deleting the EKS add-on.
 * `service_account_role_arn` - (Optional) The Amazon Resource Name (ARN) of an

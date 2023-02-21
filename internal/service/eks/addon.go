@@ -86,6 +86,22 @@ func ResourceAddon() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice(eks.ResolveConflicts_Values(), false),
+				Deprecated:   "The \"resolve_conflicts\" attribute can't be set to \"PRESERVE\" on initial resource creation. Use \"resolve_conflicts_on_create\" and \"resolve_conflicts_on_update\" instead",
+			},
+			"resolve_conflicts_on_create": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					eks.ResolveConflictsNone,
+					eks.ResolveConflictsOverwrite,
+				}, false),
+				ConflictsWith: []string{"resolve_conflicts"},
+			},
+			"resolve_conflicts_on_update": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ValidateFunc:  validation.StringInSlice(eks.ResolveConflicts_Values(), false),
+				ConflictsWith: []string{"resolve_conflicts"},
 			},
 			"service_account_role_arn": {
 				Type:         schema.TypeString,
@@ -115,6 +131,10 @@ func resourceAddonCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if v, ok := d.GetOk("addon_version"); ok {
 		input.AddonVersion = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("resolve_conflicts_on_create"); ok {
+		input.ResolveConflicts = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("resolve_conflicts"); ok {
@@ -250,7 +270,18 @@ func resourceAddonUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			input.ConfigurationValues = aws.String(d.Get("configuration_values").(string))
 		}
 
+		conflictResolutionAttr := ""
+		conflictResolution := ""
+
 		if v, ok := d.GetOk("resolve_conflicts"); ok {
+			conflictResolutionAttr = "resolve_conflicts"
+			conflictResolution = v.(string)
+			input.ResolveConflicts = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("resolve_conflicts_on_update"); ok {
+			conflictResolutionAttr = "resolve_conflicts_on_update"
+			conflictResolution = v.(string)
 			input.ResolveConflicts = aws.String(v.(string))
 		}
 
@@ -271,12 +302,12 @@ func resourceAddonUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		_, err = waitAddonUpdateSuccessful(ctx, conn, clusterName, addonName, updateID, d.Timeout(schema.TimeoutUpdate))
 
 		if err != nil {
-			if d.Get("resolve_conflicts") != eks.ResolveConflictsOverwrite {
+			if conflictResolution != eks.ResolveConflictsOverwrite {
 				// Changing addon version w/o setting resolve_conflicts to "OVERWRITE"
 				// might result in a failed update if there are conflicts:
 				// ConfigurationConflict	Apply failed with 1 conflict: conflict with "kubectl"...
 				return diag.FromErr(fmt.Errorf("error waiting for EKS Add-On (%s) update (%s): %w, consider setting attribute %q to %q",
-					d.Id(), updateID, err, "resolve_conflicts", eks.ResolveConflictsOverwrite))
+					d.Id(), updateID, err, conflictResolutionAttr, eks.ResolveConflictsOverwrite))
 			}
 
 			return diag.FromErr(fmt.Errorf("error waiting for EKS Add-On (%s) update (%s): %w", d.Id(), updateID, err))
