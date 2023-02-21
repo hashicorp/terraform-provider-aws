@@ -3,7 +3,7 @@ subcategory: "VPC (Virtual Private Cloud)"
 layout: "aws"
 page_title: "AWS: aws_vpc_security_group_rules"
 description: |-
-    Get information about a set of security group ruleds.
+    Get information about a set of security group rules.
 ---
 
 # Data Source: aws_vpc_security_group_rules
