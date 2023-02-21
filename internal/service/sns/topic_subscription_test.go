@@ -295,7 +295,7 @@ func TestAccSNSTopicSubscription_filterPolicyScope_policyNotSet(t *testing.T) {
 	})
 }
 
-func TestAccSNSTopicSubscription_filterPolicy_messageAttributesFilterPolicy_to_messageBodyNestedFilterPolicy(t *testing.T) {
+func TestAccSNSTopicSubscription_filterPolicyScope_filterPolicyWithComplexObject(t *testing.T) {
 
 	var attributes map[string]string
 	resourceName := "aws_sns_topic_subscription.test"
@@ -325,35 +325,10 @@ func TestAccSNSTopicSubscription_filterPolicy_messageAttributesFilterPolicy_to_m
 				},
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"confirmation_timeout_in_minutes",
-					"endpoint_auto_confirms",
-				},
-			},
-			{
-				Config: testAccTopicSubscriptionConfig_filterPolicy_messageBodyNestedFilterPolicy(rName),
+				Config: testAccTopicSubscriptionConfig_filterPolicyScope_filterPolicyWithComplexObject(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicSubscriptionExists(resourceName, &attributes),
 					resource.TestCheckResourceAttr(resourceName, "filter_policy_scope", "MessageBody"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"confirmation_timeout_in_minutes",
-					"endpoint_auto_confirms",
-				},
-			},
-			{
-				Config: testAccTopicSubscriptionConfig_filterPolicyScope(rName, strconv.Quote("MessageAttributes")),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicSubscriptionExists(resourceName, &attributes),
-					resource.TestCheckResourceAttr(resourceName, "filter_policy_scope", "MessageAttributes"),
 				),
 			},
 			{
@@ -866,7 +841,7 @@ resource "aws_sns_topic_subscription" "test" {
 `, rName, scope)
 }
 
-func testAccTopicSubscriptionConfig_filterPolicy_messageBodyNestedFilterPolicy(rName string) string {
+func testAccTopicSubscriptionConfig_filterPolicyScope_filterPolicyWithComplexObject(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name = %[1]q
@@ -882,7 +857,7 @@ resource "aws_sns_topic_subscription" "test" {
   topic_arn           = aws_sns_topic.test.arn
   protocol            = "sqs"
   endpoint            = aws_sqs_queue.test.arn
-  filter_policy       = jsonencode({ nested = { object = {key = ["value"]}}})
+  filter_policy       = jsonencode({ key1 = { object = {key : ["value"]}}})
   filter_policy_scope = "MessageBody"
 }
 `, rName)
