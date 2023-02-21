@@ -59,7 +59,6 @@ func TestAccSNSTopic_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "http_success_feedback_role_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "http_success_feedback_sample_rate", "0"),
 					resource.TestCheckResourceAttr(resourceName, "kms_master_key_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "signature_version", "1"),
 					resource.TestCheckResourceAttr(resourceName, "lambda_failure_feedback_role_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "lambda_success_feedback_role_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "lambda_success_feedback_sample_rate", "0"),
@@ -67,6 +66,7 @@ func TestAccSNSTopic_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner"),
 					resource.TestCheckResourceAttrSet(resourceName, "policy"),
+					resource.TestCheckResourceAttr(resourceName, "signature_version", "0"),
 					resource.TestCheckResourceAttr(resourceName, "sqs_failure_feedback_role_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "sqs_success_feedback_role_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "sqs_success_feedback_sample_rate", "0"),
@@ -517,6 +517,7 @@ func TestAccSNSTopic_encryption(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists(ctx, resourceName, &attributes),
 					resource.TestCheckResourceAttr(resourceName, "kms_master_key_id", "alias/aws/sns"),
+					resource.TestCheckResourceAttr(resourceName, "signature_version", "2"),
 				),
 			},
 			{
@@ -923,6 +924,7 @@ func testAccTopicConfig_encryption(rName string) string {
 resource "aws_sns_topic" "test" {
   name              = %[1]q
   kms_master_key_id = "alias/aws/sns"
+  signature_version = 2
 }
 `, rName)
 }

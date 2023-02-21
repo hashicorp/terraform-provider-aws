@@ -105,12 +105,6 @@ var (
 			Type:     schema.TypeString,
 			Optional: true,
 		},
-		"signature_version": {
-			Type:         schema.TypeInt,
-			Optional:     true,
-			ValidateFunc: validation.IntBetween(1, 2),
-			Default:      1,
-		},
 		"lambda_failure_feedback_role_arn": {
 			Type:         schema.TypeString,
 			Optional:     true,
@@ -156,6 +150,12 @@ var (
 				return json
 			},
 		},
+		"signature_version": {
+			Type:         schema.TypeInt,
+			Optional:     true,
+			Computed:     true,
+			ValidateFunc: validation.IntBetween(1, 2),
+		},
 		"sqs_failure_feedback_role_arn": {
 			Type:         schema.TypeString,
 			Optional:     true,
@@ -191,12 +191,12 @@ var (
 		"http_success_feedback_role_arn":        TopicAttributeNameHTTPSuccessFeedbackRoleARN,
 		"http_success_feedback_sample_rate":     TopicAttributeNameHTTPSuccessFeedbackSampleRate,
 		"kms_master_key_id":                     TopicAttributeNameKMSMasterKeyId,
-		"signature_version":                     TopicAttributeNameSignatureVersion,
 		"lambda_failure_feedback_role_arn":      TopicAttributeNameLambdaFailureFeedbackRoleARN,
 		"lambda_success_feedback_role_arn":      TopicAttributeNameLambdaSuccessFeedbackRoleARN,
 		"lambda_success_feedback_sample_rate":   TopicAttributeNameLambdaSuccessFeedbackSampleRate,
 		"owner":                                 TopicAttributeNameOwner,
 		"policy":                                TopicAttributeNamePolicy,
+		"signature_version":                     TopicAttributeNameSignatureVersion,
 		"sqs_failure_feedback_role_arn":         TopicAttributeNameSQSFailureFeedbackRoleARN,
 		"sqs_success_feedback_role_arn":         TopicAttributeNameSQSSuccessFeedbackRoleARN,
 		"sqs_success_feedback_sample_rate":      TopicAttributeNameSQSSuccessFeedbackSampleRate,
