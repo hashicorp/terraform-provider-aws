@@ -71,6 +71,7 @@ func TestAccSNSTopic_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "sqs_success_feedback_role_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "sqs_success_feedback_sample_rate", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tracing_config", ""),
 				),
 			},
 			{
@@ -346,6 +347,7 @@ func TestAccSNSTopic_deliveryStatus(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "firehose_failure_feedback_role_arn", iamRoleResourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "firehose_success_feedback_role_arn", iamRoleResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "firehose_success_feedback_sample_rate", "60"),
+					resource.TestCheckResourceAttr(resourceName, "tracing_config", "Active"),
 				),
 			},
 			{
@@ -867,6 +869,8 @@ resource "aws_sns_topic" "test" {
   firehose_success_feedback_sample_rate    = 60
   firehose_failure_feedback_role_arn       = aws_iam_role.example.arn
   firehose_success_feedback_role_arn       = aws_iam_role.example.arn
+
+  tracing_config = "Active"
 }
 
 data "aws_partition" "current" {}

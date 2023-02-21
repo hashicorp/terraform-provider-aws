@@ -173,6 +173,12 @@ var (
 		},
 		"tags":     tftags.TagsSchema(),
 		"tags_all": tftags.TagsSchemaComputed(),
+		"tracing_config": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			Computed:     true,
+			ValidateFunc: validation.StringInSlice(TopicTracingConfig_Values(), false),
+		},
 	}
 
 	topicAttributeMap = attrmap.New(map[string]string{
@@ -200,6 +206,7 @@ var (
 		"sqs_failure_feedback_role_arn":         TopicAttributeNameSQSFailureFeedbackRoleARN,
 		"sqs_success_feedback_role_arn":         TopicAttributeNameSQSSuccessFeedbackRoleARN,
 		"sqs_success_feedback_sample_rate":      TopicAttributeNameSQSSuccessFeedbackSampleRate,
+		"tracing_config":                        TopicAttributeNameTracingConfig,
 	}, topicSchema).WithIAMPolicyAttribute("policy").WithMissingSetToNil("*")
 )
 

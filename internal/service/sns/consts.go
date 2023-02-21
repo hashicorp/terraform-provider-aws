@@ -96,6 +96,7 @@ const (
 	TopicAttributeNameSQSSuccessFeedbackRoleARN            = "SQSSuccessFeedbackRoleArn"
 	TopicAttributeNameSQSSuccessFeedbackSampleRate         = "SQSSuccessFeedbackSampleRate"
 	TopicAttributeNameTopicARN                             = "TopicArn"
+	TopicAttributeNameTracingConfig                        = "TracingConfig"
 )
 
 const (
@@ -111,5 +112,17 @@ func SubscriptionFilterPolicyScope_Values() []string {
 	return []string{
 		SubscriptionFilterPolicyScopeMessageAttributes,
 		SubscriptionFilterPolicyScopeMessageBody,
+	}
+}
+
+const (
+	TopicTracingConfigActive      = "Active"
+	TopicTracingConfigPassThrough = "PassThrough"
+)
+
+func TopicTracingConfig_Values() []string {
+	return []string{
+		TopicTracingConfigActive,
+		TopicTracingConfigPassThrough,
 	}
 }
