@@ -1824,6 +1824,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 
 			"aws_networkmanager_attachment_accepter":                      networkmanager.ResourceAttachmentAccepter(),
 			"aws_networkmanager_connect_attachment":                       networkmanager.ResourceConnectAttachment(),
+			"aws_networkmanager_connect_peer":                             networkmanager.ResourceConnectPeer(),
 			"aws_networkmanager_connection":                               networkmanager.ResourceConnection(),
 			"aws_networkmanager_core_network":                             networkmanager.ResourceCoreNetwork(),
 			"aws_networkmanager_core_network_policy_attachment":           networkmanager.ResourceCoreNetworkPolicyAttachment(),
