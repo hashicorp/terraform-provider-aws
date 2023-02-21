@@ -838,9 +838,9 @@ resource "aws_sns_topic_subscription" "test" {
 }
 
 func testAccTopicSubscriptionConfig_nestedFilterPolicyScope(rName, scope string, nested bool) string {
-	filterPolicy := `jsonencode({ key1 = ["value1"] })`
+	filterPolicy := `jsonencode({"key1"=["value1"]})`
 	if nested {
-		filterPolicy = `jsonencode({ key1 = { key2 = {"value1"} } })`
+		filterPolicy = `jsonencode({"key2"={"key1"=["value1"]}})`
 	}
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
