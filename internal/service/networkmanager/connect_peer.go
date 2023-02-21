@@ -179,14 +179,13 @@ func resourceConnectPeerCreate(ctx context.Context, d *schema.ResourceData, meta
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
-	connectAttachmentId := d.Get("connect_attachment_id").(string)
-	insideCidrBlocks := flex.ExpandStringList(d.Get("inside_cidr_blocks").([]interface{}))
-	peer_address := d.Get("peer_address").(string)
-
+	connectAttachmentID := d.Get("connect_attachment_id").(string)
+	insideCIDRBlocks := flex.ExpandStringList(d.Get("inside_cidr_blocks").([]interface{}))
+	peerAddress := d.Get("peer_address").(string)
 	input := &networkmanager.CreateConnectPeerInput{
-		ConnectAttachmentId: aws.String(connectAttachmentId),
-		InsideCidrBlocks:    insideCidrBlocks,
-		PeerAddress:         aws.String(peer_address),
+		ConnectAttachmentId: aws.String(connectAttachmentID),
+		InsideCidrBlocks:    insideCIDRBlocks,
+		PeerAddress:         aws.String(peerAddress),
 	}
 
 	if v, ok := d.GetOk("bgp_options"); ok && len(v.([]interface{})) > 0 {
@@ -264,25 +263,22 @@ func resourceConnectPeerRead(ctx context.Context, d *schema.ResourceData, meta i
 		Resource:  fmt.Sprintf("connect-peer/%s", d.Id()),
 	}.String()
 	d.Set("arn", arn)
-
 	bgpOptions := map[string]interface{}{}
 	bgpOptions["peer_asn"] = connectPeer.Configuration.BgpConfigurations[0].PeerAsn
 	d.Set("bgp_options", []interface{}{bgpOptions})
-
+	d.Set("configuration", []interface{}{flattenPeerConfiguration(connectPeer.Configuration)})
+	d.Set("connect_peer_id", connectPeer.ConnectPeerId)
+	d.Set("core_network_id", connectPeer.CoreNetworkId)
 	if connectPeer.CreatedAt != nil {
 		d.Set("created_at", aws.TimeValue(connectPeer.CreatedAt).Format(time.RFC3339))
 	} else {
 		d.Set("created_at", nil)
 	}
-
-	d.Set("configuration", []interface{}{flattenPeerConfiguration(connectPeer.Configuration)})
-	d.Set("core_network_id", connectPeer.CoreNetworkId)
-	d.Set("connect_peer_id", connectPeer.ConnectPeerId)
 	d.Set("edge_location", connectPeer.EdgeLocation)
 	d.Set("connect_attachment_id", connectPeer.ConnectAttachmentId)
 	d.Set("inside_cidr_blocks", connectPeer.Configuration.InsideCidrBlocks)
-	d.Set("state", connectPeer.State)
 	d.Set("peer_address", connectPeer.Configuration.PeerAddress)
+	d.Set("state", connectPeer.State)
 
 	tags := KeyValueTags(connectPeer.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
@@ -304,7 +300,7 @@ func resourceConnectPeerUpdate(ctx context.Context, d *schema.ResourceData, meta
 		o, n := d.GetChange("tags_all")
 
 		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return diag.FromErr(fmt.Errorf("updating Network Manager Connect Peer (%s) tags: %s", d.Get("arn").(string), err))
+			return diag.Errorf("updating Network Manager Connect Peer (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
 
