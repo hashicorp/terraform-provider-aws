@@ -283,7 +283,7 @@ func TestAccSNSTopicSubscription_filterPolicyScope(t *testing.T) {
 			{
 				Config: testAccTopicSubscriptionConfig_filterPolicyScope(rName, strconv.Quote("MessageAttributes")),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicSubscriptionExists(resourceName, &attributes),
+					testAccCheckTopicSubscriptionExists(ctx, resourceName, &attributes),
 					resource.TestCheckResourceAttr(resourceName, "filter_policy_scope", "MessageAttributes"),
 				),
 			},
@@ -299,7 +299,7 @@ func TestAccSNSTopicSubscription_filterPolicyScope(t *testing.T) {
 			{
 				Config: testAccTopicSubscriptionConfig_nestedFilterPolicyScope(rName, strconv.Quote("MessageBody"), true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicSubscriptionExists(resourceName, &attributes),
+					testAccCheckTopicSubscriptionExists(ctx, resourceName, &attributes),
 					resource.TestCheckResourceAttr(resourceName, "filter_policy_scope", "MessageBody"),
 				),
 			},
@@ -316,7 +316,7 @@ func TestAccSNSTopicSubscription_filterPolicyScope(t *testing.T) {
 			{
 				Config: testAccTopicSubscriptionConfig_filterPolicyScope(rName, strconv.Quote("MessageAttributes")),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTopicSubscriptionExists(resourceName, &attributes),
+					testAccCheckTopicSubscriptionExists(ctx, resourceName, &attributes),
 					resource.TestCheckResourceAttr(resourceName, "filter_policy_scope", "MessageAttributes"),
 				),
 			},
