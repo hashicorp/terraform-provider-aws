@@ -1,4 +1,9 @@
 ## 4.56.0 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_medialive_channel: Fix setting of `m2ts_settings` `arib_captions_pid` and `arib_captions_pid_control` attributes ([#29467](https://github.com/hashicorp/terraform-provider-aws/issues/29467))
+
 ## 4.55.0 (February 16, 2023)
 
 FEATURES:
