@@ -15,7 +15,7 @@ When specifying an outbound rule for your security group in a VPC, the configura
 ~> **NOTE on Security Groups and Security Group Rules:** Terraform currently provides a [Security Group resource](security_group.html) with `ingress` and `egress` rules defined in-line and a [Security Group Rule resource](security_group_rule.html) which manages one or more `ingress` or
 `egress` rules. Both of these resource were added before AWS assigned a [security group rule unique ID](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/security-group-rules.html), and they do not work well in all scenarios using the`description` and `tags` attributes, which rely on the unique ID.
 The `aws_vpc_security_group_egress_rule` resource has been added to address these limitations and should be used for all new security group rules.
-You should not use the `aws_vpc_security_group_egress_rule` resource in conjunction with an `aws_security_group` resource with in-line rules and care should be taken when using this resource in conjunction with `aws_security_group_rule` resources defined for the same Security Group, as rule conflicts may occur and rules will be overwritten.
+You should not use the `aws_vpc_security_group_egress_rule` resource in conjunction with an `aws_security_group` resource with in-line rules or with `aws_security_group_rule` resources defined for the same Security Group, as rule conflicts may occur and rules will be overwritten.
 
 ## Example Usage
 
