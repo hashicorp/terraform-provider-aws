@@ -123,7 +123,10 @@ func ResourceOptionGroup() *schema.Resource {
 				},
 				Set: resourceOptionHash,
 			},
-
+			"skip_destroy": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
 		},
@@ -324,6 +327,11 @@ func resourceOptionGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 func resourceOptionGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn()
+
+	if _, ok := d.GetOk("skip_destroy"); ok {
+		log.Printf("[DEBUG] Retaining DB Option Group %q", d.Id())
+		return diags
+	}
 
 	deleteOpts := &rds.DeleteOptionGroupInput{
 		OptionGroupName: aws.String(d.Id()),
