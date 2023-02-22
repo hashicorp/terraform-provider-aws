@@ -135,7 +135,7 @@ func protoV5ProviderFactoriesPlusProvidersInit(ctx context.Context, t *testing.T
 			t.Fatal(err)
 		}
 
-		factories[name] = func() (tfprotov5.ProviderServer, error) {
+		factories[name] = func() (tfprotov5.ProviderServer, error) { //nolint:unparam
 			return providerServerFactory(), nil
 		}
 
