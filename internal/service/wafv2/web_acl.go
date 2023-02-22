@@ -220,7 +220,7 @@ func resourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("description", webACL.Description)
 	d.Set("lock_token", output.LockToken)
 	d.Set("name", webACL.Name)
-	rules := filterWebACLRules(webACL.Rules)
+	rules := filterWebACLRules(webACL.Rules, expandWebACLRules(d.Get("rule").(*schema.Set).List()))
 	if err := d.Set("rule", flattenWebACLRules(rules)); err != nil {
 		return diag.Errorf("setting rule: %s", err)
 	}
@@ -353,12 +353,22 @@ func FindWebACLByThreePartKey(ctx context.Context, conn *wafv2.WAFV2, id, name, 
 // owned and managed by AWS.
 // See https://github.com/hashicorp/terraform-provider-aws/issues/22869
 // See https://docs.aws.amazon.com/waf/latest/developerguide/ddos-automatic-app-layer-response-rg.html
-func filterWebACLRules(rules []*wafv2.Rule) []*wafv2.Rule {
+func filterWebACLRules(rules, configRules []*wafv2.Rule) []*wafv2.Rule {
 	var fr []*wafv2.Rule
-	pattern := fmt.Sprintf(`^ShieldMitigationRuleGroup_\d{12}_[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}_.*`)
+	pattern := `^ShieldMitigationRuleGroup_\d{12}_[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}_.*`
 	for _, r := range rules {
 		if regexp.MustCompile(pattern).MatchString(aws.StringValue(r.Name)) {
-			continue
+			filter := true
+			for _, cr := range configRules {
+				if aws.StringValue(cr.Name) == aws.StringValue(r.Name) {
+					// exception to filtering -- it's in the config
+					filter = false
+				}
+			}
+
+			if filter {
+				continue
+			}
 		}
 		fr = append(fr, r)
 	}

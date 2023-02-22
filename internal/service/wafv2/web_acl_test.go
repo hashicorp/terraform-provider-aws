@@ -1630,7 +1630,7 @@ func TestAccWAFV2WebACL_RuleGroupReference_shieldMitigation(t *testing.T) {
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebACLConfig_ruleGroupWithoutShieldMitigation(webACLName),
+				Config: testAccWebACLConfig_ruleGroupForShieldMitigation(webACLName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
@@ -1753,7 +1753,7 @@ func TestAccWAFV2WebACL_RuleGroupReference_shieldMitigation(t *testing.T) {
 						t.Fatalf("out-of-band added rule (%s) not found, cannot test handling of rule", webACLName)
 					}
 				},
-				Config: testAccWebACLConfig_ruleGroupWithoutShieldMitigation(webACLName),
+				Config: testAccWebACLConfig_ruleGroupForShieldMitigation(webACLName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
@@ -1797,6 +1797,38 @@ func ruleGroupPages(ctx context.Context, conn *wafv2.WAFV2, input *wafv2.ListRul
 		input.NextMarker = output.NextMarker
 	}
 	return nil
+}
+
+// Ensure magically-added (i.e., AWS-added) rule for Shield with CF distribution DDoS auto
+// mitigation does not cause diff and provider doesn't attempt to remove.
+// See https://github.com/hashicorp/terraform-provider-aws/issues/22869
+func TestAccWAFV2WebACL_RuleGroupReference_manageShieldMitigationRule(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v wafv2.WebACL
+	webACLName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_web_acl.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckScopeRegional(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLConfig_ruleGroupShieldMitigation(webACLName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLExists(ctx, resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "name", webACLName),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+				),
+			},
+			{
+				Config:   testAccWebACLConfig_ruleGroupShieldMitigation(webACLName),
+				PlanOnly: true,
+			},
+		},
+	})
 }
 
 func TestAccWAFV2WebACL_Custom_requestHandling(t *testing.T) {
@@ -4216,7 +4248,61 @@ func testAccWebACLImportStateIdFunc(resourceName string) resource.ImportStateIdF
 	}
 }
 
-func testAccWebACLConfig_ruleGroupWithoutShieldMitigation(name string) string {
+func testAccWebACLConfig_ruleGroupShieldMitigation(name string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_rule_group" "test" {
+  capacity = 10
+  name     = "rule-group-%[1]s"
+  scope    = "REGIONAL"
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+
+data "aws_caller_identity" "current" {}
+
+resource "aws_wafv2_web_acl" "test" {
+  name  = %[1]q
+  scope = "REGIONAL"
+
+  default_action {
+    block {}
+  }
+
+  rule {
+    name     = "ShieldMitigationRuleGroup_${data.aws_caller_identity.current.account_id}_5e665b1c-1641-4b7a-8db1-567871a18b2a_uniqueid"
+    priority = 11
+
+    override_action {
+      none {}
+    }
+
+    statement {
+      rule_group_reference_statement {
+        arn = aws_wafv2_rule_group.test.arn
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = true
+      metric_name                = "ShieldMitigationRuleGroup_${data.aws_caller_identity.current.account_id}_5e665b1c-1641-4b7a-8db1-567871a18b2a_uniqueid"
+      sampled_requests_enabled   = true
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = true
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+`, name)
+}
+
+func testAccWebACLConfig_ruleGroupForShieldMitigation(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 10
