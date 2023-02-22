@@ -5353,21 +5353,62 @@ func FindFlowLogByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.FlowLo
 		FlowLogIds: aws.StringSlice([]string{id}),
 	}
 
-	output, err := conn.DescribeFlowLogsWithContext(ctx, input)
+	output, err := FindFlowLog(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if output == nil || len(output.FlowLogs) == 0 || output.FlowLogs[0] == nil {
+	// Eventual consistency check.
+	if aws.StringValue(output.FlowLogId) != id {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func FindFlowLogs(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeFlowLogsInput) ([]*ec2.FlowLog, error) {
+	var output []*ec2.FlowLog
+
+	err := conn.DescribeFlowLogsPagesWithContext(ctx, input, func(page *ec2.DescribeFlowLogsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.FlowLogs {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func FindFlowLog(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeFlowLogsInput) (*ec2.FlowLog, error) {
+	output, err := FindFlowLogs(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 || output[0] == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	if count := len(output.FlowLogs); count > 1 {
+	if count := len(output); count > 1 {
 		return nil, tfresource.NewTooManyResultsError(count, input)
 	}
 
-	return output.FlowLogs[0], nil
+	return output[0], nil
 }
 
 func FindInternetGateway(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeInternetGatewaysInput) (*ec2.InternetGateway, error) {
