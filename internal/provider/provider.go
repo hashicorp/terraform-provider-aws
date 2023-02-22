@@ -785,11 +785,13 @@ func New(ctx context.Context) (*schema.Provider, error) {
 
 			"aws_opensearch_domain": opensearch.DataSourceDomain(),
 
-			"aws_organizations_delegated_administrators": organizations.DataSourceDelegatedAdministrators(),
-			"aws_organizations_delegated_services":       organizations.DataSourceDelegatedServices(),
-			"aws_organizations_organization":             organizations.DataSourceOrganization(),
-			"aws_organizations_organizational_units":     organizations.DataSourceOrganizationalUnits(),
-			"aws_organizations_resource_tags":            organizations.DataSourceResourceTags(),
+			"aws_organizations_delegated_administrators":                organizations.DataSourceDelegatedAdministrators(),
+			"aws_organizations_delegated_services":                      organizations.DataSourceDelegatedServices(),
+			"aws_organizations_organization":                            organizations.DataSourceOrganization(),
+			"aws_organizations_organizational_units":                    organizations.DataSourceOrganizationalUnits(),
+			"aws_organizations_organizational_unit_child_accounts":      organizations.DataSourceOrganizationalUnitChildAccounts(),
+			"aws_organizations_organizational_unit_descendant_accounts": organizations.DataSourceOrganizationalUnitDescendantAccounts(),
+			"aws_organizations_resource_tags":                           organizations.DataSourceResourceTags(),
 
 			"aws_outposts_asset":                  outposts.DataSourceOutpostAsset(),
 			"aws_outposts_assets":                 outposts.DataSourceOutpostAssets(),
@@ -1798,6 +1800,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 
 			"aws_networkmanager_attachment_accepter":                      networkmanager.ResourceAttachmentAccepter(),
 			"aws_networkmanager_connect_attachment":                       networkmanager.ResourceConnectAttachment(),
+			"aws_networkmanager_connect_peer":                             networkmanager.ResourceConnectPeer(),
 			"aws_networkmanager_connection":                               networkmanager.ResourceConnection(),
 			"aws_networkmanager_core_network":                             networkmanager.ResourceCoreNetwork(),
 			"aws_networkmanager_core_network_policy_attachment":           networkmanager.ResourceCoreNetworkPolicyAttachment(),

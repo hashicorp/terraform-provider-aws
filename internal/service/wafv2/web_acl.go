@@ -175,7 +175,6 @@ func resourceWebACLCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	log.Printf("[INFO] Creating WAFv2 WebACL: %s", input)
 	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, webACLCreateTimeout, func() (interface{}, error) {
 		return conn.CreateWebACLWithContext(ctx, input)
 	}, wafv2.ErrCodeWAFUnavailableEntityException)
@@ -270,7 +269,6 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			input.Description = aws.String(v.(string))
 		}
 
-		log.Printf("[INFO] Updating WAFv2 WebACL: %s", input)
 		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, webACLUpdateTimeout, func() (interface{}, error) {
 			return conn.UpdateWebACLWithContext(ctx, input)
 		}, wafv2.ErrCodeWAFUnavailableEntityException)

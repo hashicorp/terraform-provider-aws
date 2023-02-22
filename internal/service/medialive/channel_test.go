@@ -122,11 +122,13 @@ func TestAccMediaLiveChannel_m2ts_settings(t *testing.T) {
 						"name": "test-video-name",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "encoder_settings.0.output_groups.0.outputs.0.output_settings.0.archive_output_settings.0.container_settings.0.m2ts_settings.*", map[string]string{
-						"audio_buffer_model": "ATSC",
-						"buffer_model":       "MULTIPLEX",
-						"rate_mode":          "CBR",
-						"audio_pids":         "200",
-						"dvb_sub_pids":       "300",
+						"audio_buffer_model":        "ATSC",
+						"buffer_model":              "MULTIPLEX",
+						"rate_mode":                 "CBR",
+						"audio_pids":                "200",
+						"dvb_sub_pids":              "300",
+						"arib_captions_pid":         "100",
+						"arib_captions_pid_control": "AUTO",
 					}),
 				),
 			},
@@ -782,11 +784,13 @@ resource "aws_medialive_channel" "test" {
             extension     = "m2ts"
             container_settings {
               m2ts_settings {
-                audio_buffer_model = "ATSC"
-                buffer_model       = "MULTIPLEX"
-                rate_mode          = "CBR"
-                audio_pids         = "200"
-                dvb_sub_pids       = "300"
+                audio_buffer_model        = "ATSC"
+                buffer_model              = "MULTIPLEX"
+                rate_mode                 = "CBR"
+                audio_pids                = "200"
+                dvb_sub_pids              = "300"
+                arib_captions_pid         = "100"
+                arib_captions_pid_control = "AUTO"
               }
             }
           }

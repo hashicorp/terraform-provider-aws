@@ -279,6 +279,56 @@ func TestAccSNSTopicSubscription_filterPolicyScope(t *testing.T) {
 					"endpoint_auto_confirms",
 				},
 			},
+			// Test transition from MessageAttributes to nested MessageBody ...
+			{
+				Config: testAccTopicSubscriptionConfig_filterPolicyScope(rName, strconv.Quote("MessageAttributes")),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTopicSubscriptionExists(ctx, resourceName, &attributes),
+					resource.TestCheckResourceAttr(resourceName, "filter_policy_scope", "MessageAttributes"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"confirmation_timeout_in_minutes",
+					"endpoint_auto_confirms",
+				},
+			},
+			{
+				Config: testAccTopicSubscriptionConfig_nestedFilterPolicyScope(rName, strconv.Quote("MessageBody"), true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTopicSubscriptionExists(ctx, resourceName, &attributes),
+					resource.TestCheckResourceAttr(resourceName, "filter_policy_scope", "MessageBody"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"confirmation_timeout_in_minutes",
+					"endpoint_auto_confirms",
+				},
+			},
+			// ... and transition from nested MessageBody back to flat MessageAttributes
+			{
+				Config: testAccTopicSubscriptionConfig_filterPolicyScope(rName, strconv.Quote("MessageAttributes")),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTopicSubscriptionExists(ctx, resourceName, &attributes),
+					resource.TestCheckResourceAttr(resourceName, "filter_policy_scope", "MessageAttributes"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"confirmation_timeout_in_minutes",
+					"endpoint_auto_confirms",
+				},
+			},
 		},
 	})
 }
@@ -787,7 +837,11 @@ resource "aws_sns_topic_subscription" "test" {
 `, rName, policy)
 }
 
-func testAccTopicSubscriptionConfig_filterPolicyScope(rName, scope string) string {
+func testAccTopicSubscriptionConfig_nestedFilterPolicyScope(rName, scope string, nested bool) string {
+	filterPolicy := `jsonencode({"key1"=["value1"]})`
+	if nested {
+		filterPolicy = `jsonencode({"key2"={"key1"=["value1"]}})`
+	}
 	return fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name = %[1]q
@@ -803,10 +857,13 @@ resource "aws_sns_topic_subscription" "test" {
   topic_arn           = aws_sns_topic.test.arn
   protocol            = "sqs"
   endpoint            = aws_sqs_queue.test.arn
-  filter_policy       = jsonencode({ key1 = ["value1"] })
-  filter_policy_scope = %[2]s
+  filter_policy       = %[2]s
+  filter_policy_scope = %[3]s
 }
-`, rName, scope)
+`, rName, filterPolicy, scope)
+}
+func testAccTopicSubscriptionConfig_filterPolicyScope(rName, scope string) string {
+	return testAccTopicSubscriptionConfig_nestedFilterPolicyScope(rName, scope, false)
 }
 
 func testAccTopicSubscriptionConfig_filterPolicyScope_policyNotSet(rName string) string {

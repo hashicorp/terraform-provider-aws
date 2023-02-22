@@ -1,15 +1,38 @@
-## 4.55.0 (Unreleased)
+## 4.56.0 (Unreleased)
 
 FEATURES:
 
+* **New Resource:** `aws_networkmanager_connect_peer` ([#29296](https://github.com/hashicorp/terraform-provider-aws/issues/29296))
+
+ENHANCEMENTS:
+
+* resource/aws_lb_ssl_negotiation_policy: Add `triggers` attribute to force resource updates ([#29482](https://github.com/hashicorp/terraform-provider-aws/issues/29482))
+* resource/aws_load_balancer_listener_policy: Add `triggers` attribute to force resource updates ([#29482](https://github.com/hashicorp/terraform-provider-aws/issues/29482))
+* resource/aws_sns_topic: Add `signature_version` and `tracing_config` arguments ([#29462](https://github.com/hashicorp/terraform-provider-aws/issues/29462))
+
+BUG FIXES:
+
+* resource/aws_medialive_channel: Fix setting of `m2ts_settings` `arib_captions_pid` and `arib_captions_pid_control` attributes ([#29467](https://github.com/hashicorp/terraform-provider-aws/issues/29467))
+* resource/aws_resourceexplorer2_view: Fix `Unexpected Planned Resource State on Destroy` errors when using Terraform CLI v1.3 and above ([#29550](https://github.com/hashicorp/terraform-provider-aws/issues/29550))
+* resource/aws_sns_topic_subscription: Fix `filter_policy_scope` update from `MessageAttributes` to `MessageBody` with nested objects in `filter_policy` ([#28572](https://github.com/hashicorp/terraform-provider-aws/issues/28572))
+
+## 4.55.0 (February 16, 2023)
+
+FEATURES:
+
+* **New Data Source:** `aws_organizations_organizational_unit_child_accounts` ([#24350](https://github.com/hashicorp/terraform-provider-aws/issues/24350))
+* **New Data Source:** `aws_organizations_organizational_unit_descendant_accounts` ([#24350](https://github.com/hashicorp/terraform-provider-aws/issues/24350))
 * **New Resource:** `aws_route53_cidr_collection` ([#29407](https://github.com/hashicorp/terraform-provider-aws/issues/29407))
 * **New Resource:** `aws_route53_cidr_location` ([#29407](https://github.com/hashicorp/terraform-provider-aws/issues/29407))
+* **New Resource:** `aws_vpc_ipam_resource_discovery` ([#29216](https://github.com/hashicorp/terraform-provider-aws/issues/29216))
+* **New Resource:** `aws_vpc_ipam_resource_discovery_association` ([#29216](https://github.com/hashicorp/terraform-provider-aws/issues/29216))
 
 ENHANCEMENTS:
 
 * data-source/aws_s3_bucket_object: Expand content types that can be read from S3 to include some human-readable application types (e.g., `application/xml`, `application/atom+xml`) ([#27704](https://github.com/hashicorp/terraform-provider-aws/issues/27704))
 * data-source/aws_s3_object: Expand content types that can be read from S3 to include some human-readable application types (e.g., `application/xml`, `application/atom+xml`) ([#27704](https://github.com/hashicorp/terraform-provider-aws/issues/27704))
 * resource/aws_autoscaling_policy: Make `resource_label` optional in `predefined_load_metric_specification`, `predefined_metric_pair_specification`, and `predefined_scaling_metric_specification` ([#29277](https://github.com/hashicorp/terraform-provider-aws/issues/29277))
+* resource/aws_cloudwatch_log_group: Allow `retention_in_days` attribute to accept a three year retention period (1096 days) ([#29426](https://github.com/hashicorp/terraform-provider-aws/issues/29426))
 * resource/aws_db_proxy: Add `auth.client_password_auth_type` attribute ([#28432](https://github.com/hashicorp/terraform-provider-aws/issues/28432))
 * resource/aws_firehose_delivery_stream: Add `ForceNew` to `dynamic_partitioning_configuration` attribute ([#29093](https://github.com/hashicorp/terraform-provider-aws/issues/29093))
 * resource/aws_firehose_delivery_stream: Add configurable timeouts for create, update, and delete ([#28469](https://github.com/hashicorp/terraform-provider-aws/issues/28469))

@@ -296,9 +296,7 @@ semall:
 		--config .ci/.semgrep-service-name1.yml \
 		--config .ci/.semgrep-service-name2.yml \
 		--config .ci/.semgrep-service-name3.yml \
-		--config .ci/semgrep/acctest/ \
-		--config .ci/semgrep/aws/ \
-		--config .ci/semgrep/migrate/ \
+		--config .ci/semgrep/ \
 		--config 'r/dgryski.semgrep-go.badnilguard' \
 		--config 'r/dgryski.semgrep-go.errnilcheck' \
 		--config 'r/dgryski.semgrep-go.marshaljson' \

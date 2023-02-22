@@ -163,7 +163,6 @@ func resourceProxyCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.VpcSecurityGroupIds = flex.ExpandStringSet(v)
 	}
 
-	log.Printf("[DEBUG] Creating RDS DB Proxy: %s", input)
 	output, err := conn.CreateDBProxyWithContext(ctx, &input)
 
 	if err != nil {
@@ -252,7 +251,6 @@ func resourceProxyUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			input.SecurityGroups = flex.ExpandStringSet(v)
 		}
 
-		log.Printf("[DEBUG] Updating RDS DB Proxy: %s", input)
 		_, err := conn.ModifyDBProxyWithContext(ctx, input)
 
 		if err != nil {

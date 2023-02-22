@@ -1,4 +1,4 @@
-package sns
+package iam
 
 import (
 	"encoding/json"
@@ -204,7 +204,7 @@ func TestPolicyHasValidAWSPrincipals(t *testing.T) { // nosemgrep:ci.aws-in-func
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			valid, err := policyHasValidAWSPrincipals(testcase.json)
+			valid, err := PolicyHasValidAWSPrincipals(testcase.json)
 
 			if testcase.err == nil {
 				if err != nil {
@@ -254,7 +254,7 @@ func TestIsValidAWSPrincipal(t *testing.T) { // nosemgrep:ci.aws-in-func-name
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			a := isValidAWSPrincipal(testcase.value)
+			a := isValidPolicyAWSPrincipal(testcase.value)
 
 			if e := testcase.valid; a != e {
 				t.Fatalf("expected %t, got %t", e, a)
