@@ -251,6 +251,7 @@ network-firewall,networkfirewall,networkfirewall,networkfirewall,,networkfirewal
 networkmanager,networkmanager,networkmanager,networkmanager,,networkmanager,,,NetworkManager,NetworkManager,,1,,,aws_networkmanager_,,networkmanager_,Network Manager,AWS,,,,,
 ,,,,,,,,,,,,,,,,,NICE DCV,,x,,,,No SDK support
 nimble,nimble,nimblestudio,nimble,,nimble,,nimblestudio,Nimble,NimbleStudio,,1,,,aws_nimble_,,nimble_,Nimble Studio,Amazon,,,,,
+oam,oam,oam,oam,,oam,,cloudwatchobservabilityaccessmanager,ObservabilityAccessManager,OAM,,,2,,aws_oam_,,oam_,CloudWatch Observability Access Manager,Amazon,,,,,
 opensearch,opensearch,opensearchservice,opensearch,,opensearch,,opensearchservice,OpenSearch,OpenSearchService,,1,,,aws_opensearch_,,opensearch_,OpenSearch,Amazon,,,,,
 opensearchserverless,opensearchserverless,opensearchserverless,opensearchserverless,,opensearchserverless,,,OpenSearchServerless,OpenSearchServerless,,,2,,aws_opensearchserverless_,,opensearchserverless_,OpenSearch Serverless,Amazon,,,,,
 opsworks,opsworks,opsworks,opsworks,,opsworks,,,OpsWorks,OpsWorks,,1,,,aws_opsworks_,,opsworks_,OpsWorks,AWS,,,,,
