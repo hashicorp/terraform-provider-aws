@@ -26,7 +26,11 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) map[string]func() *
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *schema.Resource {
-	return map[string]func() *schema.Resource{}
+	return map[string]func() *schema.Resource{
+		"aws_dax_cluster":         ResourceCluster,
+		"aws_dax_parameter_group": ResourceParameterGroup,
+		"aws_dax_subnet_group":    ResourceSubnetGroup,
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {

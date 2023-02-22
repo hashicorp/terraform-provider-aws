@@ -66,7 +66,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/dataexchange"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/datapipeline"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/datasync"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/dax"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/deploy"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/detective"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/devicefarm"
@@ -1244,10 +1243,6 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			"aws_datasync_location_s3":                      datasync.ResourceLocationS3(),
 			"aws_datasync_location_smb":                     datasync.ResourceLocationSMB(),
 			"aws_datasync_task":                             datasync.ResourceTask(),
-
-			"aws_dax_cluster":         dax.ResourceCluster(),
-			"aws_dax_parameter_group": dax.ResourceParameterGroup(),
-			"aws_dax_subnet_group":    dax.ResourceSubnetGroup(),
 
 			"aws_devicefarm_device_pool":       devicefarm.ResourceDevicePool(),
 			"aws_devicefarm_instance_profile":  devicefarm.ResourceInstanceProfile(),
