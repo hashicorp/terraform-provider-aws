@@ -352,6 +352,52 @@ func resourceRepositoryDelete(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
+func FindRepositoryByName(ctx context.Context, conn *ecr.ECR, name string) (*ecr.Repository, error) {
+	input := &ecr.DescribeRepositoriesInput{
+		RepositoryNames: aws.StringSlice([]string{name}),
+	}
+
+	output, err := FindRepository(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.RepositoryName) != name {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func FindRepository(ctx context.Context, conn *ecr.ECR, input *ecr.DescribeRepositoriesInput) (*ecr.Repository, error) {
+	output, err := conn.DescribeRepositoriesWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, ecr.ErrCodeRepositoryNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.Repositories) == 0 || output.Repositories[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.Repositories); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output.Repositories[0], nil
+}
+
 func flattenImageScanningConfiguration(isc *ecr.ImageScanningConfiguration) []map[string]interface{} {
 	if isc == nil {
 		return nil
