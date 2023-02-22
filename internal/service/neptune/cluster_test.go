@@ -489,7 +489,7 @@ func TestAccNeptuneCluster_GlobalClusterIdentifier_PrimarySecondaryClusters(t *t
 			testAccPreCheckGlobalCluster(ctx, t)
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, neptune.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(t, &providers),
+		ProviderFactories: acctest.FactoriesAlternate(ctx, t, &providers),
 		CheckDestroy:      testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{

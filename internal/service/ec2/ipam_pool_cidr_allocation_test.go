@@ -188,7 +188,7 @@ func TestAccIPAMPoolCIDRAllocation_differentRegion(t *testing.T) {
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, ec2.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(t, &providers),
+		ProviderFactories: acctest.FactoriesAlternate(ctx, t, &providers),
 		CheckDestroy:      testAccCheckIPAMPoolAllocationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{

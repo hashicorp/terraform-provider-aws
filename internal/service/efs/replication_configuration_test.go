@@ -69,7 +69,7 @@ func TestAccEFSReplicationConfiguration_disappears(t *testing.T) {
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, efs.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(t, &providers),
+		ProviderFactories: acctest.FactoriesAlternate(ctx, t, &providers),
 		CheckDestroy:      acctest.CheckWithProviders(testAccCheckReplicationConfigurationDestroyWithProvider(ctx), &providers),
 		Steps: []resource.TestStep{
 			{
@@ -102,7 +102,7 @@ func TestAccEFSReplicationConfiguration_allAttributes(t *testing.T) {
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:        acctest.ErrorCheck(t, efs.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(t, &providers),
+		ProviderFactories: acctest.FactoriesAlternate(ctx, t, &providers),
 		CheckDestroy:      acctest.CheckWithProviders(testAccCheckReplicationConfigurationDestroyWithProvider(ctx), &providers),
 		Steps: []resource.TestStep{
 			{

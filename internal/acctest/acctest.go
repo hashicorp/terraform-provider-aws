@@ -152,8 +152,8 @@ func factoriesInit(ctx context.Context, t *testing.T, providers *[]*schema.Provi
 // For cross-region testing: Typically paired with PreCheckMultipleRegion and ConfigAlternateRegionProvider.
 //
 // For cross-account testing: Typically paired with PreCheckAlternateAccount and ConfigAlternateAccountProvider.
-func FactoriesAlternate(t *testing.T, providers *[]*schema.Provider) map[string]func() (*schema.Provider, error) {
-	return factoriesInit(context.Background(), t, providers, []string{
+func FactoriesAlternate(ctx context.Context, t *testing.T, providers *[]*schema.Provider) map[string]func() (*schema.Provider, error) {
+	return factoriesInit(ctx, t, providers, []string{
 		ProviderName,
 		ProviderNameAlternate,
 	})
