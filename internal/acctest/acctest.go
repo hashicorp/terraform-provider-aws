@@ -167,9 +167,9 @@ func ProtoV5FactoriesAlternate(t *testing.T) map[string]func() (tfprotov5.Provid
 //
 // Usage typically paired with PreCheckMultipleRegion, PreCheckAlternateAccount,
 // and ConfigAlternateAccountAndAlternateRegionProvider.
-func ProtoV5FactoriesAlternateAccountAndAlternateRegion(t *testing.T) map[string]func() (tfprotov5.ProviderServer, error) {
+func ProtoV5FactoriesAlternateAccountAndAlternateRegion(ctx context.Context, t *testing.T) map[string]func() (tfprotov5.ProviderServer, error) {
 	return protoV5ProviderFactoriesInit(
-		context.Background(),
+		ctx,
 		ProviderName,
 		ProviderNameAlternateAccountAlternateRegion,
 		ProviderNameAlternateAccountSameRegion,
