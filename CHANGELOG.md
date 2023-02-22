@@ -2,10 +2,16 @@
 
 FEATURES:
 
+* **New Data Source:** `aws_vpc_security_group_rule` ([#29484](https://github.com/hashicorp/terraform-provider-aws/issues/29484))
+* **New Data Source:** `aws_vpc_security_group_rules` ([#29484](https://github.com/hashicorp/terraform-provider-aws/issues/29484))
 * **New Resource:** `aws_networkmanager_connect_peer` ([#29296](https://github.com/hashicorp/terraform-provider-aws/issues/29296))
+* **New Resource:** `aws_vpc_security_group_egress_rule` ([#29484](https://github.com/hashicorp/terraform-provider-aws/issues/29484))
+* **New Resource:** `aws_vpc_security_group_ingress_rule` ([#29484](https://github.com/hashicorp/terraform-provider-aws/issues/29484))
 
 ENHANCEMENTS:
 
+* data-source/aws_ecr_image: Add `most_recent` argument to return the most recently pushed image ([#26857](https://github.com/hashicorp/terraform-provider-aws/issues/26857))
+* data-source/aws_ecr_repository: Add `most_recent_image_tags` attribute containing the most recently pushed image tag(s) in an ECR repository ([#26857](https://github.com/hashicorp/terraform-provider-aws/issues/26857))
 * resource/aws_lb_ssl_negotiation_policy: Add `triggers` attribute to force resource updates ([#29482](https://github.com/hashicorp/terraform-provider-aws/issues/29482))
 * resource/aws_load_balancer_listener_policy: Add `triggers` attribute to force resource updates ([#29482](https://github.com/hashicorp/terraform-provider-aws/issues/29482))
 * resource/aws_organizations_policy: Add `skip_destroy` attribute ([#29382](https://github.com/hashicorp/terraform-provider-aws/issues/29382))
