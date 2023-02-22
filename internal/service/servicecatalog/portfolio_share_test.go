@@ -29,7 +29,7 @@ func testAccPortfolioShare_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(servicecatalog.EndpointsID, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckPortfolioShareDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
@@ -83,7 +83,7 @@ func testAccPortfolioShare_sharePrincipals(t *testing.T) {
 			acctest.PreCheckPartitionHasService(servicecatalog.EndpointsID, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckPortfolioShareDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
@@ -165,7 +165,7 @@ func testAccPortfolioShare_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(servicecatalog.EndpointsID, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckPortfolioShareDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
