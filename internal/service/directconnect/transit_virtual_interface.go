@@ -1,6 +1,7 @@
 package directconnect
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strconv"
@@ -9,21 +10,23 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/directconnect"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceTransitVirtualInterface() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceTransitVirtualInterfaceCreate,
-		Read:   resourceTransitVirtualInterfaceRead,
-		Update: resourceTransitVirtualInterfaceUpdate,
-		Delete: resourceTransitVirtualInterfaceDelete,
+		CreateWithoutTimeout: resourceTransitVirtualInterfaceCreate,
+		ReadWithoutTimeout:   resourceTransitVirtualInterfaceRead,
+		UpdateWithoutTimeout: resourceTransitVirtualInterfaceUpdate,
+		DeleteWithoutTimeout: resourceTransitVirtualInterfaceDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceTransitVirtualInterfaceImport,
+			StateContext: resourceTransitVirtualInterfaceImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -120,8 +123,9 @@ func ResourceTransitVirtualInterface() *schema.Resource {
 	}
 }
 
-func resourceTransitVirtualInterfaceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+func resourceTransitVirtualInterfaceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -151,33 +155,34 @@ func resourceTransitVirtualInterfaceCreate(d *schema.ResourceData, meta interfac
 	}
 
 	log.Printf("[DEBUG] Creating Direct Connect transit virtual interface: %s", req)
-	resp, err := conn.CreateTransitVirtualInterface(req)
+	resp, err := conn.CreateTransitVirtualInterfaceWithContext(ctx, req)
 	if err != nil {
-		return fmt.Errorf("error creating Direct Connect transit virtual interface: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Direct Connect transit virtual interface: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resp.VirtualInterface.VirtualInterfaceId))
 
-	if err := transitVirtualInterfaceWaitUntilAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return err
+	if err := transitVirtualInterfaceWaitUntilAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	return resourceTransitVirtualInterfaceRead(d, meta)
+	return append(diags, resourceTransitVirtualInterfaceRead(ctx, d, meta)...)
 }
 
-func resourceTransitVirtualInterfaceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+func resourceTransitVirtualInterfaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	vif, err := virtualInterfaceRead(d.Id(), conn)
+	vif, err := virtualInterfaceRead(ctx, d.Id(), conn)
 	if err != nil {
-		return err
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 	if vif == nil {
 		log.Printf("[WARN] Direct Connect transit virtual interface (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	d.Set("address_family", vif.AddressFamily)
@@ -203,46 +208,49 @@ func resourceTransitVirtualInterfaceRead(d *schema.ResourceData, meta interface{
 	d.Set("sitelink_enabled", vif.SiteLinkEnabled)
 	d.Set("vlan", vif.Vlan)
 
-	tags, err := ListTags(conn, arn)
+	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for Direct Connect transit virtual interface (%s): %s", arn, err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for Direct Connect transit virtual interface (%s): %s", arn, err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceTransitVirtualInterfaceUpdate(d *schema.ResourceData, meta interface{}) error {
-	if err := virtualInterfaceUpdate(d, meta); err != nil {
-		return err
+func resourceTransitVirtualInterfaceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	diags = append(diags, virtualInterfaceUpdate(ctx, d, meta)...)
+	if diags.HasError() {
+		return diags
 	}
 
-	if err := transitVirtualInterfaceWaitUntilAvailable(meta.(*conns.AWSClient).DirectConnectConn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return err
+	if err := transitVirtualInterfaceWaitUntilAvailable(ctx, meta.(*conns.AWSClient).DirectConnectConn(), d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	return resourceTransitVirtualInterfaceRead(d, meta)
+	return append(diags, resourceTransitVirtualInterfaceRead(ctx, d, meta)...)
 }
 
-func resourceTransitVirtualInterfaceDelete(d *schema.ResourceData, meta interface{}) error {
-	return virtualInterfaceDelete(d, meta)
+func resourceTransitVirtualInterfaceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	return virtualInterfaceDelete(ctx, d, meta)
 }
 
-func resourceTransitVirtualInterfaceImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+func resourceTransitVirtualInterfaceImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 
-	vif, err := virtualInterfaceRead(d.Id(), conn)
+	vif, err := virtualInterfaceRead(ctx, d.Id(), conn)
 	if err != nil {
 		return nil, err
 	}
@@ -257,9 +265,8 @@ func resourceTransitVirtualInterfaceImport(d *schema.ResourceData, meta interfac
 	return []*schema.ResourceData{d}, nil
 }
 
-func transitVirtualInterfaceWaitUntilAvailable(conn *directconnect.DirectConnect, vifId string, timeout time.Duration) error {
-	return virtualInterfaceWaitUntilAvailable(
-		conn,
+func transitVirtualInterfaceWaitUntilAvailable(ctx context.Context, conn *directconnect.DirectConnect, vifId string, timeout time.Duration) error {
+	return virtualInterfaceWaitUntilAvailable(ctx, conn,
 		vifId,
 		timeout,
 		[]string{

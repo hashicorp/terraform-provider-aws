@@ -9,13 +9,9 @@ on:
       - .github/workflows/acctest-terraform-lint.yml
       - .go-version
       - .ci/.tflint.hcl
-      - 'internal/service/**/*_test.go'
       - .ci/scripts/validate-terraform.sh
-      - tools/go.mod
-
-env:
-  TEST_FILES_PARTITION1: '\./internal/service/[a-f].*/.*_test\.go'
-  TEST_FILES_PARTITION2: '\./internal/service/[g-z].*/.*_test\.go'
+      - .ci/tools/go.mod
+      - 'internal/service/**/*_test.go'
 
 jobs:
   terrafmt:
@@ -39,34 +35,15 @@ jobs:
             | sort -u \
             | xargs -I {} terrafmt diff --check --fmtcompat {}
 
-  validate-init:
-    name: Validate Init
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-go@v3
-        with:
-          go-version-file: .go-version
-      - uses: actions/cache@v3
-        continue-on-error: true
-        timeout-minutes: 2
-        with:
-          path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
-      - uses: actions/cache@v3
-        name: Cache plugin dir
-        continue-on-error: true
-        timeout-minutes: 2
-        with:
-          path: ~/.tflint.d/plugins
-          key: ${{ runner.os }}-tflint-${{ hashFiles('.ci/.tflint.hcl') }}
-      - run: cd .ci/tools && go install github.com/katbyte/terrafmt
-      - run: cd .ci/tools && go install github.com/terraform-linters/tflint
-      - run: tflint -c .ci/.tflint.hcl --init
-  validate-testsa:
-    name: Validate Tests 1 of 2
-    needs: [validate-init]
+  tflint:
+    name: Validate Acceptance Tests
     runs-on: [custom, linux, medium]
+    strategy:
+      matrix:
+        path: ['[a-f]', '[g-z]']
+    env:
+      TEST_FILES_PARTITION: '\./internal/service/${{ matrix.path }}.*/.*_test\.go'
+
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
@@ -85,47 +62,13 @@ jobs:
         with:
           path: ~/.tflint.d/plugins
           key: ${{ runner.os }}-tflint-${{ hashFiles('.ci/.tflint.hcl') }}
+
       - run: cd .ci/tools && go install github.com/katbyte/terrafmt
       - run: cd .ci/tools && go install github.com/terraform-linters/tflint
-      - run: find ~/ -type d -name .tflint.d
-      - run: tflint -c .ci/.tflint.hcl --init
-      - run: find ~/ -type d -name .tflint.d
-      - run: ls -hal ~/.tflint.d
-      - run: ls -hal ~/.tflint.d/plugins
-      - run: echo -n "File count $( find ./internal -type f -regextype egrep -regex ${{ env.TEST_FILES_PARTITION2 }} | wc -l | xargs )"
+
+      - run: tflint --config .ci/.tflint.hcl --init
+
+      - run: echo -n "File count $( find ./internal -type f -regextype egrep -regex ${{ env.TEST_FILES_PARTITION }} | wc -l | xargs )"
       - run: |
-          find ./internal -type f -regextype egrep -regex ${{ env.TEST_FILES_PARTITION1 }} \
-            | .ci/scripts/validate-terraform.sh
-  validate-testsb:
-    name: Validate Tests 2 of 2
-    needs: [validate-init]
-    runs-on: [custom, linux, medium]
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-go@v3
-        with:
-          go-version-file: .go-version
-      - uses: actions/cache@v3
-        continue-on-error: true
-        timeout-minutes: 2
-        with:
-          path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
-      - uses: actions/cache@v3
-        name: Cache plugin dir
-        continue-on-error: true
-        timeout-minutes: 2
-        with:
-          path: ~/.tflint.d/plugins
-          key: ${{ runner.os }}-tflint-${{ hashFiles('.ci/.tflint.hcl') }}
-      - run: cd .ci/tools && go install github.com/katbyte/terrafmt
-      - run: cd .ci/tools && go install github.com/terraform-linters/tflint
-      - run: find ~/ -type d -name .tflint.d
-      - run: tflint -c .ci/.tflint.hcl --init
-      - run: find ~/ -type d -name .tflint.d
-      - run: ls -hal ~/.tflint.d
-      - run: ls -hal ~/.tflint.d/plugins
-      - run: echo -n "File count $( find ./internal -type f -regextype egrep -regex ${{ env.TEST_FILES_PARTITION2 }} | wc -l | xargs )"
-      - run: |
-          find ./internal -type f -regextype egrep -regex ${{ env.TEST_FILES_PARTITION2 }} \
+          find ./internal -type f -regextype egrep -regex ${{ env.TEST_FILES_PARTITION }} \
             | .ci/scripts/validate-terraform.sh

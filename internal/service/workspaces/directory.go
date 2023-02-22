@@ -1,15 +1,17 @@
 package workspaces
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/workspaces"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -18,12 +20,12 @@ import (
 
 func ResourceDirectory() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceDirectoryCreate,
-		Read:   resourceDirectoryRead,
-		Update: resourceDirectoryUpdate,
-		Delete: resourceDirectoryDelete,
+		CreateWithoutTimeout: resourceDirectoryCreate,
+		ReadWithoutTimeout:   resourceDirectoryRead,
+		UpdateWithoutTimeout: resourceDirectoryUpdate,
+		DeleteWithoutTimeout: resourceDirectoryDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"alias": {
@@ -203,8 +205,9 @@ func ResourceDirectory() *schema.Resource {
 	}
 }
 
-func resourceDirectoryCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WorkSpacesConn
+func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).WorkSpacesConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 	directoryID := d.Get("directory_id").(string)
@@ -222,59 +225,58 @@ func resourceDirectoryCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Registering WorkSpaces Directory: %s", input)
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(
-		DirectoryRegisterInvalidResourceStateTimeout,
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, DirectoryRegisterInvalidResourceStateTimeout,
 		func() (interface{}, error) {
-			return conn.RegisterWorkspaceDirectory(input)
+			return conn.RegisterWorkspaceDirectoryWithContext(ctx, input)
 		},
 		// "error registering WorkSpaces Directory (d-000000000000): InvalidResourceStateException: The specified directory is not in a valid state. Confirm that the directory has a status of Active, and try again."
 		workspaces.ErrCodeInvalidResourceStateException,
 	)
 
 	if err != nil {
-		return fmt.Errorf("error registering WorkSpaces Directory (%s): %w", directoryID, err)
+		return sdkdiag.AppendErrorf(diags, "registering WorkSpaces Directory (%s): %s", directoryID, err)
 	}
 
 	d.SetId(directoryID)
 
-	_, err = WaitDirectoryRegistered(conn, d.Id())
+	_, err = WaitDirectoryRegistered(ctx, conn, d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error waiting for WorkSpaces Directory (%s) to register: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for WorkSpaces Directory (%s) to register: %s", d.Id(), err)
 	}
 
 	if v, ok := d.GetOk("self_service_permissions"); ok {
 		log.Printf("[DEBUG] Modifying WorkSpaces Directory (%s) self-service permissions", directoryID)
-		_, err := conn.ModifySelfservicePermissions(&workspaces.ModifySelfservicePermissionsInput{
+		_, err := conn.ModifySelfservicePermissionsWithContext(ctx, &workspaces.ModifySelfservicePermissionsInput{
 			ResourceId:             aws.String(directoryID),
 			SelfservicePermissions: ExpandSelfServicePermissions(v.([]interface{})),
 		})
 		if err != nil {
-			return fmt.Errorf("error setting WorkSpaces Directory (%s) self-service permissions: %w", directoryID, err)
+			return sdkdiag.AppendErrorf(diags, "setting WorkSpaces Directory (%s) self-service permissions: %s", directoryID, err)
 		}
 		log.Printf("[INFO] Modified WorkSpaces Directory (%s) self-service permissions", directoryID)
 	}
 
 	if v, ok := d.GetOk("workspace_access_properties"); ok {
 		log.Printf("[DEBUG] Modifying WorkSpaces Directory (%s) access properties", directoryID)
-		_, err := conn.ModifyWorkspaceAccessProperties(&workspaces.ModifyWorkspaceAccessPropertiesInput{
+		_, err := conn.ModifyWorkspaceAccessPropertiesWithContext(ctx, &workspaces.ModifyWorkspaceAccessPropertiesInput{
 			ResourceId:                aws.String(directoryID),
 			WorkspaceAccessProperties: ExpandWorkspaceAccessProperties(v.([]interface{})),
 		})
 		if err != nil {
-			return fmt.Errorf("error setting WorkSpaces Directory (%s) access properties: %w", directoryID, err)
+			return sdkdiag.AppendErrorf(diags, "setting WorkSpaces Directory (%s) access properties: %s", directoryID, err)
 		}
 		log.Printf("[INFO] Modified WorkSpaces Directory (%s) access properties", directoryID)
 	}
 
 	if v, ok := d.GetOk("workspace_creation_properties"); ok {
 		log.Printf("[DEBUG] Modifying WorkSpaces Directory (%s) creation properties", directoryID)
-		_, err := conn.ModifyWorkspaceCreationProperties(&workspaces.ModifyWorkspaceCreationPropertiesInput{
+		_, err := conn.ModifyWorkspaceCreationPropertiesWithContext(ctx, &workspaces.ModifyWorkspaceCreationPropertiesInput{
 			ResourceId:                  aws.String(directoryID),
 			WorkspaceCreationProperties: ExpandWorkspaceCreationProperties(v.([]interface{})),
 		})
 		if err != nil {
-			return fmt.Errorf("error setting WorkSpaces Directory (%s) creation properties: %w", directoryID, err)
+			return sdkdiag.AppendErrorf(diags, "setting WorkSpaces Directory (%s) creation properties: %s", directoryID, err)
 		}
 		log.Printf("[INFO] Modified WorkSpaces Directory (%s) creation properties", directoryID)
 	}
@@ -282,39 +284,40 @@ func resourceDirectoryCreate(d *schema.ResourceData, meta interface{}) error {
 	if v, ok := d.GetOk("ip_group_ids"); ok && v.(*schema.Set).Len() > 0 {
 		ipGroupIds := v.(*schema.Set)
 		log.Printf("[DEBUG] Associating WorkSpaces Directory (%s) with IP Groups %s", directoryID, ipGroupIds.List())
-		_, err := conn.AssociateIpGroups(&workspaces.AssociateIpGroupsInput{
+		_, err := conn.AssociateIpGroupsWithContext(ctx, &workspaces.AssociateIpGroupsInput{
 			DirectoryId: aws.String(directoryID),
 			GroupIds:    flex.ExpandStringSet(ipGroupIds),
 		})
 		if err != nil {
-			return fmt.Errorf("error asassociating WorkSpaces Directory (%s) ip groups: %w", directoryID, err)
+			return sdkdiag.AppendErrorf(diags, "asassociating WorkSpaces Directory (%s) ip groups: %s", directoryID, err)
 		}
 		log.Printf("[INFO] Associated WorkSpaces Directory (%s) IP Groups", directoryID)
 	}
 
-	return resourceDirectoryRead(d, meta)
+	return append(diags, resourceDirectoryRead(ctx, d, meta)...)
 }
 
-func resourceDirectoryRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WorkSpacesConn
+func resourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).WorkSpacesConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	directory, err := FindDirectoryByID(conn, d.Id())
+	directory, err := FindDirectoryByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] WorkSpaces Directory (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading WorkSpaces Directory (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading WorkSpaces Directory (%s): %s", d.Id(), err)
 	}
 
 	d.Set("directory_id", directory.DirectoryId)
 	if err := d.Set("subnet_ids", flex.FlattenStringSet(directory.SubnetIds)); err != nil {
-		return fmt.Errorf("error setting subnet_ids: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting subnet_ids: %s", err)
 	}
 	d.Set("workspace_security_group_id", directory.WorkspaceSecurityGroupId)
 	d.Set("iam_role_id", directory.IamRoleId)
@@ -324,57 +327,58 @@ func resourceDirectoryRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("alias", directory.Alias)
 
 	if err := d.Set("self_service_permissions", FlattenSelfServicePermissions(directory.SelfservicePermissions)); err != nil {
-		return fmt.Errorf("error setting self_service_permissions: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting self_service_permissions: %s", err)
 	}
 
 	if err := d.Set("workspace_access_properties", FlattenWorkspaceAccessProperties(directory.WorkspaceAccessProperties)); err != nil {
-		return fmt.Errorf("error setting workspace_access_properties: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting workspace_access_properties: %s", err)
 	}
 
 	if err := d.Set("workspace_creation_properties", FlattenWorkspaceCreationProperties(directory.WorkspaceCreationProperties)); err != nil {
-		return fmt.Errorf("error setting workspace_creation_properties: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting workspace_creation_properties: %s", err)
 	}
 
 	if err := d.Set("ip_group_ids", flex.FlattenStringSet(directory.IpGroupIds)); err != nil {
-		return fmt.Errorf("error setting ip_group_ids: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting ip_group_ids: %s", err)
 	}
 
 	if err := d.Set("dns_ip_addresses", flex.FlattenStringSet(directory.DnsIpAddresses)); err != nil {
-		return fmt.Errorf("error setting dns_ip_addresses: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting dns_ip_addresses: %s", err)
 	}
 
-	tags, err := ListTags(conn, d.Id())
+	tags, err := ListTags(ctx, conn, d.Id())
 	if err != nil {
-		return fmt.Errorf("error listing tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "listing tags: %s", err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceDirectoryUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WorkSpacesConn
+func resourceDirectoryUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).WorkSpacesConn()
 
 	if d.HasChange("self_service_permissions") {
 		log.Printf("[DEBUG] Modifying WorkSpaces Directory (%s) self-service permissions", d.Id())
 		permissions := d.Get("self_service_permissions").([]interface{})
 
-		_, err := conn.ModifySelfservicePermissions(&workspaces.ModifySelfservicePermissionsInput{
+		_, err := conn.ModifySelfservicePermissionsWithContext(ctx, &workspaces.ModifySelfservicePermissionsInput{
 			ResourceId:             aws.String(d.Id()),
 			SelfservicePermissions: ExpandSelfServicePermissions(permissions),
 		})
 		if err != nil {
-			return fmt.Errorf("error updating WorkSpaces Directory (%s) self service permissions: %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating WorkSpaces Directory (%s) self service permissions: %s", d.Id(), err)
 		}
 		log.Printf("[INFO] Modified WorkSpaces Directory (%s) self-service permissions", d.Id())
 	}
@@ -383,12 +387,12 @@ func resourceDirectoryUpdate(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[DEBUG] Modifying WorkSpaces Directory (%s) access properties", d.Id())
 		properties := d.Get("workspace_access_properties").([]interface{})
 
-		_, err := conn.ModifyWorkspaceAccessProperties(&workspaces.ModifyWorkspaceAccessPropertiesInput{
+		_, err := conn.ModifyWorkspaceAccessPropertiesWithContext(ctx, &workspaces.ModifyWorkspaceAccessPropertiesInput{
 			ResourceId:                aws.String(d.Id()),
 			WorkspaceAccessProperties: ExpandWorkspaceAccessProperties(properties),
 		})
 		if err != nil {
-			return fmt.Errorf("error updating WorkSpaces Directory (%s) access properties: %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating WorkSpaces Directory (%s) access properties: %s", d.Id(), err)
 		}
 		log.Printf("[INFO] Modified WorkSpaces Directory (%s) access properties", d.Id())
 	}
@@ -397,12 +401,12 @@ func resourceDirectoryUpdate(d *schema.ResourceData, meta interface{}) error {
 		log.Printf("[DEBUG] Modifying WorkSpaces Directory (%s) creation properties", d.Id())
 		properties := d.Get("workspace_creation_properties").([]interface{})
 
-		_, err := conn.ModifyWorkspaceCreationProperties(&workspaces.ModifyWorkspaceCreationPropertiesInput{
+		_, err := conn.ModifyWorkspaceCreationPropertiesWithContext(ctx, &workspaces.ModifyWorkspaceCreationPropertiesInput{
 			ResourceId:                  aws.String(d.Id()),
 			WorkspaceCreationProperties: ExpandWorkspaceCreationProperties(properties),
 		})
 		if err != nil {
-			return fmt.Errorf("error updating WorkSpaces Directory (%s) creation properties: %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating WorkSpaces Directory (%s) creation properties: %s", d.Id(), err)
 		}
 		log.Printf("[INFO] Modified WorkSpaces Directory (%s) creation properties", d.Id())
 	}
@@ -415,21 +419,21 @@ func resourceDirectoryUpdate(d *schema.ResourceData, meta interface{}) error {
 		removed := old.Difference(new)
 
 		log.Printf("[DEBUG] Associating WorkSpaces Directory (%s) with IP Groups %s", d.Id(), added.GoString())
-		_, err := conn.AssociateIpGroups(&workspaces.AssociateIpGroupsInput{
+		_, err := conn.AssociateIpGroupsWithContext(ctx, &workspaces.AssociateIpGroupsInput{
 			DirectoryId: aws.String(d.Id()),
 			GroupIds:    flex.ExpandStringSet(added),
 		})
 		if err != nil {
-			return fmt.Errorf("error asassociating WorkSpaces Directory (%s) IP Groups: %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "asassociating WorkSpaces Directory (%s) IP Groups: %s", d.Id(), err)
 		}
 
 		log.Printf("[DEBUG] Disassociating WorkSpaces Directory (%s) with IP Groups %s", d.Id(), removed.GoString())
-		_, err = conn.DisassociateIpGroups(&workspaces.DisassociateIpGroupsInput{
+		_, err = conn.DisassociateIpGroupsWithContext(ctx, &workspaces.DisassociateIpGroupsInput{
 			DirectoryId: aws.String(d.Id()),
 			GroupIds:    flex.ExpandStringSet(removed),
 		})
 		if err != nil {
-			return fmt.Errorf("error disasassociating WorkSpaces Directory (%s) IP Groups: %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "disasassociating WorkSpaces Directory (%s) IP Groups: %s", d.Id(), err)
 		}
 
 		log.Printf("[INFO] Updated WorkSpaces Directory (%s) IP Groups", d.Id())
@@ -437,22 +441,22 @@ func resourceDirectoryUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %w", err)
+		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
 		}
 	}
 
-	return resourceDirectoryRead(d, meta)
+	return append(diags, resourceDirectoryRead(ctx, d, meta)...)
 }
 
-func resourceDirectoryDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WorkSpacesConn
+func resourceDirectoryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).WorkSpacesConn()
 
 	log.Printf("[DEBUG] Deregistering WorkSpaces Directory: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(
-		DirectoryDeregisterInvalidResourceStateTimeout,
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, DirectoryDeregisterInvalidResourceStateTimeout,
 		func() (interface{}, error) {
-			return conn.DeregisterWorkspaceDirectory(&workspaces.DeregisterWorkspaceDirectoryInput{
+			return conn.DeregisterWorkspaceDirectoryWithContext(ctx, &workspaces.DeregisterWorkspaceDirectoryInput{
 				DirectoryId: aws.String(d.Id()),
 			})
 		},
@@ -461,20 +465,20 @@ func resourceDirectoryDelete(d *schema.ResourceData, meta interface{}) error {
 	)
 
 	if tfawserr.ErrCodeEquals(err, workspaces.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deregistering WorkSpaces Directory (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deregistering WorkSpaces Directory (%s): %s", d.Id(), err)
 	}
 
-	_, err = WaitDirectoryDeregistered(conn, d.Id())
+	_, err = WaitDirectoryDeregistered(ctx, conn, d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error waiting for WorkSpaces Directory (%s) to deregister: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for WorkSpaces Directory (%s) to deregister: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func ExpandWorkspaceAccessProperties(properties []interface{}) *workspaces.WorkspaceAccessProperties {

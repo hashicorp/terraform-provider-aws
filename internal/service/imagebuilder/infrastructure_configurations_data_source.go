@@ -1,18 +1,20 @@
 package imagebuilder
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/namevaluesfilters"
 )
 
 func DataSourceInfrastructureConfigurations() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceInfrastructureConfigurationsRead,
+		ReadWithoutTimeout: dataSourceInfrastructureConfigurationsRead,
 		Schema: map[string]*schema.Schema{
 			"arns": {
 				Type:     schema.TypeSet,
@@ -29,8 +31,9 @@ func DataSourceInfrastructureConfigurations() *schema.Resource {
 	}
 }
 
-func dataSourceInfrastructureConfigurationsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ImageBuilderConn
+func dataSourceInfrastructureConfigurationsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ImageBuilderConn()
 
 	input := &imagebuilder.ListInfrastructureConfigurationsInput{}
 
@@ -40,7 +43,7 @@ func dataSourceInfrastructureConfigurationsRead(d *schema.ResourceData, meta int
 
 	var results []*imagebuilder.InfrastructureConfigurationSummary
 
-	err := conn.ListInfrastructureConfigurationsPages(input, func(page *imagebuilder.ListInfrastructureConfigurationsOutput, lastPage bool) bool {
+	err := conn.ListInfrastructureConfigurationsPagesWithContext(ctx, input, func(page *imagebuilder.ListInfrastructureConfigurationsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -57,7 +60,7 @@ func dataSourceInfrastructureConfigurationsRead(d *schema.ResourceData, meta int
 	})
 
 	if err != nil {
-		return fmt.Errorf("error reading Image Builder Infrastructure Configurations: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading Image Builder Infrastructure Configurations: %s", err)
 	}
 
 	var arns, names []string
@@ -71,5 +74,5 @@ func dataSourceInfrastructureConfigurationsRead(d *schema.ResourceData, meta int
 	d.Set("arns", arns)
 	d.Set("names", names)
 
-	return nil
+	return diags
 }

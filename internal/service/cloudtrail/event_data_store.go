@@ -168,7 +168,7 @@ func ResourceEventDataStore() *schema.Resource {
 }
 
 func resourceEventDataStoreCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CloudTrailConn
+	conn := meta.(*conns.AWSClient).CloudTrailConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -206,7 +206,7 @@ func resourceEventDataStoreCreate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceEventDataStoreRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CloudTrailConn
+	conn := meta.(*conns.AWSClient).CloudTrailConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -232,7 +232,7 @@ func resourceEventDataStoreRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("retention_period", eventDataStore.RetentionPeriod)
 	d.Set("termination_protection_enabled", eventDataStore.TerminationProtectionEnabled)
 
-	tags, err := ListTags(conn, d.Id())
+	tags, err := ListTags(ctx, conn, d.Id())
 
 	if err != nil {
 		return diag.Errorf("error listing tags for CloudTrail Event Data Store (%s): %s", d.Id(), err)
@@ -253,7 +253,7 @@ func resourceEventDataStoreRead(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceEventDataStoreUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CloudTrailConn
+	conn := meta.(*conns.AWSClient).CloudTrailConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &cloudtrail.UpdateEventDataStoreInput{
@@ -300,7 +300,7 @@ func resourceEventDataStoreUpdate(ctx context.Context, d *schema.ResourceData, m
 		o, n := d.GetChange("tags_all")
 
 		log.Printf("[DEBUG] Updating CloudTrail Event Data Store (%s) tags", d.Id())
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.Errorf("error updating CloudTrail Event Data Store (%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -309,7 +309,7 @@ func resourceEventDataStoreUpdate(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceEventDataStoreDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CloudTrailConn
+	conn := meta.(*conns.AWSClient).CloudTrailConn()
 
 	log.Printf("[DEBUG] Deleting CloudTrail Event Data Store: (%s)", d.Id())
 	_, err := conn.DeleteEventDataStoreWithContext(ctx, &cloudtrail.DeleteEventDataStoreInput{

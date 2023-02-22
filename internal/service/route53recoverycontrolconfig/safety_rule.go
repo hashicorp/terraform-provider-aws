@@ -1,27 +1,29 @@
 package route53recoverycontrolconfig
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	r53rcc "github.com/aws/aws-sdk-go/service/route53recoverycontrolconfig"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
 func ResourceSafetyRule() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceSafetyRuleCreate,
-		Read:   resourceSafetyRuleRead,
-		Update: resourceSafetyRuleUpdate,
-		Delete: resourceSafetyRuleDelete,
+		CreateWithoutTimeout: resourceSafetyRuleCreate,
+		ReadWithoutTimeout:   resourceSafetyRuleRead,
+		UpdateWithoutTimeout: resourceSafetyRuleUpdate,
+		DeleteWithoutTimeout: resourceSafetyRuleDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -108,39 +110,41 @@ func ResourceSafetyRule() *schema.Resource {
 	}
 }
 
-func resourceSafetyRuleCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceSafetyRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	if _, ok := d.GetOk("asserted_controls"); ok {
-		return createAssertionRule(d, meta)
+		return append(diags, createAssertionRule(ctx, d, meta)...)
 	}
 
 	if _, ok := d.GetOk("gating_controls"); ok {
-		return createGatingRule(d, meta)
+		return append(diags, createGatingRule(ctx, d, meta)...)
 	}
 
-	return fmt.Errorf("Expecting either asserted_controls or gating_controls,  but none found")
+	return diags
 }
 
-func resourceSafetyRuleRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn
+func resourceSafetyRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn()
 
 	input := &r53rcc.DescribeSafetyRuleInput{
 		SafetyRuleArn: aws.String(d.Id()),
 	}
 
-	output, err := conn.DescribeSafetyRule(input)
+	output, err := conn.DescribeSafetyRuleWithContext(ctx, input)
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, r53rcc.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Route53 Recovery Control Config Safety Rule (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error describing Route53 Recovery Control Config Safety Rule: %s", err)
+		return sdkdiag.AppendErrorf(diags, "describing Route53 Recovery Control Config Safety Rule: %s", err)
 	}
 
 	if output == nil {
-		return fmt.Errorf("Error describing Route53 Recovery Control Config Safety Rule: %s", "empty response")
+		return sdkdiag.AppendErrorf(diags, "describing Route53 Recovery Control Config Safety Rule: %s", "empty response")
 	}
 
 	if output.AssertionRule != nil {
@@ -152,7 +156,7 @@ func resourceSafetyRuleRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("wait_period_ms", result.WaitPeriodMs)
 
 		if err := d.Set("asserted_controls", flex.FlattenStringList(result.AssertedControls)); err != nil {
-			return fmt.Errorf("Error setting asserted_controls: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting asserted_controls: %s", err)
 		}
 
 		if result.RuleConfig != nil {
@@ -161,7 +165,7 @@ func resourceSafetyRuleRead(d *schema.ResourceData, meta interface{}) error {
 			d.Set("rule_config", nil)
 		}
 
-		return nil
+		return diags
 	}
 
 	if output.GatingRule != nil {
@@ -173,11 +177,11 @@ func resourceSafetyRuleRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("wait_period_ms", result.WaitPeriodMs)
 
 		if err := d.Set("gating_controls", flex.FlattenStringList(result.GatingControls)); err != nil {
-			return fmt.Errorf("Error setting gating_controls: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting gating_controls: %s", err)
 		}
 
 		if err := d.Set("target_controls", flex.FlattenStringList(result.TargetControls)); err != nil {
-			return fmt.Errorf("Error setting target_controls: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting target_controls: %s", err)
 		}
 
 		if result.RuleConfig != nil {
@@ -187,52 +191,55 @@ func resourceSafetyRuleRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	return nil
+	return diags
 }
 
-func resourceSafetyRuleUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceSafetyRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	if _, ok := d.GetOk("asserted_controls"); ok {
-		return updateAssertionRule(d, meta)
+		return append(diags, updateAssertionRule(ctx, d, meta)...)
 	}
 
 	if _, ok := d.GetOk("gating_controls"); ok {
-		return updateGatingRule(d, meta)
+		return append(diags, updateGatingRule(ctx, d, meta)...)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceSafetyRuleDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn
+func resourceSafetyRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn()
 
 	log.Printf("[INFO] Deleting Route53 Recovery Control Config Safety Rule: %s", d.Id())
-	_, err := conn.DeleteSafetyRule(&r53rcc.DeleteSafetyRuleInput{
+	_, err := conn.DeleteSafetyRuleWithContext(ctx, &r53rcc.DeleteSafetyRuleInput{
 		SafetyRuleArn: aws.String(d.Id()),
 	})
 
 	if tfawserr.ErrCodeEquals(err, r53rcc.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error deleting Route53 Recovery Control Config Safety Rule: %w", err)
+		return sdkdiag.AppendErrorf(diags, "deleting Route53 Recovery Control Config Safety Rule: %s", err)
 	}
 
-	_, err = waitSafetyRuleDeleted(conn, d.Id())
+	_, err = waitSafetyRuleDeleted(ctx, conn, d.Id())
 
 	if tfawserr.ErrCodeEquals(err, r53rcc.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error waiting for Route53 Recovery Control Config Safety Rule (%s) to be deleted: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Route53 Recovery Control Config Safety Rule (%s) to be deleted: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func createAssertionRule(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn
+func createAssertionRule(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn()
 
 	assertionRule := &r53rcc.NewAssertionRule{
 		Name:             aws.String(d.Get("name").(string)),
@@ -247,28 +254,29 @@ func createAssertionRule(d *schema.ResourceData, meta interface{}) error {
 		AssertionRule: assertionRule,
 	}
 
-	output, err := conn.CreateSafetyRule(input)
+	output, err := conn.CreateSafetyRuleWithContext(ctx, input)
 	result := output.AssertionRule
 
 	if err != nil {
-		return fmt.Errorf("Error creating Route53 Recovery Control Config Assertion Rule: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating Route53 Recovery Control Config Assertion Rule: %s", err)
 	}
 
 	if result == nil {
-		return fmt.Errorf("Error creating Route53 Recovery Control Config Assertion Rule empty response")
+		return sdkdiag.AppendErrorf(diags, "creating Route53 Recovery Control Config Assertion Rule empty response")
 	}
 
 	d.SetId(aws.StringValue(result.SafetyRuleArn))
 
-	if _, err := waitSafetyRuleCreated(conn, d.Id()); err != nil {
-		return fmt.Errorf("Error waiting for Route53 Recovery Control Config Assertion Rule (%s) to be Deployed: %w", d.Id(), err)
+	if _, err := waitSafetyRuleCreated(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Route53 Recovery Control Config Assertion Rule (%s) to be Deployed: %s", d.Id(), err)
 	}
 
-	return resourceSafetyRuleRead(d, meta)
+	return append(diags, resourceSafetyRuleRead(ctx, d, meta)...)
 }
 
-func createGatingRule(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn
+func createGatingRule(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn()
 
 	gatingRule := &r53rcc.NewGatingRule{
 		Name:            aws.String(d.Get("name").(string)),
@@ -284,28 +292,29 @@ func createGatingRule(d *schema.ResourceData, meta interface{}) error {
 		GatingRule:  gatingRule,
 	}
 
-	output, err := conn.CreateSafetyRule(input)
+	output, err := conn.CreateSafetyRuleWithContext(ctx, input)
 	result := output.GatingRule
 
 	if err != nil {
-		return fmt.Errorf("Error creating Route53 Recovery Control Config Gating Rule: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating Route53 Recovery Control Config Gating Rule: %s", err)
 	}
 
 	if result == nil {
-		return fmt.Errorf("Error creating Route53 Recovery Control Config Gating Rule empty response")
+		return sdkdiag.AppendErrorf(diags, "creating Route53 Recovery Control Config Gating Rule empty response")
 	}
 
 	d.SetId(aws.StringValue(result.SafetyRuleArn))
 
-	if _, err := waitSafetyRuleCreated(conn, d.Id()); err != nil {
-		return fmt.Errorf("Error waiting for Route53 Recovery Control Config Assertion Rule (%s) to be Deployed: %w", d.Id(), err)
+	if _, err := waitSafetyRuleCreated(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Route53 Recovery Control Config Assertion Rule (%s) to be Deployed: %s", d.Id(), err)
 	}
 
-	return resourceSafetyRuleRead(d, meta)
+	return append(diags, resourceSafetyRuleRead(ctx, d, meta)...)
 }
 
-func updateAssertionRule(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn
+func updateAssertionRule(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn()
 
 	assertionRuleUpdate := &r53rcc.AssertionRuleUpdate{
 		SafetyRuleArn: aws.String(d.Get("arn").(string)),
@@ -323,17 +332,18 @@ func updateAssertionRule(d *schema.ResourceData, meta interface{}) error {
 		AssertionRuleUpdate: assertionRuleUpdate,
 	}
 
-	_, err := conn.UpdateSafetyRule(input)
+	_, err := conn.UpdateSafetyRuleWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error updating Route53 Recovery Control Config Assertion Rule: %s", err)
+		return sdkdiag.AppendErrorf(diags, "updating Route53 Recovery Control Config Assertion Rule: %s", err)
 	}
 
-	return resourceControlPanelRead(d, meta)
+	return append(diags, sdkdiag.WrapDiagsf(resourceControlPanelRead(ctx, d, meta), "updating Route53 Recovery Control Config Assertion Rule")...)
 }
 
-func updateGatingRule(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn
+func updateGatingRule(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn()
 
 	gatingRuleUpdate := &r53rcc.GatingRuleUpdate{
 		SafetyRuleArn: aws.String(d.Get("arn").(string)),
@@ -351,13 +361,13 @@ func updateGatingRule(d *schema.ResourceData, meta interface{}) error {
 		GatingRuleUpdate: gatingRuleUpdate,
 	}
 
-	_, err := conn.UpdateSafetyRule(input)
+	_, err := conn.UpdateSafetyRuleWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error updating Route53 Recovery Control Config Gating Rule: %s", err)
+		return sdkdiag.AppendErrorf(diags, "updating Route53 Recovery Control Config Gating Rule: %s", err)
 	}
 
-	return resourceControlPanelRead(d, meta)
+	return append(diags, sdkdiag.WrapDiagsf(resourceControlPanelRead(ctx, d, meta), "updating Route53 Recovery Control Config Gating Rule")...)
 }
 
 func testAccSafetyRuleConfig_expandRule(tfMap map[string]interface{}) *r53rcc.RuleConfig {

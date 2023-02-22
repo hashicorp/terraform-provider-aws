@@ -1,24 +1,26 @@
 package deploy
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codedeploy"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func ResourceDeploymentConfig() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceDeploymentConfigCreate,
-		Read:   resourceDeploymentConfigRead,
-		Delete: resourceDeploymentConfigDelete,
+		CreateWithoutTimeout: resourceDeploymentConfigCreate,
+		ReadWithoutTimeout:   resourceDeploymentConfigRead,
+		DeleteWithoutTimeout: resourceDeploymentConfigDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -139,8 +141,9 @@ func ResourceDeploymentConfig() *schema.Resource {
 	}
 }
 
-func resourceDeploymentConfigCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DeployConn
+func resourceDeploymentConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DeployConn()
 
 	input := &codedeploy.CreateDeploymentConfigInput{
 		DeploymentConfigName: aws.String(d.Get("deployment_config_name").(string)),
@@ -149,63 +152,67 @@ func resourceDeploymentConfigCreate(d *schema.ResourceData, meta interface{}) er
 		TrafficRoutingConfig: expandTrafficRoutingConfig(d),
 	}
 
-	_, err := conn.CreateDeploymentConfig(input)
+	_, err := conn.CreateDeploymentConfigWithContext(ctx, input)
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "creating CodeDeploy Deployment Config (%s): %s", d.Get("deployment_config_name").(string), err)
 	}
 
 	d.SetId(d.Get("deployment_config_name").(string))
 
-	return resourceDeploymentConfigRead(d, meta)
+	return append(diags, resourceDeploymentConfigRead(ctx, d, meta)...)
 }
 
-func resourceDeploymentConfigRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DeployConn
+func resourceDeploymentConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DeployConn()
 
 	input := &codedeploy.GetDeploymentConfigInput{
 		DeploymentConfigName: aws.String(d.Id()),
 	}
 
-	resp, err := conn.GetDeploymentConfig(input)
+	resp, err := conn.GetDeploymentConfigWithContext(ctx, input)
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, codedeploy.ErrCodeDeploymentConfigDoesNotExistException) {
 		log.Printf("[WARN] CodeDeploy Deployment Config (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("finding CodeDeploy Deployment Config (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading CodeDeploy Deployment Config (%s): %s", d.Id(), err)
 	}
 
 	if resp.DeploymentConfigInfo == nil {
-		return fmt.Errorf("Cannot find DeploymentConfig %q", d.Id())
+		return sdkdiag.AppendErrorf(diags, "reading CodeDeploy Deployment Config (%s): empty result", d.Id())
 	}
 
 	if err := d.Set("minimum_healthy_hosts", flattenMinimumHealthHostsConfig(resp.DeploymentConfigInfo.MinimumHealthyHosts)); err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading CodeDeploy Deployment Config (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("traffic_routing_config", flattenTrafficRoutingConfig(resp.DeploymentConfigInfo.TrafficRoutingConfig)); err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading CodeDeploy Deployment Config (%s): %s", d.Id(), err)
 	}
 
 	d.Set("deployment_config_id", resp.DeploymentConfigInfo.DeploymentConfigId)
 	d.Set("deployment_config_name", resp.DeploymentConfigInfo.DeploymentConfigName)
 	d.Set("compute_platform", resp.DeploymentConfigInfo.ComputePlatform)
 
-	return nil
+	return diags
 }
 
-func resourceDeploymentConfigDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DeployConn
+func resourceDeploymentConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DeployConn()
 
 	input := &codedeploy.DeleteDeploymentConfigInput{
 		DeploymentConfigName: aws.String(d.Id()),
 	}
 
-	_, err := conn.DeleteDeploymentConfig(input)
-	return err
+	if _, err := conn.DeleteDeploymentConfigWithContext(ctx, input); err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting CodeDeploy Deployment Config (%s): %s", d.Id(), err)
+	}
+	return diags
 }
 
 func expandMinimumHealthHostsConfig(d *schema.ResourceData) *codedeploy.MinimumHealthyHosts {

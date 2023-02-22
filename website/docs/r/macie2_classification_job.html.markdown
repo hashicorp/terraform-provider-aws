@@ -124,7 +124,6 @@ The `tag_scope_term` object supports the following:
 * `key` -  (Required) The tag key to use in the condition. The only valid value is `TAG`.
 * `target` -  (Required) The type of object to apply the condition to. The only valid value is `S3_OBJECT`.
 
-
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:

@@ -1,22 +1,23 @@
 package lambda
 
 import (
+	"context"
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/lambda"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceFunction() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceFunctionRead,
+		ReadWithoutTimeout: dataSourceFunctionRead,
 
 		Schema: map[string]*schema.Schema{
 			"architectures": {
@@ -209,12 +210,12 @@ func DataSourceFunction() *schema.Resource {
 	}
 }
 
-func dataSourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LambdaConn
+func dataSourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).LambdaConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	functionName := d.Get("function_name").(string)
-
 	input := &lambda.GetFunctionInput{
 		FunctionName: aws.String(functionName),
 	}
@@ -222,179 +223,124 @@ func dataSourceFunctionRead(d *schema.ResourceData, meta interface{}) error {
 	if v, ok := d.GetOk("qualifier"); ok {
 		input.Qualifier = aws.String(v.(string))
 	} else {
-		// If no qualifier provided, set version to latest published version
-		versionsInput := &lambda.ListVersionsByFunctionInput{
-			FunctionName: aws.String(functionName),
-		}
-		var latestVersion string
-		log.Printf("[DEBUG] Getting List of Lambda Versions : %s", versionsInput)
-		errVersions := conn.ListVersionsByFunctionPages(versionsInput, func(p *lambda.ListVersionsByFunctionOutput, lastPage bool) bool {
-			if lastPage {
-				last := p.Versions[len(p.Versions)-1]
-				latestVersion = aws.StringValue(last.Version)
-				return false
-			}
-			return true
-		})
+		// If no qualifier provided, set version to latest published version.
+		latest, err := findLatestFunctionVersionByName(ctx, conn, functionName)
 
-		if errVersions != nil {
-			return fmt.Errorf("error getting List of Lambda Versions for Function (%s): %s", functionName, errVersions)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading Lambda Function (%s) latest version: %s", functionName, err)
 		}
 
 		// If no published version exists, AWS returns '$LATEST' for latestVersion
-		if latestVersion != FunctionVersionLatest {
-			input.Qualifier = aws.String(latestVersion)
+		if v := aws.StringValue(latest.Version); v != FunctionVersionLatest {
+			input.Qualifier = aws.String(v)
 		}
 	}
 
-	log.Printf("[DEBUG] Getting Lambda Function: %s", input)
-	output, err := conn.GetFunction(input)
+	output, err := findFunction(ctx, conn, input)
 
 	if err != nil {
-		return fmt.Errorf("error getting Lambda Function (%s): %w", functionName, err)
-	}
-
-	if output == nil {
-		return fmt.Errorf("error getting Lambda Function (%s): empty response", functionName)
+		return sdkdiag.AppendErrorf(diags, "reading Lambda Function (%s): %s", functionName, err)
 	}
 
 	function := output.Configuration
-
 	functionARN := aws.StringValue(function.FunctionArn)
 	qualifierSuffix := fmt.Sprintf(":%s", aws.StringValue(input.Qualifier))
 	versionSuffix := fmt.Sprintf(":%s", aws.StringValue(function.Version))
-
-	d.Set("version", function.Version)
-
 	qualifiedARN := functionARN
 	if !strings.HasSuffix(functionARN, qualifierSuffix) && !strings.HasSuffix(functionARN, versionSuffix) {
 		qualifiedARN = functionARN + versionSuffix
 	}
-
 	unqualifiedARN := strings.TrimSuffix(functionARN, qualifierSuffix)
 
+	d.SetId(functionName)
+	d.Set("architectures", aws.StringValueSlice(function.Architectures))
 	d.Set("arn", unqualifiedARN)
-
-	deadLetterConfig := []interface{}{}
-	if function.DeadLetterConfig != nil {
-		deadLetterConfig = []interface{}{
+	if function.DeadLetterConfig != nil && function.DeadLetterConfig.TargetArn != nil {
+		if err := d.Set("dead_letter_config", []interface{}{
 			map[string]interface{}{
 				"target_arn": aws.StringValue(function.DeadLetterConfig.TargetArn),
 			},
+		}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting dead_letter_config: %s", err)
 		}
+	} else {
+		d.Set("dead_letter_config", []interface{}{})
 	}
-	if err := d.Set("dead_letter_config", deadLetterConfig); err != nil {
-		return fmt.Errorf("error setting dead_letter_config: %w", err)
-	}
-
 	d.Set("description", function.Description)
-
 	if err := d.Set("environment", flattenEnvironment(function.Environment)); err != nil {
-		return fmt.Errorf("error setting environment: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting environment: %s", err)
 	}
-
+	if err := d.Set("ephemeral_storage", flattenEphemeralStorage(function.EphemeralStorage)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting ephemeral_storage: %s", err)
+	}
+	if err := d.Set("file_system_config", flattenFileSystemConfigs(function.FileSystemConfigs)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting file_system_config: %s", err)
+	}
 	d.Set("handler", function.Handler)
-	d.Set("invoke_arn", functionInvokeARN(aws.StringValue(function.FunctionArn), meta))
-	d.Set("kms_key_arn", function.KMSKeyArn)
-	d.Set("last_modified", function.LastModified)
-
 	if output.Code != nil {
 		d.Set("image_uri", output.Code.ImageUri)
 	}
-
+	d.Set("invoke_arn", functionInvokeARN(unqualifiedARN, meta))
+	d.Set("kms_key_arn", function.KMSKeyArn)
+	d.Set("last_modified", function.LastModified)
 	if err := d.Set("layers", flattenLayers(function.Layers)); err != nil {
-		return fmt.Errorf("Error setting layers for Lambda Function (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting layers: %s", err)
 	}
-
 	d.Set("memory_size", function.MemorySize)
 	d.Set("qualified_arn", qualifiedARN)
 	d.Set("qualified_invoke_arn", functionInvokeARN(qualifiedARN, meta))
-
-	// Add Signing Profile Version ARN
-	if err := d.Set("signing_profile_version_arn", function.SigningProfileVersionArn); err != nil {
-		return fmt.Errorf("Error setting signing profile version arn for Lambda Function: %w", err)
-	}
-
-	// Add Signing Job ARN
-	if err := d.Set("signing_job_arn", function.SigningJobArn); err != nil {
-		return fmt.Errorf("Error setting signing job arn for Lambda Function: %w", err)
-	}
-
-	reservedConcurrentExecutions := int64(-1)
 	if output.Concurrency != nil {
-		reservedConcurrentExecutions = aws.Int64Value(output.Concurrency.ReservedConcurrentExecutions)
+		d.Set("reserved_concurrent_executions", output.Concurrency.ReservedConcurrentExecutions)
+	} else {
+		d.Set("reserved_concurrent_executions", -1)
 	}
-	d.Set("reserved_concurrent_executions", reservedConcurrentExecutions)
-
 	d.Set("role", function.Role)
 	d.Set("runtime", function.Runtime)
+	d.Set("signing_job_arn", function.SigningJobArn)
+	d.Set("signing_profile_version_arn", function.SigningProfileVersionArn)
 	d.Set("source_code_hash", function.CodeSha256)
 	d.Set("source_code_size", function.CodeSize)
+	d.Set("timeout", function.Timeout)
+	tracingConfigMode := lambda.TracingModePassThrough
+	if function.TracingConfig != nil {
+		tracingConfigMode = aws.StringValue(function.TracingConfig.Mode)
+	}
+	if err := d.Set("tracing_config", []interface{}{
+		map[string]interface{}{
+			"mode": tracingConfigMode,
+		},
+	}); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tracing_config: %s", err)
+	}
+	d.Set("version", function.Version)
+	if err := d.Set("vpc_config", flattenVPCConfigResponse(function.VpcConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting vpc_config: %s", err)
+	}
 
 	if err := d.Set("tags", KeyValueTags(output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	tracingConfig := []map[string]interface{}{
-		{
-			"mode": lambda.TracingModePassThrough,
-		},
-	}
-	if function.TracingConfig != nil {
-		tracingConfig[0]["mode"] = aws.StringValue(function.TracingConfig.Mode)
-	}
-	if err := d.Set("tracing_config", tracingConfig); err != nil {
-		return fmt.Errorf("error setting tracing_config: %s", tracingConfig)
-	}
+	// See r/aws_lambda_function.
+	if partition := meta.(*conns.AWSClient).Partition; partition == endpoints.AwsPartitionID && SignerServiceIsAvailable(meta.(*conns.AWSClient).Region) {
+		var codeSigningConfigArn string
 
-	d.Set("timeout", function.Timeout)
+		if aws.StringValue(function.PackageType) == lambda.PackageTypeZip {
+			output, err := conn.GetFunctionCodeSigningConfigWithContext(ctx, &lambda.GetFunctionCodeSigningConfigInput{
+				FunctionName: aws.String(d.Id()),
+			})
 
-	if err := d.Set("vpc_config", flattenVPCConfigResponse(function.VpcConfig)); err != nil {
-		return fmt.Errorf("error setting vpc_config: %w", err)
-	}
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "reading Lambda Function (%s) code signing config: %s", d.Id(), err)
+			}
 
-	if err := d.Set("file_system_config", flattenFileSystemConfigs(function.FileSystemConfigs)); err != nil {
-		return fmt.Errorf("error setting file_system_config: %w", err)
-	}
-
-	// Currently, this functionality is only enabled in AWS Commercial partition
-	// and other partitions return ambiguous error codes (e.g. AccessDeniedException
-	// in AWS GovCloud (US)) so we cannot just ignore the error as would typically.
-	if meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID {
-		d.SetId(aws.StringValue(function.FunctionName))
-
-		return nil
-	}
-
-	// Get Code Signing Config Output.
-	// Code Signing is only supported on zip packaged lambda functions.
-	var codeSigningConfigArn string
-
-	if aws.StringValue(function.PackageType) == lambda.PackageTypeZip {
-		codeSigningConfigInput := &lambda.GetFunctionCodeSigningConfigInput{
-			FunctionName: function.FunctionName,
-		}
-		getCodeSigningConfigOutput, err := conn.GetFunctionCodeSigningConfig(codeSigningConfigInput)
-		if err != nil {
-			return fmt.Errorf("error getting Lambda Function (%s) Code Signing Config: %w", aws.StringValue(function.FunctionName), err)
+			if output != nil {
+				codeSigningConfigArn = aws.StringValue(output.CodeSigningConfigArn)
+			}
 		}
 
-		if getCodeSigningConfigOutput != nil {
-			codeSigningConfigArn = aws.StringValue(getCodeSigningConfigOutput.CodeSigningConfigArn)
-		}
+		d.Set("code_signing_config_arn", codeSigningConfigArn)
 	}
 
-	d.Set("code_signing_config_arn", codeSigningConfigArn)
-
-	d.SetId(aws.StringValue(function.FunctionName))
-
-	if err := d.Set("architectures", flex.FlattenStringList(function.Architectures)); err != nil {
-		return fmt.Errorf("Error setting architectures for Lambda Function (%s): %w", d.Id(), err)
-	}
-
-	if err := d.Set("ephemeral_storage", flattenEphemeralStorage(function.EphemeralStorage)); err != nil {
-		return fmt.Errorf("error setting ephemeral_storage: (%s): %w", d.Id(), err)
-	}
-
-	return nil
+	return diags
 }

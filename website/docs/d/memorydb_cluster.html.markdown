@@ -35,6 +35,7 @@ In addition, the following attributes are exported:
 * `cluster_endpoint`
     * `address` - DNS hostname of the cluster configuration endpoint.
     * `port` - Port number that the cluster configuration endpoint is listening on.
+* `data_tiering` - True when data tiering is enabled.
 * `description` - Description for the cluster.
 * `engine_patch_version` - Patch version number of the Redis engine used by the cluster.
 * `engine_version` - Version number of the Redis engine used by the cluster.

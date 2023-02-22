@@ -1,6 +1,7 @@
 package appsync
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"regexp"
@@ -9,20 +10,22 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appsync"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceDataSource() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceDataSourceCreate,
-		Read:   resourceDataSourceRead,
-		Update: resourceDataSourceUpdate,
-		Delete: resourceDataSourceDelete,
+		CreateWithoutTimeout: resourceDataSourceCreate,
+		ReadWithoutTimeout:   resourceDataSourceRead,
+		UpdateWithoutTimeout: resourceDataSourceUpdate,
+		DeleteWithoutTimeout: resourceDataSourceDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -235,8 +238,9 @@ func ResourceDataSource() *schema.Resource {
 	}
 }
 
-func resourceDataSourceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppSyncConn
+func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppSyncConn()
 	region := meta.(*conns.AWSClient).Region
 
 	input := &appsync.CreateDataSourceInput{
@@ -273,23 +277,24 @@ func resourceDataSourceCreate(d *schema.ResourceData, meta interface{}) error {
 		input.RelationalDatabaseConfig = expandRelationalDatabaseDataSourceConfig(v.([]interface{}), region)
 	}
 
-	_, err := conn.CreateDataSource(input)
+	_, err := conn.CreateDataSourceWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("error creating Appsync Datasource: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating Appsync Datasource: %s", err)
 	}
 
 	d.SetId(d.Get("api_id").(string) + "-" + d.Get("name").(string))
 
-	return resourceDataSourceRead(d, meta)
+	return append(diags, resourceDataSourceRead(ctx, d, meta)...)
 }
 
-func resourceDataSourceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppSyncConn
+func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppSyncConn()
 
 	apiID, name, err := DecodeID(d.Id())
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading Appsync Data Source (%s): %s", d.Id(), err)
 	}
 
 	input := &appsync.GetDataSourceInput{
@@ -297,14 +302,14 @@ func resourceDataSourceRead(d *schema.ResourceData, meta interface{}) error {
 		Name:  aws.String(name),
 	}
 
-	resp, err := conn.GetDataSource(input)
+	resp, err := conn.GetDataSourceWithContext(ctx, input)
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, appsync.ErrCodeNotFoundException) && !d.IsNewResource() {
 			log.Printf("[WARN] AppSync Datasource %q not found, removing from state", d.Id())
 			d.SetId("")
-			return nil
+			return diags
 		}
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading Appsync Data Source (%s): %s", d.Id(), err)
 	}
 
 	dataSource := resp.DataSource
@@ -314,40 +319,41 @@ func resourceDataSourceRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("description", dataSource.Description)
 
 	if err := d.Set("dynamodb_config", flattenDynamoDBDataSourceConfig(dataSource.DynamodbConfig)); err != nil {
-		return fmt.Errorf("error setting dynamodb_config: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting dynamodb_config: %s", err)
 	}
 
 	if err := d.Set("elasticsearch_config", flattenElasticsearchDataSourceConfig(dataSource.ElasticsearchConfig)); err != nil {
-		return fmt.Errorf("error setting elasticsearch_config: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting elasticsearch_config: %s", err)
 	}
 
 	if err := d.Set("http_config", flattenHTTPDataSourceConfig(dataSource.HttpConfig)); err != nil {
-		return fmt.Errorf("error setting http_config: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting http_config: %s", err)
 	}
 
 	if err := d.Set("lambda_config", flattenLambdaDataSourceConfig(dataSource.LambdaConfig)); err != nil {
-		return fmt.Errorf("error setting lambda_config: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting lambda_config: %s", err)
 	}
 
 	if err := d.Set("relational_database_config", flattenRelationalDatabaseDataSourceConfig(dataSource.RelationalDatabaseConfig)); err != nil {
-		return fmt.Errorf("error setting relational_database_config: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting relational_database_config: %s", err)
 	}
 
 	d.Set("name", dataSource.Name)
 	d.Set("service_role_arn", dataSource.ServiceRoleArn)
 	d.Set("type", dataSource.Type)
 
-	return nil
+	return diags
 }
 
-func resourceDataSourceUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppSyncConn
+func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppSyncConn()
 	region := meta.(*conns.AWSClient).Region
 
 	apiID, name, err := DecodeID(d.Id())
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "updating Appsync Data Source (%s): %s", d.Id(), err)
 	}
 
 	input := &appsync.UpdateDataSourceInput{
@@ -384,20 +390,22 @@ func resourceDataSourceUpdate(d *schema.ResourceData, meta interface{}) error {
 		input.RelationalDatabaseConfig = expandRelationalDatabaseDataSourceConfig(v.([]interface{}), region)
 	}
 
-	_, err = conn.UpdateDataSource(input)
+	_, err = conn.UpdateDataSourceWithContext(ctx, input)
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "updating Appsync Data Source (%s): %s", d.Id(), err)
 	}
-	return resourceDataSourceRead(d, meta)
+
+	return append(diags, resourceDataSourceRead(ctx, d, meta)...)
 }
 
-func resourceDataSourceDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AppSyncConn
+func resourceDataSourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AppSyncConn()
 
 	apiID, name, err := DecodeID(d.Id())
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "deleting Appsync Data Source (%s): %s", d.Id(), err)
 	}
 
 	input := &appsync.DeleteDataSourceInput{
@@ -405,15 +413,15 @@ func resourceDataSourceDelete(d *schema.ResourceData, meta interface{}) error {
 		Name:  aws.String(name),
 	}
 
-	_, err = conn.DeleteDataSource(input)
+	_, err = conn.DeleteDataSourceWithContext(ctx, input)
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, appsync.ErrCodeNotFoundException) {
-			return nil
+			return diags
 		}
-		return err
+		return sdkdiag.AppendErrorf(diags, "deleting Appsync Data Source (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func DecodeID(id string) (string, string, error) {

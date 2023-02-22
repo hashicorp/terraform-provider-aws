@@ -1,6 +1,7 @@
 package route53
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -9,18 +10,20 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func ResourceZoneAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceZoneAssociationCreate,
-		Read:   resourceZoneAssociationRead,
-		Delete: resourceZoneAssociationDelete,
+		CreateWithoutTimeout: resourceZoneAssociationCreate,
+		ReadWithoutTimeout:   resourceZoneAssociationRead,
+		DeleteWithoutTimeout: resourceZoneAssociationDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -51,8 +54,9 @@ func ResourceZoneAssociation() *schema.Resource {
 	}
 }
 
-func resourceZoneAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53Conn
+func resourceZoneAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).Route53Conn()
 
 	vpcRegion := meta.(*conns.AWSClient).Region
 	vpcID := d.Get("vpc_id").(string)
@@ -71,10 +75,10 @@ func resourceZoneAssociationCreate(d *schema.ResourceData, meta interface{}) err
 		Comment: aws.String("Managed by Terraform"),
 	}
 
-	output, err := conn.AssociateVPCWithHostedZone(input)
+	output, err := conn.AssociateVPCWithHostedZoneWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("associating Route 53 Hosted Zone (%s) to EC2 VPC (%s): %w", zoneID, vpcID, err)
+		return sdkdiag.AppendErrorf(diags, "associating Route 53 Hosted Zone (%s) to EC2 VPC (%s): %s", zoneID, vpcID, err)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s:%s", zoneID, vpcID, vpcRegion))
@@ -86,24 +90,25 @@ func resourceZoneAssociationCreate(d *schema.ResourceData, meta interface{}) err
 			Target:     []string{route53.ChangeStatusInsync},
 			Timeout:    10 * time.Minute,
 			MinTimeout: 2 * time.Second,
-			Refresh:    resourceZoneAssociationRefreshFunc(conn, CleanChangeID(aws.StringValue(output.ChangeInfo.Id)), d.Id()),
+			Refresh:    resourceZoneAssociationRefreshFunc(ctx, conn, CleanChangeID(aws.StringValue(output.ChangeInfo.Id)), d.Id()),
 		}
 
-		if _, err := wait.WaitForState(); err != nil {
-			return fmt.Errorf("waiting for Route 53 Zone Association (%s) synchronization: %w", d.Id(), err)
+		if _, err := wait.WaitForStateContext(ctx); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for Route 53 Zone Association (%s) synchronization: %s", d.Id(), err)
 		}
 	}
 
-	return resourceZoneAssociationRead(d, meta)
+	return append(diags, resourceZoneAssociationRead(ctx, d, meta)...)
 }
 
-func resourceZoneAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53Conn
+func resourceZoneAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).Route53Conn()
 
 	zoneID, vpcID, vpcRegion, err := ZoneAssociationParseID(d.Id())
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading Route 53 Zone Association (%s): %s", d.Id(), err)
 	}
 
 	// Continue supporting older resources without VPC Region in ID
@@ -115,26 +120,26 @@ func resourceZoneAssociationRead(d *schema.ResourceData, meta interface{}) error
 		vpcRegion = meta.(*conns.AWSClient).Region
 	}
 
-	hostedZoneSummary, err := GetZoneAssociation(conn, zoneID, vpcID, vpcRegion)
+	hostedZoneSummary, err := GetZoneAssociation(ctx, conn, zoneID, vpcID, vpcRegion)
 
 	if tfawserr.ErrMessageContains(err, "AccessDenied", "is not owned by you") && !d.IsNewResource() {
 		log.Printf("[WARN] Route 53 Zone Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("getting Route 53 Zone Association (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Route 53 Zone Association (%s): %s", d.Id(), err)
 	}
 
 	if hostedZoneSummary == nil {
 		if d.IsNewResource() {
-			return fmt.Errorf("getting Route 53 Zone Association (%s): missing after creation", d.Id())
+			return sdkdiag.AppendErrorf(diags, "reading Route 53 Zone Association (%s): missing after creation", d.Id())
 		}
 
 		log.Printf("[WARN] Route 53 Hosted Zone (%s) Association (%s) not found, removing from state", zoneID, vpcID)
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	d.Set("vpc_id", vpcID)
@@ -142,16 +147,17 @@ func resourceZoneAssociationRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("zone_id", zoneID)
 	d.Set("owning_account", hostedZoneSummary.Owner.OwningAccount)
 
-	return nil
+	return diags
 }
 
-func resourceZoneAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).Route53Conn
+func resourceZoneAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).Route53Conn()
 
 	zoneID, vpcID, vpcRegion, err := ZoneAssociationParseID(d.Id())
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "deleting Route 53 Hosted Zone Association (%s): %s", zoneID, err)
 	}
 
 	// Continue supporting older resources without VPC Region in ID
@@ -172,21 +178,21 @@ func resourceZoneAssociationDelete(d *schema.ResourceData, meta interface{}) err
 		Comment: aws.String("Managed by Terraform"),
 	}
 
-	_, err = conn.DisassociateVPCFromHostedZone(input)
+	_, err = conn.DisassociateVPCFromHostedZoneWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, route53.ErrCodeNoSuchHostedZone) {
-		return nil
+		return diags
 	}
 
 	if tfawserr.ErrCodeEquals(err, route53.ErrCodeVPCAssociationNotFound) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("disassociating Route 53 Hosted Zone (%s) from EC2 VPC (%s): %w", zoneID, vpcID, err)
+		return sdkdiag.AppendErrorf(diags, "disassociating Route 53 Hosted Zone (%s) from EC2 VPC (%s): %s", zoneID, vpcID, err)
 	}
 
-	return nil
+	return diags
 }
 
 func ZoneAssociationParseID(id string) (string, string, string, error) {
@@ -203,12 +209,12 @@ func ZoneAssociationParseID(id string) (string, string, string, error) {
 	return parts[0], parts[1], "", nil
 }
 
-func resourceZoneAssociationRefreshFunc(conn *route53.Route53, changeId, id string) resource.StateRefreshFunc {
+func resourceZoneAssociationRefreshFunc(ctx context.Context, conn *route53.Route53, changeId, id string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		changeRequest := &route53.GetChangeInput{
 			Id: aws.String(changeId),
 		}
-		result, state, err := resourceGoWait(conn, changeRequest)
+		result, state, err := resourceGoWait(ctx, conn, changeRequest)
 		if tfawserr.ErrCodeEquals(err, "AccessDenied") {
 			log.Printf("[WARN] AccessDenied when trying to get Route 53 change progress for %s - ignoring due to likely cross account issue", id)
 			return true, route53.ChangeStatusInsync, nil
@@ -217,14 +223,14 @@ func resourceZoneAssociationRefreshFunc(conn *route53.Route53, changeId, id stri
 	}
 }
 
-func GetZoneAssociation(conn *route53.Route53, zoneID, vpcID, vpcRegion string) (*route53.HostedZoneSummary, error) {
+func GetZoneAssociation(ctx context.Context, conn *route53.Route53, zoneID, vpcID, vpcRegion string) (*route53.HostedZoneSummary, error) {
 	input := &route53.ListHostedZonesByVPCInput{
 		VPCId:     aws.String(vpcID),
 		VPCRegion: aws.String(vpcRegion),
 	}
 
 	for {
-		output, err := conn.ListHostedZonesByVPC(input)
+		output, err := conn.ListHostedZonesByVPCWithContext(ctx, input)
 
 		if err != nil {
 			return nil, err

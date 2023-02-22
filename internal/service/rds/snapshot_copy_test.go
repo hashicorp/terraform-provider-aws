@@ -3,7 +3,6 @@ package rds_test
 import (
 	"context"
 	"fmt"
-	"log"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/rds"
@@ -17,6 +16,7 @@ import (
 )
 
 func TestAccRDSSnapshotCopy_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -29,12 +29,12 @@ func TestAccRDSSnapshotCopy_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSnapshotCopyDestroy,
+		CheckDestroy:             testAccCheckSnapshotCopyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSnapshotCopyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSnapshotCopyExists(resourceName, &v),
+					testAccCheckSnapshotCopyExists(ctx, resourceName, &v),
 				),
 			},
 			{
@@ -47,6 +47,7 @@ func TestAccRDSSnapshotCopy_basic(t *testing.T) {
 }
 
 func TestAccRDSSnapshotCopy_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -59,12 +60,12 @@ func TestAccRDSSnapshotCopy_tags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSnapshotCopyDestroy,
+		CheckDestroy:             testAccCheckSnapshotCopyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSnapshotCopyConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDBSnapshotExists(resourceName, &v),
+					testAccCheckDBSnapshotExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -77,7 +78,7 @@ func TestAccRDSSnapshotCopy_tags(t *testing.T) {
 			{
 				Config: testAccSnapshotCopyConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDBSnapshotExists(resourceName, &v),
+					testAccCheckDBSnapshotExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -86,7 +87,7 @@ func TestAccRDSSnapshotCopy_tags(t *testing.T) {
 			{
 				Config: testAccSnapshotCopyConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDBSnapshotExists(resourceName, &v),
+					testAccCheckDBSnapshotExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -96,6 +97,7 @@ func TestAccRDSSnapshotCopy_tags(t *testing.T) {
 }
 
 func TestAccRDSSnapshotCopy_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -108,13 +110,13 @@ func TestAccRDSSnapshotCopy_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSnapshotCopyDestroy,
+		CheckDestroy:             testAccCheckSnapshotCopyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSnapshotCopyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSnapshotCopyExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfrds.ResourceSnapshotCopy(), resourceName),
+					testAccCheckSnapshotCopyExists(ctx, resourceName, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfrds.ResourceSnapshotCopy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -122,30 +124,33 @@ func TestAccRDSSnapshotCopy_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckSnapshotCopyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
+func testAccCheckSnapshotCopyDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_db_snapshot_copy" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_db_snapshot_copy" {
+				continue
+			}
+
+			_, err := tfrds.FindDBSnapshotByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("RDS DB Snapshot %s still exists", rs.Primary.ID)
 		}
 
-		log.Printf("[DEBUG] Checking if RDS DB Snapshot %s exists", rs.Primary.ID)
-
-		_, err := tfrds.FindSnapshot(context.Background(), conn, rs.Primary.ID)
-
-		// verify error is what we want
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		return err
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckSnapshotCopyExists(n string, ci *rds.DBSnapshot) resource.TestCheckFunc {
+func testAccCheckSnapshotCopyExists(ctx context.Context, n string, v *rds.DBSnapshot) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -153,17 +158,18 @@ func testAccCheckSnapshotCopyExists(n string, ci *rds.DBSnapshot) resource.TestC
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("no RDS DB Snapshot ID is set")
+			return fmt.Errorf("No RDS DB Snapshot ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
 
-		out, err := tfrds.FindSnapshot(context.Background(), conn, rs.Primary.ID)
+		output, err := tfrds.FindDBSnapshotByID(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		ci = out
+		v = output
 
 		return nil
 	}

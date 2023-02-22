@@ -1,16 +1,18 @@
 package autoscalingplans
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscalingplans"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -18,12 +20,12 @@ import (
 
 func ResourceScalingPlan() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceScalingPlanCreate,
-		Read:   resourceScalingPlanRead,
-		Update: resourceScalingPlanUpdate,
-		Delete: resourceScalingPlanDelete,
+		CreateWithoutTimeout: resourceScalingPlanCreate,
+		ReadWithoutTimeout:   resourceScalingPlanRead,
+		UpdateWithoutTimeout: resourceScalingPlanUpdate,
+		DeleteWithoutTimeout: resourceScalingPlanDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceScalingPlanImport,
+			StateContext: resourceScalingPlanImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -318,8 +320,9 @@ func ResourceScalingPlan() *schema.Resource {
 	}
 }
 
-func resourceScalingPlanCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AutoScalingPlansConn
+func resourceScalingPlanCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AutoScalingPlansConn()
 
 	scalingPlanName := d.Get("name").(string)
 	input := &autoscalingplans.CreateScalingPlanInput{
@@ -329,67 +332,69 @@ func resourceScalingPlanCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Creating Auto Scaling Scaling Plan: %s", input)
-	output, err := conn.CreateScalingPlan(input)
+	output, err := conn.CreateScalingPlanWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating Auto Scaling Scaling Plan (%s): %w", scalingPlanName, err)
+		return sdkdiag.AppendErrorf(diags, "creating Auto Scaling Scaling Plan (%s): %s", scalingPlanName, err)
 	}
 
 	scalingPlanVersion := int(aws.Int64Value(output.ScalingPlanVersion))
 	d.SetId(scalingPlanCreateResourceID(scalingPlanName, scalingPlanVersion))
 	d.Set("scaling_plan_version", scalingPlanVersion)
 
-	_, err = waitScalingPlanCreated(conn, scalingPlanName, scalingPlanVersion)
+	_, err = waitScalingPlanCreated(ctx, conn, scalingPlanName, scalingPlanVersion)
 
 	if err != nil {
-		return fmt.Errorf("error waiting for Auto Scaling Scaling Plan (%s) create: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Auto Scaling Scaling Plan (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceScalingPlanRead(d, meta)
+	return append(diags, resourceScalingPlanRead(ctx, d, meta)...)
 }
 
-func resourceScalingPlanRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AutoScalingPlansConn
+func resourceScalingPlanRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AutoScalingPlansConn()
 
 	scalingPlanName, scalingPlanVersion, err := scalingPlanParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading Auto Scaling Scaling Plan (%s): %s", d.Id(), err)
 	}
 
-	scalingPlan, err := FindScalingPlanByNameAndVersion(conn, scalingPlanName, scalingPlanVersion)
+	scalingPlan, err := FindScalingPlanByNameAndVersion(ctx, conn, scalingPlanName, scalingPlanVersion)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Auto Scaling Scaling Plan (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Auto Scaling Scaling Plan (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Auto Scaling Scaling Plan (%s): %s", d.Id(), err)
 	}
 
 	err = d.Set("application_source", flattenApplicationSource(scalingPlan.ApplicationSource))
 	if err != nil {
-		return fmt.Errorf("error setting application_source: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting application_source: %s", err)
 	}
 	d.Set("name", scalingPlan.ScalingPlanName)
 	err = d.Set("scaling_instruction", flattenScalingInstructions(scalingPlan.ScalingInstructions))
 	if err != nil {
-		return fmt.Errorf("error setting scaling_instruction: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting scaling_instruction: %s", err)
 	}
 	d.Set("scaling_plan_version", scalingPlan.ScalingPlanVersion)
 
-	return nil
+	return diags
 }
 
-func resourceScalingPlanUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AutoScalingPlansConn
+func resourceScalingPlanUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AutoScalingPlansConn()
 
 	scalingPlanName, scalingPlanVersion, err := scalingPlanParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "updating Auto Scaling Scaling Plan (%s): %s", d.Id(), err)
 	}
 
 	input := &autoscalingplans.UpdateScalingPlanInput{
@@ -400,54 +405,55 @@ func resourceScalingPlanUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Updating Auto Scaling Scaling Plan: %s", input)
-	_, err = conn.UpdateScalingPlan(input)
+	_, err = conn.UpdateScalingPlanWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error updating Auto Scaling Scaling Plan (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating Auto Scaling Scaling Plan (%s): %s", d.Id(), err)
 	}
 
-	_, err = waitScalingPlanUpdated(conn, scalingPlanName, scalingPlanVersion)
+	_, err = waitScalingPlanUpdated(ctx, conn, scalingPlanName, scalingPlanVersion)
 
 	if err != nil {
-		return fmt.Errorf("error waiting for Auto Scaling Scaling Plan (%s) update: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating Auto Scaling Scaling Plan (%s): waiting for completion: %s", d.Id(), err)
 	}
 
-	return resourceScalingPlanRead(d, meta)
+	return append(diags, resourceScalingPlanRead(ctx, d, meta)...)
 }
 
-func resourceScalingPlanDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AutoScalingPlansConn
+func resourceScalingPlanDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AutoScalingPlansConn()
 
 	scalingPlanName, scalingPlanVersion, err := scalingPlanParseResourceID(d.Id())
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "deleting Auto Scaling Scaling Plan (%s): %s", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Deleting Auto Scaling Scaling Plan: %s", d.Id())
-	_, err = conn.DeleteScalingPlan(&autoscalingplans.DeleteScalingPlanInput{
+	_, err = conn.DeleteScalingPlanWithContext(ctx, &autoscalingplans.DeleteScalingPlanInput{
 		ScalingPlanName:    aws.String(scalingPlanName),
 		ScalingPlanVersion: aws.Int64(int64(scalingPlanVersion)),
 	})
 
 	if tfawserr.ErrCodeEquals(err, autoscalingplans.ErrCodeObjectNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Auto Scaling Scaling Plan (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Auto Scaling Scaling Plan (%s): %s", d.Id(), err)
 	}
 
-	_, err = waitScalingPlanDeleted(conn, scalingPlanName, scalingPlanVersion)
+	_, err = waitScalingPlanDeleted(ctx, conn, scalingPlanName, scalingPlanVersion)
 
 	if err != nil {
-		return fmt.Errorf("error waiting for Auto Scaling Scaling Plan (%s) delete: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Auto Scaling Scaling Plan (%s): waiting for completion: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceScalingPlanImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceScalingPlanImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	scalingPlanName := d.Id()
 	scalingPlanVersion := 1
 

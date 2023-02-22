@@ -1,6 +1,7 @@
 package ecs
 
 import (
+	"context"
 	"fmt"
 	"log"
 
@@ -8,19 +9,21 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ecs"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func ResourceAccountSettingDefault() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAccountSettingDefaultCreate,
-		Read:   resourceAccountSettingDefaultRead,
-		Update: resourceAccountSettingDefaultUpdate,
-		Delete: resourceAccountSettingDefaultDelete,
+		CreateWithoutTimeout: resourceAccountSettingDefaultCreate,
+		ReadWithoutTimeout:   resourceAccountSettingDefaultRead,
+		UpdateWithoutTimeout: resourceAccountSettingDefaultUpdate,
+		DeleteWithoutTimeout: resourceAccountSettingDefaultDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAccountSettingDefaultImport,
+			StateContext: resourceAccountSettingDefaultImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -43,7 +46,7 @@ func ResourceAccountSettingDefault() *schema.Resource {
 	}
 }
 
-func resourceAccountSettingDefaultImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceAccountSettingDefaultImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	d.Set("name", d.Id())
 	d.SetId(arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
@@ -55,8 +58,9 @@ func resourceAccountSettingDefaultImport(d *schema.ResourceData, meta interface{
 	return []*schema.ResourceData{d}, nil
 }
 
-func resourceAccountSettingDefaultCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECSConn
+func resourceAccountSettingDefaultCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ECSConn()
 
 	settingName := d.Get("name").(string)
 	settingValue := d.Get("value").(string)
@@ -67,21 +71,22 @@ func resourceAccountSettingDefaultCreate(d *schema.ResourceData, meta interface{
 		Value: aws.String(settingValue),
 	}
 
-	out, err := conn.PutAccountSettingDefault(&input)
+	out, err := conn.PutAccountSettingDefaultWithContext(ctx, &input)
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "creating ECS Account Setting Defauilt (%s): %s", settingName, err)
 	}
 	log.Printf("[DEBUG] Account Setting Default %s set", aws.StringValue(out.Setting.Value))
 
 	d.SetId(aws.StringValue(out.Setting.Value))
 	d.Set("principal_arn", out.Setting.PrincipalArn)
 
-	return resourceAccountSettingDefaultRead(d, meta)
+	return append(diags, resourceAccountSettingDefaultRead(ctx, d, meta)...)
 }
 
-func resourceAccountSettingDefaultRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECSConn
+func resourceAccountSettingDefaultRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ECSConn()
 
 	input := &ecs.ListAccountSettingsInput{
 		Name:              aws.String(d.Get("name").(string)),
@@ -89,16 +94,16 @@ func resourceAccountSettingDefaultRead(d *schema.ResourceData, meta interface{})
 	}
 
 	log.Printf("[DEBUG] Reading Default Account Settings: %s", input)
-	resp, err := conn.ListAccountSettings(input)
+	resp, err := conn.ListAccountSettingsWithContext(ctx, input)
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading ECS Account Setting Defauilt (%s): %s", d.Get("name").(string), err)
 	}
 
 	if len(resp.Settings) == 0 {
 		log.Printf("[WARN] Account Setting Default not set. Removing from state")
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	for _, r := range resp.Settings {
@@ -108,11 +113,12 @@ func resourceAccountSettingDefaultRead(d *schema.ResourceData, meta interface{})
 		d.Set("value", r.Value)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceAccountSettingDefaultUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECSConn
+func resourceAccountSettingDefaultUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ECSConn()
 
 	settingName := d.Get("name").(string)
 	settingValue := d.Get("value").(string)
@@ -123,17 +129,18 @@ func resourceAccountSettingDefaultUpdate(d *schema.ResourceData, meta interface{
 			Value: aws.String(settingValue),
 		}
 
-		_, err := conn.PutAccountSettingDefault(&input)
+		_, err := conn.PutAccountSettingDefaultWithContext(ctx, &input)
 		if err != nil {
-			return fmt.Errorf("updating ECS Account Setting Default (%s): %w", settingName, err)
+			return sdkdiag.AppendErrorf(diags, "updating ECS Account Setting Default (%s): %s", settingName, err)
 		}
 	}
 
-	return nil
+	return diags
 }
 
-func resourceAccountSettingDefaultDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECSConn
+func resourceAccountSettingDefaultDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ECSConn()
 
 	settingName := d.Get("name").(string)
 
@@ -143,17 +150,17 @@ func resourceAccountSettingDefaultDelete(d *schema.ResourceData, meta interface{
 		Value: aws.String("disabled"),
 	}
 
-	_, err := conn.PutAccountSettingDefault(&input)
+	_, err := conn.PutAccountSettingDefaultWithContext(ctx, &input)
 
 	if tfawserr.ErrMessageContains(err, ecs.ErrCodeInvalidParameterException, "You can no longer disable") {
 		log.Printf("[DEBUG] ECS Account Setting Default (%q) could not be disabled: %s", settingName, err)
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("disabling ECS Account Setting Default: %s", err)
+		return sdkdiag.AppendErrorf(diags, "disabling ECS Account Setting Default: %s", err)
 	}
 
 	log.Printf("[DEBUG] ECS Account Setting Default (%q) disabled", settingName)
-	return nil
+	return diags
 }

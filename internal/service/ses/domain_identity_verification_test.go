@@ -1,6 +1,7 @@
 package ses_test
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"regexp"
@@ -28,31 +29,33 @@ func testAccDomainIdentityDomainFromEnv(t *testing.T) string {
 }
 
 func TestAccSESDomainIdentityVerification_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rootDomain := testAccDomainIdentityDomainFromEnv(t)
 	domain := fmt.Sprintf("tf-acc-%d.%s", sdkacctest.RandInt(), rootDomain)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainIdentityDestroy,
+		CheckDestroy:             testAccCheckDomainIdentityDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainIdentityVerificationConfig_basic(rootDomain, domain),
-				Check:  testAccCheckDomainIdentityVerificationPassed("aws_ses_domain_identity_verification.test"),
+				Check:  testAccCheckDomainIdentityVerificationPassed(ctx, "aws_ses_domain_identity_verification.test"),
 			},
 		},
 	})
 }
 
 func TestAccSESDomainIdentityVerification_timeout(t *testing.T) {
+	ctx := acctest.Context(t)
 	domain := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainIdentityDestroy,
+		CheckDestroy:             testAccCheckDomainIdentityDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDomainIdentityVerificationConfig_timeout(domain),
@@ -63,13 +66,14 @@ func TestAccSESDomainIdentityVerification_timeout(t *testing.T) {
 }
 
 func TestAccSESDomainIdentityVerification_nonexistent(t *testing.T) {
+	ctx := acctest.Context(t)
 	domain := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainIdentityDestroy,
+		CheckDestroy:             testAccCheckDomainIdentityDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDomainIdentityVerificationConfig_nonexistent(domain),
@@ -79,7 +83,7 @@ func TestAccSESDomainIdentityVerification_nonexistent(t *testing.T) {
 	})
 }
 
-func testAccCheckDomainIdentityVerificationPassed(n string) resource.TestCheckFunc {
+func testAccCheckDomainIdentityVerificationPassed(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -91,7 +95,7 @@ func testAccCheckDomainIdentityVerificationPassed(n string) resource.TestCheckFu
 		}
 
 		domain := rs.Primary.ID
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn()
 
 		params := &ses.GetIdentityVerificationAttributesInput{
 			Identities: []*string{
@@ -99,7 +103,7 @@ func testAccCheckDomainIdentityVerificationPassed(n string) resource.TestCheckFu
 			},
 		}
 
-		response, err := conn.GetIdentityVerificationAttributes(params)
+		response, err := conn.GetIdentityVerificationAttributesWithContext(ctx, params)
 		if err != nil {
 			return err
 		}

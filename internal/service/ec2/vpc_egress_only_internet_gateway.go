@@ -1,14 +1,17 @@
 package ec2
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -16,13 +19,13 @@ import (
 
 func ResourceEgressOnlyInternetGateway() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceEgressOnlyInternetGatewayCreate,
-		Read:   resourceEgressOnlyInternetGatewayRead,
-		Update: resourceEgressOnlyInternetGatewayUpdate,
-		Delete: resourceEgressOnlyInternetGatewayDelete,
+		CreateWithoutTimeout: resourceEgressOnlyInternetGatewayCreate,
+		ReadWithoutTimeout:   resourceEgressOnlyInternetGatewayRead,
+		UpdateWithoutTimeout: resourceEgressOnlyInternetGatewayUpdate,
+		DeleteWithoutTimeout: resourceEgressOnlyInternetGatewayDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -39,45 +42,47 @@ func ResourceEgressOnlyInternetGateway() *schema.Resource {
 	}
 }
 
-func resourceEgressOnlyInternetGatewayCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceEgressOnlyInternetGatewayCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &ec2.CreateEgressOnlyInternetGatewayInput{
+		ClientToken:       aws.String(resource.UniqueId()),
 		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeEgressOnlyInternetGateway),
 		VpcId:             aws.String(d.Get("vpc_id").(string)),
 	}
 
-	log.Printf("[DEBUG] Creating EC2 Egress-only Internet Gateway: %s", input)
-	output, err := conn.CreateEgressOnlyInternetGateway(input)
+	output, err := conn.CreateEgressOnlyInternetGatewayWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating EC2 Egress-only Internet Gateway: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating EC2 Egress-only Internet Gateway: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.EgressOnlyInternetGateway.EgressOnlyInternetGatewayId))
 
-	return resourceEgressOnlyInternetGatewayRead(d, meta)
+	return append(diags, resourceEgressOnlyInternetGatewayRead(ctx, d, meta)...)
 }
 
-func resourceEgressOnlyInternetGatewayRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceEgressOnlyInternetGatewayRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(propagationTimeout, func() (interface{}, error) {
-		return FindEgressOnlyInternetGatewayByID(conn, d.Id())
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+		return FindEgressOnlyInternetGatewayByID(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Egress-only Internet Gateway %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 Egress-only Internet Gateway (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Egress-only Internet Gateway (%s): %s", d.Id(), err)
 	}
 
 	ig := outputRaw.(*ec2.EgressOnlyInternetGateway)
@@ -92,45 +97,47 @@ func resourceEgressOnlyInternetGatewayRead(d *schema.ResourceData, meta interfac
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceEgressOnlyInternetGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceEgressOnlyInternetGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating EC2 Egress-only Internet Gateway (%s) tags: %w", d.Id(), err)
+		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating EC2 Egress-only Internet Gateway (%s) tags: %s", d.Id(), err)
 		}
 	}
 
-	return resourceEgressOnlyInternetGatewayRead(d, meta)
+	return append(diags, resourceEgressOnlyInternetGatewayRead(ctx, d, meta)...)
 }
 
-func resourceEgressOnlyInternetGatewayDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceEgressOnlyInternetGatewayDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	log.Printf("[INFO] Deleting EC2 Egress-only Internet Gateway: %s", d.Id())
-	_, err := conn.DeleteEgressOnlyInternetGateway(&ec2.DeleteEgressOnlyInternetGatewayInput{
+	_, err := conn.DeleteEgressOnlyInternetGatewayWithContext(ctx, &ec2.DeleteEgressOnlyInternetGatewayInput{
 		EgressOnlyInternetGatewayId: aws.String(d.Id()),
 	})
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidGatewayIDNotFound) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting EC2 Egress-only Internet Gateway (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting EC2 Egress-only Internet Gateway (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

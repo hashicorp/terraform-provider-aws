@@ -1,30 +1,21 @@
 package sfn
 
 import (
-	"fmt"
-	"log"
+	"context"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sfn"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func DataSourceActivity() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceActivityRead,
+		ReadWithoutTimeout: dataSourceActivityRead,
 
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:     schema.TypeString,
-				Computed: true,
-				Optional: true,
-				ExactlyOneOf: []string{
-					"arn",
-					"name",
-				},
-			},
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -38,71 +29,70 @@ func DataSourceActivity() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"name": {
+				Type:     schema.TypeString,
+				Computed: true,
+				Optional: true,
+				ExactlyOneOf: []string{
+					"arn",
+					"name",
+				},
+			},
 		},
 	}
 }
 
-func dataSourceActivityRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*conns.AWSClient)
-	conn := client.SFNConn
-	log.Print("[DEBUG] Reading Step Function Activity")
+func dataSourceActivityRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).SFNConn()
 
-	if nm, ok := d.GetOk("name"); ok {
-		name := nm.(string)
-		var acts []*sfn.ActivityListItem
+	if v, ok := d.GetOk("name"); ok {
+		name := v.(string)
+		var activities []*sfn.ActivityListItem
 
-		err := conn.ListActivitiesPages(&sfn.ListActivitiesInput{}, func(page *sfn.ListActivitiesOutput, lastPage bool) bool {
-			for _, a := range page.Activities {
-				if name == aws.StringValue(a.Name) {
-					acts = append(acts, a)
+		err := conn.ListActivitiesPagesWithContext(ctx, &sfn.ListActivitiesInput{}, func(page *sfn.ListActivitiesOutput, lastPage bool) bool {
+			if page == nil {
+				return !lastPage
+			}
+
+			for _, v := range page.Activities {
+				if name == aws.StringValue(v.Name) {
+					activities = append(activities, v)
 				}
 			}
+
 			return !lastPage
 		})
 
 		if err != nil {
-			return fmt.Errorf("Error listing activities: %w", err)
+			return diag.Errorf("listing Step Functions Activities: %s", err)
 		}
 
-		if len(acts) == 0 {
-			return fmt.Errorf("No activity found with name %s in this region", name)
+		if n := len(activities); n == 0 {
+			return diag.Errorf("no Step Functions Activities matched")
+		} else if n > 1 {
+			return diag.Errorf("%d Step Functions Activities matched; use additional constraints to reduce matches to a single Activity", n)
 		}
 
-		if len(acts) > 1 {
-			return fmt.Errorf("Found more than 1 activity with name %s in this region", name)
-		}
+		activity := activities[0]
 
-		act := acts[0]
+		arn := aws.StringValue(activity.ActivityArn)
+		d.SetId(arn)
+		d.Set("arn", arn)
+		d.Set("creation_date", activity.CreationDate.Format(time.RFC3339))
+		d.Set("name", activity.Name)
+	} else if v, ok := d.GetOk("arn"); ok {
+		arn := v.(string)
+		activity, err := FindActivityByARN(ctx, conn, arn)
 
-		d.SetId(aws.StringValue(act.ActivityArn))
-		d.Set("name", act.Name)
-		d.Set("arn", act.ActivityArn)
-		if err := d.Set("creation_date", act.CreationDate.Format(time.RFC3339)); err != nil {
-			log.Printf("[DEBUG] Error setting creation_date: %s", err)
-		}
-	}
-
-	if rnm, ok := d.GetOk("arn"); ok {
-		arn := rnm.(string)
-		params := &sfn.DescribeActivityInput{
-			ActivityArn: aws.String(arn),
-		}
-
-		act, err := conn.DescribeActivity(params)
 		if err != nil {
-			return fmt.Errorf("Error describing activities: %w", err)
+			return diag.Errorf("reading Step Functions Activity (%s): %s", arn, err)
 		}
 
-		if act == nil {
-			return fmt.Errorf("No activity found with arn %s in this region", arn)
-		}
-
-		d.SetId(aws.StringValue(act.ActivityArn))
-		d.Set("name", act.Name)
-		d.Set("arn", act.ActivityArn)
-		if err := d.Set("creation_date", act.CreationDate.Format(time.RFC3339)); err != nil {
-			log.Printf("[DEBUG] Error setting creation_date: %s", err)
-		}
+		arn = aws.StringValue(activity.ActivityArn)
+		d.SetId(arn)
+		d.Set("arn", arn)
+		d.Set("creation_date", activity.CreationDate.Format(time.RFC3339))
+		d.Set("name", activity.Name)
 	}
 
 	return nil

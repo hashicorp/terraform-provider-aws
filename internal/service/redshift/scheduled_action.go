@@ -1,28 +1,30 @@
 package redshift
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourceScheduledAction() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceScheduledActionCreate,
-		Read:   resourceScheduledActionRead,
-		Update: resourceScheduledActionUpdate,
-		Delete: resourceScheduledActionDelete,
+		CreateWithoutTimeout: resourceScheduledActionCreate,
+		ReadWithoutTimeout:   resourceScheduledActionRead,
+		UpdateWithoutTimeout: resourceScheduledActionUpdate,
+		DeleteWithoutTimeout: resourceScheduledActionDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -142,8 +144,9 @@ func ResourceScheduledAction() *schema.Resource {
 	}
 }
 
-func resourceScheduledActionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+func resourceScheduledActionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 
 	name := d.Get("name").(string)
 	input := &redshift.CreateScheduledActionInput{
@@ -171,10 +174,9 @@ func resourceScheduledActionCreate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	log.Printf("[DEBUG] Creating Redshift Scheduled Action: %s", input)
-	outputRaw, err := tfresource.RetryWhen(
-		propagationTimeout,
+	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
 		func() (interface{}, error) {
-			return conn.CreateScheduledAction(input)
+			return conn.CreateScheduledActionWithContext(ctx, input)
 		},
 		func(err error) (bool, error) {
 			if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "The IAM role must delegate access to Amazon Redshift scheduler") {
@@ -186,27 +188,28 @@ func resourceScheduledActionCreate(d *schema.ResourceData, meta interface{}) err
 	)
 
 	if err != nil {
-		return fmt.Errorf("creating Redshift Scheduled Action (%s): %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating Redshift Scheduled Action (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(outputRaw.(*redshift.CreateScheduledActionOutput).ScheduledActionName))
 
-	return resourceScheduledActionRead(d, meta)
+	return append(diags, resourceScheduledActionRead(ctx, d, meta)...)
 }
 
-func resourceScheduledActionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+func resourceScheduledActionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 
-	scheduledAction, err := FindScheduledActionByName(conn, d.Id())
+	scheduledAction, err := FindScheduledActionByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Redshift Scheduled Action (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading Redshift Scheduled Action (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Redshift Scheduled Action (%s): %s", d.Id(), err)
 	}
 
 	d.Set("description", scheduledAction.ScheduledActionDescription)
@@ -231,17 +234,18 @@ func resourceScheduledActionRead(d *schema.ResourceData, meta interface{}) error
 
 	if scheduledAction.TargetAction != nil {
 		if err := d.Set("target_action", []interface{}{flattenScheduledActionType(scheduledAction.TargetAction)}); err != nil {
-			return fmt.Errorf("setting target_action: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting target_action: %s", err)
 		}
 	} else {
 		d.Set("target_action", nil)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceScheduledActionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+func resourceScheduledActionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 
 	input := &redshift.ModifyScheduledActionInput{
 		ScheduledActionName: aws.String(d.Get("name").(string)),
@@ -280,32 +284,33 @@ func resourceScheduledActionUpdate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	log.Printf("[DEBUG] Updating Redshift Scheduled Action: %s", input)
-	_, err := conn.ModifyScheduledAction(input)
+	_, err := conn.ModifyScheduledActionWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("updating Redshift Scheduled Action (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating Redshift Scheduled Action (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceScheduledActionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+func resourceScheduledActionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 
 	log.Printf("[DEBUG] Deleting Redshift Scheduled Action: %s", d.Id())
-	_, err := conn.DeleteScheduledAction(&redshift.DeleteScheduledActionInput{
+	_, err := conn.DeleteScheduledActionWithContext(ctx, &redshift.DeleteScheduledActionInput{
 		ScheduledActionName: aws.String(d.Id()),
 	})
 
 	if tfawserr.ErrCodeEquals(err, redshift.ErrCodeScheduledActionNotFoundFault) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("deleting Redshift Scheduled Action (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Redshift Scheduled Action (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandScheduledActionType(tfMap map[string]interface{}) *redshift.ScheduledActionType {

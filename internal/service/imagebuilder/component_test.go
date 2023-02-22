@@ -1,6 +1,7 @@
 package imagebuilder_test
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -17,6 +18,7 @@ import (
 )
 
 func TestAccImageBuilderComponent_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_component.test"
 
@@ -24,12 +26,12 @@ func TestAccImageBuilderComponent_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckComponentDestroy,
+		CheckDestroy:             testAccCheckComponentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccComponentConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckComponentExists(resourceName),
+					testAccCheckComponentExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "imagebuilder", regexp.MustCompile(fmt.Sprintf("component/%s/1.0.0/[1-9][0-9]*", rName))),
 					resource.TestCheckResourceAttr(resourceName, "change_description", ""),
 					resource.TestMatchResourceAttr(resourceName, "data", regexp.MustCompile(`schemaVersion`)),
@@ -47,15 +49,17 @@ func TestAccImageBuilderComponent_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_destroy"},
 			},
 		},
 	})
 }
 
 func TestAccImageBuilderComponent_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_component.test"
 
@@ -63,13 +67,13 @@ func TestAccImageBuilderComponent_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckComponentDestroy,
+		CheckDestroy:             testAccCheckComponentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccComponentConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckComponentExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfimagebuilder.ResourceComponent(), resourceName),
+					testAccCheckComponentExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfimagebuilder.ResourceComponent(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -78,6 +82,7 @@ func TestAccImageBuilderComponent_disappears(t *testing.T) {
 }
 
 func TestAccImageBuilderComponent_changeDescription(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_component.test"
 
@@ -85,25 +90,27 @@ func TestAccImageBuilderComponent_changeDescription(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckComponentDestroy,
+		CheckDestroy:             testAccCheckComponentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccComponentConfig_changeDescription(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckComponentExists(resourceName),
+					testAccCheckComponentExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "change_description", "description1"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_destroy"},
 			},
 		},
 	})
 }
 
 func TestAccImageBuilderComponent_description(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_component.test"
 
@@ -111,25 +118,27 @@ func TestAccImageBuilderComponent_description(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckComponentDestroy,
+		CheckDestroy:             testAccCheckComponentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccComponentConfig_description(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckComponentExists(resourceName),
+					testAccCheckComponentExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_destroy"},
 			},
 		},
 	})
 }
 
 func TestAccImageBuilderComponent_kmsKeyID(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	kmsKeyResourceName := "aws_kms_key.test"
 	resourceName := "aws_imagebuilder_component.test"
@@ -138,25 +147,27 @@ func TestAccImageBuilderComponent_kmsKeyID(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckComponentDestroy,
+		CheckDestroy:             testAccCheckComponentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccComponentConfig_kmsKeyID(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckComponentExists(resourceName),
+					testAccCheckComponentExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsKeyResourceName, "arn"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_destroy"},
 			},
 		},
 	})
 }
 
 func TestAccImageBuilderComponent_Platform_windows(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_component.test"
 
@@ -164,25 +175,27 @@ func TestAccImageBuilderComponent_Platform_windows(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckComponentDestroy,
+		CheckDestroy:             testAccCheckComponentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccComponentConfig_platformWindows(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckComponentExists(resourceName),
+					testAccCheckComponentExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "platform", imagebuilder.PlatformWindows),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_destroy"},
 			},
 		},
 	})
 }
 
 func TestAccImageBuilderComponent_supportedOsVersions(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_component.test"
 
@@ -190,25 +203,27 @@ func TestAccImageBuilderComponent_supportedOsVersions(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckComponentDestroy,
+		CheckDestroy:             testAccCheckComponentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccComponentConfig_supportedOsVersions(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckComponentExists(resourceName),
+					testAccCheckComponentExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "supported_os_versions.#", "1"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_destroy"},
 			},
 		},
 	})
 }
 
 func TestAccImageBuilderComponent_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_component.test"
 
@@ -216,25 +231,26 @@ func TestAccImageBuilderComponent_tags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckComponentDestroy,
+		CheckDestroy:             testAccCheckComponentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccComponentConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckComponentExists(resourceName),
+					testAccCheckComponentExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_destroy"},
 			},
 			{
 				Config: testAccComponentConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckComponentExists(resourceName),
+					testAccCheckComponentExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -243,7 +259,7 @@ func TestAccImageBuilderComponent_tags(t *testing.T) {
 			{
 				Config: testAccComponentConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckComponentExists(resourceName),
+					testAccCheckComponentExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -253,6 +269,7 @@ func TestAccImageBuilderComponent_tags(t *testing.T) {
 }
 
 func TestAccImageBuilderComponent_uri(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_imagebuilder_component.test"
 
@@ -260,68 +277,70 @@ func TestAccImageBuilderComponent_uri(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckComponentDestroy,
+		CheckDestroy:             testAccCheckComponentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccComponentConfig_uri(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckComponentExists(resourceName),
+					testAccCheckComponentExists(ctx, resourceName),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"uri"},
+				ImportStateVerifyIgnore: []string{"skip_destroy", "uri"},
 			},
 		},
 	})
 }
 
-func testAccCheckComponentDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderConn
+func testAccCheckComponentDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_imagebuilder_component" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_imagebuilder_component" {
+				continue
+			}
+
+			input := &imagebuilder.GetComponentInput{
+				ComponentBuildVersionArn: aws.String(rs.Primary.ID),
+			}
+
+			output, err := conn.GetComponentWithContext(ctx, input)
+
+			if tfawserr.ErrCodeEquals(err, imagebuilder.ErrCodeResourceNotFoundException) {
+				continue
+			}
+
+			if err != nil {
+				return fmt.Errorf("error getting Image Builder Component (%s): %w", rs.Primary.ID, err)
+			}
+
+			if output != nil {
+				return fmt.Errorf("Image Builder Component (%s) still exists", rs.Primary.ID)
+			}
 		}
 
-		input := &imagebuilder.GetComponentInput{
-			ComponentBuildVersionArn: aws.String(rs.Primary.ID),
-		}
-
-		output, err := conn.GetComponent(input)
-
-		if tfawserr.ErrCodeEquals(err, imagebuilder.ErrCodeResourceNotFoundException) {
-			continue
-		}
-
-		if err != nil {
-			return fmt.Errorf("error getting Image Builder Component (%s): %w", rs.Primary.ID, err)
-		}
-
-		if output != nil {
-			return fmt.Errorf("Image Builder Component (%s) still exists", rs.Primary.ID)
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckComponentExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckComponentExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderConn()
 
 		input := &imagebuilder.GetComponentInput{
 			ComponentBuildVersionArn: aws.String(rs.Primary.ID),
 		}
 
-		_, err := conn.GetComponent(input)
+		_, err := conn.GetComponentWithContext(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("error getting Image Builder Component (%s): %w", rs.Primary.ID, err)

@@ -1,7 +1,7 @@
 package apigateway
 
 import (
-	"errors"
+	"context"
 	"fmt"
 	"log"
 	"strconv"
@@ -10,21 +10,23 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceUsagePlan() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceUsagePlanCreate,
-		Read:   resourceUsagePlanRead,
-		Update: resourceUsagePlanUpdate,
-		Delete: resourceUsagePlanDelete,
+		CreateWithoutTimeout: resourceUsagePlanCreate,
+		ReadWithoutTimeout:   resourceUsagePlanRead,
+		UpdateWithoutTimeout: resourceUsagePlanUpdate,
+		DeleteWithoutTimeout: resourceUsagePlanDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -143,8 +145,9 @@ func ResourceUsagePlan() *schema.Resource {
 	}
 }
 
-func resourceUsagePlanCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+func resourceUsagePlanCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 	log.Print("[DEBUG] Creating API Gateway Usage Plan")
@@ -166,11 +169,11 @@ func resourceUsagePlanCreate(d *schema.ResourceData, meta interface{}) error {
 		q, ok := settings[0].(map[string]interface{})
 
 		if errs := validUsagePlanQuotaSettings(q); len(errs) > 0 {
-			return fmt.Errorf("error validating the quota settings: %v", errs)
+			return sdkdiag.AppendErrorf(diags, "validating the quota settings: %v", errs)
 		}
 
 		if !ok {
-			return errors.New("At least one field is expected inside quota_settings")
+			return sdkdiag.AppendErrorf(diags, "At least one field is expected inside quota_settings")
 		}
 
 		params.Quota = expandQuotaSettings(v.([]interface{}))
@@ -184,9 +187,9 @@ func resourceUsagePlanCreate(d *schema.ResourceData, meta interface{}) error {
 		params.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	up, err := conn.CreateUsagePlan(params)
+	up, err := conn.CreateUsagePlanWithContext(ctx, params)
 	if err != nil {
-		return fmt.Errorf("error creating API Gateway Usage Plan: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating API Gateway Usage Plan: %s", err)
 	}
 
 	d.SetId(aws.StringValue(up.Id))
@@ -205,43 +208,44 @@ func resourceUsagePlanCreate(d *schema.ResourceData, meta interface{}) error {
 			},
 		}
 
-		_, err = conn.UpdateUsagePlan(updateParameters)
+		_, err = conn.UpdateUsagePlanWithContext(ctx, updateParameters)
 		if err != nil {
-			return fmt.Errorf("error creating the API Gateway Usage Plan product code: %w", err)
+			return sdkdiag.AppendErrorf(diags, "creating the API Gateway Usage Plan product code: %s", err)
 		}
 	}
 
-	return resourceUsagePlanRead(d, meta)
+	return append(diags, resourceUsagePlanRead(ctx, d, meta)...)
 }
 
-func resourceUsagePlanRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+func resourceUsagePlanRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	log.Printf("[DEBUG] Reading API Gateway Usage Plan: %s", d.Id())
 
-	up, err := conn.GetUsagePlan(&apigateway.GetUsagePlanInput{
+	up, err := conn.GetUsagePlanWithContext(ctx, &apigateway.GetUsagePlanInput{
 		UsagePlanId: aws.String(d.Id()),
 	})
 	if err != nil {
 		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
 			log.Printf("[WARN] API Gateway Usage Plan (%s) not found, removing from state", d.Id())
 			d.SetId("")
-			return nil
+			return diags
 		}
-		return fmt.Errorf("error reading API Gateway Usage Plan (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading API Gateway Usage Plan (%s): %s", d.Id(), err)
 	}
 
 	tags := KeyValueTags(up.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
 	arn := arn.ARN{
@@ -258,27 +262,28 @@ func resourceUsagePlanRead(d *schema.ResourceData, meta interface{}) error {
 
 	if up.ApiStages != nil {
 		if err := d.Set("api_stages", flattenAPIStages(up.ApiStages)); err != nil {
-			return fmt.Errorf("error setting api_stages error: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting api_stages error: %s", err)
 		}
 	}
 
 	if up.Throttle != nil {
 		if err := d.Set("throttle_settings", flattenThrottleSettings(up.Throttle)); err != nil {
-			return fmt.Errorf("error setting throttle_settings error: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting throttle_settings error: %s", err)
 		}
 	}
 
 	if up.Quota != nil {
 		if err := d.Set("quota_settings", flattenQuotaSettings(up.Quota)); err != nil {
-			return fmt.Errorf("error setting quota_settings error: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting quota_settings error: %s", err)
 		}
 	}
 
-	return nil
+	return diags
 }
 
-func resourceUsagePlanUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+func resourceUsagePlanUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 	log.Print("[DEBUG] Updating API Gateway Usage Plan")
 
 	operations := make([]*apigateway.PatchOperation, 0)
@@ -344,7 +349,6 @@ func resourceUsagePlanUpdate(d *schema.ResourceData, meta interface{}) error {
 				})
 				if t, ok := m["throttle"].(*schema.Set); ok && t.Len() > 0 {
 					for _, throttle := range t.List() {
-
 						th := throttle.(map[string]interface{})
 						operations = append(operations, &apigateway.PatchOperation{
 							Op:    aws.String(apigateway.OpReplace),
@@ -423,7 +427,7 @@ func resourceUsagePlanUpdate(d *schema.ResourceData, meta interface{}) error {
 			d := diff[0].(map[string]interface{})
 
 			if errors := validUsagePlanQuotaSettings(d); len(errors) > 0 {
-				return fmt.Errorf("Error validating the quota settings: %v", errors)
+				return sdkdiag.AppendErrorf(diags, "validating the quota settings: %v", errors)
 			}
 
 			// Handle Replaces
@@ -468,8 +472,8 @@ func resourceUsagePlanUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %w", err)
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
 		}
 	}
 
@@ -478,16 +482,17 @@ func resourceUsagePlanUpdate(d *schema.ResourceData, meta interface{}) error {
 		PatchOperations: operations,
 	}
 
-	_, err := conn.UpdateUsagePlan(params)
+	_, err := conn.UpdateUsagePlanWithContext(ctx, params)
 	if err != nil {
-		return fmt.Errorf("error updating API Gateway Usage Plan: %w", err)
+		return sdkdiag.AppendErrorf(diags, "updating API Gateway Usage Plan: %s", err)
 	}
 
-	return resourceUsagePlanRead(d, meta)
+	return append(diags, resourceUsagePlanRead(ctx, d, meta)...)
 }
 
-func resourceUsagePlanDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+func resourceUsagePlanDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayConn()
 
 	// Removing existing api stages associated
 	if apistages, ok := d.GetOk("api_stages"); ok {
@@ -505,31 +510,30 @@ func resourceUsagePlanDelete(d *schema.ResourceData, meta interface{}) error {
 			})
 		}
 
-		_, err := conn.UpdateUsagePlan(&apigateway.UpdateUsagePlanInput{
+		_, err := conn.UpdateUsagePlanWithContext(ctx, &apigateway.UpdateUsagePlanInput{
 			UsagePlanId:     aws.String(d.Id()),
 			PatchOperations: operations,
 		})
 		if err != nil {
-			return fmt.Errorf("error removing API Stages associated with Usage Plan: %w", err)
+			return sdkdiag.AppendErrorf(diags, "removing API Stages associated with Usage Plan: %s", err)
 		}
 	}
 
 	log.Printf("[DEBUG] Deleting API Gateway Usage Plan: %s", d.Id())
 
-	_, err := conn.DeleteUsagePlan(&apigateway.DeleteUsagePlanInput{
+	_, err := conn.DeleteUsagePlanWithContext(ctx, &apigateway.DeleteUsagePlanInput{
 		UsagePlanId: aws.String(d.Id()),
 	})
 
 	if tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting API gateway usage plan: %w", err)
+		return sdkdiag.AppendErrorf(diags, "deleting API gateway usage plan: %s", err)
 	}
 
-	return nil
-
+	return diags
 }
 
 func expandAPIStages(s *schema.Set) []*apigateway.ApiStage {

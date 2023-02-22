@@ -30,7 +30,7 @@ resource "aws_lambda_function" "example" {
   function_name = "Example"
   role          = aws_iam_role.example.arn
   handler       = "index.handler"
-  runtime       = "nodejs12.x"
+  runtime       = "nodejs16.x"
 }
 
 resource "aws_apigatewayv2_integration" "example" {
@@ -136,7 +136,7 @@ Terraform will only perform drift detection of its value when present in a confi
 The `response_parameters` object supports the following:
 
 * `status_code` - (Required) HTTP status code in the range 200-599.
-* `mappings` - (Required) Key-value map. The key of ths map identifies the location of the request parameter to change, and how to change it. The corresponding value specifies the new data for the parameter.
+* `mappings` - (Required) Key-value map. The key of this map identifies the location of the request parameter to change, and how to change it. The corresponding value specifies the new data for the parameter.
 See the [Amazon API Gateway Developer Guide](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-parameter-mapping.html) for details.
 
 The `tls_config` object supports the following:

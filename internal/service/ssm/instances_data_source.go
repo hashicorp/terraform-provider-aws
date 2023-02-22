@@ -1,18 +1,20 @@
 package ssm
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
 func DataSourceInstances() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceInstancesRead,
+		ReadWithoutTimeout: dataSourceInstancesRead,
 		Schema: map[string]*schema.Schema{
 			"filter": {
 				Type:     schema.TypeSet,
@@ -41,8 +43,9 @@ func DataSourceInstances() *schema.Resource {
 	}
 }
 
-func dataSourceInstancesRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+func dataSourceInstancesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SSMConn()
 
 	input := &ssm.DescribeInstanceInformationInput{}
 
@@ -52,7 +55,7 @@ func dataSourceInstancesRead(d *schema.ResourceData, meta interface{}) error {
 
 	var results []*ssm.InstanceInformation
 
-	err := conn.DescribeInstanceInformationPages(input, func(page *ssm.DescribeInstanceInformationOutput, lastPage bool) bool {
+	err := conn.DescribeInstanceInformationPagesWithContext(ctx, input, func(page *ssm.DescribeInstanceInformationOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -69,7 +72,7 @@ func dataSourceInstancesRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if err != nil {
-		return fmt.Errorf("error reading SSM Instances: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading SSM Instances: %s", err)
 	}
 
 	var instanceIDs []string
@@ -81,7 +84,7 @@ func dataSourceInstancesRead(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(meta.(*conns.AWSClient).Region)
 	d.Set("ids", instanceIDs)
 
-	return nil
+	return diags
 }
 
 func expandInstanceInformationStringFilters(tfList []interface{}) []*ssm.InstanceInformationStringFilter {

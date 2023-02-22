@@ -88,7 +88,6 @@ The following arguments are supported:
 * `role` - (Required) Amazon Resource Name (ARN) of an IAM role that allows the service to controls your user’s access to your Amazon S3 bucket.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-
 ### Home Directory Mappings
 
 * `entry` - (Required) Represents an entry and a target.

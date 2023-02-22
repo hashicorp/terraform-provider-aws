@@ -1,17 +1,19 @@
 package servicecatalog
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -19,12 +21,12 @@ import (
 
 func ResourceProduct() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceProductCreate,
-		Read:   resourceProductRead,
-		Update: resourceProductUpdate,
-		Delete: resourceProductDelete,
+		CreateWithoutTimeout: resourceProductCreate,
+		ReadWithoutTimeout:   resourceProductRead,
+		UpdateWithoutTimeout: resourceProductUpdate,
+		DeleteWithoutTimeout: resourceProductDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -147,8 +149,9 @@ func ResourceProduct() *schema.Resource {
 	}
 }
 
-func resourceProductCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn
+func resourceProductCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -191,10 +194,10 @@ func resourceProductCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	var output *servicecatalog.CreateProductOutput
-	err := resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
+	err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 		var err error
 
-		output, err = conn.CreateProduct(input)
+		output, err = conn.CreateProductWithContext(ctx, input)
 
 		if tfawserr.ErrMessageContains(err, servicecatalog.ErrCodeInvalidParametersException, "profile does not exist") {
 			return resource.RetryableError(err)
@@ -208,54 +211,55 @@ func resourceProductCreate(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if tfresource.TimedOut(err) {
-		output, err = conn.CreateProduct(input)
+		output, err = conn.CreateProductWithContext(ctx, input)
 	}
 
 	if err != nil {
-		return fmt.Errorf("error creating Service Catalog Product: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating Service Catalog Product: %s", err)
 	}
 
 	if output == nil {
-		return fmt.Errorf("error creating Service Catalog Product: empty response")
+		return sdkdiag.AppendErrorf(diags, "creating Service Catalog Product: empty response")
 	}
 
 	if output.ProductViewDetail == nil || output.ProductViewDetail.ProductViewSummary == nil {
-		return fmt.Errorf("error creating Service Catalog Product: no product view detail or summary")
+		return sdkdiag.AppendErrorf(diags, "creating Service Catalog Product: no product view detail or summary")
 	}
 
 	if output.ProvisioningArtifactDetail == nil {
-		return fmt.Errorf("error creating Service Catalog Product: no provisioning artifact detail")
+		return sdkdiag.AppendErrorf(diags, "creating Service Catalog Product: no provisioning artifact detail")
 	}
 
 	d.SetId(aws.StringValue(output.ProductViewDetail.ProductViewSummary.ProductId))
 
-	if _, err := WaitProductReady(conn, aws.StringValue(input.AcceptLanguage),
+	if _, err := WaitProductReady(ctx, conn, aws.StringValue(input.AcceptLanguage),
 		aws.StringValue(output.ProductViewDetail.ProductViewSummary.ProductId), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("error waiting for Service Catalog Product (%s) to be ready: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Service Catalog Product (%s) to be ready: %s", d.Id(), err)
 	}
 
-	return resourceProductRead(d, meta)
+	return append(diags, resourceProductRead(ctx, d, meta)...)
 }
 
-func resourceProductRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn
+func resourceProductRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	output, err := WaitProductReady(conn, d.Get("accept_language").(string), d.Id(), d.Timeout(schema.TimeoutRead))
+	output, err := WaitProductReady(ctx, conn, d.Get("accept_language").(string), d.Id(), d.Timeout(schema.TimeoutRead))
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Service Catalog Product (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error describing Service Catalog Product (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "describing Service Catalog Product (%s): %s", d.Id(), err)
 	}
 
 	if output == nil || output.ProductViewDetail == nil || output.ProductViewDetail.ProductViewSummary == nil {
-		return fmt.Errorf("error getting Service Catalog Product (%s): empty response", d.Id())
+		return sdkdiag.AppendErrorf(diags, "getting Service Catalog Product (%s): empty response", d.Id())
 	}
 
 	pvs := output.ProductViewDetail.ProductViewSummary
@@ -279,18 +283,19 @@ func resourceProductRead(d *schema.ResourceData, meta interface{}) error {
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceProductUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn
+func resourceProductUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &servicecatalog.UpdateProductInput{
@@ -329,8 +334,8 @@ func resourceProductUpdate(d *schema.ResourceData, meta interface{}) error {
 			input.SupportUrl = aws.String(v.(string))
 		}
 
-		err := resource.Retry(d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
-			_, err := conn.UpdateProduct(input)
+		err := resource.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
+			_, err := conn.UpdateProductWithContext(ctx, input)
 
 			if tfawserr.ErrMessageContains(err, servicecatalog.ErrCodeInvalidParametersException, "profile does not exist") {
 				return resource.RetryableError(err)
@@ -344,27 +349,28 @@ func resourceProductUpdate(d *schema.ResourceData, meta interface{}) error {
 		})
 
 		if tfresource.TimedOut(err) {
-			_, err = conn.UpdateProduct(input)
+			_, err = conn.UpdateProductWithContext(ctx, input)
 		}
 
 		if err != nil {
-			return fmt.Errorf("error updating Service Catalog Product (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Service Catalog Product (%s): %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := productUpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating tags for Service Catalog Product (%s): %w", d.Id(), err)
+		if err := productUpdateTags(ctx, conn, d.Id(), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating tags for Service Catalog Product (%s): %s", d.Id(), err)
 		}
 	}
 
-	return resourceProductRead(d, meta)
+	return append(diags, resourceProductRead(ctx, d, meta)...)
 }
 
-func resourceProductDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn
+func resourceProductDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 
 	input := &servicecatalog.DeleteProductInput{
 		Id: aws.String(d.Id()),
@@ -374,21 +380,21 @@ func resourceProductDelete(d *schema.ResourceData, meta interface{}) error {
 		input.AcceptLanguage = aws.String(v.(string))
 	}
 
-	_, err := conn.DeleteProduct(input)
+	_, err := conn.DeleteProductWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Service Catalog Product (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Service Catalog Product (%s): %s", d.Id(), err)
 	}
 
-	if _, err := WaitProductDeleted(conn, d.Get("accept_language").(string), d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("error waiting for Service Catalog Product (%s) to be deleted: %w", d.Id(), err)
+	if _, err := WaitProductDeleted(ctx, conn, d.Get("accept_language").(string), d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Service Catalog Product (%s) to be deleted: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandProvisioningArtifactParameters(tfMap map[string]interface{}) *servicecatalog.ProvisioningArtifactProperties {

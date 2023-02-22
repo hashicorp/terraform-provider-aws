@@ -158,9 +158,24 @@ func ResourceService() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"ingress_configuration": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"is_publicly_accessible": {
+										Type:     schema.TypeBool,
+										Optional: true,
+									},
+								},
+							},
+						},
 						"egress_configuration": {
 							Type:     schema.TypeList,
 							Optional: true,
+							Computed: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -190,7 +205,7 @@ func ResourceService() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"observability_configuration_arn": {
 							Type:         schema.TypeString,
-							Required:     true,
+							Optional:     true,
 							ValidateFunc: verify.ValidARN,
 						},
 						"observability_enabled": {
@@ -281,6 +296,14 @@ func ResourceService() *schema.Resource {
 																Required:     true,
 																ValidateFunc: validation.StringInSlice(apprunner.Runtime_Values(), false),
 															},
+															"runtime_environment_secrets": {
+																Type:     schema.TypeMap,
+																Optional: true,
+																Elem: &schema.Schema{
+																	Type:         schema.TypeString,
+																	ValidateFunc: validation.StringLenBetween(0, 2048),
+																},
+															},
 															"runtime_environment_variables": {
 																Type:     schema.TypeMap,
 																Optional: true,
@@ -351,6 +374,14 @@ func ResourceService() *schema.Resource {
 													Default:      "8080",
 													ValidateFunc: validation.StringLenBetween(0, 51200),
 												},
+												"runtime_environment_secrets": {
+													Type:     schema.TypeMap,
+													Optional: true,
+													Elem: &schema.Schema{
+														Type:         schema.TypeString,
+														ValidateFunc: validation.StringLenBetween(0, 2048),
+													},
+												},
 												"runtime_environment_variables": {
 													Type:     schema.TypeMap,
 													Optional: true,
@@ -370,7 +401,7 @@ func ResourceService() *schema.Resource {
 									"image_identifier": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validation.StringMatch(regexp.MustCompile(`([0-9]{12}.dkr.ecr.[a-z\-]+-[0-9]{1}.amazonaws.com\/.*)|(^public\.ecr\.aws\/.+\/.+)`), ""),
+										ValidateFunc: validation.StringMatch(regexp.MustCompile(`([0-9]{12}\.dkr\.ecr\.[a-z\-]+-[0-9]{1}\.amazonaws\.com\/.*)|(^public\.ecr\.aws\/.+\/.+)`), ""),
 									},
 									"image_repository_type": {
 										Type:         schema.TypeString,
@@ -400,7 +431,7 @@ func ResourceService() *schema.Resource {
 }
 
 func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppRunnerConn
+	conn := meta.(*conns.AWSClient).AppRunnerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -475,7 +506,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppRunnerConn
+	conn := meta.(*conns.AWSClient).AppRunnerConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -546,7 +577,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return diag.FromErr(fmt.Errorf("error setting source_configuration: %w", err))
 	}
 
-	tags, err := ListTags(conn, arn)
+	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
 		return diag.FromErr(fmt.Errorf("error listing tags for App Runner Service (%s): %s", arn, err))
@@ -567,7 +598,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppRunnerConn
+	conn := meta.(*conns.AWSClient).AppRunnerConn()
 
 	if d.HasChanges(
 		"auto_scaling_configuration_arn",
@@ -614,7 +645,7 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
 			return diag.FromErr(fmt.Errorf("error updating App Runner Service (%s) tags: %s", d.Get("arn").(string), err))
 		}
 	}
@@ -623,7 +654,7 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppRunnerConn
+	conn := meta.(*conns.AWSClient).AppRunnerConn()
 
 	input := &apprunner.DeleteServiceInput{
 		ServiceArn: aws.String(d.Id()),
@@ -751,6 +782,10 @@ func expandNetworkConfiguration(l []interface{}) *apprunner.NetworkConfiguration
 
 	result := &apprunner.NetworkConfiguration{}
 
+	if v, ok := tfMap["ingress_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		result.IngressConfiguration = expandNetworkIngressConfiguration(v)
+	}
+
 	if v, ok := tfMap["egress_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		result.EgressConfiguration = expandNetworkEgressConfiguration(v)
 	}
@@ -771,7 +806,7 @@ func expandServiceObservabilityConfiguration(l []interface{}) *apprunner.Service
 
 	result := &apprunner.ServiceObservabilityConfiguration{}
 
-	if v, ok := tfMap["observability_configuration_arn"].(string); ok {
+	if v, ok := tfMap["observability_configuration_arn"].(string); ok && len(v) > 0 {
 		result.ObservabilityConfigurationArn = aws.String(v)
 	}
 
@@ -838,6 +873,26 @@ func expandServiceAuthenticationConfiguration(l []interface{}) *apprunner.Authen
 	return result
 }
 
+func expandNetworkIngressConfiguration(l []interface{}) *apprunner.IngressConfiguration {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := l[0].(map[string]interface{})
+
+	if !ok {
+		return nil
+	}
+
+	result := &apprunner.IngressConfiguration{}
+
+	if v, ok := tfMap["is_publicly_accessible"].(bool); ok {
+		result.IsPubliclyAccessible = aws.Bool(v)
+	}
+
+	return result
+}
+
 func expandNetworkEgressConfiguration(l []interface{}) *apprunner.EgressConfiguration {
 	if len(l) == 0 || l[0] == nil {
 		return nil
@@ -877,6 +932,10 @@ func expandServiceImageConfiguration(l []interface{}) *apprunner.ImageConfigurat
 
 	if v, ok := tfMap["port"].(string); ok && v != "" {
 		result.Port = aws.String(v)
+	}
+
+	if v, ok := tfMap["runtime_environment_secrets"].(map[string]interface{}); ok && len(v) > 0 {
+		result.RuntimeEnvironmentSecrets = flex.ExpandStringMap(v)
 	}
 
 	if v, ok := tfMap["runtime_environment_variables"].(map[string]interface{}); ok && len(v) > 0 {
@@ -995,6 +1054,10 @@ func expandServiceCodeConfigurationValues(l []interface{}) *apprunner.CodeConfig
 		result.Runtime = aws.String(v)
 	}
 
+	if v, ok := tfMap["runtime_environment_secrets"].(map[string]interface{}); ok && len(v) > 0 {
+		result.RuntimeEnvironmentSecrets = flex.ExpandStringMap(v)
+	}
+
 	if v, ok := tfMap["runtime_environment_variables"].(map[string]interface{}); ok && len(v) > 0 {
 		result.RuntimeEnvironmentVariables = flex.ExpandStringMap(v)
 	}
@@ -1079,7 +1142,20 @@ func flattenNetworkConfiguration(config *apprunner.NetworkConfiguration) []inter
 	}
 
 	m := map[string]interface{}{
-		"egress_configuration": flattenNetworkEgressConfiguration(config.EgressConfiguration),
+		"ingress_configuration": flattenNetworkIngressConfiguration(config.IngressConfiguration),
+		"egress_configuration":  flattenNetworkEgressConfiguration(config.EgressConfiguration),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenNetworkIngressConfiguration(config *apprunner.IngressConfiguration) []interface{} {
+	if config == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"is_publicly_accessible": aws.BoolValue(config.IsPubliclyAccessible),
 	}
 
 	return []interface{}{m}
@@ -1147,6 +1223,7 @@ func flattenServiceCodeConfigurationValues(values *apprunner.CodeConfigurationVa
 		"build_command":                 aws.StringValue(values.BuildCommand),
 		"port":                          aws.StringValue(values.Port),
 		"runtime":                       aws.StringValue(values.Runtime),
+		"runtime_environment_secrets":   aws.StringValueMap(values.RuntimeEnvironmentSecrets),
 		"runtime_environment_variables": aws.StringValueMap(values.RuntimeEnvironmentVariables),
 		"start_command":                 aws.StringValue(values.StartCommand),
 	}
@@ -1202,6 +1279,7 @@ func flattenServiceImageConfiguration(config *apprunner.ImageConfiguration) []in
 
 	m := map[string]interface{}{
 		"port":                          aws.StringValue(config.Port),
+		"runtime_environment_secrets":   aws.StringValueMap(config.RuntimeEnvironmentSecrets),
 		"runtime_environment_variables": aws.StringValueMap(config.RuntimeEnvironmentVariables),
 		"start_command":                 aws.StringValue(config.StartCommand),
 	}

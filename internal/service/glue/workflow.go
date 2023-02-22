@@ -1,6 +1,7 @@
 package glue
 
 import (
+	"context"
 	"fmt"
 	"log"
 
@@ -8,9 +9,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -18,12 +21,12 @@ import (
 
 func ResourceWorkflow() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceWorkflowCreate,
-		Read:   resourceWorkflowRead,
-		Update: resourceWorkflowUpdate,
-		Delete: resourceWorkflowDelete,
+		CreateWithoutTimeout: resourceWorkflowCreate,
+		ReadWithoutTimeout:   resourceWorkflowRead,
+		UpdateWithoutTimeout: resourceWorkflowUpdate,
+		DeleteWithoutTimeout: resourceWorkflowDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -58,8 +61,9 @@ func ResourceWorkflow() *schema.Resource {
 	}
 }
 
-func resourceWorkflowCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+func resourceWorkflowCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlueConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 	name := d.Get("name").(string)
@@ -82,17 +86,18 @@ func resourceWorkflowCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Creating Glue Workflow: %s", input)
-	_, err := conn.CreateWorkflow(input)
+	_, err := conn.CreateWorkflowWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("error creating Glue Trigger (%s): %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating Glue Trigger (%s): %s", name, err)
 	}
 	d.SetId(name)
 
-	return resourceWorkflowRead(d, meta)
+	return append(diags, resourceWorkflowRead(ctx, d, meta)...)
 }
 
-func resourceWorkflowRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+func resourceWorkflowRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlueConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -101,21 +106,21 @@ func resourceWorkflowRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Reading Glue Workflow: %#v", input)
-	output, err := conn.GetWorkflow(input)
+	output, err := conn.GetWorkflowWithContext(ctx, input)
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 			log.Printf("[WARN] Glue Workflow (%s) not found, removing from state", d.Id())
 			d.SetId("")
-			return nil
+			return diags
 		}
-		return fmt.Errorf("error reading Glue Workflow (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Glue Workflow (%s): %s", d.Id(), err)
 	}
 
 	workflow := output.Workflow
 	if workflow == nil {
 		log.Printf("[WARN] Glue Workflow (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	workFlowArn := arn.ARN{
@@ -128,34 +133,35 @@ func resourceWorkflowRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", workFlowArn)
 
 	if err := d.Set("default_run_properties", aws.StringValueMap(workflow.DefaultRunProperties)); err != nil {
-		return fmt.Errorf("error setting default_run_properties: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting default_run_properties: %s", err)
 	}
 	d.Set("description", workflow.Description)
 	d.Set("max_concurrent_runs", workflow.MaxConcurrentRuns)
 	d.Set("name", workflow.Name)
 
-	tags, err := ListTags(conn, workFlowArn)
+	tags, err := ListTags(ctx, conn, workFlowArn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for Glue Workflow (%s): %w", workFlowArn, err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for Glue Workflow (%s): %s", workFlowArn, err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceWorkflowUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+func resourceWorkflowUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlueConn()
 
 	if d.HasChanges("default_run_properties", "description", "max_concurrent_runs") {
 		input := &glue.UpdateWorkflowInput{
@@ -175,40 +181,41 @@ func resourceWorkflowUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		log.Printf("[DEBUG] Updating Glue Workflow: %#v", input)
-		_, err := conn.UpdateWorkflow(input)
+		_, err := conn.UpdateWorkflowWithContext(ctx, input)
 		if err != nil {
-			return fmt.Errorf("error updating Glue Workflow (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Glue Workflow (%s): %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %s", err)
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
 		}
 	}
 
-	return resourceWorkflowRead(d, meta)
+	return append(diags, resourceWorkflowRead(ctx, d, meta)...)
 }
 
-func resourceWorkflowDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+func resourceWorkflowDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlueConn()
 
 	log.Printf("[DEBUG] Deleting Glue Workflow: %s", d.Id())
-	err := DeleteWorkflow(conn, d.Id())
+	err := DeleteWorkflow(ctx, conn, d.Id())
 	if err != nil {
-		return fmt.Errorf("error deleting Glue Workflow (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Glue Workflow (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func DeleteWorkflow(conn *glue.Glue, name string) error {
+func DeleteWorkflow(ctx context.Context, conn *glue.Glue, name string) error {
 	input := &glue.DeleteWorkflowInput{
 		Name: aws.String(name),
 	}
 
-	_, err := conn.DeleteWorkflow(input)
+	_, err := conn.DeleteWorkflowWithContext(ctx, input)
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 			return nil

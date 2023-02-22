@@ -1,6 +1,7 @@
 package ec2
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"time"
@@ -10,10 +11,13 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -27,13 +31,13 @@ const (
 
 func ResourceVPCEndpoint() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceVPCEndpointCreate,
-		Read:   resourceVPCEndpointRead,
-		Update: resourceVPCEndpointUpdate,
-		Delete: resourceVPCEndpointDelete,
+		CreateWithoutTimeout: resourceVPCEndpointCreate,
+		ReadWithoutTimeout:   resourceVPCEndpointRead,
+		UpdateWithoutTimeout: resourceVPCEndpointUpdate,
+		DeleteWithoutTimeout: resourceVPCEndpointDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -98,11 +102,12 @@ func ResourceVPCEndpoint() *schema.Resource {
 				Computed: true,
 			},
 			"policy": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				Type:                  schema.TypeString,
+				Optional:              true,
+				Computed:              true,
+				ValidateFunc:          validation.StringIsJSON,
+				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+				DiffSuppressOnRefresh: true,
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
@@ -174,13 +179,15 @@ func ResourceVPCEndpoint() *schema.Resource {
 	}
 }
 
-func resourceVPCEndpointCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceVPCEndpointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	serviceName := d.Get("service_name").(string)
 	input := &ec2.CreateVpcEndpointInput{
+		ClientToken:       aws.String(resource.UniqueId()),
 		PrivateDnsEnabled: aws.Bool(d.Get("private_dns_enabled").(bool)),
 		ServiceName:       aws.String(serviceName),
 		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeVpcEndpoint),
@@ -200,7 +207,7 @@ func resourceVPCEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 		policy, err := structure.NormalizeJsonString(v)
 
 		if err != nil {
-			return fmt.Errorf("policy contains invalid JSON: %w", err)
+			return sdkdiag.AppendErrorf(diags, "policy contains invalid JSON: %s", err)
 		}
 
 		input.PolicyDocument = aws.String(policy)
@@ -218,44 +225,44 @@ func resourceVPCEndpointCreate(d *schema.ResourceData, meta interface{}) error {
 		input.SubnetIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	log.Printf("[DEBUG] Creating EC2 VPC Endpoint: %s", input)
-	output, err := conn.CreateVpcEndpoint(input)
+	output, err := conn.CreateVpcEndpointWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("creating EC2 VPC Endpoint (%s): %w", serviceName, err)
+		return sdkdiag.AppendErrorf(diags, "creating EC2 VPC Endpoint (%s): %s", serviceName, err)
 	}
 
 	vpce := output.VpcEndpoint
 	d.SetId(aws.StringValue(vpce.VpcEndpointId))
 
 	if d.Get("auto_accept").(bool) && aws.StringValue(vpce.State) == vpcEndpointStatePendingAcceptance {
-		if err := vpcEndpointAccept(conn, d.Id(), aws.StringValue(vpce.ServiceName), d.Timeout(schema.TimeoutCreate)); err != nil {
-			return err
+		if err := vpcEndpointAccept(ctx, conn, d.Id(), aws.StringValue(vpce.ServiceName), d.Timeout(schema.TimeoutCreate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "creating EC2 VPC Endpoint (%s): %s", serviceName, err)
 		}
 	}
 
-	if _, err = WaitVPCEndpointAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("waiting for EC2 VPC Endpoint (%s) create: %w", d.Id(), err)
+	if _, err = WaitVPCEndpointAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "creating EC2 VPC Endpoint (%s): waiting for completion: %s", serviceName, err)
 	}
 
-	return resourceVPCEndpointRead(d, meta)
+	return append(diags, resourceVPCEndpointRead(ctx, d, meta)...)
 }
 
-func resourceVPCEndpointRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	vpce, err := FindVPCEndpointByID(conn, d.Id())
+	vpce, err := FindVPCEndpointByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] VPC Endpoint (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading VPC Endpoint (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading VPC Endpoint (%s): %s", d.Id(), err)
 	}
 
 	arn := arn.ARN{
@@ -269,11 +276,11 @@ func resourceVPCEndpointRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("arn", arn)
 	if err := d.Set("dns_entry", flattenDNSEntries(vpce.DnsEntries)); err != nil {
-		return fmt.Errorf("setting dns_entry: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting dns_entry: %s", err)
 	}
 	if vpce.DnsOptions != nil {
 		if err := d.Set("dns_options", []interface{}{flattenDNSOptions(vpce.DnsOptions)}); err != nil {
-			return fmt.Errorf("setting dns_options: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting dns_options: %s", err)
 		}
 	} else {
 		d.Set("dns_options", nil)
@@ -296,11 +303,11 @@ func resourceVPCEndpointRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("vpc_id", vpce.VpcId)
 
-	if pl, err := FindPrefixListByName(conn, serviceName); err != nil {
+	if pl, err := FindPrefixListByName(ctx, conn, serviceName); err != nil {
 		if tfresource.NotFound(err) {
 			d.Set("cidr_blocks", nil)
 		} else {
-			return fmt.Errorf("reading EC2 Prefix List (%s): %w", serviceName, err)
+			return sdkdiag.AppendErrorf(diags, "reading EC2 Prefix List (%s): %s", serviceName, err)
 		}
 	} else {
 		d.Set("cidr_blocks", aws.StringValueSlice(pl.Cidrs))
@@ -310,13 +317,13 @@ func resourceVPCEndpointRead(d *schema.ResourceData, meta interface{}) error {
 	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), aws.StringValue(vpce.PolicyDocument))
 
 	if err != nil {
-		return fmt.Errorf("while setting policy (%s), encountered: %w", policyToSet, err)
+		return sdkdiag.AppendErrorf(diags, "while setting policy (%s), encountered: %s", policyToSet, err)
 	}
 
 	policyToSet, err = structure.NormalizeJsonString(policyToSet)
 
 	if err != nil {
-		return fmt.Errorf("policy (%s) is invalid JSON: %w", policyToSet, err)
+		return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", policyToSet, err)
 	}
 
 	d.Set("policy", policyToSet)
@@ -325,22 +332,23 @@ func resourceVPCEndpointRead(d *schema.ResourceData, meta interface{}) error {
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceVPCEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceVPCEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	if d.HasChange("auto_accept") && d.Get("auto_accept").(bool) && d.Get("state").(string) == vpcEndpointStatePendingAcceptance {
-		if err := vpcEndpointAccept(conn, d.Id(), d.Get("service_name").(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return err
+		if err := vpcEndpointAccept(ctx, conn, d.Id(), d.Get("service_name").(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating EC2 VPC Endpoint (%s): %s", d.Get("service_name").(string), err)
 		}
 	}
 
@@ -374,7 +382,7 @@ func resourceVPCEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 				policy, err := structure.NormalizeJsonString(d.Get("policy"))
 
 				if err != nil {
-					return fmt.Errorf("policy contains invalid JSON: %w", err)
+					return sdkdiag.AppendErrorf(diags, "policy contains invalid JSON: %s", err)
 				}
 
 				if policy == "" {
@@ -385,34 +393,34 @@ func resourceVPCEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 
-		log.Printf("[DEBUG] Updating EC2 VPC Endpoint: %s", input)
-		_, err := conn.ModifyVpcEndpoint(input)
+		_, err := conn.ModifyVpcEndpointWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("updating EC2 VPC Endpoint (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating EC2 VPC Endpoint (%s): %s", d.Id(), err)
 		}
 
-		if _, err := WaitVPCEndpointAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return fmt.Errorf("waiting for EC2 VPC Endpoint (%s) update: %w", d.Id(), err)
+		if _, err := WaitVPCEndpointAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for EC2 VPC Endpoint (%s) update: %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("updating tags: %w", err)
+		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating EC2 VPC Endpoint (%s) tags: %s", d.Id(), err)
 		}
 	}
 
-	return resourceVPCEndpointRead(d, meta)
+	return append(diags, resourceVPCEndpointRead(ctx, d, meta)...)
 }
 
-func resourceVPCEndpointDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceVPCEndpointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	log.Printf("[DEBUG] Deleting EC2 VPC Endpoint: %s", d.Id())
-	output, err := conn.DeleteVpcEndpoints(&ec2.DeleteVpcEndpointsInput{
+	output, err := conn.DeleteVpcEndpointsWithContext(ctx, &ec2.DeleteVpcEndpointsInput{
 		VpcEndpointIds: aws.StringSlice([]string{d.Id()}),
 	})
 
@@ -421,22 +429,22 @@ func resourceVPCEndpointDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEndpointNotFound) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("deleting EC2 VPC Endpoint (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting EC2 VPC Endpoint (%s): %s", d.Id(), err)
 	}
 
-	if _, err = WaitVPCEndpointDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("waiting for EC2 VPC Endpoint (%s) delete: %w", d.Id(), err)
+	if _, err = WaitVPCEndpointDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for EC2 VPC Endpoint (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func vpcEndpointAccept(conn *ec2.EC2, vpceID, serviceName string, timeout time.Duration) error {
-	serviceConfiguration, err := FindVPCEndpointServiceConfigurationByServiceName(conn, serviceName)
+func vpcEndpointAccept(ctx context.Context, conn *ec2.EC2, vpceID, serviceName string, timeout time.Duration) error {
+	serviceConfiguration, err := FindVPCEndpointServiceConfigurationByServiceName(ctx, conn, serviceName)
 
 	if err != nil {
 		return fmt.Errorf("reading EC2 VPC Endpoint Service Configuration (%s): %w", serviceName, err)
@@ -447,14 +455,13 @@ func vpcEndpointAccept(conn *ec2.EC2, vpceID, serviceName string, timeout time.D
 		VpcEndpointIds: aws.StringSlice([]string{vpceID}),
 	}
 
-	log.Printf("[DEBUG] Accepting EC2 VPC Endpoint connection: %s", input)
-	_, err = conn.AcceptVpcEndpointConnections(input)
+	_, err = conn.AcceptVpcEndpointConnectionsWithContext(ctx, input)
 
 	if err != nil {
 		return fmt.Errorf("accepting EC2 VPC Endpoint (%s) connection: %w", vpceID, err)
 	}
 
-	if _, err = WaitVPCEndpointAccepted(conn, vpceID, timeout); err != nil {
+	if _, err = WaitVPCEndpointAccepted(ctx, conn, vpceID, timeout); err != nil {
 		return fmt.Errorf("waiting for EC2 VPC Endpoint (%s) acceptance: %w", vpceID, err)
 	}
 

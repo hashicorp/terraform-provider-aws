@@ -1,15 +1,18 @@
 package events
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"math"
 	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/eventbridge"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-cty/cty"
+	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -17,18 +20,19 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceTarget() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceTargetCreate,
-		Read:   resourceTargetRead,
-		Update: resourceTargetUpdate,
-		Delete: resourceTargetDelete,
+		CreateWithoutTimeout: resourceTargetCreate,
+		ReadWithoutTimeout:   resourceTargetRead,
+		UpdateWithoutTimeout: resourceTargetUpdate,
+		DeleteWithoutTimeout: resourceTargetDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: resourceTargetImport,
+			StateContext: resourceTargetImport,
 		},
 
 		SchemaVersion: 1,
@@ -41,127 +45,80 @@ func ResourceTarget() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"event_bus_name": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validBusNameOrARN,
-				Default:      DefaultEventBusName,
-			},
-
-			"rule": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validateRuleName,
-			},
-
-			"target_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validateTargetID,
-			},
-
 			"arn": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-
-			"input": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ValidateFunc: validation.All(
-					validation.StringIsJSON,
-					validation.StringLenBetween(0, 8192),
-				),
-				ConflictsWith: []string{"input_path", "input_transformer"},
-				// We could be normalizing the JSON here,
-				// but for built-in targets input may not be JSON
-			},
-
-			"input_path": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ValidateFunc:  validation.StringLenBetween(0, 256),
-				ConflictsWith: []string{"input", "input_transformer"},
-			},
-
-			"role_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-
-			"run_command_targets": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 5,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"key": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 128),
-						},
-						"values": {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 50,
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: validation.StringLenBetween(1, 256),
-							},
-						},
-					},
-				},
-			},
-
-			"http_target": {
+			"batch_target": {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"header_parameters": {
-							Type:     schema.TypeMap,
-							Optional: true,
-							ValidateDiagFunc: allDiagFunc(
-								validation.MapKeyLenBetween(0, 512),
-								validation.MapKeyMatch(regexp.MustCompile(`^[!#$%&'*+-.^_|~0-9a-zA-Z]+$`), ""),
-								validation.MapValueLenBetween(0, 512),
-								validation.MapValueMatch(regexp.MustCompile(`^[ \t]*[\x20-\x7E]+([ \t]+[\x20-\x7E]+)*[ \t]*$`), ""),
-							),
-							Elem: &schema.Schema{Type: schema.TypeString},
+						"array_size": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(2, 10000),
 						},
-						"query_string_parameters": {
-							Type:     schema.TypeMap,
-							Optional: true,
-							ValidateDiagFunc: allDiagFunc(
-								validation.MapKeyLenBetween(0, 512),
-								validation.MapKeyMatch(regexp.MustCompile(`[^\x00-\x1F\x7F]+`), ""),
-								validation.MapValueLenBetween(0, 512),
-								validation.MapValueMatch(regexp.MustCompile(`[^\x00-\x09\x0B\x0C\x0E-\x1F\x7F]+`), ""),
-							),
-							Elem: &schema.Schema{Type: schema.TypeString},
+						"job_attempts": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(1, 10),
 						},
-						"path_parameter_values": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+						"job_definition": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"job_name": {
+							Type:     schema.TypeString,
+							Required: true,
 						},
 					},
 				},
 			},
-
+			"dead_letter_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+					},
+				},
+			},
 			"ecs_target": {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"capacity_provider_strategy": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"base": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										ValidateFunc: validation.IntBetween(0, 100000),
+									},
+									"capacity_provider": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"weight": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										ValidateFunc: validation.IntBetween(0, 1000),
+									},
+								},
+							},
+						},
 						"enable_ecs_managed_tags": {
 							Type:     schema.TypeBool,
 							Optional: true,
@@ -188,6 +145,11 @@ func ResourceTarget() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"assign_public_ip": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Default:  false,
+									},
 									"security_groups": {
 										Type:     schema.TypeSet,
 										Optional: true,
@@ -197,11 +159,6 @@ func ResourceTarget() *schema.Resource {
 										Type:     schema.TypeSet,
 										Required: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-									"assign_public_ip": {
-										Type:     schema.TypeBool,
-										Optional: true,
-										Default:  false,
 									},
 								},
 							},
@@ -250,35 +207,90 @@ func ResourceTarget() *schema.Resource {
 					},
 				},
 			},
-
-			"batch_target": {
+			"event_bus_name": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validBusNameOrARN,
+				Default:      DefaultEventBusName,
+			},
+			"http_target": {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"job_definition": {
-							Type:     schema.TypeString,
-							Required: true,
+						"header_parameters": {
+							Type:     schema.TypeMap,
+							Optional: true,
+							ValidateDiagFunc: allDiagFunc(
+								validation.MapKeyLenBetween(0, 512),
+								validation.MapKeyMatch(regexp.MustCompile(`^[!#$%&'*+-.^_|~0-9a-zA-Z]+$`), ""),
+								validation.MapValueLenBetween(0, 512),
+								validation.MapValueMatch(regexp.MustCompile(`^[ \t]*[\x20-\x7E]+([ \t]+[\x20-\x7E]+)*[ \t]*$`), ""),
+							),
+							Elem: &schema.Schema{Type: schema.TypeString},
 						},
-						"job_name": {
-							Type:     schema.TypeString,
-							Required: true,
+						"path_parameter_values": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"array_size": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(2, 10000),
-						},
-						"job_attempts": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(1, 10),
+						"query_string_parameters": {
+							Type:     schema.TypeMap,
+							Optional: true,
+							ValidateDiagFunc: allDiagFunc(
+								validation.MapKeyLenBetween(0, 512),
+								validation.MapKeyMatch(regexp.MustCompile(`[^\x00-\x1F\x7F]+`), ""),
+								validation.MapValueLenBetween(0, 512),
+								validation.MapValueMatch(regexp.MustCompile(`[^\x00-\x09\x0B\x0C\x0E-\x1F\x7F]+`), ""),
+							),
+							Elem: &schema.Schema{Type: schema.TypeString},
 						},
 					},
 				},
 			},
-
+			"input": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ValidateFunc: validation.All(
+					validation.StringIsJSON,
+					validation.StringLenBetween(0, 8192),
+				),
+				ConflictsWith: []string{"input_path", "input_transformer"},
+				// We could be normalizing the JSON here,
+				// but for built-in targets input may not be JSON
+			},
+			"input_path": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ValidateFunc:  validation.StringLenBetween(0, 256),
+				ConflictsWith: []string{"input", "input_transformer"},
+			},
+			"input_transformer": {
+				Type:          schema.TypeList,
+				Optional:      true,
+				MaxItems:      1,
+				ConflictsWith: []string{"input", "input_path"},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"input_paths": {
+							Type:     schema.TypeMap,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+							ValidateFunc: validation.All(
+								mapMaxItems(targetInputTransformerMaxInputPaths),
+								mapKeysDoNotMatch(regexp.MustCompile(`^AWS.*$`), "input_path must not start with \"AWS\""),
+							),
+						},
+						"input_template": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringLenBetween(1, 8192),
+						},
+					},
+				},
+			},
 			"kinesis_target": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -293,7 +305,6 @@ func ResourceTarget() *schema.Resource {
 					},
 				},
 			},
-
 			"redshift_target": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -332,46 +343,6 @@ func ResourceTarget() *schema.Resource {
 					},
 				},
 			},
-
-			"sqs_target": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"message_group_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-					},
-				},
-			},
-
-			"input_transformer": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				MaxItems:      1,
-				ConflictsWith: []string{"input", "input_path"},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"input_paths": {
-							Type:     schema.TypeMap,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-							ValidateFunc: validation.All(
-								mapMaxItems(targetInputTransformerMaxInputPaths),
-								mapKeysDoNotMatch(regexp.MustCompile(`^AWS.*$`), "input_path must not start with \"AWS\""),
-							),
-						},
-						"input_template": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 8192),
-						},
-					},
-				},
-			},
-
 			"retry_policy": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -391,27 +362,66 @@ func ResourceTarget() *schema.Resource {
 					},
 				},
 			},
-
-			"dead_letter_config": {
+			"role_arn": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: verify.ValidARN,
+			},
+			"rule": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validateRuleName,
+			},
+			"run_command_targets": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 5,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"key": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringLenBetween(1, 128),
+						},
+						"values": {
+							Type:     schema.TypeList,
+							Required: true,
+							MaxItems: 50,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.StringLenBetween(1, 256),
+							},
+						},
+					},
+				},
+			},
+			"sqs_target": {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
+						"message_group_id": {
+							Type:     schema.TypeString,
+							Optional: true,
 						},
 					},
 				},
+			},
+			"target_id": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validateTargetID,
 			},
 		},
 	}
 }
 
-func resourceTargetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EventsConn
+func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).EventsConn()
 
 	rule := d.Get("rule").(string)
 
@@ -426,43 +436,42 @@ func resourceTargetCreate(d *schema.ResourceData, meta interface{}) error {
 	if v, ok := d.GetOk("event_bus_name"); ok {
 		busName = v.(string)
 	}
+	id := TargetCreateResourceID(busName, rule, targetID)
 
 	input := buildPutTargetInputStruct(d)
 
 	log.Printf("[DEBUG] Creating EventBridge Target: %s", input)
-	out, err := conn.PutTargets(input)
+	output, err := conn.PutTargetsWithContext(ctx, input)
+
+	if err == nil && output != nil {
+		err = putTargetsError(output.FailedEntries)
+	}
+
 	if err != nil {
-		return fmt.Errorf("Creating EventBridge Target failed: %w", err)
+		return diag.Errorf("creating EventBridge Target (%s): %s", id, err)
 	}
 
-	if len(out.FailedEntries) > 0 {
-		return fmt.Errorf("Creating EventBridge Target failed: %s", out.FailedEntries)
-	}
-
-	id := TargetCreateResourceID(busName, rule, targetID)
 	d.SetId(id)
 
-	log.Printf("[INFO] EventBridge Target (%s) created", d.Id())
-
-	return resourceTargetRead(d, meta)
+	return resourceTargetRead(ctx, d, meta)
 }
 
-func resourceTargetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EventsConn
+func resourceTargetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).EventsConn()
 
 	busName := d.Get("event_bus_name").(string)
 
-	t, err := FindTarget(conn, busName, d.Get("rule").(string), d.Get("target_id").(string))
-	if err != nil {
-		if !d.IsNewResource() && (tfawserr.ErrCodeEquals(err, "ValidationException", eventbridge.ErrCodeResourceNotFoundException) ||
-			regexp.MustCompile(" not found$").MatchString(err.Error())) {
-			log.Printf("[WARN] EventBridge Target (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return err
+	t, err := FindTargetByThreePartKey(ctx, conn, busName, d.Get("rule").(string), d.Get("target_id").(string))
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] EventBridge Target (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
-	log.Printf("[DEBUG] Found Event Target: %s", t)
+
+	if err != nil {
+		return diag.Errorf("reading EventBridge Target (%s): %s", d.Id(), err)
+	}
 
 	d.Set("arn", t.Arn)
 	d.Set("target_id", t.Id)
@@ -473,13 +482,13 @@ func resourceTargetRead(d *schema.ResourceData, meta interface{}) error {
 
 	if t.RunCommandParameters != nil {
 		if err := d.Set("run_command_targets", flattenTargetRunParameters(t.RunCommandParameters)); err != nil {
-			return fmt.Errorf("Error setting run_command_targets error: %w", err)
+			return diag.Errorf("setting run_command_targets: %s", err)
 		}
 	}
 
 	if t.HttpParameters != nil {
 		if err := d.Set("http_target", []interface{}{flattenTargetHTTPParameters(t.HttpParameters)}); err != nil {
-			return fmt.Errorf("error setting http_target: %w", err)
+			return diag.Errorf("setting http_target: %s", err)
 		}
 	} else {
 		d.Set("http_target", nil)
@@ -487,71 +496,76 @@ func resourceTargetRead(d *schema.ResourceData, meta interface{}) error {
 
 	if t.RedshiftDataParameters != nil {
 		if err := d.Set("redshift_target", flattenTargetRedshiftParameters(t.RedshiftDataParameters)); err != nil {
-			return fmt.Errorf("Error setting ecs_target error: %w", err)
+			return diag.Errorf("setting redshift_target: %s", err)
 		}
 	}
 
 	if t.EcsParameters != nil {
 		if err := d.Set("ecs_target", flattenTargetECSParameters(t.EcsParameters)); err != nil {
-			return fmt.Errorf("Error setting ecs_target error: %w", err)
+			return diag.Errorf("setting ecs_target: %s", err)
 		}
 	}
 
 	if t.BatchParameters != nil {
 		if err := d.Set("batch_target", flattenTargetBatchParameters(t.BatchParameters)); err != nil {
-			return fmt.Errorf("Error setting batch_target error: %w", err)
+			return diag.Errorf("setting batch_target: %s", err)
 		}
 	}
 
 	if t.KinesisParameters != nil {
 		if err := d.Set("kinesis_target", flattenTargetKinesisParameters(t.KinesisParameters)); err != nil {
-			return fmt.Errorf("Error setting kinesis_target error: %w", err)
+			return diag.Errorf("setting kinesis_target: %s", err)
 		}
 	}
 
 	if t.SqsParameters != nil {
 		if err := d.Set("sqs_target", flattenTargetSQSParameters(t.SqsParameters)); err != nil {
-			return fmt.Errorf("Error setting sqs_target error: %w", err)
+			return diag.Errorf("setting sqs_target: %s", err)
 		}
 	}
 
 	if t.InputTransformer != nil {
 		if err := d.Set("input_transformer", flattenInputTransformer(t.InputTransformer)); err != nil {
-			return fmt.Errorf("Error setting input_transformer error: %w", err)
+			return diag.Errorf("setting input_transformer: %s", err)
 		}
 	}
 
 	if t.RetryPolicy != nil {
 		if err := d.Set("retry_policy", flattenTargetRetryPolicy(t.RetryPolicy)); err != nil {
-			return fmt.Errorf("Error setting retry_policy error: #{err}")
+			return diag.Errorf("setting retry_policy: %s", err)
 		}
 	}
 
 	if t.DeadLetterConfig != nil {
 		if err := d.Set("dead_letter_config", flattenTargetDeadLetterConfig(t.DeadLetterConfig)); err != nil {
-			return fmt.Errorf("Error setting dead_letter_config error: #{err}")
+			return diag.Errorf("setting dead_letter_config: %s", err)
 		}
 	}
 
 	return nil
 }
 
-func resourceTargetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EventsConn
+func resourceTargetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).EventsConn()
 
 	input := buildPutTargetInputStruct(d)
 
 	log.Printf("[DEBUG] Updating EventBridge Target: %s", input)
-	_, err := conn.PutTargets(input)
-	if err != nil {
-		return fmt.Errorf("error updating EventBridge Target (%s): %w", d.Id(), err)
+	output, err := conn.PutTargetsWithContext(ctx, input)
+
+	if err == nil && output != nil {
+		err = putTargetsError(output.FailedEntries)
 	}
 
-	return resourceTargetRead(d, meta)
+	if err != nil {
+		return diag.Errorf("updating EventBridge Target (%s): %s", d.Id(), err)
+	}
+
+	return resourceTargetRead(ctx, d, meta)
 }
 
-func resourceTargetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EventsConn
+func resourceTargetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).EventsConn()
 
 	input := &eventbridge.RemoveTargetsInput{
 		Ids:  []*string{aws.String(d.Get("target_id").(string))},
@@ -562,20 +576,62 @@ func resourceTargetDelete(d *schema.ResourceData, meta interface{}) error {
 		input.EventBusName = aws.String(v.(string))
 	}
 
-	output, err := conn.RemoveTargets(input)
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, eventbridge.ErrCodeResourceNotFoundException) {
-			return nil
-		}
-		return fmt.Errorf("error deleting EventBridge Target (%s): %w", d.Id(), err)
+	log.Printf("[DEBUG] Deleting EventBridge Target: %s", d.Id())
+	output, err := conn.RemoveTargetsWithContext(ctx, input)
+
+	if err == nil && output != nil {
+		err = removeTargetsError(output.FailedEntries)
 	}
 
-	if output != nil && len(output.FailedEntries) > 0 && output.FailedEntries[0] != nil {
-		failedEntry := output.FailedEntries[0]
-		return fmt.Errorf("error deleting EventBridge Target (%s): failure entry: %s: %s", d.Id(), aws.StringValue(failedEntry.ErrorCode), aws.StringValue(failedEntry.ErrorMessage))
+	if tfawserr.ErrCodeEquals(err, eventbridge.ErrCodeResourceNotFoundException) {
+		return nil
+	}
+
+	if err != nil {
+		return diag.Errorf("deleting EventBridge Target (%s): %s", d.Id(), err)
 	}
 
 	return nil
+}
+
+func putTargetError(apiObject *eventbridge.PutTargetsResultEntry) error {
+	if apiObject == nil {
+		return nil
+	}
+
+	return awserr.New(aws.StringValue(apiObject.ErrorCode), aws.StringValue(apiObject.ErrorMessage), nil)
+}
+
+func putTargetsError(apiObjects []*eventbridge.PutTargetsResultEntry) error {
+	var errors *multierror.Error
+
+	for _, apiObject := range apiObjects {
+		if err := putTargetError(apiObject); err != nil {
+			errors = multierror.Append(errors, fmt.Errorf("%s: %w", aws.StringValue(apiObject.TargetId), err))
+		}
+	}
+
+	return errors.ErrorOrNil()
+}
+
+func removeTargetError(apiObject *eventbridge.RemoveTargetsResultEntry) error {
+	if apiObject == nil {
+		return nil
+	}
+
+	return awserr.New(aws.StringValue(apiObject.ErrorCode), aws.StringValue(apiObject.ErrorMessage), nil)
+}
+
+func removeTargetsError(apiObjects []*eventbridge.RemoveTargetsResultEntry) error {
+	var errors *multierror.Error
+
+	for _, apiObject := range apiObjects {
+		if err := removeTargetError(apiObject); err != nil {
+			errors = multierror.Append(errors, fmt.Errorf("%s: %w", aws.StringValue(apiObject.TargetId), err))
+		}
+	}
+
+	return errors.ErrorOrNil()
 }
 
 func buildPutTargetInputStruct(d *schema.ResourceData) *eventbridge.PutTargetsInput {
@@ -697,6 +753,10 @@ func expandTargetECSParameters(config []interface{}) *eventbridge.EcsParameters 
 	for _, c := range config {
 		param := c.(map[string]interface{})
 		tags := tftags.New(param["tags"].(map[string]interface{}))
+
+		if v, ok := param["capacity_provider_strategy"].(*schema.Set); ok && v.Len() > 0 {
+			ecsParameters.CapacityProviderStrategy = expandTargetCapacityProviderStrategy(v.List())
+		}
 
 		if val, ok := param["group"].(string); ok && val != "" {
 			ecsParameters.Group = aws.String(val)
@@ -911,6 +971,10 @@ func flattenTargetECSParameters(ecsParameters *eventbridge.EcsParameters) []map[
 		config["placement_constraint"] = flattenTargetPlacementConstraints(ecsParameters.PlacementConstraints)
 	}
 
+	if ecsParameters.CapacityProviderStrategy != nil {
+		config["capacity_provider_strategy"] = flattenTargetCapacityProviderStrategy(ecsParameters.CapacityProviderStrategy)
+	}
+
 	config["tags"] = KeyValueTags(ecsParameters.Tags).IgnoreAWS().Map()
 	config["enable_execute_command"] = aws.BoolValue(ecsParameters.EnableExecuteCommand)
 	config["enable_ecs_managed_tags"] = aws.BoolValue(ecsParameters.EnableECSManagedTags)
@@ -1066,6 +1130,40 @@ func expandTargetPlacementConstraints(tfList []interface{}) []*eventbridge.Place
 	return result
 }
 
+func expandTargetCapacityProviderStrategy(tfList []interface{}) []*eventbridge.CapacityProviderStrategyItem {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var result []*eventbridge.CapacityProviderStrategyItem
+
+	for _, tfMapRaw := range tfList {
+		if tfMapRaw == nil {
+			continue
+		}
+
+		cp := tfMapRaw.(map[string]interface{})
+
+		apiObject := &eventbridge.CapacityProviderStrategyItem{}
+
+		if val, ok := cp["base"]; ok {
+			apiObject.Base = aws.Int64(int64(val.(int)))
+		}
+
+		if val, ok := cp["weight"]; ok {
+			apiObject.Weight = aws.Int64(int64(val.(int)))
+		}
+
+		if val, ok := cp["capacity_provider"]; ok {
+			apiObject.CapacityProvider = aws.String(val.(string))
+		}
+
+		result = append(result, apiObject)
+	}
+
+	return result
+}
+
 func flattenTargetPlacementConstraints(pcs []*eventbridge.PlacementConstraint) []map[string]interface{} {
 	if len(pcs) == 0 {
 		return nil
@@ -1083,7 +1181,26 @@ func flattenTargetPlacementConstraints(pcs []*eventbridge.PlacementConstraint) [
 	return results
 }
 
-func resourceTargetImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func flattenTargetCapacityProviderStrategy(cps []*eventbridge.CapacityProviderStrategyItem) []map[string]interface{} {
+	if cps == nil {
+		return nil
+	}
+	results := make([]map[string]interface{}, 0)
+	for _, cp := range cps {
+		s := make(map[string]interface{})
+		s["capacity_provider"] = aws.StringValue(cp.CapacityProvider)
+		if cp.Weight != nil {
+			s["weight"] = aws.Int64Value(cp.Weight)
+		}
+		if cp.Base != nil {
+			s["base"] = aws.Int64Value(cp.Base)
+		}
+		results = append(results, s)
+	}
+	return results
+}
+
+func resourceTargetImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	busName, ruleName, targetID, err := TargetParseImportID(d.Id())
 	if err != nil {
 		return []*schema.ResourceData{}, err

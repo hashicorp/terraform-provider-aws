@@ -62,6 +62,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -96,17 +97,19 @@ func Resource{{ .Resource }}() *schema.Resource {
 		// you'll need a custom import function.
 		//
 		// See more:
-		// https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/contribution-checklists.md#adding-resource-import-support
-		// https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/data-handling-and-conversion.md#implicit-state-passthrough
-		// https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/data-handling-and-conversion.md#virtual-attributes
+		// https://hashicorp.github.io/terraform-provider-aws/add-import-support/
+		// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/#implicit-state-passthrough
+		// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/#virtual-attributes
 		{{- end }}
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 		{{ if .IncludeComments }}
 		// TIP: ==== CONFIGURABLE TIMEOUTS ====
-		// Users can configure timeout lengths (if you use the times they
-		// provide). These are the defaults if they don't configure timeouts.
+		// Users can configure timeout lengths but you need to use the times they
+		// provide. Access the timeout they configure (or the defaults) using,
+		// e.g., d.Timeout(schema.TimeoutCreate) (see below). The times here are
+		// the defaults if they don't configure timeouts.
 		{{- end }}
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),
@@ -214,7 +217,7 @@ func resource{{ .Resource }}Create(ctx context.Context, d *schema.ResourceData, 
 
 	// TIP: -- 1. Get a client connection to the relevant service
 	{{- end }}
-	conn := meta.(*conns.AWSClient).{{ .Service }}Conn
+	conn := meta.(*conns.AWSClient).{{ .Service }}{{ if .AWSGoSDKV2 }}Client(){{ else }}Conn(){{ end }}
 	{{ if .IncludeComments }}
 	// TIP: -- 2. Populate a create input structure
 	{{- end }}
@@ -306,7 +309,7 @@ func resource{{ .Resource }}Read(ctx context.Context, d *schema.ResourceData, me
 
 	// TIP: -- 1. Get a client connection to the relevant service
 	{{- end }}
-	conn := meta.(*conns.AWSClient).{{ .Service }}Conn
+	conn := meta.(*conns.AWSClient).{{ .Service }}{{ if .AWSGoSDKV2 }}Client(){{ else }}Conn(){{ end }}
 	{{ if .IncludeComments }}
 	// TIP: -- 2. Get the resource from AWS using an API Get, List, or Describe-
 	// type function, or, better yet, using a finder.
@@ -344,9 +347,9 @@ func resource{{ .Resource }}Read(ctx context.Context, d *schema.ResourceData, me
 	{{ if .IncludeComments }}
 	// TIP: Setting a complex type.
 	// For more information, see:
-	// https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/data-handling-and-conversion.md
-	// https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/data-handling-and-conversion.md#flatten-functions-for-blocks
-	// https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/data-handling-and-conversion.md#root-typeset-of-resource-and-aws-list-of-structure
+	// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/#data-handling-and-conversion
+	// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/#flatten-functions-for-blocks
+	// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/#root-typeset-of-resource-and-aws-list-of-structure
 	{{- end }}
 	if err := d.Set("complex_argument", flattenComplexArguments(out.ComplexArguments)); err != nil {
 		return create.DiagError(names.{{ .Service }}, create.ErrActionSetting, ResName{{ .Resource }}, d.Id(), err)
@@ -425,7 +428,7 @@ func resource{{ .Resource }}Update(ctx context.Context, d *schema.ResourceData, 
 
 	// TIP: -- 1. Get a client connection to the relevant service
 	{{- end }}
-	conn := meta.(*conns.AWSClient).{{ .Service }}Conn
+	conn := meta.(*conns.AWSClient).{{ .Service }}{{ if .AWSGoSDKV2 }}Client(){{ else }}Conn(){{ end }}
 	{{ if .IncludeComments }}
 	// TIP: -- 2. Populate a modify input structure and check for changes
 	//
@@ -498,7 +501,7 @@ func resource{{ .Resource }}Delete(ctx context.Context, d *schema.ResourceData, 
 
 	// TIP: -- 1. Get a client connection to the relevant service
 	{{- end }}
-	conn := meta.(*conns.AWSClient).{{ .Service }}Conn
+	conn := meta.(*conns.AWSClient).{{ .Service }}{{ if .AWSGoSDKV2 }}Client(){{ else }}Conn(){{ end }}
 	{{ if .IncludeComments }}
 	// TIP: -- 2. Populate a delete input structure
 	{{- end }}
@@ -526,7 +529,7 @@ func resource{{ .Resource }}Delete(ctx context.Context, d *schema.ResourceData, 
 			return nil
 		}
 
-		return create.DiagError(names.{{ .Service }}, create.ErrActionDeleting, ResNameEndpoint, d.Id(), err)
+		return create.DiagError(names.{{ .Service }}, create.ErrActionDeleting, ResName{{ .Resource }}, d.Id(), err)
 	}
 	{{- else }}
 	if tfawserr.ErrCodeEquals(err, {{ .ServiceLower }}.ErrCodeResourceNotFoundException) {
@@ -733,7 +736,7 @@ func find{{ .Resource }}ByID(ctx context.Context, conn *{{ .ServiceLower }}.{{ .
 // translate from Terraform -> AWS.
 //
 // See more:
-// https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/data-handling-and-conversion.md
+// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/
 {{- end }}
 func flattenComplexArgument(apiObject *{{ .ServiceLower }}.ComplexArgument) map[string]interface{} {
 	if apiObject == nil {
@@ -781,7 +784,7 @@ func flattenComplexArguments(apiObjects []*{{ .ServiceLower }}.ComplexArgument) 
 // expanders translate from Terraform -> AWS.
 //
 // See more:
-// https://github.com/hashicorp/terraform-provider-aws/blob/main/docs/contributing/data-handling-and-conversion.md
+// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/
 {{- end }}
 func expandComplexArgument(tfMap map[string]interface{}) *{{ .ServiceLower }}.ComplexArgument {
 	if tfMap == nil {

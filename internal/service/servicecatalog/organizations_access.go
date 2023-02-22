@@ -1,20 +1,22 @@
 package servicecatalog
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func ResourceOrganizationsAccess() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceOrganizationsAccessCreate,
-		Read:   resourceOrganizationsAccessRead,
-		Delete: resourceOrganizationsAccessDelete,
+		CreateWithoutTimeout: resourceOrganizationsAccessCreate,
+		ReadWithoutTimeout:   resourceOrganizationsAccessRead,
+		DeleteWithoutTimeout: resourceOrganizationsAccessDelete,
 
 		Timeouts: &schema.ResourceTimeout{
 			Read: schema.DefaultTimeout(OrganizationsAccessStableTimeout),
@@ -30,8 +32,9 @@ func ResourceOrganizationsAccess() *schema.Resource {
 	}
 }
 
-func resourceOrganizationsAccessCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn
+func resourceOrganizationsAccessCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 
 	d.SetId(meta.(*conns.AWSClient).AccountID)
 
@@ -39,74 +42,76 @@ func resourceOrganizationsAccessCreate(d *schema.ResourceData, meta interface{})
 	// During delete, the opposite
 
 	if _, ok := d.GetOk("enabled"); ok {
-		_, err := conn.EnableAWSOrganizationsAccess(&servicecatalog.EnableAWSOrganizationsAccessInput{})
+		_, err := conn.EnableAWSOrganizationsAccessWithContext(ctx, &servicecatalog.EnableAWSOrganizationsAccessInput{})
 
 		if err != nil {
-			return fmt.Errorf("error enabling Service Catalog AWS Organizations Access: %w", err)
+			return sdkdiag.AppendErrorf(diags, "enabling Service Catalog AWS Organizations Access: %s", err)
 		}
 
-		return resourceOrganizationsAccessRead(d, meta)
+		return append(diags, resourceOrganizationsAccessRead(ctx, d, meta)...)
 	}
 
-	_, err := conn.DisableAWSOrganizationsAccess(&servicecatalog.DisableAWSOrganizationsAccessInput{})
+	_, err := conn.DisableAWSOrganizationsAccessWithContext(ctx, &servicecatalog.DisableAWSOrganizationsAccessInput{})
 
 	if err != nil {
-		return fmt.Errorf("error disabling Service Catalog AWS Organizations Access: %w", err)
+		return sdkdiag.AppendErrorf(diags, "disabling Service Catalog AWS Organizations Access: %s", err)
 	}
 
-	return resourceOrganizationsAccessRead(d, meta)
+	return append(diags, resourceOrganizationsAccessRead(ctx, d, meta)...)
 }
 
-func resourceOrganizationsAccessRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn
+func resourceOrganizationsAccessRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 
-	output, err := WaitOrganizationsAccessStable(conn, d.Timeout(schema.TimeoutRead))
+	output, err := WaitOrganizationsAccessStable(ctx, conn, d.Timeout(schema.TimeoutRead))
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
 		// theoretically this should not be possible
 		log.Printf("[WARN] Service Catalog Organizations Access (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error describing Service Catalog AWS Organizations Access (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "describing Service Catalog AWS Organizations Access (%s): %s", d.Id(), err)
 	}
 
 	if output == "" {
-		return fmt.Errorf("error getting Service Catalog AWS Organizations Access (%s): empty response", d.Id())
+		return sdkdiag.AppendErrorf(diags, "getting Service Catalog AWS Organizations Access (%s): empty response", d.Id())
 	}
 
 	if output == servicecatalog.AccessStatusEnabled {
 		d.Set("enabled", true)
-		return nil
+		return diags
 	}
 
 	d.Set("enabled", false)
-	return nil
+	return diags
 }
 
-func resourceOrganizationsAccessDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn
+func resourceOrganizationsAccessDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 
 	// During create, if enabled = "true", then Enable Access and vice versa
 	// During delete, the opposite
 
 	if _, ok := d.GetOk("enabled"); !ok {
-		_, err := conn.EnableAWSOrganizationsAccess(&servicecatalog.EnableAWSOrganizationsAccessInput{})
+		_, err := conn.EnableAWSOrganizationsAccessWithContext(ctx, &servicecatalog.EnableAWSOrganizationsAccessInput{})
 
 		if err != nil {
-			return fmt.Errorf("error enabling Service Catalog AWS Organizations Access: %w", err)
+			return sdkdiag.AppendErrorf(diags, "enabling Service Catalog AWS Organizations Access: %s", err)
 		}
 
-		return nil
+		return diags
 	}
 
-	_, err := conn.DisableAWSOrganizationsAccess(&servicecatalog.DisableAWSOrganizationsAccessInput{})
+	_, err := conn.DisableAWSOrganizationsAccessWithContext(ctx, &servicecatalog.DisableAWSOrganizationsAccessInput{})
 
 	if err != nil {
-		return fmt.Errorf("error disabling Service Catalog AWS Organizations Access: %w", err)
+		return sdkdiag.AppendErrorf(diags, "disabling Service Catalog AWS Organizations Access: %s", err)
 	}
 
-	return nil
+	return diags
 }

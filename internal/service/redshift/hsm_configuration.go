@@ -1,6 +1,7 @@
 package redshift
 
 import (
+	"context"
 	"fmt"
 	"log"
 
@@ -8,8 +9,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -17,13 +20,13 @@ import (
 
 func ResourceHSMConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceHSMConfigurationCreate,
-		Read:   resourceHSMConfigurationRead,
-		Update: resourceHSMConfigurationUpdate,
-		Delete: resourceHSMConfigurationDelete,
+		CreateWithoutTimeout: resourceHSMConfigurationCreate,
+		ReadWithoutTimeout:   resourceHSMConfigurationRead,
+		UpdateWithoutTimeout: resourceHSMConfigurationUpdate,
+		DeleteWithoutTimeout: resourceHSMConfigurationDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -70,8 +73,9 @@ func ResourceHSMConfiguration() *schema.Resource {
 	}
 }
 
-func resourceHSMConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+func resourceHSMConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -87,32 +91,33 @@ func resourceHSMConfigurationCreate(d *schema.ResourceData, meta interface{}) er
 
 	input.Tags = Tags(tags.IgnoreAWS())
 
-	output, err := conn.CreateHsmConfiguration(input)
+	output, err := conn.CreateHsmConfigurationWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("creating Redshift HSM Configuration (%s): %s", hsmConfigurationID, err)
+		return sdkdiag.AppendErrorf(diags, "creating Redshift HSM Configuration (%s): %s", hsmConfigurationID, err)
 	}
 
 	d.SetId(aws.StringValue(output.HsmConfiguration.HsmConfigurationIdentifier))
 
-	return resourceHSMConfigurationRead(d, meta)
+	return append(diags, resourceHSMConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceHSMConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+func resourceHSMConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	hsmConfiguration, err := FindHSMConfigurationByID(conn, d.Id())
+	hsmConfiguration, err := FindHSMConfigurationByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Redshift HSM Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading Redshift HSM Configuration (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Redshift HSM Configuration (%s): %s", d.Id(), err)
 	}
 
 	arn := arn.ARN{
@@ -134,45 +139,47 @@ func resourceHSMConfigurationRead(d *schema.ResourceData, meta interface{}) erro
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceHSMConfigurationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+func resourceHSMConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("updating Redshift HSM Configuration (%s) tags: %w", d.Get("arn").(string), err)
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Redshift HSM Configuration (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
 
-	return resourceHSMConfigurationRead(d, meta)
+	return append(diags, resourceHSMConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceHSMConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+func resourceHSMConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 
 	log.Printf("[DEBUG] Deleting Redshift HSM Configuration: %s", d.Id())
-	_, err := conn.DeleteHsmConfiguration(&redshift.DeleteHsmConfigurationInput{
+	_, err := conn.DeleteHsmConfigurationWithContext(ctx, &redshift.DeleteHsmConfigurationInput{
 		HsmConfigurationIdentifier: aws.String(d.Id()),
 	})
 
 	if tfawserr.ErrCodeEquals(err, redshift.ErrCodeHsmConfigurationNotFoundFault) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("deleting Redshift HSM Configuration (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Redshift HSM Configuration (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

@@ -1,19 +1,21 @@
 package servicecatalog
 
 import (
-	"fmt"
+	"context"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceProduct() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceProductRead,
+		ReadWithoutTimeout: dataSourceProductRead,
 
 		Timeouts: &schema.ResourceTimeout{
 			Read: schema.DefaultTimeout(ProductReadTimeout),
@@ -83,17 +85,18 @@ func DataSourceProduct() *schema.Resource {
 	}
 }
 
-func dataSourceProductRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn
+func dataSourceProductRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 
-	output, err := WaitProductReady(conn, d.Get("accept_language").(string), d.Get("id").(string), d.Timeout(schema.TimeoutRead))
+	output, err := WaitProductReady(ctx, conn, d.Get("accept_language").(string), d.Get("id").(string), d.Timeout(schema.TimeoutRead))
 
 	if err != nil {
-		return fmt.Errorf("error describing Service Catalog Product: %w", err)
+		return sdkdiag.AppendErrorf(diags, "describing Service Catalog Product: %s", err)
 	}
 
 	if output == nil || output.ProductViewDetail == nil || output.ProductViewDetail.ProductViewSummary == nil {
-		return fmt.Errorf("error getting Service Catalog Product: empty response")
+		return sdkdiag.AppendErrorf(diags, "getting Service Catalog Product: empty response")
 	}
 
 	pvs := output.ProductViewDetail.ProductViewSummary
@@ -118,8 +121,8 @@ func dataSourceProductRead(d *schema.ResourceData, meta interface{}) error {
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	if err := d.Set("tags", KeyValueTags(output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

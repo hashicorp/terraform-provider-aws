@@ -11,6 +11,8 @@ import (
 )
 
 func TestFilterPermissions(t *testing.T) {
+	t.Parallel()
+
 	// primitives to make test cases easier
 	accountID := "481516234248"
 	dbName := "Hiliji"
@@ -537,7 +539,10 @@ func TestFilterPermissions(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.Name, func(t *testing.T) {
+			t.Parallel()
+
 			got := tflakeformation.FilterPermissions(testCase.Input, testCase.TableType, testCase.ColumnNames, testCase.ExcludedColumnNames, testCase.ColumnWildcard, testCase.All)
 
 			if !reflect.DeepEqual(testCase.ExpectedClean, got) {

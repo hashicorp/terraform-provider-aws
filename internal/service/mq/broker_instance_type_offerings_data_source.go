@@ -1,10 +1,11 @@
 package mq
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mq"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -13,23 +14,9 @@ import (
 
 func DataSourceBrokerInstanceTypeOfferings() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceBrokerInstanceTypeOfferingsRead,
+		ReadWithoutTimeout: dataSourceBrokerInstanceTypeOfferingsRead,
 
 		Schema: map[string]*schema.Schema{
-			"engine_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice(mq.EngineType_Values(), false),
-			},
-			"host_instance_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"storage_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice(mq.BrokerStorageType_Values(), false),
-			},
 			"broker_instance_options": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -72,52 +59,61 @@ func DataSourceBrokerInstanceTypeOfferings() *schema.Resource {
 					},
 				},
 			},
+			"engine_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(mq.EngineType_Values(), false),
+			},
+			"host_instance_type": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"storage_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(mq.BrokerStorageType_Values(), false),
+			},
 		},
 	}
 }
 
-func dataSourceBrokerInstanceTypeOfferingsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).MQConn
+func dataSourceBrokerInstanceTypeOfferingsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).MQConn()
 
 	input := &mq.DescribeBrokerInstanceOptionsInput{}
 
-	if v, ok := d.GetOk("host_instance_type"); ok {
-		input.HostInstanceType = aws.String(v.(string))
-	}
-
 	if v, ok := d.GetOk("engine_type"); ok {
 		input.EngineType = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("host_instance_type"); ok {
+		input.HostInstanceType = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("storage_type"); ok {
 		input.StorageType = aws.String(v.(string))
 	}
 
-	bios := make([]*mq.BrokerInstanceOption, 0)
-	for {
-		output, err := conn.DescribeBrokerInstanceOptions(input)
+	var output []*mq.BrokerInstanceOption
 
-		if err != nil {
-			return fmt.Errorf("error listing MQ Broker Instance Type Offerings: %w", err)
+	err := describeBrokerInstanceOptionsPages(ctx, conn, input, func(page *mq.DescribeBrokerInstanceOptionsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
 
-		if output == nil {
-			return fmt.Errorf("empty response while reading MQ Broker Instance Type Offerings")
-		}
+		output = append(output, page.BrokerInstanceOptions...)
 
-		bios = append(bios, output.BrokerInstanceOptions...)
+		return !lastPage
+	})
 
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
-
-		input.NextToken = output.NextToken
+	if err != nil {
+		return diag.Errorf("reading MQ Broker Instance Options: %s", err)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
 
-	if err := d.Set("broker_instance_options", flattenBrokerInstanceOptions(bios)); err != nil {
-		return fmt.Errorf("error setting broker_instance_options: %w", err)
+	if err := d.Set("broker_instance_options", flattenBrokerInstanceOptions(output)); err != nil {
+		return diag.Errorf("setting broker_instance_options: %s", err)
 	}
 
 	return nil

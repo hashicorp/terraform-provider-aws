@@ -1,18 +1,19 @@
 package elasticache
 
 import (
-	"fmt"
-	"log"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/elasticache"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func DataSourceUser() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceUserRead,
+		ReadWithoutTimeout: dataSourceUserRead,
 
 		Schema: map[string]*schema.Schema{
 			"access_string": {
@@ -46,24 +47,17 @@ func DataSourceUser() *schema.Resource {
 	}
 }
 
-func dataSourceUserRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn
+func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 
-	params := &elasticache.DescribeUsersInput{
-		UserId: aws.String(d.Get("user_id").(string)),
+	user, err := FindUserByID(ctx, conn, d.Get("user_id").(string))
+	if tfresource.NotFound(err) {
+		return sdkdiag.AppendErrorf(diags, "reading ElastiCache Cache Cluster (%s): Not found. Please change your search criteria and try again: %s", d.Get("user_id").(string), err)
 	}
-
-	log.Printf("[DEBUG] Reading ElastiCache User: %s", params)
-	response, err := conn.DescribeUsers(params)
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading ElastiCache Cache Cluster (%s): %s", d.Get("user_id").(string), err)
 	}
-
-	if len(response.Users) != 1 {
-		return fmt.Errorf("[ERROR] Query returned wrong number of results. Please change your search criteria and try again.")
-	}
-
-	user := response.Users[0]
 
 	d.SetId(aws.StringValue(user.UserId))
 
@@ -72,6 +66,5 @@ func dataSourceUserRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("user_id", user.UserId)
 	d.Set("user_name", user.UserName)
 
-	return nil
-
+	return diags
 }

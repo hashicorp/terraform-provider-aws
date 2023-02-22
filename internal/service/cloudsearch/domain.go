@@ -1,6 +1,7 @@
 package cloudsearch
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"regexp"
@@ -10,21 +11,23 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudsearch"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourceDomain() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceDomainCreate,
-		Read:   resourceDomainRead,
-		Update: resourceDomainUpdate,
-		Delete: resourceDomainDelete,
+		CreateWithoutTimeout: resourceDomainCreate,
+		ReadWithoutTimeout:   resourceDomainRead,
+		UpdateWithoutTimeout: resourceDomainUpdate,
+		DeleteWithoutTimeout: resourceDomainDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -169,8 +172,9 @@ func ResourceDomain() *schema.Resource {
 	}
 }
 
-func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudSearchConn
+func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CloudSearchConn()
 
 	name := d.Get("name").(string)
 	input := cloudsearch.CreateDomainInput{
@@ -178,10 +182,10 @@ func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Creating CloudSearch Domain: %s", input)
-	_, err := conn.CreateDomain(&input)
+	_, err := conn.CreateDomainWithContext(ctx, &input)
 
 	if err != nil {
-		return fmt.Errorf("error creating CloudSearch Domain (%s): %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating CloudSearch Domain (%s): %s", name, err)
 	}
 
 	d.SetId(name)
@@ -193,10 +197,10 @@ func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		log.Printf("[DEBUG] Updating CloudSearch Domain scaling parameters: %s", input)
-		_, err := conn.UpdateScalingParameters(input)
+		_, err := conn.UpdateScalingParametersWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error updating CloudSearch Domain (%s) scaling parameters: %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating CloudSearch Domain (%s) scaling parameters: %s", d.Id(), err)
 		}
 	}
 
@@ -207,10 +211,10 @@ func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		log.Printf("[DEBUG] Updating CloudSearch Domain availability options: %s", input)
-		_, err := conn.UpdateAvailabilityOptions(input)
+		_, err := conn.UpdateAvailabilityOptionsWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error updating CloudSearch Domain (%s) availability options: %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating CloudSearch Domain (%s) availability options: %s", d.Id(), err)
 		}
 	}
 
@@ -221,54 +225,55 @@ func resourceDomainCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		log.Printf("[DEBUG] Updating CloudSearch Domain endpoint options: %s", input)
-		_, err := conn.UpdateDomainEndpointOptions(input)
+		_, err := conn.UpdateDomainEndpointOptionsWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error updating CloudSearch Domain (%s) endpoint options: %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating CloudSearch Domain (%s) endpoint options: %s", d.Id(), err)
 		}
 	}
 
 	if v, ok := d.GetOk("index_field"); ok && v.(*schema.Set).Len() > 0 {
-		err := defineIndexFields(conn, d.Id(), v.(*schema.Set).List())
+		err := defineIndexFields(ctx, conn, d.Id(), v.(*schema.Set).List())
 
 		if err != nil {
-			return err
+			return sdkdiag.AppendErrorf(diags, "creating CloudSearch Domain (%s): %s", name, err)
 		}
 
 		log.Printf("[DEBUG] Indexing CloudSearch Domain documents: %s", d.Id())
-		_, err = conn.IndexDocuments(&cloudsearch.IndexDocumentsInput{
+		_, err = conn.IndexDocumentsWithContext(ctx, &cloudsearch.IndexDocumentsInput{
 			DomainName: aws.String(d.Id()),
 		})
 
 		if err != nil {
-			return fmt.Errorf("error indexing CloudSearch Domain (%s) documents: %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "indexing CloudSearch Domain (%s) documents: %s", d.Id(), err)
 		}
 	}
 
 	// TODO: Status.RequiresIndexDocuments = true?
 
-	_, err = waitDomainActive(conn, d.Id(), d.Timeout(schema.TimeoutCreate))
+	_, err = waitDomainActive(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 
 	if err != nil {
-		return fmt.Errorf("error waiting for CloudSearch Domain (%s) create: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for CloudSearch Domain (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceDomainRead(d, meta)
+	return append(diags, resourceDomainRead(ctx, d, meta)...)
 }
 
-func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudSearchConn
+func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CloudSearchConn()
 
-	domainStatus, err := FindDomainStatusByName(conn, d.Id())
+	domainStatus, err := FindDomainStatusByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudSearch Domain (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading CloudSearch Domain (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading CloudSearch Domain (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", domainStatus.ARN)
@@ -286,53 +291,54 @@ func resourceDomainRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("search_service_endpoint", nil)
 	}
 
-	availabilityOptionStatus, err := findAvailabilityOptionsStatusByName(conn, d.Id())
+	availabilityOptionStatus, err := findAvailabilityOptionsStatusByName(ctx, conn, d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error reading CloudSearch Domain (%s) availability options: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading CloudSearch Domain (%s) availability options: %s", d.Id(), err)
 	}
 
 	d.Set("multi_az", availabilityOptionStatus.Options)
 
-	endpointOptions, err := findDomainEndpointOptionsByName(conn, d.Id())
+	endpointOptions, err := findDomainEndpointOptionsByName(ctx, conn, d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error reading CloudSearch Domain (%s) endpoint options: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading CloudSearch Domain (%s) endpoint options: %s", d.Id(), err)
 	}
 
 	if err := d.Set("endpoint_options", []interface{}{flattenDomainEndpointOptions(endpointOptions)}); err != nil {
-		return fmt.Errorf("error setting endpoint_options: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting endpoint_options: %s", err)
 	}
 
-	scalingParameters, err := findScalingParametersByName(conn, d.Id())
+	scalingParameters, err := findScalingParametersByName(ctx, conn, d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error reading CloudSearch Domain (%s) scaling parameters: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading CloudSearch Domain (%s) scaling parameters: %s", d.Id(), err)
 	}
 
 	if err := d.Set("scaling_parameters", []interface{}{flattenScalingParameters(scalingParameters)}); err != nil {
-		return fmt.Errorf("error setting scaling_parameters: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting scaling_parameters: %s", err)
 	}
 
-	indexResults, err := conn.DescribeIndexFields(&cloudsearch.DescribeIndexFieldsInput{
+	indexResults, err := conn.DescribeIndexFieldsWithContext(ctx, &cloudsearch.DescribeIndexFieldsInput{
 		DomainName: aws.String(d.Get("name").(string)),
 	})
 
 	if err != nil {
-		return fmt.Errorf("error reading CloudSearch Domain (%s) index fields: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading CloudSearch Domain (%s) index fields: %s", d.Id(), err)
 	}
 
 	if tfList, err := flattenIndexFieldStatuses(indexResults.IndexFields); err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading CloudSearch Domain (%s): %s", d.Id(), err)
 	} else if err := d.Set("index_field", tfList); err != nil {
-		return fmt.Errorf("error setting index_field: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting index_field: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceDomainUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudSearchConn
+func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CloudSearchConn()
 	requiresIndexDocuments := false
 
 	if d.HasChange("scaling_parameters") {
@@ -347,10 +353,10 @@ func resourceDomainUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		log.Printf("[DEBUG] Updating CloudSearch Domain scaling parameters: %s", input)
-		output, err := conn.UpdateScalingParameters(input)
+		output, err := conn.UpdateScalingParametersWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error updating CloudSearch Domain (%s) scaling parameters: %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating CloudSearch Domain (%s) scaling parameters: %s", d.Id(), err)
 		}
 
 		if output != nil && output.ScalingParameters != nil && output.ScalingParameters.Status != nil && aws.StringValue(output.ScalingParameters.Status.State) == cloudsearch.OptionStateRequiresIndexDocuments {
@@ -365,10 +371,10 @@ func resourceDomainUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		log.Printf("[DEBUG] Updating CloudSearch Domain availability options: %s", input)
-		output, err := conn.UpdateAvailabilityOptions(input)
+		output, err := conn.UpdateAvailabilityOptionsWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error updating CloudSearch Domain (%s) availability options: %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating CloudSearch Domain (%s) availability options: %s", d.Id(), err)
 		}
 
 		if output != nil && output.AvailabilityOptions != nil && output.AvailabilityOptions.Status != nil && aws.StringValue(output.AvailabilityOptions.Status.State) == cloudsearch.OptionStateRequiresIndexDocuments {
@@ -388,10 +394,10 @@ func resourceDomainUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		log.Printf("[DEBUG] Updating CloudSearch Domain endpoint options: %s", input)
-		output, err := conn.UpdateDomainEndpointOptions(input)
+		output, err := conn.UpdateDomainEndpointOptionsWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error updating CloudSearch Domain (%s) endpoint options: %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating CloudSearch Domain (%s) endpoint options: %s", d.Id(), err)
 		}
 
 		if output != nil && output.DomainEndpointOptions != nil && output.DomainEndpointOptions.Status != nil && aws.StringValue(output.DomainEndpointOptions.Status.State) == cloudsearch.OptionStateRequiresIndexDocuments {
@@ -423,18 +429,18 @@ func resourceDomainUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 
 			log.Printf("[DEBUG] Deleting CloudSearch Domain index field: %s", input)
-			_, err := conn.DeleteIndexField(input)
+			_, err := conn.DeleteIndexFieldWithContext(ctx, input)
 
 			if err != nil {
-				return fmt.Errorf("error deleting CloudSearch Domain (%s) index field (%s): %w", d.Id(), fieldName, err)
+				return sdkdiag.AppendErrorf(diags, "deleting CloudSearch Domain (%s) index field (%s): %s", d.Id(), fieldName, err)
 			}
 
 			requiresIndexDocuments = true
 		}
 
 		if v := new.Difference(old); v.Len() > 0 {
-			if err := defineIndexFields(conn, d.Id(), v.List()); err != nil {
-				return err
+			if err := defineIndexFields(ctx, conn, d.Id(), v.List()); err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating CloudSearch Domain (%s): %s", d.Id(), err)
 			}
 
 			requiresIndexDocuments = true
@@ -443,43 +449,44 @@ func resourceDomainUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if requiresIndexDocuments {
 		log.Printf("[DEBUG] Indexing CloudSearch Domain documents: %s", d.Id())
-		_, err := conn.IndexDocuments(&cloudsearch.IndexDocumentsInput{
+		_, err := conn.IndexDocumentsWithContext(ctx, &cloudsearch.IndexDocumentsInput{
 			DomainName: aws.String(d.Id()),
 		})
 
 		if err != nil {
-			return fmt.Errorf("error indexing CloudSearch Domain (%s) documents: %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "indexing CloudSearch Domain (%s) documents: %s", d.Id(), err)
 		}
 	}
 
-	_, err := waitDomainActive(conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+	_, err := waitDomainActive(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
 
 	if err != nil {
-		return fmt.Errorf("error waiting for CloudSearch Domain (%s) update: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for CloudSearch Domain (%s) update: %s", d.Id(), err)
 	}
 
-	return resourceDomainRead(d, meta)
+	return append(diags, resourceDomainRead(ctx, d, meta)...)
 }
 
-func resourceDomainDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudSearchConn
+func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CloudSearchConn()
 
 	log.Printf("[DEBUG] Deleting CloudSearch Domain: %s", d.Id())
-	_, err := conn.DeleteDomain(&cloudsearch.DeleteDomainInput{
+	_, err := conn.DeleteDomainWithContext(ctx, &cloudsearch.DeleteDomainInput{
 		DomainName: aws.String(d.Id()),
 	})
 
 	if err != nil {
-		return fmt.Errorf("error deleting CloudSearch Domain (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting CloudSearch Domain (%s): %s", d.Id(), err)
 	}
 
-	_, err = waitDomainDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
+	_, err = waitDomainDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete))
 
 	if err != nil {
-		return fmt.Errorf("error waiting for CloudSearch Domain (%s) delete: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for CloudSearch Domain (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func validateIndexName(v interface{}, k string) (ws []string, es []error) {
@@ -497,7 +504,7 @@ func validateIndexName(v interface{}, k string) (ws []string, es []error) {
 	return
 }
 
-func defineIndexFields(conn *cloudsearch.CloudSearch, domainName string, tfList []interface{}) error {
+func defineIndexFields(ctx context.Context, conn *cloudsearch.CloudSearch, domainName string, tfList []interface{}) error {
 	// Define index fields with source fields after those without.
 	for _, defineWhenSourceFieldsConfigured := range []bool{false, true} {
 		for _, tfMapRaw := range tfList {
@@ -531,7 +538,7 @@ func defineIndexFields(conn *cloudsearch.CloudSearch, domainName string, tfList 
 			}
 
 			log.Printf("[DEBUG] Defining CloudSearch Domain index field: %s", input)
-			_, err = conn.DefineIndexField(input)
+			_, err = conn.DefineIndexFieldWithContext(ctx, input)
 
 			if err != nil {
 				return fmt.Errorf("error defining CloudSearch Domain (%s) index field (%s): %w", domainName, aws.StringValue(apiObject.IndexFieldName), err)
@@ -542,12 +549,12 @@ func defineIndexFields(conn *cloudsearch.CloudSearch, domainName string, tfList 
 	return nil
 }
 
-func FindDomainStatusByName(conn *cloudsearch.CloudSearch, name string) (*cloudsearch.DomainStatus, error) {
+func FindDomainStatusByName(ctx context.Context, conn *cloudsearch.CloudSearch, name string) (*cloudsearch.DomainStatus, error) {
 	input := &cloudsearch.DescribeDomainsInput{
 		DomainNames: aws.StringSlice([]string{name}),
 	}
 
-	output, err := conn.DescribeDomains(input)
+	output, err := conn.DescribeDomainsWithContext(ctx, input)
 
 	if err != nil {
 		return nil, err
@@ -564,12 +571,12 @@ func FindDomainStatusByName(conn *cloudsearch.CloudSearch, name string) (*clouds
 	return output.DomainStatusList[0], nil
 }
 
-func findAvailabilityOptionsStatusByName(conn *cloudsearch.CloudSearch, name string) (*cloudsearch.AvailabilityOptionsStatus, error) {
+func findAvailabilityOptionsStatusByName(ctx context.Context, conn *cloudsearch.CloudSearch, name string) (*cloudsearch.AvailabilityOptionsStatus, error) {
 	input := &cloudsearch.DescribeAvailabilityOptionsInput{
 		DomainName: aws.String(name),
 	}
 
-	output, err := conn.DescribeAvailabilityOptions(input)
+	output, err := conn.DescribeAvailabilityOptionsWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, cloudsearch.ErrCodeResourceNotFoundException) {
 		return nil, &resource.NotFoundError{
@@ -589,8 +596,8 @@ func findAvailabilityOptionsStatusByName(conn *cloudsearch.CloudSearch, name str
 	return output.AvailabilityOptions, nil
 }
 
-func findDomainEndpointOptionsByName(conn *cloudsearch.CloudSearch, name string) (*cloudsearch.DomainEndpointOptions, error) {
-	output, err := findDomainEndpointOptionsStatusByName(conn, name)
+func findDomainEndpointOptionsByName(ctx context.Context, conn *cloudsearch.CloudSearch, name string) (*cloudsearch.DomainEndpointOptions, error) {
+	output, err := findDomainEndpointOptionsStatusByName(ctx, conn, name)
 
 	if err != nil {
 		return nil, err
@@ -603,12 +610,12 @@ func findDomainEndpointOptionsByName(conn *cloudsearch.CloudSearch, name string)
 	return output.Options, nil
 }
 
-func findDomainEndpointOptionsStatusByName(conn *cloudsearch.CloudSearch, name string) (*cloudsearch.DomainEndpointOptionsStatus, error) {
+func findDomainEndpointOptionsStatusByName(ctx context.Context, conn *cloudsearch.CloudSearch, name string) (*cloudsearch.DomainEndpointOptionsStatus, error) {
 	input := &cloudsearch.DescribeDomainEndpointOptionsInput{
 		DomainName: aws.String(name),
 	}
 
-	output, err := conn.DescribeDomainEndpointOptions(input)
+	output, err := conn.DescribeDomainEndpointOptionsWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, cloudsearch.ErrCodeResourceNotFoundException) {
 		return nil, &resource.NotFoundError{
@@ -628,8 +635,8 @@ func findDomainEndpointOptionsStatusByName(conn *cloudsearch.CloudSearch, name s
 	return output.DomainEndpointOptions, nil
 }
 
-func findScalingParametersByName(conn *cloudsearch.CloudSearch, name string) (*cloudsearch.ScalingParameters, error) {
-	output, err := findScalingParametersStatusByName(conn, name)
+func findScalingParametersByName(ctx context.Context, conn *cloudsearch.CloudSearch, name string) (*cloudsearch.ScalingParameters, error) {
+	output, err := findScalingParametersStatusByName(ctx, conn, name)
 
 	if err != nil {
 		return nil, err
@@ -642,12 +649,12 @@ func findScalingParametersByName(conn *cloudsearch.CloudSearch, name string) (*c
 	return output.Options, nil
 }
 
-func findScalingParametersStatusByName(conn *cloudsearch.CloudSearch, name string) (*cloudsearch.ScalingParametersStatus, error) {
+func findScalingParametersStatusByName(ctx context.Context, conn *cloudsearch.CloudSearch, name string) (*cloudsearch.ScalingParametersStatus, error) {
 	input := &cloudsearch.DescribeScalingParametersInput{
 		DomainName: aws.String(name),
 	}
 
-	output, err := conn.DescribeScalingParameters(input)
+	output, err := conn.DescribeScalingParametersWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, cloudsearch.ErrCodeResourceNotFoundException) {
 		return nil, &resource.NotFoundError{
@@ -667,9 +674,9 @@ func findScalingParametersStatusByName(conn *cloudsearch.CloudSearch, name strin
 	return output.ScalingParameters, nil
 }
 
-func statusDomainDeleting(conn *cloudsearch.CloudSearch, name string) resource.StateRefreshFunc {
+func statusDomainDeleting(ctx context.Context, conn *cloudsearch.CloudSearch, name string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindDomainStatusByName(conn, name)
+		output, err := FindDomainStatusByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -683,9 +690,9 @@ func statusDomainDeleting(conn *cloudsearch.CloudSearch, name string) resource.S
 	}
 }
 
-func statusDomainProcessing(conn *cloudsearch.CloudSearch, name string) resource.StateRefreshFunc {
+func statusDomainProcessing(ctx context.Context, conn *cloudsearch.CloudSearch, name string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindDomainStatusByName(conn, name)
+		output, err := FindDomainStatusByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -699,15 +706,15 @@ func statusDomainProcessing(conn *cloudsearch.CloudSearch, name string) resource
 	}
 }
 
-func waitDomainActive(conn *cloudsearch.CloudSearch, name string, timeout time.Duration) (*cloudsearch.DomainStatus, error) { //nolint:unparam
+func waitDomainActive(ctx context.Context, conn *cloudsearch.CloudSearch, name string, timeout time.Duration) (*cloudsearch.DomainStatus, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"true"},
 		Target:  []string{"false"},
-		Refresh: statusDomainProcessing(conn, name),
+		Refresh: statusDomainProcessing(ctx, conn, name),
 		Timeout: timeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*cloudsearch.DomainStatus); ok {
 		return output, err
@@ -716,15 +723,15 @@ func waitDomainActive(conn *cloudsearch.CloudSearch, name string, timeout time.D
 	return nil, err
 }
 
-func waitDomainDeleted(conn *cloudsearch.CloudSearch, name string, timeout time.Duration) (*cloudsearch.DomainStatus, error) {
+func waitDomainDeleted(ctx context.Context, conn *cloudsearch.CloudSearch, name string, timeout time.Duration) (*cloudsearch.DomainStatus, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{"true"},
 		Target:  []string{},
-		Refresh: statusDomainDeleting(conn, name),
+		Refresh: statusDomainDeleting(ctx, conn, name),
 		Timeout: timeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*cloudsearch.DomainStatus); ok {
 		return output, err

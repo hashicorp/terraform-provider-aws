@@ -35,6 +35,10 @@ func DataSourceAddon() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validClusterName,
 			},
+			"configuration_values": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"created_at": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -53,7 +57,7 @@ func DataSourceAddon() *schema.Resource {
 }
 
 func dataSourceAddonRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EKSConn
+	conn := meta.(*conns.AWSClient).EKSConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	addonName := d.Get("addon_name").(string)
@@ -69,6 +73,7 @@ func dataSourceAddonRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.SetId(id)
 	d.Set("addon_version", addon.AddonVersion)
 	d.Set("arn", addon.AddonArn)
+	d.Set("configuration_values", addon.ConfigurationValues)
 	d.Set("created_at", aws.TimeValue(addon.CreatedAt).Format(time.RFC3339))
 	d.Set("modified_at", aws.TimeValue(addon.ModifiedAt).Format(time.RFC3339))
 	d.Set("service_account_role_arn", addon.ServiceAccountRoleArn)

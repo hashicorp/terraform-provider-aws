@@ -1,6 +1,7 @@
 package elasticache
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -9,19 +10,21 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func ResourceUserGroupAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceUserGroupAssociationCreate,
-		Read:   resourceUserGroupAssociationRead,
-		Delete: resourceUserGroupAssociationDelete,
+		CreateWithoutTimeout: resourceUserGroupAssociationCreate,
+		ReadWithoutTimeout:   resourceUserGroupAssociationRead,
+		DeleteWithoutTimeout: resourceUserGroupAssociationDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -39,8 +42,9 @@ func ResourceUserGroupAssociation() *schema.Resource {
 	}
 }
 
-func resourceUserGroupAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn
+func resourceUserGroupAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 
 	input := &elasticache.ModifyUserGroupInput{
 		UserGroupId:  aws.String(d.Get("user_group_id").(string)),
@@ -49,12 +53,14 @@ func resourceUserGroupAssociationCreate(d *schema.ResourceData, meta interface{}
 
 	id := userGroupAssociationID(d.Get("user_group_id").(string), d.Get("user_id").(string))
 
-	_, err := tfresource.RetryWhenNotFound(30*time.Second, func() (interface{}, error) {
-		return conn.ModifyUserGroup(input)
-	})
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 10*time.Minute, func() (interface{}, error) {
+		return tfresource.RetryWhenNotFound(ctx, 30*time.Second, func() (interface{}, error) {
+			return conn.ModifyUserGroupWithContext(ctx, input)
+		})
+	}, elasticache.ErrCodeInvalidUserGroupStateFault)
 
 	if err != nil {
-		return fmt.Errorf("creating ElastiCache User Group Association (%q): %w", id, err)
+		return sdkdiag.AppendErrorf(diags, "creating ElastiCache User Group Association (%q): %s", id, err)
 	}
 
 	d.SetId(id)
@@ -62,7 +68,7 @@ func resourceUserGroupAssociationCreate(d *schema.ResourceData, meta interface{}
 	stateConf := &resource.StateChangeConf{
 		Pending:        []string{"modifying", ""},
 		Target:         []string{"active"},
-		Refresh:        resourceUserGroupStateRefreshFunc(d.Get("user_group_id").(string), conn),
+		Refresh:        resourceUserGroupStateRefreshFunc(ctx, d.Get("user_group_id").(string), conn),
 		Timeout:        d.Timeout(schema.TimeoutCreate),
 		MinTimeout:     2 * time.Second,
 		NotFoundChecks: 5,
@@ -70,31 +76,32 @@ func resourceUserGroupAssociationCreate(d *schema.ResourceData, meta interface{}
 	}
 
 	log.Printf("[INFO] Waiting for ElastiCache User Group (%s) to be available", d.Id())
-	_, err = stateConf.WaitForState()
+	_, err = stateConf.WaitForStateContext(ctx)
 	if err != nil {
-		return fmt.Errorf("creating ElastiCache User Group Association (%q): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "creating ElastiCache User Group Association (%q): %s", d.Id(), err)
 	}
 
-	return resourceUserGroupAssociationRead(d, meta)
+	return append(diags, resourceUserGroupAssociationRead(ctx, d, meta)...)
 }
 
-func resourceUserGroupAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn
+func resourceUserGroupAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 
 	groupID, userID, err := UserGroupAssociationParseID(d.Id())
 	if err != nil {
-		return fmt.Errorf("reading ElastiCache User Group Association (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading ElastiCache User Group Association (%s): %s", d.Id(), err)
 	}
 
-	output, err := FindUserGroupByID(conn, groupID)
+	output, err := FindUserGroupByID(ctx, conn, groupID)
 	if !d.IsNewResource() && (tfresource.NotFound(err) || tfawserr.ErrCodeEquals(err, elasticache.ErrCodeUserGroupNotFoundFault)) {
 		d.SetId("")
 		log.Printf("[DEBUG] ElastiCache User Group Association (%s) not found", d.Id())
-		return nil
+		return diags
 	}
 
 	if err != nil && !tfawserr.ErrCodeEquals(err, elasticache.ErrCodeUserGroupNotFoundFault) {
-		return fmt.Errorf("describing ElastiCache User Group (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "describing ElastiCache User Group (%s): %s", d.Id(), err)
 	}
 
 	gotUserID := ""
@@ -108,48 +115,52 @@ func resourceUserGroupAssociationRead(d *schema.ResourceData, meta interface{}) 
 	if !d.IsNewResource() && gotUserID == "" {
 		d.SetId("")
 		log.Printf("[DEBUG] ElastiCache User Group Association (%s) not found", d.Id())
-		return nil
+		return diags
 	}
 
 	if gotUserID == "" {
-		return fmt.Errorf("reading ElastiCache User Group Association, user ID (%s) not associated with user group (%s)", userID, groupID)
+		return sdkdiag.AppendErrorf(diags, "reading ElastiCache User Group Association, user ID (%s) not associated with user group (%s)", userID, groupID)
 	}
 
 	d.Set("user_id", gotUserID)
 	d.Set("user_group_id", groupID)
 
-	return nil
+	return diags
 }
 
-func resourceUserGroupAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn
+func resourceUserGroupAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 
 	input := &elasticache.ModifyUserGroupInput{
 		UserGroupId:     aws.String(d.Get("user_group_id").(string)),
 		UserIdsToRemove: aws.StringSlice([]string{d.Get("user_id").(string)}),
 	}
 
-	_, err := conn.ModifyUserGroup(input)
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 10*time.Minute, func() (interface{}, error) {
+		return conn.ModifyUserGroupWithContext(ctx, input)
+	}, elasticache.ErrCodeInvalidUserGroupStateFault)
+
 	if err != nil && !tfawserr.ErrMessageContains(err, elasticache.ErrCodeInvalidParameterValueException, "not a member") {
-		return fmt.Errorf("deleting ElastiCache User Group Association (%q): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting ElastiCache User Group Association (%q): %s", d.Id(), err)
 	}
 
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"modifying"},
 		Target:     []string{"active"},
-		Refresh:    resourceUserGroupStateRefreshFunc(d.Get("user_group_id").(string), conn),
+		Refresh:    resourceUserGroupStateRefreshFunc(ctx, d.Get("user_group_id").(string), conn),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second, // Wait 30 secs before starting
 	}
 
 	log.Printf("[INFO] Waiting for ElastiCache User Group (%s) to be available", d.Id())
-	_, err = stateConf.WaitForState()
+	_, err = stateConf.WaitForStateContext(ctx)
 	if err != nil {
-		return fmt.Errorf("waiting for ElastiCache User Group Association delete (%q): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for ElastiCache User Group Association delete (%q): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func userGroupAssociationID(userGroupID, userID string) string {

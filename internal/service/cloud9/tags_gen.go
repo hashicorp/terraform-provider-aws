@@ -14,11 +14,7 @@ import (
 // ListTags lists cloud9 service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn cloud9iface.Cloud9API, identifier string) (tftags.KeyValueTags, error) {
-	return ListTagsWithContext(context.Background(), conn, identifier)
-}
-
-func ListTagsWithContext(ctx context.Context, conn cloud9iface.Cloud9API, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(ctx context.Context, conn cloud9iface.Cloud9API, identifier string) (tftags.KeyValueTags, error) {
 	input := &cloud9.ListTagsForResourceInput{
 		ResourceARN: aws.String(identifier),
 	}
@@ -64,10 +60,7 @@ func KeyValueTags(tags []*cloud9.Tag) tftags.KeyValueTags {
 // UpdateTags updates cloud9 service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn cloud9iface.Cloud9API, identifier string, oldTags interface{}, newTags interface{}) error {
-	return UpdateTagsWithContext(context.Background(), conn, identifier, oldTags, newTags)
-}
-func UpdateTagsWithContext(ctx context.Context, conn cloud9iface.Cloud9API, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(ctx context.Context, conn cloud9iface.Cloud9API, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 

@@ -1,6 +1,7 @@
 package ec2_test
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log"
@@ -20,6 +21,7 @@ import (
 )
 
 func TestAccEC2SpotFleetRequest_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var sfr ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -31,15 +33,15 @@ func TestAccEC2SpotFleetRequest_basic(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSpotFleetRequestDestroy,
+		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSpotFleetRequestConfig_basic(rName, publicKey, validUntil),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSpotFleetRequestExists(resourceName, &sfr),
+					testAccCheckSpotFleetRequestExists(ctx, resourceName, &sfr),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "excess_capacity_termination_policy", "Default"),
 					resource.TestCheckResourceAttr(resourceName, "valid_until", validUntil),
@@ -57,6 +59,7 @@ func TestAccEC2SpotFleetRequest_basic(t *testing.T) {
 }
 
 func TestAccEC2SpotFleetRequest_targetCapacityUnitType(t *testing.T) {
+	ctx := acctest.Context(t)
 	var sfr ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -69,15 +72,15 @@ func TestAccEC2SpotFleetRequest_targetCapacityUnitType(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSpotFleetRequestDestroy,
+		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSpotFleetRequestConfig_targetCapacityUnitType(rName, publicKey, validUntil, targetCapacityUnitType),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSpotFleetRequestExists(resourceName, &sfr),
+					testAccCheckSpotFleetRequestExists(ctx, resourceName, &sfr),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "excess_capacity_termination_policy", "Default"),
 					resource.TestCheckResourceAttr(resourceName, "valid_until", validUntil),
@@ -96,6 +99,7 @@ func TestAccEC2SpotFleetRequest_targetCapacityUnitType(t *testing.T) {
 }
 
 func TestAccEC2SpotFleetRequest_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var sfr ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -107,16 +111,16 @@ func TestAccEC2SpotFleetRequest_disappears(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSpotFleetRequestDestroy,
+		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSpotFleetRequestConfig_basic(rName, publicKey, validUntil),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSpotFleetRequestExists(resourceName, &sfr),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceSpotFleetRequest(), resourceName),
+					testAccCheckSpotFleetRequestExists(ctx, resourceName, &sfr),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceSpotFleetRequest(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -125,6 +129,7 @@ func TestAccEC2SpotFleetRequest_disappears(t *testing.T) {
 }
 
 func TestAccEC2SpotFleetRequest_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var sfr ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -136,15 +141,15 @@ func TestAccEC2SpotFleetRequest_tags(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSpotFleetRequestDestroy,
+		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSpotFleetRequestConfig_tags1(rName, publicKey, validUntil, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSpotFleetRequestExists(resourceName, &sfr),
+					testAccCheckSpotFleetRequestExists(ctx, resourceName, &sfr),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -158,7 +163,7 @@ func TestAccEC2SpotFleetRequest_tags(t *testing.T) {
 			{
 				Config: testAccSpotFleetRequestConfig_tags2(rName, publicKey, validUntil, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSpotFleetRequestExists(resourceName, &sfr),
+					testAccCheckSpotFleetRequestExists(ctx, resourceName, &sfr),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -167,7 +172,7 @@ func TestAccEC2SpotFleetRequest_tags(t *testing.T) {
 			{
 				Config: testAccSpotFleetRequestConfig_tags1(rName, publicKey, validUntil, "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSpotFleetRequestExists(resourceName, &sfr),
+					testAccCheckSpotFleetRequestExists(ctx, resourceName, &sfr),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -177,6 +182,7 @@ func TestAccEC2SpotFleetRequest_tags(t *testing.T) {
 }
 
 func TestAccEC2SpotFleetRequest_associatePublicIPAddress(t *testing.T) {
+	ctx := acctest.Context(t)
 	var sfr ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -188,15 +194,15 @@ func TestAccEC2SpotFleetRequest_associatePublicIPAddress(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSpotFleetRequestDestroy,
+		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSpotFleetRequestConfig_associatePublicIPAddress(rName, publicKey, validUntil),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSpotFleetRequestExists(resourceName, &sfr),
+					testAccCheckSpotFleetRequestExists(ctx, resourceName, &sfr),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "launch_specification.*", map[string]string{
@@ -215,6 +221,7 @@ func TestAccEC2SpotFleetRequest_associatePublicIPAddress(t *testing.T) {
 }
 
 func TestAccEC2SpotFleetRequest_launchTemplate(t *testing.T) {
+	ctx := acctest.Context(t)
 	var sfr ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -226,15 +233,15 @@ func TestAccEC2SpotFleetRequest_launchTemplate(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSpotFleetRequestDestroy,
+		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSpotFleetRequestConfig_launchTemplate(rName, publicKey, validUntil),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSpotFleetRequestExists(resourceName, &sfr),
+					testAccCheckSpotFleetRequestExists(ctx, resourceName, &sfr),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
@@ -251,6 +258,7 @@ func TestAccEC2SpotFleetRequest_launchTemplate(t *testing.T) {
 }
 
 func TestAccEC2SpotFleetRequest_LaunchTemplate_multiple(t *testing.T) {
+	ctx := acctest.Context(t)
 	var sfr ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -262,15 +270,15 @@ func TestAccEC2SpotFleetRequest_LaunchTemplate_multiple(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSpotFleetRequestDestroy,
+		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSpotFleetRequestConfig_launchTemplateMultiple(rName, publicKey, validUntil),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSpotFleetRequestExists(resourceName, &sfr),
+					testAccCheckSpotFleetRequestExists(ctx, resourceName, &sfr),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "2"),
@@ -281,6 +289,7 @@ func TestAccEC2SpotFleetRequest_LaunchTemplate_multiple(t *testing.T) {
 }
 
 func TestAccEC2SpotFleetRequest_launchTemplateWithInstanceTypeOverrides(t *testing.T) {
+	ctx := acctest.Context(t)
 	var sfr ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -292,15 +301,15 @@ func TestAccEC2SpotFleetRequest_launchTemplateWithInstanceTypeOverrides(t *testi
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSpotFleetRequestDestroy,
+		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSpotFleetRequestConfig_launchTemplateInstanceTypeOverrides(rName, publicKey, validUntil),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSpotFleetRequestExists(resourceName, &sfr),
+					testAccCheckSpotFleetRequestExists(ctx, resourceName, &sfr),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
@@ -331,6 +340,7 @@ func TestAccEC2SpotFleetRequest_launchTemplateWithInstanceTypeOverrides(t *testi
 }
 
 func TestAccEC2SpotFleetRequest_launchTemplateWithInstanceRequirementsOverrides(t *testing.T) {
+	ctx := acctest.Context(t)
 	var sfr ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -342,15 +352,15 @@ func TestAccEC2SpotFleetRequest_launchTemplateWithInstanceRequirementsOverrides(
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSpotFleetRequestDestroy,
+		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSpotFleetRequestConfig_launchTemplateInstanceRequirementsOverrides(rName, publicKey, validUntil),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSpotFleetRequestExists(resourceName, &sfr),
+					testAccCheckSpotFleetRequestExists(ctx, resourceName, &sfr),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
@@ -381,6 +391,7 @@ func TestAccEC2SpotFleetRequest_launchTemplateWithInstanceRequirementsOverrides(
 }
 
 func TestAccEC2SpotFleetRequest_launchTemplateToLaunchSpec(t *testing.T) {
+	ctx := acctest.Context(t)
 	var before, after ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -392,15 +403,15 @@ func TestAccEC2SpotFleetRequest_launchTemplateToLaunchSpec(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSpotFleetRequestDestroy,
+		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSpotFleetRequestConfig_launchTemplate(rName, publicKey, validUntil),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSpotFleetRequestExists(resourceName, &before),
+					testAccCheckSpotFleetRequestExists(ctx, resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
@@ -415,7 +426,7 @@ func TestAccEC2SpotFleetRequest_launchTemplateToLaunchSpec(t *testing.T) {
 			{
 				Config: testAccSpotFleetRequestConfig_basic(rName, publicKey, validUntil),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSpotFleetRequestExists(resourceName, &after),
+					testAccCheckSpotFleetRequestExists(ctx, resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "spot_price", "0.05"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "1"),
@@ -427,6 +438,7 @@ func TestAccEC2SpotFleetRequest_launchTemplateToLaunchSpec(t *testing.T) {
 }
 
 func TestAccEC2SpotFleetRequest_launchSpecToLaunchTemplate(t *testing.T) {
+	ctx := acctest.Context(t)
 	var before, after ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -438,15 +450,15 @@ func TestAccEC2SpotFleetRequest_launchSpecToLaunchTemplate(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSpotFleetRequestDestroy,
+		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSpotFleetRequestConfig_basic(rName, publicKey, validUntil),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSpotFleetRequestExists(resourceName, &before),
+					testAccCheckSpotFleetRequestExists(ctx, resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "spot_price", "0.05"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "1"),
@@ -455,7 +467,7 @@ func TestAccEC2SpotFleetRequest_launchSpecToLaunchTemplate(t *testing.T) {
 			{
 				Config: testAccSpotFleetRequestConfig_launchTemplate(rName, publicKey, validUntil),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSpotFleetRequestExists(resourceName, &after),
+					testAccCheckSpotFleetRequestExists(ctx, resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
@@ -467,6 +479,7 @@ func TestAccEC2SpotFleetRequest_launchSpecToLaunchTemplate(t *testing.T) {
 }
 
 func TestAccEC2SpotFleetRequest_onDemandTargetCapacity(t *testing.T) {
+	ctx := acctest.Context(t)
 	var sfr ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -478,15 +491,15 @@ func TestAccEC2SpotFleetRequest_onDemandTargetCapacity(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSpotFleetRequestDestroy,
+		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSpotFleetRequestConfig_onDemandTargetCapacity(rName, publicKey, validUntil, 0),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSpotFleetRequestExists(resourceName, &sfr),
+					testAccCheckSpotFleetRequestExists(ctx, resourceName, &sfr),
 					resource.TestCheckResourceAttr(resourceName, "on_demand_target_capacity", "0"),
 				),
 			},
@@ -499,14 +512,14 @@ func TestAccEC2SpotFleetRequest_onDemandTargetCapacity(t *testing.T) {
 			{
 				Config: testAccSpotFleetRequestConfig_onDemandTargetCapacity(rName, publicKey, validUntil, 1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSpotFleetRequestExists(resourceName, &sfr),
+					testAccCheckSpotFleetRequestExists(ctx, resourceName, &sfr),
 					resource.TestCheckResourceAttr(resourceName, "on_demand_target_capacity", "1"),
 				),
 			},
 			{
 				Config: testAccSpotFleetRequestConfig_onDemandTargetCapacity(rName, publicKey, validUntil, 0),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSpotFleetRequestExists(resourceName, &sfr),
+					testAccCheckSpotFleetRequestExists(ctx, resourceName, &sfr),
 					resource.TestCheckResourceAttr(resourceName, "on_demand_target_capacity", "0"),
 				),
 			},
@@ -515,6 +528,7 @@ func TestAccEC2SpotFleetRequest_onDemandTargetCapacity(t *testing.T) {
 }
 
 func TestAccEC2SpotFleetRequest_onDemandMaxTotalPrice(t *testing.T) {
+	ctx := acctest.Context(t)
 	var sfr ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -526,15 +540,15 @@ func TestAccEC2SpotFleetRequest_onDemandMaxTotalPrice(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSpotFleetRequestDestroy,
+		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSpotFleetRequestConfig_onDemandMaxTotalPrice(rName, publicKey, validUntil, "0.05"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSpotFleetRequestExists(resourceName, &sfr),
+					testAccCheckSpotFleetRequestExists(ctx, resourceName, &sfr),
 					resource.TestCheckResourceAttr(resourceName, "on_demand_max_total_price", "0.05"),
 				),
 			},
@@ -549,6 +563,7 @@ func TestAccEC2SpotFleetRequest_onDemandMaxTotalPrice(t *testing.T) {
 }
 
 func TestAccEC2SpotFleetRequest_onDemandAllocationStrategy(t *testing.T) {
+	ctx := acctest.Context(t)
 	var sfr ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -560,15 +575,15 @@ func TestAccEC2SpotFleetRequest_onDemandAllocationStrategy(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSpotFleetRequestDestroy,
+		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSpotFleetRequestConfig_onDemandAllocationStrategy(rName, publicKey, validUntil, "prioritized"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSpotFleetRequestExists(resourceName, &sfr),
+					testAccCheckSpotFleetRequestExists(ctx, resourceName, &sfr),
 					resource.TestCheckResourceAttr(resourceName, "on_demand_allocation_strategy", "prioritized"),
 				),
 			},
@@ -583,6 +598,7 @@ func TestAccEC2SpotFleetRequest_onDemandAllocationStrategy(t *testing.T) {
 }
 
 func TestAccEC2SpotFleetRequest_instanceInterruptionBehavior(t *testing.T) {
+	ctx := acctest.Context(t)
 	var sfr ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -594,15 +610,15 @@ func TestAccEC2SpotFleetRequest_instanceInterruptionBehavior(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSpotFleetRequestDestroy,
+		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSpotFleetRequestConfig_basic(rName, publicKey, validUntil),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSpotFleetRequestExists(resourceName, &sfr),
+					testAccCheckSpotFleetRequestExists(ctx, resourceName, &sfr),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "instance_interruption_behaviour", "stop"),
 				),
@@ -618,6 +634,7 @@ func TestAccEC2SpotFleetRequest_instanceInterruptionBehavior(t *testing.T) {
 }
 
 func TestAccEC2SpotFleetRequest_fleetType(t *testing.T) {
+	ctx := acctest.Context(t)
 	var sfr ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -629,15 +646,15 @@ func TestAccEC2SpotFleetRequest_fleetType(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSpotFleetRequestDestroy,
+		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSpotFleetRequestConfig_type(rName, publicKey, validUntil),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSpotFleetRequestExists(resourceName, &sfr),
+					testAccCheckSpotFleetRequestExists(ctx, resourceName, &sfr),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "fleet_type", "request"),
 				),
@@ -653,6 +670,7 @@ func TestAccEC2SpotFleetRequest_fleetType(t *testing.T) {
 }
 
 func TestAccEC2SpotFleetRequest_iamInstanceProfileARN(t *testing.T) {
+	ctx := acctest.Context(t)
 	var sfr ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -664,15 +682,15 @@ func TestAccEC2SpotFleetRequest_iamInstanceProfileARN(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSpotFleetRequestDestroy,
+		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSpotFleetRequestConfig_iamInstanceProfileARN(rName, publicKey, validUntil),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSpotFleetRequestExists(resourceName, &sfr),
+					testAccCheckSpotFleetRequestExists(ctx, resourceName, &sfr),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					testAccCheckSpotFleetRequest_IAMInstanceProfileARN(&sfr),
 				),
@@ -688,6 +706,7 @@ func TestAccEC2SpotFleetRequest_iamInstanceProfileARN(t *testing.T) {
 }
 
 func TestAccEC2SpotFleetRequest_changePriceForcesNewRequest(t *testing.T) {
+	ctx := acctest.Context(t)
 	var before, after ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -699,15 +718,15 @@ func TestAccEC2SpotFleetRequest_changePriceForcesNewRequest(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSpotFleetRequestDestroy,
+		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSpotFleetRequestConfig_basic(rName, publicKey, validUntil),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSpotFleetRequestExists(resourceName, &before),
+					testAccCheckSpotFleetRequestExists(ctx, resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "spot_price", "0.05"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "1"),
@@ -722,7 +741,7 @@ func TestAccEC2SpotFleetRequest_changePriceForcesNewRequest(t *testing.T) {
 			{
 				Config: testAccSpotFleetRequestConfig_changeBidPrice(rName, publicKey, validUntil),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSpotFleetRequestExists(resourceName, &after),
+					testAccCheckSpotFleetRequestExists(ctx, resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spot_price", "0.05"),
@@ -734,6 +753,7 @@ func TestAccEC2SpotFleetRequest_changePriceForcesNewRequest(t *testing.T) {
 }
 
 func TestAccEC2SpotFleetRequest_updateTargetCapacity(t *testing.T) {
+	ctx := acctest.Context(t)
 	var before, after ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -745,15 +765,15 @@ func TestAccEC2SpotFleetRequest_updateTargetCapacity(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSpotFleetRequestDestroy,
+		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSpotFleetRequestConfig_basic(rName, publicKey, validUntil),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSpotFleetRequestExists(resourceName, &before),
+					testAccCheckSpotFleetRequestExists(ctx, resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "target_capacity", "2"),
 				),
@@ -767,14 +787,14 @@ func TestAccEC2SpotFleetRequest_updateTargetCapacity(t *testing.T) {
 			{
 				Config: testAccSpotFleetRequestConfig_targetCapacity(rName, publicKey, validUntil),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSpotFleetRequestExists(resourceName, &after),
+					testAccCheckSpotFleetRequestExists(ctx, resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, "target_capacity", "3"),
 				),
 			},
 			{
 				Config: testAccSpotFleetRequestConfig_basic(rName, publicKey, validUntil),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSpotFleetRequestExists(resourceName, &before),
+					testAccCheckSpotFleetRequestExists(ctx, resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "target_capacity", "2"),
 				),
@@ -784,6 +804,7 @@ func TestAccEC2SpotFleetRequest_updateTargetCapacity(t *testing.T) {
 }
 
 func TestAccEC2SpotFleetRequest_updateExcessCapacityTerminationPolicy(t *testing.T) {
+	ctx := acctest.Context(t)
 	var before, after ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -795,15 +816,15 @@ func TestAccEC2SpotFleetRequest_updateExcessCapacityTerminationPolicy(t *testing
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSpotFleetRequestDestroy,
+		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSpotFleetRequestConfig_basic(rName, publicKey, validUntil),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSpotFleetRequestExists(resourceName, &before),
+					testAccCheckSpotFleetRequestExists(ctx, resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "excess_capacity_termination_policy", "Default"),
 				),
@@ -817,7 +838,7 @@ func TestAccEC2SpotFleetRequest_updateExcessCapacityTerminationPolicy(t *testing
 			{
 				Config: testAccSpotFleetRequestConfig_excessCapacityTermination(rName, publicKey, validUntil),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSpotFleetRequestExists(resourceName, &after),
+					testAccCheckSpotFleetRequestExists(ctx, resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, "excess_capacity_termination_policy", "NoTermination"),
 				),
 			},
@@ -826,6 +847,7 @@ func TestAccEC2SpotFleetRequest_updateExcessCapacityTerminationPolicy(t *testing
 }
 
 func TestAccEC2SpotFleetRequest_lowestPriceAzOrSubnetInRegion(t *testing.T) {
+	ctx := acctest.Context(t)
 	var sfr ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -837,15 +859,15 @@ func TestAccEC2SpotFleetRequest_lowestPriceAzOrSubnetInRegion(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSpotFleetRequestDestroy,
+		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSpotFleetRequestConfig_basic(rName, publicKey, validUntil),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSpotFleetRequestExists(resourceName, &sfr),
+					testAccCheckSpotFleetRequestExists(ctx, resourceName, &sfr),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "1"),
 				),
@@ -861,6 +883,7 @@ func TestAccEC2SpotFleetRequest_lowestPriceAzOrSubnetInRegion(t *testing.T) {
 }
 
 func TestAccEC2SpotFleetRequest_lowestPriceAzInGivenList(t *testing.T) {
+	ctx := acctest.Context(t)
 	var sfr ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -873,15 +896,15 @@ func TestAccEC2SpotFleetRequest_lowestPriceAzInGivenList(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSpotFleetRequestDestroy,
+		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSpotFleetRequestConfig_azs(rName, publicKey, validUntil),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSpotFleetRequestExists(resourceName, &sfr),
+					testAccCheckSpotFleetRequestExists(ctx, resourceName, &sfr),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "2"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "launch_specification.*.availability_zone", availabilityZonesDataSource, "names.0"),
@@ -899,6 +922,7 @@ func TestAccEC2SpotFleetRequest_lowestPriceAzInGivenList(t *testing.T) {
 }
 
 func TestAccEC2SpotFleetRequest_lowestPriceSubnetInGivenList(t *testing.T) {
+	ctx := acctest.Context(t)
 	var sfr ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -910,15 +934,15 @@ func TestAccEC2SpotFleetRequest_lowestPriceSubnetInGivenList(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSpotFleetRequestDestroy,
+		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSpotFleetRequestConfig_subnet(rName, publicKey, validUntil),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSpotFleetRequestExists(resourceName, &sfr),
+					testAccCheckSpotFleetRequestExists(ctx, resourceName, &sfr),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "2"),
 				),
@@ -934,6 +958,7 @@ func TestAccEC2SpotFleetRequest_lowestPriceSubnetInGivenList(t *testing.T) {
 }
 
 func TestAccEC2SpotFleetRequest_multipleInstanceTypesInSameAz(t *testing.T) {
+	ctx := acctest.Context(t)
 	var sfr ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -947,15 +972,15 @@ func TestAccEC2SpotFleetRequest_multipleInstanceTypesInSameAz(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSpotFleetRequestDestroy,
+		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSpotFleetRequestConfig_multipleInstanceTypesinSameAZ(rName, publicKey, validUntil),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSpotFleetRequestExists(resourceName, &sfr),
+					testAccCheckSpotFleetRequestExists(ctx, resourceName, &sfr),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "2"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "launch_specification.*.availability_zone", availabilityZonesDataSource, "names.0"),
@@ -976,6 +1001,7 @@ func TestAccEC2SpotFleetRequest_multipleInstanceTypesInSameAz(t *testing.T) {
 }
 
 func TestAccEC2SpotFleetRequest_multipleInstanceTypesInSameSubnet(t *testing.T) {
+	ctx := acctest.Context(t)
 	var sfr ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -987,15 +1013,15 @@ func TestAccEC2SpotFleetRequest_multipleInstanceTypesInSameSubnet(t *testing.T) 
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSpotFleetRequestDestroy,
+		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSpotFleetRequestConfig_multipleInstanceTypesinSameSubnet(rName, publicKey, validUntil),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSpotFleetRequestExists(resourceName, &sfr),
+					testAccCheckSpotFleetRequestExists(ctx, resourceName, &sfr),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "2"),
 				),
@@ -1011,6 +1037,7 @@ func TestAccEC2SpotFleetRequest_multipleInstanceTypesInSameSubnet(t *testing.T) 
 }
 
 func TestAccEC2SpotFleetRequest_overridingSpotPrice(t *testing.T) {
+	ctx := acctest.Context(t)
 	var sfr ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -1023,15 +1050,15 @@ func TestAccEC2SpotFleetRequest_overridingSpotPrice(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSpotFleetRequestDestroy,
+		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSpotFleetRequestConfig_overridingPrice(rName, publicKey, validUntil),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSpotFleetRequestExists(resourceName, &sfr),
+					testAccCheckSpotFleetRequestExists(ctx, resourceName, &sfr),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "spot_price", "0.05"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "2"),
@@ -1053,6 +1080,7 @@ func TestAccEC2SpotFleetRequest_overridingSpotPrice(t *testing.T) {
 }
 
 func TestAccEC2SpotFleetRequest_withoutSpotPrice(t *testing.T) {
+	ctx := acctest.Context(t)
 	var sfr ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -1064,15 +1092,15 @@ func TestAccEC2SpotFleetRequest_withoutSpotPrice(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSpotFleetRequestDestroy,
+		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSpotFleetRequestConfig_noPrice(rName, publicKey, validUntil),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSpotFleetRequestExists(resourceName, &sfr),
+					testAccCheckSpotFleetRequestExists(ctx, resourceName, &sfr),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "2"),
 				),
@@ -1088,6 +1116,7 @@ func TestAccEC2SpotFleetRequest_withoutSpotPrice(t *testing.T) {
 }
 
 func TestAccEC2SpotFleetRequest_diversifiedAllocation(t *testing.T) {
+	ctx := acctest.Context(t)
 	var sfr ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -1099,15 +1128,15 @@ func TestAccEC2SpotFleetRequest_diversifiedAllocation(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSpotFleetRequestDestroy,
+		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSpotFleetRequestConfig_diversifiedAllocation(rName, publicKey, validUntil),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSpotFleetRequestExists(resourceName, &sfr),
+					testAccCheckSpotFleetRequestExists(ctx, resourceName, &sfr),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "allocation_strategy", "diversified"),
@@ -1124,6 +1153,7 @@ func TestAccEC2SpotFleetRequest_diversifiedAllocation(t *testing.T) {
 }
 
 func TestAccEC2SpotFleetRequest_multipleInstancePools(t *testing.T) {
+	ctx := acctest.Context(t)
 	var sfr ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -1135,15 +1165,15 @@ func TestAccEC2SpotFleetRequest_multipleInstancePools(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSpotFleetRequestDestroy,
+		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSpotFleetRequestConfig_multipleInstancePools(rName, publicKey, validUntil),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSpotFleetRequestExists(resourceName, &sfr),
+					testAccCheckSpotFleetRequestExists(ctx, resourceName, &sfr),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "allocation_strategy", "lowestPrice"),
@@ -1161,6 +1191,7 @@ func TestAccEC2SpotFleetRequest_multipleInstancePools(t *testing.T) {
 }
 
 func TestAccEC2SpotFleetRequest_withWeightedCapacity(t *testing.T) {
+	ctx := acctest.Context(t)
 	var sfr ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -1186,16 +1217,16 @@ func TestAccEC2SpotFleetRequest_withWeightedCapacity(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSpotFleetRequestDestroy,
+		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSpotFleetRequestConfig_weightedCapacity(rName, publicKey, validUntil),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					fulfillSleep(),
-					testAccCheckSpotFleetRequestExists(resourceName, &sfr),
+					testAccCheckSpotFleetRequestExists(ctx, resourceName, &sfr),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "launch_specification.*", map[string]string{
@@ -1219,6 +1250,7 @@ func TestAccEC2SpotFleetRequest_withWeightedCapacity(t *testing.T) {
 }
 
 func TestAccEC2SpotFleetRequest_withEBSDisk(t *testing.T) {
+	ctx := acctest.Context(t)
 	var config ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -1230,15 +1262,15 @@ func TestAccEC2SpotFleetRequest_withEBSDisk(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSpotFleetRequestDestroy,
+		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSpotFleetRequestConfig_ebs(rName, publicKey, validUntil),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSpotFleetRequestExists(resourceName, &config),
+					testAccCheckSpotFleetRequestExists(ctx, resourceName, &config),
 					testAccCheckSpotFleetRequest_EBSAttributes(&config),
 				),
 			},
@@ -1253,6 +1285,7 @@ func TestAccEC2SpotFleetRequest_withEBSDisk(t *testing.T) {
 }
 
 func TestAccEC2SpotFleetRequest_LaunchSpecificationEBSBlockDevice_kmsKeyID(t *testing.T) {
+	ctx := acctest.Context(t)
 	var config ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -1264,15 +1297,15 @@ func TestAccEC2SpotFleetRequest_LaunchSpecificationEBSBlockDevice_kmsKeyID(t *te
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSpotFleetRequestDestroy,
+		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSpotFleetRequestConfig_launchSpecificationEBSBlockDeviceKMSKeyID(rName, publicKey, validUntil),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSpotFleetRequestExists(resourceName, &config),
+					testAccCheckSpotFleetRequestExists(ctx, resourceName, &config),
 				),
 			},
 			{
@@ -1286,6 +1319,7 @@ func TestAccEC2SpotFleetRequest_LaunchSpecificationEBSBlockDevice_kmsKeyID(t *te
 }
 
 func TestAccEC2SpotFleetRequest_LaunchSpecificationRootBlockDevice_kmsKeyID(t *testing.T) {
+	ctx := acctest.Context(t)
 	var config ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -1297,15 +1331,15 @@ func TestAccEC2SpotFleetRequest_LaunchSpecificationRootBlockDevice_kmsKeyID(t *t
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSpotFleetRequestDestroy,
+		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSpotFleetRequestConfig_launchSpecificationRootBlockDeviceKMSKeyID(rName, publicKey, validUntil),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSpotFleetRequestExists(resourceName, &config),
+					testAccCheckSpotFleetRequestExists(ctx, resourceName, &config),
 				),
 			},
 			{
@@ -1319,6 +1353,7 @@ func TestAccEC2SpotFleetRequest_LaunchSpecificationRootBlockDevice_kmsKeyID(t *t
 }
 
 func TestAccEC2SpotFleetRequest_LaunchSpecification_ebsBlockDeviceGP3(t *testing.T) {
+	ctx := acctest.Context(t)
 	var config ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_spot_fleet_request.test"
@@ -1329,15 +1364,15 @@ func TestAccEC2SpotFleetRequest_LaunchSpecification_ebsBlockDeviceGP3(t *testing
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSpotFleetRequestDestroy,
+		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSpotFleetRequestConfig_launchSpecificationEBSBlockDeviceGP3(rName, publicKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSpotFleetRequestExists(resourceName, &config),
+					testAccCheckSpotFleetRequestExists(ctx, resourceName, &config),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "launch_specification.*.ebs_block_device.*", map[string]string{
 						"device_name": "/dev/xvdcz",
 						"iops":        "4000",
@@ -1358,6 +1393,7 @@ func TestAccEC2SpotFleetRequest_LaunchSpecification_ebsBlockDeviceGP3(t *testing
 }
 
 func TestAccEC2SpotFleetRequest_LaunchSpecification_rootBlockDeviceGP3(t *testing.T) {
+	ctx := acctest.Context(t)
 	var config ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_spot_fleet_request.test"
@@ -1368,15 +1404,15 @@ func TestAccEC2SpotFleetRequest_LaunchSpecification_rootBlockDeviceGP3(t *testin
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSpotFleetRequestDestroy,
+		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSpotFleetRequestConfig_launchSpecificationRootBlockDeviceGP3(rName, publicKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSpotFleetRequestExists(resourceName, &config),
+					testAccCheckSpotFleetRequestExists(ctx, resourceName, &config),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "launch_specification.*.root_block_device.*", map[string]string{
 						"iops":        "4000",
 						"throughput":  "500",
@@ -1396,6 +1432,7 @@ func TestAccEC2SpotFleetRequest_LaunchSpecification_rootBlockDeviceGP3(t *testin
 }
 
 func TestAccEC2SpotFleetRequest_withTags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var config ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -1407,15 +1444,15 @@ func TestAccEC2SpotFleetRequest_withTags(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSpotFleetRequestDestroy,
+		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSpotFleetRequestConfig_tags(rName, publicKey, validUntil),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSpotFleetRequestExists(resourceName, &config),
+					testAccCheckSpotFleetRequestExists(ctx, resourceName, &config),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "launch_specification.*", map[string]string{
 						"tags.%":      "3",
 						"tags.First":  "TfAccTest",
@@ -1435,6 +1472,7 @@ func TestAccEC2SpotFleetRequest_withTags(t *testing.T) {
 }
 
 func TestAccEC2SpotFleetRequest_placementTenancyAndGroup(t *testing.T) {
+	ctx := acctest.Context(t)
 	var sfr ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -1446,15 +1484,15 @@ func TestAccEC2SpotFleetRequest_placementTenancyAndGroup(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSpotFleetRequestDestroy,
+		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSpotFleetRequestConfig_tenancyGroup(rName, publicKey, validUntil),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSpotFleetRequestExists(resourceName, &sfr),
+					testAccCheckSpotFleetRequestExists(ctx, resourceName, &sfr),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					testAccCheckSpotFleetRequest_PlacementAttributes(&sfr, rName),
 				),
@@ -1470,6 +1508,7 @@ func TestAccEC2SpotFleetRequest_placementTenancyAndGroup(t *testing.T) {
 }
 
 func TestAccEC2SpotFleetRequest_withELBs(t *testing.T) {
+	ctx := acctest.Context(t)
 	var sfr ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -1481,15 +1520,15 @@ func TestAccEC2SpotFleetRequest_withELBs(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSpotFleetRequestDestroy,
+		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSpotFleetRequestConfig_elbs(rName, publicKey, validUntil),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSpotFleetRequestExists(resourceName, &sfr),
+					testAccCheckSpotFleetRequestExists(ctx, resourceName, &sfr),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "load_balancers.#", "1"),
@@ -1506,6 +1545,7 @@ func TestAccEC2SpotFleetRequest_withELBs(t *testing.T) {
 }
 
 func TestAccEC2SpotFleetRequest_withTargetGroups(t *testing.T) {
+	ctx := acctest.Context(t)
 	var sfr ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -1517,15 +1557,15 @@ func TestAccEC2SpotFleetRequest_withTargetGroups(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSpotFleetRequestDestroy,
+		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSpotFleetRequestConfig_targetGroups(rName, publicKey, validUntil),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSpotFleetRequestExists(resourceName, &sfr),
+					testAccCheckSpotFleetRequestExists(ctx, resourceName, &sfr),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_group_arns.#", "1"),
@@ -1542,6 +1582,7 @@ func TestAccEC2SpotFleetRequest_withTargetGroups(t *testing.T) {
 }
 
 func TestAccEC2SpotFleetRequest_Zero_capacity(t *testing.T) {
+	ctx := acctest.Context(t)
 	var sfr ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -1553,15 +1594,15 @@ func TestAccEC2SpotFleetRequest_Zero_capacity(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSpotFleetRequestDestroy,
+		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSpotFleetRequestConfig_zeroCapacity(rName, publicKey, validUntil),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSpotFleetRequestExists(resourceName, &sfr),
+					testAccCheckSpotFleetRequestExists(ctx, resourceName, &sfr),
 					resource.TestCheckResourceAttr(resourceName, "target_capacity", "0"),
 				),
 			},
@@ -1574,14 +1615,14 @@ func TestAccEC2SpotFleetRequest_Zero_capacity(t *testing.T) {
 			{
 				Config: testAccSpotFleetRequestConfig_basic(rName, publicKey, validUntil),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSpotFleetRequestExists(resourceName, &sfr),
+					testAccCheckSpotFleetRequestExists(ctx, resourceName, &sfr),
 					resource.TestCheckResourceAttr(resourceName, "target_capacity", "2"),
 				),
 			},
 			{
 				Config: testAccSpotFleetRequestConfig_zeroCapacity(rName, publicKey, validUntil),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSpotFleetRequestExists(resourceName, &sfr),
+					testAccCheckSpotFleetRequestExists(ctx, resourceName, &sfr),
 					resource.TestCheckResourceAttr(resourceName, "target_capacity", "0"),
 				),
 			},
@@ -1590,6 +1631,7 @@ func TestAccEC2SpotFleetRequest_Zero_capacity(t *testing.T) {
 }
 
 func TestAccEC2SpotFleetRequest_capacityRebalance(t *testing.T) {
+	ctx := acctest.Context(t)
 	var sfr ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -1601,15 +1643,15 @@ func TestAccEC2SpotFleetRequest_capacityRebalance(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSpotFleetRequestDestroy,
+		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSpotFleetRequestConfig_capacityRebalance(rName, publicKey, validUntil),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSpotFleetRequestExists(resourceName, &sfr),
+					testAccCheckSpotFleetRequestExists(ctx, resourceName, &sfr),
 					resource.TestCheckResourceAttr(resourceName, "spot_maintenance_strategies.0.capacity_rebalance.0.replacement_strategy", "launch"),
 				),
 			},
@@ -1624,9 +1666,11 @@ func TestAccEC2SpotFleetRequest_capacityRebalance(t *testing.T) {
 }
 
 func TestAccEC2SpotFleetRequest_withInstanceStoreAMI(t *testing.T) {
-	acctest.Skip(t, "Test fails due to test harness constraints")
+	ctx := acctest.Context(t)
+	var config ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
+	resourceName := "aws_spot_fleet_request.test"
 
 	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
 	if err != nil {
@@ -1634,20 +1678,33 @@ func TestAccEC2SpotFleetRequest_withInstanceStoreAMI(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSpotFleetRequestDestroy,
+		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccSpotFleetRequestConfig_launchSpecificationInstanceStoreAMI(rName, publicKey, validUntil),
-				ExpectError: regexp.MustCompile("Instance store backed AMIs do not provide a root device name"),
+				Config: testAccSpotFleetRequestConfig_launchSpecificationInstanceStoreAMI(rName, publicKey, validUntil),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSpotFleetRequestExists(ctx, resourceName, &config),
+					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_specification.0.ebs_block_device.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "launch_specification.0.ebs_optimized", "false"),
+					resource.TestCheckResourceAttr(resourceName, "launch_specification.0.root_block_device.#", "0"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"wait_for_fulfillment"},
 			},
 		},
 	})
 }
 
 func TestAccEC2SpotFleetRequest_noTerminateInstancesWithExpiration(t *testing.T) {
+	ctx := acctest.Context(t)
 	var sfr ec2.SpotFleetRequestConfig
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
@@ -1659,15 +1716,15 @@ func TestAccEC2SpotFleetRequest_noTerminateInstancesWithExpiration(t *testing.T)
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckSpotFleetRequest(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSpotFleetRequestDestroy,
+		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSpotFleetRequestConfig_noTerminateInstancesExpiration(rName, publicKey, validUntil),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSpotFleetRequestExists(resourceName, &sfr),
+					testAccCheckSpotFleetRequestExists(ctx, resourceName, &sfr),
 					resource.TestCheckResourceAttr(resourceName, "terminate_instances_on_delete", "true"),
 					resource.TestCheckResourceAttr(resourceName, "terminate_instances_with_expiration", "false"),
 				),
@@ -1692,7 +1749,7 @@ func testAccCheckSpotFleetRequestRecreatedConfig(t *testing.T,
 	}
 }
 
-func testAccCheckSpotFleetRequestExists(n string, v *ec2.SpotFleetRequestConfig) resource.TestCheckFunc {
+func testAccCheckSpotFleetRequestExists(ctx context.Context, n string, v *ec2.SpotFleetRequestConfig) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -1703,9 +1760,9 @@ func testAccCheckSpotFleetRequestExists(n string, v *ec2.SpotFleetRequestConfig)
 			return errors.New("No EC2 Spot Fleet Request ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
-		output, err := tfec2.FindSpotFleetRequestByID(conn, rs.Primary.ID)
+		output, err := tfec2.FindSpotFleetRequestByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -1717,32 +1774,33 @@ func testAccCheckSpotFleetRequestExists(n string, v *ec2.SpotFleetRequestConfig)
 	}
 }
 
-func testAccCheckSpotFleetRequestDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+func testAccCheckSpotFleetRequestDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_spot_fleet_request" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_spot_fleet_request" {
+				continue
+			}
+
+			_, err := tfec2.FindSpotFleetRequestByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("EC2 Spot Fleet Request %s still exists", rs.Primary.ID)
 		}
 
-		_, err := tfec2.FindSpotFleetRequestByID(conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("EC2 Spot Fleet Request %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckSpotFleetRequest_EBSAttributes(
-	sfr *ec2.SpotFleetRequestConfig) resource.TestCheckFunc {
+func testAccCheckSpotFleetRequest_EBSAttributes(sfr *ec2.SpotFleetRequestConfig) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if len(sfr.SpotFleetRequestConfig.LaunchSpecifications) == 0 {
 			return errors.New("Missing launch specification")
@@ -1789,13 +1847,12 @@ func testAccCheckSpotFleetRequest_PlacementAttributes(
 
 		return nil
 	}
-
 }
 
-func testAccPreCheckSpotFleetRequest(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+func testAccPreCheckSpotFleetRequest(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
-	_, err := tfec2.FindSpotFleetRequests(conn, &ec2.DescribeSpotFleetRequestsInput{})
+	_, err := tfec2.FindSpotFleetRequests(ctx, conn, &ec2.DescribeSpotFleetRequestsInput{})
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
@@ -3147,7 +3204,7 @@ func testAccSpotFleetRequestConfig_launchSpecificationInstanceStoreAMI(rName, pu
 		testAccSpotFleetRequestConfig_base(rName, publicKey),
 		fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
-  iam_fleet_role                      = aws_iam_role.test-role.arn
+  iam_fleet_role                      = aws_iam_role.test.arn
   spot_price                          = "0.05"
   target_capacity                     = 2
   valid_until                         = %[2]q

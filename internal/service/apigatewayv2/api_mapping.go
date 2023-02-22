@@ -1,6 +1,7 @@
 package apigatewayv2
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -8,18 +9,20 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func ResourceAPIMapping() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAPIMappingCreate,
-		Read:   resourceAPIMappingRead,
-		Update: resourceAPIMappingUpdate,
-		Delete: resourceAPIMappingDelete,
+		CreateWithoutTimeout: resourceAPIMappingCreate,
+		ReadWithoutTimeout:   resourceAPIMappingRead,
+		UpdateWithoutTimeout: resourceAPIMappingUpdate,
+		DeleteWithoutTimeout: resourceAPIMappingDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAPIMappingImport,
+			StateContext: resourceAPIMappingImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -45,8 +48,9 @@ func ResourceAPIMapping() *schema.Resource {
 	}
 }
 
-func resourceAPIMappingCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
+func resourceAPIMappingCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
 
 	req := &apigatewayv2.CreateApiMappingInput{
 		ApiId:      aws.String(d.Get("api_id").(string)),
@@ -58,41 +62,43 @@ func resourceAPIMappingCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Creating API Gateway v2 API mapping: %s", req)
-	resp, err := conn.CreateApiMapping(req)
+	resp, err := conn.CreateApiMappingWithContext(ctx, req)
 	if err != nil {
-		return fmt.Errorf("creating API Gateway v2 API mapping: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating API Gateway v2 API mapping: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resp.ApiMappingId))
 
-	return resourceAPIMappingRead(d, meta)
+	return append(diags, resourceAPIMappingRead(ctx, d, meta)...)
 }
 
-func resourceAPIMappingRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
+func resourceAPIMappingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
 
-	resp, err := conn.GetApiMapping(&apigatewayv2.GetApiMappingInput{
+	resp, err := conn.GetApiMappingWithContext(ctx, &apigatewayv2.GetApiMappingInput{
 		ApiMappingId: aws.String(d.Id()),
 		DomainName:   aws.String(d.Get("domain_name").(string)),
 	})
 	if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) && !d.IsNewResource() {
 		log.Printf("[WARN] API Gateway v2 API mapping (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 	if err != nil {
-		return fmt.Errorf("reading API Gateway v2 API mapping: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading API Gateway v2 API mapping: %s", err)
 	}
 
 	d.Set("api_id", resp.ApiId)
 	d.Set("api_mapping_key", resp.ApiMappingKey)
 	d.Set("stage", resp.Stage)
 
-	return nil
+	return diags
 }
 
-func resourceAPIMappingUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
+func resourceAPIMappingUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
 
 	req := &apigatewayv2.UpdateApiMappingInput{
 		ApiId:        aws.String(d.Get("api_id").(string)),
@@ -107,33 +113,34 @@ func resourceAPIMappingUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Updating API Gateway v2 API mapping: %s", req)
-	_, err := conn.UpdateApiMapping(req)
+	_, err := conn.UpdateApiMappingWithContext(ctx, req)
 	if err != nil {
-		return fmt.Errorf("updating API Gateway v2 API mapping: %s", err)
+		return sdkdiag.AppendErrorf(diags, "updating API Gateway v2 API mapping: %s", err)
 	}
 
-	return resourceAPIMappingRead(d, meta)
+	return append(diags, resourceAPIMappingRead(ctx, d, meta)...)
 }
 
-func resourceAPIMappingDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn
+func resourceAPIMappingDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayV2Conn()
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 API mapping (%s)", d.Id())
-	_, err := conn.DeleteApiMapping(&apigatewayv2.DeleteApiMappingInput{
+	_, err := conn.DeleteApiMappingWithContext(ctx, &apigatewayv2.DeleteApiMappingInput{
 		ApiMappingId: aws.String(d.Id()),
 		DomainName:   aws.String(d.Get("domain_name").(string)),
 	})
 	if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) {
-		return nil
+		return diags
 	}
 	if err != nil {
-		return fmt.Errorf("deleting API Gateway v2 API mapping: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting API Gateway v2 API mapping: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceAPIMappingImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceAPIMappingImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), "/")
 	if len(parts) != 2 {
 		return []*schema.ResourceData{}, fmt.Errorf("wrong format of import ID (%s), use: 'api-mapping-id/domain-name'", d.Id())

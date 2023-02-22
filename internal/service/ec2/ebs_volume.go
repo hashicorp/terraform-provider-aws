@@ -10,10 +10,13 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -21,13 +24,13 @@ import (
 
 func ResourceEBSVolume() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceEBSVolumeCreate,
-		Read:   resourceEBSVolumeRead,
-		Update: resourceEBSVolumeUpdate,
-		Delete: resourceEBSVolumeDelete,
+		CreateWithoutTimeout: resourceEBSVolumeCreate,
+		ReadWithoutTimeout:   resourceEBSVolumeRead,
+		UpdateWithoutTimeout: resourceEBSVolumeUpdate,
+		DeleteWithoutTimeout: resourceEBSVolumeDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -115,13 +118,15 @@ func ResourceEBSVolume() *schema.Resource {
 	}
 }
 
-func resourceEBSVolumeCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceEBSVolumeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &ec2.CreateVolumeInput{
 		AvailabilityZone:  aws.String(d.Get("availability_zone").(string)),
+		ClientToken:       aws.String(resource.UniqueId()),
 		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeVolume),
 	}
 
@@ -161,37 +166,37 @@ func resourceEBSVolumeCreate(d *schema.ResourceData, meta interface{}) error {
 		input.VolumeType = aws.String(value.(string))
 	}
 
-	log.Printf("[DEBUG] Creating EBS Volume: %s", input)
-	output, err := conn.CreateVolume(input)
+	output, err := conn.CreateVolumeWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("creating EBS Volume: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating EBS Volume: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.VolumeId))
 
-	if _, err := WaitVolumeCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("waiting for EBS Volume (%s) create: %w", d.Id(), err)
+	if _, err := WaitVolumeCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for EBS Volume (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceEBSVolumeRead(d, meta)
+	return append(diags, resourceEBSVolumeRead(ctx, d, meta)...)
 }
 
-func resourceEBSVolumeRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceEBSVolumeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	volume, err := FindEBSVolumeByID(conn, d.Id())
+	volume, err := FindEBSVolumeByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EBS Volume %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading EBS Volume (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading EBS Volume (%s): %s", d.Id(), err)
 	}
 
 	arn := arn.ARN{
@@ -217,18 +222,19 @@ func resourceEBSVolumeRead(d *schema.ResourceData, meta interface{}) error {
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceEBSVolumeUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceEBSVolumeUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &ec2.ModifyVolumeInput{
@@ -262,30 +268,31 @@ func resourceEBSVolumeUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 
-		_, err := conn.ModifyVolume(input)
+		_, err := conn.ModifyVolumeWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("modifying EBS Volume (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "modifying EBS Volume (%s): %s", d.Id(), err)
 		}
 
-		if _, err := WaitVolumeUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return fmt.Errorf("waiting for EBS Volume (%s) update: %w", d.Id(), err)
+		if _, err := WaitVolumeUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for EBS Volume (%s) update: %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("updating EBS Volume (%s) tags: %w", d.Id(), err)
+		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating EBS Volume (%s) tags: %s", d.Id(), err)
 		}
 	}
 
-	return resourceEBSVolumeRead(d, meta)
+	return append(diags, resourceEBSVolumeRead(ctx, d, meta)...)
 }
 
-func resourceEBSVolumeDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceEBSVolumeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	if d.Get("final_snapshot").(bool) {
 		input := &ec2.CreateSnapshotInput{
@@ -294,53 +301,53 @@ func resourceEBSVolumeDelete(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		log.Printf("[DEBUG] Creating EBS Snapshot: %s", input)
-		outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(1*time.Minute,
+		outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, 1*time.Minute,
 			func() (interface{}, error) {
-				return conn.CreateSnapshot(input)
+				return conn.CreateSnapshotWithContext(ctx, input)
 			},
 			errCodeSnapshotCreationPerVolumeRateExceeded, "The maximum per volume CreateSnapshot request rate has been exceeded")
 
 		if err != nil {
-			return fmt.Errorf("creating EBS Snapshot (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "creating EBS Snapshot (%s): %s", d.Id(), err)
 		}
 
 		snapshotID := aws.StringValue(outputRaw.(*ec2.Snapshot).SnapshotId)
 
-		_, err = tfresource.RetryWhenAWSErrCodeEquals(d.Timeout(schema.TimeoutDelete),
+		_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutDelete),
 			func() (interface{}, error) {
-				return nil, conn.WaitUntilSnapshotCompleted(&ec2.DescribeSnapshotsInput{
+				return nil, conn.WaitUntilSnapshotCompletedWithContext(ctx, &ec2.DescribeSnapshotsInput{
 					SnapshotIds: aws.StringSlice([]string{snapshotID}),
 				})
 			},
 			errCodeResourceNotReady)
 
 		if err != nil {
-			return fmt.Errorf("waiting for EBS Snapshot (%s) create: %w", snapshotID, err)
+			return sdkdiag.AppendErrorf(diags, "waiting for EBS Snapshot (%s) create: %s", snapshotID, err)
 		}
 	}
 
 	log.Printf("[DEBUG] Deleting EBS Volume: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(d.Timeout(schema.TimeoutDelete),
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutDelete),
 		func() (interface{}, error) {
-			return conn.DeleteVolume(&ec2.DeleteVolumeInput{
+			return conn.DeleteVolumeWithContext(ctx, &ec2.DeleteVolumeInput{
 				VolumeId: aws.String(d.Id()),
 			})
 		},
 		errCodeVolumeInUse)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidVolumeNotFound) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("deleting EBS Volume (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting EBS Volume (%s): %s", d.Id(), err)
 	}
 
-	if _, err := WaitVolumeDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("waiting for EBS Volume (%s) delete: %w", d.Id(), err)
+	if _, err := WaitVolumeDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for EBS Volume (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceEBSVolumeCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {

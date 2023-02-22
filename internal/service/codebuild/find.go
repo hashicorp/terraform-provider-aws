@@ -1,6 +1,8 @@
 package codebuild
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codebuild"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -9,9 +11,8 @@ import (
 )
 
 // FindReportGroupByARN returns the Report Group corresponding to the specified Arn.
-func FindReportGroupByARN(conn *codebuild.CodeBuild, arn string) (*codebuild.ReportGroup, error) {
-
-	output, err := conn.BatchGetReportGroups(&codebuild.BatchGetReportGroupsInput{
+func FindReportGroupByARN(ctx context.Context, conn *codebuild.CodeBuild, arn string) (*codebuild.ReportGroup, error) {
+	output, err := conn.BatchGetReportGroupsWithContext(ctx, &codebuild.BatchGetReportGroupsInput{
 		ReportGroupArns: aws.StringSlice([]string{arn}),
 	})
 	if err != nil {
@@ -34,12 +35,12 @@ func FindReportGroupByARN(conn *codebuild.CodeBuild, arn string) (*codebuild.Rep
 	return reportGroup, nil
 }
 
-func FindProjectByARN(conn *codebuild.CodeBuild, arn string) (*codebuild.Project, error) {
+func FindProjectByARN(ctx context.Context, conn *codebuild.CodeBuild, arn string) (*codebuild.Project, error) {
 	input := &codebuild.BatchGetProjectsInput{
 		Names: []*string{aws.String(arn)},
 	}
 
-	output, err := conn.BatchGetProjects(input)
+	output, err := conn.BatchGetProjectsWithContext(ctx, input)
 	if err != nil {
 		return nil, err
 	}
@@ -55,12 +56,12 @@ func FindProjectByARN(conn *codebuild.CodeBuild, arn string) (*codebuild.Project
 	return output.Projects[0], nil
 }
 
-func FindResourcePolicyByARN(conn *codebuild.CodeBuild, arn string) (*codebuild.GetResourcePolicyOutput, error) {
+func FindResourcePolicyByARN(ctx context.Context, conn *codebuild.CodeBuild, arn string) (*codebuild.GetResourcePolicyOutput, error) {
 	input := &codebuild.GetResourcePolicyInput{
 		ResourceArn: aws.String(arn),
 	}
 
-	output, err := conn.GetResourcePolicy(input)
+	output, err := conn.GetResourcePolicyWithContext(ctx, input)
 	if tfawserr.ErrMessageContains(err, codebuild.ErrCodeResourceNotFoundException, "Resource ARN does not exist") ||
 		tfawserr.ErrMessageContains(err, codebuild.ErrCodeResourceNotFoundException, "Resource ARN resource policy does not exist") {
 		return nil, &resource.NotFoundError{
@@ -76,10 +77,10 @@ func FindResourcePolicyByARN(conn *codebuild.CodeBuild, arn string) (*codebuild.
 	return output, nil
 }
 
-func FindSourceCredentialByARN(conn *codebuild.CodeBuild, arn string) (*codebuild.SourceCredentialsInfo, error) {
+func FindSourceCredentialByARN(ctx context.Context, conn *codebuild.CodeBuild, arn string) (*codebuild.SourceCredentialsInfo, error) {
 	var result *codebuild.SourceCredentialsInfo
 	input := &codebuild.ListSourceCredentialsInput{}
-	output, err := conn.ListSourceCredentials(input)
+	output, err := conn.ListSourceCredentialsWithContext(ctx, input)
 	if err != nil {
 		return nil, err
 	}

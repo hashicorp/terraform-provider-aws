@@ -1,6 +1,7 @@
 package iot_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -15,6 +16,7 @@ import (
 )
 
 func TestAccIoTThing_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var thing iot.DescribeThingOutput
 	rString := sdkacctest.RandString(8)
 	thingName := fmt.Sprintf("tf_acc_thing_%s", rString)
@@ -24,12 +26,12 @@ func TestAccIoTThing_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckThingDestroy,
+		CheckDestroy:             testAccCheckThingDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccThingConfig_basic(thingName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckThingExists(resourceName, &thing),
+					testAccCheckThingExists(ctx, resourceName, &thing),
 					resource.TestCheckResourceAttr(resourceName, "name", thingName),
 					resource.TestCheckResourceAttr(resourceName, "attributes.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "thing_type_name", ""),
@@ -48,6 +50,7 @@ func TestAccIoTThing_basic(t *testing.T) {
 }
 
 func TestAccIoTThing_full(t *testing.T) {
+	ctx := acctest.Context(t)
 	var thing iot.DescribeThingOutput
 	rString := sdkacctest.RandString(8)
 	thingName := fmt.Sprintf("tf_acc_thing_%s", rString)
@@ -58,12 +61,12 @@ func TestAccIoTThing_full(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckThingDestroy,
+		CheckDestroy:             testAccCheckThingDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccThingConfig_full(thingName, typeName, "42"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckThingExists(resourceName, &thing),
+					testAccCheckThingExists(ctx, resourceName, &thing),
 					resource.TestCheckResourceAttr(resourceName, "name", thingName),
 					resource.TestCheckResourceAttr(resourceName, "thing_type_name", typeName),
 					resource.TestCheckResourceAttr(resourceName, "attributes.%", "3"),
@@ -83,7 +86,7 @@ func TestAccIoTThing_full(t *testing.T) {
 			{ // Update attribute
 				Config: testAccThingConfig_full(thingName, typeName, "differentOne"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckThingExists(resourceName, &thing),
+					testAccCheckThingExists(ctx, resourceName, &thing),
 					resource.TestCheckResourceAttr(resourceName, "name", thingName),
 					resource.TestCheckResourceAttr(resourceName, "thing_type_name", typeName),
 					resource.TestCheckResourceAttr(resourceName, "attributes.%", "3"),
@@ -98,7 +101,7 @@ func TestAccIoTThing_full(t *testing.T) {
 			{ // Remove thing type association
 				Config: testAccThingConfig_basic(thingName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckThingExists(resourceName, &thing),
+					testAccCheckThingExists(ctx, resourceName, &thing),
 					resource.TestCheckResourceAttr(resourceName, "name", thingName),
 					resource.TestCheckResourceAttr(resourceName, "attributes.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "thing_type_name", ""),
@@ -111,7 +114,7 @@ func TestAccIoTThing_full(t *testing.T) {
 	})
 }
 
-func testAccCheckThingExists(n string, v *iot.DescribeThingOutput) resource.TestCheckFunc {
+func testAccCheckThingExists(ctx context.Context, n string, v *iot.DescribeThingOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -122,9 +125,9 @@ func testAccCheckThingExists(n string, v *iot.DescribeThingOutput) resource.Test
 			return fmt.Errorf("No IoT Thing ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn()
 
-		output, err := tfiot.FindThingByName(conn, rs.Primary.ID)
+		output, err := tfiot.FindThingByName(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -136,28 +139,30 @@ func testAccCheckThingExists(n string, v *iot.DescribeThingOutput) resource.Test
 	}
 }
 
-func testAccCheckThingDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn
+func testAccCheckThingDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IoTConn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_iot_thing" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_iot_thing" {
+				continue
+			}
+
+			_, err := tfiot.FindThingByName(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("IoT Thing %s still exists", rs.Primary.ID)
 		}
 
-		_, err := tfiot.FindThingByName(conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("IoT Thing %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
 func testAccThingConfig_basic(thingName string) string {

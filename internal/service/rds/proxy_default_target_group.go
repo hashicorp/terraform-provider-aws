@@ -1,28 +1,30 @@
 package rds
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
 func ResourceProxyDefaultTargetGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceProxyDefaultTargetGroupCreate,
-		Read:   resourceProxyDefaultTargetGroupRead,
-		Update: resourceProxyDefaultTargetGroupUpdate,
-		Delete: schema.Noop,
+		CreateWithoutTimeout: resourceProxyDefaultTargetGroupCreate,
+		ReadWithoutTimeout:   resourceProxyDefaultTargetGroupRead,
+		UpdateWithoutTimeout: resourceProxyDefaultTargetGroupUpdate,
+		DeleteWithoutTimeout: schema.NoopContext,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -93,24 +95,25 @@ func ResourceProxyDefaultTargetGroup() *schema.Resource {
 	}
 }
 
-func resourceProxyDefaultTargetGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+func resourceProxyDefaultTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RDSConn()
 
-	tg, err := resourceProxyDefaultTargetGroupGet(conn, d.Id())
+	tg, err := resourceProxyDefaultTargetGroupGet(ctx, conn, d.Id())
 
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyNotFoundFault) {
 			log.Printf("[WARN] DB Proxy (%s) not found, removing from state", d.Id())
 			d.SetId("")
-			return nil
+			return diags
 		}
-		return fmt.Errorf("error reading RDS DB Proxy (%s) Default Target Group: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading RDS DB Proxy (%s) Default Target Group: %s", d.Id(), err)
 	}
 
 	if tg == nil {
 		log.Printf("[WARN] DB Proxy default target group (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	d.Set("arn", tg.TargetGroupArn)
@@ -120,20 +123,21 @@ func resourceProxyDefaultTargetGroupRead(d *schema.ResourceData, meta interface{
 	cpc := tg.ConnectionPoolConfig
 	d.Set("connection_pool_config", flattenProxyTargetGroupConnectionPoolConfig(cpc))
 
-	return nil
+	return diags
 }
 
-func resourceProxyDefaultTargetGroupCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceProxyDefaultTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	d.SetId(d.Get("db_proxy_name").(string))
-	return resourceProxyDefaultTargetGroupCreateUpdate(d, meta, schema.TimeoutCreate)
+	return resourceProxyDefaultTargetGroupCreateUpdate(ctx, d, schema.TimeoutCreate, meta)
 }
 
-func resourceProxyDefaultTargetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	return resourceProxyDefaultTargetGroupCreateUpdate(d, meta, schema.TimeoutUpdate)
+func resourceProxyDefaultTargetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	return resourceProxyDefaultTargetGroupCreateUpdate(ctx, d, schema.TimeoutUpdate, meta)
 }
 
-func resourceProxyDefaultTargetGroupCreateUpdate(d *schema.ResourceData, meta interface{}, timeout string) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+func resourceProxyDefaultTargetGroupCreateUpdate(ctx context.Context, d *schema.ResourceData, timeout string, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	params := rds.ModifyDBProxyTargetGroupInput{
 		DBProxyName:     aws.String(d.Get("db_proxy_name").(string)),
@@ -144,25 +148,22 @@ func resourceProxyDefaultTargetGroupCreateUpdate(d *schema.ResourceData, meta in
 		params.ConnectionPoolConfig = expandProxyConnectionPoolConfig(v.([]interface{}))
 	}
 
-	log.Printf("[DEBUG] Update DB Proxy default target group: %#v", params)
-	_, err := conn.ModifyDBProxyTargetGroup(&params)
-	if err != nil {
-		return fmt.Errorf("error updating RDS DB Proxy (%s) default target group: %w", d.Id(), err)
+	if _, err := conn.ModifyDBProxyTargetGroupWithContext(ctx, &params); err != nil {
+		return sdkdiag.AppendErrorf(diags, "updating RDS DB Proxy (%s) default target group: %s", d.Id(), err)
 	}
 
 	stateChangeConf := &resource.StateChangeConf{
 		Pending: []string{rds.DBProxyStatusModifying},
 		Target:  []string{rds.DBProxyStatusAvailable},
-		Refresh: resourceProxyDefaultTargetGroupRefreshFunc(conn, d.Id()),
+		Refresh: resourceProxyDefaultTargetGroupRefreshFunc(ctx, conn, d.Id()),
 		Timeout: d.Timeout(timeout),
 	}
 
-	_, err = stateChangeConf.WaitForState()
-	if err != nil {
-		return fmt.Errorf("Error waiting for DB Proxy default target group update: %s", err)
+	if _, err := stateChangeConf.WaitForStateContext(ctx); err != nil {
+		return sdkdiag.AppendErrorf(diags, "updating RDS DB Proxy (%s) default target group: waiting for completion: %s", d.Id(), err)
 	}
 
-	return resourceProxyDefaultTargetGroupRead(d, meta)
+	return append(diags, resourceProxyDefaultTargetGroupRead(ctx, d, meta)...)
 }
 
 func expandProxyConnectionPoolConfig(configs []interface{}) *rds.ConnectionPoolConfiguration {
@@ -198,13 +199,13 @@ func flattenProxyTargetGroupConnectionPoolConfig(cpc *rds.ConnectionPoolConfigur
 	return []interface{}{m}
 }
 
-func resourceProxyDefaultTargetGroupGet(conn *rds.RDS, proxyName string) (*rds.DBProxyTargetGroup, error) {
+func resourceProxyDefaultTargetGroupGet(ctx context.Context, conn *rds.RDS, proxyName string) (*rds.DBProxyTargetGroup, error) {
 	params := &rds.DescribeDBProxyTargetGroupsInput{
 		DBProxyName: aws.String(proxyName),
 	}
 
 	var defaultTargetGroup *rds.DBProxyTargetGroup
-	err := conn.DescribeDBProxyTargetGroupsPages(params, func(page *rds.DescribeDBProxyTargetGroupsOutput, lastPage bool) bool {
+	err := conn.DescribeDBProxyTargetGroupsPagesWithContext(ctx, params, func(page *rds.DescribeDBProxyTargetGroupsOutput, lastPage bool) bool {
 		for _, targetGroup := range page.TargetGroups {
 			if *targetGroup.IsDefault {
 				defaultTargetGroup = targetGroup
@@ -222,9 +223,9 @@ func resourceProxyDefaultTargetGroupGet(conn *rds.RDS, proxyName string) (*rds.D
 	return defaultTargetGroup, nil
 }
 
-func resourceProxyDefaultTargetGroupRefreshFunc(conn *rds.RDS, proxyName string) resource.StateRefreshFunc {
+func resourceProxyDefaultTargetGroupRefreshFunc(ctx context.Context, conn *rds.RDS, proxyName string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		tg, err := resourceProxyDefaultTargetGroupGet(conn, proxyName)
+		tg, err := resourceProxyDefaultTargetGroupGet(ctx, conn, proxyName)
 
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyNotFoundFault) {

@@ -1,6 +1,7 @@
 package storagegateway
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -8,18 +9,20 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourceWorkingStorage() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceWorkingStorageCreate,
-		Read:   resourceWorkingStorageRead,
-		Delete: schema.Noop,
+		CreateWithoutTimeout: resourceWorkingStorageCreate,
+		ReadWithoutTimeout:   resourceWorkingStorageRead,
+		DeleteWithoutTimeout: schema.NoopContext,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -38,8 +41,9 @@ func ResourceWorkingStorage() *schema.Resource {
 	}
 }
 
-func resourceWorkingStorageCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).StorageGatewayConn
+func resourceWorkingStorageCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).StorageGatewayConn()
 
 	diskID := d.Get("disk_id").(string)
 	gatewayARN := d.Get("gateway_arn").(string)
@@ -49,44 +53,44 @@ func resourceWorkingStorageCreate(d *schema.ResourceData, meta interface{}) erro
 		GatewayARN: aws.String(gatewayARN),
 	}
 
-	log.Printf("[DEBUG] Adding Storage Gateway working storage: %s", input)
-	_, err := conn.AddWorkingStorage(input)
+	log.Printf("[DEBUG] Adding Storage Gateway Working Storage: %s", input)
+	_, err := conn.AddWorkingStorageWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("error adding Storage Gateway working storage: %s", err)
+		return sdkdiag.AppendErrorf(diags, "adding Storage Gateway Working Storage: %s", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", gatewayARN, diskID))
 
-	return resourceWorkingStorageRead(d, meta)
+	return append(diags, resourceWorkingStorageRead(ctx, d, meta)...)
 }
 
-func resourceWorkingStorageRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).StorageGatewayConn
+func resourceWorkingStorageRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).StorageGatewayConn()
 
 	gatewayARN, diskID, err := DecodeWorkingStorageID(d.Id())
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading Storage Gateway Working Storage (%s): %s", d.Id(), err)
 	}
 
 	input := &storagegateway.DescribeWorkingStorageInput{
 		GatewayARN: aws.String(gatewayARN),
 	}
 
-	log.Printf("[DEBUG] Reading Storage Gateway working storage: %s", input)
-	output, err := conn.DescribeWorkingStorage(input)
+	output, err := conn.DescribeWorkingStorageWithContext(ctx, input)
 	if err != nil {
 		if IsErrGatewayNotFound(err) {
-			log.Printf("[WARN] Storage Gateway working storage %q not found - removing from state", d.Id())
+			log.Printf("[WARN] Storage Gateway Working Storage (%s) not found, removing from state", d.Id())
 			d.SetId("")
-			return nil
+			return diags
 		}
-		return fmt.Errorf("error reading Storage Gateway working storage: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading Storage Gateway Working Storage (%s): %s", d.Id(), err)
 	}
 
 	if output == nil || len(output.DiskIds) == 0 {
-		log.Printf("[WARN] Storage Gateway working storage %q not found - removing from state", d.Id())
+		log.Printf("[WARN] Storage Gateway Working Storage (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	found := false
@@ -98,15 +102,15 @@ func resourceWorkingStorageRead(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	if !found {
-		log.Printf("[WARN] Storage Gateway working storage %q not found - removing from state", d.Id())
+		log.Printf("[WARN] Storage Gateway Working Storage (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	d.Set("disk_id", diskID)
 	d.Set("gateway_arn", gatewayARN)
 
-	return nil
+	return diags
 }
 
 func DecodeWorkingStorageID(id string) (string, string, error) {

@@ -1,18 +1,20 @@
 package fsx
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/fsx"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -20,12 +22,12 @@ import (
 
 func ResourceOpenzfsSnapshot() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceOpenzfsSnapshotCreate,
-		Read:   resourceOpenzfsSnapshotRead,
-		Update: resourceOpenzfsSnapshotUpdate,
-		Delete: resourceOpenzfsSnapshotDelete,
+		CreateWithoutTimeout: resourceOpenzfsSnapshotCreate,
+		ReadWithoutTimeout:   resourceOpenzfsSnapshotRead,
+		UpdateWithoutTimeout: resourceOpenzfsSnapshotUpdate,
+		DeleteWithoutTimeout: resourceOpenzfsSnapshotDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -65,8 +67,9 @@ func ResourceOpenzfsSnapshot() *schema.Resource {
 	}
 }
 
-func resourceOpenzfsSnapshotCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FSxConn
+func resourceOpenzfsSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).FSxConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -80,35 +83,36 @@ func resourceOpenzfsSnapshotCreate(d *schema.ResourceData, meta interface{}) err
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	result, err := conn.CreateSnapshot(input)
+	result, err := conn.CreateSnapshotWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("error creating FSx OpenZFS Snapshot: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating FSx OpenZFS Snapshot: %s", err)
 	}
 
 	d.SetId(aws.StringValue(result.Snapshot.SnapshotId))
 
 	log.Println("[DEBUG] Waiting for FSx OpenZFS Snapshot to become available")
-	if _, err := waitSnapshotCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("error waiting for FSx OpenZFS Snapshot (%s) to be available: %w", d.Id(), err)
+	if _, err := waitSnapshotCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for FSx OpenZFS Snapshot (%s) to be available: %s", d.Id(), err)
 	}
 
-	return resourceOpenzfsSnapshotRead(d, meta)
+	return append(diags, resourceOpenzfsSnapshotRead(ctx, d, meta)...)
 }
 
-func resourceOpenzfsSnapshotRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FSxConn
+func resourceOpenzfsSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).FSxConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	snapshot, err := FindSnapshotByID(conn, d.Id())
+	snapshot, err := FindSnapshotByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] FSx Snapshot (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading FSx Snapshot (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading FSx Snapshot (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", snapshot.ResourceARN)
@@ -116,37 +120,38 @@ func resourceOpenzfsSnapshotRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("name", snapshot.Name)
 
 	if err := d.Set("creation_time", snapshot.CreationTime.Format(time.RFC3339)); err != nil {
-		return fmt.Errorf("error setting creation_time: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting creation_time: %s", err)
 	}
 
 	//Snapshot tags do not get returned with describe call so need to make a separate list tags call
-	tags, tagserr := ListTags(conn, *snapshot.ResourceARN)
+	tags, tagserr := ListTags(ctx, conn, *snapshot.ResourceARN)
 
 	if tagserr != nil {
-		return fmt.Errorf("error reading Tags for FSx OpenZFS Snapshot (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Tags for FSx OpenZFS Snapshot (%s): %s", d.Id(), err)
 	} else {
 		tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 	}
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceOpenzfsSnapshotUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FSxConn
+func resourceOpenzfsSnapshotUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).FSxConn()
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating FSx Snapshot (%s) tags: %w", d.Get("arn").(string), err)
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating FSx Snapshot (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
 
@@ -160,42 +165,42 @@ func resourceOpenzfsSnapshotUpdate(d *schema.ResourceData, meta interface{}) err
 			input.Name = aws.String(d.Get("name").(string))
 		}
 
-		_, err := conn.UpdateSnapshot(input)
+		_, err := conn.UpdateSnapshotWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error updating FSx OpenZFS Snapshot (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating FSx OpenZFS Snapshot (%s): %s", d.Id(), err)
 		}
 
-		if _, err := waitSnapshotUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return fmt.Errorf("error waiting for FSx OpenZFS Snapshot (%s) update: %w", d.Id(), err)
+		if _, err := waitSnapshotUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for FSx OpenZFS Snapshot (%s) update: %s", d.Id(), err)
 		}
-
 	}
 
-	return resourceOpenzfsSnapshotRead(d, meta)
+	return append(diags, resourceOpenzfsSnapshotRead(ctx, d, meta)...)
 }
 
-func resourceOpenzfsSnapshotDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).FSxConn
+func resourceOpenzfsSnapshotDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).FSxConn()
 
 	request := &fsx.DeleteSnapshotInput{
 		SnapshotId: aws.String(d.Id()),
 	}
 
 	log.Printf("[INFO] Deleting FSx Snapshot: %s", d.Id())
-	_, err := conn.DeleteSnapshot(request)
+	_, err := conn.DeleteSnapshotWithContext(ctx, request)
 
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, fsx.ErrCodeSnapshotNotFound) {
-			return nil
+			return diags
 		}
-		return fmt.Errorf("error deleting FSx Snapshot (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting FSx Snapshot (%s): %s", d.Id(), err)
 	}
 
 	log.Println("[DEBUG] Waiting for snapshot to delete")
-	if _, err := waitSnapshotDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("error waiting for FSx Snapshot (%s) to deleted: %w", d.Id(), err)
+	if _, err := waitSnapshotDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for FSx Snapshot (%s) to deleted: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

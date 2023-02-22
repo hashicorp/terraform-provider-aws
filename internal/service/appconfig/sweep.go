@@ -51,19 +51,20 @@ func init() {
 }
 
 func sweepApplications(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).AppConfigConn
+	conn := client.(*conns.AWSClient).AppConfigConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &appconfig.ListApplicationsInput{}
 
-	err = conn.ListApplicationsPages(input, func(page *appconfig.ListApplicationsOutput, lastPage bool) bool {
+	err = conn.ListApplicationsPagesWithContext(ctx, input, func(page *appconfig.ListApplicationsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -90,7 +91,7 @@ func sweepApplications(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing AppConfig Applications: %w", err))
 	}
 
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping AppConfig Applications for %s: %w", region, err))
 	}
 
@@ -103,19 +104,20 @@ func sweepApplications(region string) error {
 }
 
 func sweepConfigurationProfiles(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).AppConfigConn
+	conn := client.(*conns.AWSClient).AppConfigConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &appconfig.ListApplicationsInput{}
 
-	err = conn.ListApplicationsPages(input, func(page *appconfig.ListApplicationsOutput, lastPage bool) bool {
+	err = conn.ListApplicationsPagesWithContext(ctx, input, func(page *appconfig.ListApplicationsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -131,7 +133,7 @@ func sweepConfigurationProfiles(region string) error {
 				ApplicationId: item.Id,
 			}
 
-			err := conn.ListConfigurationProfilesPages(profilesInput, func(page *appconfig.ListConfigurationProfilesOutput, lastPage bool) bool {
+			err := conn.ListConfigurationProfilesPagesWithContext(ctx, profilesInput, func(page *appconfig.ListConfigurationProfilesOutput, lastPage bool) bool {
 				if page == nil {
 					return !lastPage
 				}
@@ -166,7 +168,7 @@ func sweepConfigurationProfiles(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing AppConfig Applications: %w", err))
 	}
 
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping AppConfig Configuration Profiles for %s: %w", region, err))
 	}
 
@@ -179,19 +181,20 @@ func sweepConfigurationProfiles(region string) error {
 }
 
 func sweepDeploymentStrategies(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).AppConfigConn
+	conn := client.(*conns.AWSClient).AppConfigConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &appconfig.ListDeploymentStrategiesInput{}
 
-	err = conn.ListDeploymentStrategiesPages(input, func(page *appconfig.ListDeploymentStrategiesOutput, lastPage bool) bool {
+	err = conn.ListDeploymentStrategiesPagesWithContext(ctx, input, func(page *appconfig.ListDeploymentStrategiesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -224,7 +227,7 @@ func sweepDeploymentStrategies(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing AppConfig Deployment Strategies: %w", err))
 	}
 
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping AppConfig Deployment Strategies for %s: %w", region, err))
 	}
 
@@ -237,19 +240,20 @@ func sweepDeploymentStrategies(region string) error {
 }
 
 func sweepEnvironments(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).AppConfigConn
+	conn := client.(*conns.AWSClient).AppConfigConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &appconfig.ListApplicationsInput{}
 
-	err = conn.ListApplicationsPages(input, func(page *appconfig.ListApplicationsOutput, lastPage bool) bool {
+	err = conn.ListApplicationsPagesWithContext(ctx, input, func(page *appconfig.ListApplicationsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -265,7 +269,7 @@ func sweepEnvironments(region string) error {
 				ApplicationId: item.Id,
 			}
 
-			err := conn.ListEnvironmentsPages(envInput, func(page *appconfig.ListEnvironmentsOutput, lastPage bool) bool {
+			err := conn.ListEnvironmentsPagesWithContext(ctx, envInput, func(page *appconfig.ListEnvironmentsOutput, lastPage bool) bool {
 				if page == nil {
 					return !lastPage
 				}
@@ -300,7 +304,7 @@ func sweepEnvironments(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing AppConfig Applications: %w", err))
 	}
 
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping AppConfig Environments for %s: %w", region, err))
 	}
 
@@ -313,19 +317,20 @@ func sweepEnvironments(region string) error {
 }
 
 func sweepHostedConfigurationVersions(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).AppConfigConn
+	conn := client.(*conns.AWSClient).AppConfigConn()
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &appconfig.ListApplicationsInput{}
 
-	err = conn.ListApplicationsPages(input, func(page *appconfig.ListApplicationsOutput, lastPage bool) bool {
+	err = conn.ListApplicationsPagesWithContext(ctx, input, func(page *appconfig.ListApplicationsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -341,7 +346,7 @@ func sweepHostedConfigurationVersions(region string) error {
 				ApplicationId: item.Id,
 			}
 
-			err := conn.ListConfigurationProfilesPages(profilesInput, func(page *appconfig.ListConfigurationProfilesOutput, lastPage bool) bool {
+			err := conn.ListConfigurationProfilesPagesWithContext(ctx, profilesInput, func(page *appconfig.ListConfigurationProfilesOutput, lastPage bool) bool {
 				if page == nil {
 					return !lastPage
 				}
@@ -358,7 +363,7 @@ func sweepHostedConfigurationVersions(region string) error {
 						ConfigurationProfileId: aws.String(profId),
 					}
 
-					err := conn.ListHostedConfigurationVersionsPages(versionInput, func(page *appconfig.ListHostedConfigurationVersionsOutput, lastPage bool) bool {
+					err := conn.ListHostedConfigurationVersionsPagesWithContext(ctx, versionInput, func(page *appconfig.ListHostedConfigurationVersionsOutput, lastPage bool) bool {
 						if page == nil {
 							return !lastPage
 						}
@@ -401,7 +406,7 @@ func sweepHostedConfigurationVersions(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing AppConfig Applications: %w", err))
 	}
 
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping AppConfig Hosted Configuration Versions for %s: %w", region, err))
 	}
 

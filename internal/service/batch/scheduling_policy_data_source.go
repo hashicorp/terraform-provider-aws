@@ -16,7 +16,7 @@ import (
 
 func DataSourceSchedulingPolicy() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceSchedulingPolicyRead,
+		ReadWithoutTimeout: dataSourceSchedulingPolicyRead,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -73,7 +73,7 @@ func DataSourceSchedulingPolicy() *schema.Resource {
 }
 
 func dataSourceSchedulingPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).BatchConn
+	conn := meta.(*conns.AWSClient).BatchConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 	arn := d.Get("arn").(string)
 

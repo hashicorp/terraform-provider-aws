@@ -1,16 +1,18 @@
 package cur
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func DataSourceReportDefinition() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceReportDefinitionRead,
+		ReadWithoutTimeout: dataSourceReportDefinitionRead,
 
 		Schema: map[string]*schema.Schema{
 			"report_name": {
@@ -65,19 +67,20 @@ func DataSourceReportDefinition() *schema.Resource {
 	}
 }
 
-func dataSourceReportDefinitionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CURConn
+func dataSourceReportDefinitionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CURConn()
 
 	reportName := d.Get("report_name").(string)
 
-	reportDefinition, err := FindReportDefinitionByName(conn, reportName)
+	reportDefinition, err := FindReportDefinitionByName(ctx, conn, reportName)
 
 	if err != nil {
-		return fmt.Errorf("error reading Report Definition (%s): %w", reportName, err)
+		return sdkdiag.AppendErrorf(diags, "reading Report Definition (%s): %s", reportName, err)
 	}
 
 	if reportDefinition == nil {
-		return fmt.Errorf("error reading Report Definition (%s): not found", reportName)
+		return sdkdiag.AppendErrorf(diags, "reading Report Definition (%s): not found", reportName)
 	}
 
 	d.SetId(aws.StringValue(reportDefinition.ReportName))
@@ -93,5 +96,5 @@ func dataSourceReportDefinitionRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("refresh_closed_reports", reportDefinition.RefreshClosedReports)
 	d.Set("report_versioning", reportDefinition.ReportVersioning)
 
-	return nil
+	return diags
 }

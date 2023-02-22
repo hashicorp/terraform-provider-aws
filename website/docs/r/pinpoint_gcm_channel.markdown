@@ -24,7 +24,6 @@ resource "aws_pinpoint_gcm_channel" "gcm" {
 resource "aws_pinpoint_app" "app" {}
 ```
 
-
 ## Argument Reference
 
 The following arguments are supported:

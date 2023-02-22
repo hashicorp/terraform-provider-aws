@@ -1,6 +1,7 @@
 package elasticache
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log"
@@ -13,11 +14,13 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -36,12 +39,12 @@ const (
 
 func ResourceCluster() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceClusterCreate,
-		Read:   resourceClusterRead,
-		Update: resourceClusterUpdate,
-		Delete: resourceClusterDelete,
+		CreateWithoutTimeout: resourceClusterCreate,
+		ReadWithoutTimeout:   resourceClusterRead,
+		UpdateWithoutTimeout: resourceClusterUpdate,
+		DeleteWithoutTimeout: resourceClusterDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -67,33 +70,34 @@ func ResourceCluster() *schema.Resource {
 				ForceNew: true,
 			},
 			"az_mode": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					elasticache.AZModeCrossAz,
-					elasticache.AZModeSingleAz,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(elasticache.AZMode_Values(), false),
 			},
 			"cache_nodes": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"address": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"availability_zone": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						"id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"address": {
+						"outpost_arn": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 						"port": {
 							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"availability_zone": {
-							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
@@ -129,8 +133,8 @@ func ResourceCluster() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"engine", "replication_group_id"},
 				ForceNew:     true,
+				ExactlyOneOf: []string{"engine", "replication_group_id"},
 				ValidateFunc: validation.StringInSlice(engine_Values(), false),
 			},
 			"engine_version": {
@@ -142,20 +146,30 @@ func ResourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"final_snapshot_identifier": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"ip_discovery": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(elasticache.IpDiscovery_Values(), false),
+			},
 			"log_delivery_configuration": {
 				Type:     schema.TypeSet,
-				Optional: true,
 				MaxItems: 2,
+				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"destination": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
 						"destination_type": {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringInSlice(elasticache.DestinationType_Values(), false),
-						},
-						"destination": {
-							Type:     schema.TypeString,
-							Required: true,
 						},
 						"log_format": {
 							Type:         schema.TypeString,
@@ -181,6 +195,13 @@ func ResourceCluster() *schema.Resource {
 				},
 				ValidateFunc: verify.ValidOnceAWeekWindowFormat,
 			},
+			"network_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(elasticache.NetworkType_Values(), false),
+			},
 			"node_type": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -194,6 +215,13 @@ func ResourceCluster() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
+			},
+			"outpost_mode": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				RequiredWith: []string{"preferred_outpost_arn"},
+				ValidateFunc: validation.StringInSlice(elasticache.OutpostMode_Values(), false),
 			},
 			"parameter_group_name": {
 				Type:     schema.TypeString,
@@ -218,12 +246,19 @@ func ResourceCluster() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"preferred_outpost_arn": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidARN,
+			},
 			"replication_group_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ExactlyOneOf: []string{"replication_group_id", "engine"},
 				ForceNew:     true,
+				ExactlyOneOf: []string{"replication_group_id", "engine"},
 				ValidateFunc: validateReplicationGroupID,
 				ConflictsWith: []string{
 					"az_mode",
@@ -243,27 +278,25 @@ func ResourceCluster() *schema.Resource {
 					"subnet_group_name",
 				},
 			},
+			"security_group_ids": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"security_group_names": {
 				Type:       schema.TypeSet,
 				Optional:   true,
 				Computed:   true,
 				ForceNew:   true,
 				Elem:       &schema.Schema{Type: schema.TypeString},
-				Set:        schema.HashString,
 				Deprecated: `With the retirement of EC2-Classic the security_group_names attribute has been deprecated and will be removed in a future version.`,
-			},
-			"security_group_ids": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
 			},
 			"snapshot_arns": {
 				Type:     schema.TypeList,
+				MaxItems: 1,
 				Optional: true,
 				ForceNew: true,
-				MaxItems: 1,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 					ValidateFunc: validation.All(
@@ -271,6 +304,11 @@ func ResourceCluster() *schema.Resource {
 						validation.StringDoesNotContainAny(","),
 					),
 				},
+			},
+			"snapshot_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
 			},
 			"snapshot_retention_limit": {
 				Type:         schema.TypeInt,
@@ -283,20 +321,11 @@ func ResourceCluster() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: verify.ValidOnceADayWindowFormat,
 			},
-			"snapshot_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
 			"subnet_group_name": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
-			},
-			"final_snapshot_identifier": {
-				Type:     schema.TypeString,
-				Optional: true,
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
@@ -314,13 +343,14 @@ func ResourceCluster() *schema.Resource {
 	}
 }
 
-func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn
+func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	if v, ok := d.GetOk("security_group_names"); ok && v.(*schema.Set).Len() > 0 {
-		return errors.New(`with the retirement of EC2-Classic no new ElastiCache Clusters can be created referencing ElastiCache Security Groups`)
+		return sdkdiag.AppendErrorf(diags, `with the retirement of EC2-Classic no new ElastiCache Clusters can be created referencing ElastiCache Security Groups`)
 	}
 
 	req := &elasticache.CreateCacheClusterInput{}
@@ -345,6 +375,14 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("num_cache_nodes"); ok {
 		req.NumCacheNodes = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk("outpost_mode"); ok {
+		req.OutpostMode = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("preferred_outpost_arn"); ok {
+		req.PreferredOutpostArn = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("engine"); ok {
@@ -422,54 +460,63 @@ func resourceClusterCreate(d *schema.ResourceData, meta interface{}) error {
 		req.PreferredAvailabilityZones = flex.ExpandStringList(v.([]interface{}))
 	}
 
-	id, arn, err := createCacheCluster(conn, req)
+	if v, ok := d.GetOk("ip_discovery"); ok {
+		req.IpDiscovery = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("network_type"); ok {
+		req.NetworkType = aws.String(v.(string))
+	}
+
+	id, arn, err := createCacheCluster(ctx, conn, req)
 	if err != nil {
-		return fmt.Errorf("error creating ElastiCache Cache Cluster: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating ElastiCache Cache Cluster: %s", err)
 	}
 
 	d.SetId(id)
 
-	_, err = waitCacheClusterAvailable(conn, d.Id(), cacheClusterCreatedTimeout)
+	_, err = waitCacheClusterAvailable(ctx, conn, d.Id(), cacheClusterCreatedTimeout)
 	if err != nil {
-		return fmt.Errorf("error waiting for ElastiCache Cache Cluster (%s) to be created: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for ElastiCache Cache Cluster (%s) to be created: %s", d.Id(), err)
 	}
 
 	// Only post-create tagging supported in some partitions
 	if req.Tags == nil && len(tags) > 0 {
-		err := UpdateTags(conn, arn, nil, tags)
+		err := UpdateTags(ctx, conn, arn, nil, tags)
 
 		if err != nil {
 			if v, ok := d.GetOk("tags"); (ok && len(v.(map[string]interface{})) > 0) || !verify.ErrorISOUnsupported(conn.PartitionID, err) {
 				// explicitly setting tags or not an iso-unsupported error
-				return fmt.Errorf("failed adding tags after create for ElastiCache Cache Cluster (%s): %w", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "adding tags after create for ElastiCache Cache Cluster (%s): %s", d.Id(), err)
 			}
 
 			log.Printf("[WARN] failed adding tags after create for ElastiCache Cache Cluster (%s): %s", d.Id(), err)
 		}
 	}
 
-	return resourceClusterRead(d, meta)
+	return append(diags, resourceClusterRead(ctx, d, meta)...)
 }
 
-func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn
+func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	c, err := FindCacheClusterWithNodeInfoByID(conn, d.Id())
+	c, err := FindCacheClusterWithNodeInfoByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ElastiCache Cache Cluster (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 	if err != nil {
-		return fmt.Errorf("error reading ElastiCache Cache Cluster (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading ElastiCache Cache Cluster (%s): %s", d.Id(), err)
 	}
 
 	d.Set("cluster_id", c.CacheClusterId)
 
 	if err := setFromCacheCluster(d, c); err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading ElastiCache Cache Cluster (%s): %s", d.Id(), err)
 	}
 
 	d.Set("log_delivery_configuration", flattenLogDeliveryConfigurations(c.LogDeliveryConfigurations))
@@ -486,9 +533,7 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("port", c.CacheNodes[0].Endpoint.Port)
 	}
 
-	if c.ReplicationGroupId != nil {
-		d.Set("replication_group_id", c.ReplicationGroupId)
-	}
+	d.Set("replication_group_id", c.ReplicationGroupId)
 
 	if c.NotificationConfiguration != nil {
 		if aws.StringValue(c.NotificationConfiguration.TopicStatus) == "active" {
@@ -503,19 +548,23 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if err := setCacheNodeData(d, c); err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading ElastiCache Cache Cluster (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", c.ARN)
 
-	tags, err := ListTags(conn, aws.StringValue(c.ARN))
+	d.Set("ip_discovery", c.IpDiscovery)
+	d.Set("network_type", c.NetworkType)
+	d.Set("preferred_outpost_arn", c.PreferredOutpostArn)
+
+	tags, err := ListTags(ctx, conn, aws.StringValue(c.ARN))
 
 	if err != nil && !verify.ErrorISOUnsupported(conn.PartitionID, err) {
-		return fmt.Errorf("error listing tags for ElastiCache Cache Cluster (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for ElastiCache Cache Cluster (%s): %s", d.Id(), err)
 	}
 
 	if err != nil {
-		log.Printf("[WARN] error listing tags for Elasticache Cache Cluster (%s): %s", d.Id(), err)
+		log.Printf("[WARN] error listing tags for ElastiCache Cache Cluster (%s): %s", d.Id(), err)
 	}
 
 	if tags != nil {
@@ -523,15 +572,15 @@ func resourceClusterRead(d *schema.ResourceData, meta interface{}) error {
 
 		//lintignore:AWSR002
 		if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-			return fmt.Errorf("error setting tags: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 		}
 
 		if err := d.Set("tags_all", tags.Map()); err != nil {
-			return fmt.Errorf("error setting tags_all: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 		}
 	}
 
-	return nil
+	return diags
 }
 
 func setFromCacheCluster(d *schema.ResourceData, c *elasticache.CacheCluster) error {
@@ -540,7 +589,7 @@ func setFromCacheCluster(d *schema.ResourceData, c *elasticache.CacheCluster) er
 	d.Set("engine", c.Engine)
 	if aws.StringValue(c.Engine) == engineRedis {
 		if err := setEngineVersionRedis(d, c.EngineVersion); err != nil {
-			return err
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	} else {
 		setEngineVersionMemcached(d, c.EngineVersion)
@@ -549,10 +598,10 @@ func setFromCacheCluster(d *schema.ResourceData, c *elasticache.CacheCluster) er
 
 	d.Set("subnet_group_name", c.CacheSubnetGroupName)
 	if err := d.Set("security_group_names", flattenSecurityGroupNames(c.CacheSecurityGroups)); err != nil {
-		return fmt.Errorf("error setting security_group_names: %w", err)
+		return fmt.Errorf("setting security_group_names: %w", err)
 	}
 	if err := d.Set("security_group_ids", flattenSecurityGroupIDs(c.SecurityGroups)); err != nil {
-		return fmt.Errorf("error setting security_group_ids: %w", err)
+		return fmt.Errorf("setting security_group_ids: %w", err)
 	}
 
 	if c.CacheParameterGroup != nil {
@@ -564,8 +613,9 @@ func setFromCacheCluster(d *schema.ResourceData, c *elasticache.CacheCluster) er
 	return nil
 }
 
-func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn
+func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 
 	req := &elasticache.ModifyCacheClusterInput{
 		CacheClusterId:   aws.String(d.Id()),
@@ -585,8 +635,12 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		requestUpdate = true
 	}
 
-	if d.HasChange("log_delivery_configuration") {
+	if d.HasChange("ip_discovery") {
+		req.IpDiscovery = aws.String(d.Get("ip_discovery").(string))
+		requestUpdate = true
+	}
 
+	if d.HasChange("log_delivery_configuration") {
 		oldLogDeliveryConfig, newLogDeliveryConfig := d.GetChange("log_delivery_configuration")
 
 		req.LogDeliveryConfigurations = []*elasticache.LogDeliveryConfigurationRequest{}
@@ -679,7 +733,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 			if v, ok := d.GetOk("preferred_availability_zones"); ok && len(v.([]interface{})) > 0 {
 				// Here we check the list length to prevent a potential panic :)
 				if len(v.([]interface{})) != n {
-					return fmt.Errorf("length of preferred_availability_zones (%d) must match num_cache_nodes (%d)", len(v.([]interface{})), n)
+					return sdkdiag.AppendErrorf(diags, "length of preferred_availability_zones (%d) must match num_cache_nodes (%d)", len(v.([]interface{})), n)
 				}
 				req.NewAvailabilityZones = flex.ExpandStringList(v.([]interface{})[o:])
 			}
@@ -687,32 +741,31 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		req.NumCacheNodes = aws.Int64(int64(d.Get("num_cache_nodes").(int)))
 		requestUpdate = true
-
 	}
 
 	if requestUpdate {
 		log.Printf("[DEBUG] Modifying ElastiCache Cluster (%s), opts:\n%s", d.Id(), req)
-		_, err := conn.ModifyCacheCluster(req)
+		_, err := conn.ModifyCacheClusterWithContext(ctx, req)
 		if err != nil {
-			return fmt.Errorf("Error updating ElastiCache cluster (%s), error: %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating ElastiCache cluster (%s), error: %s", d.Id(), err)
 		}
 
-		_, err = waitCacheClusterAvailable(conn, d.Id(), CacheClusterUpdatedTimeout)
+		_, err = waitCacheClusterAvailable(ctx, conn, d.Id(), CacheClusterUpdatedTimeout)
 		if err != nil {
-			return fmt.Errorf("error waiting for ElastiCache Cache Cluster (%s) to update: %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for ElastiCache Cache Cluster (%s) to update: %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		err := UpdateTags(conn, d.Get("arn").(string), o, n)
+		err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n)
 
 		// ISO partitions may not support tagging, giving error
 		if err != nil {
 			if v, ok := d.GetOk("tags"); (ok && len(v.(map[string]interface{})) > 0) || !verify.ErrorISOUnsupported(conn.PartitionID, err) {
 				// explicitly setting tags or not an iso-unsupported error
-				return fmt.Errorf("failed updating ElastiCache Cache Cluster (%s) tags: %w", d.Get("arn").(string), err)
+				return sdkdiag.AppendErrorf(diags, "updating ElastiCache Cache Cluster (%s) tags: %s", d.Get("arn").(string), err)
 			}
 
 			// no non-default tags and iso-unsupported error
@@ -720,7 +773,7 @@ func resourceClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	return resourceClusterRead(d, meta)
+	return append(diags, resourceClusterRead(ctx, d, meta)...)
 }
 
 func getCacheNodesToRemove(oldNumberOfNodes int, cacheNodesToRemove int) []*string {
@@ -749,6 +802,7 @@ func setCacheNodeData(d *schema.ResourceData, c *elasticache.CacheCluster) error
 			"address":           aws.StringValue(node.Endpoint.Address),
 			"port":              aws.Int64Value(node.Endpoint.Port),
 			"availability_zone": aws.StringValue(node.CustomerAvailabilityZone),
+			"outpost_arn":       aws.StringValue(node.CustomerOutpostArn),
 		})
 	}
 
@@ -764,35 +818,36 @@ func (b byCacheNodeId) Less(i, j int) bool {
 		aws.StringValue(b[i].CacheNodeId) < aws.StringValue(b[j].CacheNodeId)
 }
 
-func resourceClusterDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ElastiCacheConn
+func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ElastiCacheConn()
 
 	var finalSnapshotID = d.Get("final_snapshot_identifier").(string)
-	err := DeleteCacheCluster(conn, d.Id(), finalSnapshotID)
+	err := DeleteCacheCluster(ctx, conn, d.Id(), finalSnapshotID)
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeCacheClusterNotFoundFault) {
-			return nil
+			return diags
 		}
-		return fmt.Errorf("error deleting ElastiCache Cache Cluster (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting ElastiCache Cache Cluster (%s): %s", d.Id(), err)
 	}
-	_, err = WaitCacheClusterDeleted(conn, d.Id(), CacheClusterDeletedTimeout)
+	_, err = WaitCacheClusterDeleted(ctx, conn, d.Id(), CacheClusterDeletedTimeout)
 	if err != nil {
-		return fmt.Errorf("error waiting for ElastiCache Cache Cluster (%s) to be deleted: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for ElastiCache Cache Cluster (%s) to be deleted: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func createCacheCluster(conn *elasticache.ElastiCache, input *elasticache.CreateCacheClusterInput) (string, string, error) {
+func createCacheCluster(ctx context.Context, conn *elasticache.ElastiCache, input *elasticache.CreateCacheClusterInput) (string, string, error) {
 	log.Printf("[DEBUG] Creating ElastiCache Cache Cluster: %s", input)
-	output, err := conn.CreateCacheCluster(input)
+	output, err := conn.CreateCacheClusterWithContext(ctx, input)
 
 	// Some partitions may not support tag-on-create
 	if input.Tags != nil && verify.ErrorISOUnsupported(conn.PartitionID, err) {
 		log.Printf("[WARN] failed creating ElastiCache Cache Cluster with tags: %s. Trying create without tags.", err)
 
 		input.Tags = nil
-		output, err = conn.CreateCacheCluster(input)
+		output, err = conn.CreateCacheClusterWithContext(ctx, input)
 	}
 
 	if err != nil {
@@ -802,13 +857,13 @@ func createCacheCluster(conn *elasticache.ElastiCache, input *elasticache.Create
 	if output == nil || output.CacheCluster == nil {
 		return "", "", errors.New("missing cluster ID after creation")
 	}
-	// Elasticache always retains the id in lower case, so we have to
+	// ElastiCache always retains the id in lower case, so we have to
 	// mimic that or else we won't be able to refresh a resource whose
 	// name contained uppercase characters.
 	return strings.ToLower(aws.StringValue(output.CacheCluster.CacheClusterId)), aws.StringValue(output.CacheCluster.ARN), nil
 }
 
-func DeleteCacheCluster(conn *elasticache.ElastiCache, cacheClusterID string, finalSnapshotID string) error {
+func DeleteCacheCluster(ctx context.Context, conn *elasticache.ElastiCache, cacheClusterID string, finalSnapshotID string) error {
 	input := &elasticache.DeleteCacheClusterInput{
 		CacheClusterId: aws.String(cacheClusterID),
 	}
@@ -817,8 +872,8 @@ func DeleteCacheCluster(conn *elasticache.ElastiCache, cacheClusterID string, fi
 	}
 
 	log.Printf("[DEBUG] Deleting ElastiCache Cache Cluster: %s", input)
-	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteCacheCluster(input)
+	err := resource.RetryContext(ctx, 5*time.Minute, func() *resource.RetryError {
+		_, err := conn.DeleteCacheClusterWithContext(ctx, input)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, elasticache.ErrCodeInvalidCacheClusterStateFault, "serving as primary") {
 				return resource.NonRetryableError(err)
@@ -835,7 +890,7 @@ func DeleteCacheCluster(conn *elasticache.ElastiCache, cacheClusterID string, fi
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteCacheCluster(input)
+		_, err = conn.DeleteCacheClusterWithContext(ctx, input)
 	}
 
 	return err

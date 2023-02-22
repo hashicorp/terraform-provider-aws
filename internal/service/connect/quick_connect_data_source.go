@@ -15,7 +15,7 @@ import (
 
 func DataSourceQuickConnect() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceQuickConnectRead,
+		ReadWithoutTimeout: dataSourceQuickConnectRead,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -104,7 +104,7 @@ func DataSourceQuickConnect() *schema.Resource {
 }
 
 func dataSourceQuickConnectRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	conn := meta.(*conns.AWSClient).ConnectConn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	instanceID := d.Get("instance_id").(string)

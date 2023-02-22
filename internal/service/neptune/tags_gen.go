@@ -14,11 +14,7 @@ import (
 // ListTags lists neptune service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn neptuneiface.NeptuneAPI, identifier string) (tftags.KeyValueTags, error) {
-	return ListTagsWithContext(context.Background(), conn, identifier)
-}
-
-func ListTagsWithContext(ctx context.Context, conn neptuneiface.NeptuneAPI, identifier string) (tftags.KeyValueTags, error) {
+func ListTags(ctx context.Context, conn neptuneiface.NeptuneAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &neptune.ListTagsForResourceInput{
 		ResourceName: aws.String(identifier),
 	}
@@ -64,10 +60,7 @@ func KeyValueTags(tags []*neptune.Tag) tftags.KeyValueTags {
 // UpdateTags updates neptune service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn neptuneiface.NeptuneAPI, identifier string, oldTags interface{}, newTags interface{}) error {
-	return UpdateTagsWithContext(context.Background(), conn, identifier, oldTags, newTags)
-}
-func UpdateTagsWithContext(ctx context.Context, conn neptuneiface.NeptuneAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+func UpdateTags(ctx context.Context, conn neptuneiface.NeptuneAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 

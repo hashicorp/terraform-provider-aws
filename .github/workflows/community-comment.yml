@@ -12,7 +12,7 @@ jobs:
     steps:
       - name: Add community note to new Issues
         if: github.event_name == 'issues'
-        uses: peter-evans/create-or-update-comment@v1
+        uses: peter-evans/create-or-update-comment@v2
         with:
           issue-number: ${{ github.event.issue.number }}
           body: |
@@ -30,7 +30,7 @@ jobs:
             * If this would be your first contribution, please review the [contribution guide](https://hashicorp.github.io/terraform-provider-aws/).
 
       - name: Add community note to new Pull Requests
-        uses: peter-evans/create-or-update-comment@v1
+        uses: peter-evans/create-or-update-comment@v2
         if: github.event_name == 'pull_request_target'
         with:
           issue-number: ${{ github.event.pull_request.number }}
@@ -45,5 +45,6 @@ jobs:
 
             **For Submitters**
 
-            * Please review the [contribution guide](https://hashicorp.github.io/terraform-provider-aws/) relating to the type of change you are making to ensure all of the necessary steps have been taken.
+            * Review the [contribution guide](https://hashicorp.github.io/terraform-provider-aws/) relating to the type of change you are making to ensure all of the necessary steps have been taken.
+            * For new resources and data sources, use [skaff](https://hashicorp.github.io/terraform-provider-aws/skaff/) to generate scaffolding with comments detailing common expectations.
             * Whether or not the branch has been rebased will **not** impact prioritization, but doing so is always a welcome surprise.

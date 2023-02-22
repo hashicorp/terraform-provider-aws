@@ -1,30 +1,35 @@
 package s3
 
 import (
-	"fmt"
+	"context"
+	"errors"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func ResourceBucketPolicy() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceBucketPolicyPut,
-		Read:   resourceBucketPolicyRead,
-		Update: resourceBucketPolicyPut,
-		Delete: resourceBucketPolicyDelete,
+		CreateWithoutTimeout: resourceBucketPolicyPut,
+		ReadWithoutTimeout:   resourceBucketPolicyRead,
+		UpdateWithoutTimeout: resourceBucketPolicyPut,
+		DeleteWithoutTimeout: resourceBucketPolicyDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -35,24 +40,29 @@ func ResourceBucketPolicy() *schema.Resource {
 			},
 
 			"policy": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentPolicyDiffs,
+				Type:                  schema.TypeString,
+				Required:              true,
+				ValidateFunc:          validation.StringIsJSON,
+				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+				DiffSuppressOnRefresh: true,
+				StateFunc: func(v interface{}) string {
+					json, _ := structure.NormalizeJsonString(v)
+					return json
+				},
 			},
 		},
 	}
 }
 
-func resourceBucketPolicyPut(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+func resourceBucketPolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket := d.Get("bucket").(string)
 
 	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
-
 	if err != nil {
-		return fmt.Errorf("policy (%s) is an invalid JSON: %w", policy, err)
+		return sdkdiag.AppendErrorf(diags, "policy (%s) is an invalid JSON: %s", policy, err)
 	}
 
 	log.Printf("[DEBUG] S3 bucket: %s, put policy: %s", bucket, policy)
@@ -62,8 +72,8 @@ func resourceBucketPolicyPut(d *schema.ResourceData, meta interface{}) error {
 		Policy: aws.String(policy),
 	}
 
-	err = resource.Retry(1*time.Minute, func() *resource.RetryError {
-		_, err := conn.PutBucketPolicy(params)
+	err = resource.RetryContext(ctx, 1*time.Minute, func() *resource.RetryError {
+		_, err := conn.PutBucketPolicyWithContext(ctx, params)
 		if tfawserr.ErrCodeEquals(err, "MalformedPolicy") {
 			return resource.RetryableError(err)
 		}
@@ -73,76 +83,72 @@ func resourceBucketPolicyPut(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		_, err = conn.PutBucketPolicy(params)
+		_, err = conn.PutBucketPolicyWithContext(ctx, params)
 	}
 	if err != nil {
-		return fmt.Errorf("Error putting S3 policy: %s", err)
+		return sdkdiag.AppendErrorf(diags, "Error putting S3 policy: %s", err)
 	}
 
 	d.SetId(bucket)
 
-	return nil
+	return diags
 }
 
-func resourceBucketPolicyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+func resourceBucketPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	log.Printf("[DEBUG] S3 bucket policy, read for bucket: %s", d.Id())
-	pol, err := conn.GetBucketPolicy(&s3.GetBucketPolicyInput{
+	pol, err := conn.GetBucketPolicyWithContext(ctx, &s3.GetBucketPolicyInput{
 		Bucket: aws.String(d.Id()),
 	})
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ErrCodeNoSuchBucketPolicy, s3.ErrCodeNoSuchBucket) {
 		log.Printf("[WARN] S3 Bucket Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
-
-	v := ""
-	if err == nil && pol.Policy != nil {
-		v = aws.StringValue(pol.Policy)
-	}
-
-	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), v)
 
 	if err != nil {
-		return fmt.Errorf("while setting policy (%s), encountered: %w", policyToSet, err)
+		return create.DiagError(names.S3, create.ErrActionReading, "Bucket Policy", d.Id(), err)
 	}
 
-	policyToSet, err = structure.NormalizeJsonString(policyToSet)
+	if pol.Policy == nil {
+		return create.DiagError(names.S3, create.ErrActionReading, "Bucket Policy", d.Id(), errors.New("empty policy returned"))
+	}
 
+	policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.StringValue(pol.Policy))
 	if err != nil {
-		return fmt.Errorf("policy (%s) is an invalid JSON: %w", policyToSet, err)
+		return sdkdiag.AppendErrorf(diags, "setting policy: %s", err)
 	}
 
 	if err := d.Set("policy", policyToSet); err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "setting policy: %s", err)
 	}
 
-	if err := d.Set("bucket", d.Id()); err != nil {
-		return err
-	}
+	d.Set("bucket", d.Id())
 
-	return nil
+	return diags
 }
 
-func resourceBucketPolicyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+func resourceBucketPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).S3Conn()
 
 	bucket := d.Get("bucket").(string)
 
 	log.Printf("[DEBUG] S3 bucket: %s, delete policy", bucket)
-	_, err := conn.DeleteBucketPolicy(&s3.DeleteBucketPolicyInput{
+	_, err := conn.DeleteBucketPolicyWithContext(ctx, &s3.DeleteBucketPolicyInput{
 		Bucket: aws.String(bucket),
 	})
 
 	if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error deleting S3 policy: %s", err)
+		return sdkdiag.AppendErrorf(diags, "Error deleting S3 policy: %s", err)
 	}
 
-	return nil
+	return diags
 }

@@ -107,7 +107,7 @@ resource "aws_subnet" "test" {
 
 resource "aws_route_table_association" "test" {
   count          = 2
-  subnet_id      = aws_subnet.test.*.id[count.index]
+  subnet_id      = aws_subnet.test[count.index].id
   route_table_id = aws_route_table.test.id
 }
 
@@ -155,8 +155,8 @@ resource "aws_mq_broker" "test" {
   }
 
   publicly_accessible = true
-  security_groups     = aws_security_group.test.*.id
-  subnet_ids          = aws_subnet.test.*.id
+  security_groups     = aws_security_group.test[*].id
+  subnet_ids          = aws_subnet.test[*].id
 
   user {
     username = "Ender"

@@ -1,10 +1,10 @@
 package autoscaling
 
 import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
+	"context"
 	"crypto/sha1"
 	"encoding/base64"
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"log"
 
@@ -12,11 +12,13 @@ import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -25,12 +27,12 @@ import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
 
 func ResourceLaunchConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceLaunchConfigurationCreate,
-		Read:   resourceLaunchConfigurationRead,
-		Delete: resourceLaunchConfigurationDelete,
+		CreateWithoutTimeout: resourceLaunchConfigurationCreate,
+		ReadWithoutTimeout:   resourceLaunchConfigurationRead,
+		DeleteWithoutTimeout: resourceLaunchConfigurationDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -322,16 +324,17 @@ func ResourceLaunchConfiguration() *schema.Resource {
 	}
 }
 
-func resourceLaunchConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
-	autoscalingconn := meta.(*conns.AWSClient).AutoScalingConn
-	ec2conn := meta.(*conns.AWSClient).EC2Conn
+func resourceLaunchConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	autoscalingconn := meta.(*conns.AWSClient).AutoScalingConn()
+	ec2conn := meta.(*conns.AWSClient).EC2Conn()
 
 	if _, ok := d.GetOk("vpc_classic_link_id"); ok {
-		return errors.New(`with the retirement of EC2-Classic no new Auto Scaling Launch Configurations can be created referencing ClassicLink`)
+		return sdkdiag.AppendErrorf(diags, `with the retirement of EC2-Classic no new Auto Scaling Launch Configurations can be created referencing ClassicLink`)
 	}
 
 	if v, ok := d.GetOk("vpc_classic_link_security_groups"); ok && v.(*schema.Set).Len() > 0 {
-		return errors.New(`with the retirement of EC2-Classic no new Auto Scaling Launch Configurations can be created referencing ClassicLink`)
+		return sdkdiag.AppendErrorf(diags, `with the retirement of EC2-Classic no new Auto Scaling Launch Configurations can be created referencing ClassicLink`)
 	}
 
 	lcName := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
@@ -382,10 +385,10 @@ func resourceLaunchConfigurationCreate(d *schema.ResourceData, meta interface{})
 	}
 
 	// We'll use this to detect if we're declaring it incorrectly as an ebs_block_device.
-	rootDeviceName, err := findImageRootDeviceName(ec2conn, d.Get("image_id").(string))
+	rootDeviceName, err := findImageRootDeviceName(ctx, ec2conn, d.Get("image_id").(string))
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "creating Auto Scaling Launch Configuration (%s): %s", lcName, err)
 	}
 
 	var blockDeviceMappings []*autoscaling.BlockDeviceMapping
@@ -395,7 +398,7 @@ func resourceLaunchConfigurationCreate(d *schema.ResourceData, meta interface{})
 
 		for _, v := range v {
 			if aws.StringValue(v.DeviceName) == rootDeviceName {
-				return fmt.Errorf("root device (%s) declared as an 'ebs_block_device'. Use 'root_block_device' argument.", rootDeviceName)
+				return sdkdiag.AppendErrorf(diags, "root device (%s) declared as an 'ebs_block_device'. Use 'root_block_device' argument.", rootDeviceName)
 			}
 		}
 
@@ -422,9 +425,9 @@ func resourceLaunchConfigurationCreate(d *schema.ResourceData, meta interface{})
 	log.Printf("[DEBUG] Creating Auto Scaling Launch Configuration: %s", input)
 	// IAM profiles can take ~10 seconds to propagate in AWS:
 	// http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html#launch-instance-with-role-console
-	_, err = tfresource.RetryWhen(propagationTimeout,
+	_, err = tfresource.RetryWhen(ctx, propagationTimeout,
 		func() (interface{}, error) {
-			return autoscalingconn.CreateLaunchConfiguration(&input)
+			return autoscalingconn.CreateLaunchConfigurationWithContext(ctx, &input)
 		},
 		func(err error) (bool, error) {
 			if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "Invalid IamInstanceProfile") ||
@@ -436,28 +439,29 @@ func resourceLaunchConfigurationCreate(d *schema.ResourceData, meta interface{})
 		})
 
 	if err != nil {
-		return fmt.Errorf("creating Auto Scaling Launch Configuration (%s): %w", lcName, err)
+		return sdkdiag.AppendErrorf(diags, "creating Auto Scaling Launch Configuration (%s): %s", lcName, err)
 	}
 
 	d.SetId(lcName)
 
-	return resourceLaunchConfigurationRead(d, meta)
+	return append(diags, resourceLaunchConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceLaunchConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	autoscalingconn := meta.(*conns.AWSClient).AutoScalingConn
-	ec2conn := meta.(*conns.AWSClient).EC2Conn
+func resourceLaunchConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	autoscalingconn := meta.(*conns.AWSClient).AutoScalingConn()
+	ec2conn := meta.(*conns.AWSClient).EC2Conn()
 
-	lc, err := FindLaunchConfigurationByName(autoscalingconn, d.Id())
+	lc, err := FindLaunchConfigurationByName(ctx, autoscalingconn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Auto Scaling Launch Configuration %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading Auto Scaling Launch Configuration (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Auto Scaling Launch Configuration (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", lc.LaunchConfigurationARN)
@@ -474,7 +478,7 @@ func resourceLaunchConfigurationRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("key_name", lc.KeyName)
 	if lc.MetadataOptions != nil {
 		if err := d.Set("metadata_options", []interface{}{flattenInstanceMetadataOptions(lc.MetadataOptions)}); err != nil {
-			return fmt.Errorf("setting metadata_options: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting metadata_options: %s", err)
 		}
 	} else {
 		d.Set("metadata_options", nil)
@@ -494,13 +498,13 @@ func resourceLaunchConfigurationRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("vpc_classic_link_id", lc.ClassicLinkVPCId)
 	d.Set("vpc_classic_link_security_groups", aws.StringValueSlice(lc.ClassicLinkVPCSecurityGroups))
 
-	rootDeviceName, err := findImageRootDeviceName(ec2conn, d.Get("image_id").(string))
+	rootDeviceName, err := findImageRootDeviceName(ctx, ec2conn, d.Get("image_id").(string))
 
 	if tfresource.NotFound(err) {
 		// Don't block a refresh for a bad image.
 		rootDeviceName = ""
 	} else if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading Auto Scaling Launch Configuration (%s): %s", d.Id(), err)
 	}
 
 	configuredEBSBlockDevices := make(map[string]map[string]interface{})
@@ -520,39 +524,40 @@ func resourceLaunchConfigurationRead(d *schema.ResourceData, meta interface{}) e
 	tfListEBSBlockDevice, tfListEphemeralBlockDevice, tfListRootBlockDevice := flattenBlockDeviceMappings(lc.BlockDeviceMappings, rootDeviceName, configuredEBSBlockDevices)
 
 	if err := d.Set("ebs_block_device", tfListEBSBlockDevice); err != nil {
-		return fmt.Errorf("setting ebs_block_device: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting ebs_block_device: %s", err)
 	}
 	if err := d.Set("ephemeral_block_device", tfListEphemeralBlockDevice); err != nil {
-		return fmt.Errorf("setting ephemeral_block_device: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting ephemeral_block_device: %s", err)
 	}
 	if err := d.Set("root_block_device", tfListRootBlockDevice); err != nil {
-		return fmt.Errorf("setting root_block_device: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting root_block_device: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceLaunchConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AutoScalingConn
+func resourceLaunchConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AutoScalingConn()
 
 	log.Printf("[DEBUG] Deleting Auto Scaling Launch Configuration: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(propagationTimeout,
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout,
 		func() (interface{}, error) {
-			return conn.DeleteLaunchConfiguration(&autoscaling.DeleteLaunchConfigurationInput{
+			return conn.DeleteLaunchConfigurationWithContext(ctx, &autoscaling.DeleteLaunchConfigurationInput{
 				LaunchConfigurationName: aws.String(d.Id()),
 			})
 		},
 		autoscaling.ErrCodeResourceInUseFault)
 
 	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not found") {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("deleting Auto Scaling Launch Configuration (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Auto Scaling Launch Configuration (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandBlockDeviceMappingForEBSBlockDevice(tfMap map[string]interface{}) *autoscaling.BlockDeviceMapping {
@@ -828,8 +833,8 @@ func userDataHashSum(userData string) string {
 	return hex.EncodeToString(hash[:])
 }
 
-func findLaunchConfiguration(conn *autoscaling.AutoScaling, input *autoscaling.DescribeLaunchConfigurationsInput) (*autoscaling.LaunchConfiguration, error) {
-	output, err := findLaunchConfigurations(conn, input)
+func findLaunchConfiguration(ctx context.Context, conn *autoscaling.AutoScaling, input *autoscaling.DescribeLaunchConfigurationsInput) (*autoscaling.LaunchConfiguration, error) {
+	output, err := findLaunchConfigurations(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -846,10 +851,10 @@ func findLaunchConfiguration(conn *autoscaling.AutoScaling, input *autoscaling.D
 	return output[0], nil
 }
 
-func findLaunchConfigurations(conn *autoscaling.AutoScaling, input *autoscaling.DescribeLaunchConfigurationsInput) ([]*autoscaling.LaunchConfiguration, error) {
+func findLaunchConfigurations(ctx context.Context, conn *autoscaling.AutoScaling, input *autoscaling.DescribeLaunchConfigurationsInput) ([]*autoscaling.LaunchConfiguration, error) {
 	var output []*autoscaling.LaunchConfiguration
 
-	err := conn.DescribeLaunchConfigurationsPages(input, func(page *autoscaling.DescribeLaunchConfigurationsOutput, lastPage bool) bool {
+	err := conn.DescribeLaunchConfigurationsPagesWithContext(ctx, input, func(page *autoscaling.DescribeLaunchConfigurationsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -872,12 +877,12 @@ func findLaunchConfigurations(conn *autoscaling.AutoScaling, input *autoscaling.
 	return output, nil
 }
 
-func FindLaunchConfigurationByName(conn *autoscaling.AutoScaling, name string) (*autoscaling.LaunchConfiguration, error) {
+func FindLaunchConfigurationByName(ctx context.Context, conn *autoscaling.AutoScaling, name string) (*autoscaling.LaunchConfiguration, error) {
 	input := &autoscaling.DescribeLaunchConfigurationsInput{
 		LaunchConfigurationNames: aws.StringSlice([]string{name}),
 	}
 
-	output, err := findLaunchConfiguration(conn, input)
+	output, err := findLaunchConfiguration(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -893,8 +898,8 @@ func FindLaunchConfigurationByName(conn *autoscaling.AutoScaling, name string) (
 	return output, nil
 }
 
-func findImageRootDeviceName(conn *ec2.EC2, imageID string) (string, error) {
-	image, err := tfec2.FindImageByID(conn, imageID)
+func findImageRootDeviceName(ctx context.Context, conn *ec2.EC2, imageID string) (string, error) {
+	image, err := tfec2.FindImageByID(ctx, conn, imageID)
 
 	if err != nil {
 		return "", err

@@ -12,10 +12,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -23,13 +25,13 @@ import (
 
 func ResourceFleet() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceFleetCreate,
-		Read:   resourceFleetRead,
-		Update: resourceFleetUpdate,
-		Delete: resourceFleetDelete,
+		CreateWithoutTimeout: resourceFleetCreate,
+		ReadWithoutTimeout:   resourceFleetRead,
+		UpdateWithoutTimeout: resourceFleetUpdate,
+		DeleteWithoutTimeout: resourceFleetDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -567,8 +569,9 @@ func ResourceFleet() *schema.Resource {
 	}
 }
 
-func resourceFleetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -606,10 +609,10 @@ func resourceFleetCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Creating EC2 Fleet: %s", input)
-	output, err := conn.CreateFleet(input)
+	output, err := conn.CreateFleetWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("creating EC2 Fleet: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating EC2 Fleet: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.FleetId))
@@ -621,28 +624,29 @@ func resourceFleetCreate(d *schema.ResourceData, meta interface{}) error {
 		targetStates = append(targetStates, ec2.FleetStateCodeDeleted, ec2.FleetStateCodeDeletedRunning, ec2.FleetStateCodeDeletedTerminating)
 	}
 
-	if _, err := WaitFleet(conn, d.Id(), []string{ec2.FleetStateCodeSubmitted}, targetStates, d.Timeout(schema.TimeoutCreate), 0); err != nil {
-		return fmt.Errorf("waiting for EC2 Fleet (%s) create: %w", d.Id(), err)
+	if _, err := WaitFleet(ctx, conn, d.Id(), []string{ec2.FleetStateCodeSubmitted}, targetStates, d.Timeout(schema.TimeoutCreate), 0); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Fleet (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceFleetRead(d, meta)
+	return append(diags, resourceFleetRead(ctx, d, meta)...)
 }
 
-func resourceFleetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	fleet, err := FindFleetByID(conn, d.Id())
+	fleet, err := FindFleetByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Fleet %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading EC2 Fleet (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Fleet (%s): %s", d.Id(), err)
 	}
 
 	arn := arn.ARN{
@@ -656,11 +660,11 @@ func resourceFleetRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("context", fleet.Context)
 	d.Set("excess_capacity_termination_policy", fleet.ExcessCapacityTerminationPolicy)
 	if err := d.Set("launch_template_config", flattenFleetLaunchTemplateConfigs(fleet.LaunchTemplateConfigs)); err != nil {
-		return fmt.Errorf("setting launch_template_config: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting launch_template_config: %s", err)
 	}
 	if fleet.OnDemandOptions != nil {
 		if err := d.Set("on_demand_options", []interface{}{flattenOnDemandOptions(fleet.OnDemandOptions)}); err != nil {
-			return fmt.Errorf("setting on_demand_options: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting on_demand_options: %s", err)
 		}
 	} else {
 		d.Set("on_demand_options", nil)
@@ -668,14 +672,14 @@ func resourceFleetRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("replace_unhealthy_instances", fleet.ReplaceUnhealthyInstances)
 	if fleet.SpotOptions != nil {
 		if err := d.Set("spot_options", []interface{}{flattenSpotOptions(fleet.SpotOptions)}); err != nil {
-			return fmt.Errorf("setting spot_options: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting spot_options: %s", err)
 		}
 	} else {
 		d.Set("spot_options", nil)
 	}
 	if fleet.TargetCapacitySpecification != nil {
 		if err := d.Set("target_capacity_specification", []interface{}{flattenTargetCapacitySpecification(fleet.TargetCapacitySpecification)}); err != nil {
-			return fmt.Errorf("setting target_capacity_specification: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting target_capacity_specification: %s", err)
 		}
 	} else {
 		d.Set("target_capacity_specification", nil)
@@ -687,18 +691,19 @@ func resourceFleetRead(d *schema.ResourceData, meta interface{}) error {
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceFleetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceFleetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &ec2.ModifyFleetInput{
@@ -714,33 +719,34 @@ func resourceFleetUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		log.Printf("[DEBUG] Modifying EC2 Fleet: %s", input)
-		_, err := conn.ModifyFleet(input)
+		_, err := conn.ModifyFleetWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("modifying EC2 Fleet (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "modifying EC2 Fleet (%s): %s", d.Id(), err)
 		}
 
-		if _, err := WaitFleet(conn, d.Id(), []string{ec2.FleetStateCodeModifying}, []string{ec2.FleetStateCodeActive}, d.Timeout(schema.TimeoutUpdate), 0); err != nil {
-			return fmt.Errorf("waiting for EC2 Fleet (%s) update: %w", d.Id(), err)
+		if _, err := WaitFleet(ctx, conn, d.Id(), []string{ec2.FleetStateCodeModifying}, []string{ec2.FleetStateCodeActive}, d.Timeout(schema.TimeoutUpdate), 0); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for EC2 Fleet (%s) update: %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("updating EC2 Fleet (%s) tags: %s", d.Id(), err)
+		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating EC2 Fleet (%s) tags: %s", d.Id(), err)
 		}
 	}
 
-	return resourceFleetRead(d, meta)
+	return append(diags, resourceFleetRead(ctx, d, meta)...)
 }
 
-func resourceFleetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceFleetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 
 	log.Printf("[DEBUG] Deleting EC2 Fleet: %s", d.Id())
-	output, err := conn.DeleteFleets(&ec2.DeleteFleetsInput{
+	output, err := conn.DeleteFleetsWithContext(ctx, &ec2.DeleteFleetsInput{
 		FleetIds:           aws.StringSlice([]string{d.Id()}),
 		TerminateInstances: aws.Bool(d.Get("terminate_instances").(bool)),
 	})
@@ -750,11 +756,11 @@ func resourceFleetDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidFleetIdNotFound) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("deleting EC2 Fleet (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting EC2 Fleet (%s): %s", d.Id(), err)
 	}
 
 	delay := 0 * time.Second
@@ -767,11 +773,11 @@ func resourceFleetDelete(d *schema.ResourceData, meta interface{}) error {
 		targetStates = append(targetStates, ec2.FleetStateCodeDeletedRunning)
 	}
 
-	if _, err := WaitFleet(conn, d.Id(), pendingStates, targetStates, d.Timeout(schema.TimeoutDelete), delay); err != nil {
-		return fmt.Errorf("waiting for EC2 Fleet (%s) delete: %w", d.Id(), err)
+	if _, err := WaitFleet(ctx, conn, d.Id(), pendingStates, targetStates, d.Timeout(schema.TimeoutDelete), delay); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Fleet (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandFleetLaunchTemplateConfigRequests(tfList []interface{}) []*ec2.FleetLaunchTemplateConfigRequest {

@@ -1,6 +1,7 @@
 package glue
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -10,19 +11,21 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func ResourceUserDefinedFunction() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceUserDefinedFunctionCreate,
-		Read:   resourceUserDefinedFunctionRead,
-		Update: resourceUserDefinedFunctionUpdate,
-		Delete: resourceUserDefinedFunctionDelete,
+		CreateWithoutTimeout: resourceUserDefinedFunctionCreate,
+		ReadWithoutTimeout:   resourceUserDefinedFunctionRead,
+		UpdateWithoutTimeout: resourceUserDefinedFunctionUpdate,
+		DeleteWithoutTimeout: resourceUserDefinedFunctionDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -88,8 +91,9 @@ func ResourceUserDefinedFunction() *schema.Resource {
 	}
 }
 
-func resourceUserDefinedFunctionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+func resourceUserDefinedFunctionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlueConn()
 	catalogID := createCatalogID(d, meta.(*conns.AWSClient).AccountID)
 	dbName := d.Get("database_name").(string)
 	funcName := d.Get("name").(string)
@@ -100,22 +104,23 @@ func resourceUserDefinedFunctionCreate(d *schema.ResourceData, meta interface{})
 		FunctionInput: expandUserDefinedFunctionInput(d),
 	}
 
-	_, err := conn.CreateUserDefinedFunction(input)
+	_, err := conn.CreateUserDefinedFunctionWithContext(ctx, input)
 	if err != nil {
-		return fmt.Errorf("error creating Glue User Defined Function: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating Glue User Defined Function: %s", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s:%s", catalogID, dbName, funcName))
 
-	return resourceUserDefinedFunctionRead(d, meta)
+	return append(diags, resourceUserDefinedFunctionRead(ctx, d, meta)...)
 }
 
-func resourceUserDefinedFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+func resourceUserDefinedFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlueConn()
 
 	catalogID, dbName, funcName, err := ReadUDFID(d.Id())
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "updating Glue User Defined Function (%s): %s", d.Id(), err)
 	}
 
 	input := &glue.UpdateUserDefinedFunctionInput{
@@ -125,19 +130,20 @@ func resourceUserDefinedFunctionUpdate(d *schema.ResourceData, meta interface{})
 		FunctionInput: expandUserDefinedFunctionInput(d),
 	}
 
-	if _, err := conn.UpdateUserDefinedFunction(input); err != nil {
-		return fmt.Errorf("error updating Glue User Defined Function (%s): %w", d.Id(), err)
+	if _, err := conn.UpdateUserDefinedFunctionWithContext(ctx, input); err != nil {
+		return sdkdiag.AppendErrorf(diags, "updating Glue User Defined Function (%s): %s", d.Id(), err)
 	}
 
-	return resourceUserDefinedFunctionRead(d, meta)
+	return append(diags, resourceUserDefinedFunctionRead(ctx, d, meta)...)
 }
 
-func resourceUserDefinedFunctionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+func resourceUserDefinedFunctionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlueConn()
 
 	catalogID, dbName, funcName, err := ReadUDFID(d.Id())
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading Glue User Defined Function (%s): %s", d.Id(), err)
 	}
 
 	input := &glue.GetUserDefinedFunctionInput{
@@ -146,16 +152,15 @@ func resourceUserDefinedFunctionRead(d *schema.ResourceData, meta interface{}) e
 		FunctionName: aws.String(funcName),
 	}
 
-	out, err := conn.GetUserDefinedFunction(input)
+	out, err := conn.GetUserDefinedFunctionWithContext(ctx, input)
 	if err != nil {
-
 		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 			log.Printf("[WARN] Glue User Defined Function (%s) not found, removing from state", d.Id())
 			d.SetId("")
-			return nil
+			return diags
 		}
 
-		return fmt.Errorf("error reading Glue User Defined Function: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading Glue User Defined Function (%s): %s", d.Id(), err)
 	}
 
 	udf := out.UserDefinedFunction
@@ -179,29 +184,30 @@ func resourceUserDefinedFunctionRead(d *schema.ResourceData, meta interface{}) e
 		d.Set("create_time", udf.CreateTime.Format(time.RFC3339))
 	}
 	if err := d.Set("resource_uris", flattenUserDefinedFunctionResourceURI(udf.ResourceUris)); err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading Glue User Defined Function (%s): setting resource_uris: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceUserDefinedFunctionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GlueConn
+func resourceUserDefinedFunctionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GlueConn()
 	catalogID, dbName, funcName, err := ReadUDFID(d.Id())
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "deleting Glue User Defined Function (%s): %s", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Glue User Defined Function: %s", d.Id())
-	_, err = conn.DeleteUserDefinedFunction(&glue.DeleteUserDefinedFunctionInput{
+	_, err = conn.DeleteUserDefinedFunctionWithContext(ctx, &glue.DeleteUserDefinedFunctionInput{
 		CatalogId:    aws.String(catalogID),
 		DatabaseName: aws.String(dbName),
 		FunctionName: aws.String(funcName),
 	})
 	if err != nil {
-		return fmt.Errorf("error deleting Glue User Defined Function: %w", err)
+		return sdkdiag.AppendErrorf(diags, "deleting Glue User Defined Function (%s): %s", d.Id(), err)
 	}
-	return nil
+	return diags
 }
 
 func ReadUDFID(id string) (catalogID string, dbName string, funcName string, err error) {
@@ -213,7 +219,6 @@ func ReadUDFID(id string) (catalogID string, dbName string, funcName string, err
 }
 
 func expandUserDefinedFunctionInput(d *schema.ResourceData) *glue.UserDefinedFunctionInput {
-
 	udf := &glue.UserDefinedFunctionInput{
 		ClassName:    aws.String(d.Get("class_name").(string)),
 		FunctionName: aws.String(d.Get("name").(string)),

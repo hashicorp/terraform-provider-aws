@@ -1,18 +1,20 @@
 package lambda
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lambda"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func DataSourceCodeSigningConfig() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceCodeSigningConfigRead,
+		ReadWithoutTimeout: dataSourceCodeSigningConfigRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -64,42 +66,43 @@ func DataSourceCodeSigningConfig() *schema.Resource {
 	}
 }
 
-func dataSourceCodeSigningConfigRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LambdaConn
+func dataSourceCodeSigningConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).LambdaConn()
 
 	arn := d.Get("arn").(string)
 
-	configOutput, err := conn.GetCodeSigningConfig(&lambda.GetCodeSigningConfigInput{
+	configOutput, err := conn.GetCodeSigningConfigWithContext(ctx, &lambda.GetCodeSigningConfigInput{
 		CodeSigningConfigArn: aws.String(arn),
 	})
 
 	if err != nil {
-		return fmt.Errorf("error getting Lambda code signing config (%s): %w", arn, err)
+		return sdkdiag.AppendErrorf(diags, "getting Lambda code signing config (%s): %s", arn, err)
 	}
 
 	if configOutput == nil {
-		return fmt.Errorf("error getting Lambda code signing config (%s): empty response", arn)
+		return sdkdiag.AppendErrorf(diags, "getting Lambda code signing config (%s): empty response", arn)
 	}
 
 	codeSigningConfig := configOutput.CodeSigningConfig
 	if codeSigningConfig == nil {
-		return fmt.Errorf("error getting Lambda code signing config (%s): empty CodeSigningConfig", arn)
+		return sdkdiag.AppendErrorf(diags, "getting Lambda code signing config (%s): empty CodeSigningConfig", arn)
 	}
 
 	if err := d.Set("config_id", codeSigningConfig.CodeSigningConfigId); err != nil {
-		return fmt.Errorf("error setting lambda code signing config id: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting lambda code signing config id: %s", err)
 	}
 
 	if err := d.Set("description", codeSigningConfig.Description); err != nil {
-		return fmt.Errorf("error setting lambda code signing config description: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting lambda code signing config description: %s", err)
 	}
 
 	if err := d.Set("last_modified", codeSigningConfig.LastModified); err != nil {
-		return fmt.Errorf("error setting lambda code signing config last modified: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting lambda code signing config last modified: %s", err)
 	}
 
 	if err := d.Set("allowed_publishers", flattenCodeSigningConfigAllowedPublishers(codeSigningConfig.AllowedPublishers)); err != nil {
-		return fmt.Errorf("error setting lambda code signing config allowed publishers: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting lambda code signing config allowed publishers: %s", err)
 	}
 
 	if err := d.Set("policies", []interface{}{
@@ -107,10 +110,10 @@ func dataSourceCodeSigningConfigRead(d *schema.ResourceData, meta interface{}) e
 			"untrusted_artifact_on_deployment": codeSigningConfig.CodeSigningPolicies.UntrustedArtifactOnDeployment,
 		},
 	}); err != nil {
-		return fmt.Errorf("error setting lambda code signing config code signing policies: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting lambda code signing config code signing policies: %s", err)
 	}
 
 	d.SetId(aws.StringValue(codeSigningConfig.CodeSigningConfigArn))
 
-	return nil
+	return diags
 }

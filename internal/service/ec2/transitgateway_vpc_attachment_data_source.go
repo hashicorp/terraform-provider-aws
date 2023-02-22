@@ -1,20 +1,22 @@
 package ec2
 
 import (
-	"fmt"
+	"context"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func DataSourceTransitGatewayVPCAttachment() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceTransitGatewayVPCAttachmentRead,
+		ReadWithoutTimeout: dataSourceTransitGatewayVPCAttachmentRead,
 
 		Timeouts: &schema.ResourceTimeout{
 			Read: schema.DefaultTimeout(20 * time.Minute),
@@ -61,8 +63,9 @@ func DataSourceTransitGatewayVPCAttachment() *schema.Resource {
 	}
 }
 
-func dataSourceTransitGatewayVPCAttachmentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func dataSourceTransitGatewayVPCAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn()
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeTransitGatewayVpcAttachmentsInput{}
@@ -80,10 +83,10 @@ func dataSourceTransitGatewayVPCAttachmentRead(d *schema.ResourceData, meta inte
 		input.TransitGatewayAttachmentIds = aws.StringSlice([]string{v.(string)})
 	}
 
-	transitGatewayVPCAttachment, err := FindTransitGatewayVPCAttachment(conn, input)
+	transitGatewayVPCAttachment, err := FindTransitGatewayVPCAttachment(ctx, conn, input)
 
 	if err != nil {
-		return tfresource.SingularDataSourceFindError("EC2 Transit Gateway VPC Attachment", err)
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Transit Gateway VPC Attachment", err))
 	}
 
 	d.SetId(aws.StringValue(transitGatewayVPCAttachment.TransitGatewayAttachmentId))
@@ -96,8 +99,8 @@ func dataSourceTransitGatewayVPCAttachmentRead(d *schema.ResourceData, meta inte
 	d.Set("vpc_owner_id", transitGatewayVPCAttachment.VpcOwnerId)
 
 	if err := d.Set("tags", KeyValueTags(transitGatewayVPCAttachment.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

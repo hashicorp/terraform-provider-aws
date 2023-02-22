@@ -1,6 +1,7 @@
 package wafv2
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -9,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/wafv2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -18,14 +20,19 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+const (
+	regexPatternSetDeleteTimeout = 5 * time.Minute
+)
+
 func ResourceRegexPatternSet() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceRegexPatternSetCreate,
-		Read:   resourceRegexPatternSetRead,
-		Update: resourceRegexPatternSetUpdate,
-		Delete: resourceRegexPatternSetDelete,
+		CreateWithoutTimeout: resourceRegexPatternSetCreate,
+		ReadWithoutTimeout:   resourceRegexPatternSetRead,
+		UpdateWithoutTimeout: resourceRegexPatternSetUpdate,
+		DeleteWithoutTimeout: resourceRegexPatternSetDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "/")
 				if len(idParts) != 3 || idParts[0] == "" || idParts[1] == "" || idParts[2] == "" {
 					return nil, fmt.Errorf("Unexpected format of ID (%q), expected ID/NAME/SCOPE", d.Id())
@@ -67,21 +74,21 @@ func ResourceRegexPatternSet() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"regex_string": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 200),
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.All(
+								validation.StringLenBetween(1, 200),
+								validation.StringIsValidRegExp,
+							),
 						},
 					},
 				},
 			},
 			"scope": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					wafv2.ScopeCloudfront,
-					wafv2.ScopeRegional,
-				}, false),
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(wafv2.Scope_Values(), false),
 			},
 			"tags":     tftags.TagsSchema(),
 			"tags_all": tftags.TagsSchemaComputed(),
@@ -91,206 +98,178 @@ func ResourceRegexPatternSet() *schema.Resource {
 	}
 }
 
-func resourceRegexPatternSetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFV2Conn
+func resourceRegexPatternSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).WAFV2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
-	params := &wafv2.CreateRegexPatternSetInput{
-		Name:                  aws.String(d.Get("name").(string)),
-		Scope:                 aws.String(d.Get("scope").(string)),
+
+	name := d.Get("name").(string)
+	input := &wafv2.CreateRegexPatternSetInput{
+		Name:                  aws.String(name),
 		RegularExpressionList: []*wafv2.Regex{},
+		Scope:                 aws.String(d.Get("scope").(string)),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
-		params.Description = aws.String(v.(string))
+		input.Description = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("regular_expression"); ok && v.(*schema.Set).Len() > 0 {
-		params.RegularExpressionList = expandRegexPatternSet(v.(*schema.Set).List())
+		input.RegularExpressionList = expandRegexPatternSet(v.(*schema.Set).List())
 	}
 
 	if len(tags) > 0 {
-		params.Tags = Tags(tags.IgnoreAWS())
+		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	resp, err := conn.CreateRegexPatternSet(params)
+	log.Printf("[INFO] Creating WAFv2 RegexPatternSet: %s", input)
+	output, err := conn.CreateRegexPatternSetWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("Error creating WAFv2 RegexPatternSet: %s", err)
+		return diag.Errorf("creating WAFv2 RegexPatternSet (%s): %s", name, err)
 	}
 
-	if resp == nil || resp.Summary == nil {
-		return fmt.Errorf("Error creating WAFv2 RegexPatternSet")
-	}
+	d.SetId(aws.StringValue(output.Summary.Id))
 
-	d.SetId(aws.StringValue(resp.Summary.Id))
-
-	return resourceRegexPatternSetRead(d, meta)
+	return resourceRegexPatternSetRead(ctx, d, meta)
 }
 
-func resourceRegexPatternSetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFV2Conn
+func resourceRegexPatternSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).WAFV2Conn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	params := &wafv2.GetRegexPatternSetInput{
-		Id:    aws.String(d.Id()),
-		Name:  aws.String(d.Get("name").(string)),
-		Scope: aws.String(d.Get("scope").(string)),
+
+	output, err := FindRegexPatternSetByThreePartKey(ctx, conn, d.Id(), d.Get("name").(string), d.Get("scope").(string))
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] WAFv2 RegexPatternSet (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
 
-	resp, err := conn.GetRegexPatternSet(params)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, wafv2.ErrCodeWAFNonexistentItemException) {
-			log.Printf("[WARN] WAFv2 RegexPatternSet (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return err
+		return diag.Errorf("reading WAFv2 RegexPatternSet (%s): %s", d.Id(), err)
 	}
 
-	if resp == nil || resp.RegexPatternSet == nil {
-		return fmt.Errorf("Error getting WAFv2 RegexPatternSet")
+	regexPatternSet := output.RegexPatternSet
+	arn := aws.StringValue(regexPatternSet.ARN)
+	d.Set("arn", arn)
+	d.Set("description", regexPatternSet.Description)
+	d.Set("lock_token", output.LockToken)
+	d.Set("name", regexPatternSet.Name)
+	if err := d.Set("regular_expression", flattenRegexPatternSet(regexPatternSet.RegularExpressionList)); err != nil {
+		return diag.Errorf("setting regular_expression: %s", err)
 	}
 
-	d.Set("name", resp.RegexPatternSet.Name)
-	d.Set("description", resp.RegexPatternSet.Description)
-	d.Set("arn", resp.RegexPatternSet.ARN)
-	d.Set("lock_token", resp.LockToken)
+	tags, err := ListTags(ctx, conn, arn)
 
-	if err := d.Set("regular_expression", flattenRegexPatternSet(resp.RegexPatternSet.RegularExpressionList)); err != nil {
-		return fmt.Errorf("Error setting regular_expression: %s", err)
-	}
-
-	tags, err := ListTags(conn, aws.StringValue(resp.RegexPatternSet.ARN))
 	if err != nil {
-		return fmt.Errorf("Error listing tags for WAFv2 RegexPatternSet (%s): %s", aws.StringValue(resp.RegexPatternSet.ARN), err)
+		return diag.Errorf("listing tags for WAFv2 RegexPatternSet (%s): %s", arn, err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return diag.Errorf("setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return diag.Errorf("setting tags_all: %s", err)
 	}
 
 	return nil
 }
 
-func resourceRegexPatternSetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFV2Conn
+func resourceRegexPatternSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).WAFV2Conn()
 
-	log.Printf("[INFO] Updating WAFv2 RegexPatternSet %s", d.Id())
+	if d.HasChangesExcept("tags", "tags_all") {
+		input := &wafv2.UpdateRegexPatternSetInput{
+			Id:                    aws.String(d.Id()),
+			LockToken:             aws.String(d.Get("lock_token").(string)),
+			Name:                  aws.String(d.Get("name").(string)),
+			RegularExpressionList: []*wafv2.Regex{},
+			Scope:                 aws.String(d.Get("scope").(string)),
+		}
 
-	params := &wafv2.UpdateRegexPatternSetInput{
-		Id:                    aws.String(d.Id()),
-		Name:                  aws.String(d.Get("name").(string)),
-		Scope:                 aws.String(d.Get("scope").(string)),
-		LockToken:             aws.String(d.Get("lock_token").(string)),
-		RegularExpressionList: []*wafv2.Regex{},
-	}
+		if v, ok := d.GetOk("description"); ok {
+			input.Description = aws.String(v.(string))
+		}
 
-	if v, ok := d.GetOk("regular_expression"); ok && v.(*schema.Set).Len() > 0 {
-		params.RegularExpressionList = expandRegexPatternSet(v.(*schema.Set).List())
-	}
+		if v, ok := d.GetOk("regular_expression"); ok && v.(*schema.Set).Len() > 0 {
+			input.RegularExpressionList = expandRegexPatternSet(v.(*schema.Set).List())
+		}
 
-	if v, ok := d.GetOk("description"); ok {
-		params.Description = aws.String(v.(string))
-	}
+		log.Printf("[INFO] Updating WAFv2 RegexPatternSet: %s", input)
+		_, err := conn.UpdateRegexPatternSetWithContext(ctx, input)
 
-	_, err := conn.UpdateRegexPatternSet(params)
-
-	if err != nil {
-		return fmt.Errorf("Error updating WAFv2 RegexPatternSet: %s", err)
+		if err != nil {
+			return diag.Errorf("updating WAFv2 RegexPatternSet (%s): %s", d.Id(), err)
+		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("Error updating tags: %s", err)
+		arn := d.Get("arn").(string)
+
+		if err := UpdateTags(ctx, conn, arn, o, n); err != nil {
+			return diag.Errorf("updating tags for WAFv2 RegexPatternSet (%s): %s", arn, err)
 		}
 	}
 
-	return resourceRegexPatternSetRead(d, meta)
+	return resourceRegexPatternSetRead(ctx, d, meta)
 }
 
-func resourceRegexPatternSetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFV2Conn
+func resourceRegexPatternSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	conn := meta.(*conns.AWSClient).WAFV2Conn()
 
-	log.Printf("[INFO] Deleting WAFv2 RegexPatternSet %s", d.Id())
-	params := &wafv2.DeleteRegexPatternSetInput{
+	input := &wafv2.DeleteRegexPatternSetInput{
 		Id:        aws.String(d.Id()),
+		LockToken: aws.String(d.Get("lock_token").(string)),
 		Name:      aws.String(d.Get("name").(string)),
 		Scope:     aws.String(d.Get("scope").(string)),
-		LockToken: aws.String(d.Get("lock_token").(string)),
 	}
-	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteRegexPatternSet(params)
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, wafv2.ErrCodeWAFAssociatedItemException) {
-				return resource.RetryableError(err)
-			}
-			return resource.NonRetryableError(err)
-		}
-		return nil
-	})
 
-	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteRegexPatternSet(params)
+	log.Printf("[INFO] Deleting WAFv2 RegexPatternSet: %s", d.Id())
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, regexPatternSetDeleteTimeout, func() (interface{}, error) {
+		return conn.DeleteRegexPatternSetWithContext(ctx, input)
+	}, wafv2.ErrCodeWAFAssociatedItemException)
+
+	if tfawserr.ErrCodeEquals(err, wafv2.ErrCodeWAFNonexistentItemException) {
+		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error deleting WAFv2 RegexPatternSet: %s", err)
+		return diag.Errorf("deleting WAFv2 RegexPatternSet (%s): %s", d.Id(), err)
 	}
 
 	return nil
 }
 
-func expandRegexPatternSet(l []interface{}) []*wafv2.Regex {
-	if len(l) == 0 || l[0] == nil {
-		return nil
+func FindRegexPatternSetByThreePartKey(ctx context.Context, conn *wafv2.WAFV2, id, name, scope string) (*wafv2.GetRegexPatternSetOutput, error) {
+	input := &wafv2.GetRegexPatternSetInput{
+		Id:    aws.String(id),
+		Name:  aws.String(name),
+		Scope: aws.String(scope),
 	}
 
-	regexPatterns := make([]*wafv2.Regex, 0)
-	for _, regexPattern := range l {
-		if regexPattern == nil {
-			continue
+	output, err := conn.GetRegexPatternSetWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, wafv2.ErrCodeWAFNonexistentItemException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
 		}
-		regexPatterns = append(regexPatterns, expandRegex(regexPattern.(map[string]interface{})))
 	}
 
-	return regexPatterns
-}
-
-func expandRegex(m map[string]interface{}) *wafv2.Regex {
-	if m == nil {
-		return nil
+	if err != nil {
+		return nil, err
 	}
 
-	return &wafv2.Regex{
-		RegexString: aws.String(m["regex_string"].(string)),
-	}
-}
-
-func flattenRegexPatternSet(r []*wafv2.Regex) interface{} {
-	if r == nil {
-		return []interface{}{}
+	if output == nil || output.RegexPatternSet == nil {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	regexPatterns := make([]interface{}, 0)
-
-	for _, regexPattern := range r {
-		if regexPattern == nil {
-			continue
-		}
-		d := map[string]interface{}{
-			"regex_string": aws.StringValue(regexPattern.RegexString),
-		}
-		regexPatterns = append(regexPatterns, d)
-	}
-
-	return regexPatterns
+	return output, nil
 }

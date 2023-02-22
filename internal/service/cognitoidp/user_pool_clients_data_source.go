@@ -1,17 +1,19 @@
 package cognitoidp
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func DataSourceUserPoolClients() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceuserPoolClientsRead,
+		ReadWithoutTimeout: dataSourceuserPoolClientsRead,
 		Schema: map[string]*schema.Schema{
 			"client_ids": {
 				Type: schema.TypeList,
@@ -35,8 +37,9 @@ func DataSourceUserPoolClients() *schema.Resource {
 	}
 }
 
-func dataSourceuserPoolClientsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
+func dataSourceuserPoolClientsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CognitoIDPConn()
 
 	userPoolID := d.Get("user_pool_id").(string)
 	input := &cognitoidentityprovider.ListUserPoolClientsInput{
@@ -45,7 +48,7 @@ func dataSourceuserPoolClientsRead(d *schema.ResourceData, meta interface{}) err
 
 	var clientIDs []string
 	var clientNames []string
-	err := conn.ListUserPoolClientsPages(input, func(page *cognitoidentityprovider.ListUserPoolClientsOutput, lastPage bool) bool {
+	err := conn.ListUserPoolClientsPagesWithContext(ctx, input, func(page *cognitoidentityprovider.ListUserPoolClientsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -63,12 +66,12 @@ func dataSourceuserPoolClientsRead(d *schema.ResourceData, meta interface{}) err
 	})
 
 	if err != nil {
-		return fmt.Errorf("Error getting user pool clients: %w", err)
+		return sdkdiag.AppendErrorf(diags, "Error getting user pool clients: %s", err)
 	}
 
 	d.SetId(userPoolID)
 	d.Set("client_ids", clientIDs)
 	d.Set("client_names", clientNames)
 
-	return nil
+	return diags
 }

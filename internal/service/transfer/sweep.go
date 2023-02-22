@@ -30,15 +30,16 @@ func init() {
 }
 
 func sweepServers(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).TransferConn
+	conn := client.(*conns.AWSClient).TransferConn()
 	input := &transfer.ListServersInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListServersPages(input, func(page *transfer.ListServersOutput, lastPage bool) bool {
+	err = conn.ListServersPagesWithContext(ctx, input, func(page *transfer.ListServersOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -65,7 +66,7 @@ func sweepServers(region string) error {
 		return fmt.Errorf("error listing Transfer Servers (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Transfer Servers (%s): %w", region, err)
@@ -75,15 +76,16 @@ func sweepServers(region string) error {
 }
 
 func sweepWorkflows(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).TransferConn
+	conn := client.(*conns.AWSClient).TransferConn()
 	input := &transfer.ListWorkflowsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListWorkflowsPages(input, func(page *transfer.ListWorkflowsOutput, lastPage bool) bool {
+	err = conn.ListWorkflowsPagesWithContext(ctx, input, func(page *transfer.ListWorkflowsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -108,7 +110,7 @@ func sweepWorkflows(region string) error {
 		return fmt.Errorf("error listing Transfer Workflows (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Transfer Workflows (%s): %w", region, err)

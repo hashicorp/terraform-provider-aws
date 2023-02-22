@@ -77,70 +77,15 @@ func waitAddonUpdateSuccessful(ctx context.Context, conn *eks.EKS, clusterName, 
 	return nil, err
 }
 
-func waitClusterCreated(conn *eks.EKS, name string, timeout time.Duration) (*eks.Cluster, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{eks.ClusterStatusCreating},
-		Target:  []string{eks.ClusterStatusActive},
-		Refresh: statusCluster(conn, name),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForState()
-
-	if output, ok := outputRaw.(*eks.Cluster); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitClusterDeleted(conn *eks.EKS, name string, timeout time.Duration) (*eks.Cluster, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{eks.ClusterStatusActive, eks.ClusterStatusDeleting},
-		Target:  []string{},
-		Refresh: statusCluster(conn, name),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForState()
-
-	if output, ok := outputRaw.(*eks.Cluster); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitClusterUpdateSuccessful(conn *eks.EKS, name, id string, timeout time.Duration) (*eks.Update, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{eks.UpdateStatusInProgress},
-		Target:  []string{eks.UpdateStatusSuccessful},
-		Refresh: statusClusterUpdate(conn, name, id),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForState()
-
-	if output, ok := outputRaw.(*eks.Update); ok {
-		if status := aws.StringValue(output.Status); status == eks.UpdateStatusCancelled || status == eks.UpdateStatusFailed {
-			tfresource.SetLastError(err, ErrorDetailsError(output.Errors))
-		}
-
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitFargateProfileCreated(conn *eks.EKS, clusterName, fargateProfileName string, timeout time.Duration) (*eks.FargateProfile, error) {
+func waitFargateProfileCreated(ctx context.Context, conn *eks.EKS, clusterName, fargateProfileName string, timeout time.Duration) (*eks.FargateProfile, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{eks.FargateProfileStatusCreating},
 		Target:  []string{eks.FargateProfileStatusActive},
-		Refresh: statusFargateProfile(conn, clusterName, fargateProfileName),
+		Refresh: statusFargateProfile(ctx, conn, clusterName, fargateProfileName),
 		Timeout: timeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*eks.FargateProfile); ok {
 		return output, err
@@ -149,15 +94,15 @@ func waitFargateProfileCreated(conn *eks.EKS, clusterName, fargateProfileName st
 	return nil, err
 }
 
-func waitFargateProfileDeleted(conn *eks.EKS, clusterName, fargateProfileName string, timeout time.Duration) (*eks.FargateProfile, error) {
+func waitFargateProfileDeleted(ctx context.Context, conn *eks.EKS, clusterName, fargateProfileName string, timeout time.Duration) (*eks.FargateProfile, error) {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{eks.FargateProfileStatusActive, eks.FargateProfileStatusDeleting},
 		Target:  []string{},
-		Refresh: statusFargateProfile(conn, clusterName, fargateProfileName),
+		Refresh: statusFargateProfile(ctx, conn, clusterName, fargateProfileName),
 		Timeout: timeout,
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*eks.FargateProfile); ok {
 		return output, err
@@ -170,7 +115,7 @@ func waitNodegroupCreated(ctx context.Context, conn *eks.EKS, clusterName, nodeG
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{eks.NodegroupStatusCreating},
 		Target:  []string{eks.NodegroupStatusActive},
-		Refresh: statusNodegroup(conn, clusterName, nodeGroupName),
+		Refresh: statusNodegroup(ctx, conn, clusterName, nodeGroupName),
 		Timeout: timeout,
 	}
 
@@ -191,7 +136,7 @@ func waitNodegroupDeleted(ctx context.Context, conn *eks.EKS, clusterName, nodeG
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{eks.NodegroupStatusActive, eks.NodegroupStatusDeleting},
 		Target:  []string{},
-		Refresh: statusNodegroup(conn, clusterName, nodeGroupName),
+		Refresh: statusNodegroup(ctx, conn, clusterName, nodeGroupName),
 		Timeout: timeout,
 	}
 
@@ -212,7 +157,7 @@ func waitNodegroupUpdateSuccessful(ctx context.Context, conn *eks.EKS, clusterNa
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{eks.UpdateStatusInProgress},
 		Target:  []string{eks.UpdateStatusSuccessful},
-		Refresh: statusNodegroupUpdate(conn, clusterName, nodeGroupName, id),
+		Refresh: statusNodegroupUpdate(ctx, conn, clusterName, nodeGroupName, id),
 		Timeout: timeout,
 	}
 

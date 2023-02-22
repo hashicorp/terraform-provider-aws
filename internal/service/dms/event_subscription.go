@@ -1,6 +1,7 @@
 package dms
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"time"
@@ -9,10 +10,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -20,10 +23,10 @@ import (
 
 func ResourceEventSubscription() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceEventSubscriptionCreate,
-		Read:   resourceEventSubscriptionRead,
-		Update: resourceEventSubscriptionUpdate,
-		Delete: resourceEventSubscriptionDelete,
+		CreateWithoutTimeout: resourceEventSubscriptionCreate,
+		ReadWithoutTimeout:   resourceEventSubscriptionRead,
+		UpdateWithoutTimeout: resourceEventSubscriptionUpdate,
+		DeleteWithoutTimeout: resourceEventSubscriptionDelete,
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
 			Delete: schema.DefaultTimeout(10 * time.Minute),
@@ -31,7 +34,7 @@ func ResourceEventSubscription() *schema.Resource {
 		},
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -86,8 +89,9 @@ func ResourceEventSubscription() *schema.Resource {
 	}
 }
 
-func resourceEventSubscriptionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DMSConn
+func resourceEventSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DMSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -107,10 +111,10 @@ func resourceEventSubscriptionCreate(d *schema.ResourceData, meta interface{}) e
 		request.SourceIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	_, err := conn.CreateEventSubscription(request)
+	_, err := conn.CreateEventSubscriptionWithContext(ctx, request)
 
 	if err != nil {
-		return fmt.Errorf("error creating DMS Event Subscription (%s): %w", d.Get("name").(string), err)
+		return sdkdiag.AppendErrorf(diags, "creating DMS Event Subscription (%s): %s", d.Get("name").(string), err)
 	}
 
 	d.SetId(d.Get("name").(string))
@@ -118,22 +122,23 @@ func resourceEventSubscriptionCreate(d *schema.ResourceData, meta interface{}) e
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"creating", "modifying"},
 		Target:     []string{"active"},
-		Refresh:    resourceEventSubscriptionStateRefreshFunc(conn, d.Id()),
+		Refresh:    resourceEventSubscriptionStateRefreshFunc(ctx, conn, d.Id()),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
 		MinTimeout: 10 * time.Second,
 		Delay:      10 * time.Second,
 	}
 
-	_, err = stateConf.WaitForState()
+	_, err = stateConf.WaitForStateContext(ctx)
 	if err != nil {
-		return fmt.Errorf("error waiting for DMS Event Subscription (%s) creation: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for DMS Event Subscription (%s) creation: %s", d.Id(), err)
 	}
 
-	return resourceEventSubscriptionRead(d, meta)
+	return append(diags, resourceEventSubscriptionRead(ctx, d, meta)...)
 }
 
-func resourceEventSubscriptionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DMSConn
+func resourceEventSubscriptionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DMSConn()
 
 	if d.HasChanges("enabled", "event_categories", "sns_topic_arn", "source_type") {
 		request := &dms.ModifyEventSubscriptionInput{
@@ -147,40 +152,41 @@ func resourceEventSubscriptionUpdate(d *schema.ResourceData, meta interface{}) e
 			request.EventCategories = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
-		_, err := conn.ModifyEventSubscription(request)
+		_, err := conn.ModifyEventSubscriptionWithContext(ctx, request)
 
 		if err != nil {
-			return fmt.Errorf("error updating DMS Event Subscription (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating DMS Event Subscription (%s): %s", d.Id(), err)
 		}
 
 		stateConf := &resource.StateChangeConf{
 			Pending:    []string{"modifying"},
 			Target:     []string{"active"},
-			Refresh:    resourceEventSubscriptionStateRefreshFunc(conn, d.Id()),
+			Refresh:    resourceEventSubscriptionStateRefreshFunc(ctx, conn, d.Id()),
 			Timeout:    d.Timeout(schema.TimeoutUpdate),
 			MinTimeout: 10 * time.Second,
 			Delay:      10 * time.Second,
 		}
 
-		_, err = stateConf.WaitForState()
+		_, err = stateConf.WaitForStateContext(ctx)
 		if err != nil {
-			return fmt.Errorf("error waiting for DMS Event Subscription (%s) modification: %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for DMS Event Subscription (%s) modification: %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating DMS Event Subscription (%s) tags: %s", d.Get("arn").(string), err)
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating DMS Event Subscription (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
 
-	return resourceEventSubscriptionRead(d, meta)
+	return append(diags, resourceEventSubscriptionRead(ctx, d, meta)...)
 }
 
-func resourceEventSubscriptionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DMSConn
+func resourceEventSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DMSConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -188,22 +194,22 @@ func resourceEventSubscriptionRead(d *schema.ResourceData, meta interface{}) err
 		SubscriptionName: aws.String(d.Id()),
 	}
 
-	response, err := conn.DescribeEventSubscriptions(request)
+	response, err := conn.DescribeEventSubscriptionsWithContext(ctx, request)
 
 	if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
 		log.Printf("[WARN] DMS event subscription (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error reading DMS event subscription: %s", err)
+		return sdkdiag.AppendErrorf(diags, "Error reading DMS event subscription: %s", err)
 	}
 
 	if response == nil || len(response.EventSubscriptionsList) == 0 || response.EventSubscriptionsList[0] == nil {
 		log.Printf("[WARN] DMS event subscription (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	subscription := response.EventSubscriptionsList[0]
@@ -224,63 +230,64 @@ func resourceEventSubscriptionRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("event_categories", flex.FlattenStringList(subscription.EventCategoriesList))
 	d.Set("source_ids", flex.FlattenStringList(subscription.SourceIdsList))
 
-	tags, err := ListTags(conn, arn)
+	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for DMS Event Subscription (%s): %s", arn, err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for DMS Event Subscription (%s): %s", arn, err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceEventSubscriptionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DMSConn
+func resourceEventSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DMSConn()
 
 	request := &dms.DeleteEventSubscriptionInput{
 		SubscriptionName: aws.String(d.Id()),
 	}
 
-	_, err := conn.DeleteEventSubscription(request)
+	_, err := conn.DeleteEventSubscriptionWithContext(ctx, request)
 
 	if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting DMS Event Subscription (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting DMS Event Subscription (%s): %s", d.Id(), err)
 	}
 
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"deleting"},
 		Target:     []string{},
-		Refresh:    resourceEventSubscriptionStateRefreshFunc(conn, d.Id()),
+		Refresh:    resourceEventSubscriptionStateRefreshFunc(ctx, conn, d.Id()),
 		Timeout:    d.Timeout(schema.TimeoutDelete),
 		MinTimeout: 10 * time.Second,
 		Delay:      10 * time.Second,
 	}
 
-	_, err = stateConf.WaitForState()
+	_, err = stateConf.WaitForStateContext(ctx)
 	if err != nil {
-		return fmt.Errorf("error waiting for DMS Event Subscription (%s) deletion: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for DMS Event Subscription (%s) deletion: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceEventSubscriptionStateRefreshFunc(conn *dms.DatabaseMigrationService, name string) resource.StateRefreshFunc {
+func resourceEventSubscriptionStateRefreshFunc(ctx context.Context, conn *dms.DatabaseMigrationService, name string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		v, err := conn.DescribeEventSubscriptions(&dms.DescribeEventSubscriptionsInput{
+		v, err := conn.DescribeEventSubscriptionsWithContext(ctx, &dms.DescribeEventSubscriptionsInput{
 			SubscriptionName: aws.String(name),
 		})
 

@@ -1,6 +1,7 @@
 package datasync
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net"
@@ -10,9 +11,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/datasync"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -21,12 +24,12 @@ import (
 
 func ResourceAgent() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAgentCreate,
-		Read:   resourceAgentRead,
-		Update: resourceAgentUpdate,
-		Delete: resourceAgentDelete,
+		CreateWithoutTimeout: resourceAgentCreate,
+		ReadWithoutTimeout:   resourceAgentRead,
+		UpdateWithoutTimeout: resourceAgentUpdate,
+		DeleteWithoutTimeout: resourceAgentDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
@@ -87,15 +90,16 @@ func ResourceAgent() *schema.Resource {
 	}
 }
 
-func resourceAgentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataSyncConn
+func resourceAgentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DataSyncConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	activationKey := d.Get("activation_key").(string)
 	agentIpAddress := d.Get("ip_address").(string)
 
-	// Perform one time fetch of activation key from gateway IP address
+	// Perform one time fetch of activation key from gateway IP address.
 	if activationKey == "" {
 		client := &http.Client{
 			CheckRedirect: func(req *http.Request, via []*http.Request) error {
@@ -114,12 +118,11 @@ func resourceAgentCreate(d *schema.ResourceData, meta interface{}) error {
 
 		request, err := http.NewRequest("GET", requestURL, nil)
 		if err != nil {
-			return fmt.Errorf("error creating HTTP request: %w", err)
+			return sdkdiag.AppendErrorf(diags, "creating HTTP request: %s", err)
 		}
 
 		var response *http.Response
-		err = resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-			log.Printf("[DEBUG] Making HTTP request: %s", request.URL.String())
+		err = resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 			response, err = client.Do(request)
 
 			if err, ok := err.(net.Error); ok {
@@ -155,15 +158,15 @@ func resourceAgentCreate(d *schema.ResourceData, meta interface{}) error {
 		})
 
 		if tfresource.TimedOut(err) {
-			return fmt.Errorf("timeout retrieving activation key from IP Address (%s): %w", agentIpAddress, err)
+			return sdkdiag.AppendErrorf(diags, "timeout retrieving activation key from IP Address (%s): %s", agentIpAddress, err)
 		}
 
 		if err != nil {
-			return fmt.Errorf("error retrieving activation key from IP Address (%s): %w", agentIpAddress, err)
+			return sdkdiag.AppendErrorf(diags, "retrieving activation key from IP Address (%s): %s", agentIpAddress, err)
 		}
 
 		if activationKey == "" {
-			return fmt.Errorf("empty activationKey received from IP Address: %s", agentIpAddress)
+			return sdkdiag.AppendErrorf(diags, "empty activationKey received from IP Address: %s", agentIpAddress)
 		}
 	}
 
@@ -188,38 +191,40 @@ func resourceAgentCreate(d *schema.ResourceData, meta interface{}) error {
 		input.VpcEndpointId = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating DataSync Agent: %s", input)
-	output, err := conn.CreateAgent(input)
+	output, err := conn.CreateAgentWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating DataSync Agent: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating DataSync Agent: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.AgentArn))
 
-	// Agent activations can take a few minutes
-	if _, err := waitAgentReady(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("error waiting for DataSync Agent (%s) creation: %s", d.Id(), err)
+	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+		return FindAgentByARN(ctx, conn, d.Id())
+	})
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for DataSync Agent (%s) creation: %s", d.Id(), err)
 	}
 
-	return resourceAgentRead(d, meta)
+	return append(diags, resourceAgentRead(ctx, d, meta)...)
 }
 
-func resourceAgentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataSyncConn
+func resourceAgentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DataSyncConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	output, err := FindAgentByARN(conn, d.Id())
+	output, err := FindAgentByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] DataSync Agent (%s)not found, removing from state", d.Id())
+		log.Printf("[WARN] DataSync Agent (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading DataSync Agent (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading DataSync Agent (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", output.AgentArn)
@@ -236,28 +241,29 @@ func resourceAgentRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("vpc_endpoint_id", "")
 	}
 
-	tags, err := ListTags(conn, d.Id())
+	tags, err := ListTags(ctx, conn, d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for DataSync Agent (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for DataSync Agent (%s): %s", d.Id(), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceAgentUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataSyncConn
+func resourceAgentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DataSyncConn()
 
 	if d.HasChange("name") {
 		input := &datasync.UpdateAgentInput{
@@ -265,40 +271,40 @@ func resourceAgentUpdate(d *schema.ResourceData, meta interface{}) error {
 			Name:     aws.String(d.Get("name").(string)),
 		}
 
-		log.Printf("[DEBUG] Updating DataSync Agent: %s", input)
-		_, err := conn.UpdateAgent(input)
+		_, err := conn.UpdateAgentWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error updating DataSync Agent (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating DataSync Agent (%s): %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating DataSync Agent (%s) tags: %w", d.Id(), err)
+		if err := UpdateTags(ctx, conn, d.Id(), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating DataSync Agent (%s) tags: %s", d.Id(), err)
 		}
 	}
 
-	return resourceAgentRead(d, meta)
+	return append(diags, resourceAgentRead(ctx, d, meta)...)
 }
 
-func resourceAgentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataSyncConn
+func resourceAgentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DataSyncConn()
 
 	log.Printf("[DEBUG] Deleting DataSync Agent: %s", d.Id())
-	_, err := conn.DeleteAgent(&datasync.DeleteAgentInput{
+	_, err := conn.DeleteAgentWithContext(ctx, &datasync.DeleteAgentInput{
 		AgentArn: aws.String(d.Id()),
 	})
 
 	if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "does not exist") {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting DataSync Agent (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting DataSync Agent (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

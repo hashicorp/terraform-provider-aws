@@ -1,6 +1,7 @@
 package s3_test
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"sort"
@@ -18,6 +19,7 @@ import (
 )
 
 func TestAccS3BucketNotification_eventbridge(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_notification.notification"
 
@@ -25,12 +27,12 @@ func TestAccS3BucketNotification_eventbridge(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketNotificationDestroy,
+		CheckDestroy:             testAccCheckBucketNotificationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketNotificationConfig_eventBridge(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketEventBridgeNotification("aws_s3_bucket.bucket")),
+					testAccCheckBucketEventBridgeNotification(ctx, "aws_s3_bucket.bucket")),
 			},
 			{
 				ResourceName:      resourceName,
@@ -42,6 +44,7 @@ func TestAccS3BucketNotification_eventbridge(t *testing.T) {
 }
 
 func TestAccS3BucketNotification_lambdaFunction(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_notification.notification"
 
@@ -49,13 +52,12 @@ func TestAccS3BucketNotification_lambdaFunction(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketNotificationDestroy,
+		CheckDestroy:             testAccCheckBucketNotificationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketNotificationConfig_lambdaFunction(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketLambdaFunctionConfiguration(
-						"aws_s3_bucket.bucket",
+					testAccCheckBucketLambdaFunctionConfiguration(ctx, "aws_s3_bucket.bucket",
 						"notification-lambda",
 						"aws_lambda_function.func",
 						[]string{"s3:ObjectCreated:*", "s3:ObjectRemoved:Delete"},
@@ -84,6 +86,7 @@ func TestAccS3BucketNotification_lambdaFunction(t *testing.T) {
 }
 
 func TestAccS3BucketNotification_LambdaFunctionLambdaFunctionARN_alias(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_notification.test"
 
@@ -91,13 +94,12 @@ func TestAccS3BucketNotification_LambdaFunctionLambdaFunctionARN_alias(t *testin
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketNotificationDestroy,
+		CheckDestroy:             testAccCheckBucketNotificationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketNotificationConfig_lambdaFunctionLambdaFunctionARNAlias(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketLambdaFunctionConfiguration(
-						"aws_s3_bucket.test",
+					testAccCheckBucketLambdaFunctionConfiguration(ctx, "aws_s3_bucket.test",
 						"test",
 						"aws_lambda_alias.test",
 						[]string{"s3:ObjectCreated:*"},
@@ -115,6 +117,7 @@ func TestAccS3BucketNotification_LambdaFunctionLambdaFunctionARN_alias(t *testin
 }
 
 func TestAccS3BucketNotification_queue(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_notification.notification"
 
@@ -122,13 +125,12 @@ func TestAccS3BucketNotification_queue(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketNotificationDestroy,
+		CheckDestroy:             testAccCheckBucketNotificationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketNotificationConfig_queue(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketQueueNotification(
-						"aws_s3_bucket.bucket",
+					testAccCheckBucketQueueNotification(ctx, "aws_s3_bucket.bucket",
 						"notification-sqs",
 						"aws_sqs_queue.queue",
 						[]string{"s3:ObjectCreated:*", "s3:ObjectRemoved:Delete"},
@@ -157,6 +159,7 @@ func TestAccS3BucketNotification_queue(t *testing.T) {
 }
 
 func TestAccS3BucketNotification_topic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_notification.notification"
 
@@ -164,13 +167,12 @@ func TestAccS3BucketNotification_topic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketNotificationDestroy,
+		CheckDestroy:             testAccCheckBucketNotificationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketNotificationConfig_topic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketTopicNotification(
-						"aws_s3_bucket.bucket",
+					testAccCheckBucketTopicNotification(ctx, "aws_s3_bucket.bucket",
 						"notification-sns1",
 						"aws_sns_topic.topic",
 						[]string{"s3:ObjectCreated:*", "s3:ObjectRemoved:Delete"},
@@ -188,6 +190,7 @@ func TestAccS3BucketNotification_topic(t *testing.T) {
 }
 
 func TestAccS3BucketNotification_Topic_multiple(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_notification.notification"
 
@@ -195,13 +198,12 @@ func TestAccS3BucketNotification_Topic_multiple(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketNotificationDestroy,
+		CheckDestroy:             testAccCheckBucketNotificationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketNotificationConfig_topicMultiple(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketTopicNotification(
-						"aws_s3_bucket.bucket",
+					testAccCheckBucketTopicNotification(ctx, "aws_s3_bucket.bucket",
 						"notification-sns1",
 						"aws_sns_topic.topic",
 						[]string{"s3:ObjectCreated:*", "s3:ObjectRemoved:Delete"},
@@ -218,8 +220,7 @@ func TestAccS3BucketNotification_Topic_multiple(t *testing.T) {
 							},
 						},
 					),
-					testAccCheckBucketTopicNotification(
-						"aws_s3_bucket.bucket",
+					testAccCheckBucketTopicNotification(ctx, "aws_s3_bucket.bucket",
 						"notification-sns2",
 						"aws_sns_topic.topic",
 						[]string{"s3:ObjectCreated:*", "s3:ObjectRemoved:Delete"},
@@ -244,19 +245,19 @@ func TestAccS3BucketNotification_Topic_multiple(t *testing.T) {
 }
 
 func TestAccS3BucketNotification_update(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketNotificationDestroy,
+		CheckDestroy:             testAccCheckBucketNotificationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketNotificationConfig_topic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketTopicNotification(
-						"aws_s3_bucket.bucket",
+					testAccCheckBucketTopicNotification(ctx, "aws_s3_bucket.bucket",
 						"notification-sns1",
 						"aws_sns_topic.topic",
 						[]string{"s3:ObjectCreated:*", "s3:ObjectRemoved:Delete"},
@@ -267,8 +268,7 @@ func TestAccS3BucketNotification_update(t *testing.T) {
 			{
 				Config: testAccBucketNotificationConfig_queue(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketQueueNotification(
-						"aws_s3_bucket.bucket",
+					testAccCheckBucketQueueNotification(ctx, "aws_s3_bucket.bucket",
 						"notification-sqs",
 						"aws_sqs_queue.queue",
 						[]string{"s3:ObjectCreated:*", "s3:ObjectRemoved:Delete"},
@@ -291,54 +291,56 @@ func TestAccS3BucketNotification_update(t *testing.T) {
 	})
 }
 
-func testAccCheckBucketNotificationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
+func testAccCheckBucketNotificationDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_s3_bucket_notification" {
-			continue
-		}
-		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-			out, err := conn.GetBucketNotificationConfiguration(&s3.GetBucketNotificationConfigurationRequest{
-				Bucket: aws.String(rs.Primary.ID),
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_s3_bucket_notification" {
+				continue
+			}
+			err := resource.RetryContext(ctx, 1*time.Minute, func() *resource.RetryError {
+				out, err := conn.GetBucketNotificationConfigurationWithContext(ctx, &s3.GetBucketNotificationConfigurationRequest{
+					Bucket: aws.String(rs.Primary.ID),
+				})
+
+				if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
+					return nil
+				}
+
+				if err != nil {
+					return resource.NonRetryableError(err)
+				}
+
+				if len(out.TopicConfigurations) > 0 {
+					return resource.RetryableError(fmt.Errorf("TopicConfigurations is exists: %v", out))
+				}
+				if len(out.LambdaFunctionConfigurations) > 0 {
+					return resource.RetryableError(fmt.Errorf("LambdaFunctionConfigurations is exists: %v", out))
+				}
+				if len(out.QueueConfigurations) > 0 {
+					return resource.RetryableError(fmt.Errorf("QueueConfigurations is exists: %v", out))
+				}
+
+				return nil
 			})
 
-			if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) {
-				return nil
-			}
-
 			if err != nil {
-				return resource.NonRetryableError(err)
+				return err
 			}
-
-			if len(out.TopicConfigurations) > 0 {
-				return resource.RetryableError(fmt.Errorf("TopicConfigurations is exists: %v", out))
-			}
-			if len(out.LambdaFunctionConfigurations) > 0 {
-				return resource.RetryableError(fmt.Errorf("LambdaFunctionConfigurations is exists: %v", out))
-			}
-			if len(out.QueueConfigurations) > 0 {
-				return resource.RetryableError(fmt.Errorf("QueueConfigurations is exists: %v", out))
-			}
-
-			return nil
-		})
-
-		if err != nil {
-			return err
 		}
+		return nil
 	}
-	return nil
 }
 
-func testAccCheckBucketTopicNotification(n, i, t string, events []string, filters *s3.KeyFilter) resource.TestCheckFunc {
+func testAccCheckBucketTopicNotification(ctx context.Context, n, i, t string, events []string, filters *s3.KeyFilter) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
 		topicArn := s.RootModule().Resources[t].Primary.ID
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
 
-		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-			out, err := conn.GetBucketNotificationConfiguration(&s3.GetBucketNotificationConfigurationRequest{
+		err := resource.RetryContext(ctx, 1*time.Minute, func() *resource.RetryError {
+			out, err := conn.GetBucketNotificationConfigurationWithContext(ctx, &s3.GetBucketNotificationConfigurationRequest{
 				Bucket: aws.String(rs.Primary.ID),
 			})
 
@@ -388,13 +390,13 @@ func testAccCheckBucketTopicNotification(n, i, t string, events []string, filter
 	}
 }
 
-func testAccCheckBucketEventBridgeNotification(n string) resource.TestCheckFunc {
+func testAccCheckBucketEventBridgeNotification(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
 
-		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-			out, err := conn.GetBucketNotificationConfiguration(&s3.GetBucketNotificationConfigurationRequest{
+		err := resource.RetryContext(ctx, 1*time.Minute, func() *resource.RetryError {
+			out, err := conn.GetBucketNotificationConfigurationWithContext(ctx, &s3.GetBucketNotificationConfigurationRequest{
 				Bucket: aws.String(rs.Primary.ID),
 			})
 
@@ -413,14 +415,14 @@ func testAccCheckBucketEventBridgeNotification(n string) resource.TestCheckFunc 
 	}
 }
 
-func testAccCheckBucketQueueNotification(n, i, t string, events []string, filters *s3.KeyFilter) resource.TestCheckFunc {
+func testAccCheckBucketQueueNotification(ctx context.Context, n, i, t string, events []string, filters *s3.KeyFilter) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
 		queueArn := s.RootModule().Resources[t].Primary.Attributes["arn"]
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
 
-		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-			out, err := conn.GetBucketNotificationConfiguration(&s3.GetBucketNotificationConfigurationRequest{
+		err := resource.RetryContext(ctx, 1*time.Minute, func() *resource.RetryError {
+			out, err := conn.GetBucketNotificationConfigurationWithContext(ctx, &s3.GetBucketNotificationConfigurationRequest{
 				Bucket: aws.String(rs.Primary.ID),
 			})
 
@@ -470,14 +472,14 @@ func testAccCheckBucketQueueNotification(n, i, t string, events []string, filter
 	}
 }
 
-func testAccCheckBucketLambdaFunctionConfiguration(n, i, t string, events []string, filters *s3.KeyFilter) resource.TestCheckFunc {
+func testAccCheckBucketLambdaFunctionConfiguration(ctx context.Context, n, i, t string, events []string, filters *s3.KeyFilter) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
 		funcArn := s.RootModule().Resources[t].Primary.Attributes["arn"]
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn()
 
-		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-			out, err := conn.GetBucketNotificationConfiguration(&s3.GetBucketNotificationConfigurationRequest{
+		err := resource.RetryContext(ctx, 1*time.Minute, func() *resource.RetryError {
+			out, err := conn.GetBucketNotificationConfigurationWithContext(ctx, &s3.GetBucketNotificationConfigurationRequest{
 				Bucket: aws.String(rs.Primary.ID),
 			})
 
@@ -708,7 +710,7 @@ resource "aws_lambda_function" "func" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs12.x"
+  runtime       = "nodejs16.x"
 }
 
 resource "aws_s3_bucket" "bucket" {
@@ -767,7 +769,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   handler       = "exports.example"
   role          = aws_iam_role.test.arn
-  runtime       = "nodejs12.x"
+  runtime       = "nodejs16.x"
 }
 
 resource "aws_lambda_alias" "test" {

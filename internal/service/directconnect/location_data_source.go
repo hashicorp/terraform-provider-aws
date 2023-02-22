@@ -1,17 +1,19 @@
 package directconnect
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func DataSourceLocation() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceLocationRead,
+		ReadWithoutTimeout: dataSourceLocationRead,
 
 		Schema: map[string]*schema.Schema{
 			"available_macsec_port_speeds": {
@@ -45,18 +47,19 @@ func DataSourceLocation() *schema.Resource {
 	}
 }
 
-func dataSourceLocationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+func dataSourceLocationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DirectConnectConn()
 	locationCode := d.Get("location_code").(string)
 
-	location, err := FindLocationByCode(conn, locationCode)
+	location, err := FindLocationByCode(ctx, conn, locationCode)
 
 	if tfresource.NotFound(err) {
-		return fmt.Errorf("no Direct Connect location matched; change the search criteria and try again")
+		return sdkdiag.AppendErrorf(diags, "no Direct Connect location matched; change the search criteria and try again")
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Direct Connect location (%s): %w", locationCode, err)
+		return sdkdiag.AppendErrorf(diags, "reading Direct Connect location (%s): %s", locationCode, err)
 	}
 
 	d.SetId(locationCode)
@@ -66,5 +69,5 @@ func dataSourceLocationRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("location_code", location.LocationCode)
 	d.Set("location_name", location.LocationName)
 
-	return nil
+	return diags
 }

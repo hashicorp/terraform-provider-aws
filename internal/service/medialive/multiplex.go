@@ -104,7 +104,7 @@ const (
 )
 
 func resourceMultiplexCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MediaLiveConn
+	conn := meta.(*conns.AWSClient).MediaLiveClient()
 
 	in := &medialive.CreateMultiplexInput{
 		RequestId:         aws.String(resource.UniqueId()),
@@ -148,7 +148,7 @@ func resourceMultiplexCreate(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceMultiplexRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MediaLiveConn
+	conn := meta.(*conns.AWSClient).MediaLiveClient()
 
 	out, err := FindMultiplexByID(ctx, conn, d.Id())
 
@@ -191,7 +191,7 @@ func resourceMultiplexRead(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceMultiplexUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MediaLiveConn
+	conn := meta.(*conns.AWSClient).MediaLiveClient()
 
 	if d.HasChangesExcept("tags", "tags_all", "start_multiplex") {
 		in := &medialive.UpdateMultiplexInput{
@@ -234,7 +234,6 @@ func resourceMultiplexUpdate(ctx context.Context, d *schema.ResourceData, meta i
 				}
 			}
 		}
-
 	}
 
 	if d.HasChange("tags_all") {
@@ -249,7 +248,7 @@ func resourceMultiplexUpdate(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceMultiplexDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MediaLiveConn
+	conn := meta.(*conns.AWSClient).MediaLiveClient()
 
 	log.Printf("[INFO] Deleting MediaLive Multiplex %s", d.Id())
 

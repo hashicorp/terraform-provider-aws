@@ -1,14 +1,16 @@
 package iot
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iot"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -17,13 +19,13 @@ import (
 
 func ResourceTopicRule() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceTopicRuleCreate,
-		Read:   resourceTopicRuleRead,
-		Update: resourceTopicRuleUpdate,
-		Delete: resourceTopicRuleDelete,
+		CreateWithoutTimeout: resourceTopicRuleCreate,
+		ReadWithoutTimeout:   resourceTopicRuleRead,
+		UpdateWithoutTimeout: resourceTopicRuleUpdate,
+		DeleteWithoutTimeout: resourceTopicRuleDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -1159,8 +1161,9 @@ var timestreamDimensionResource *schema.Resource = &schema.Resource{
 	},
 }
 
-func resourceTopicRuleCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
+func resourceTopicRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IoTConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -1172,36 +1175,37 @@ func resourceTopicRuleCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[INFO] Creating IoT Topic Rule: %s", input)
-	_, err := tfresource.RetryWhenAWSErrMessageContains(propagationTimeout,
+	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
 		func() (interface{}, error) {
-			return conn.CreateTopicRule(input)
+			return conn.CreateTopicRuleWithContext(ctx, input)
 		},
 		iot.ErrCodeInvalidRequestException, "sts:AssumeRole")
 
 	if err != nil {
-		return fmt.Errorf("creating IoT Topic Rule (%s): %w", ruleName, err)
+		return sdkdiag.AppendErrorf(diags, "creating IoT Topic Rule (%s): %s", ruleName, err)
 	}
 
 	d.SetId(ruleName)
 
-	return resourceTopicRuleRead(d, meta)
+	return append(diags, resourceTopicRuleRead(ctx, d, meta)...)
 }
 
-func resourceTopicRuleRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
+func resourceTopicRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IoTConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	output, err := FindTopicRuleByName(conn, d.Id())
+	output, err := FindTopicRuleByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] IoT Topic Rule %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading IoT Topic Rule (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading IoT Topic Rule (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", output.RuleArn)
@@ -1212,107 +1216,108 @@ func resourceTopicRuleRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("sql_version", output.Rule.AwsIotSqlVersion)
 
 	if err := d.Set("cloudwatch_alarm", flattenCloudWatchAlarmActions(output.Rule.Actions)); err != nil {
-		return fmt.Errorf("setting cloudwatch_alarm: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting cloudwatch_alarm: %s", err)
 	}
 
 	if err := d.Set("cloudwatch_logs", flattenCloudWatchLogsActions(output.Rule.Actions)); err != nil {
-		return fmt.Errorf("setting cloudwatch_logs: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting cloudwatch_logs: %s", err)
 	}
 
 	if err := d.Set("cloudwatch_metric", flattenCloudWatchMetricActions(output.Rule.Actions)); err != nil {
-		return fmt.Errorf("setting cloudwatch_metric: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting cloudwatch_metric: %s", err)
 	}
 
 	if err := d.Set("dynamodb", flattenDynamoDBActions(output.Rule.Actions)); err != nil {
-		return fmt.Errorf("setting dynamodb: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting dynamodb: %s", err)
 	}
 
 	if err := d.Set("dynamodbv2", flattenDynamoDBv2Actions(output.Rule.Actions)); err != nil {
-		return fmt.Errorf("setting dynamodbv2: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting dynamodbv2: %s", err)
 	}
 
 	if err := d.Set("elasticsearch", flattenElasticsearchActions(output.Rule.Actions)); err != nil {
-		return fmt.Errorf("setting elasticsearch: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting elasticsearch: %s", err)
 	}
 
 	if err := d.Set("firehose", flattenFirehoseActions(output.Rule.Actions)); err != nil {
-		return fmt.Errorf("setting firehose: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting firehose: %s", err)
 	}
 
 	if err := d.Set("http", flattenHTTPActions(output.Rule.Actions)); err != nil {
-		return fmt.Errorf("setting http: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting http: %s", err)
 	}
 
 	if err := d.Set("iot_analytics", flattenAnalyticsActions(output.Rule.Actions)); err != nil {
-		return fmt.Errorf("setting iot_analytics: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting iot_analytics: %s", err)
 	}
 
 	if err := d.Set("iot_events", flattenEventsActions(output.Rule.Actions)); err != nil {
-		return fmt.Errorf("setting iot_events: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting iot_events: %s", err)
 	}
 
 	if err := d.Set("kafka", flattenKafkaActions(output.Rule.Actions)); err != nil {
-		return fmt.Errorf("setting kafka: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting kafka: %s", err)
 	}
 
 	if err := d.Set("kinesis", flattenKinesisActions(output.Rule.Actions)); err != nil {
-		return fmt.Errorf("setting kinesis: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting kinesis: %s", err)
 	}
 
 	if err := d.Set("lambda", flattenLambdaActions(output.Rule.Actions)); err != nil {
-		return fmt.Errorf("setting lambda: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting lambda: %s", err)
 	}
 
 	if err := d.Set("republish", flattenRepublishActions(output.Rule.Actions)); err != nil {
-		return fmt.Errorf("setting republish: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting republish: %s", err)
 	}
 
 	if err := d.Set("s3", flattenS3Actions(output.Rule.Actions)); err != nil {
-		return fmt.Errorf("setting s3: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting s3: %s", err)
 	}
 
 	if err := d.Set("sns", flattenSNSActions(output.Rule.Actions)); err != nil {
-		return fmt.Errorf("setting sns: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting sns: %s", err)
 	}
 
 	if err := d.Set("sqs", flattenSQSActions(output.Rule.Actions)); err != nil {
-		return fmt.Errorf("setting sqs: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting sqs: %s", err)
 	}
 
 	if err := d.Set("step_functions", flattenStepFunctionsActions(output.Rule.Actions)); err != nil {
-		return fmt.Errorf("setting step_functions: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting step_functions: %s", err)
 	}
 
 	if err := d.Set("timestream", flattenTimestreamActions(output.Rule.Actions)); err != nil {
-		return fmt.Errorf("setting timestream: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting timestream: %s", err)
 	}
 
 	if err := d.Set("error_action", flattenErrorAction(output.Rule.ErrorAction)); err != nil {
-		return fmt.Errorf("setting error_action: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting error_action: %s", err)
 	}
 
-	tags, err := ListTags(conn, aws.StringValue(output.RuleArn))
+	tags, err := ListTags(ctx, conn, aws.StringValue(output.RuleArn))
 
 	if err != nil {
-		return fmt.Errorf("listing tags for IoT Topic Rule (%s): %w", aws.StringValue(output.RuleArn), err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for IoT Topic Rule (%s): %s", aws.StringValue(output.RuleArn), err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceTopicRuleUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
+func resourceTopicRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IoTConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &iot.ReplaceTopicRuleInput{
@@ -1321,37 +1326,38 @@ func resourceTopicRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		log.Printf("[INFO] Replacing IoT Topic Rule: %s", input)
-		_, err := conn.ReplaceTopicRule(input)
+		_, err := conn.ReplaceTopicRuleWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("replacing IoT Topic Rule (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "replacing IoT Topic Rule (%s): %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("updating tags: %w", err)
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
 		}
 	}
 
-	return resourceTopicRuleRead(d, meta)
+	return append(diags, resourceTopicRuleRead(ctx, d, meta)...)
 }
 
-func resourceTopicRuleDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
+func resourceTopicRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IoTConn()
 
 	log.Printf("[INFO] Deleting IoT Topic Rule: %s", d.Id())
-	_, err := conn.DeleteTopicRule(&iot.DeleteTopicRuleInput{
+	_, err := conn.DeleteTopicRuleWithContext(ctx, &iot.DeleteTopicRuleInput{
 		RuleName: aws.String(d.Id()),
 	})
 
 	if err != nil {
-		return fmt.Errorf("deleting IoT Topic Rule (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting IoT Topic Rule (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandPutItemInput(tfList []interface{}) *iot.PutItemInput {
@@ -2146,7 +2152,6 @@ func expandTopicRulePayload(d *schema.ResourceData) *iot.TopicRulePayload {
 					}
 
 					iotErrorAction = &iot.Action{CloudwatchAlarm: action}
-
 				}
 			case "cloudwatch_logs":
 				for _, tfMapRaw := range v.([]interface{}) {

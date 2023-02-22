@@ -1,16 +1,18 @@
 package cognitoidp
 
 import (
-	"fmt"
+	"context"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
 func DataSourceUserPoolClient() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceUserPoolClientRead,
+		ReadWithoutTimeout: dataSourceUserPoolClientRead,
 
 		Schema: map[string]*schema.Schema{
 			"access_token_validity": {
@@ -174,16 +176,17 @@ func DataSourceUserPoolClient() *schema.Resource {
 	}
 }
 
-func dataSourceUserPoolClientRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
+func dataSourceUserPoolClientRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CognitoIDPConn()
 
 	clientId := d.Get("client_id").(string)
 	d.SetId(clientId)
 
-	userPoolClient, err := FindCognitoUserPoolClient(conn, d.Get("user_pool_id").(string), d.Id())
+	userPoolClient, err := FindCognitoUserPoolClient(ctx, conn, d.Get("user_pool_id").(string), d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error reading Cognito User Pool Client (%s): %w", clientId, err)
+		return sdkdiag.AppendErrorf(diags, "reading Cognito User Pool Client (%s): %s", clientId, err)
 	}
 
 	d.Set("user_pool_id", userPoolClient.UserPoolId)
@@ -207,12 +210,12 @@ func dataSourceUserPoolClientRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("enable_propagate_additional_user_context_data", userPoolClient.EnablePropagateAdditionalUserContextData)
 
 	if err := d.Set("analytics_configuration", flattenUserPoolClientAnalyticsConfig(userPoolClient.AnalyticsConfiguration)); err != nil {
-		return fmt.Errorf("error setting analytics_configuration: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting analytics_configuration: %s", err)
 	}
 
 	if err := d.Set("token_validity_units", flattenUserPoolClientTokenValidityUnitsType(userPoolClient.TokenValidityUnits)); err != nil {
-		return fmt.Errorf("error setting token_validity_units: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting token_validity_units: %s", err)
 	}
 
-	return nil
+	return diags
 }

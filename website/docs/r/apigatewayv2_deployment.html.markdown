@@ -21,7 +21,7 @@ More information can be found in the [Amazon API Gateway Developer Guide](https:
 
 ```terraform
 resource "aws_apigatewayv2_deployment" "example" {
-  api_id      = aws_apigatewayv2_route.example.api_id
+  api_id      = aws_apigatewayv2_api.example.id
   description = "Example deployment"
 
   lifecycle {
@@ -40,10 +40,10 @@ resource "aws_apigatewayv2_deployment" "example" {
   description = "Example deployment"
 
   triggers = {
-    redeployment = sha1(join(",", list(
+    redeployment = sha1(join(",", tolist([
       jsonencode(aws_apigatewayv2_integration.example),
       jsonencode(aws_apigatewayv2_route.example),
-    )))
+    ])))
   }
 
   lifecycle {

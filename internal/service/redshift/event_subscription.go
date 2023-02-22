@@ -1,6 +1,7 @@
 package redshift
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"time"
@@ -9,9 +10,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -20,13 +23,13 @@ import (
 
 func ResourceEventSubscription() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceEventSubscriptionCreate,
-		Read:   resourceEventSubscriptionRead,
-		Update: resourceEventSubscriptionUpdate,
-		Delete: resourceEventSubscriptionDelete,
+		CreateWithoutTimeout: resourceEventSubscriptionCreate,
+		ReadWithoutTimeout:   resourceEventSubscriptionRead,
+		UpdateWithoutTimeout: resourceEventSubscriptionUpdate,
+		DeleteWithoutTimeout: resourceEventSubscriptionDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -110,8 +113,9 @@ func ResourceEventSubscription() *schema.Resource {
 	}
 }
 
-func resourceEventSubscriptionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+func resourceEventSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -140,30 +144,31 @@ func resourceEventSubscriptionCreate(d *schema.ResourceData, meta interface{}) e
 
 	log.Println("[DEBUG] Create Redshift Event Subscription:", request)
 
-	output, err := conn.CreateEventSubscription(request)
+	output, err := conn.CreateEventSubscriptionWithContext(ctx, request)
 	if err != nil || output.EventSubscription == nil {
-		return fmt.Errorf("Error creating Redshift Event Subscription %s: %s", d.Get("name").(string), err)
+		return sdkdiag.AppendErrorf(diags, "creating Redshift Event Subscription %s: %s", d.Get("name").(string), err)
 	}
 
 	d.SetId(aws.StringValue(output.EventSubscription.CustSubscriptionId))
 
-	return resourceEventSubscriptionRead(d, meta)
+	return append(diags, resourceEventSubscriptionRead(ctx, d, meta)...)
 }
 
-func resourceEventSubscriptionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+func resourceEventSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	sub, err := FindEventSubscriptionByName(conn, d.Id())
+	sub, err := FindEventSubscriptionByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Redshift Event Subscription (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 	if err != nil {
-		return fmt.Errorf("reading Redshift Event Subscription (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Redshift Event Subscription (%s): %s", d.Id(), err)
 	}
 
 	arn := arn.ARN{
@@ -188,18 +193,19 @@ func resourceEventSubscriptionRead(d *schema.ResourceData, meta interface{}) err
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceEventSubscriptionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+func resourceEventSubscriptionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		req := &redshift.ModifyEventSubscriptionInput{
@@ -213,35 +219,36 @@ func resourceEventSubscriptionUpdate(d *schema.ResourceData, meta interface{}) e
 		}
 
 		log.Printf("[DEBUG] Redshift Event Subscription modification request: %#v", req)
-		_, err := conn.ModifyEventSubscription(req)
+		_, err := conn.ModifyEventSubscriptionWithContext(ctx, req)
 		if err != nil {
-			return fmt.Errorf("Modifying Redshift Event Subscription %s failed: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "Modifying Redshift Event Subscription %s failed: %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("updating Redshift Event Subscription (%s) tags: %s", d.Get("arn").(string), err)
+		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Redshift Event Subscription (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
 
-	return nil
+	return diags
 }
 
-func resourceEventSubscriptionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+func resourceEventSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RedshiftConn()
 	deleteOpts := redshift.DeleteEventSubscriptionInput{
 		SubscriptionName: aws.String(d.Id()),
 	}
 
-	if _, err := conn.DeleteEventSubscription(&deleteOpts); err != nil {
+	if _, err := conn.DeleteEventSubscriptionWithContext(ctx, &deleteOpts); err != nil {
 		if tfawserr.ErrCodeEquals(err, redshift.ErrCodeSubscriptionNotFoundFault) {
-			return nil
+			return diags
 		}
-		return fmt.Errorf("Error deleting Redshift Event Subscription %s: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Redshift Event Subscription %s: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

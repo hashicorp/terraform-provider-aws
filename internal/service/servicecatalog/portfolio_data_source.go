@@ -1,21 +1,23 @@
 package servicecatalog
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourcePortfolio() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourcePortfolioRead,
+		ReadWithoutTimeout: dataSourcePortfolioRead,
 
 		Timeouts: &schema.ResourceTimeout{
 			Read: schema.DefaultTimeout(ConstraintReadTimeout),
@@ -57,8 +59,9 @@ func DataSourcePortfolio() *schema.Resource {
 	}
 }
 
-func dataSourcePortfolioRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn
+func dataSourcePortfolioRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn()
 
 	input := &servicecatalog.DescribePortfolioInput{
 		Id: aws.String(d.Get("id").(string)),
@@ -68,14 +71,14 @@ func dataSourcePortfolioRead(d *schema.ResourceData, meta interface{}) error {
 		input.AcceptLanguage = aws.String(v.(string))
 	}
 
-	output, err := conn.DescribePortfolio(input)
+	output, err := conn.DescribePortfolioWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error getting Service Catalog Portfolio (%s): %w", d.Get("id").(string), err)
+		return sdkdiag.AppendErrorf(diags, "getting Service Catalog Portfolio (%s): %s", d.Get("id").(string), err)
 	}
 
 	if output == nil || output.PortfolioDetail == nil {
-		return fmt.Errorf("error getting Service Catalog Portfolio (%s): empty response", d.Get("id").(string))
+		return sdkdiag.AppendErrorf(diags, "getting Service Catalog Portfolio (%s): empty response", d.Get("id").(string))
 	}
 
 	detail := output.PortfolioDetail
@@ -95,8 +98,8 @@ func dataSourcePortfolioRead(d *schema.ResourceData, meta interface{}) error {
 	tags := KeyValueTags(output.Tags)
 
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

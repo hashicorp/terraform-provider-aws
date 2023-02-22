@@ -1,6 +1,7 @@
 package guardduty
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -8,21 +9,23 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/guardduty"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func ResourcePublishingDestination() *schema.Resource {
 	return &schema.Resource{
-		Create: resourcePublishingDestinationCreate,
-		Read:   resourcePublishingDestinationRead,
-		Update: resourcePublishingDestinationUpdate,
-		Delete: resourcePublishingDestinationDelete,
+		CreateWithoutTimeout: resourcePublishingDestinationCreate,
+		ReadWithoutTimeout:   resourcePublishingDestinationRead,
+		UpdateWithoutTimeout: resourcePublishingDestinationUpdate,
+		DeleteWithoutTimeout: resourcePublishingDestinationDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -51,8 +54,9 @@ func ResourcePublishingDestination() *schema.Resource {
 	}
 }
 
-func resourcePublishingDestinationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GuardDutyConn
+func resourcePublishingDestinationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GuardDutyConn()
 
 	detectorID := d.Get("detector_id").(string)
 	input := guardduty.CreatePublishingDestinationInput{
@@ -64,31 +68,31 @@ func resourcePublishingDestinationCreate(d *schema.ResourceData, meta interface{
 		DestinationType: aws.String(d.Get("destination_type").(string)),
 	}
 
-	log.Printf("[DEBUG] Creating GuardDuty publishing destination: %s", input)
-	output, err := conn.CreatePublishingDestination(&input)
+	output, err := conn.CreatePublishingDestinationWithContext(ctx, &input)
 	if err != nil {
-		return fmt.Errorf("Creating GuardDuty publishing destination failed: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating GuardDuty Publishing Destination: %s", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", d.Get("detector_id"), aws.StringValue(output.DestinationId)))
 
-	_, err = waitPublishingDestinationCreated(conn, aws.StringValue(output.DestinationId), detectorID)
+	_, err = waitPublishingDestinationCreated(ctx, conn, aws.StringValue(output.DestinationId), detectorID)
 
 	if err != nil {
-		return fmt.Errorf("Error waiting for GuardDuty PublishingDestination status to be \"%s\": %w",
+		return sdkdiag.AppendErrorf(diags, "waiting for GuardDuty PublishingDestination status to be \"%s\": %s",
 			guardduty.PublishingStatusPublishing, err)
 	}
 
-	return resourcePublishingDestinationRead(d, meta)
+	return append(diags, resourcePublishingDestinationRead(ctx, d, meta)...)
 }
 
-func resourcePublishingDestinationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GuardDutyConn
+func resourcePublishingDestinationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GuardDutyConn()
 
-	destinationId, detectorId, errStateRead := DecodePublishDestinationID(d.Id())
+	destinationId, detectorId, err := DecodePublishDestinationID(d.Id())
 
-	if errStateRead != nil {
-		return errStateRead
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading GuardDuty Publishing Destination (%s): %s", d.Id(), err)
 	}
 
 	input := &guardduty.DescribePublishingDestinationInput{
@@ -96,31 +100,31 @@ func resourcePublishingDestinationRead(d *schema.ResourceData, meta interface{})
 		DestinationId: aws.String(destinationId),
 	}
 
-	log.Printf("[DEBUG] Reading GuardDuty publishing destination: %s", input)
-	gdo, err := conn.DescribePublishingDestination(input)
+	gdo, err := conn.DescribePublishingDestinationWithContext(ctx, input)
 	if err != nil {
 		if tfawserr.ErrMessageContains(err, guardduty.ErrCodeBadRequestException, "The request is rejected because the one or more input parameters have invalid values.") {
-			log.Printf("[WARN] GuardDuty publishing destination: %q not found, removing from state", d.Id())
+			log.Printf("[WARN] GuardDuty Publishing Destination: %q not found, removing from state", d.Id())
 			d.SetId("")
-			return nil
+			return diags
 		}
-		return fmt.Errorf("Reading GuardDuty publishing destination: '%s' failed: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading GuardDuty Publishing Destination (%s): %s", d.Id(), err)
 	}
 
 	d.Set("detector_id", detectorId)
 	d.Set("destination_type", gdo.DestinationType)
 	d.Set("kms_key_arn", gdo.DestinationProperties.KmsKeyArn)
 	d.Set("destination_arn", gdo.DestinationProperties.DestinationArn)
-	return nil
+	return diags
 }
 
-func resourcePublishingDestinationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GuardDutyConn
+func resourcePublishingDestinationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GuardDutyConn()
 
-	destinationId, detectorId, errStateRead := DecodePublishDestinationID(d.Id())
+	destinationId, detectorId, err := DecodePublishDestinationID(d.Id())
 
-	if errStateRead != nil {
-		return errStateRead
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "updating GuardDuty Publishing Destination (%s): %s", d.Id(), err)
 	}
 
 	input := guardduty.UpdatePublishingDestinationInput{
@@ -132,22 +136,21 @@ func resourcePublishingDestinationUpdate(d *schema.ResourceData, meta interface{
 		},
 	}
 
-	log.Printf("[DEBUG] Update GuardDuty publishing destination: %s", input)
-	_, err := conn.UpdatePublishingDestination(&input)
-	if err != nil {
-		return fmt.Errorf("Updating GuardDuty publishing destination '%s' failed: %w", d.Id(), err)
+	if _, err = conn.UpdatePublishingDestinationWithContext(ctx, &input); err != nil {
+		return sdkdiag.AppendErrorf(diags, "updating GuardDuty Publishing Destination (%s): %s", d.Id(), err)
 	}
 
-	return resourcePublishingDestinationRead(d, meta)
+	return append(diags, resourcePublishingDestinationRead(ctx, d, meta)...)
 }
 
-func resourcePublishingDestinationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).GuardDutyConn
+func resourcePublishingDestinationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).GuardDutyConn()
 
-	destinationId, detectorId, errStateRead := DecodePublishDestinationID(d.Id())
+	destinationId, detectorId, err := DecodePublishDestinationID(d.Id())
 
-	if errStateRead != nil {
-		return errStateRead
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting GuardDuty Publishing Destination (%s): %s", d.Id(), err)
 	}
 
 	input := guardduty.DeletePublishingDestinationInput{
@@ -155,18 +158,18 @@ func resourcePublishingDestinationDelete(d *schema.ResourceData, meta interface{
 		DetectorId:    aws.String(detectorId),
 	}
 
-	log.Printf("[DEBUG] Delete GuardDuty publishing destination: %s", input)
-	_, err := conn.DeletePublishingDestination(&input)
+	log.Printf("[DEBUG] Delete GuardDuty Publishing Destination: %s", input)
+	_, err = conn.DeletePublishingDestinationWithContext(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, guardduty.ErrCodeBadRequestException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("Deleting GuardDuty publishing destination '%s' failed: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting GuardDuty Publishing Destination (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func DecodePublishDestinationID(id string) (destinationID, detectorID string, err error) {

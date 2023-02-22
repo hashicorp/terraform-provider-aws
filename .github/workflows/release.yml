@@ -9,18 +9,10 @@ permissions:
   contents: write
 
 jobs:
-  go-version:
-    runs-on: macos-latest
-    outputs:
-      version: ${{ steps.go-version.outputs.version }}
-    steps:
-      - uses: actions/checkout@v2
-      - id: go-version
-        run: echo "::set-output name=version::$(cat ./.go-version)"
   release-notes:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
       - name: Generate Release Notes
@@ -32,7 +24,7 @@ jobs:
           retention-days: 1
   terraform-provider-release:
     name: 'Terraform Provider Release'
-    needs: [go-version, release-notes]
+    needs: [release-notes]
     uses: hashicorp/ghaction-terraform-provider-release/.github/workflows/hashicorp.yml@v2
     secrets:
       hc-releases-key-prod: '${{ secrets.HC_RELEASES_KEY_PROD }}'
@@ -47,7 +39,7 @@ jobs:
     with:
       goreleaser-release-args: '--timeout 3h --parallelism 4'
       release-notes: true
-      setup-go-version: '${{ needs.go-version.outputs.version }}'
+      setup-go-version-file: '.go-version'
       # Product Version (e.g. v1.2.3 or github.ref_name)
       product-version: '${{ github.ref_name }}'
   highest-version-tag:
@@ -56,7 +48,7 @@ jobs:
     outputs:
       tag: ${{ steps.highest-version-tag.outputs.tag }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           # Allow tag to be fetched when ref is a commit
           fetch-depth: 0
@@ -64,7 +56,7 @@ jobs:
         id: highest-version-tag
         run: |
           HIGHEST=$(git tag | sort -V | tail -1)
-          echo ::set-output name=tag::$HIGHEST
+          echo "tag=$HIGHEST" >> "$GITHUB_OUTPUT"
   changelog-newversion:
     needs: [terraform-provider-release, highest-version-tag]
     # write new changelog header only if release tag is the $HIGHEST i.e. exists on main

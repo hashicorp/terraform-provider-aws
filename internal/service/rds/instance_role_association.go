@@ -1,6 +1,7 @@
 package rds
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -9,9 +10,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -29,12 +32,12 @@ const (
 
 func ResourceInstanceRoleAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceInstanceRoleAssociationCreate,
-		Read:   resourceInstanceRoleAssociationRead,
-		Delete: resourceInstanceRoleAssociationDelete,
+		CreateWithoutTimeout: resourceInstanceRoleAssociationCreate,
+		ReadWithoutTimeout:   resourceInstanceRoleAssociationRead,
+		DeleteWithoutTimeout: resourceInstanceRoleAssociationDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -58,8 +61,9 @@ func ResourceInstanceRoleAssociation() *schema.Resource {
 	}
 }
 
-func resourceInstanceRoleAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+func resourceInstanceRoleAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	dbInstanceIdentifier := d.Get("db_instance_identifier").(string)
 	roleArn := d.Get("role_arn").(string)
@@ -70,9 +74,9 @@ func resourceInstanceRoleAssociationCreate(d *schema.ResourceData, meta interfac
 		RoleArn:              aws.String(roleArn),
 	}
 
-	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
+	err := resource.RetryContext(ctx, propagationTimeout, func() *resource.RetryError {
 		var err error
-		_, err = conn.AddRoleToDBInstance(input)
+		_, err = conn.AddRoleToDBInstanceWithContext(ctx, input)
 		if err != nil {
 			if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "IAM role ARN value is invalid or does not include the required permissions") {
 				return resource.RetryableError(err)
@@ -82,56 +86,58 @@ func resourceInstanceRoleAssociationCreate(d *schema.ResourceData, meta interfac
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		_, err = conn.AddRoleToDBInstance(input)
+		_, err = conn.AddRoleToDBInstanceWithContext(ctx, input)
 	}
 	if err != nil {
-		return fmt.Errorf("error associating RDS DB Instance (%s) IAM Role (%s): %w", dbInstanceIdentifier, roleArn, err)
+		return sdkdiag.AppendErrorf(diags, "associating RDS DB Instance (%s) IAM Role (%s): %s", dbInstanceIdentifier, roleArn, err)
 	}
 
 	d.SetId(fmt.Sprintf("%s,%s", dbInstanceIdentifier, roleArn))
 
-	if err := waitForDBInstanceRoleAssociation(conn, dbInstanceIdentifier, roleArn); err != nil {
-		return fmt.Errorf("error waiting for RDS DB Instance (%s) IAM Role (%s) association: %w", dbInstanceIdentifier, roleArn, err)
+	if err := waitForDBInstanceRoleAssociation(ctx, conn, dbInstanceIdentifier, roleArn); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for RDS DB Instance (%s) IAM Role (%s) association: %s", dbInstanceIdentifier, roleArn, err)
 	}
 
-	return resourceInstanceRoleAssociationRead(d, meta)
+	return append(diags, resourceInstanceRoleAssociationRead(ctx, d, meta)...)
 }
 
-func resourceInstanceRoleAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+func resourceInstanceRoleAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	dbInstanceIdentifier, roleArn, err := InstanceRoleAssociationDecodeID(d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error reading resource ID: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading resource ID: %s", err)
 	}
 
-	dbInstanceRole, err := DescribeDBInstanceRole(conn, dbInstanceIdentifier, roleArn)
+	dbInstanceRole, err := DescribeDBInstanceRole(ctx, conn, dbInstanceIdentifier, roleArn)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] RDS DB Instance (%s) not found, removing from state", dbInstanceIdentifier)
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading RDS DB Instance (%s) IAM Role (%s) association: %w", dbInstanceIdentifier, roleArn, err)
+		return sdkdiag.AppendErrorf(diags, "reading RDS DB Instance (%s) IAM Role (%s) association: %s", dbInstanceIdentifier, roleArn, err)
 	}
 
 	d.Set("db_instance_identifier", dbInstanceIdentifier)
 	d.Set("feature_name", dbInstanceRole.FeatureName)
 	d.Set("role_arn", dbInstanceRole.RoleArn)
 
-	return nil
+	return diags
 }
 
-func resourceInstanceRoleAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+func resourceInstanceRoleAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RDSConn()
 
 	dbInstanceIdentifier, roleArn, err := InstanceRoleAssociationDecodeID(d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error reading resource ID: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading resource ID: %s", err)
 	}
 
 	input := &rds.RemoveRoleFromDBInstanceInput{
@@ -141,25 +147,25 @@ func resourceInstanceRoleAssociationDelete(d *schema.ResourceData, meta interfac
 	}
 
 	log.Printf("[DEBUG] RDS DB Instance (%s) IAM Role disassociating: %s", dbInstanceIdentifier, roleArn)
-	_, err = conn.RemoveRoleFromDBInstance(input)
+	_, err = conn.RemoveRoleFromDBInstanceWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBInstanceNotFoundFault) {
-		return nil
+		return diags
 	}
 
 	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBInstanceRoleNotFoundFault) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error disassociating RDS DB Instance (%s) IAM Role (%s): %w", dbInstanceIdentifier, roleArn, err)
+		return sdkdiag.AppendErrorf(diags, "disassociating RDS DB Instance (%s) IAM Role (%s): %s", dbInstanceIdentifier, roleArn, err)
 	}
 
-	if err := WaitForDBInstanceRoleDisassociation(conn, dbInstanceIdentifier, roleArn); err != nil {
-		return fmt.Errorf("error waiting for RDS DB Instance (%s) IAM Role (%s) disassociation: %w", dbInstanceIdentifier, roleArn, err)
+	if err := WaitForDBInstanceRoleDisassociation(ctx, conn, dbInstanceIdentifier, roleArn); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for RDS DB Instance (%s) IAM Role (%s) disassociation: %s", dbInstanceIdentifier, roleArn, err)
 	}
 
-	return nil
+	return diags
 }
 
 func InstanceRoleAssociationDecodeID(id string) (string, string, error) {
@@ -172,8 +178,8 @@ func InstanceRoleAssociationDecodeID(id string) (string, string, error) {
 	return parts[0], parts[1], nil
 }
 
-func DescribeDBInstanceRole(conn *rds.RDS, dbInstanceIdentifier, roleArn string) (*rds.DBInstanceRole, error) {
-	dbInstance, err := FindDBInstanceByID(conn, dbInstanceIdentifier)
+func DescribeDBInstanceRole(ctx context.Context, conn *rds.RDS, dbInstanceIdentifier, roleArn string) (*rds.DBInstanceRole, error) {
+	dbInstance, err := findDBInstanceByIDSDKv1(ctx, conn, dbInstanceIdentifier)
 	if err != nil {
 		return nil, err
 	}
@@ -187,40 +193,40 @@ func DescribeDBInstanceRole(conn *rds.RDS, dbInstanceIdentifier, roleArn string)
 	return nil, &tfresource.EmptyResultError{}
 }
 
-func waitForDBInstanceRoleAssociation(conn *rds.RDS, dbInstanceIdentifier, roleArn string) error {
+func waitForDBInstanceRoleAssociation(ctx context.Context, conn *rds.RDS, dbInstanceIdentifier, roleArn string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{dbInstanceRoleStatusPending},
 		Target:  []string{dbInstanceRoleStatusActive},
-		Refresh: statusDBInstanceRoleAssociation(conn, dbInstanceIdentifier, roleArn),
+		Refresh: statusDBInstanceRoleAssociation(ctx, conn, dbInstanceIdentifier, roleArn),
 		Timeout: dbInstanceRoleAssociationCreatedTimeout,
 	}
 
 	log.Printf("[DEBUG] Waiting for RDS DB Instance (%s) IAM Role association: %s", dbInstanceIdentifier, roleArn)
-	_, err := stateConf.WaitForState()
+	_, err := stateConf.WaitForStateContext(ctx)
 
 	return err
 }
 
-func WaitForDBInstanceRoleDisassociation(conn *rds.RDS, dbInstanceIdentifier, roleArn string) error {
+func WaitForDBInstanceRoleDisassociation(ctx context.Context, conn *rds.RDS, dbInstanceIdentifier, roleArn string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			dbInstanceRoleStatusActive,
 			dbInstanceRoleStatusPending,
 		},
 		Target:  []string{},
-		Refresh: statusDBInstanceRoleAssociation(conn, dbInstanceIdentifier, roleArn),
+		Refresh: statusDBInstanceRoleAssociation(ctx, conn, dbInstanceIdentifier, roleArn),
 		Timeout: dbInstanceRoleAssociationDeletedTimeout,
 	}
 
 	log.Printf("[DEBUG] Waiting for RDS DB Instance (%s) IAM Role disassociation: %s", dbInstanceIdentifier, roleArn)
-	_, err := stateConf.WaitForState()
+	_, err := stateConf.WaitForStateContext(ctx)
 
 	return err
 }
 
-func statusDBInstanceRoleAssociation(conn *rds.RDS, dbInstanceIdentifier, roleArn string) resource.StateRefreshFunc {
+func statusDBInstanceRoleAssociation(ctx context.Context, conn *rds.RDS, dbInstanceIdentifier, roleArn string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		dbInstanceRole, err := DescribeDBInstanceRole(conn, dbInstanceIdentifier, roleArn)
+		dbInstanceRole, err := DescribeDBInstanceRole(ctx, conn, dbInstanceIdentifier, roleArn)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

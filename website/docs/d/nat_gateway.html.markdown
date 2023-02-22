@@ -13,8 +13,6 @@ Provides details about a specific Nat Gateway.
 ## Example Usage
 
 ```terraform
-variable "subnet_id" {}
-
 data "aws_nat_gateway" "default" {
   subnet_id = aws_subnet.public.id
 }
@@ -72,6 +70,6 @@ Each attachment supports the following:
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `read` - (Default `20m`)

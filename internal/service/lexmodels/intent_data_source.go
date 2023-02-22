@@ -1,6 +1,7 @@
 package lexmodels
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"time"
@@ -8,14 +9,16 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func DataSourceIntent() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceIntentRead,
+		ReadWithoutTimeout: dataSourceIntentRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -63,16 +66,17 @@ func DataSourceIntent() *schema.Resource {
 	}
 }
 
-func dataSourceIntentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LexModelsConn
+func dataSourceIntentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).LexModelsConn()
 
 	intentName := d.Get("name").(string)
-	resp, err := conn.GetIntent(&lexmodelbuildingservice.GetIntentInput{
+	resp, err := conn.GetIntentWithContext(ctx, &lexmodelbuildingservice.GetIntentInput{
 		Name:    aws.String(intentName),
 		Version: aws.String(d.Get("version").(string)),
 	})
 	if err != nil {
-		return fmt.Errorf("error getting intent %s: %w", intentName, err)
+		return sdkdiag.AppendErrorf(diags, "getting intent %s: %s", intentName, err)
 	}
 
 	arn := arn.ARN{
@@ -94,5 +98,5 @@ func dataSourceIntentRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(intentName)
 
-	return nil
+	return diags
 }

@@ -22,15 +22,16 @@ func init() {
 }
 
 func sweepEnvironmentEC2s(region string) error {
+	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).Cloud9Conn
+	conn := client.(*conns.AWSClient).Cloud9Conn()
 	input := &cloud9.ListEnvironmentsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListEnvironmentsPages(input, func(page *cloud9.ListEnvironmentsOutput, lastPage bool) bool {
+	err = conn.ListEnvironmentsPagesWithContext(ctx, input, func(page *cloud9.ListEnvironmentsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -55,7 +56,7 @@ func sweepEnvironmentEC2s(region string) error {
 		return fmt.Errorf("error listing Cloud9 EC2 Environments (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Cloud9 EC2 Environments (%s): %w", region, err)

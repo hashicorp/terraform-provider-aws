@@ -12,12 +12,13 @@ import (
 )
 
 func TestAccSSOAdminPermissionSetDataSource_arn(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ssoadmin_permission_set.test"
 	resourceName := "aws_ssoadmin_permission_set.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckInstances(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckInstances(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ssoadmin.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -37,12 +38,13 @@ func TestAccSSOAdminPermissionSetDataSource_arn(t *testing.T) {
 }
 
 func TestAccSSOAdminPermissionSetDataSource_name(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ssoadmin_permission_set.test"
 	resourceName := "aws_ssoadmin_permission_set.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckInstances(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckInstances(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ssoadmin.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -62,9 +64,9 @@ func TestAccSSOAdminPermissionSetDataSource_name(t *testing.T) {
 }
 
 func TestAccSSOAdminPermissionSetDataSource_nonExistent(t *testing.T) {
-
+	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckInstances(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckInstances(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ssoadmin.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{

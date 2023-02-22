@@ -1,16 +1,18 @@
-// UpdateTags updates {{ .ServicePackage }} service tags.
+// {{ .UpdateTagsFunc }} updates {{ .ServicePackage }} service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn {{ .ClientType }}, identifier string{{ if .TagResTypeElem }}, resourceType string{{ end }}, oldTags interface{}, newTags interface{}) error {
-	return UpdateTagsWithContext(context.Background(), conn, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}, oldTags, newTags)
+{{- if not ( .ContextOnly ) }}
+func {{ .UpdateTagsFunc }}(conn {{ .ClientType }}, identifier string{{ if .TagResTypeElem }}, resourceType string{{ end }}, oldTags interface{}, newTags interface{}) error {
+	return {{ .UpdateTagsFunc }}WithContext(context.Background(), conn, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}, oldTags, newTags)
 }
-
-{{- if  .TagTypeAddBoolElem }}
-func UpdateTagsWithContext(ctx context.Context, conn {{ .ClientType }}, identifier string{{ if .TagResTypeElem }}, resourceType string{{ end }}, oldTagsSet interface{}, newTagsSet interface{}) error {
+{{- end }}
+func {{ if .ContextOnly }}{{ .UpdateTagsFunc }}{{ else }}{{ .UpdateTagsFunc }}WithContext{{ end }}(ctx context.Context, conn {{ .ClientType }}, identifier string{{ if .TagResTypeElem }}, resourceType string{{ end }},
+{{- if  .TagTypeAddBoolElem -}}
+oldTagsSet interface{}, newTagsSet interface{}) error {
 	oldTags := KeyValueTags(oldTagsSet, identifier{{ if .TagResTypeElem }}, resourceType{{ end }})
 	newTags := KeyValueTags(newTagsSet, identifier{{ if .TagResTypeElem }}, resourceType{{ end }})
-{{- else }}
-func UpdateTagsWithContext(ctx context.Context, conn {{ .ClientType }}, identifier string{{ if .TagResTypeElem }}, resourceType string{{ end }}, oldTagsMap interface{}, newTagsMap interface{}) error {
+{{- else -}}
+oldTagsMap interface{}, newTagsMap interface{}) error {
 	oldTags := tftags.New(oldTagsMap)
 	newTags := tftags.New(newTagsMap)
 {{- end }}

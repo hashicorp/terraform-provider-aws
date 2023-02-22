@@ -1,15 +1,17 @@
 package shield
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/shield"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -17,12 +19,12 @@ import (
 
 func ResourceProtectionGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceProtectionGroupCreate,
-		Read:   resourceProtectionGroupRead,
-		Update: resourceProtectionGroupUpdate,
-		Delete: resourceProtectionGroupDelete,
+		CreateWithoutTimeout: resourceProtectionGroupCreate,
+		ReadWithoutTimeout:   resourceProtectionGroupRead,
+		UpdateWithoutTimeout: resourceProtectionGroupUpdate,
+		DeleteWithoutTimeout: resourceProtectionGroupDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -72,8 +74,9 @@ func ResourceProtectionGroup() *schema.Resource {
 	}
 }
 
-func resourceProtectionGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ShieldConn
+func resourceProtectionGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ShieldConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -94,19 +97,20 @@ func resourceProtectionGroupCreate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	log.Printf("[DEBUG] Creating Shield Protection Group: %s", input)
-	_, err := conn.CreateProtectionGroup(input)
+	_, err := conn.CreateProtectionGroupWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating Shield Protection Group (%s): %w", protectionGroupID, err)
+		return sdkdiag.AppendErrorf(diags, "creating Shield Protection Group (%s): %s", protectionGroupID, err)
 	}
 
 	d.SetId(protectionGroupID)
 
-	return resourceProtectionGroupRead(d, meta)
+	return append(diags, resourceProtectionGroupRead(ctx, d, meta)...)
 }
 
-func resourceProtectionGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ShieldConn
+func resourceProtectionGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ShieldConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -114,16 +118,16 @@ func resourceProtectionGroupRead(d *schema.ResourceData, meta interface{}) error
 		ProtectionGroupId: aws.String(d.Id()),
 	}
 
-	resp, err := conn.DescribeProtectionGroup(input)
+	resp, err := conn.DescribeProtectionGroupWithContext(ctx, input)
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, shield.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Shield Protection Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Shield Protection Group (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Shield Protection Group (%s): %s", d.Id(), err)
 	}
 
 	arn := aws.StringValue(resp.ProtectionGroup.ProtectionGroupArn)
@@ -131,37 +135,32 @@ func resourceProtectionGroupRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("aggregation", resp.ProtectionGroup.Aggregation)
 	d.Set("protection_group_id", resp.ProtectionGroup.ProtectionGroupId)
 	d.Set("pattern", resp.ProtectionGroup.Pattern)
+	d.Set("members", resp.ProtectionGroup.Members)
+	d.Set("resource_type", resp.ProtectionGroup.ResourceType)
 
-	if resp.ProtectionGroup.Members != nil {
-		d.Set("members", resp.ProtectionGroup.Members)
-	}
-
-	if resp.ProtectionGroup.ResourceType != nil {
-		d.Set("resource_type", resp.ProtectionGroup.ResourceType)
-	}
-
-	tags, err := ListTags(conn, arn)
+	tags, err := ListTags(ctx, conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for Shield Protection Group (%s): %w", arn, err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for Shield Protection Group (%s): %s", arn, err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags_all: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceProtectionGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ShieldConn
+func resourceProtectionGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ShieldConn()
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &shield.UpdateProtectionGroupInput{
@@ -179,38 +178,39 @@ func resourceProtectionGroupUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 
 		log.Printf("[DEBUG] Updating Shield Protection Group: %s", input)
-		_, err := conn.UpdateProtectionGroup(input)
+		_, err := conn.UpdateProtectionGroupWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error updating Shield Protection Group (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Shield Protection Group (%s): %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("protection_group_arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %w", err)
+		if err := UpdateTags(ctx, conn, d.Get("protection_group_arn").(string), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
 		}
 	}
 
-	return resourceProtectionGroupRead(d, meta)
+	return append(diags, resourceProtectionGroupRead(ctx, d, meta)...)
 }
 
-func resourceProtectionGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ShieldConn
+func resourceProtectionGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ShieldConn()
 
 	log.Printf("[DEBUG] Deletinh Shield Protection Group: %s", d.Id())
-	_, err := conn.DeleteProtectionGroup(&shield.DeleteProtectionGroupInput{
+	_, err := conn.DeleteProtectionGroupWithContext(ctx, &shield.DeleteProtectionGroupInput{
 		ProtectionGroupId: aws.String(d.Id()),
 	})
 
 	if tfawserr.ErrCodeEquals(err, shield.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Shield Protection Group (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Shield Protection Group (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

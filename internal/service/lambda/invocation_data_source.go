@@ -1,19 +1,22 @@
 package lambda
 
 import (
+	"context"
 	"crypto/md5"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lambda"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 func DataSourceInvocation() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceInvocationRead,
+		ReadWithoutTimeout: dataSourceInvocationRead,
 
 		Schema: map[string]*schema.Schema{
 			"function_name": {
@@ -41,14 +44,15 @@ func DataSourceInvocation() *schema.Resource {
 	}
 }
 
-func dataSourceInvocationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LambdaConn
+func dataSourceInvocationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).LambdaConn()
 
 	functionName := d.Get("function_name").(string)
 	qualifier := d.Get("qualifier").(string)
 	input := []byte(d.Get("input").(string))
 
-	res, err := conn.Invoke(&lambda.InvokeInput{
+	res, err := conn.InvokeWithContext(ctx, &lambda.InvokeInput{
 		FunctionName:   aws.String(functionName),
 		InvocationType: aws.String(lambda.InvocationTypeRequestResponse),
 		Payload:        input,
@@ -56,18 +60,16 @@ func dataSourceInvocationRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "invoking Lambda Function (%s): %s", functionName, err)
 	}
 
 	if res.FunctionError != nil {
-		return fmt.Errorf("Lambda function (%s) returned error: (%s)", functionName, string(res.Payload))
+		return sdkdiag.AppendErrorf(diags, `invoking Lambda Function (%s): returned error: "%s"`, functionName, string(res.Payload))
 	}
 
-	if err = d.Set("result", string(res.Payload)); err != nil {
-		return err
-	}
+	d.Set("result", string(res.Payload))
 
 	d.SetId(fmt.Sprintf("%s_%s_%x", functionName, qualifier, md5.Sum(input)))
 
-	return nil
+	return diags
 }

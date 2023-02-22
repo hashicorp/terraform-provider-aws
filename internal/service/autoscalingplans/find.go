@@ -1,6 +1,8 @@
 package autoscalingplans
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscalingplans"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -8,13 +10,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindScalingPlanByNameAndVersion(conn *autoscalingplans.AutoScalingPlans, scalingPlanName string, scalingPlanVersion int) (*autoscalingplans.ScalingPlan, error) {
+func FindScalingPlanByNameAndVersion(ctx context.Context, conn *autoscalingplans.AutoScalingPlans, scalingPlanName string, scalingPlanVersion int) (*autoscalingplans.ScalingPlan, error) {
 	input := &autoscalingplans.DescribeScalingPlansInput{
 		ScalingPlanNames:   aws.StringSlice([]string{scalingPlanName}),
 		ScalingPlanVersion: aws.Int64(int64(scalingPlanVersion)),
 	}
 
-	output, err := conn.DescribeScalingPlans(input)
+	output, err := conn.DescribeScalingPlansWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, autoscalingplans.ErrCodeObjectNotFoundException) {
 		return nil, &resource.NotFoundError{

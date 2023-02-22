@@ -34,3 +34,4 @@ In addition to all arguments above, the following attributes are exported:
 * `owner_account_id` - ID of the AWS account that owns the connection.
 * `provider_name` - Name of the service provider associated with the connection.
 * `tags` - Map of tags for the resource.
+* `vlan_id` - The VLAN ID.

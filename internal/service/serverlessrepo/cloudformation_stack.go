@@ -1,6 +1,7 @@
 package serverlessrepo
 
 import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -10,10 +11,12 @@ import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	serverlessrepo "github.com/aws/aws-sdk-go/service/serverlessapplicationrepository"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfcloudformation "github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -30,13 +33,13 @@ const (
 
 func ResourceCloudFormationStack() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceCloudFormationStackCreate,
-		Read:   resourceCloudFormationStackRead,
-		Update: resourceCloudFormationStackUpdate,
-		Delete: resourceCloudFormationStackDelete,
+		CreateWithoutTimeout: resourceCloudFormationStackCreate,
+		ReadWithoutTimeout:   resourceCloudFormationStackRead,
+		UpdateWithoutTimeout: resourceCloudFormationStackUpdate,
+		DeleteWithoutTimeout: resourceCloudFormationStackDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: resourceCloudFormationStackImport,
+			StateContext: resourceCloudFormationStackImport,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -90,12 +93,13 @@ func ResourceCloudFormationStack() *schema.Resource {
 	}
 }
 
-func resourceCloudFormationStackCreate(d *schema.ResourceData, meta interface{}) error {
-	cfConn := meta.(*conns.AWSClient).CloudFormationConn
+func resourceCloudFormationStackCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	cfConn := meta.(*conns.AWSClient).CloudFormationConn()
 
-	changeSet, err := createCloudFormationChangeSet(d, meta.(*conns.AWSClient))
+	changeSet, err := createCloudFormationChangeSet(ctx, d, meta.(*conns.AWSClient))
 	if err != nil {
-		return fmt.Errorf("error creating Serverless Application Repository CloudFormation change set: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating Serverless Application Repository CloudFormation change set: %s", err)
 	}
 
 	log.Printf("[INFO] Serverless Application Repository CloudFormation Stack (%s) change set created", d.Id())
@@ -108,37 +112,38 @@ func resourceCloudFormationStackCreate(d *schema.ResourceData, meta interface{})
 		ClientRequestToken: aws.String(requestToken),
 	}
 	log.Printf("[DEBUG] Executing Serverless Application Repository CloudFormation change set: %s", executeRequest)
-	_, err = cfConn.ExecuteChangeSet(&executeRequest)
+	_, err = cfConn.ExecuteChangeSetWithContext(ctx, &executeRequest)
 	if err != nil {
-		return fmt.Errorf("executing Serverless Application Repository CloudFormation Stack (%s) change set failed: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "executing Serverless Application Repository CloudFormation Stack (%s) change set failed: %s", d.Id(), err)
 	}
 
-	_, err = tfcloudformation.WaitStackCreated(cfConn, d.Id(), requestToken, d.Timeout(schema.TimeoutCreate))
+	_, err = tfcloudformation.WaitStackCreated(ctx, cfConn, d.Id(), requestToken, d.Timeout(schema.TimeoutCreate))
 	if err != nil {
-		return fmt.Errorf("error waiting for Serverless Application Repository CloudFormation Stack (%s) creation: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Serverless Application Repository CloudFormation Stack (%s) creation: %s", d.Id(), err)
 	}
 
 	log.Printf("[INFO] Serverless Application Repository CloudFormation Stack (%s) created", d.Id())
 
-	return resourceCloudFormationStackRead(d, meta)
+	return append(diags, resourceCloudFormationStackRead(ctx, d, meta)...)
 }
 
-func resourceCloudFormationStackRead(d *schema.ResourceData, meta interface{}) error {
-	serverlessConn := meta.(*conns.AWSClient).ServerlessRepoConn
-	cfConn := meta.(*conns.AWSClient).CloudFormationConn
+func resourceCloudFormationStackRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	serverlessConn := meta.(*conns.AWSClient).ServerlessRepoConn()
+	cfConn := meta.(*conns.AWSClient).CloudFormationConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	stack, err := tfcloudformation.FindStackByID(cfConn, d.Id())
+	stack, err := tfcloudformation.FindStackByID(ctx, cfConn, d.Id())
 
 	if tfresource.NotFound(err) {
 		log.Printf("[WARN] Serverless Application Repository CloudFormation Stack (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error describing Serverless Application Repository CloudFormation Stack (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "describing Serverless Application Repository CloudFormation Stack (%s): %s", d.Id(), err)
 	}
 
 	// Serverless Application Repo prefixes the stack name with "serverlessrepo-", so remove it from the saved string
@@ -151,50 +156,50 @@ func resourceCloudFormationStackRead(d *schema.ResourceData, meta interface{}) e
 		applicationID = aws.StringValue(v.Value)
 		d.Set("application_id", applicationID)
 	} else {
-		return fmt.Errorf("error describing Serverless Application Repository CloudFormation Stack (%s): missing required tag \"%s\"", d.Id(), cloudFormationStackTagApplicationID)
+		return sdkdiag.AppendErrorf(diags, "describing Serverless Application Repository CloudFormation Stack (%s): missing required tag \"%s\"", d.Id(), cloudFormationStackTagApplicationID)
 	}
 	if v, ok := tags[cloudFormationStackTagSemanticVersion]; ok {
 		semanticVersion = aws.StringValue(v.Value)
 		d.Set("semantic_version", semanticVersion)
 	} else {
-		return fmt.Errorf("error describing Serverless Application Repository CloudFormation Stack (%s): missing required tag \"%s\"", d.Id(), cloudFormationStackTagSemanticVersion)
+		return sdkdiag.AppendErrorf(diags, "describing Serverless Application Repository CloudFormation Stack (%s): missing required tag \"%s\"", d.Id(), cloudFormationStackTagSemanticVersion)
 	}
 
 	tags = tags.IgnoreServerlessApplicationRepository().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err = d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("failed to set tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "to set tags: %s", err)
 	}
 
 	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("failed to set tags_all: %w", err)
+		return sdkdiag.AppendErrorf(diags, "to set tags_all: %s", err)
 	}
 
 	if err = d.Set("outputs", flattenCloudFormationOutputs(stack.Outputs)); err != nil {
-		return fmt.Errorf("failed to set outputs: %w", err)
+		return sdkdiag.AppendErrorf(diags, "to set outputs: %s", err)
 	}
 
-	getApplicationOutput, err := findApplication(serverlessConn, applicationID, semanticVersion)
+	getApplicationOutput, err := findApplication(ctx, serverlessConn, applicationID, semanticVersion)
 	if err != nil {
-		return fmt.Errorf("error getting Serverless Application Repository application (%s, v%s): %w", applicationID, semanticVersion, err)
+		return sdkdiag.AppendErrorf(diags, "getting Serverless Application Repository application (%s, v%s): %s", applicationID, semanticVersion, err)
 	}
 
 	if getApplicationOutput == nil || getApplicationOutput.Version == nil {
-		return fmt.Errorf("error getting Serverless Application Repository application (%s, v%s): empty response", applicationID, semanticVersion)
+		return sdkdiag.AppendErrorf(diags, "getting Serverless Application Repository application (%s, v%s): empty response", applicationID, semanticVersion)
 	}
 
 	version := getApplicationOutput.Version
 
 	if err = d.Set("parameters", flattenNonDefaultCloudFormationParameters(stack.Parameters, version.ParameterDefinitions)); err != nil {
-		return fmt.Errorf("failed to set parameters: %w", err)
+		return sdkdiag.AppendErrorf(diags, "to set parameters: %s", err)
 	}
 
 	if err = d.Set("capabilities", flattenStackCapabilities(stack.Capabilities, version.RequiredCapabilities)); err != nil {
-		return fmt.Errorf("failed to set capabilities: %w", err)
+		return sdkdiag.AppendErrorf(diags, "to set capabilities: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
 func flattenNonDefaultCloudFormationParameters(cfParams []*cloudformation.Parameter, rawParameterDefinitions []*serverlessrepo.ParameterDefinition) map[string]interface{} {
@@ -218,12 +223,13 @@ func flattenParameterDefinitions(parameterDefinitions []*serverlessrepo.Paramete
 	return result
 }
 
-func resourceCloudFormationStackUpdate(d *schema.ResourceData, meta interface{}) error {
-	cfConn := meta.(*conns.AWSClient).CloudFormationConn
+func resourceCloudFormationStackUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	cfConn := meta.(*conns.AWSClient).CloudFormationConn()
 
-	changeSet, err := createCloudFormationChangeSet(d, meta.(*conns.AWSClient))
+	changeSet, err := createCloudFormationChangeSet(ctx, d, meta.(*conns.AWSClient))
 	if err != nil {
-		return fmt.Errorf("error creating Serverless Application Repository CloudFormation Stack (%s) change set: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "creating Serverless Application Repository CloudFormation Stack (%s) change set: %s", d.Id(), err)
 	}
 
 	log.Printf("[INFO] Serverless Application Repository CloudFormation Stack (%s) change set created", d.Id())
@@ -234,49 +240,47 @@ func resourceCloudFormationStackUpdate(d *schema.ResourceData, meta interface{})
 		ClientRequestToken: aws.String(requestToken),
 	}
 	log.Printf("[DEBUG] Executing Serverless Application Repository CloudFormation change set: %s", executeRequest)
-	_, err = cfConn.ExecuteChangeSet(&executeRequest)
+	_, err = cfConn.ExecuteChangeSetWithContext(ctx, &executeRequest)
 	if err != nil {
-		return fmt.Errorf("executing Serverless Application Repository CloudFormation change set failed: %w", err)
+		return sdkdiag.AppendErrorf(diags, "executing Serverless Application Repository CloudFormation change set failed: %s", err)
 	}
 
-	_, err = tfcloudformation.WaitStackUpdated(cfConn, d.Id(), requestToken, d.Timeout(schema.TimeoutUpdate))
+	_, err = tfcloudformation.WaitStackUpdated(ctx, cfConn, d.Id(), requestToken, d.Timeout(schema.TimeoutUpdate))
 	if err != nil {
-		return fmt.Errorf("error waiting for Serverless Application Repository CloudFormation Stack (%s) update: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Serverless Application Repository CloudFormation Stack (%s) update: %s", d.Id(), err)
 	}
 
 	log.Printf("[INFO] Serverless Application Repository CloudFormation Stack (%s) updated", d.Id())
 
-	return resourceCloudFormationStackRead(d, meta)
+	return append(diags, resourceCloudFormationStackRead(ctx, d, meta)...)
 }
 
-func resourceCloudFormationStackDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFormationConn
+func resourceCloudFormationStackDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	cfConn := meta.(*conns.AWSClient).CloudFormationConn()
 
 	requestToken := resource.UniqueId()
 	input := &cloudformation.DeleteStackInput{
 		StackName:          aws.String(d.Id()),
 		ClientRequestToken: aws.String(requestToken),
 	}
-	log.Printf("[DEBUG] Deleting Serverless Application Repository CloudFormation stack %s", input)
-	_, err := conn.DeleteStack(input)
+	_, err := cfConn.DeleteStackWithContext(ctx, input)
 	if tfawserr.ErrCodeEquals(err, "ValidationError") {
-		return nil
+		return diags
 	}
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "deleting Serverless Application Repository CloudFormation Stack (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfcloudformation.WaitStackDeleted(conn, d.Id(), requestToken, d.Timeout(schema.TimeoutDelete))
+	_, err = tfcloudformation.WaitStackDeleted(ctx, cfConn, d.Id(), requestToken, d.Timeout(schema.TimeoutDelete))
 	if err != nil {
-		return fmt.Errorf("error waiting for Serverless Application Repository CloudFormation Stack deletion: %w", err)
+		return sdkdiag.AppendErrorf(diags, "deleting Serverless Application Repository CloudFormation Stack (%s): waiting for completion: %s", d.Id(), err)
 	}
 
-	log.Printf("[INFO] Serverless Application Repository CloudFormation stack (%s) deleted", d.Id())
-
-	return nil
+	return diags
 }
 
-func resourceCloudFormationStackImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceCloudFormationStackImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	stackID := d.Id()
 
 	// If this isn't an ARN, it's the stack name
@@ -286,10 +290,10 @@ func resourceCloudFormationStackImport(d *schema.ResourceData, meta interface{})
 		}
 	}
 
-	cfConn := meta.(*conns.AWSClient).CloudFormationConn
-	stack, err := tfcloudformation.FindStackByID(cfConn, stackID)
+	cfConn := meta.(*conns.AWSClient).CloudFormationConn()
+	stack, err := tfcloudformation.FindStackByID(ctx, cfConn, stackID)
 	if err != nil {
-		return nil, fmt.Errorf("error describing Serverless Application Repository CloudFormation Stack (%s): %w", stackID, err)
+		return nil, fmt.Errorf("describing Serverless Application Repository CloudFormation Stack (%s): %w", stackID, err)
 	}
 
 	d.SetId(aws.StringValue(stack.StackId))
@@ -297,9 +301,9 @@ func resourceCloudFormationStackImport(d *schema.ResourceData, meta interface{})
 	return []*schema.ResourceData{d}, nil
 }
 
-func createCloudFormationChangeSet(d *schema.ResourceData, client *conns.AWSClient) (*cloudformation.DescribeChangeSetOutput, error) {
-	serverlessConn := client.ServerlessRepoConn
-	cfConn := client.CloudFormationConn
+func createCloudFormationChangeSet(ctx context.Context, d *schema.ResourceData, client *conns.AWSClient) (*cloudformation.DescribeChangeSetOutput, error) {
+	serverlessConn := client.ServerlessRepoConn()
+	cfConn := client.CloudFormationConn()
 	defaultTagsConfig := client.DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
@@ -318,12 +322,12 @@ func createCloudFormationChangeSet(d *schema.ResourceData, client *conns.AWSClie
 	}
 
 	log.Printf("[DEBUG] Creating Serverless Application Repository CloudFormation change set: %s", changeSetRequest)
-	changeSetResponse, err := serverlessConn.CreateCloudFormationChangeSet(&changeSetRequest)
+	changeSetResponse, err := serverlessConn.CreateCloudFormationChangeSetWithContext(ctx, &changeSetRequest)
 	if err != nil {
 		return nil, err
 	}
 
-	return tfcloudformation.WaitChangeSetCreated(cfConn, aws.StringValue(changeSetResponse.StackId), aws.StringValue(changeSetResponse.ChangeSetId))
+	return tfcloudformation.WaitChangeSetCreated(ctx, cfConn, aws.StringValue(changeSetResponse.StackId), aws.StringValue(changeSetResponse.ChangeSetId))
 }
 
 func expandCloudFormationChangeSetParameters(params map[string]interface{}) []*serverlessrepo.ParameterValue {

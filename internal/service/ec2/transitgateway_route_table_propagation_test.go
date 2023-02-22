@@ -1,6 +1,7 @@
 package ec2_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -15,6 +16,7 @@ import (
 )
 
 func testAccTransitGatewayRouteTablePropagation_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v ec2.TransitGatewayRouteTablePropagation
 	resourceName := "aws_ec2_transit_gateway_route_table_propagation.test"
 	transitGatewayRouteTableResourceName := "aws_ec2_transit_gateway_route_table.test"
@@ -22,15 +24,15 @@ func testAccTransitGatewayRouteTablePropagation_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTransitGatewayRouteTablePropagationDestroy,
+		CheckDestroy:             testAccCheckTransitGatewayRouteTablePropagationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayRouteTablePropagationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitGatewayRouteTablePropagationExists(resourceName, &v),
+					testAccCheckTransitGatewayRouteTablePropagationExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "resource_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "resource_type"),
 					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_attachment_id", transitGatewayVpcAttachmentResourceName, "id"),
@@ -47,21 +49,22 @@ func testAccTransitGatewayRouteTablePropagation_basic(t *testing.T) {
 }
 
 func testAccTransitGatewayRouteTablePropagation_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v ec2.TransitGatewayRouteTablePropagation
 	resourceName := "aws_ec2_transit_gateway_route_table_propagation.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(t) },
+		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckTransitGateway(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTransitGatewayRouteTablePropagationDestroy,
+		CheckDestroy:             testAccCheckTransitGatewayRouteTablePropagationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayRouteTablePropagationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitGatewayRouteTablePropagationExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceTransitGatewayRouteTablePropagation(), resourceName),
+					testAccCheckTransitGatewayRouteTablePropagationExists(ctx, resourceName, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceTransitGatewayRouteTablePropagation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -69,7 +72,7 @@ func testAccTransitGatewayRouteTablePropagation_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckTransitGatewayRouteTablePropagationExists(n string, v *ec2.TransitGatewayRouteTablePropagation) resource.TestCheckFunc {
+func testAccCheckTransitGatewayRouteTablePropagationExists(ctx context.Context, n string, v *ec2.TransitGatewayRouteTablePropagation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -86,9 +89,9 @@ func testAccCheckTransitGatewayRouteTablePropagationExists(n string, v *ec2.Tran
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
-		output, err := tfec2.FindTransitGatewayRouteTablePropagationByTwoPartKey(conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
+		output, err := tfec2.FindTransitGatewayRouteTablePropagationByTwoPartKey(ctx, conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
 
 		if err != nil {
 			return err
@@ -100,34 +103,36 @@ func testAccCheckTransitGatewayRouteTablePropagationExists(n string, v *ec2.Tran
 	}
 }
 
-func testAccCheckTransitGatewayRouteTablePropagationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn
+func testAccCheckTransitGatewayRouteTablePropagationDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_ec2_transit_gateway_route_table_propagation" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_ec2_transit_gateway_route_table_propagation" {
+				continue
+			}
+
+			transitGatewayRouteTableID, transitGatewayAttachmentID, err := tfec2.TransitGatewayRouteTablePropagationParseResourceID(rs.Primary.ID)
+
+			if err != nil {
+				return err
+			}
+
+			_, err = tfec2.FindTransitGatewayRouteTablePropagationByTwoPartKey(ctx, conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("EC2 Transit Gateway Route Table Propagation %s still exists", rs.Primary.ID)
 		}
 
-		transitGatewayRouteTableID, transitGatewayAttachmentID, err := tfec2.TransitGatewayRouteTablePropagationParseResourceID(rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		_, err = tfec2.FindTransitGatewayRouteTablePropagationByTwoPartKey(conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("EC2 Transit Gateway Route Table Propagation %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
 func testAccTransitGatewayRouteTablePropagationConfig_basic(rName string) string {
