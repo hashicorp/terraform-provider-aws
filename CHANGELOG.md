@@ -8,6 +8,8 @@ ENHANCEMENTS:
 
 * resource/aws_lb_ssl_negotiation_policy: Add `triggers` attribute to force resource updates ([#29482](https://github.com/hashicorp/terraform-provider-aws/issues/29482))
 * resource/aws_load_balancer_listener_policy: Add `triggers` attribute to force resource updates ([#29482](https://github.com/hashicorp/terraform-provider-aws/issues/29482))
+* resource/aws_organizations_policy: Add `skip_destroy` attribute ([#29382](https://github.com/hashicorp/terraform-provider-aws/issues/29382))
+* resource/aws_organizations_policy_attachment: Add `skip_destroy` attribute ([#29382](https://github.com/hashicorp/terraform-provider-aws/issues/29382))
 * resource/aws_sns_topic: Add `signature_version` and `tracing_config` arguments ([#29462](https://github.com/hashicorp/terraform-provider-aws/issues/29462))
 
 BUG FIXES:
