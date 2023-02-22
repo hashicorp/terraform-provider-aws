@@ -27,6 +27,7 @@ func ResourceRepository() *schema.Resource {
 		ReadWithoutTimeout:   resourceRepositoryRead,
 		UpdateWithoutTimeout: resourceRepositoryUpdate,
 		DeleteWithoutTimeout: resourceRepositoryDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -48,14 +49,11 @@ func ResourceRepository() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"encryption_type": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								ecr.EncryptionTypeAes256,
-								ecr.EncryptionTypeKms,
-							}, false),
-							Default:  ecr.EncryptionTypeAes256,
-							ForceNew: true,
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							Default:      ecr.EncryptionTypeAes256,
+							ValidateFunc: validation.StringInSlice(ecr.EncryptionType_Values(), false),
 						},
 						"kms_key": {
 							Type:     schema.TypeString,
@@ -87,13 +85,10 @@ func ResourceRepository() *schema.Resource {
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 			},
 			"image_tag_mutability": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  ecr.ImageTagMutabilityMutable,
-				ValidateFunc: validation.StringInSlice([]string{
-					ecr.ImageTagMutabilityMutable,
-					ecr.ImageTagMutabilityImmutable,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      ecr.ImageTagMutabilityMutable,
+				ValidateFunc: validation.StringInSlice(ecr.ImageTagMutability_Values(), false),
 			},
 			"name": {
 				Type:     schema.TypeString,
@@ -120,9 +115,10 @@ func resourceRepositoryCreate(ctx context.Context, d *schema.ResourceData, meta 
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
+	name := d.Get("name").(string)
 	input := ecr.CreateRepositoryInput{
 		ImageTagMutability:      aws.String(d.Get("image_tag_mutability").(string)),
-		RepositoryName:          aws.String(d.Get("name").(string)),
+		RepositoryName:          aws.String(name),
 		EncryptionConfiguration: expandRepositoryEncryptionConfiguration(d.Get("encryption_configuration").([]interface{})),
 	}
 
@@ -269,51 +265,6 @@ func resourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func flattenImageScanningConfiguration(isc *ecr.ImageScanningConfiguration) []map[string]interface{} {
-	if isc == nil {
-		return nil
-	}
-
-	config := make(map[string]interface{})
-	config["scan_on_push"] = aws.BoolValue(isc.ScanOnPush)
-
-	return []map[string]interface{}{
-		config,
-	}
-}
-
-func expandRepositoryEncryptionConfiguration(data []interface{}) *ecr.EncryptionConfiguration {
-	if len(data) == 0 || data[0] == nil {
-		return nil
-	}
-
-	ec := data[0].(map[string]interface{})
-	config := &ecr.EncryptionConfiguration{
-		EncryptionType: aws.String(ec["encryption_type"].(string)),
-	}
-	if v, ok := ec["kms_key"]; ok {
-		if s := v.(string); s != "" {
-			config.KmsKey = aws.String(v.(string))
-		}
-	}
-	return config
-}
-
-func flattenRepositoryEncryptionConfiguration(ec *ecr.EncryptionConfiguration) []map[string]interface{} {
-	if ec == nil {
-		return nil
-	}
-
-	config := map[string]interface{}{
-		"encryption_type": aws.StringValue(ec.EncryptionType),
-		"kms_key":         aws.StringValue(ec.KmsKey),
-	}
-
-	return []map[string]interface{}{
-		config,
-	}
-}
-
 func resourceRepositoryUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	arn := d.Get("arn").(string)
@@ -401,6 +352,51 @@ func resourceRepositoryDelete(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
+func flattenImageScanningConfiguration(isc *ecr.ImageScanningConfiguration) []map[string]interface{} {
+	if isc == nil {
+		return nil
+	}
+
+	config := make(map[string]interface{})
+	config["scan_on_push"] = aws.BoolValue(isc.ScanOnPush)
+
+	return []map[string]interface{}{
+		config,
+	}
+}
+
+func expandRepositoryEncryptionConfiguration(data []interface{}) *ecr.EncryptionConfiguration {
+	if len(data) == 0 || data[0] == nil {
+		return nil
+	}
+
+	ec := data[0].(map[string]interface{})
+	config := &ecr.EncryptionConfiguration{
+		EncryptionType: aws.String(ec["encryption_type"].(string)),
+	}
+	if v, ok := ec["kms_key"]; ok {
+		if s := v.(string); s != "" {
+			config.KmsKey = aws.String(v.(string))
+		}
+	}
+	return config
+}
+
+func flattenRepositoryEncryptionConfiguration(ec *ecr.EncryptionConfiguration) []map[string]interface{} {
+	if ec == nil {
+		return nil
+	}
+
+	config := map[string]interface{}{
+		"encryption_type": aws.StringValue(ec.EncryptionType),
+		"kms_key":         aws.StringValue(ec.KmsKey),
+	}
+
+	return []map[string]interface{}{
+		config,
+	}
+}
+
 func resourceRepositoryUpdateImageTagMutability(ctx context.Context, conn *ecr.ECR, d *schema.ResourceData) error {
 	input := &ecr.PutImageTagMutabilityInput{
 		ImageTagMutability: aws.String(d.Get("image_tag_mutability").(string)),
@@ -415,6 +411,7 @@ func resourceRepositoryUpdateImageTagMutability(ctx context.Context, conn *ecr.E
 
 	return nil
 }
+
 func resourceRepositoryUpdateImageScanningConfiguration(ctx context.Context, conn *ecr.ECR, d *schema.ResourceData) error {
 	var ecrImageScanningConfig ecr.ImageScanningConfiguration
 	imageScanningConfigs := d.Get("image_scanning_configuration").([]interface{})
