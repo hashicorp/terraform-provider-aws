@@ -46,7 +46,7 @@ func TestAccRDSOptionGroup_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"name_prefix"},
+				ImportStateVerifyIgnore: []string{"name_prefix", "skip_destroy"},
 			},
 		},
 	})
@@ -75,7 +75,7 @@ func TestAccRDSOptionGroup_timeoutBlock(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"name_prefix"},
+				ImportStateVerifyIgnore: []string{"name_prefix", "skip_destroy"},
 			},
 		},
 	})
@@ -102,7 +102,7 @@ func TestAccRDSOptionGroup_namePrefix(t *testing.T) {
 				ResourceName:            "aws_db_option_group.test",
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"name_prefix"},
+				ImportStateVerifyIgnore: []string{"name_prefix", "skip_destroy"},
 			},
 		},
 	})
@@ -128,7 +128,7 @@ func TestAccRDSOptionGroup_generatedName(t *testing.T) {
 				ResourceName:            "aws_db_option_group.test",
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"name_prefix"},
+				ImportStateVerifyIgnore: []string{"name_prefix", "skip_destroy"},
 			},
 		},
 	})
@@ -157,7 +157,7 @@ func TestAccRDSOptionGroup_optionGroupDescription(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"name_prefix"},
+				ImportStateVerifyIgnore: []string{"name_prefix", "skip_destroy"},
 			},
 		},
 	})
@@ -185,7 +185,7 @@ func TestAccRDSOptionGroup_basicDestroyWithInstance(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"name_prefix"},
+				ImportStateVerifyIgnore: []string{"name_prefix", "skip_destroy"},
 			},
 		},
 	})
@@ -220,7 +220,7 @@ func TestAccRDSOptionGroup_Option_optionSettings(t *testing.T) {
 				ImportStateVerify: true,
 				// Ignore option since our current logic skips "unconfigured" default option settings
 				// Even with Config set, ImportState TestStep does not "see" the configuration to check against
-				ImportStateVerifyIgnore: []string{"name_prefix", "option"},
+				ImportStateVerifyIgnore: []string{"name_prefix", "skip_destroy", "option"},
 			},
 			{
 				Config: testAccOptionGroupConfig_optionSettingsUpdate(rName),
@@ -238,7 +238,7 @@ func TestAccRDSOptionGroup_Option_optionSettings(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"name_prefix"},
+				ImportStateVerifyIgnore: []string{"name_prefix", "skip_destroy"},
 			},
 		},
 	})
@@ -269,7 +269,7 @@ func TestAccRDSOptionGroup_OptionOptionSettings_iamRole(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"name_prefix"},
+				ImportStateVerifyIgnore: []string{"name_prefix", "skip_destroy"},
 			},
 		},
 	})
@@ -298,7 +298,7 @@ func TestAccRDSOptionGroup_sqlServerOptionsUpdate(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"name_prefix"},
+				ImportStateVerifyIgnore: []string{"name_prefix", "skip_destroy"},
 			},
 			{
 				Config: testAccOptionGroupConfig_sqlServerEEOptionsUpdate(rName),
@@ -338,7 +338,7 @@ func TestAccRDSOptionGroup_oracleOptionsUpdate(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				// Ignore option since API responds with **** instead of password
-				ImportStateVerifyIgnore: []string{"name_prefix", "option"},
+				ImportStateVerifyIgnore: []string{"name_prefix", "skip_destroy", "option"},
 			},
 			{
 				Config: testAccOptionGroupConfig_oracleEEOptionSettings(rName, "13.3.0.0.v2"),
@@ -377,7 +377,7 @@ func TestAccRDSOptionGroup_OptionOptionSettings_multipleNonDefault(t *testing.T)
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"name_prefix"},
+				ImportStateVerifyIgnore: []string{"name_prefix", "skip_destroy"},
 			},
 			{
 				Config: testAccOptionGroupConfig_settingsMultiple(rName, "example1,example2"),
@@ -414,7 +414,7 @@ func TestAccRDSOptionGroup_multipleOptions(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"name_prefix"},
+				ImportStateVerifyIgnore: []string{"name_prefix", "skip_destroy"},
 			},
 		},
 	})
@@ -444,7 +444,7 @@ func TestAccRDSOptionGroup_tags(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"name_prefix"},
+				ImportStateVerifyIgnore: []string{"name_prefix", "skip_destroy"},
 			},
 			{
 				Config: testAccOptionGroupConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
@@ -493,7 +493,7 @@ func TestAccRDSOptionGroup_Tags_withOptions(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"name_prefix"},
+				ImportStateVerifyIgnore: []string{"name_prefix", "skip_destroy"},
 			},
 			{
 				Config: testAccOptionGroupConfig_tagsOption2(rName, "key1", "value1updated", "key2", "value2"),
@@ -516,6 +516,58 @@ func TestAccRDSOptionGroup_Tags_withOptions(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestAccCheckOptionGroup_skipDestroy(t *testing.T) {
+	var v rds.OptionGroup
+	ctx := acctest.Context(t)
+	resourceName := "aws_db_option_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOptionGroupNoDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccOptionGroupConfig_skip_destroy(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOptionGroupExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "skip_destroy", "true"),
+				),
+			},
+		},
+	})
+}
+
+func testAccCheckOptionGroupNoDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_db_option_group" {
+				continue
+			}
+
+			opts := rds.DescribeOptionGroupsInput{
+				OptionGroupName: aws.String(rs.Primary.ID),
+			}
+			_, err := conn.DescribeOptionGroupsWithContext(ctx, &opts)
+
+			// cleanup option group if it was properly verified not to be destroyed by tf in the first place
+			if err == nil {
+				deleteOpts := rds.DeleteOptionGroupInput{
+					OptionGroupName: aws.String(rs.Primary.ID),
+				}
+				_, _ = conn.DeleteOptionGroupWithContext(ctx, &deleteOpts)
+			}
+
+			return err
+		}
+
+		return nil
+	}
 }
 
 func testAccCheckOptionGroupOptionSettingsIAMRole(optionGroup *rds.OptionGroup) resource.TestCheckFunc {
@@ -623,7 +675,6 @@ func testAccCheckOptionGroupDestroy(ctx context.Context) resource.TestCheckFunc 
 		return nil
 	}
 }
-
 func testAccOptionGroupConfig_timeoutBlock(rName string) string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "default" {
@@ -696,6 +747,21 @@ resource "aws_db_option_group" "test" {
   major_engine_version     = regex("^\\d+\\.\\d+", data.aws_rds_engine_version.default.version)
 }
 `, mySQLPreferredInstanceClasses, rName)
+}
+
+func testAccOptionGroupConfig_skip_destroy(rName string) string {
+	return fmt.Sprintf(`
+data "aws_rds_engine_version" "default" {
+  engine = "mysql"
+}
+
+resource "aws_db_option_group" "test" {
+  name                 = %[1]q
+  engine_name          = data.aws_rds_engine_version.default.engine
+  major_engine_version = regex("^\\d+\\.\\d+", data.aws_rds_engine_version.default.version)
+  skip_destroy         = true
+}
+`, rName)
 }
 
 func testAccOptionGroupConfig_optionSettings(rName string) string {

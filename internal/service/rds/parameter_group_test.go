@@ -993,6 +993,58 @@ func TestDBParameterModifyChunk(t *testing.T) {
 	}
 }
 
+func TestAccCheckRDSParameterGroup_skipDestroy(t *testing.T) {
+	var v rds.DBParameterGroup
+	ctx := acctest.Context(t)
+	resourceName := "aws_db_parameter_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccRDSParameterGroupNoDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccParameterGroupConfig_skip_destroy(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckParameterGroupExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "skip_destroy", "true"),
+				),
+			},
+		},
+	})
+}
+
+func testAccRDSParameterGroupNoDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_db_parameter_group" {
+				continue
+			}
+
+			opts := rds.DescribeDBParameterGroupsInput{
+				DBParameterGroupName: aws.String(rs.Primary.ID),
+			}
+			_, err := conn.DescribeDBParameterGroupsWithContext(ctx, &opts)
+
+			// cleanup option group if it was properly verified not to be destroyed by tf in the first place
+			if err == nil {
+				deleteOpts := rds.DeleteDBParameterGroupInput{
+					DBParameterGroupName: aws.String(rs.Primary.ID),
+				}
+				_, _ = conn.DeleteDBParameterGroupWithContext(ctx, &deleteOpts)
+			}
+
+			return err
+		}
+
+		return nil
+	}
+}
+
 func testAccCheckParameterGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
@@ -1228,6 +1280,17 @@ resource "aws_db_parameter_group" "test" {
   name        = %[1]q
   family      = "mysql5.6"
   description = "Test parameter group for terraform"
+}
+`, rName)
+}
+
+func testAccParameterGroupConfig_skip_destroy(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_db_parameter_group" "test" {
+  name         = %[1]q
+  family       = "mysql5.6"
+  description  = "Test parameter group for terraform"
+  skip_destroy = true
 }
 `, rName)
 }
