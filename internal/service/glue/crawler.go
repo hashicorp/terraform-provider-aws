@@ -118,6 +118,10 @@ func ResourceCrawler() *schema.Resource {
 							Type:     schema.TypeBool,
 							Required: true,
 						},
+						"create_native_delta_table": {
+							Type: schema.TypeBool,
+							Required: true,
+						},
 					},
 				},
 			},
@@ -738,6 +742,7 @@ func expandDeltaTarget(cfg map[string]interface{}) *glue.DeltaTarget {
 	target := &glue.DeltaTarget{
 		DeltaTables:   flex.ExpandStringSet(cfg["delta_tables"].(*schema.Set)),
 		WriteManifest: aws.Bool(cfg["write_manifest"].(bool)),
+		CreateNativeDeltaTable: aws.Bool(cfg["create_native_delta_table"].(bool)),
 	}
 
 	if v, ok := cfg["connection_name"].(string); ok {
@@ -997,6 +1002,7 @@ func flattenDeltaTargets(deltaTargets []*glue.DeltaTarget) []map[string]interfac
 		attrs["connection_name"] = aws.StringValue(deltaTarget.ConnectionName)
 		attrs["delta_tables"] = flex.FlattenStringSet(deltaTarget.DeltaTables)
 		attrs["write_manifest"] = aws.BoolValue(deltaTarget.WriteManifest)
+		attrs["create_native_delta_table"] = aws.BoolValue(deltaTarget.CreateNativeDeltaTable)
 
 		result = append(result, attrs)
 	}
