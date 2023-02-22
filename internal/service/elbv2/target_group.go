@@ -29,6 +29,8 @@ const (
 	propagationTimeout = 2 * time.Minute
 )
 
+// @SDKResource("aws_alb_target_group")
+// @SDKResource("aws_lb_target_group")
 func ResourceTargetGroup() *schema.Resource {
 	return &schema.Resource{
 		// NLBs have restrictions on them at this time

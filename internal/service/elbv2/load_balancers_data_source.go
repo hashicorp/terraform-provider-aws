@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKDataSource("aws_lbs")
 func DataSourceLoadBalancers() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceLoadBalancersRead,

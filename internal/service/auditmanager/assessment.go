@@ -34,10 +34,7 @@ import (
 
 const iamPropagationTimeout = 2 * time.Minute
 
-func init() {
-	_sp.registerFrameworkResourceFactory(newResourceAssessment)
-}
-
+// @FrameworkResource
 func newResourceAssessment(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceAssessment{}, nil
 }

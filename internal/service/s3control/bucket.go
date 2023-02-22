@@ -27,10 +27,7 @@ const (
 	bucketStatePropagationTimeout = 5 * time.Minute
 )
 
-func init() {
-	_sp.registerSDKResourceFactory("aws_s3control_bucket", resourceBucket)
-}
-
+// @SDKResource("aws_s3control_bucket")
 func resourceBucket() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketCreate,

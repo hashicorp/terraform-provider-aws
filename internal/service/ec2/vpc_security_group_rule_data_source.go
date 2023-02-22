@@ -17,10 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func init() {
-	_sp.registerFrameworkDataSourceFactory(newDataSourceSecurityGroupRule)
-}
-
+// @FrameworkDataSource
 func newDataSourceSecurityGroupRule(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceSecurityGroupRule{}, nil
 }

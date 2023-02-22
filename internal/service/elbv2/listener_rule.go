@@ -36,6 +36,8 @@ const (
 	listenerActionOrderMax = 50_000
 )
 
+// @SDKResource("aws_alb_listener_rule")
+// @SDKResource("aws_lb_listener_rule")
 func ResourceListenerRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceListenerRuleCreate,

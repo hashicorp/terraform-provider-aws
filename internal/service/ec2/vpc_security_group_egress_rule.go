@@ -9,10 +9,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
-func init() {
-	_sp.registerFrameworkResourceFactory(newResourceSecurityGroupEgressRule)
-}
-
+// @FrameworkResource
 func newResourceSecurityGroupEgressRule(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceSecurityGroupEgressRule{}
 	r.create = r.createSecurityGroupRule

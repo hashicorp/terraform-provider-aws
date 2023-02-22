@@ -21,10 +21,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
-func init() {
-	_sp.registerFrameworkDataSourceFactory(newDataSourceControl)
-}
-
+// @FrameworkDataSource
 func newDataSourceControl(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceControl{}, nil
 }

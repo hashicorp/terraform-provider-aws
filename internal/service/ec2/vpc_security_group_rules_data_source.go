@@ -13,10 +13,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
-func init() {
-	_sp.registerFrameworkDataSourceFactory(newDataSourceSecurityGroupRules)
-}
-
+// @FrameworkDataSource
 func newDataSourceSecurityGroupRules(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceSecurityGroupRules{}, nil
 }

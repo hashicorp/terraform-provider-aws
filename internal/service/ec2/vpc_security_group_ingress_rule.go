@@ -26,10 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func init() {
-	_sp.registerFrameworkResourceFactory(newResourceSecurityGroupIngressRule)
-}
-
+// @FrameworkResource
 func newResourceSecurityGroupIngressRule(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceSecurityGroupIngressRule{}
 	r.create = r.createSecurityGroupRule
