@@ -125,18 +125,18 @@ func protoV5ProviderFactoriesInit(ctx context.Context, providerNames ...string) 
 	return factories
 }
 
-func factoriesInit(ctx context.Context, t *testing.T, providers *[]*schema.Provider, providerNames []string) map[string]func() (*schema.Provider, error) {
-	var factories = make(map[string]func() (*schema.Provider, error), len(providerNames))
+func protoV5ProviderFactoriesPlusProvidersInit(ctx context.Context, t *testing.T, providers *[]*schema.Provider, providerNames ...string) map[string]func() (tfprotov5.ProviderServer, error) {
+	factories := make(map[string]func() (tfprotov5.ProviderServer, error), len(providerNames))
 
 	for _, name := range providerNames {
-		p, err := provider.New(ctx)
+		providerServerFactory, p, err := provider.ProtoV5ProviderServerFactory(ctx)
 
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		factories[name] = func() (*schema.Provider, error) { //nolint:unparam
-			return p, nil
+		factories[name] = func() (tfprotov5.ProviderServer, error) {
+			return providerServerFactory(), nil
 		}
 
 		if providers != nil {
@@ -147,16 +147,14 @@ func factoriesInit(ctx context.Context, t *testing.T, providers *[]*schema.Provi
 	return factories
 }
 
-// FactoriesAlternate creates ProviderFactories for cross-account and cross-region configurations
+// ProtoV5FactoriesPlusProvidersAlternate creates ProtoV5ProviderFactories for cross-account and cross-region configurations
+// and also returns Providers suitable for use with AWS APIs.
 //
 // For cross-region testing: Typically paired with PreCheckMultipleRegion and ConfigAlternateRegionProvider.
 //
 // For cross-account testing: Typically paired with PreCheckAlternateAccount and ConfigAlternateAccountProvider.
-func FactoriesAlternate(ctx context.Context, t *testing.T, providers *[]*schema.Provider) map[string]func() (*schema.Provider, error) {
-	return factoriesInit(ctx, t, providers, []string{
-		ProviderName,
-		ProviderNameAlternate,
-	})
+func ProtoV5FactoriesPlusProvidersAlternate(ctx context.Context, t *testing.T, providers *[]*schema.Provider) map[string]func() (tfprotov5.ProviderServer, error) {
+	return protoV5ProviderFactoriesPlusProvidersInit(ctx, t, providers, ProviderName, ProviderNameAlternate)
 }
 
 func ProtoV5FactoriesAlternate(ctx context.Context, t *testing.T) map[string]func() (tfprotov5.ProviderServer, error) {
