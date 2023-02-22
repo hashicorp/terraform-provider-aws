@@ -220,7 +220,8 @@ func resourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("description", webACL.Description)
 	d.Set("lock_token", output.LockToken)
 	d.Set("name", webACL.Name)
-	if err := d.Set("rule", flattenWebACLRules(webACL.Rules)); err != nil {
+	rules := filterWebACLRules(webACL.Rules)
+	if err := d.Set("rule", flattenWebACLRules(rules)); err != nil {
 		return diag.Errorf("setting rule: %s", err)
 	}
 	if err := d.Set("visibility_config", flattenVisibilityConfig(webACL.VisibilityConfig)); err != nil {
@@ -345,4 +346,21 @@ func FindWebACLByThreePartKey(ctx context.Context, conn *wafv2.WAFV2, id, name, 
 	}
 
 	return output, nil
+}
+
+// filterWebACLRules removes the AWS-added Shield Advanced auto mitigation rule here
+// so that the provider will not report diff and/or attempt to remove the rule as it is
+// owned and managed by AWS.
+// See https://github.com/hashicorp/terraform-provider-aws/issues/22869
+// See https://docs.aws.amazon.com/waf/latest/developerguide/ddos-automatic-app-layer-response-rg.html
+func filterWebACLRules(rules []*wafv2.Rule) []*wafv2.Rule {
+	var fr []*wafv2.Rule
+	pattern := fmt.Sprintf(`^ShieldMitigationRuleGroup_\d{12}_[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}_.*`)
+	for _, r := range rules {
+		if regexp.MustCompile(pattern).MatchString(aws.StringValue(r.Name)) {
+			continue
+		}
+		fr = append(fr, r)
+	}
+	return fr
 }
