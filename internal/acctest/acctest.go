@@ -125,18 +125,18 @@ func protoV5ProviderFactoriesInit(ctx context.Context, providerNames ...string) 
 	return factories
 }
 
-func factoriesInit(ctx context.Context, t *testing.T, providers *[]*schema.Provider, providerNames []string) map[string]func() (*schema.Provider, error) {
-	var factories = make(map[string]func() (*schema.Provider, error), len(providerNames))
+func protoV5ProviderFactoriesPlusProvidersInit(ctx context.Context, t *testing.T, providers *[]*schema.Provider, providerNames ...string) map[string]func() (tfprotov5.ProviderServer, error) {
+	factories := make(map[string]func() (tfprotov5.ProviderServer, error), len(providerNames))
 
 	for _, name := range providerNames {
-		p, err := provider.New(ctx)
+		providerServerFactory, p, err := provider.ProtoV5ProviderServerFactory(ctx)
 
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		factories[name] = func() (*schema.Provider, error) { //nolint:unparam
-			return p, nil
+		factories[name] = func() (tfprotov5.ProviderServer, error) { //nolint:unparam
+			return providerServerFactory(), nil
 		}
 
 		if providers != nil {
@@ -147,29 +147,27 @@ func factoriesInit(ctx context.Context, t *testing.T, providers *[]*schema.Provi
 	return factories
 }
 
-// FactoriesAlternate creates ProviderFactories for cross-account and cross-region configurations
+// ProtoV5FactoriesPlusProvidersAlternate creates ProtoV5ProviderFactories for cross-account and cross-region configurations
+// and also returns Providers suitable for use with AWS APIs.
 //
 // For cross-region testing: Typically paired with PreCheckMultipleRegion and ConfigAlternateRegionProvider.
 //
 // For cross-account testing: Typically paired with PreCheckAlternateAccount and ConfigAlternateAccountProvider.
-func FactoriesAlternate(t *testing.T, providers *[]*schema.Provider) map[string]func() (*schema.Provider, error) {
-	return factoriesInit(context.Background(), t, providers, []string{
-		ProviderName,
-		ProviderNameAlternate,
-	})
+func ProtoV5FactoriesPlusProvidersAlternate(ctx context.Context, t *testing.T, providers *[]*schema.Provider) map[string]func() (tfprotov5.ProviderServer, error) {
+	return protoV5ProviderFactoriesPlusProvidersInit(ctx, t, providers, ProviderName, ProviderNameAlternate)
 }
 
-func ProtoV5FactoriesAlternate(t *testing.T) map[string]func() (tfprotov5.ProviderServer, error) {
-	return protoV5ProviderFactoriesInit(context.Background(), ProviderName, ProviderNameAlternate)
+func ProtoV5FactoriesAlternate(ctx context.Context, t *testing.T) map[string]func() (tfprotov5.ProviderServer, error) {
+	return protoV5ProviderFactoriesInit(ctx, ProviderName, ProviderNameAlternate)
 }
 
 // ProtoV5FactoriesAlternateAccountAndAlternateRegion creates ProtoV5ProviderFactories for cross-account and cross-region configurations
 //
 // Usage typically paired with PreCheckMultipleRegion, PreCheckAlternateAccount,
 // and ConfigAlternateAccountAndAlternateRegionProvider.
-func ProtoV5FactoriesAlternateAccountAndAlternateRegion(t *testing.T) map[string]func() (tfprotov5.ProviderServer, error) {
+func ProtoV5FactoriesAlternateAccountAndAlternateRegion(ctx context.Context, t *testing.T) map[string]func() (tfprotov5.ProviderServer, error) {
 	return protoV5ProviderFactoriesInit(
-		context.Background(),
+		ctx,
 		ProviderName,
 		ProviderNameAlternateAccountAlternateRegion,
 		ProviderNameAlternateAccountSameRegion,
@@ -180,12 +178,12 @@ func ProtoV5FactoriesAlternateAccountAndAlternateRegion(t *testing.T) map[string
 // ProtoV5FactoriesMultipleRegions creates ProtoV5ProviderFactories for the specified number of region configurations
 //
 // Usage typically paired with PreCheckMultipleRegion and ConfigMultipleRegionProvider.
-func ProtoV5FactoriesMultipleRegions(t *testing.T, n int) map[string]func() (tfprotov5.ProviderServer, error) {
+func ProtoV5FactoriesMultipleRegions(ctx context.Context, t *testing.T, n int) map[string]func() (tfprotov5.ProviderServer, error) {
 	switch n {
 	case 2:
-		return protoV5ProviderFactoriesInit(context.Background(), ProviderName, ProviderNameAlternate)
+		return protoV5ProviderFactoriesInit(ctx, ProviderName, ProviderNameAlternate)
 	case 3:
-		return protoV5ProviderFactoriesInit(context.Background(), ProviderName, ProviderNameAlternate, ProviderNameThird)
+		return protoV5ProviderFactoriesInit(ctx, ProviderName, ProviderNameAlternate, ProviderNameThird)
 	default:
 		t.Fatalf("invalid number of Region configurations: %d", n)
 	}

@@ -8,12 +8,15 @@ ENHANCEMENTS:
 
 * resource/aws_lb_ssl_negotiation_policy: Add `triggers` attribute to force resource updates ([#29482](https://github.com/hashicorp/terraform-provider-aws/issues/29482))
 * resource/aws_load_balancer_listener_policy: Add `triggers` attribute to force resource updates ([#29482](https://github.com/hashicorp/terraform-provider-aws/issues/29482))
+* resource/aws_organizations_policy: Add `skip_destroy` attribute ([#29382](https://github.com/hashicorp/terraform-provider-aws/issues/29382))
+* resource/aws_organizations_policy_attachment: Add `skip_destroy` attribute ([#29382](https://github.com/hashicorp/terraform-provider-aws/issues/29382))
 * resource/aws_sns_topic: Add `signature_version` and `tracing_config` arguments ([#29462](https://github.com/hashicorp/terraform-provider-aws/issues/29462))
 
 BUG FIXES:
 
 * resource/aws_medialive_channel: Fix setting of `m2ts_settings` `arib_captions_pid` and `arib_captions_pid_control` attributes ([#29467](https://github.com/hashicorp/terraform-provider-aws/issues/29467))
 * resource/aws_resourceexplorer2_view: Fix `Unexpected Planned Resource State on Destroy` errors when using Terraform CLI v1.3 and above ([#29550](https://github.com/hashicorp/terraform-provider-aws/issues/29550))
+* resource/aws_servicecatalog_provisioned_product: Fix to allow `outputs` to be `Computed` when the resource changes ([#29559](https://github.com/hashicorp/terraform-provider-aws/issues/29559))
 * resource/aws_sns_topic_subscription: Fix `filter_policy_scope` update from `MessageAttributes` to `MessageBody` with nested objects in `filter_policy` ([#28572](https://github.com/hashicorp/terraform-provider-aws/issues/28572))
 
 ## 4.55.0 (February 16, 2023)

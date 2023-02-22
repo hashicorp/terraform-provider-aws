@@ -137,6 +137,7 @@ func TestAccDSDirectoryDataSource_connector(t *testing.T) {
 }
 
 func TestAccDSDirectoryDataSource_sharedMicrosoftAD(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_directory_service_directory.test"
 	dataSourceName := "data.aws_directory_service_directory.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -149,7 +150,7 @@ func TestAccDSDirectoryDataSource_sharedMicrosoftAD(t *testing.T) {
 			acctest.PreCheckAlternateAccount(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, directoryservice.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDirectoryDataSourceConfig_sharedMicrosoftAD(rName, domainName),
