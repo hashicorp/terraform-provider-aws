@@ -326,8 +326,54 @@ func testAccCheckProvisionedProductExists(ctx context.Context, resourceName stri
 	}
 }
 
-func testAccProvisionedProductTemplateURLBaseConfig(rName, domain, email string) string {
+func testAccProvisionedProductPortfolioBaseConfig(rName string) string {
 	return fmt.Sprintf(`
+resource "aws_servicecatalog_portfolio" "test" {
+  name          = %[1]q
+  description   = %[1]q
+  provider_name = %[1]q
+}
+
+resource "aws_servicecatalog_constraint" "test" {
+  description  = %[1]q
+  portfolio_id = aws_servicecatalog_product_portfolio_association.test.portfolio_id
+  product_id   = aws_servicecatalog_product_portfolio_association.test.product_id
+  type         = "RESOURCE_UPDATE"
+
+  parameters = jsonencode({
+    Version = "2.0"
+    Properties = {
+      TagUpdateOnProvisionedProduct = "ALLOWED"
+    }
+  })
+}
+
+resource "aws_servicecatalog_product_portfolio_association" "test" {
+  portfolio_id = aws_servicecatalog_principal_portfolio_association.test.portfolio_id # avoid depends_on
+  product_id   = aws_servicecatalog_product.test.id
+}
+
+data "aws_caller_identity" "current" {}
+
+data "aws_iam_session_context" "current" {
+  arn = data.aws_caller_identity.current.arn
+}
+
+resource "aws_servicecatalog_principal_portfolio_association" "test" {
+  portfolio_id  = aws_servicecatalog_portfolio.test.id
+  principal_arn = data.aws_iam_session_context.current.issuer_arn # unfortunately, you cannot get launch_path for arbitrary role - only caller
+}
+
+data "aws_servicecatalog_launch_paths" "test" {
+  product_id = aws_servicecatalog_product_portfolio_association.test.product_id # avoid depends_on
+}
+`, rName)
+}
+
+func testAccProvisionedProductTemplateURLBaseConfig(rName, domain, email string) string {
+	return acctest.ConfigCompose(
+		testAccProvisionedProductPortfolioBaseConfig(rName),
+		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   force_destroy = true
@@ -409,51 +455,13 @@ resource "aws_servicecatalog_product" "test" {
     Name = %[1]q
   }
 }
-
-resource "aws_servicecatalog_portfolio" "test" {
-  name          = %[1]q
-  description   = %[1]q
-  provider_name = %[1]q
-}
-
-resource "aws_servicecatalog_constraint" "test" {
-  description  = %[1]q
-  portfolio_id = aws_servicecatalog_product_portfolio_association.test.portfolio_id
-  product_id   = aws_servicecatalog_product_portfolio_association.test.product_id
-  type         = "RESOURCE_UPDATE"
-
-  parameters = jsonencode({
-    Version = "2.0"
-    Properties = {
-      TagUpdateOnProvisionedProduct = "ALLOWED"
-    }
-  })
-}
-
-resource "aws_servicecatalog_product_portfolio_association" "test" {
-  portfolio_id = aws_servicecatalog_principal_portfolio_association.test.portfolio_id # avoid depends_on
-  product_id   = aws_servicecatalog_product.test.id
-}
-
-data "aws_caller_identity" "current" {}
-
-data "aws_iam_session_context" "current" {
-  arn = data.aws_caller_identity.current.arn
-}
-
-resource "aws_servicecatalog_principal_portfolio_association" "test" {
-  portfolio_id  = aws_servicecatalog_portfolio.test.id
-  principal_arn = data.aws_iam_session_context.current.issuer_arn # unfortunately, you cannot get launch_path for arbitrary role - only caller
-}
-
-data "aws_servicecatalog_launch_paths" "test" {
-  product_id = aws_servicecatalog_product_portfolio_association.test.product_id # avoid depends_on
-}
-`, rName, domain, email)
+`, rName, domain, email))
 }
 
 func testAccProvisionedProductPhysicalTemplateIDBaseConfig(rName, domain, email string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccProvisionedProductPortfolioBaseConfig(rName),
+		fmt.Sprintf(`
 resource "aws_cloudformation_stack" "test" {
   name = %[1]q
 
@@ -533,47 +541,7 @@ resource "aws_servicecatalog_product" "test" {
     Name = %[1]q
   }
 }
-
-resource "aws_servicecatalog_portfolio" "test" {
-  name          = %[1]q
-  description   = %[1]q
-  provider_name = %[1]q
-}
-
-resource "aws_servicecatalog_constraint" "test" {
-  description  = %[1]q
-  portfolio_id = aws_servicecatalog_product_portfolio_association.test.portfolio_id
-  product_id   = aws_servicecatalog_product_portfolio_association.test.product_id
-  type         = "RESOURCE_UPDATE"
-
-  parameters = jsonencode({
-    Version = "2.0"
-    Properties = {
-      TagUpdateOnProvisionedProduct = "ALLOWED"
-    }
-  })
-}
-
-resource "aws_servicecatalog_product_portfolio_association" "test" {
-  portfolio_id = aws_servicecatalog_principal_portfolio_association.test.portfolio_id # avoid depends_on
-  product_id   = aws_servicecatalog_product.test.id
-}
-
-data "aws_caller_identity" "current" {}
-
-data "aws_iam_session_context" "current" {
-  arn = data.aws_caller_identity.current.arn
-}
-
-resource "aws_servicecatalog_principal_portfolio_association" "test" {
-  portfolio_id  = aws_servicecatalog_portfolio.test.id
-  principal_arn = data.aws_iam_session_context.current.issuer_arn # unfortunately, you cannot get launch_path for arbitrary role - only caller
-}
-
-data "aws_servicecatalog_launch_paths" "test" {
-  product_id = aws_servicecatalog_product_portfolio_association.test.product_id # avoid depends_on
-}
-`, rName, domain, email)
+`, rName, domain, email))
 }
 
 func testAccProvisionedProductConfig_basic(rName, domain, email, vpcCidr string) string {
