@@ -102,6 +102,11 @@ func (d *dataSourceSecurityGroupRule) Read(ctx context.Context, request datasour
 		input.SecurityGroupRuleIds = []*string{flex.StringFromFramework(ctx, data.SecurityGroupRuleID)}
 	}
 
+	if len(input.Filters) == 0 {
+		// Don't send an empty filters list; the EC2 API won't accept it.
+		input.Filters = nil
+	}
+
 	output, err := FindSecurityGroupRule(ctx, conn, input)
 
 	if err != nil {

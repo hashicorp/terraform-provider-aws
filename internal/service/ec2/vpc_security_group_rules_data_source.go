@@ -60,6 +60,11 @@ func (d *dataSourceSecurityGroupRules) Read(ctx context.Context, request datasou
 		Filters: append(BuildCustomFilters(ctx, data.Filters), BuildTagFilterList(Tags(tftags.New(data.Tags)))...),
 	}
 
+	if len(input.Filters) == 0 {
+		// Don't send an empty filters list; the EC2 API won't accept it.
+		input.Filters = nil
+	}
+
 	output, err := FindSecurityGroupRules(ctx, conn, input)
 
 	if err != nil {
