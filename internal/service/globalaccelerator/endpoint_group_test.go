@@ -219,7 +219,7 @@ func TestAccGlobalAcceleratorEndpointGroup_multiRegion(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckMultipleRegion(t, 2); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, globalaccelerator.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(t),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckEndpointGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
