@@ -96,7 +96,7 @@ func ResourceDataSource() *schema.Resource {
 						},
 					},
 				},
-				ConflictsWith: []string{"elasticsearch_config", "http_config", "lambda_config", "relational_database_config"},
+				ConflictsWith: []string{"elasticsearch_config", "http_config", "lambda_config", "relational_database_config", "opensearchservice_config"},
 			},
 			"elasticsearch_config": {
 				Type:     schema.TypeList,
@@ -115,7 +115,26 @@ func ResourceDataSource() *schema.Resource {
 						},
 					},
 				},
-				ConflictsWith: []string{"dynamodb_config", "http_config", "lambda_config"},
+				ConflictsWith: []string{"dynamodb_config", "http_config", "lambda_config", "opensearchservice_config"},
+			},
+			"opensearchservice_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"region": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
+						"endpoint": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
+				ConflictsWith: []string{"dynamodb_config", "http_config", "lambda_config", "elasticsearch_config", "opensearchservice_config"},
 			},
 			"http_config": {
 				Type:     schema.TypeList,
@@ -161,7 +180,7 @@ func ResourceDataSource() *schema.Resource {
 						},
 					},
 				},
-				ConflictsWith: []string{"dynamodb_config", "elasticsearch_config", "lambda_config", "relational_database_config"},
+				ConflictsWith: []string{"dynamodb_config", "elasticsearch_config", "opensearchservice_config", "lambda_config", "relational_database_config"},
 			},
 			"lambda_config": {
 				Type:     schema.TypeList,
@@ -176,7 +195,7 @@ func ResourceDataSource() *schema.Resource {
 						},
 					},
 				},
-				ConflictsWith: []string{"dynamodb_config", "elasticsearch_config", "http_config", "relational_database_config"},
+				ConflictsWith: []string{"dynamodb_config", "elasticsearch_config", "opensearchservice_config", "http_config", "relational_database_config"},
 			},
 			"relational_database_config": {
 				Type:     schema.TypeList,
@@ -223,7 +242,7 @@ func ResourceDataSource() *schema.Resource {
 						},
 					},
 				},
-				ConflictsWith: []string{"dynamodb_config", "elasticsearch_config", "http_config", "lambda_config"},
+				ConflictsWith: []string{"dynamodb_config", "elasticsearch_config", "opensearchservice_config", "http_config", "lambda_config"},
 			},
 			"service_role_arn": {
 				Type:         schema.TypeString,
@@ -259,6 +278,10 @@ func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	if v, ok := d.GetOk("elasticsearch_config"); ok {
 		input.ElasticsearchConfig = expandElasticsearchDataSourceConfig(v.([]interface{}), region)
+	}
+
+	if v, ok := d.GetOk("opensearchservice_config"); ok {
+		input.OpenSearchServiceConfig = expandOpenSearchServiceDataSourceConfig(v.([]interface{}), region)
 	}
 
 	if v, ok := d.GetOk("http_config"); ok {
@@ -326,6 +349,10 @@ func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "setting elasticsearch_config: %s", err)
 	}
 
+	if err := d.Set("opensearchservice_config", flattenOpenSearchServiceDataSourceConfig(dataSource.OpenSearchServiceConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting opensearchservice_config: %s", err)
+	}
+
 	if err := d.Set("http_config", flattenHTTPDataSourceConfig(dataSource.HttpConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting http_config: %s", err)
 	}
@@ -372,6 +399,10 @@ func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 	if v, ok := d.GetOk("elasticsearch_config"); ok {
 		input.ElasticsearchConfig = expandElasticsearchDataSourceConfig(v.([]interface{}), region)
+	}
+
+	if v, ok := d.GetOk("opensearchservice_config"); ok {
+		input.OpenSearchServiceConfig = expandOpenSearchServiceDataSourceConfig(v.([]interface{}), region)
 	}
 
 	if v, ok := d.GetOk("http_config"); ok {
@@ -553,7 +584,39 @@ func expandElasticsearchDataSourceConfig(l []interface{}, currentRegion string) 
 	return result
 }
 
+func expandOpenSearchServiceDataSourceConfig(l []interface{}, currentRegion string) *appsync.OpenSearchServiceDataSourceConfig {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	configured := l[0].(map[string]interface{})
+
+	result := &appsync.OpenSearchServiceDataSourceConfig{
+		AwsRegion: aws.String(currentRegion),
+		Endpoint:  aws.String(configured["endpoint"].(string)),
+	}
+
+	if v, ok := configured["region"]; ok && v.(string) != "" {
+		result.AwsRegion = aws.String(v.(string))
+	}
+
+	return result
+}
+
 func flattenElasticsearchDataSourceConfig(config *appsync.ElasticsearchDataSourceConfig) []map[string]interface{} {
+	if config == nil {
+		return nil
+	}
+
+	result := map[string]interface{}{
+		"endpoint": aws.StringValue(config.Endpoint),
+		"region":   aws.StringValue(config.AwsRegion),
+	}
+
+	return []map[string]interface{}{result}
+}
+
+func flattenOpenSearchServiceDataSourceConfig(config *appsync.OpenSearchServiceDataSourceConfig) []map[string]interface{} {
 	if config == nil {
 		return nil
 	}
