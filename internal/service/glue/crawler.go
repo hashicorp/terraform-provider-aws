@@ -119,7 +119,7 @@ func ResourceCrawler() *schema.Resource {
 							Required: true,
 						},
 						"create_native_delta_table": {
-							Type: schema.TypeBool,
+							Type:     schema.TypeBool,
 							Required: true,
 						},
 					},
@@ -740,8 +740,8 @@ func expandDeltaTargets(targets []interface{}) []*glue.DeltaTarget {
 
 func expandDeltaTarget(cfg map[string]interface{}) *glue.DeltaTarget {
 	target := &glue.DeltaTarget{
-		DeltaTables:   flex.ExpandStringSet(cfg["delta_tables"].(*schema.Set)),
-		WriteManifest: aws.Bool(cfg["write_manifest"].(bool)),
+		DeltaTables:            flex.ExpandStringSet(cfg["delta_tables"].(*schema.Set)),
+		WriteManifest:          aws.Bool(cfg["write_manifest"].(bool)),
 		CreateNativeDeltaTable: aws.Bool(cfg["create_native_delta_table"].(bool)),
 	}
 
