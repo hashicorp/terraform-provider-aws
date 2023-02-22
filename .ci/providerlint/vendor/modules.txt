@@ -4,7 +4,7 @@ github.com/agext/levenshtein
 # github.com/apparentlymart/go-textseg/v13 v13.0.0
 ## explicit; go 1.16
 github.com/apparentlymart/go-textseg/v13/textseg
-# github.com/aws/aws-sdk-go v1.44.205
+# github.com/aws/aws-sdk-go v1.44.206
 ## explicit; go 1.11
 github.com/aws/aws-sdk-go/aws/awserr
 github.com/aws/aws-sdk-go/aws/endpoints
