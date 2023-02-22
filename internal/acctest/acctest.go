@@ -180,12 +180,12 @@ func ProtoV5FactoriesAlternateAccountAndAlternateRegion(t *testing.T) map[string
 // ProtoV5FactoriesMultipleRegions creates ProtoV5ProviderFactories for the specified number of region configurations
 //
 // Usage typically paired with PreCheckMultipleRegion and ConfigMultipleRegionProvider.
-func ProtoV5FactoriesMultipleRegions(t *testing.T, n int) map[string]func() (tfprotov5.ProviderServer, error) {
+func ProtoV5FactoriesMultipleRegions(ctx context.Context, t *testing.T, n int) map[string]func() (tfprotov5.ProviderServer, error) {
 	switch n {
 	case 2:
-		return protoV5ProviderFactoriesInit(context.Background(), ProviderName, ProviderNameAlternate)
+		return protoV5ProviderFactoriesInit(ctx, ProviderName, ProviderNameAlternate)
 	case 3:
-		return protoV5ProviderFactoriesInit(context.Background(), ProviderName, ProviderNameAlternate, ProviderNameThird)
+		return protoV5ProviderFactoriesInit(ctx, ProviderName, ProviderNameAlternate, ProviderNameThird)
 	default:
 		t.Fatalf("invalid number of Region configurations: %d", n)
 	}

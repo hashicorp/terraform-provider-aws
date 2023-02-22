@@ -298,7 +298,7 @@ func testAccSSMDefaultPatchBaseline_multiRegion(t *testing.T) {
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMEndpointID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 2),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 2),
 		CheckDestroy:             testAccCheckDefaultPatchBaselineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
