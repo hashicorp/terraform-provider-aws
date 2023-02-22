@@ -93,6 +93,11 @@ gen:
 	rm -f .ci/.semgrep-service-name*.yml
 	$(GO_VER) generate ./...
 
+servicepackages:
+	rm -f internal/service/**/service_package_gen.go
+	rm -f internal/provider/service_packages_gen.go
+	$(GO_VER) generate ./internal/generate/servicepackages
+
 sweep:
 	# make sweep SWEEPARGS=-sweep-run=aws_example_thing
 	# set SWEEPARGS=-sweep-allow-failures to continue after first failure
@@ -311,6 +316,7 @@ yamllint:
 .PHONY: \
 	build \
 	gen \
+	servicepackages \
 	sweep \
 	t \
 	test \

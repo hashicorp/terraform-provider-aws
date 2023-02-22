@@ -73,6 +73,11 @@ func (r *ResourceWithConfigure) FlattenTagsAll(ctx context.Context, apiTags tfta
 
 // SetTagsAll calculates the new value for the `tags_all` attribute.
 func (r *ResourceWithConfigure) SetTagsAll(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+	// If the entire plan is null, the resource is planned for destruction.
+	if request.Plan.Raw.IsNull() {
+		return
+	}
+
 	defaultTagsConfig := r.Meta().DefaultTagsConfig
 	ignoreTagsConfig := r.Meta().IgnoreTagsConfig
 

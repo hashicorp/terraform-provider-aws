@@ -32,10 +32,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func init() {
-	_sp.registerFrameworkResourceFactory(newResourceView)
-}
-
+// @FrameworkResource
 func newResourceView(context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceView{}, nil
 }

@@ -287,7 +287,7 @@ func disassociateTransitGatewayConnectPeers(ctx context.Context, conn *networkma
 }
 
 func globalNetworkIDNotFoundError(err error) bool {
-	return validationExceptionMessageContains(err, networkmanager.ValidationExceptionReasonFieldValidationFailed, "Global network not found")
+	return validationExceptionFieldsMessageContains(err, networkmanager.ValidationExceptionReasonFieldValidationFailed, "Global network not found")
 }
 
 func FindGlobalNetwork(ctx context.Context, conn *networkmanager.NetworkManager, input *networkmanager.DescribeGlobalNetworksInput) (*networkmanager.GlobalNetwork, error) {

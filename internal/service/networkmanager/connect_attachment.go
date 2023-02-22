@@ -169,7 +169,7 @@ func resourceConnectAttachmentCreate(ctx context.Context, d *schema.ResourceData
 			//   Message_: "Incorrect input.",
 			//   Reason: "FieldValidationFailed"
 			// }
-			if validationExceptionMessageContains(err, networkmanager.ValidationExceptionReasonFieldValidationFailed, "Transport attachment state is invalid.") {
+			if validationExceptionFieldsMessageContains(err, networkmanager.ValidationExceptionReasonFieldValidationFailed, "Transport attachment state is invalid.") {
 				return true, err
 			}
 
