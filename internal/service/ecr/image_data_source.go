@@ -113,7 +113,7 @@ func dataSourceImageRead(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 
 		slices.SortFunc(imageDetails, func(a, b *ecr.ImageDetail) bool {
-			return aws.TimeValue(a.ImagePushedAt).Before(aws.TimeValue(b.ImagePushedAt))
+			return aws.TimeValue(a.ImagePushedAt).After(aws.TimeValue(b.ImagePushedAt))
 		})
 	}
 

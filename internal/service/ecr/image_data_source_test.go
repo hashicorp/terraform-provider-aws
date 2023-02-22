@@ -13,6 +13,7 @@ func TestAccECRImageDataSource_basic(t *testing.T) {
 	registry, repo, tag := "137112412989", "amazonlinux", "latest"
 	resourceByTag := "data.aws_ecr_image.by_tag"
 	resourceByDigest := "data.aws_ecr_image.by_digest"
+	resourceByMostRecent := "data.aws_ecr_image.by_most_recent"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(t) },
@@ -29,6 +30,9 @@ func TestAccECRImageDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceByDigest, "image_pushed_at"),
 					resource.TestCheckResourceAttrSet(resourceByDigest, "image_size_in_bytes"),
 					resource.TestCheckTypeSetElemAttr(resourceByDigest, "image_tags.*", tag),
+					resource.TestCheckResourceAttrSet(resourceByMostRecent, "image_pushed_at"),
+					resource.TestCheckResourceAttrSet(resourceByMostRecent, "image_size_in_bytes"),
+					resource.TestCheckTypeSetElemAttr(resourceByMostRecent, "image_tags.*", tag),
 				),
 			},
 		},
@@ -47,6 +51,12 @@ data "aws_ecr_image" "by_digest" {
   registry_id     = data.aws_ecr_image.by_tag.registry_id
   repository_name = data.aws_ecr_image.by_tag.repository_name
   image_digest    = data.aws_ecr_image.by_tag.image_digest
+}
+
+data "aws_ecr_image" "by_most_recent" {
+  registry_id     = data.aws_ecr_image.by_tag.registry_id
+  repository_name = data.aws_ecr_image.by_tag.repository_name
+  most_recent     = true
 }
 `, reg, repo, tag)
 }
