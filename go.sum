@@ -68,8 +68,8 @@ github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.23 h1:QoOybhwRf
 github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.23/go.mod h1:9uPh+Hrz2Vn6oMnQYiUi/zbh3ovbnQk19YKINkQny44=
 github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.13.23 h1:qc+RW0WWZ2KApMnsu/EVCPqLTyIH55uc7YQq7mq4XqE=
 github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.13.23/go.mod h1:FJhZWVWBCcgAF8jbep7pxQ1QUsjzTwa9tvEXGw2TDRo=
-github.com/aws/aws-sdk-go-v2/service/ivschat v1.3.3 h1:BIjJJ1N0bTobTBi76wuO3hTWEiax8ws3oDAFiTBRHh0=
-github.com/aws/aws-sdk-go-v2/service/ivschat v1.3.3/go.mod h1:Ic/51aMt0SrY+rLEBYCMW6iuORW0wQJ/rhV0PGg07mQ=
+github.com/aws/aws-sdk-go-v2/service/ivschat v1.3.4 h1:nGVv8RFgC4P7BsnL/NPGhT8W0kdhBSf3TXR88GzjwLQ=
+github.com/aws/aws-sdk-go-v2/service/ivschat v1.3.4/go.mod h1:Ic/51aMt0SrY+rLEBYCMW6iuORW0wQJ/rhV0PGg07mQ=
 github.com/aws/aws-sdk-go-v2/service/kendra v1.38.4 h1:xYTIDgOjcy7iI4TtgCHQ/JHNI+DwOv2SrRvqN43wRyI=
 github.com/aws/aws-sdk-go-v2/service/kendra v1.38.4/go.mod h1:PMq9hXXhaNxmBMIolmknhJ9gXi4PYDsZwsFBaJs7Zak=
 github.com/aws/aws-sdk-go-v2/service/medialive v1.29.3 h1:zTs4JUuPMfx4OXywAp9Pg7KazsxnYJA/1plV2WuaXIY=
