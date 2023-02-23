@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
@@ -30,7 +30,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *sc
 }
 
 func (p *servicePackage) ServicePackageName() string {
-	return "keyspaces"
+	return names.Keyspaces
 }
 
-var ServicePackage intf.ServicePackage = &servicePackage{}
+var ServicePackage = &servicePackage{}

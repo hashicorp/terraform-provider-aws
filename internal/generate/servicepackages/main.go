@@ -48,6 +48,7 @@ func main() {
 			continue
 		}
 
+		// See internal/generate/namesconsts/main.go.
 		p := l[names.ColProviderPackageCorrect]
 
 		if l[names.ColProviderPackageActual] != "" {
@@ -79,6 +80,7 @@ func main() {
 
 		s := ServiceDatum{
 			ProviderPackage:      p,
+			ProviderNameUpper:    l[names.ColProviderNameUpper],
 			FrameworkDataSources: v.frameworkDataSources,
 			FrameworkResources:   v.frameworkResources,
 			SDKDataSources:       v.sdkDataSources,
@@ -125,6 +127,7 @@ func main() {
 
 type ServiceDatum struct {
 	ProviderPackage      string
+	ProviderNameUpper    string
 	FrameworkDataSources []string
 	FrameworkResources   []string
 	SDKDataSources       map[string]string
