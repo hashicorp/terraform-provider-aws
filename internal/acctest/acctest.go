@@ -957,12 +957,11 @@ func PreCheckDirectoryServiceSimpleDirectory(ctx context.Context, t *testing.T) 
 	}
 }
 
-func PreCheckOutpostsOutposts(t *testing.T) {
+func PreCheckOutpostsOutposts(ctx context.Context, t *testing.T) {
 	conn := Provider.Meta().(*conns.AWSClient).OutpostsConn()
-
 	input := &outposts.ListOutpostsInput{}
 
-	output, err := conn.ListOutposts(input)
+	output, err := conn.ListOutpostsWithContext(ctx, input)
 
 	if PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
