@@ -111,7 +111,7 @@ func TestAccACMPCACertificateAuthority_enabledDeprecated(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "type", acmpca.CertificateAuthorityTypeRoot),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "status", acmpca.CertificateAuthorityStatusPendingCertificate),
-					acctest.CheckACMPCACertificateAuthorityActivateRootCA(&certificateAuthority),
+					acctest.CheckACMPCACertificateAuthorityActivateRootCA(ctx, &certificateAuthority),
 				),
 			},
 			{

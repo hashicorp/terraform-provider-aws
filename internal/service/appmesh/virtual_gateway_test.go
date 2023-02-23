@@ -467,7 +467,7 @@ func testAccVirtualGateway_ListenerTLS(t *testing.T) {
 				Config: testAccVirtualGatewayConfig_rootCA(domain),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckACMPCACertificateAuthorityExists(acmCAResourceName, &ca),
-					acctest.CheckACMPCACertificateAuthorityActivateRootCA(&ca),
+					acctest.CheckACMPCACertificateAuthorityActivateRootCA(ctx, &ca),
 				),
 			},
 			{

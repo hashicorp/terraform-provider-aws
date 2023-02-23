@@ -716,7 +716,7 @@ func testAccServer_protocols(t *testing.T) {
 				Config: testAccServerConfig_rootCA(rootDomain),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckACMPCACertificateAuthorityExists(acmCAResourceName, &ca),
-					acctest.CheckACMPCACertificateAuthorityActivateRootCA(&ca),
+					acctest.CheckACMPCACertificateAuthorityActivateRootCA(ctx, &ca),
 				),
 			},
 			{

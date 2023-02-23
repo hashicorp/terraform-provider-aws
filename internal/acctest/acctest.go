@@ -1501,7 +1501,7 @@ func ACMCertificateRandomSubDomain(rootDomain string) string {
 		rootDomain)
 }
 
-func CheckACMPCACertificateAuthorityActivateRootCA(certificateAuthority *acmpca.CertificateAuthority) resource.TestCheckFunc {
+func CheckACMPCACertificateAuthorityActivateRootCA(ctx context.Context, certificateAuthority *acmpca.CertificateAuthority) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := Provider.Meta().(*conns.AWSClient).ACMPCAConn()
 
@@ -1511,7 +1511,7 @@ func CheckACMPCACertificateAuthorityActivateRootCA(certificateAuthority *acmpca.
 
 		arn := aws.StringValue(certificateAuthority.Arn)
 
-		getCsrOutput, err := conn.GetCertificateAuthorityCsr(&acmpca.GetCertificateAuthorityCsrInput{
+		getCsrOutput, err := conn.GetCertificateAuthorityCsrWithContext(ctx, &acmpca.GetCertificateAuthorityCsrInput{
 			CertificateAuthorityArn: aws.String(arn),
 		})
 
@@ -1519,7 +1519,7 @@ func CheckACMPCACertificateAuthorityActivateRootCA(certificateAuthority *acmpca.
 			return fmt.Errorf("getting ACM PCA Certificate Authority (%s) CSR: %w", arn, err)
 		}
 
-		issueCertOutput, err := conn.IssueCertificate(&acmpca.IssueCertificateInput{
+		issueCertOutput, err := conn.IssueCertificateWithContext(ctx, &acmpca.IssueCertificateInput{
 			CertificateAuthorityArn: aws.String(arn),
 			Csr:                     []byte(aws.StringValue(getCsrOutput.Csr)),
 			IdempotencyToken:        aws.String(resource.UniqueId()),
@@ -1536,7 +1536,7 @@ func CheckACMPCACertificateAuthorityActivateRootCA(certificateAuthority *acmpca.
 		}
 
 		// Wait for certificate status to become ISSUED.
-		err = conn.WaitUntilCertificateIssued(&acmpca.GetCertificateInput{
+		err = conn.WaitUntilCertificateIssuedWithContext(ctx, &acmpca.GetCertificateInput{
 			CertificateAuthorityArn: aws.String(arn),
 			CertificateArn:          issueCertOutput.CertificateArn,
 		})
@@ -1545,7 +1545,7 @@ func CheckACMPCACertificateAuthorityActivateRootCA(certificateAuthority *acmpca.
 			return fmt.Errorf("waiting for ACM PCA Certificate Authority (%s) Root CA certificate to become ISSUED: %w", arn, err)
 		}
 
-		getCertOutput, err := conn.GetCertificate(&acmpca.GetCertificateInput{
+		getCertOutput, err := conn.GetCertificateWithContext(ctx, &acmpca.GetCertificateInput{
 			CertificateAuthorityArn: aws.String(arn),
 			CertificateArn:          issueCertOutput.CertificateArn,
 		})
@@ -1554,7 +1554,7 @@ func CheckACMPCACertificateAuthorityActivateRootCA(certificateAuthority *acmpca.
 			return fmt.Errorf("getting ACM PCA Certificate Authority (%s) issued Root CA certificate: %w", arn, err)
 		}
 
-		_, err = conn.ImportCertificateAuthorityCertificate(&acmpca.ImportCertificateAuthorityCertificateInput{
+		_, err = conn.ImportCertificateAuthorityCertificateWithContext(ctx, &acmpca.ImportCertificateAuthorityCertificateInput{
 			CertificateAuthorityArn: aws.String(arn),
 			Certificate:             []byte(aws.StringValue(getCertOutput.Certificate)),
 		})
