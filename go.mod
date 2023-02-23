@@ -7,7 +7,7 @@ require (
 	github.com/aws/aws-sdk-go v1.44.206
 	github.com/aws/aws-sdk-go-v2 v1.17.5
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.23
-	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.24.0
+	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.24.1
 	github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.11.4
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.20.4
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.21.3
