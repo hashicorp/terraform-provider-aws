@@ -870,20 +870,22 @@ func PreCheckSSOAdminInstances(ctx context.Context, t *testing.T) {
 	}
 }
 
-func PreCheckHasIAMRole(t *testing.T, roleName string) {
+func PreCheckHasIAMRole(ctx context.Context, t *testing.T, roleName string) {
 	conn := Provider.Meta().(*conns.AWSClient).IAMConn()
-
 	input := &iam.GetRoleInput{
 		RoleName: aws.String(roleName),
 	}
-	_, err := conn.GetRole(input)
+
+	_, err := conn.GetRoleWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 		t.Skipf("skipping acceptance test: required IAM role \"%s\" is not present", roleName)
 	}
+
 	if PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance test: %s", err)
 	}
+
 	if err != nil {
 		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
@@ -916,6 +918,66 @@ func PreCheckIAMServiceLinkedRole(t *testing.T, pathPrefix string) {
 
 	if role == nil {
 		t.Skipf("skipping tests; missing IAM service-linked role %s. Please create the role and retry", pathPrefix)
+	}
+}
+
+func PreCheckDirectoryService(t *testing.T) {
+	conn := Provider.Meta().(*conns.AWSClient).DSConn()
+
+	input := &directoryservice.DescribeDirectoriesInput{}
+
+	_, err := conn.DescribeDirectories(input)
+
+	if PreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+}
+
+// Certain regions such as AWS GovCloud (US) do not support Simple AD directories
+// and we do not have a good read-only way to determine this situation. Here we
+// opt to perform a creation that will fail so we can determine Simple AD support.
+func PreCheckDirectoryServiceSimpleDirectory(t *testing.T) {
+	conn := Provider.Meta().(*conns.AWSClient).DSConn()
+
+	input := &directoryservice.CreateDirectoryInput{
+		Name:     aws.String("corp.example.com"),
+		Password: aws.String("PreCheck123"),
+		Size:     aws.String(directoryservice.DirectorySizeSmall),
+	}
+
+	_, err := conn.CreateDirectory(input)
+
+	if tfawserr.ErrMessageContains(err, directoryservice.ErrCodeClientException, "Simple AD directory creation is currently not supported in this region") {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil && !tfawserr.ErrMessageContains(err, directoryservice.ErrCodeInvalidParameterException, "VpcSettings must be specified") {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+}
+
+func PreCheckOutpostsOutposts(t *testing.T) {
+	conn := Provider.Meta().(*conns.AWSClient).OutpostsConn()
+
+	input := &outposts.ListOutpostsInput{}
+
+	output, err := conn.ListOutposts(input)
+
+	if PreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+
+	// Ensure there is at least one Outpost
+	if output == nil || len(output.Outposts) == 0 {
+		t.Skip("skipping since no Outposts found")
 	}
 }
 
@@ -1396,27 +1458,6 @@ func RandomEmailAddress(domainName string) string {
 	return fmt.Sprintf("%s@%s", sdkacctest.RandomWithPrefix(ResourcePrefix), domainName)
 }
 
-func PreCheckOutpostsOutposts(t *testing.T) {
-	conn := Provider.Meta().(*conns.AWSClient).OutpostsConn()
-
-	input := &outposts.ListOutpostsInput{}
-
-	output, err := conn.ListOutposts(input)
-
-	if PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
-
-	// Ensure there is at least one Outpost
-	if output == nil || len(output.Outposts) == 0 {
-		t.Skip("skipping since no Outposts found")
-	}
-}
-
 const (
 	// ACM domain names cannot be longer than 64 characters
 	// Other resources, e.g. Cognito User Pool Domains, limit this to 63
@@ -1649,45 +1690,6 @@ func CheckACMPCACertificateAuthorityExists(n string, certificateAuthority *acmpc
 func PreCheckAPIGatewayTypeEDGE(t *testing.T) {
 	if Partition() != endpoints.AwsPartitionID {
 		t.Skipf("skipping test; Endpoint Configuration type EDGE is not supported in this partition (%s)", Partition())
-	}
-}
-
-func PreCheckDirectoryService(t *testing.T) {
-	conn := Provider.Meta().(*conns.AWSClient).DSConn()
-
-	input := &directoryservice.DescribeDirectoriesInput{}
-
-	_, err := conn.DescribeDirectories(input)
-
-	if PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
-}
-
-// Certain regions such as AWS GovCloud (US) do not support Simple AD directories
-// and we do not have a good read-only way to determine this situation. Here we
-// opt to perform a creation that will fail so we can determine Simple AD support.
-func PreCheckDirectoryServiceSimpleDirectory(t *testing.T) {
-	conn := Provider.Meta().(*conns.AWSClient).DSConn()
-
-	input := &directoryservice.CreateDirectoryInput{
-		Name:     aws.String("corp.example.com"),
-		Password: aws.String("PreCheck123"),
-		Size:     aws.String(directoryservice.DirectorySizeSmall),
-	}
-
-	_, err := conn.CreateDirectory(input)
-
-	if tfawserr.ErrMessageContains(err, directoryservice.ErrCodeClientException, "Simple AD directory creation is currently not supported in this region") {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-
-	if err != nil && !tfawserr.ErrMessageContains(err, directoryservice.ErrCodeInvalidParameterException, "VpcSettings must be specified") {
-		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 }
 
