@@ -34,6 +34,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
+	tfacmpca "github.com/hashicorp/terraform-provider-aws/internal/service/acmpca"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tforganizations "github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
 	tfsts "github.com/hashicorp/terraform-provider-aws/internal/service/sts"
@@ -1662,21 +1663,13 @@ func CheckACMPCACertificateAuthorityExists(ctx context.Context, n string, certif
 
 		conn := Provider.Meta().(*conns.AWSClient).ACMPCAConn()
 
-		input := &acmpca.DescribeCertificateAuthorityInput{
-			CertificateAuthorityArn: aws.String(rs.Primary.ID),
-		}
-
-		output, err := conn.DescribeCertificateAuthorityWithContext(ctx, input)
+		output, err := tfacmpca.FindCertificateAuthorityByARN(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if output == nil || output.CertificateAuthority == nil {
-			return fmt.Errorf("empty ACM PCA Certificate Authority (%s)", rs.Primary.ID)
-		}
-
-		*certificateAuthority = *output.CertificateAuthority
+		*certificateAuthority = *output
 
 		return nil
 	}
