@@ -149,8 +149,8 @@ the custom OCSP responder endpoint. Defined below.
 
 * `custom_cname` - (Optional) Name inserted into the certificate CRL Distribution Points extension that enables the use of an alias for the CRL distribution point. Use this value if you don't want the name of your S3 bucket to be public. Must be less than or equal to 253 characters in length.
 * `enabled` - (Optional) Boolean value that specifies whether certificate revocation lists (CRLs) are enabled. Defaults to `false`.
-* `expiration_in_days` - (Required) Number of days until a certificate expires. Must be between 1 and 5000.
-* `s3_bucket_name` - (Optional) Name of the S3 bucket that contains the CRL. If you do not provide a value for the `custom_cname` argument, the name of your S3 bucket is placed into the CRL Distribution Points extension of the issued certificate. You must specify a bucket policy that allows ACM PCA to write the CRL to your bucket. Must be less than or equal to 255 characters in length.
+* `expiration_in_days` - (Optional, Required if `enabled` is `true`) Number of days until a certificate expires. Must be between 1 and 5000.
+* `s3_bucket_name` - (Optional, Required if `enabled` is `true`) Name of the S3 bucket that contains the CRL. If you do not provide a value for the `custom_cname` argument, the name of your S3 bucket is placed into the CRL Distribution Points extension of the issued certificate. You must specify a bucket policy that allows ACM PCA to write the CRL to your bucket. Must be between 3 and 255 characters in length.
 * `s3_object_acl` - (Optional) Determines whether the CRL will be publicly readable or privately held in the CRL Amazon S3 bucket. Defaults to `PUBLIC_READ`.
 
 #### ocsp_configuration
