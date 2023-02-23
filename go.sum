@@ -72,8 +72,8 @@ github.com/aws/aws-sdk-go-v2/service/ivschat v1.3.3 h1:BIjJJ1N0bTobTBi76wuO3hTWE
 github.com/aws/aws-sdk-go-v2/service/ivschat v1.3.3/go.mod h1:Ic/51aMt0SrY+rLEBYCMW6iuORW0wQJ/rhV0PGg07mQ=
 github.com/aws/aws-sdk-go-v2/service/kendra v1.38.4 h1:xYTIDgOjcy7iI4TtgCHQ/JHNI+DwOv2SrRvqN43wRyI=
 github.com/aws/aws-sdk-go-v2/service/kendra v1.38.4/go.mod h1:PMq9hXXhaNxmBMIolmknhJ9gXi4PYDsZwsFBaJs7Zak=
-github.com/aws/aws-sdk-go-v2/service/medialive v1.29.3 h1:zTs4JUuPMfx4OXywAp9Pg7KazsxnYJA/1plV2WuaXIY=
-github.com/aws/aws-sdk-go-v2/service/medialive v1.29.3/go.mod h1:MDHSj74ylVyTusJYPIoFhNXqwaD8W8cIf8yTEI7+ccc=
+github.com/aws/aws-sdk-go-v2/service/medialive v1.29.4 h1:1K+jiIQQdFGgYUmITnQRTRFQSCv0fUIH/X//Kgq0m/8=
+github.com/aws/aws-sdk-go-v2/service/medialive v1.29.4/go.mod h1:MDHSj74ylVyTusJYPIoFhNXqwaD8W8cIf8yTEI7+ccc=
 github.com/aws/aws-sdk-go-v2/service/oam v1.1.5 h1:b4IaVHpAfwj2cOmTUgoIFTjLjTuC1yh3Ml3K7cjZFaU=
 github.com/aws/aws-sdk-go-v2/service/oam v1.1.5/go.mod h1:wjIJYruJrl1fA6qqfQSOjUUUjASLrjbVsD7y6NYcoOc=
 github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.1.4 h1:IzVnEh5/mdQ7OG/+ULa6cgd7tp4DBcNC8utvgM9K/RQ=
