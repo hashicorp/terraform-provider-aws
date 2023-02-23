@@ -891,15 +891,14 @@ func PreCheckHasIAMRole(ctx context.Context, t *testing.T, roleName string) {
 	}
 }
 
-func PreCheckIAMServiceLinkedRole(t *testing.T, pathPrefix string) {
+func PreCheckIAMServiceLinkedRole(ctx context.Context, t *testing.T, pathPrefix string) {
 	conn := Provider.Meta().(*conns.AWSClient).IAMConn()
-
 	input := &iam.ListRolesInput{
 		PathPrefix: aws.String(pathPrefix),
 	}
-
 	var role *iam.Role
-	err := conn.ListRolesPages(input, func(page *iam.ListRolesOutput, lastPage bool) bool {
+
+	err := conn.ListRolesPagesWithContext(ctx, input, func(page *iam.ListRolesOutput, lastPage bool) bool {
 		for _, r := range page.Roles {
 			role = r
 			break
