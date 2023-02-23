@@ -39,7 +39,7 @@ func GetTag(ctx context.Context, conn autoscalingiface.AutoScalingAPI, identifie
 		return nil, err
 	}
 
-	listTags := KeyValueTags(output.Tags, identifier, resourceType)
+	listTags := KeyValueTags(ctx, output.Tags, identifier, resourceType)
 
 	if !listTags.KeyExists(key) {
 		return nil, tfresource.NewEmptyResultError(nil)
@@ -64,10 +64,10 @@ func ListTags(ctx context.Context, conn autoscalingiface.AutoScalingAPI, identif
 	output, err := conn.DescribeTagsWithContext(ctx, input)
 
 	if err != nil {
-		return tftags.New(nil), err
+		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTags(output.Tags, identifier, resourceType), nil
+	return KeyValueTags(ctx, output.Tags, identifier, resourceType), nil
 }
 
 // []*SERVICE.Tag handling
@@ -143,7 +143,7 @@ func Tags(tags tftags.KeyValueTags) []*autoscaling.Tag {
 //   - []*autoscaling.TagDescription
 //   - []interface{} (Terraform TypeList configuration block compatible)
 //   - *schema.Set (Terraform TypeSet configuration block compatible)
-func KeyValueTags(tags interface{}, identifier string, resourceType string) tftags.KeyValueTags {
+func KeyValueTags(ctx context.Context, tags interface{}, identifier string, resourceType string) tftags.KeyValueTags {
 	switch tags := tags.(type) {
 	case []*autoscaling.Tag:
 		m := make(map[string]*tftags.TagData, len(tags))
@@ -162,7 +162,7 @@ func KeyValueTags(tags interface{}, identifier string, resourceType string) tfta
 			m[aws.StringValue(tag.Key)] = tagData
 		}
 
-		return tftags.New(m)
+		return tftags.New(ctx, m)
 	case []*autoscaling.TagDescription:
 		m := make(map[string]*tftags.TagData, len(tags))
 
@@ -179,9 +179,9 @@ func KeyValueTags(tags interface{}, identifier string, resourceType string) tfta
 			m[aws.StringValue(tag.Key)] = tagData
 		}
 
-		return tftags.New(m)
+		return tftags.New(ctx, m)
 	case *schema.Set:
-		return KeyValueTags(tags.List(), identifier, resourceType)
+		return KeyValueTags(ctx, tags.List(), identifier, resourceType)
 	case []interface{}:
 		result := make(map[string]*tftags.TagData)
 
@@ -222,9 +222,9 @@ func KeyValueTags(tags interface{}, identifier string, resourceType string) tfta
 			result[key] = tagData
 		}
 
-		return tftags.New(result)
+		return tftags.New(ctx, result)
 	default:
-		return tftags.New(nil)
+		return tftags.New(ctx, nil)
 	}
 }
 
@@ -232,8 +232,8 @@ func KeyValueTags(tags interface{}, identifier string, resourceType string) tfta
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
 func UpdateTags(ctx context.Context, conn autoscalingiface.AutoScalingAPI, identifier string, resourceType string, oldTagsSet interface{}, newTagsSet interface{}) error {
-	oldTags := KeyValueTags(oldTagsSet, identifier, resourceType)
-	newTags := KeyValueTags(newTagsSet, identifier, resourceType)
+	oldTags := KeyValueTags(ctx, oldTagsSet, identifier, resourceType)
+	newTags := KeyValueTags(ctx, newTagsSet, identifier, resourceType)
 
 	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
 		input := &autoscaling.DeleteTagsInput{

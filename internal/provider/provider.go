@@ -2322,21 +2322,21 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 	}
 
 	if v, ok := d.GetOk("assume_role"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		config.AssumeRole = expandAssumeRole(v.([]interface{})[0].(map[string]interface{}))
+		config.AssumeRole = expandAssumeRole(ctx, v.([]interface{})[0].(map[string]interface{}))
 		log.Printf("[INFO] assume_role configuration set: (ARN: %q, SessionID: %q, ExternalID: %q, SourceIdentity: %q)", config.AssumeRole.RoleARN, config.AssumeRole.SessionName, config.AssumeRole.ExternalID, config.AssumeRole.SourceIdentity)
 	}
 
 	if v, ok := d.GetOk("assume_role_with_web_identity"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		config.AssumeRoleWithWebIdentity = expandAssumeRoleWithWebIdentity(v.([]interface{})[0].(map[string]interface{}))
+		config.AssumeRoleWithWebIdentity = expandAssumeRoleWithWebIdentity(ctx, v.([]interface{})[0].(map[string]interface{}))
 		log.Printf("[INFO] assume_role_with_web_identity configuration set: (ARN: %q, SessionID: %q)", config.AssumeRoleWithWebIdentity.RoleARN, config.AssumeRoleWithWebIdentity.SessionName)
 	}
 
 	if v, ok := d.GetOk("default_tags"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		config.DefaultTagsConfig = expandDefaultTags(v.([]interface{})[0].(map[string]interface{}))
+		config.DefaultTagsConfig = expandDefaultTags(ctx, v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("endpoints"); ok && v.(*schema.Set).Len() > 0 {
-		endpoints, err := expandEndpoints(v.(*schema.Set).List())
+		endpoints, err := expandEndpoints(ctx, v.(*schema.Set).List())
 
 		if err != nil {
 			return nil, diag.FromErr(err)
@@ -2350,7 +2350,7 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 	}
 
 	if v, ok := d.GetOk("ignore_tags"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		config.IgnoreTagsConfig = expandIgnoreTags(v.([]interface{})[0].(map[string]interface{}))
+		config.IgnoreTagsConfig = expandIgnoreTags(ctx, v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("max_retries"); ok {
@@ -2548,7 +2548,7 @@ func endpointsSchema() *schema.Schema {
 	}
 }
 
-func expandAssumeRole(tfMap map[string]interface{}) *awsbase.AssumeRole {
+func expandAssumeRole(_ context.Context, tfMap map[string]interface{}) *awsbase.AssumeRole {
 	if tfMap == nil {
 		return nil
 	}
@@ -2597,7 +2597,7 @@ func expandAssumeRole(tfMap map[string]interface{}) *awsbase.AssumeRole {
 	return &assumeRole
 }
 
-func expandAssumeRoleWithWebIdentity(tfMap map[string]interface{}) *awsbase.AssumeRoleWithWebIdentity {
+func expandAssumeRoleWithWebIdentity(_ context.Context, tfMap map[string]interface{}) *awsbase.AssumeRoleWithWebIdentity {
 	if tfMap == nil {
 		return nil
 	}
@@ -2638,7 +2638,7 @@ func expandAssumeRoleWithWebIdentity(tfMap map[string]interface{}) *awsbase.Assu
 	return &assumeRole
 }
 
-func expandDefaultTags(tfMap map[string]interface{}) *tftags.DefaultConfig {
+func expandDefaultTags(ctx context.Context, tfMap map[string]interface{}) *tftags.DefaultConfig {
 	if tfMap == nil {
 		return nil
 	}
@@ -2646,13 +2646,13 @@ func expandDefaultTags(tfMap map[string]interface{}) *tftags.DefaultConfig {
 	defaultConfig := &tftags.DefaultConfig{}
 
 	if v, ok := tfMap["tags"].(map[string]interface{}); ok {
-		defaultConfig.Tags = tftags.New(v)
+		defaultConfig.Tags = tftags.New(ctx, v)
 	}
 
 	return defaultConfig
 }
 
-func expandIgnoreTags(tfMap map[string]interface{}) *tftags.IgnoreConfig {
+func expandIgnoreTags(ctx context.Context, tfMap map[string]interface{}) *tftags.IgnoreConfig {
 	if tfMap == nil {
 		return nil
 	}
@@ -2660,17 +2660,17 @@ func expandIgnoreTags(tfMap map[string]interface{}) *tftags.IgnoreConfig {
 	ignoreConfig := &tftags.IgnoreConfig{}
 
 	if v, ok := tfMap["keys"].(*schema.Set); ok {
-		ignoreConfig.Keys = tftags.New(v.List())
+		ignoreConfig.Keys = tftags.New(ctx, v.List())
 	}
 
 	if v, ok := tfMap["key_prefixes"].(*schema.Set); ok {
-		ignoreConfig.KeyPrefixes = tftags.New(v.List())
+		ignoreConfig.KeyPrefixes = tftags.New(ctx, v.List())
 	}
 
 	return ignoreConfig
 }
 
-func expandEndpoints(tfList []interface{}) (map[string]string, error) {
+func expandEndpoints(_ context.Context, tfList []interface{}) (map[string]string, error) {
 	if len(tfList) == 0 {
 		return nil, nil
 	}

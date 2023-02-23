@@ -218,7 +218,7 @@ func dataSourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("subnet_id", eni.SubnetId)
 	d.Set("vpc_id", eni.VpcId)
 
-	if err := d.Set("tags", KeyValueTags(eni.TagSet).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, eni.TagSet).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

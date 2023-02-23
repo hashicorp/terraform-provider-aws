@@ -198,7 +198,7 @@ func (rd *dataSourceControlData) refreshFromOutput(ctx context.Context, meta *co
 	rd.Type = types.StringValue(string(out.Type))
 
 	ignoreTagsConfig := meta.IgnoreTagsConfig
-	tags := KeyValueTags(out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 	rd.Tags = flex.FlattenFrameworkStringValueMapLegacy(ctx, tags.Map())
 
 	return diags

@@ -15,8 +15,8 @@ import (
 // Custom Service Catalog tag service update functions using the same format as generated code.
 
 func productUpdateTags(ctx context.Context, conn *servicecatalog.ServiceCatalog, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
-	oldTags := tftags.New(oldTagsMap)
-	newTags := tftags.New(newTagsMap)
+	oldTags := tftags.New(ctx, oldTagsMap)
+	newTags := tftags.New(ctx, newTagsMap)
 
 	input := &servicecatalog.UpdateProductInput{
 		Id: aws.String(identifier),
@@ -39,12 +39,12 @@ func productUpdateTags(ctx context.Context, conn *servicecatalog.ServiceCatalog,
 	return nil
 }
 
-func recordKeyValueTags(tags []*servicecatalog.RecordTag) tftags.KeyValueTags {
+func recordKeyValueTags(ctx context.Context, tags []*servicecatalog.RecordTag) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
 		m[aws.StringValue(tag.Key)] = tag.Value
 	}
 
-	return tftags.New(m)
+	return tftags.New(ctx, m)
 }

@@ -163,7 +163,7 @@ func dataSourceImagePipelineRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	d.Set("status", imagePipeline.Status)
-	d.Set("tags", KeyValueTags(imagePipeline.Tags).IgnoreAWS().IgnoreConfig(meta.(*conns.AWSClient).IgnoreTagsConfig).Map())
+	d.Set("tags", KeyValueTags(ctx, imagePipeline.Tags).IgnoreAWS().IgnoreConfig(meta.(*conns.AWSClient).IgnoreTagsConfig).Map())
 
 	return diags
 }

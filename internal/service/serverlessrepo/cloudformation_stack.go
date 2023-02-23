@@ -150,7 +150,7 @@ func resourceCloudFormationStackRead(ctx context.Context, d *schema.ResourceData
 	stackName := strings.TrimPrefix(aws.StringValue(stack.StackName), CloudFormationStackNamePrefix)
 	d.Set("name", &stackName)
 
-	tags := tfcloudformation.KeyValueTags(stack.Tags)
+	tags := tfcloudformation.KeyValueTags(ctx, stack.Tags)
 	var applicationID, semanticVersion string
 	if v, ok := tags[cloudFormationStackTagApplicationID]; ok {
 		applicationID = aws.StringValue(v.Value)
@@ -305,7 +305,7 @@ func createCloudFormationChangeSet(ctx context.Context, d *schema.ResourceData, 
 	serverlessConn := client.ServerlessRepoConn()
 	cfConn := client.CloudFormationConn()
 	defaultTagsConfig := client.DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	stackName := d.Get("name").(string)
 	changeSetRequest := serverlessrepo.CreateCloudFormationChangeSetRequest{

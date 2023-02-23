@@ -24,6 +24,7 @@ import (
 func TestExpandMetricsFilter(t *testing.T) {
 	t.Parallel()
 
+	ctx := context.Background()
 	testCases := []struct {
 		Config                  map[string]interface{}
 		ExpectedS3MetricsFilter *s3.MetricsFilter
@@ -117,7 +118,7 @@ func TestExpandMetricsFilter(t *testing.T) {
 	}
 
 	for i, tc := range testCases {
-		value := tfs3.ExpandMetricsFilter(tc.Config)
+		value := tfs3.ExpandMetricsFilter(ctx, tc.Config)
 
 		// Sort tags by key for consistency
 		if value.And != nil && value.And.Tags != nil {
@@ -139,6 +140,7 @@ func TestExpandMetricsFilter(t *testing.T) {
 func TestFlattenMetricsFilter(t *testing.T) {
 	t.Parallel()
 
+	ctx := context.Background()
 	testCases := []struct {
 		S3MetricsFilter *s3.MetricsFilter
 		ExpectedConfig  map[string]interface{}
@@ -232,7 +234,7 @@ func TestFlattenMetricsFilter(t *testing.T) {
 	}
 
 	for i, tc := range testCases {
-		value := tfs3.FlattenMetricsFilter(tc.S3MetricsFilter)
+		value := tfs3.FlattenMetricsFilter(ctx, tc.S3MetricsFilter)
 
 		if !reflect.DeepEqual(value, tc.ExpectedConfig) {
 			t.Fatalf("Case #%d: Given:\n%s\n\nExpected:\n%s", i, value, tc.ExpectedConfig)

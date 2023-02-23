@@ -177,7 +177,7 @@ func (r *resourceSecurityGroupRule) Create(ctx context.Context, request resource
 	conn := r.Meta().EC2Conn()
 	defaultTagsConfig := r.Meta().DefaultTagsConfig
 	ignoreTagsConfig := r.Meta().IgnoreTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(data.Tags))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, data.Tags))
 
 	if len(tags) > 0 {
 		if err := UpdateTags(ctx, conn, data.ID.ValueString(), nil, tags); err != nil {
@@ -246,7 +246,7 @@ func (r *resourceSecurityGroupRule) Read(ctx context.Context, request resource.R
 		data.ToPort = flex.Int64ToFramework(ctx, output.ToPort)
 	}
 
-	tags := KeyValueTags(output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 	// AWS APIs often return empty lists of tags when none have been configured.
 	if tags := tags.RemoveDefaultConfig(defaultTagsConfig).Map(); len(tags) == 0 {
 		data.Tags = tftags.Null

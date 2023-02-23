@@ -555,7 +555,7 @@ func (tags KeyValueTags) URLQueryString() string {
 // map[string]string, map[string]*string, map[string]interface{}, []interface{}, and types.Map.
 // When passed []interface{}, all elements are treated as keys and assigned nil values.
 // When passed KeyValueTags or its underlying type implementation, returns itself.
-func New(i interface{}) KeyValueTags {
+func New(ctx context.Context, i interface{}) KeyValueTags {
 	switch value := i.(type) {
 	case KeyValueTags:
 		return make(KeyValueTags).Merge(value)
@@ -616,7 +616,7 @@ func New(i interface{}) KeyValueTags {
 
 		return kvtm
 	case types.Map:
-		return New(flex.ExpandFrameworkStringValueMap(context.TODO(), value))
+		return New(ctx, flex.ExpandFrameworkStringValueMap(ctx, value))
 	default:
 		return make(KeyValueTags)
 	}

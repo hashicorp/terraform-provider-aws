@@ -397,7 +397,7 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaConn()
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	functionName := d.Get("function_name").(string)
 	packageType := d.Get("package_type").(string)
@@ -662,7 +662,7 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 		// Tagging operations are permitted on Lambda functions only.
 		// Tags on aliases and versions are not supported.
-		tags := KeyValueTags(output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+		tags := KeyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 		//lintignore:AWSR002
 		if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {

@@ -162,7 +162,7 @@ func (rd *dataSourceFrameworkData) refreshFromOutput(ctx context.Context, meta *
 	rd.ARN = flex.StringToFramework(ctx, out.Arn)
 
 	ignoreTagsConfig := meta.IgnoreTagsConfig
-	tags := KeyValueTags(out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 	rd.Tags = flex.FlattenFrameworkStringValueMapLegacy(ctx, tags.Map())
 
 	return diags

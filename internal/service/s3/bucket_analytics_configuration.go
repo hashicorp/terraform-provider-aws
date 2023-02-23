@@ -141,7 +141,7 @@ func resourceBucketAnalyticsConfigurationPut(ctx context.Context, d *schema.Reso
 
 	analyticsConfiguration := &s3.AnalyticsConfiguration{
 		Id:                   aws.String(name),
-		Filter:               ExpandAnalyticsFilter(d.Get("filter").([]interface{})),
+		Filter:               ExpandAnalyticsFilter(ctx, d.Get("filter").([]interface{})),
 		StorageClassAnalysis: ExpandStorageClassAnalysis(d.Get("storage_class_analysis").([]interface{})),
 	}
 
@@ -217,7 +217,7 @@ func resourceBucketAnalyticsConfigurationRead(ctx context.Context, d *schema.Res
 		return sdkdiag.AppendErrorf(diags, "getting S3 Bucket Analytics Configuration (%s): empty response", d.Id())
 	}
 
-	if err := d.Set("filter", FlattenAnalyticsFilter(output.AnalyticsConfiguration.Filter)); err != nil {
+	if err := d.Set("filter", FlattenAnalyticsFilter(ctx, output.AnalyticsConfiguration.Filter)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting filter: %s", err)
 	}
 
@@ -267,7 +267,7 @@ func BucketAnalyticsConfigurationParseID(id string) (string, string, error) {
 	return bucket, name, nil
 }
 
-func ExpandAnalyticsFilter(l []interface{}) *s3.AnalyticsFilter {
+func ExpandAnalyticsFilter(ctx context.Context, l []interface{}) *s3.AnalyticsFilter {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -281,7 +281,7 @@ func ExpandAnalyticsFilter(l []interface{}) *s3.AnalyticsFilter {
 
 	var tags []*s3.Tag
 	if v, ok := m["tags"]; ok {
-		tags = Tags(tftags.New(v).IgnoreAWS())
+		tags = Tags(tftags.New(ctx, v).IgnoreAWS())
 	}
 
 	if prefix == "" && len(tags) == 0 {
@@ -361,7 +361,7 @@ func expandAnalyticsBucketDestination(bdl []interface{}) *s3.AnalyticsS3BucketDe
 	return result
 }
 
-func FlattenAnalyticsFilter(analyticsFilter *s3.AnalyticsFilter) []map[string]interface{} {
+func FlattenAnalyticsFilter(ctx context.Context, analyticsFilter *s3.AnalyticsFilter) []map[string]interface{} {
 	if analyticsFilter == nil {
 		return nil
 	}
@@ -372,7 +372,7 @@ func FlattenAnalyticsFilter(analyticsFilter *s3.AnalyticsFilter) []map[string]in
 			result["prefix"] = aws.StringValue(and.Prefix)
 		}
 		if and.Tags != nil {
-			result["tags"] = KeyValueTags(and.Tags).IgnoreAWS().Map()
+			result["tags"] = KeyValueTags(ctx, and.Tags).IgnoreAWS().Map()
 		}
 	} else if analyticsFilter.Prefix != nil {
 		result["prefix"] = aws.StringValue(analyticsFilter.Prefix)
@@ -380,7 +380,7 @@ func FlattenAnalyticsFilter(analyticsFilter *s3.AnalyticsFilter) []map[string]in
 		tags := []*s3.Tag{
 			analyticsFilter.Tag,
 		}
-		result["tags"] = KeyValueTags(tags).IgnoreAWS().Map()
+		result["tags"] = KeyValueTags(ctx, tags).IgnoreAWS().Map()
 	} else {
 		return nil
 	}

@@ -124,7 +124,7 @@ func (d *dataSourceSecurityGroupRule) Read(ctx context.Context, request datasour
 	data.ReferencedSecurityGroupID = d.flattenReferencedSecurityGroup(ctx, output.ReferencedGroupInfo)
 	data.SecurityGroupID = flex.StringToFramework(ctx, output.GroupId)
 	data.SecurityGroupRuleID = flex.StringToFramework(ctx, output.SecurityGroupRuleId)
-	data.Tags = flex.FlattenFrameworkStringValueMapLegacy(ctx, KeyValueTags(output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
+	data.Tags = flex.FlattenFrameworkStringValueMapLegacy(ctx, KeyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
 	data.ToPort = flex.Int64ToFramework(ctx, output.ToPort)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
