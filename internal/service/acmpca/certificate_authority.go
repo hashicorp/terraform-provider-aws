@@ -2,6 +2,7 @@ package acmpca
 
 import (
 	"context"
+	"errors"
 	"log"
 	"time"
 
@@ -363,33 +364,19 @@ func resourceCertificateAuthorityCreate(ctx context.Context, d *schema.ResourceD
 		input.Tags = Tags(tags.IgnoreAWS())
 	}
 
-	log.Printf("[DEBUG] Creating ACM PCA Certificate Authority: %s", input)
-	var output *acmpca.CreateCertificateAuthorityOutput
-	err := resource.RetryContext(ctx, 1*time.Minute, func() *resource.RetryError {
-		var err error
-		output, err = conn.CreateCertificateAuthorityWithContext(ctx, input)
-		if err != nil {
-			// ValidationException: The ACM Private CA service account 'acm-pca-prod-pdx' requires getBucketAcl permissions for your S3 bucket 'tf-acc-test-5224996536060125340'. Check your S3 bucket permissions and try again.
-			if tfawserr.ErrMessageContains(err, "ValidationException", "Check your S3 bucket permissions and try again") {
-				return resource.RetryableError(err)
-			}
-			return resource.NonRetryableError(err)
-		}
-		return nil
-	})
-	if tfresource.TimedOut(err) {
-		output, err = conn.CreateCertificateAuthorityWithContext(ctx, input)
-	}
+	// ValidationException: The ACM Private CA service account 'acm-pca-prod-pdx' requires getBucketAcl permissions for your S3 bucket 'tf-acc-test-5224996536060125340'. Check your S3 bucket permissions and try again.
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, 1*time.Minute, func() (interface{}, error) {
+		return conn.CreateCertificateAuthorityWithContext(ctx, input)
+	}, "ValidationException", "Check your S3 bucket permissions and try again")
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating ACM PCA Certificate Authority: %s", err)
 	}
 
-	d.SetId(aws.StringValue(output.CertificateAuthorityArn))
+	d.SetId(aws.StringValue(outputRaw.(*acmpca.CreateCertificateAuthorityOutput).CertificateAuthorityArn))
 
-	_, err = waitCertificateAuthorityCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate))
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for ACM PCA Certificate Authority %q to be active or pending certificate: %s", d.Id(), err)
+	if _, err := waitCertificateAuthorityCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for ACM PCA Certificate Authority (%s) create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceCertificateAuthorityRead(ctx, d, meta)...)
@@ -403,7 +390,7 @@ func resourceCertificateAuthorityRead(ctx context.Context, d *schema.ResourceDat
 
 	certificateAuthority, err := FindCertificateAuthorityByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, acmpca.ErrCodeResourceNotFoundException) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ACM PCA Certificate Authority (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -411,16 +398,6 @@ func resourceCertificateAuthorityRead(ctx context.Context, d *schema.ResourceDat
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading ACM PCA Certificate Authority (%s): %s", d.Id(), err)
-	}
-
-	if certificateAuthority == nil || aws.StringValue(certificateAuthority.Status) == acmpca.CertificateAuthorityStatusDeleted {
-		if d.IsNewResource() {
-			return sdkdiag.AppendErrorf(diags, "reading ACM PCA Certificate Authority (%s): not found or deleted", d.Id())
-		}
-
-		log.Printf("[WARN] ACM PCA Certificate Authority (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return diags
 	}
 
 	d.Set("arn", certificateAuthority.Arn)
@@ -441,8 +418,6 @@ func resourceCertificateAuthorityRead(ctx context.Context, d *schema.ResourceDat
 	getCertificateAuthorityCertificateInput := &acmpca.GetCertificateAuthorityCertificateInput{
 		CertificateAuthorityArn: aws.String(d.Id()),
 	}
-
-	log.Printf("[DEBUG] Reading ACM PCA Certificate Authority Certificate: %s", getCertificateAuthorityCertificateInput)
 
 	getCertificateAuthorityCertificateOutput, err := conn.GetCertificateAuthorityCertificateWithContext(ctx, getCertificateAuthorityCertificateInput)
 
@@ -513,30 +488,27 @@ func resourceCertificateAuthorityRead(ctx context.Context, d *schema.ResourceDat
 func resourceCertificateAuthorityUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ACMPCAConn()
-	updateCertificateAuthority := false
 
-	input := &acmpca.UpdateCertificateAuthorityInput{
-		CertificateAuthorityArn: aws.String(d.Id()),
-	}
-
-	if d.HasChange("enabled") {
-		input.Status = aws.String(acmpca.CertificateAuthorityStatusActive)
-		if !d.Get("enabled").(bool) {
-			input.Status = aws.String(acmpca.CertificateAuthorityStatusDisabled)
+	if d.HasChangesExcept("tags", "tags_all") {
+		input := &acmpca.UpdateCertificateAuthorityInput{
+			CertificateAuthorityArn: aws.String(d.Id()),
 		}
-		updateCertificateAuthority = true
-	}
 
-	if d.HasChange("revocation_configuration") {
-		input.RevocationConfiguration = expandRevocationConfiguration(d.Get("revocation_configuration").([]interface{}))
-		updateCertificateAuthority = true
-	}
+		if d.HasChange("enabled") {
+			input.Status = aws.String(acmpca.CertificateAuthorityStatusActive)
+			if !d.Get("enabled").(bool) {
+				input.Status = aws.String(acmpca.CertificateAuthorityStatusDisabled)
+			}
+		}
 
-	if updateCertificateAuthority {
-		log.Printf("[DEBUG] Updating ACM PCA Certificate Authority: %s", input)
+		if d.HasChange("revocation_configuration") {
+			input.RevocationConfiguration = expandRevocationConfiguration(d.Get("revocation_configuration").([]interface{}))
+		}
+
 		_, err := conn.UpdateCertificateAuthorityWithContext(ctx, input)
+
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating ACM PCA Certificate Authority: %s", err)
+			return sdkdiag.AppendErrorf(diags, "updating ACM PCA Certificate Authority (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -587,6 +559,86 @@ func resourceCertificateAuthorityDelete(ctx context.Context, d *schema.ResourceD
 
 	return diags
 }
+
+func FindCertificateAuthorityByARN(ctx context.Context, conn *acmpca.ACMPCA, arn string) (*acmpca.CertificateAuthority, error) {
+	input := &acmpca.DescribeCertificateAuthorityInput{
+		CertificateAuthorityArn: aws.String(arn),
+	}
+
+	output, err := conn.DescribeCertificateAuthorityWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, acmpca.ErrCodeResourceNotFoundException) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.CertificateAuthority == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if status := aws.StringValue(output.CertificateAuthority.Status); status == acmpca.CertificateAuthorityStatusDeleted {
+		return nil, &resource.NotFoundError{
+			Message:     status,
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.CertificateAuthority.Arn) != arn {
+		return nil, &resource.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output.CertificateAuthority, nil
+}
+
+func statusCertificateAuthority(ctx context.Context, conn *acmpca.ACMPCA, arn string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindCertificateAuthorityByARN(ctx, conn, arn)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Status), nil
+	}
+}
+
+func waitCertificateAuthorityCreated(ctx context.Context, conn *acmpca.ACMPCA, arn string, timeout time.Duration) (*acmpca.CertificateAuthority, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{acmpca.CertificateAuthorityStatusCreating},
+		Target:  []string{acmpca.CertificateAuthorityStatusActive, acmpca.CertificateAuthorityStatusPendingCertificate},
+		Refresh: statusCertificateAuthority(ctx, conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*acmpca.CertificateAuthority); ok {
+		if status := aws.StringValue(output.Status); status == acmpca.CertificateAuthorityStatusFailed {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(output.FailureReason)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+const (
+	certificateAuthorityActiveTimeout = 1 * time.Minute
+)
 
 func expandASN1Subject(l []interface{}) *acmpca.ASN1Subject {
 	if len(l) == 0 {
