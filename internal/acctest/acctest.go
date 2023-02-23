@@ -842,12 +842,12 @@ func PreCheckOrganizationManagementAccount(ctx context.Context, t *testing.T) {
 	}
 }
 
-func PreCheckSSOAdminInstances(t *testing.T) {
+func PreCheckSSOAdminInstances(ctx context.Context, t *testing.T) {
 	conn := Provider.Meta().(*conns.AWSClient).SSOAdminConn()
 	input := &ssoadmin.ListInstancesInput{}
 	var instances []*ssoadmin.InstanceMetadata
 
-	err := conn.ListInstancesPages(input, func(page *ssoadmin.ListInstancesOutput, lastPage bool) bool {
+	err := conn.ListInstancesPagesWithContext(ctx, input, func(page *ssoadmin.ListInstancesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
