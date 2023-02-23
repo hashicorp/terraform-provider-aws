@@ -225,8 +225,8 @@ func TestAccSiteVPNCustomerGateway_certificate(t *testing.T) {
 				Config: testAccSiteVPNCustomerGatewayConfig_certificate(rName, rBgpAsn, rootDomain, subDomain, domain),
 				Check: resource.ComposeTestCheckFunc(
 					// CAs must be DISABLED for deletion.
-					acctest.CheckACMPCACertificateAuthorityDisableCA(&caSubordinate),
-					acctest.CheckACMPCACertificateAuthorityDisableCA(&caRoot),
+					acctest.CheckACMPCACertificateAuthorityDisableCA(ctx, &caSubordinate),
+					acctest.CheckACMPCACertificateAuthorityDisableCA(ctx, &caRoot),
 				),
 				ExpectNonEmptyPlan: true,
 			},
