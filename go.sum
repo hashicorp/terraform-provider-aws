@@ -59,8 +59,8 @@ github.com/aws/aws-sdk-go-v2/service/fis v1.14.3 h1:O/iBHxsCvctumGQ1a51xEW+Nlvef
 github.com/aws/aws-sdk-go-v2/service/fis v1.14.3/go.mod h1:IQGhkhTVkQE+/bVqKbLpipbH9H935C05Z0/z6k7eVPQ=
 github.com/aws/aws-sdk-go-v2/service/iam v1.19.3 h1:vaDXu/p/5RNK++B2pqKS3hwsWGxsVjJJqPaAMg0OkiM=
 github.com/aws/aws-sdk-go-v2/service/iam v1.19.3/go.mod h1:F5Xt96+AfAiyMpRXHy9CKafE/KULVwj7MwgZ0a4row4=
-github.com/aws/aws-sdk-go-v2/service/identitystore v1.16.3 h1:PzEytkGm0bAXde+HgXF87U55tYc/RgcGCV3X0qLDumY=
-github.com/aws/aws-sdk-go-v2/service/identitystore v1.16.3/go.mod h1:b/31AIODyxR/m34zRvUXs/mjF7pLAwS6IHIfl0kdRYc=
+github.com/aws/aws-sdk-go-v2/service/identitystore v1.16.4 h1:WmE4yfzKZBgSLdLOG8/pWekHSskhXNX+7HXeWire/II=
+github.com/aws/aws-sdk-go-v2/service/identitystore v1.16.4/go.mod h1:b/31AIODyxR/m34zRvUXs/mjF7pLAwS6IHIfl0kdRYc=
 github.com/aws/aws-sdk-go-v2/service/inspector2 v1.11.4 h1:oBOr3vG1X1pa7deLeP9mJVaPeJOlnnQ2Z4ZS7UKK9kw=
 github.com/aws/aws-sdk-go-v2/service/inspector2 v1.11.4/go.mod h1:XsERJJVZCcUOrsHAeDy73b++Yvx8K7gdi+gEMYUeNr0=
 github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.22/go.mod h1:xt0Au8yPIwYXf/GYPy/vl4K3CgwhfQMYbrH7DlUUIws=
