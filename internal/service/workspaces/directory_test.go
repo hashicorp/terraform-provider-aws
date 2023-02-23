@@ -32,7 +32,7 @@ func testAccDirectory_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheckDirectory(ctx, t)
-			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
+			acctest.PreCheckDirectoryServiceSimpleDirectory(ctx, t)
 			acctest.PreCheckHasIAMRole(ctx, t, "workspaces_DefaultRole")
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, workspaces.EndpointsID),
@@ -100,7 +100,7 @@ func testAccDirectory_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheckDirectory(ctx, t)
-			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
+			acctest.PreCheckDirectoryServiceSimpleDirectory(ctx, t)
 			acctest.PreCheckHasIAMRole(ctx, t, "workspaces_DefaultRole")
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, workspaces.EndpointsID),
@@ -132,7 +132,7 @@ func testAccDirectory_subnetIDs(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheckDirectory(ctx, t)
-			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
+			acctest.PreCheckDirectoryServiceSimpleDirectory(ctx, t)
 			acctest.PreCheckHasIAMRole(ctx, t, "workspaces_DefaultRole")
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, workspaces.EndpointsID),
@@ -168,7 +168,7 @@ func testAccDirectory_tags(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheckDirectory(ctx, t)
-			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
+			acctest.PreCheckDirectoryServiceSimpleDirectory(ctx, t)
 			acctest.PreCheckHasIAMRole(ctx, t, "workspaces_DefaultRole")
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, workspaces.EndpointsID),
@@ -222,7 +222,7 @@ func testAccDirectory_selfServicePermissions(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheckDirectory(ctx, t)
-			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
+			acctest.PreCheckDirectoryServiceSimpleDirectory(ctx, t)
 			acctest.PreCheckHasIAMRole(ctx, t, "workspaces_DefaultRole")
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, workspaces.EndpointsID),
@@ -258,7 +258,7 @@ func testAccDirectory_workspaceAccessProperties(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheckDirectory(ctx, t)
-			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
+			acctest.PreCheckDirectoryServiceSimpleDirectory(ctx, t)
 			acctest.PreCheckHasIAMRole(ctx, t, "workspaces_DefaultRole")
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, workspaces.EndpointsID),
@@ -298,7 +298,7 @@ func testAccDirectory_workspaceCreationProperties(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheckDirectory(ctx, t)
-			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
+			acctest.PreCheckDirectoryServiceSimpleDirectory(ctx, t)
 			acctest.PreCheckHasIAMRole(ctx, t, "workspaces_DefaultRole")
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, workspaces.EndpointsID),
@@ -335,7 +335,7 @@ func testAccDirectory_workspaceCreationProperties_customSecurityGroupId_defaultO
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheckDirectory(ctx, t)
-			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
+			acctest.PreCheckDirectoryServiceSimpleDirectory(ctx, t)
 			acctest.PreCheckHasIAMRole(ctx, t, "workspaces_DefaultRole")
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, workspaces.EndpointsID),

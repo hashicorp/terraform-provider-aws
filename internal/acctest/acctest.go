@@ -938,16 +938,15 @@ func PreCheckDirectoryService(ctx context.Context, t *testing.T) {
 // Certain regions such as AWS GovCloud (US) do not support Simple AD directories
 // and we do not have a good read-only way to determine this situation. Here we
 // opt to perform a creation that will fail so we can determine Simple AD support.
-func PreCheckDirectoryServiceSimpleDirectory(t *testing.T) {
+func PreCheckDirectoryServiceSimpleDirectory(ctx context.Context, t *testing.T) {
 	conn := Provider.Meta().(*conns.AWSClient).DSConn()
-
 	input := &directoryservice.CreateDirectoryInput{
 		Name:     aws.String("corp.example.com"),
 		Password: aws.String("PreCheck123"),
 		Size:     aws.String(directoryservice.DirectorySizeSmall),
 	}
 
-	_, err := conn.CreateDirectory(input)
+	_, err := conn.CreateDirectoryWithContext(ctx, input)
 
 	if tfawserr.ErrMessageContains(err, directoryservice.ErrCodeClientException, "Simple AD directory creation is currently not supported in this region") {
 		t.Skipf("skipping acceptance testing: %s", err)

@@ -26,7 +26,7 @@ func TestAccDSDirectory_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckDirectoryService(ctx, t)
-			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
+			acctest.PreCheckDirectoryServiceSimpleDirectory(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, directoryservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -78,7 +78,7 @@ func TestAccDSDirectory_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckDirectoryService(ctx, t)
-			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
+			acctest.PreCheckDirectoryServiceSimpleDirectory(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, directoryservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -107,7 +107,7 @@ func TestAccDSDirectory_tags(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckDirectoryService(ctx, t)
-			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
+			acctest.PreCheckDirectoryServiceSimpleDirectory(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, directoryservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -257,7 +257,7 @@ func TestAccDSDirectory_connector(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckDirectoryService(ctx, t)
-			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
+			acctest.PreCheckDirectoryServiceSimpleDirectory(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, directoryservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -312,7 +312,7 @@ func TestAccDSDirectory_withAliasAndSSO(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckDirectoryService(ctx, t)
-			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
+			acctest.PreCheckDirectoryServiceSimpleDirectory(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, directoryservice.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
