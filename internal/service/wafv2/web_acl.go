@@ -131,6 +131,7 @@ func ResourceWebACL() *schema.Resource {
 						"rule_label":        ruleLabelsSchema(),
 						"statement":         webACLRootStatementSchema(webACLRootStatementSchemaLevel),
 						"visibility_config": visibilityConfigSchema(),
+						"captcha_config":    outerCaptchaConfigSchema(),
 					},
 				},
 			},
@@ -143,6 +144,7 @@ func ResourceWebACL() *schema.Resource {
 			"tags":              tftags.TagsSchema(),
 			"tags_all":          tftags.TagsSchemaComputed(),
 			"visibility_config": visibilityConfigSchema(),
+			"captcha_config":    outerCaptchaConfigSchema(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -161,6 +163,7 @@ func resourceWebACLCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		Rules:            expandWebACLRules(d.Get("rule").(*schema.Set).List()),
 		Scope:            aws.String(d.Get("scope").(string)),
 		VisibilityConfig: expandVisibilityConfig(d.Get("visibility_config").([]interface{})),
+		CaptchaConfig:    expandCaptchaConfig(d.Get("captcha_config").([]interface{})),
 	}
 
 	if v, ok := d.GetOk("custom_response_body"); ok && v.(*schema.Set).Len() > 0 {
@@ -227,6 +230,9 @@ func resourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta interf
 	if err := d.Set("visibility_config", flattenVisibilityConfig(webACL.VisibilityConfig)); err != nil {
 		return diag.Errorf("setting visibility_config: %s", err)
 	}
+	if err := d.Set("captcha_config", flattenCaptchaConfig(webACL.CaptchaConfig)); err != nil {
+		return diag.Errorf("setting captcha_config: %s", err)
+	}
 
 	tags, err := ListTagsWithContext(ctx, conn, arn)
 
@@ -260,6 +266,7 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			Rules:            expandWebACLRules(d.Get("rule").(*schema.Set).List()),
 			Scope:            aws.String(d.Get("scope").(string)),
 			VisibilityConfig: expandVisibilityConfig(d.Get("visibility_config").([]interface{})),
+			CaptchaConfig:    expandCaptchaConfig(d.Get("captcha_config").([]interface{})),
 		}
 
 		if v, ok := d.GetOk("custom_response_body"); ok && v.(*schema.Set).Len() > 0 {

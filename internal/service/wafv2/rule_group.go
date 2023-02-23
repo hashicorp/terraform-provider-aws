@@ -110,6 +110,7 @@ func ResourceRuleGroup() *schema.Resource {
 						"rule_label":        ruleLabelsSchema(),
 						"statement":         ruleGroupRootStatementSchema(ruleGroupRootStatementSchemaLevel),
 						"visibility_config": visibilityConfigSchema(),
+						"captcha_config":    outerCaptchaConfigSchema(),
 					},
 				},
 			},
@@ -122,6 +123,7 @@ func ResourceRuleGroup() *schema.Resource {
 			"tags":              tftags.TagsSchema(),
 			"tags_all":          tftags.TagsSchemaComputed(),
 			"visibility_config": visibilityConfigSchema(),
+			"captcha_config":    outerCaptchaConfigSchema(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,

@@ -206,6 +206,12 @@ resource "aws_wafv2_rule_group" "example" {
       metric_name                = "rule-2"
       sampled_requests_enabled   = false
     }
+    
+    captcha_config {
+      immunity_time_property {
+        immunity_time = 240
+      }
+    }
   }
 
   rule {
@@ -291,6 +297,12 @@ resource "aws_wafv2_rule_group" "example" {
     cloudwatch_metrics_enabled = false
     metric_name                = "friendly-metric-name"
     sampled_requests_enabled   = false
+  }
+
+  captcha_config {
+    immunity_time_property {
+      immunity_time = 120
+    }
   }
 
   tags = {
@@ -653,6 +665,19 @@ The `visibility_config` block supports the following arguments:
 * `cloudwatch_metrics_enabled` - (Required) A boolean indicating whether the associated resource sends metrics to CloudWatch. For the list of available metrics, see [AWS WAF Metrics](https://docs.aws.amazon.com/waf/latest/developerguide/monitoring-cloudwatch.html#waf-metrics).
 * `metric_name` - (Required, Forces new resource) A friendly name of the CloudWatch metric. The name can contain only alphanumeric characters (A-Z, a-z, 0-9) hyphen(-) and underscore (_), with length from one to 128 characters. It can't contain whitespace or metric names reserved for AWS WAF, for example `All` and `Default_Action`.
 * `sampled_requests_enabled` - (Required) A boolean indicating whether AWS WAF should store a sampling of the web requests that match the rules. You can view the sampled requests through the AWS WAF console.
+
+### Captcha Configuration
+
+The `captcha_config` block supports the following arguments:
+
+* `immunity_time_property` - (Optional) Defines custom immunity time. See [Immunity Time Property](#immunity-time-property) below for details.
+
+### Immunity Time Property
+
+The `immunity_time_property` block supports the following arguments:
+
+* `immunity_time` - (Optional) The amount of time, in seconds, that a CAPTCHA or challenge timestamp is considered valid by AWS WAF. The default setting is 300.
+
 
 ## Attributes Reference
 

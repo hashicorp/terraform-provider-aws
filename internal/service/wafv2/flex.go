@@ -35,6 +35,7 @@ func expandRule(m map[string]interface{}) *wafv2.Rule {
 		Action:           expandRuleAction(m["action"].([]interface{})),
 		Statement:        expandRuleGroupRootStatement(m["statement"].([]interface{})),
 		VisibilityConfig: expandVisibilityConfig(m["visibility_config"].([]interface{})),
+		CaptchaConfig:    expandCaptchaConfig(m["captcha_config"].([]interface{})),
 	}
 
 	if v, ok := m["rule_label"].(*schema.Set); ok && v.Len() > 0 {
@@ -42,6 +43,32 @@ func expandRule(m map[string]interface{}) *wafv2.Rule {
 	}
 
 	return rule
+}
+
+func expandCaptchaConfig(l []interface{}) *wafv2.CaptchaConfig {
+	configuration := &wafv2.CaptchaConfig{}
+
+	if len(l) == 0 || l[0] == nil {
+		return configuration
+	}
+
+	m := l[0].(map[string]interface{})
+	if v, ok := m["immunity_time_property"]; ok {
+		inner := v.([]interface{})
+		if len(inner) == 0 || inner[0] == nil {
+			return configuration
+		}
+
+		m = inner[0].(map[string]interface{})
+
+		if v, ok := m["immunity_time"]; ok {
+			configuration.ImmunityTimeProperty = &wafv2.ImmunityTimeProperty{
+				ImmunityTime: aws.Int64(int64(v.(int))),
+			}
+		}
+	}
+
+	return configuration
 }
 
 func expandRuleLabels(l []interface{}) []*wafv2.Label {
@@ -838,6 +865,7 @@ func expandWebACLRule(m map[string]interface{}) *wafv2.Rule {
 		OverrideAction:   expandOverrideAction(m["override_action"].([]interface{})),
 		Statement:        expandWebACLRootStatement(m["statement"].([]interface{})),
 		VisibilityConfig: expandVisibilityConfig(m["visibility_config"].([]interface{})),
+		CaptchaConfig:    expandCaptchaConfig(m["captcha_config"].([]interface{})),
 	}
 
 	if v, ok := m["rule_label"].(*schema.Set); ok && v.Len() > 0 {
@@ -1116,6 +1144,7 @@ func flattenRules(r []*wafv2.Rule) interface{} {
 		m["rule_label"] = flattenRuleLabels(rule.RuleLabels)
 		m["statement"] = flattenRuleGroupRootStatement(rule.Statement)
 		m["visibility_config"] = flattenVisibilityConfig(rule.VisibilityConfig)
+		m["captcha_config"] = flattenCaptchaConfig(rule.CaptchaConfig)
 		out[i] = m
 	}
 
@@ -1188,6 +1217,23 @@ func flattenCaptcha(a *wafv2.CaptchaAction) []interface{} {
 
 	if a.CustomRequestHandling != nil {
 		m["custom_request_handling"] = flattenCustomRequestHandling(a.CustomRequestHandling)
+	}
+
+	return []interface{}{m}
+}
+
+func flattenCaptchaConfig(config *wafv2.CaptchaConfig) interface{} {
+	if config == nil {
+		return []interface{}{}
+	}
+	if config.ImmunityTimeProperty == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"immunity_time_property": []interface{}{map[string]interface{}{
+			"immunity_time": aws.Int64Value(config.ImmunityTimeProperty.ImmunityTime),
+		}},
 	}
 
 	return []interface{}{m}
@@ -1856,6 +1902,7 @@ func flattenWebACLRules(r []*wafv2.Rule) interface{} {
 		m["rule_label"] = flattenRuleLabels(rule.RuleLabels)
 		m["statement"] = flattenWebACLRootStatement(rule.Statement)
 		m["visibility_config"] = flattenVisibilityConfig(rule.VisibilityConfig)
+		m["captcha_config"] = flattenCaptchaConfig(rule.CaptchaConfig)
 		out[i] = m
 	}
 
