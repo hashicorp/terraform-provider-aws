@@ -814,7 +814,7 @@ func testAccServer_directoryService(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			testAccPreCheck(ctx, t)
-			acctest.PreCheckDirectoryService(t)
+			acctest.PreCheckDirectoryService(ctx, t)
 			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, transfer.EndpointsID),

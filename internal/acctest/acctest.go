@@ -920,12 +920,11 @@ func PreCheckIAMServiceLinkedRole(ctx context.Context, t *testing.T, pathPrefix 
 	}
 }
 
-func PreCheckDirectoryService(t *testing.T) {
+func PreCheckDirectoryService(ctx context.Context, t *testing.T) {
 	conn := Provider.Meta().(*conns.AWSClient).DSConn()
-
 	input := &directoryservice.DescribeDirectoriesInput{}
 
-	_, err := conn.DescribeDirectories(input)
+	_, err := conn.DescribeDirectoriesWithContext(ctx, input)
 
 	if PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
