@@ -13,7 +13,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.21.3
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.21.2
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.86.1
-	github.com/aws/aws-sdk-go-v2/service/fis v1.14.3
+	github.com/aws/aws-sdk-go-v2/service/fis v1.14.4
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.16.3
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.11.4
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.3.3
