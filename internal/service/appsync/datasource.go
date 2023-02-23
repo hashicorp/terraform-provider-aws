@@ -134,7 +134,7 @@ func ResourceDataSource() *schema.Resource {
 						},
 					},
 				},
-				ConflictsWith: []string{"dynamodb_config", "http_config", "lambda_config", "elasticsearch_config", "opensearchservice_config"},
+				ConflictsWith: []string{"dynamodb_config", "http_config", "lambda_config", "elasticsearch_config"},
 			},
 			"http_config": {
 				Type:     schema.TypeList,
