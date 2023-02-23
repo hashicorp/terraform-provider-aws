@@ -36,6 +36,7 @@ func testAccDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "dynamodb_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "opensearchservice_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "http_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "relational_database_config.#", "0"),
@@ -195,6 +196,43 @@ func TestAccAppSyncDataSource_Elasticsearch_region(t *testing.T) {
 	})
 }
 
+func TestAccAppSyncDataSource_OpenSearchService_region(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
+	resourceName := "aws_appsync_datasource.test"
+
+	// Keep this test Parallel as it takes considerably longer to run than any non-OpenSearchService tests.
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, appsync.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceConfig_openSearchServiceRegion(rName, acctest.Region()),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckExistsDataSource(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "opensearchservice_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "opensearchservice_config.0.region", acctest.Region()),
+				),
+			},
+			{
+				Config: testAccDataSourceConfig_typeOpenSearchService(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckExistsDataSource(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "opensearchservice_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "opensearchservice_config.0.region", acctest.Region()),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccDataSource_HTTP_endpoint(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
@@ -317,6 +355,39 @@ func TestAccAppSyncDataSource_Type_elasticSearch(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_config.0.region", acctest.Region()),
 					resource.TestCheckResourceAttrPair(resourceName, "service_role_arn", iamRoleResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "type", "AMAZON_ELASTICSEARCH"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAppSyncDataSource_Type_openSearchService(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
+	iamRoleResourceName := "aws_iam_role.test"
+	resourceName := "aws_appsync_datasource.test"
+
+	// Keep this test Parallel as it takes considerably longer to run than any non-OpenSearchService tests.
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(appsync.EndpointsID, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, appsync.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceConfig_typeOpenSearchService(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckExistsDataSource(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "opensearchservice_config.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "opensearchservice_config.0.endpoint"),
+					resource.TestCheckResourceAttr(resourceName, "opensearchservice_config.0.region", acctest.Region()),
+					resource.TestCheckResourceAttrPair(resourceName, "service_role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "type", "AMAZON_OPENSEARCH_SERVICE"),
 				),
 			},
 			{
@@ -679,6 +750,59 @@ EOF
 `, rName, rName)
 }
 
+func testAccDataSourceConfig_Base_openSearchService(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_opensearch_domain" "test" {
+  domain_name = %q
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+}
+
+resource "aws_iam_role" "test" {
+  name = %q
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "appsync.amazonaws.com"
+      },
+      "Effect": "Allow"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "test" {
+  role = aws_iam_role.test.id
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "es:*"
+      ],
+      "Effect": "Allow",
+      "Resource": [
+        "${aws_opensearch_domain.test.arn}"
+      ]
+    }
+  ]
+}
+EOF
+}
+`, rName, rName)
+}
+
 func testAccDatasourceConfig_lambdaBase(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "lambda" {
@@ -833,6 +957,27 @@ resource "aws_appsync_datasource" "test" {
 `, rName, rName, region)
 }
 
+func testAccDataSourceConfig_openSearchServiceRegion(rName, region string) string {
+	return testAccDataSourceConfig_Base_openSearchService(rName) + fmt.Sprintf(`
+resource "aws_appsync_graphql_api" "test" {
+  authentication_type = "API_KEY"
+  name                = %q
+}
+
+resource "aws_appsync_datasource" "test" {
+  api_id           = aws_appsync_graphql_api.test.id
+  name             = %q
+  service_role_arn = aws_iam_role.test.arn
+  type             = "AMAZON_OPENSEARCH_SERVICE"
+
+  opensearchservice_config {
+    endpoint = "https://${aws_opensearch_domain.test.endpoint}"
+    region   = %q
+  }
+}
+`, rName, rName, region)
+}
+
 func testAccDataSourceConfig_httpEndpoint(rName, endpoint string) string {
 	return fmt.Sprintf(`
 resource "aws_appsync_graphql_api" "test" {
@@ -887,6 +1032,26 @@ resource "aws_appsync_datasource" "test" {
 
   elasticsearch_config {
     endpoint = "https://${aws_elasticsearch_domain.test.endpoint}"
+  }
+}
+`, rName, rName)
+}
+
+func testAccDataSourceConfig_typeOpenSearchService(rName string) string {
+	return testAccDataSourceConfig_Base_openSearchService(rName) + fmt.Sprintf(`
+resource "aws_appsync_graphql_api" "test" {
+  authentication_type = "API_KEY"
+  name                = %q
+}
+
+resource "aws_appsync_datasource" "test" {
+  api_id           = aws_appsync_graphql_api.test.id
+  name             = %q
+  service_role_arn = aws_iam_role.test.arn
+  type             = "AMAZON_OPENSEARCH_SERVICE"
+
+  opensearchservice_config {
+    endpoint = "https://${aws_opensearch_domain.test.endpoint}"
   }
 }
 `, rName, rName)
