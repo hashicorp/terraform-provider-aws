@@ -1152,8 +1152,8 @@ func statusFunctionState(ctx context.Context, conn *lambda.Client, name string) 
 
 func waitFunctionCreated(ctx context.Context, conn *lambda.Client, name string, timeout time.Duration) (*types.FunctionConfiguration, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{string(types.StatePending)},
-		Target:  []string{string(types.StateActive)},
+		Pending: enum.Slice(types.StatePending),
+		Target:  enum.Slice(types.StateActive),
 		Refresh: statusFunctionState(ctx, conn, name),
 		Timeout: timeout,
 		Delay:   5 * time.Second,
@@ -1172,8 +1172,8 @@ func waitFunctionCreated(ctx context.Context, conn *lambda.Client, name string, 
 
 func waitFunctionUpdated(ctx context.Context, conn *lambda.Client, functionName string, timeout time.Duration) (*types.FunctionConfiguration, error) { //nolint:unparam
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{string(types.LastUpdateStatusInProgress)},
-		Target:  []string{string(types.LastUpdateStatusSuccessful)},
+		Pending: enum.Slice(types.LastUpdateStatusInProgress),
+		Target:  enum.Slice(types.LastUpdateStatusSuccessful),
 		Refresh: statusFunctionLastUpdateStatus(ctx, conn, functionName),
 		Timeout: timeout,
 		Delay:   5 * time.Second,
