@@ -16,6 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ivschat"
 	"github.com/aws/aws-sdk-go-v2/service/kendra"
 	"github.com/aws/aws-sdk-go-v2/service/medialive"
+	"github.com/aws/aws-sdk-go-v2/service/oam"
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
 	"github.com/aws/aws-sdk-go-v2/service/pipes"
 	rds_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rds"
@@ -549,6 +550,7 @@ type AWSClient struct {
 	networkfirewallConn              *networkfirewall.NetworkFirewall
 	networkmanagerConn               *networkmanager.NetworkManager
 	nimbleConn                       *nimblestudio.NimbleStudio
+	oamClient                        *oam.Client
 	opensearchConn                   *opensearchservice.OpenSearchService
 	opensearchserverlessClient       *opensearchserverless.Client
 	opsworksConn                     *opsworks.OpsWorks
@@ -1485,6 +1487,10 @@ func (client *AWSClient) NetworkManagerConn() *networkmanager.NetworkManager {
 
 func (client *AWSClient) NimbleConn() *nimblestudio.NimbleStudio {
 	return client.nimbleConn
+}
+
+func (client *AWSClient) ObservabilityAccessManagerClient() *oam.Client {
+	return client.oamClient
 }
 
 func (client *AWSClient) OpenSearchConn() *opensearchservice.OpenSearchService {

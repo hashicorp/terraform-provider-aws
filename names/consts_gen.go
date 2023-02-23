@@ -208,6 +208,7 @@ const (
 	NetworkFirewall              = "networkfirewall"
 	NetworkManager               = "networkmanager"
 	Nimble                       = "nimble"
+	ObservabilityAccessManager   = "oam"
 	OpenSearch                   = "opensearch"
 	OpenSearchServerless         = "opensearchserverless"
 	OpsWorks                     = "opsworks"
