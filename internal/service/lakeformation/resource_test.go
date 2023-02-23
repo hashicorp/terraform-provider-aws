@@ -75,7 +75,7 @@ func TestAccLakeFormationResource_serviceLinkedRole(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lakeformation.EndpointsID, t)
-			acctest.PreCheckIAMServiceLinkedRole(t, "/aws-service-role/lakeformation.amazonaws.com")
+			acctest.PreCheckIAMServiceLinkedRole(ctx, t, "/aws-service-role/lakeformation.amazonaws.com")
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, lakeformation.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -140,7 +140,7 @@ func TestAccLakeFormationResource_updateSLRToRole(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(t)
 			acctest.PreCheckPartitionHasService(lakeformation.EndpointsID, t)
-			acctest.PreCheckIAMServiceLinkedRole(t, "/aws-service-role/lakeformation.amazonaws.com")
+			acctest.PreCheckIAMServiceLinkedRole(ctx, t, "/aws-service-role/lakeformation.amazonaws.com")
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, lakeformation.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
