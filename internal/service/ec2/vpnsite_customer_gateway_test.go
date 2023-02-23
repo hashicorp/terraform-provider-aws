@@ -205,7 +205,7 @@ func TestAccSiteVPNCustomerGateway_certificate(t *testing.T) {
 					acctest.CheckACMPCACertificateAuthorityExists(acmRootCAResourceName, &caRoot),
 					acctest.CheckACMPCACertificateAuthorityExists(acmSubordinateCAResourceName, &caSubordinate),
 					acctest.CheckACMPCACertificateAuthorityActivateRootCA(ctx, &caRoot),
-					acctest.CheckACMPCACertificateAuthorityActivateSubordinateCA(&caRoot, &caSubordinate),
+					acctest.CheckACMPCACertificateAuthorityActivateSubordinateCA(ctx, &caRoot, &caSubordinate),
 				),
 			},
 			{

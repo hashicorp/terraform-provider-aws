@@ -1567,7 +1567,7 @@ func CheckACMPCACertificateAuthorityActivateRootCA(ctx context.Context, certific
 	}
 }
 
-func CheckACMPCACertificateAuthorityActivateSubordinateCA(rootCertificateAuthority, certificateAuthority *acmpca.CertificateAuthority) resource.TestCheckFunc {
+func CheckACMPCACertificateAuthorityActivateSubordinateCA(ctx context.Context, rootCertificateAuthority, certificateAuthority *acmpca.CertificateAuthority) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := Provider.Meta().(*conns.AWSClient).ACMPCAConn()
 
@@ -1577,7 +1577,7 @@ func CheckACMPCACertificateAuthorityActivateSubordinateCA(rootCertificateAuthori
 
 		arn := aws.StringValue(certificateAuthority.Arn)
 
-		getCsrOutput, err := conn.GetCertificateAuthorityCsr(&acmpca.GetCertificateAuthorityCsrInput{
+		getCsrOutput, err := conn.GetCertificateAuthorityCsrWithContext(ctx, &acmpca.GetCertificateAuthorityCsrInput{
 			CertificateAuthorityArn: aws.String(arn),
 		})
 
@@ -1587,7 +1587,7 @@ func CheckACMPCACertificateAuthorityActivateSubordinateCA(rootCertificateAuthori
 
 		rootCertificateAuthorityArn := aws.StringValue(rootCertificateAuthority.Arn)
 
-		issueCertOutput, err := conn.IssueCertificate(&acmpca.IssueCertificateInput{
+		issueCertOutput, err := conn.IssueCertificateWithContext(ctx, &acmpca.IssueCertificateInput{
 			CertificateAuthorityArn: aws.String(rootCertificateAuthorityArn),
 			Csr:                     []byte(aws.StringValue(getCsrOutput.Csr)),
 			IdempotencyToken:        aws.String(resource.UniqueId()),
@@ -1604,7 +1604,7 @@ func CheckACMPCACertificateAuthorityActivateSubordinateCA(rootCertificateAuthori
 		}
 
 		// Wait for certificate status to become ISSUED.
-		err = conn.WaitUntilCertificateIssued(&acmpca.GetCertificateInput{
+		err = conn.WaitUntilCertificateIssuedWithContext(ctx, &acmpca.GetCertificateInput{
 			CertificateAuthorityArn: aws.String(rootCertificateAuthorityArn),
 			CertificateArn:          issueCertOutput.CertificateArn,
 		})
@@ -1613,7 +1613,7 @@ func CheckACMPCACertificateAuthorityActivateSubordinateCA(rootCertificateAuthori
 			return fmt.Errorf("waiting for ACM PCA Certificate Authority (%s) Subordinate CA certificate to become ISSUED: %w", arn, err)
 		}
 
-		getCertOutput, err := conn.GetCertificate(&acmpca.GetCertificateInput{
+		getCertOutput, err := conn.GetCertificateWithContext(ctx, &acmpca.GetCertificateInput{
 			CertificateAuthorityArn: aws.String(rootCertificateAuthorityArn),
 			CertificateArn:          issueCertOutput.CertificateArn,
 		})
@@ -1622,7 +1622,7 @@ func CheckACMPCACertificateAuthorityActivateSubordinateCA(rootCertificateAuthori
 			return fmt.Errorf("getting ACM PCA Certificate Authority (%s) issued Subordinate CA certificate: %w", arn, err)
 		}
 
-		_, err = conn.ImportCertificateAuthorityCertificate(&acmpca.ImportCertificateAuthorityCertificateInput{
+		_, err = conn.ImportCertificateAuthorityCertificateWithContext(ctx, &acmpca.ImportCertificateAuthorityCertificateInput{
 			CertificateAuthorityArn: aws.String(arn),
 			Certificate:             []byte(aws.StringValue(getCertOutput.Certificate)),
 			CertificateChain:        []byte(aws.StringValue(getCertOutput.CertificateChain)),
