@@ -1649,7 +1649,7 @@ func CheckACMPCACertificateAuthorityDisableCA(ctx context.Context, certificateAu
 	}
 }
 
-func CheckACMPCACertificateAuthorityExists(n string, certificateAuthority *acmpca.CertificateAuthority) resource.TestCheckFunc {
+func CheckACMPCACertificateAuthorityExists(ctx context.Context, n string, certificateAuthority *acmpca.CertificateAuthority) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -1666,7 +1666,7 @@ func CheckACMPCACertificateAuthorityExists(n string, certificateAuthority *acmpc
 			CertificateAuthorityArn: aws.String(rs.Primary.ID),
 		}
 
-		output, err := conn.DescribeCertificateAuthority(input)
+		output, err := conn.DescribeCertificateAuthorityWithContext(ctx, input)
 
 		if err != nil {
 			return err
