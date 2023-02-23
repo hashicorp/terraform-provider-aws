@@ -25,21 +25,12 @@ func ResourceUsagePlan() *schema.Resource {
 		ReadWithoutTimeout:   resourceUsagePlanRead,
 		UpdateWithoutTimeout: resourceUsagePlanUpdate,
 		DeleteWithoutTimeout: resourceUsagePlanDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:     schema.TypeString,
-				Required: true, // Required since not addable nor removable afterwards
-			},
-
-			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-
 			"api_stages": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -49,7 +40,6 @@ func ResourceUsagePlan() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-
 						"stage": {
 							Type:     schema.TypeString,
 							Required: true,
@@ -59,14 +49,14 @@ func ResourceUsagePlan() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"path": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
 									"burst_limit": {
 										Type:     schema.TypeInt,
 										Default:  0,
 										Optional: true,
+									},
+									"path": {
+										Type:     schema.TypeString,
+										Required: true,
 									},
 									"rate_limit": {
 										Type:     schema.TypeFloat,
@@ -79,7 +69,22 @@ func ResourceUsagePlan() *schema.Resource {
 					},
 				},
 			},
-
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"description": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"name": {
+				Type:     schema.TypeString,
+				Required: true, // Required since not addable nor removable afterwards
+			},
+			"product_code": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"quota_settings": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
@@ -90,13 +95,11 @@ func ResourceUsagePlan() *schema.Resource {
 							Type:     schema.TypeInt,
 							Required: true, // Required as not removable singularly
 						},
-
 						"offset": {
 							Type:     schema.TypeInt,
 							Default:  0,
 							Optional: true,
 						},
-
 						"period": {
 							Type:         schema.TypeString,
 							Required:     true, // Required as not removable
@@ -105,7 +108,8 @@ func ResourceUsagePlan() *schema.Resource {
 					},
 				},
 			},
-
+			"tags":     tftags.TagsSchema(),
+			"tags_all": tftags.TagsSchemaComputed(),
 			"throttle_settings": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
@@ -118,7 +122,6 @@ func ResourceUsagePlan() *schema.Resource {
 							Optional:     true,
 							AtLeastOneOf: []string{"throttle_settings.0.burst_limit", "throttle_settings.0.rate_limit"},
 						},
-
 						"rate_limit": {
 							Type:         schema.TypeFloat,
 							Default:      0,
@@ -127,17 +130,6 @@ func ResourceUsagePlan() *schema.Resource {
 						},
 					},
 				},
-			},
-
-			"product_code": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 		},
 
