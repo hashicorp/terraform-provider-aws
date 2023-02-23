@@ -88,7 +88,7 @@ func testAccAlternateContact_disappears(t *testing.T) {
 	})
 }
 
-func testAccAlternateContact_accountID(t *testing.T) {
+func testAccAlternateContact_accountID(t *testing.T) { // nosemgrep:ci.account-in-func-name
 	ctx := acctest.Context(t)
 	resourceName := "aws_account_alternate_contact.test"
 	domain := acctest.RandomDomainName()
