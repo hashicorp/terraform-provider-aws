@@ -684,7 +684,7 @@ resource "aws_api_gateway_usage_plan" "test" {
 func testAccUsagePlanConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(testAccUsagePlanConfig_base(rName), fmt.Sprintf(`
 resource "aws_api_gateway_usage_plan" "test" {
-  name =  %[1]q
+  name = %[1]q
 
   tags = {
     %[2]q = %[3]q
@@ -696,7 +696,7 @@ resource "aws_api_gateway_usage_plan" "test" {
 func testAccUsagePlanConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(testAccUsagePlanConfig_base(rName), fmt.Sprintf(`
 resource "aws_api_gateway_usage_plan" "test" {
-  name =  %[1]q
+  name = %[1]q
 
   tags = {
     %[2]q = %[3]q
@@ -727,7 +727,7 @@ resource "aws_api_gateway_usage_plan" "test" {
 func testAccUsagePlanConfig_throttling(rName string) string {
 	return acctest.ConfigCompose(testAccUsagePlanConfig_base(rName), fmt.Sprintf(`
 resource "aws_api_gateway_usage_plan" "test" {
-  name =  %[1]q
+  name = %[1]q
 
   throttle_settings {
     burst_limit = 2
@@ -740,7 +740,7 @@ resource "aws_api_gateway_usage_plan" "test" {
 func testAccUsagePlanConfig_throttlingModified(rName string) string {
 	return acctest.ConfigCompose(testAccUsagePlanConfig_base(rName), fmt.Sprintf(`
 resource "aws_api_gateway_usage_plan" "test" {
-  name =  %[1]q
+  name = %[1]q
 
   throttle_settings {
     burst_limit = 3
@@ -753,7 +753,7 @@ resource "aws_api_gateway_usage_plan" "test" {
 func testAccUsagePlanConfig_quota(rName string) string {
 	return acctest.ConfigCompose(testAccUsagePlanConfig_base(rName), fmt.Sprintf(`
 resource "aws_api_gateway_usage_plan" "test" {
-  name =  %[1]q
+  name = %[1]q
 
   quota_settings {
     limit  = 100
@@ -767,7 +767,7 @@ resource "aws_api_gateway_usage_plan" "test" {
 func testAccUsagePlanConfig_quotaModified(rName string) string {
 	return acctest.ConfigCompose(testAccUsagePlanConfig_base(rName), fmt.Sprintf(`
 resource "aws_api_gateway_usage_plan" "test" {
-  name =  %[1]q
+  name = %[1]q
 
   quota_settings {
     limit  = 200
@@ -781,7 +781,7 @@ resource "aws_api_gateway_usage_plan" "test" {
 func testAccUsagePlanConfig_apiStages(rName string) string {
 	return acctest.ConfigCompose(testAccUsagePlanConfig_base(rName), fmt.Sprintf(`
 resource "aws_api_gateway_usage_plan" "test" {
-  name =  %[1]q
+  name = %[1]q
 
   api_stages {
     api_id = aws_api_gateway_rest_api.test.id
@@ -794,7 +794,7 @@ resource "aws_api_gateway_usage_plan" "test" {
 func testAccUsagePlanConfig_apiStagesThrottle(rName string) string {
 	return acctest.ConfigCompose(testAccUsagePlanConfig_base(rName), fmt.Sprintf(`
 resource "aws_api_gateway_usage_plan" "test" {
-  name =  %[1]q
+  name = %[1]q
 
   throttle_settings {
     burst_limit = 3
@@ -818,7 +818,7 @@ resource "aws_api_gateway_usage_plan" "test" {
 func testAccUsagePlanConfig_apiStagesThrottleMulti(rName string) string {
 	return acctest.ConfigCompose(testAccUsagePlanConfig_base(rName), fmt.Sprintf(`
 resource "aws_api_gateway_usage_plan" "test" {
-  name =  %[1]q
+  name = %[1]q
 
   throttle_settings {
     burst_limit = 3
@@ -853,7 +853,7 @@ resource "aws_api_gateway_usage_plan" "test" {
 func testAccUsagePlanConfig_apiStagesModified(rName string) string {
 	return acctest.ConfigCompose(testAccUsagePlanConfig_base(rName), fmt.Sprintf(`
 resource "aws_api_gateway_usage_plan" "test" {
-  name =  %[1]q
+  name = %[1]q
 
   api_stages {
     api_id = aws_api_gateway_rest_api.test.id
