@@ -10,6 +10,7 @@ import (
 )
 
 func TestAccSFNStateMachineDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_sfn_state_machine.test"
 	resourceName := "aws_sfn_state_machine.test"

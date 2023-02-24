@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccSFNActivityDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sfn_activity.test"
 	dataSource1Name := "data.aws_sfn_activity.by_name"
