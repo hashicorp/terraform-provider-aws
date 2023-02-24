@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccMemoryDBACLDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := "tf-test-" + sdkacctest.RandString(8)
 	resourceName := "aws_memorydb_acl.test"
 	dataSourceName := "data.aws_memorydb_acl.test"
