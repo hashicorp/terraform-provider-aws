@@ -12,6 +12,7 @@ import (
 )
 
 func testAccWorkspaceBundleDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_workspaces_bundle.test"
 
 	resource.Test(t, resource.TestCase{
@@ -39,6 +40,7 @@ func testAccWorkspaceBundleDataSource_basic(t *testing.T) {
 }
 
 func testAccWorkspaceBundleDataSource_byOwnerName(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_workspaces_bundle.test"
 
 	resource.Test(t, resource.TestCase{
@@ -66,6 +68,7 @@ func testAccWorkspaceBundleDataSource_byOwnerName(t *testing.T) {
 }
 
 func testAccWorkspaceBundleDataSource_bundleIDAndNameConflict(t *testing.T) {
+	ctx := acctest.Context(t)
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, workspaces.EndpointsID),
@@ -80,6 +83,7 @@ func testAccWorkspaceBundleDataSource_bundleIDAndNameConflict(t *testing.T) {
 }
 
 func testAccWorkspaceBundleDataSource_privateOwner(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_workspaces_bundle.test"
 	bundleName := os.Getenv("AWS_WORKSPACES_BUNDLE_NAME")
 
