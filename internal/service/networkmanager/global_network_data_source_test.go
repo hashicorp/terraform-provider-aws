@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccNetworkManagerGlobalNetworkDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_networkmanager_global_network.test"
 	resourceName := "aws_networkmanager_global_network.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccNetworkManagerLinksDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceAllName := "data.aws_networkmanager_links.all"
 	dataSourceByTagsName := "data.aws_networkmanager_links.by_tags"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

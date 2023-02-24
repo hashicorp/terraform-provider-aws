@@ -10,6 +10,7 @@ import (
 )
 
 func TestAccNetworkManagerConnectionDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_networkmanager_connection.test"
 	resourceName := "aws_networkmanager_connection.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
