@@ -528,8 +528,7 @@ func TestAccELBV2ListenerRule_changeListenerRuleARNForcesNew(t *testing.T) {
 func TestAccELBV2ListenerRule_priority(t *testing.T) {
 	ctx := acctest.Context(t)
 	var rule elbv2.Rule
-	lbName := fmt.Sprintf("testrule-basic-%s", sdkacctest.RandString(13))
-	targetGroupName := fmt.Sprintf("testtargetgroup-%s", sdkacctest.RandString(10))
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -542,37 +541,46 @@ func TestAccELBV2ListenerRule_priority(t *testing.T) {
 		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccListenerRuleConfig_priorityFirst(lbName, targetGroupName),
+				Config: testAccListenerRuleConfig_priorityFirst(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerRuleExists(ctx, "aws_lb_listener_rule.first", &rule),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.first", "priority", "1"),
 				),
 			},
 			{
-				Config: testAccListenerRuleConfig_priorityLast(lbName, targetGroupName),
+				Config: testAccListenerRuleConfig_priorityLast(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerRuleExists(ctx, "aws_lb_listener_rule.last", &rule),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.last", "priority", "4"),
 				),
 			},
 			{
-				Config: testAccListenerRuleConfig_priorityStatic(lbName, targetGroupName),
+				Config: testAccListenerRuleConfig_priorityStatic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerRuleExists(ctx, "aws_lb_listener_rule.last", &rule),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.last", "priority", "7"),
 				),
 			},
 			{
-				Config: testAccListenerRuleConfig_priorityLast(lbName, targetGroupName),
+				Config: testAccListenerRuleConfig_priorityLast(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerRuleExists(ctx, "aws_lb_listener_rule.last", &rule),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.last", "priority", "7"),
 				),
 			},
 			{
-				Config: testAccListenerRuleConfig_priorityParallelism(lbName, targetGroupName),
+				Config: testAccListenerRuleConfig_priorityParallelism(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckListenerRuleExists(ctx, "aws_lb_listener_rule.last", &rule),
+					testAccCheckListenerRuleExists(ctx, "aws_lb_listener_rule.parallelism.0", &rule),
+					testAccCheckListenerRuleExists(ctx, "aws_lb_listener_rule.parallelism.1", &rule),
+					testAccCheckListenerRuleExists(ctx, "aws_lb_listener_rule.parallelism.2", &rule),
+					testAccCheckListenerRuleExists(ctx, "aws_lb_listener_rule.parallelism.3", &rule),
+					testAccCheckListenerRuleExists(ctx, "aws_lb_listener_rule.parallelism.4", &rule),
+					testAccCheckListenerRuleExists(ctx, "aws_lb_listener_rule.parallelism.5", &rule),
+					testAccCheckListenerRuleExists(ctx, "aws_lb_listener_rule.parallelism.6", &rule),
+					testAccCheckListenerRuleExists(ctx, "aws_lb_listener_rule.parallelism.7", &rule),
+					testAccCheckListenerRuleExists(ctx, "aws_lb_listener_rule.parallelism.8", &rule),
+					testAccCheckListenerRuleExists(ctx, "aws_lb_listener_rule.parallelism.9", &rule),
 					resource.TestCheckResourceAttrSet("aws_lb_listener_rule.parallelism.0", "priority"),
 					resource.TestCheckResourceAttrSet("aws_lb_listener_rule.parallelism.1", "priority"),
 					resource.TestCheckResourceAttrSet("aws_lb_listener_rule.parallelism.2", "priority"),
@@ -586,19 +594,19 @@ func TestAccELBV2ListenerRule_priority(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccListenerRuleConfig_priority50000(lbName, targetGroupName),
+				Config: testAccListenerRuleConfig_priority50000(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerRuleExists(ctx, "aws_lb_listener_rule.priority50000", &rule),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.priority50000", "priority", "50000"),
 				),
 			},
 			{
-				Config:      testAccListenerRuleConfig_priority50001(lbName, targetGroupName),
-				ExpectError: regexp.MustCompile(`Error creating LB Listener Rule: ValidationError`),
+				Config:      testAccListenerRuleConfig_priority50001(rName),
+				ExpectError: regexp.MustCompile(`creating LB Listener Rule: ValidationError`),
 			},
 			{
-				Config:      testAccListenerRuleConfig_priorityInUse(lbName, targetGroupName),
-				ExpectError: regexp.MustCompile(`Error creating LB Listener Rule: PriorityInUse`),
+				Config:      testAccListenerRuleConfig_priorityInUse(rName),
+				ExpectError: regexp.MustCompile(`creating LB Listener Rule: PriorityInUse`),
 			},
 		},
 	})
@@ -2400,115 +2408,10 @@ resource "aws_lb_listener" "test2" {
 `, rName))
 }
 
-func testAccListenerRuleConfig_priorityBase(lbName, targetGroupName string) string {
-	return fmt.Sprintf(`
-resource "aws_lb_listener" "front_end" {
-  load_balancer_arn = aws_lb.alb_test.id
-  protocol          = "HTTP"
-  port              = "80"
-
-  default_action {
-    target_group_arn = aws_lb_target_group.test.id
-    type             = "forward"
-  }
-}
-
-resource "aws_lb" "alb_test" {
-  name            = %[1]q
-  internal        = true
-  security_groups = [aws_security_group.alb_test.id]
-  subnets         = aws_subnet.alb_test[*].id
-
-  idle_timeout               = 30
-  enable_deletion_protection = false
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_lb_target_group" "test" {
-  name     = %[2]q
-  port     = 8080
-  protocol = "HTTP"
-  vpc_id   = aws_vpc.alb_test.id
-
-  health_check {
-    path                = "/health"
-    interval            = 60
-    port                = 8081
-    protocol            = "HTTP"
-    timeout             = 3
-    healthy_threshold   = 3
-    unhealthy_threshold = 3
-    matcher             = "200-299"
-  }
-}
-
-variable "subnets" {
-  default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = list(string)
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "alb_test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = "terraform-testacc-lb-listener-rule-priority"
-  }
-}
-
-resource "aws_subnet" "alb_test" {
-  count                   = 2
-  vpc_id                  = aws_vpc.alb_test.id
-  cidr_block              = element(var.subnets, count.index)
-  map_public_ip_on_launch = true
-  availability_zone       = element(data.aws_availability_zones.available.names, count.index)
-
-  tags = {
-    Name = "tf-acc-lb-listener-rule-priority-${count.index}"
-  }
-}
-
-resource "aws_security_group" "alb_test" {
-  name        = "allow_all_alb_test"
-  description = "Used for ALB Testing"
-  vpc_id      = aws_vpc.alb_test.id
-
-  ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = %[1]q
-  }
-}
-`, lbName, targetGroupName)
-}
-
-func testAccListenerRuleConfig_priorityFirst(lbName, targetGroupName string) string {
-	return acctest.ConfigCompose(testAccListenerRuleConfig_priorityBase(lbName, targetGroupName), `
+func testAccListenerRuleConfig_priorityFirst(rName string) string {
+	return acctest.ConfigCompose(testAccListenerRuleConfig_baseWithListener(rName), fmt.Sprintf(`
 resource "aws_lb_listener_rule" "first" {
-  listener_arn = aws_lb_listener.front_end.arn
+  listener_arn = aws_lb_listener.test.arn
 
   action {
     type             = "forward"
@@ -2520,10 +2423,14 @@ resource "aws_lb_listener_rule" "first" {
       values = ["/first/*"]
     }
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_lb_listener_rule" "third" {
-  listener_arn = aws_lb_listener.front_end.arn
+  listener_arn = aws_lb_listener.test.arn
   priority     = 3
 
   action {
@@ -2537,15 +2444,19 @@ resource "aws_lb_listener_rule" "third" {
     }
   }
 
+  tags = {
+    Name = %[1]q
+  }
+
   depends_on = [aws_lb_listener_rule.first]
 }
-`)
+`, rName))
 }
 
-func testAccListenerRuleConfig_priorityLast(lbName, targetGroupName string) string {
-	return acctest.ConfigCompose(testAccListenerRuleConfig_priorityFirst(lbName, targetGroupName), `
+func testAccListenerRuleConfig_priorityLast(rName string) string {
+	return acctest.ConfigCompose(testAccListenerRuleConfig_baseWithListener(rName), fmt.Sprintf(`
 resource "aws_lb_listener_rule" "last" {
-  listener_arn = aws_lb_listener.front_end.arn
+  listener_arn = aws_lb_listener.test.arn
 
   action {
     type             = "forward"
@@ -2557,14 +2468,18 @@ resource "aws_lb_listener_rule" "last" {
       values = ["/last/*"]
     }
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`)
+`, rName))
 }
 
-func testAccListenerRuleConfig_priorityStatic(lbName, targetGroupName string) string {
-	return acctest.ConfigCompose(testAccListenerRuleConfig_priorityFirst(lbName, targetGroupName), `
+func testAccListenerRuleConfig_priorityStatic(rName string) string {
+	return acctest.ConfigCompose(testAccListenerRuleConfig_baseWithListener(rName), fmt.Sprintf(`
 resource "aws_lb_listener_rule" "last" {
-  listener_arn = aws_lb_listener.front_end.arn
+  listener_arn = aws_lb_listener.test.arn
   priority     = 7
 
   action {
@@ -2577,16 +2492,20 @@ resource "aws_lb_listener_rule" "last" {
       values = ["/last/*"]
     }
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`)
+`, rName))
 }
 
-func testAccListenerRuleConfig_priorityParallelism(lbName, targetGroupName string) string {
-	return acctest.ConfigCompose(testAccListenerRuleConfig_priorityStatic(lbName, targetGroupName), `
+func testAccListenerRuleConfig_priorityParallelism(rName string) string {
+	return acctest.ConfigCompose(testAccListenerRuleConfig_baseWithListener(rName), fmt.Sprintf(`
 resource "aws_lb_listener_rule" "parallelism" {
   count = 10
 
-  listener_arn = aws_lb_listener.front_end.arn
+  listener_arn = aws_lb_listener.test.arn
 
   action {
     type             = "forward"
@@ -2598,14 +2517,18 @@ resource "aws_lb_listener_rule" "parallelism" {
       values = ["/${count.index}/*"]
     }
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`)
+`, rName))
 }
 
-func testAccListenerRuleConfig_priority50000(lbName, targetGroupName string) string {
-	return acctest.ConfigCompose(testAccListenerRuleConfig_priorityBase(lbName, targetGroupName), `
+func testAccListenerRuleConfig_priority50000(rName string) string {
+	return acctest.ConfigCompose(testAccListenerRuleConfig_baseWithListener(rName), fmt.Sprintf(`
 resource "aws_lb_listener_rule" "priority50000" {
-  listener_arn = aws_lb_listener.front_end.arn
+  listener_arn = aws_lb_listener.test.arn
   priority     = 50000
 
   action {
@@ -2618,15 +2541,19 @@ resource "aws_lb_listener_rule" "priority50000" {
       values = ["/50000/*"]
     }
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`)
+`, rName))
 }
 
 // priority out of range (1, 50000)
-func testAccListenerRuleConfig_priority50001(lbName, targetGroupName string) string {
-	return acctest.ConfigCompose(testAccListenerRuleConfig_priority50000(lbName, targetGroupName), `
+func testAccListenerRuleConfig_priority50001(rName string) string {
+	return acctest.ConfigCompose(testAccListenerRuleConfig_baseWithListener(rName), fmt.Sprintf(`
 resource "aws_lb_listener_rule" "priority50001" {
-  listener_arn = aws_lb_listener.front_end.arn
+  listener_arn = aws_lb_listener.test.arn
 
   action {
     type             = "forward"
@@ -2638,14 +2565,38 @@ resource "aws_lb_listener_rule" "priority50001" {
       values = ["/50001/*"]
     }
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`)
+`, rName))
 }
 
-func testAccListenerRuleConfig_priorityInUse(lbName, targetGroupName string) string {
-	return acctest.ConfigCompose(testAccListenerRuleConfig_priority50000(lbName, targetGroupName), `
+func testAccListenerRuleConfig_priorityInUse(rName string) string {
+	return acctest.ConfigCompose(testAccListenerRuleConfig_baseWithListener(rName), fmt.Sprintf(`
+resource "aws_lb_listener_rule" "priority50000" {
+  listener_arn = aws_lb_listener.test.arn
+  priority     = 50000
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.test.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/50000/*"]
+    }
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
 resource "aws_lb_listener_rule" "priority50000_in_use" {
-  listener_arn = aws_lb_listener.front_end.arn
+  listener_arn = aws_lb_listener.test.arn
   priority     = 50000
 
   action {
@@ -2658,8 +2609,14 @@ resource "aws_lb_listener_rule" "priority50000_in_use" {
       values = ["/50000_in_use/*"]
     }
   }
+
+  tags = {
+    Name = %[1]q
+  }
+
+  depends_on = [aws_lb_listener_rule.priority50000_in_use]
 }
-`)
+`, rName))
 }
 
 func testAccListenerRuleConfig_cognito(rName, key, certificate string) string {
