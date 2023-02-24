@@ -22,7 +22,7 @@ func TestAccChimeVoiceConnectorStreaming_basic(t *testing.T) {
 	resourceName := "aws_chime_voice_connector_streaming.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, chime.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVoiceConnectorStreamingDestroy(ctx),
@@ -51,7 +51,7 @@ func TestAccChimeVoiceConnectorStreaming_disappears(t *testing.T) {
 	resourceName := "aws_chime_voice_connector_streaming.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, chime.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVoiceConnectorStreamingDestroy(ctx),
@@ -74,7 +74,7 @@ func TestAccChimeVoiceConnectorStreaming_update(t *testing.T) {
 	resourceName := "aws_chime_voice_connector_streaming.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, chime.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVoiceConnectorStreamingDestroy(ctx),
