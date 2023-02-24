@@ -23,7 +23,7 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_basic(t *testing.T) {
 	resourceName := "aws_apprunner_auto_scaling_configuration_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, apprunner.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAutoScalingConfigurationVersionDestroy(ctx),
@@ -57,7 +57,7 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_complex(t *testing.T) {
 	resourceName := "aws_apprunner_auto_scaling_configuration_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, apprunner.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAutoScalingConfigurationVersionDestroy(ctx),
@@ -127,7 +127,7 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_multipleVersions(t *testing
 	otherResourceName := "aws_apprunner_auto_scaling_configuration_version.other"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, apprunner.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAutoScalingConfigurationVersionDestroy(ctx),
@@ -186,7 +186,7 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_updateMultipleVersions(t *t
 	otherResourceName := "aws_apprunner_auto_scaling_configuration_version.other"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, apprunner.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAutoScalingConfigurationVersionDestroy(ctx),
@@ -241,7 +241,7 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_disappears(t *testing.T) {
 	resourceName := "aws_apprunner_auto_scaling_configuration_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, apprunner.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAutoScalingConfigurationVersionDestroy(ctx),
@@ -264,7 +264,7 @@ func TestAccAppRunnerAutoScalingConfigurationVersion_tags(t *testing.T) {
 	resourceName := "aws_apprunner_auto_scaling_configuration_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, apprunner.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAutoScalingConfigurationVersionDestroy(ctx),

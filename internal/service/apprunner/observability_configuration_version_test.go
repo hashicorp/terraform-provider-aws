@@ -23,7 +23,7 @@ func TestAccAppRunnerObservabilityConfiguration_basic(t *testing.T) {
 	resourceName := "aws_apprunner_observability_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, apprunner.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckObservabilityConfigurationDestroy(ctx),
@@ -53,7 +53,7 @@ func TestAccAppRunnerObservabilityConfiguration_traceConfiguration(t *testing.T)
 	resourceName := "aws_apprunner_observability_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, apprunner.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckObservabilityConfigurationDestroy(ctx),
@@ -85,7 +85,7 @@ func TestAccAppRunnerObservabilityConfiguration_disappears(t *testing.T) {
 	resourceName := "aws_apprunner_observability_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, apprunner.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckObservabilityConfigurationDestroy(ctx),
@@ -108,7 +108,7 @@ func TestAccAppRunnerObservabilityConfiguration_tags(t *testing.T) {
 	resourceName := "aws_apprunner_observability_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, apprunner.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckObservabilityConfigurationDestroy(ctx),
