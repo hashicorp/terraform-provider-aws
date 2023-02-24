@@ -48,6 +48,7 @@ func TestAccCloudFormationTypeDataSource_ARN_private(t *testing.T) {
 }
 
 func TestAccCloudFormationTypeDataSource_ARN_public(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_cloudformation_type.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -114,6 +115,7 @@ func TestAccCloudFormationTypeDataSource_TypeName_private(t *testing.T) {
 }
 
 func TestAccCloudFormationTypeDataSource_TypeName_public(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_cloudformation_type.test"
 
 	resource.ParallelTest(t, resource.TestCase{

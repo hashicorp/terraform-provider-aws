@@ -12,6 +12,7 @@ import (
 )
 
 func TestAccCloudFormationStackDataSource_DataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	stackName := sdkacctest.RandomWithPrefix("tf-acc-ds-basic")
 	resourceName := "data.aws_cloudformation_stack.network"
 
@@ -98,6 +99,7 @@ data "aws_cloudformation_stack" "network" {
 }
 
 func TestAccCloudFormationStackDataSource_DataSource_yaml(t *testing.T) {
+	ctx := acctest.Context(t)
 	stackName := sdkacctest.RandomWithPrefix("tf-acc-ds-yaml")
 	resourceName := "data.aws_cloudformation_stack.yaml"
 
