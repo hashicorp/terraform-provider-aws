@@ -1,0 +1,28 @@
+rules:
+  - id: data-source-acceptance-test-no-Context
+    languages: [go]
+    message: $FUNCNAME should create Context
+    paths:
+      include:
+        - internal/service/**/*_data_source_test.go
+    patterns:
+      - pattern: |
+          func $FUNCNAME(t *testing.T) {
+            $...BODY
+          }
+      - pattern-not: |
+          func $FUNCNAME(t *testing.T) {
+            ...
+            ctx := acctest.Context(t)
+            ...
+          }
+      - metavariable-pattern:
+          metavariable: $FUNCNAME
+          patterns:
+            - pattern-regex: "^[Tt]estAcc[a-zA-Z0-9]+_[a-zA-Z0-9_]+$"
+            - pattern-not-regex: "^TestAcc[a-zA-Z0-9]+_serial$"
+      - focus-metavariable: $...BODY
+    fix: |
+        ctx := acctest.Context(t)
+        $...BODY
+    severity: WARNING
