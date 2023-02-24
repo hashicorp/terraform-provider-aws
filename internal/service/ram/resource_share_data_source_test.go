@@ -12,6 +12,7 @@ import (
 )
 
 func TestAccRAMResourceShareDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ram_resource_share.test"
 	datasourceName := "data.aws_ram_resource_share.test"
@@ -38,6 +39,7 @@ func TestAccRAMResourceShareDataSource_basic(t *testing.T) {
 }
 
 func TestAccRAMResourceShareDataSource_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ram_resource_share.test"
 	datasourceName := "data.aws_ram_resource_share.test"
@@ -60,6 +62,7 @@ func TestAccRAMResourceShareDataSource_tags(t *testing.T) {
 }
 
 func TestAccRAMResourceShareDataSource_status(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ram_resource_share.test"
 	datasourceName := "data.aws_ram_resource_share.test"
