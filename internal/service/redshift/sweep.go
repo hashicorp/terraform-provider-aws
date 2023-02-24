@@ -83,22 +83,14 @@ func sweepClusterSnapshots(region string) error {
 			return false
 		}
 
-		for _, s := range resp.Snapshots {
-			id := aws.StringValue(s.SnapshotIdentifier)
+		for _, c := range resp.Snapshots {
+			r := ResourceClusterSnapshot()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(c.SnapshotIdentifier))
 
-			if !strings.EqualFold(aws.StringValue(s.SnapshotType), "manual") || !strings.EqualFold(aws.StringValue(s.Status), "available") {
-				log.Printf("[INFO] Skipping Redshift cluster snapshot: %s", id)
-				continue
-			}
-
-			log.Printf("[INFO] Deleting Redshift cluster snapshot: %s", id)
-			_, err := conn.DeleteClusterSnapshotWithContext(ctx, &redshift.DeleteClusterSnapshotInput{
-				SnapshotIdentifier: s.SnapshotIdentifier,
-			})
-			if err != nil {
-				log.Printf("[ERROR] Failed deleting Redshift cluster snapshot (%s): %s", id, err)
-			}
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
+
 		return !lastPage
 	})
 	if err != nil {
