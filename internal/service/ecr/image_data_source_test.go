@@ -10,6 +10,7 @@ import (
 )
 
 func TestAccECRImageDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	registry, repo, tag := "137112412989", "amazonlinux", "latest"
 	resourceByTag := "data.aws_ecr_image.by_tag"
 	resourceByDigest := "data.aws_ecr_image.by_digest"
