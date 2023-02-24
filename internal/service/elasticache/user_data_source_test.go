@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccElastiCacheUserDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_elasticache_user.test-basic"
 	dataSourceName := "data.aws_elasticache_user.test-basic"
 	rName := sdkacctest.RandomWithPrefix("tf-acc")

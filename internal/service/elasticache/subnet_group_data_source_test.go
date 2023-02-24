@@ -18,6 +18,7 @@ func testAccPreCheck(t *testing.T) {
 }
 
 func TestAccElastiCacheSubnetGroupDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elasticache_subnet_group.test"
 	dataSourceName := "data.aws_elasticache_subnet_group.test"

@@ -12,6 +12,7 @@ import (
 )
 
 func TestAccElastiCacheReplicationGroupDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -50,6 +51,7 @@ func TestAccElastiCacheReplicationGroupDataSource_basic(t *testing.T) {
 }
 
 func TestAccElastiCacheReplicationGroupDataSource_clusterMode(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -83,6 +85,7 @@ func TestAccElastiCacheReplicationGroupDataSource_clusterMode(t *testing.T) {
 }
 
 func TestAccElastiCacheReplicationGroupDataSource_multiAZ(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -108,6 +111,7 @@ func TestAccElastiCacheReplicationGroupDataSource_multiAZ(t *testing.T) {
 }
 
 func TestAccElastiCacheReplicationGroupDataSource_nonExistent(t *testing.T) {
+	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
@@ -122,6 +126,7 @@ func TestAccElastiCacheReplicationGroupDataSource_nonExistent(t *testing.T) {
 }
 
 func TestAccElastiCacheReplicationGroupDataSource_Engine_Redis_LogDeliveryConfigurations(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}

@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccElastiCacheClusterDataSource_Data_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -44,6 +45,7 @@ func TestAccElastiCacheClusterDataSource_Data_basic(t *testing.T) {
 }
 
 func TestAccElastiCacheClusterDataSource_Engine_Redis_LogDeliveryConfigurations(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
