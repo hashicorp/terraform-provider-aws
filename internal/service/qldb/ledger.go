@@ -20,6 +20,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+const (
+	createLedgerTimeout = 5 * time.Minute
+	deleteLedgerTimeout = 15 * time.Minute
+)
+
 func ResourceLedger() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLedgerCreate,
@@ -29,6 +34,11 @@ func ResourceLedger() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(createLedgerTimeout),
+			Delete: schema.DefaultTimeout(createLedgerTimeout),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -276,7 +286,7 @@ func waitLedgerCreated(ctx context.Context, conn *qldb.QLDB, name string) (*qldb
 		Pending:    []string{qldb.LedgerStateCreating},
 		Target:     []string{qldb.LedgerStateActive},
 		Refresh:    statusLedgerState(ctx, conn, name),
-		Timeout:    8 * time.Minute,
+		Timeout:    createLedgerTimeout,
 		MinTimeout: 3 * time.Second,
 	}
 
@@ -294,7 +304,7 @@ func waitLedgerDeleted(ctx context.Context, conn *qldb.QLDB, name string) (*qldb
 		Pending:    []string{qldb.LedgerStateActive, qldb.LedgerStateDeleting},
 		Target:     []string{},
 		Refresh:    statusLedgerState(ctx, conn, name),
-		Timeout:    5 * time.Minute,
+		Timeout:    deleteLedgerTimeout,
 		MinTimeout: 1 * time.Second,
 	}
 
