@@ -291,6 +291,11 @@ func ResourceFunction() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"skip_destroy": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"snap_start": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -996,6 +1001,11 @@ func resourceFunctionDelete(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient()
 
+	if v, ok := d.GetOk("skip_destroy"); ok && v.(bool) {
+		log.Printf("[DEBUG] Retaining Lambda Function: %s", d.Id())
+		return diags
+	}
+
 	log.Printf("[INFO] Deleting Lambda Function: %s", d.Id())
 	_, err := tfresource.RetryWhenIsAErrorMessageContains[*types.InvalidParameterValueException](ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
 		return conn.DeleteFunction(ctx, &lambda.DeleteFunctionInput{
@@ -1030,14 +1040,15 @@ func FindFunctionByName(ctx context.Context, conn *lambda.Client, name string) (
 
 func findFunction(ctx context.Context, conn *lambda.Client, input *lambda.GetFunctionInput) (*lambda.GetFunctionOutput, error) {
 	output, err := conn.GetFunction(ctx, input)
-	if err != nil {
-		var nfe *types.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return nil, &resource.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
-			}
+
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return nil, &resource.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
 		}
+	}
+
+	if err != nil {
 		return nil, err
 	}
 
