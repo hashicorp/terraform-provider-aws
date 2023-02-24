@@ -373,6 +373,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `create` - (Default `10m`)
 * `update` - (Default `10m`)
+* `delete` - (Default `10m`)
 
 ## Import
 
