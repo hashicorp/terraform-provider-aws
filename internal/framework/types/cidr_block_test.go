@@ -7,6 +7,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
@@ -108,6 +109,43 @@ func TestCIDRBlockTypeValidate(t *testing.T) {
 
 			if diags.HasError() && !test.expectError {
 				t.Fatalf("got unexpected error: %#v", diags)
+			}
+		})
+	}
+}
+
+func TestCIDRBlockToStringValue(t *testing.T) {
+	t.Parallel()
+
+	tests := map[string]struct {
+		cidrBlock fwtypes.CIDRBlock
+		expected  types.String
+	}{
+		"value": {
+			cidrBlock: fwtypes.CIDRBlockValue("10.2.2.0/24"),
+			expected:  types.StringValue("10.2.2.0/24"),
+		},
+		"null": {
+			cidrBlock: fwtypes.CIDRBlockNull(),
+			expected:  types.StringNull(),
+		},
+		"unknown": {
+			cidrBlock: fwtypes.CIDRBlockUnknown(),
+			expected:  types.StringUnknown(),
+		},
+	}
+
+	for name, test := range tests {
+		name, test := name, test
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			ctx := context.Background()
+
+			s, _ := test.cidrBlock.ToStringValue(ctx)
+
+			if !test.expected.Equal(s) {
+				t.Fatalf("expected %#v to equal %#v", s, test.expected)
 			}
 		})
 	}

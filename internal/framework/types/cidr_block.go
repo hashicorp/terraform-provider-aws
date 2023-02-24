@@ -152,7 +152,18 @@ func (c CIDRBlock) Type(_ context.Context) attr.Type {
 }
 
 func (c CIDRBlock) ToStringValue(ctx context.Context) (types.String, diag.Diagnostics) {
-	return types.StringValue(c.value), nil
+	switch c.state {
+	case attr.ValueStateKnown:
+		return types.StringValue(c.value), nil
+	case attr.ValueStateNull:
+		return types.StringNull(), nil
+	case attr.ValueStateUnknown:
+		return types.StringUnknown(), nil
+	default:
+		return types.StringUnknown(), diag.Diagnostics{
+			diag.NewErrorDiagnostic(fmt.Sprintf("unhandled CIDRBlock state in ToStringValue: %s", c.state), ""),
+		}
+	}
 }
 
 func (c CIDRBlock) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {

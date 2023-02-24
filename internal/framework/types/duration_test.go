@@ -8,6 +8,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
@@ -105,4 +106,55 @@ func TestDurationTypeValidate(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestDurationToStringValue(t *testing.T) {
+	t.Parallel()
+
+	tests := map[string]struct {
+		duration fwtypes.Duration
+		expected types.String
+	}{
+		"value": {
+			// TODO: StringValue does not round-trip
+			duration: durationFromString(t, "2h"),
+			expected: types.StringValue("2h0m0s"),
+		},
+		"null": {
+			duration: fwtypes.DurationNull(),
+			expected: types.StringNull(),
+		},
+		"unknown": {
+			duration: fwtypes.DurationUnknown(),
+			expected: types.StringUnknown(),
+		},
+	}
+
+	for name, test := range tests {
+		name, test := name, test
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			ctx := context.Background()
+
+			s, _ := test.duration.ToStringValue(ctx)
+
+			if !test.expected.Equal(s) {
+				t.Fatalf("expected %#v to equal %#v", s, test.expected)
+			}
+		})
+	}
+}
+
+func durationFromString(t *testing.T, s string) fwtypes.Duration {
+	ctx := context.Background()
+
+	val := tftypes.NewValue(tftypes.String, s)
+
+	attr, err := fwtypes.DurationType.ValueFromTerraform(ctx, val)
+	if err != nil {
+		t.Fatalf("setting Duration: %s", err)
+	}
+
+	return attr.(fwtypes.Duration)
 }

@@ -174,7 +174,18 @@ func (a ARN) Type(_ context.Context) attr.Type {
 }
 
 func (a ARN) ToStringValue(ctx context.Context) (types.String, diag.Diagnostics) {
-	return types.StringValue(a.value.String()), nil
+	switch a.state {
+	case attr.ValueStateKnown:
+		return types.StringValue(a.value.String()), nil
+	case attr.ValueStateNull:
+		return types.StringNull(), nil
+	case attr.ValueStateUnknown:
+		return types.StringUnknown(), nil
+	default:
+		return types.StringUnknown(), diag.Diagnostics{
+			diag.NewErrorDiagnostic(fmt.Sprintf("unhandled ARN state in ToStringValue: %s", a.state), ""),
+		}
+	}
 }
 
 func (a ARN) ToTerraformValue(ctx context.Context) (tftypes.Value, error) {

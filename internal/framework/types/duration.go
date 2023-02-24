@@ -177,7 +177,18 @@ func (d Duration) Type(_ context.Context) attr.Type {
 }
 
 func (d Duration) ToStringValue(ctx context.Context) (types.String, diag.Diagnostics) {
-	return types.StringValue(d.value.String()), nil
+	switch d.state {
+	case attr.ValueStateKnown:
+		return types.StringValue(d.value.String()), nil
+	case attr.ValueStateNull:
+		return types.StringNull(), nil
+	case attr.ValueStateUnknown:
+		return types.StringUnknown(), nil
+	default:
+		return types.StringUnknown(), diag.Diagnostics{
+			diag.NewErrorDiagnostic(fmt.Sprintf("unhandled Duration state in ToStringValue: %s", d.state), ""),
+		}
+	}
 }
 
 // ToTerraformValue returns the data contained in the *String as a string. If
