@@ -11,6 +11,7 @@ import (
 )
 
 func testAccPromptDataSource_name(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	datasourceName := "data.aws_connect_prompt.test"
 

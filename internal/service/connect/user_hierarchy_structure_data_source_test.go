@@ -11,6 +11,7 @@ import (
 )
 
 func testAccUserHierarchyStructureDataSource_instanceID(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_user_hierarchy_structure.test"
 	datasourceName := "data.aws_connect_user_hierarchy_structure.test"

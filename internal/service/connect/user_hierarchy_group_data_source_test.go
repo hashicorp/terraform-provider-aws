@@ -11,6 +11,7 @@ import (
 )
 
 func testAccUserHierarchyGroupDataSource_hierarchyGroupID(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
@@ -47,6 +48,7 @@ func testAccUserHierarchyGroupDataSource_hierarchyGroupID(t *testing.T) {
 }
 
 func testAccUserHierarchyGroupDataSource_name(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")

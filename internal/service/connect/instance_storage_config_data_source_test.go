@@ -11,6 +11,7 @@ import (
 )
 
 func testAccInstanceStorageConfigDataSource_KinesisFirehoseConfig(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_connect_instance_storage_config.test"
 	datasourceName := "data.aws_connect_instance_storage_config.test"
@@ -37,6 +38,7 @@ func testAccInstanceStorageConfigDataSource_KinesisFirehoseConfig(t *testing.T) 
 }
 
 func testAccInstanceStorageConfigDataSource_KinesisStreamConfig(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_connect_instance_storage_config.test"
@@ -64,6 +66,7 @@ func testAccInstanceStorageConfigDataSource_KinesisStreamConfig(t *testing.T) {
 }
 
 func testAccInstanceStorageConfigDataSource_KinesisVideoStreamConfig(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_connect_instance_storage_config.test"
 	datasourceName := "data.aws_connect_instance_storage_config.test"
@@ -94,6 +97,7 @@ func testAccInstanceStorageConfigDataSource_KinesisVideoStreamConfig(t *testing.
 }
 
 func testAccInstanceStorageConfigDataSource_S3Config(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_connect_instance_storage_config.test"

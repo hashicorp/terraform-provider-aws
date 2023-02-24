@@ -11,6 +11,7 @@ import (
 )
 
 func testAccSecurityProfileDataSource_securityProfileID(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_security_profile.test"
@@ -39,6 +40,7 @@ func testAccSecurityProfileDataSource_securityProfileID(t *testing.T) {
 }
 
 func testAccSecurityProfileDataSource_name(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_security_profile.test"

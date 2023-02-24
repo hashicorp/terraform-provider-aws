@@ -11,6 +11,7 @@ import (
 )
 
 func testAccContactFlowDataSource_contactFlowID(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_contact_flow.test"
 	datasourceName := "data.aws_connect_contact_flow.test"
@@ -39,6 +40,7 @@ func testAccContactFlowDataSource_contactFlowID(t *testing.T) {
 }
 
 func testAccContactFlowDataSource_name(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_contact_flow.test"
