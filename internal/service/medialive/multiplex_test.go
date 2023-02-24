@@ -293,23 +293,9 @@ func testAccMultiplexesPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccMultiplexBaseConfig() string {
-	return `
-data "aws_availability_zones" "available" {
-  state         = "available"
-  exclude_names = ["us-west-2-las-1a"] # not available in this zone
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-`
-}
-
 func testAccMultiplexConfig_basic(rName string, start bool) string {
 	return acctest.ConfigCompose(
-		testAccMultiplexBaseConfig(),
+		acctest.ConfigAvailableAZsNoOptInExclude("usw2-las1-az1"),
 		fmt.Sprintf(`
 resource "aws_medialive_multiplex" "test" {
   name               = %[1]q
@@ -333,7 +319,7 @@ resource "aws_medialive_multiplex" "test" {
 
 func testAccMultiplexConfig_update(rName string, start bool) string {
 	return acctest.ConfigCompose(
-		testAccMultiplexBaseConfig(),
+		acctest.ConfigAvailableAZsNoOptInExclude("usw2-las1-az1"),
 		fmt.Sprintf(`
 resource "aws_medialive_multiplex" "test" {
   name               = %[1]q
@@ -357,7 +343,7 @@ resource "aws_medialive_multiplex" "test" {
 
 func testAccMultiplexConfig_tags1(rName, key1, value1 string) string {
 	return acctest.ConfigCompose(
-		testAccMultiplexBaseConfig(),
+		acctest.ConfigAvailableAZsNoOptInExclude("usw2-las1-az1"),
 		fmt.Sprintf(`
 resource "aws_medialive_multiplex" "test" {
   name               = %[1]q
@@ -379,7 +365,7 @@ resource "aws_medialive_multiplex" "test" {
 
 func testAccMultiplexConfig_tags2(rName, key1, value1, key2, value2 string) string {
 	return acctest.ConfigCompose(
-		testAccMultiplexBaseConfig(),
+		acctest.ConfigAvailableAZsNoOptInExclude("usw2-las1-az1"),
 		fmt.Sprintf(`
 resource "aws_medialive_multiplex" "test" {
   name               = %[1]q
