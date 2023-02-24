@@ -1,0 +1,4 @@
+```release-note:enhancement
+data-source/aws_ec2_transit_gateway_attachment: Add association_state argument
+data-source/aws_ec2_transit_gateway_attachment: Add association_transit_gateway_route_table_id argument
+```
