@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccBatchSchedulingPolicyDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix("tf_acc_test_")
 	resourceName := "aws_batch_scheduling_policy.test"
 	datasourceName := "data.aws_batch_scheduling_policy.test"
