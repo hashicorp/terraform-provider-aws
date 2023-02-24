@@ -12,6 +12,7 @@ import (
 )
 
 func TestAccServerlessRepoApplicationDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	datasourceName := "data.aws_serverlessapplicationrepository_application.secrets_manager_postgres_single_user_rotator"
 	appARN := testAccCloudFormationApplicationID()
 
@@ -40,6 +41,7 @@ func TestAccServerlessRepoApplicationDataSource_basic(t *testing.T) {
 }
 
 func TestAccServerlessRepoApplicationDataSource_versioned(t *testing.T) {
+	ctx := acctest.Context(t)
 	datasourceName := "data.aws_serverlessapplicationrepository_application.secrets_manager_postgres_single_user_rotator"
 	appARN := testAccCloudFormationApplicationID()
 
