@@ -12,6 +12,7 @@ import (
 )
 
 func TestAccWAFRegionalSubscribedRuleGroupDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	if os.Getenv("WAF_SUBSCRIBED_RULE_GROUP_NAME") == "" {
 		t.Skip("Environment variable WAF_SUBSCRIBED_RULE_GROUP_NAME is not set")
 	}

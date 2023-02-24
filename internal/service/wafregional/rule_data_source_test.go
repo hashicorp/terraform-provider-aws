@@ -12,6 +12,7 @@ import (
 )
 
 func TestAccWAFRegionalRuleDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_wafregional_rule.wafrule"
 	datasourceName := "data.aws_wafregional_rule.wafrule"
