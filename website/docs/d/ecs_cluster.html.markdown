@@ -36,4 +36,6 @@ This data source exports the following attributes in addition to the arguments a
 * `registered_container_instances_count` - The number of registered container instances for the ECS Cluster
 * `service_connect_defaults` - The default Service Connect namespace
 * `setting` - Settings associated with the ECS Cluster
+* `capacity_providers` - The capacity providers associated with the ECS Cluster
+* `default_capacity_provider_strategy` - The default capacity provider strategy for the ECS Cluster
 * `tags` - Key-value map of resource tags
