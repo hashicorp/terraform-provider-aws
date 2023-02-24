@@ -8,7 +8,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+{{- if ne .ProviderPackage "meta" }}
 	"github.com/hashicorp/terraform-provider-aws/names"
+{{- end }}
 )
 
 type servicePackage struct {}
@@ -46,7 +48,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) map[string]func() *sc
 }
 
 func (p *servicePackage) ServicePackageName() string {
+{{- if eq .ProviderPackage "meta" }}
+	return "{{ .ProviderPackage }}"
+{{- else }}
 	return names.{{ .ProviderNameUpper }}
+{{- end }}
 }
 
 var ServicePackage = &servicePackage{}

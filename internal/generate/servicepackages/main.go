@@ -44,6 +44,11 @@ func main() {
 			continue
 		}
 
+		// Don't skip excluded packages, instead handle missing values in the template.
+		// if l[names.ColExclude] != "" {
+		// 	continue
+		// }
+
 		if l[names.ColProviderPackageActual] == "" && l[names.ColProviderPackageCorrect] == "" {
 			continue
 		}
