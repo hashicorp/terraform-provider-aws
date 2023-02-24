@@ -12,6 +12,7 @@ import (
 )
 
 func TestAccRDSClusterSnapshotDataSource_dbClusterSnapshotIdentifier(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_db_cluster_snapshot.test"
 	resourceName := "aws_db_cluster_snapshot.test"
@@ -49,6 +50,7 @@ func TestAccRDSClusterSnapshotDataSource_dbClusterSnapshotIdentifier(t *testing.
 }
 
 func TestAccRDSClusterSnapshotDataSource_dbClusterIdentifier(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_db_cluster_snapshot.test"
 	resourceName := "aws_db_cluster_snapshot.test"
@@ -86,6 +88,7 @@ func TestAccRDSClusterSnapshotDataSource_dbClusterIdentifier(t *testing.T) {
 }
 
 func TestAccRDSClusterSnapshotDataSource_mostRecent(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_db_cluster_snapshot.test"
 	resourceName := "aws_db_cluster_snapshot.test"

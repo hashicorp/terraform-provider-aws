@@ -10,6 +10,7 @@ import (
 )
 
 func TestAccRDSEventCategoriesDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_db_event_categories.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -41,6 +42,7 @@ func TestAccRDSEventCategoriesDataSource_basic(t *testing.T) {
 }
 
 func TestAccRDSEventCategoriesDataSource_sourceType(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_db_event_categories.test"
 
 	resource.ParallelTest(t, resource.TestCase{

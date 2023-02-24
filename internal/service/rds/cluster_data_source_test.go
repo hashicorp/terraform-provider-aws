@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccRDSClusterDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_rds_cluster.test"
 	resourceName := "aws_rds_cluster.test"

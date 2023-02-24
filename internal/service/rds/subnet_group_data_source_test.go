@@ -10,6 +10,7 @@ import (
 )
 
 func TestAccRDSSubnetGroupDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_db_subnet_group.test"
 	dataSourceName := "data.aws_db_subnet_group.test"

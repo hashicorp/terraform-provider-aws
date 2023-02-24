@@ -12,6 +12,7 @@ import (
 )
 
 func TestAccRDSSnapshotDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
