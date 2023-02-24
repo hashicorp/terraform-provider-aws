@@ -25,7 +25,7 @@ func TestAccSSOAdminAccountAssignment_Basic_group(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckInstances(ctx, t)
 			testAccPreCheckIdentityStoreGroupName(t)
 		},
@@ -59,7 +59,7 @@ func TestAccSSOAdminAccountAssignment_Basic_user(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckInstances(ctx, t)
 			testAccPreCheckIdentityStoreUserName(t)
 		},
@@ -93,7 +93,7 @@ func TestAccSSOAdminAccountAssignment_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckInstances(ctx, t)
 			testAccPreCheckIdentityStoreGroupName(t)
 		},
