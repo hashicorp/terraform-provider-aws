@@ -37,7 +37,7 @@ func testAccOrganizationConfiguration_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(names.Inspector2EndpointID, t)
 			testAccPreCheck(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
@@ -64,7 +64,7 @@ func testAccOrganizationConfiguration_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(names.Inspector2EndpointID, t)
 			testAccPreCheck(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
@@ -91,7 +91,7 @@ func testAccOrganizationConfiguration_ec2ECR(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(names.Inspector2EndpointID, t)
 			testAccPreCheck(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
