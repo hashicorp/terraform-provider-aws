@@ -10,6 +10,7 @@ import (
 )
 
 func TestAccKafkaConnectConnectorDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mskconnect_connector.test"
 	dataSourceName := "data.aws_mskconnect_connector.test"
