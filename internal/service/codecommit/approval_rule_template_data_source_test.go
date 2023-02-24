@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccCodeCommitApprovalRuleTemplateDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codecommit_approval_rule_template.test"
 	datasourceName := "data.aws_codecommit_approval_rule_template.test"
