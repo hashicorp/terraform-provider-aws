@@ -18,7 +18,7 @@ func TestAccServiceDiscoveryHTTPNamespaceDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(servicediscovery.EndpointsID, t)
 			testAccPreCheck(ctx, t)
 		},
