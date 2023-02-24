@@ -24,7 +24,7 @@ func testAccClientVPNAuthorizationRule_basic(t *testing.T) {
 	subnetResourceName := "aws_subnet.test.0"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(t) },
+		PreCheck:                 func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClientVPNAuthorizationRuleDestroy(ctx),
@@ -54,7 +54,7 @@ func testAccClientVPNAuthorizationRule_disappears(t *testing.T) {
 	resourceName := "aws_ec2_client_vpn_authorization_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(t) },
+		PreCheck:                 func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClientVPNAuthorizationRuleDestroy(ctx),
@@ -78,7 +78,7 @@ func testAccClientVPNAuthorizationRule_Disappears_endpoint(t *testing.T) {
 	resourceName := "aws_ec2_client_vpn_authorization_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(t) },
+		PreCheck:                 func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClientVPNAuthorizationRuleDestroy(ctx),
@@ -118,7 +118,7 @@ func testAccClientVPNAuthorizationRule_groups(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(t) },
+		PreCheck:                 func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClientVPNAuthorizationRuleDestroy(ctx),
@@ -190,7 +190,7 @@ func testAccClientVPNAuthorizationRule_subnets(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(t) },
+		PreCheck:                 func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClientVPNAuthorizationRuleDestroy(ctx),

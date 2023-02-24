@@ -25,7 +25,7 @@ func testAccTransitGatewayPeeringAttachment_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckTransitGateway(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
@@ -62,7 +62,7 @@ func testAccTransitGatewayPeeringAttachment_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckTransitGateway(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
@@ -90,7 +90,7 @@ func testAccTransitGatewayPeeringAttachment_Tags(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckTransitGateway(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
@@ -143,7 +143,7 @@ func testAccTransitGatewayPeeringAttachment_differentAccount(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckTransitGateway(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 			acctest.PreCheckAlternateAccount(t)

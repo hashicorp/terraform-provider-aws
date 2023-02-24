@@ -16,7 +16,7 @@ func TestAccEC2OutpostsLocalGatewayVirtualInterfaceDataSource_filter(t *testing.
 	dataSourceName := "data.aws_ec2_local_gateway_virtual_interface.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -41,7 +41,7 @@ func TestAccEC2OutpostsLocalGatewayVirtualInterfaceDataSource_id(t *testing.T) {
 	dataSourceName := "data.aws_ec2_local_gateway_virtual_interface.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -68,7 +68,7 @@ func TestAccEC2OutpostsLocalGatewayVirtualInterfaceDataSource_tags(t *testing.T)
 	dataSourceName := "data.aws_ec2_local_gateway_virtual_interface.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{

@@ -20,7 +20,7 @@ func testAccTransitGatewayDxGatewayAttachmentDataSource_TransitGatewayIdAndDxGat
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckTransitGateway(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
@@ -49,7 +49,7 @@ func testAccTransitGatewayDxGatewayAttachmentDataSource_filter(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckTransitGateway(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),

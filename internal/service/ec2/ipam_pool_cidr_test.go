@@ -23,7 +23,7 @@ func TestAccIPAMPoolCIDR_basic(t *testing.T) {
 	cidrBlock := "10.0.0.0/24"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIPAMPoolCIDRDestroy(ctx),
@@ -55,7 +55,7 @@ func TestAccIPAMPoolCIDR_basicNetmaskLength(t *testing.T) {
 	netmaskLength := "24"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIPAMPoolCIDRDestroy(ctx),
@@ -88,7 +88,7 @@ func TestAccIPAMPoolCIDR_disappears(t *testing.T) {
 	cidrBlock := "10.0.0.0/24"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIPAMPoolCIDRDestroy(ctx),
@@ -113,7 +113,7 @@ func TestAccIPAMPoolCIDR_Disappears_ipam(t *testing.T) {
 	cidrBlock := "10.0.0.0/24"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIPAMPoolCIDRDestroy(ctx),

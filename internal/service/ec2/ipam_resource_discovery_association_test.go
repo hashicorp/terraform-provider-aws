@@ -23,7 +23,7 @@ func testAccIPAMResourceDiscoveryAssociation_basic(t *testing.T) {
 	rdName := "aws_vpc_ipam_resource_discovery.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIPAMResourceDiscoveryAssociationDestroy(ctx),
@@ -54,7 +54,7 @@ func testAccIPAMResourceDiscoveryAssociation_tags(t *testing.T) {
 	resourceName := "aws_vpc_ipam_resource_discovery_association.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIPAMResourceDiscoveryAssociationDestroy(ctx),
@@ -97,7 +97,7 @@ func testAccIPAMResourceDiscoveryAssociation_disappears(t *testing.T) {
 	resourceName := "aws_vpc_ipam_resource_discovery_association.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIPAMResourceDiscoveryAssociationDestroy(ctx),

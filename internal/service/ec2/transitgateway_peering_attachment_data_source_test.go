@@ -17,7 +17,7 @@ func testAccTransitGatewayPeeringAttachmentDataSource_Filter_sameAccount(t *test
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckTransitGateway(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
@@ -48,7 +48,7 @@ func testAccTransitGatewayPeeringAttachmentDataSource_Filter_differentAccount(t 
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckTransitGateway(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 			acctest.PreCheckAlternateAccount(t)
@@ -78,7 +78,7 @@ func testAccTransitGatewayPeeringAttachmentDataSource_ID_sameAccount(t *testing.
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckTransitGateway(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
@@ -109,7 +109,7 @@ func testAccTransitGatewayPeeringAttachmentDataSource_ID_differentAccount(t *tes
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckTransitGateway(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 			acctest.PreCheckAlternateAccount(t)
@@ -139,7 +139,7 @@ func testAccTransitGatewayPeeringAttachmentDataSource_Tags(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckTransitGateway(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},

@@ -23,7 +23,7 @@ func TestAccVPCEndpointService_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tfacctest") // 32 character limit
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPCEndpointServiceDestroy(ctx),
@@ -65,7 +65,7 @@ func TestAccVPCEndpointService_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tfacctest") // 32 character limit
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPCEndpointServiceDestroy(ctx),
@@ -89,7 +89,7 @@ func TestAccVPCEndpointService_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tfacctest") // 32 character limit
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPCEndpointServiceDestroy(ctx),
@@ -135,7 +135,7 @@ func TestAccVPCEndpointService_networkLoadBalancerARNs(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tfacctest") // 32 character limit
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPCEndpointServiceDestroy(ctx),
@@ -170,7 +170,7 @@ func TestAccVPCEndpointService_supportedIPAddressTypes(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tfacctest") // 32 character limit
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPCEndpointServiceDestroy(ctx),
@@ -208,7 +208,7 @@ func TestAccVPCEndpointService_allowedPrincipals(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tfacctest") // 32 character limit
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPCEndpointServiceDestroy(ctx),
@@ -250,7 +250,7 @@ func TestAccVPCEndpointService_gatewayLoadBalancerARNs(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tfacctest") // 32 character limit
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckELBv2GatewayLoadBalancer(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckELBv2GatewayLoadBalancer(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPCEndpointServiceDestroy(ctx),
@@ -287,7 +287,7 @@ func TestAccVPCEndpointService_privateDNSName(t *testing.T) {
 	domainName2 := acctest.RandomSubdomain()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPCEndpointServiceDestroy(ctx),
