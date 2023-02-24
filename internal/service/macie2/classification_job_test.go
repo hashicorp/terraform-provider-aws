@@ -23,7 +23,7 @@ func testAccClassificationJob_basic(t *testing.T) {
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClassificationJobDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, macie2.EndpointsID),
@@ -54,7 +54,7 @@ func testAccClassificationJob_Name_Generated(t *testing.T) {
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClassificationJobDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, macie2.EndpointsID),
@@ -84,7 +84,7 @@ func testAccClassificationJob_NamePrefix(t *testing.T) {
 	namePrefix := "tf-acc-test-prefix-"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClassificationJobDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, macie2.EndpointsID),
@@ -113,7 +113,7 @@ func testAccClassificationJob_disappears(t *testing.T) {
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClassificationJobDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, macie2.EndpointsID),
@@ -136,7 +136,7 @@ func testAccClassificationJob_Status(t *testing.T) {
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClassificationJobDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, macie2.EndpointsID),
@@ -180,7 +180,7 @@ func testAccClassificationJob_complete(t *testing.T) {
 	descriptionUpdated := "Updated Description of a test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClassificationJobDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, macie2.EndpointsID),
@@ -262,7 +262,7 @@ func testAccClassificationJob_WithTags(t *testing.T) {
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClassificationJobDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, macie2.EndpointsID),
@@ -311,7 +311,7 @@ func testAccClassificationJob_BucketCriteria(t *testing.T) {
 	descriptionUpdated := "Updated Description of a test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClassificationJobDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, macie2.EndpointsID),

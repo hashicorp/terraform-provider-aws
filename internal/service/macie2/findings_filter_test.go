@@ -22,7 +22,7 @@ func testAccFindingsFilter_basic(t *testing.T) {
 	resourceName := "aws_macie2_findings_filter.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFindingsFilterDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, macie2.EndpointsID),
@@ -52,7 +52,7 @@ func testAccFindingsFilter_Name_Generated(t *testing.T) {
 	resourceName := "aws_macie2_findings_filter.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFindingsFilterDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, macie2.EndpointsID),
@@ -81,7 +81,7 @@ func testAccFindingsFilter_NamePrefix(t *testing.T) {
 	namePrefix := "tf-acc-test-prefix-"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFindingsFilterDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, macie2.EndpointsID),
@@ -109,7 +109,7 @@ func testAccFindingsFilter_disappears(t *testing.T) {
 	resourceName := "aws_macie2_findings_filter.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFindingsFilterDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, macie2.EndpointsID),
@@ -137,7 +137,7 @@ func testAccFindingsFilter_complete(t *testing.T) {
 	descriptionUpdated := "this is a description updated"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFindingsFilterDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, macie2.EndpointsID),
@@ -219,7 +219,7 @@ func testAccFindingsFilter_WithDate(t *testing.T) {
 	endDate := "2020-02-01T00:00:00Z"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFindingsFilterDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, macie2.EndpointsID),
@@ -296,7 +296,7 @@ func testAccFindingsFilter_WithNumber(t *testing.T) {
 	secondNumber := "13"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFindingsFilterDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, macie2.EndpointsID),
@@ -364,7 +364,7 @@ func testAccFindingsFilter_withTags(t *testing.T) {
 	description := "this is a description"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFindingsFilterDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, macie2.EndpointsID),

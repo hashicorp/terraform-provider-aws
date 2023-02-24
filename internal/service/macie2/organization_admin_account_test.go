@@ -20,7 +20,7 @@ func testAccOrganizationAdminAccount_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationsAccount(ctx, t)
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -49,7 +49,7 @@ func testAccOrganizationAdminAccount_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationsAccount(ctx, t)
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
