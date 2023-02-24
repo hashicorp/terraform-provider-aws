@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccAutoScalingGroupsDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	datasource1Name := "data.aws_autoscaling_groups.group_list"
 	datasource2Name := "data.aws_autoscaling_groups.group_list_tag_lookup"
 	datasource3Name := "data.aws_autoscaling_groups.group_list_by_name"

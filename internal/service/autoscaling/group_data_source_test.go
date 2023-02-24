@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccAutoScalingGroupDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	datasourceName := "data.aws_autoscaling_group.test"
 	resourceName := "aws_autoscaling_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -51,6 +52,7 @@ func TestAccAutoScalingGroupDataSource_basic(t *testing.T) {
 }
 
 func TestAccAutoScalingGroupDataSource_launchTemplate(t *testing.T) {
+	ctx := acctest.Context(t)
 	datasourceName := "data.aws_autoscaling_group.test"
 	resourceName := "aws_autoscaling_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
