@@ -29,7 +29,7 @@ func testAccWorkspace_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckDirectory(ctx, t)
 			acctest.PreCheckDirectoryServiceSimpleDirectory(ctx, t)
 			acctest.PreCheckHasIAMRole(ctx, t, "workspaces_DefaultRole")
@@ -79,7 +79,7 @@ func testAccWorkspace_tags(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckDirectory(ctx, t)
 			acctest.PreCheckDirectoryServiceSimpleDirectory(ctx, t)
 			acctest.PreCheckHasIAMRole(ctx, t, "workspaces_DefaultRole")
@@ -133,7 +133,7 @@ func testAccWorkspace_workspaceProperties(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckDirectory(ctx, t)
 			acctest.PreCheckDirectoryServiceSimpleDirectory(ctx, t)
 			acctest.PreCheckHasIAMRole(ctx, t, "workspaces_DefaultRole")
@@ -200,7 +200,7 @@ func testAccWorkspace_workspaceProperties_runningModeAlwaysOn(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckDirectory(ctx, t)
 			acctest.PreCheckDirectoryServiceSimpleDirectory(ctx, t)
 			acctest.PreCheckHasIAMRole(ctx, t, "workspaces_DefaultRole")
@@ -236,7 +236,7 @@ func testAccWorkspace_validateRootVolumeSize(t *testing.T) {
 	domain := acctest.RandomDomainName()
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, workspaces.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx),
@@ -255,7 +255,7 @@ func testAccWorkspace_validateUserVolumeSize(t *testing.T) {
 	domain := acctest.RandomDomainName()
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, workspaces.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx),
@@ -278,7 +278,7 @@ func testAccWorkspace_recreate(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckDirectory(ctx, t)
 			acctest.PreCheckDirectoryServiceSimpleDirectory(ctx, t)
 			acctest.PreCheckHasIAMRole(ctx, t, "workspaces_DefaultRole")
@@ -314,7 +314,7 @@ func testAccWorkspace_timeout(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckDirectory(ctx, t)
 			acctest.PreCheckDirectoryServiceSimpleDirectory(ctx, t)
 			acctest.PreCheckHasIAMRole(ctx, t, "workspaces_DefaultRole")
