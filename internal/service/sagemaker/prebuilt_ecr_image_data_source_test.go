@@ -10,6 +10,7 @@ import (
 )
 
 func TestAccSageMakerPrebuiltECRImageDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	expectedID := tfsagemaker.PrebuiltECRImageIDByRegion_factorMachines[acctest.Region()]
 
 	dataSourceName := "data.aws_sagemaker_prebuilt_ecr_image.test"
@@ -32,6 +33,7 @@ func TestAccSageMakerPrebuiltECRImageDataSource_basic(t *testing.T) {
 }
 
 func TestAccSageMakerPrebuiltECRImageDataSource_region(t *testing.T) {
+	ctx := acctest.Context(t)
 	expectedID := tfsagemaker.PrebuiltECRImageIDByRegion_sparkML[acctest.Region()]
 
 	dataSourceName := "data.aws_sagemaker_prebuilt_ecr_image.test"
