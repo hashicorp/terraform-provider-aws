@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccRedshiftServerlessCredentialsDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_redshiftserverless_credentials.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
