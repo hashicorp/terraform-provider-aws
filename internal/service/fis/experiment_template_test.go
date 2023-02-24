@@ -25,7 +25,7 @@ func TestAccFISExperimentTemplate_basic(t *testing.T) {
 	var conf types.ExperimentTemplate
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, fis.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckExperimentTemplateDestroy(ctx),
@@ -75,7 +75,7 @@ func TestAccFISExperimentTemplate_disappears(t *testing.T) {
 	var conf types.ExperimentTemplate
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, fis.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckExperimentTemplateDestroy(ctx),
@@ -99,7 +99,7 @@ func TestAccFISExperimentTemplate_update(t *testing.T) {
 	var conf types.ExperimentTemplate
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, fis.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckExperimentTemplateDestroy(ctx),
@@ -169,7 +169,7 @@ func TestAccFISExperimentTemplate_spot(t *testing.T) {
 	var conf types.ExperimentTemplate
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, fis.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckExperimentTemplateDestroy(ctx),
