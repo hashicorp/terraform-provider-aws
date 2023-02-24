@@ -51,4 +51,4 @@ In addition to all arguments above, the following attributes are exported:
 * `transit_gateway_id` - ID of the transit gateway.
 * `transit_gateway_owner_id` - The ID of the AWS account that owns the transit gateway.
 * `association_state` - The state of the association (see [the underlying AWS API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_TransitGatewayAttachmentAssociation.html) for valid values).
-*	`association_transit_gateway_route_table_id` - The ID of the route table for the transit gateway.
+* `association_transit_gateway_route_table_id` - The ID of the route table for the transit gateway.
