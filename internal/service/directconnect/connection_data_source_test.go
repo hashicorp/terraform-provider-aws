@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccDirectConnectConnectionDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_dx_connection.test"
 	datasourceName := "data.aws_dx_connection.test"

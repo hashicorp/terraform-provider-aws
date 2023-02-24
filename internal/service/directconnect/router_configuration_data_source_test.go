@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccDirectConnectRouterConfigurationDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	key := "VIRTUAL_INTERFACE_ID"
 	virtualInterfaceId := os.Getenv(key)
 	if virtualInterfaceId == "" {

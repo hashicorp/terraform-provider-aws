@@ -9,6 +9,7 @@ import (
 )
 
 func TestAccDirectConnectLocationDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	dsResourceName := "data.aws_dx_location.test"
 
 	resource.ParallelTest(t, resource.TestCase{

@@ -14,6 +14,7 @@ import (
 )
 
 func TestAccDirectConnectMacSecKey_withCkn(t *testing.T) {
+	ctx := acctest.Context(t)
 	// Requires an existing MACsec-capable DX connection set as environmental variable
 	key := "DX_CONNECTION_ID"
 	connectionId := os.Getenv(key)
@@ -49,6 +50,7 @@ func TestAccDirectConnectMacSecKey_withCkn(t *testing.T) {
 }
 
 func TestAccDirectConnectMacSecKey_withSecret(t *testing.T) {
+	ctx := acctest.Context(t)
 	// Requires an existing MACsec-capable DX connection set as environmental variable
 	dxKey := "DX_CONNECTION_ID"
 	connectionId := os.Getenv(dxKey)
