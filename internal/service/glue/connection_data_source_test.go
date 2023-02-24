@@ -12,6 +12,7 @@ import (
 )
 
 func TestAccGlueConnectionDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_glue_connection.test"
 	datasourceName := "data.aws_glue_connection.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccGlueCatalogTableDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_glue_catalog_table.test"
 	datasourceName := "data.aws_glue_catalog_table.test"
 

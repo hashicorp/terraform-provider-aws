@@ -9,6 +9,7 @@ import (
 )
 
 func testAccDataCatalogEncryptionSettingsDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	t.Skipf("Skipping aws_glue_data_catalog_encryption_settings tests due to potential KMS key corruption")
 
 	resourceName := "aws_glue_data_catalog_encryption_settings.test"
