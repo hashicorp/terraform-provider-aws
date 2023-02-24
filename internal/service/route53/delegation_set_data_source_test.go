@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccRoute53DelegationSetDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_route53_delegation_set.dset"
 	resourceName := "aws_route53_delegation_set.dset"
 
