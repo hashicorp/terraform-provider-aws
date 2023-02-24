@@ -15,6 +15,7 @@ import (
 )
 
 func TestAccS3BucketObjectsDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rInt := sdkacctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -41,6 +42,7 @@ func TestAccS3BucketObjectsDataSource_basic(t *testing.T) {
 }
 
 func TestAccS3BucketObjectsDataSource_basicViaAccessPoint(t *testing.T) {
+	ctx := acctest.Context(t)
 	rInt := sdkacctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -67,6 +69,7 @@ func TestAccS3BucketObjectsDataSource_basicViaAccessPoint(t *testing.T) {
 }
 
 func TestAccS3BucketObjectsDataSource_all(t *testing.T) {
+	ctx := acctest.Context(t)
 	rInt := sdkacctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -98,6 +101,7 @@ func TestAccS3BucketObjectsDataSource_all(t *testing.T) {
 }
 
 func TestAccS3BucketObjectsDataSource_prefixes(t *testing.T) {
+	ctx := acctest.Context(t)
 	rInt := sdkacctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -128,6 +132,7 @@ func TestAccS3BucketObjectsDataSource_prefixes(t *testing.T) {
 }
 
 func TestAccS3BucketObjectsDataSource_encoded(t *testing.T) {
+	ctx := acctest.Context(t)
 	rInt := sdkacctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -154,6 +159,7 @@ func TestAccS3BucketObjectsDataSource_encoded(t *testing.T) {
 }
 
 func TestAccS3BucketObjectsDataSource_maxKeys(t *testing.T) {
+	ctx := acctest.Context(t)
 	rInt := sdkacctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -180,6 +186,7 @@ func TestAccS3BucketObjectsDataSource_maxKeys(t *testing.T) {
 }
 
 func TestAccS3BucketObjectsDataSource_startAfter(t *testing.T) {
+	ctx := acctest.Context(t)
 	rInt := sdkacctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -205,6 +212,7 @@ func TestAccS3BucketObjectsDataSource_startAfter(t *testing.T) {
 }
 
 func TestAccS3BucketObjectsDataSource_fetchOwner(t *testing.T) {
+	ctx := acctest.Context(t)
 	rInt := sdkacctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
