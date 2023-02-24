@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccKinesisStreamConsumerDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_kinesis_stream_consumer.test"
 	resourceName := "aws_kinesis_stream_consumer.test"
@@ -37,6 +38,7 @@ func TestAccKinesisStreamConsumerDataSource_basic(t *testing.T) {
 }
 
 func TestAccKinesisStreamConsumerDataSource_name(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_kinesis_stream_consumer.test"
 	resourceName := "aws_kinesis_stream_consumer.test"
@@ -63,6 +65,7 @@ func TestAccKinesisStreamConsumerDataSource_name(t *testing.T) {
 }
 
 func TestAccKinesisStreamConsumerDataSource_arn(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_kinesis_stream_consumer.test"
 	resourceName := "aws_kinesis_stream_consumer.test"
