@@ -92,6 +92,7 @@ func TestAccOrganizationsDelegatedAdministratorsDataSource_servicePrincipal(t *t
 }
 
 func TestAccOrganizationsDelegatedAdministratorsDataSource_empty(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_organizations_delegated_administrators.test"
 	servicePrincipal := "config-multiaccountsetup.amazonaws.com"
 
