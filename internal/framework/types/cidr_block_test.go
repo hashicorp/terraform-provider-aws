@@ -16,9 +16,8 @@ func TestCIDRBlockTypeValueFromTerraform(t *testing.T) {
 	t.Parallel()
 
 	tests := map[string]struct {
-		val         tftypes.Value
-		expected    attr.Value
-		expectError bool
+		val      tftypes.Value
+		expected attr.Value
 	}{
 		"null value": {
 			val:      tftypes.NewValue(tftypes.String, nil),
@@ -33,8 +32,8 @@ func TestCIDRBlockTypeValueFromTerraform(t *testing.T) {
 			expected: fwtypes.CIDRBlockValue("0.0.0.0/0"),
 		},
 		"invalid CIDR block": {
-			val:         tftypes.NewValue(tftypes.String, "not ok"),
-			expectError: true,
+			val:      tftypes.NewValue(tftypes.String, "not ok"),
+			expected: fwtypes.CIDRBlockUnknown(),
 		},
 	}
 
@@ -46,10 +45,7 @@ func TestCIDRBlockTypeValueFromTerraform(t *testing.T) {
 			ctx := context.Background()
 			val, err := fwtypes.CIDRBlockType.ValueFromTerraform(ctx, test.val)
 
-			if err == nil && test.expectError {
-				t.Fatal("expected error, got no error")
-			}
-			if err != nil && !test.expectError {
+			if err != nil {
 				t.Fatalf("got unexpected error: %s", err)
 			}
 

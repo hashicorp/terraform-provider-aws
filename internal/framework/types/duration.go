@@ -69,7 +69,7 @@ func (d durationType) ValueFromTerraform(_ context.Context, in tftypes.Value) (a
 	v, err := time.ParseDuration(s)
 
 	if err != nil {
-		return nil, err
+		return DurationUnknown(), nil //nolint: nilerr // Must not return validation errors
 	}
 
 	return DurationValue(v), nil

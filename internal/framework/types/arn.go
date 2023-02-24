@@ -68,7 +68,7 @@ func (t arnType) ValueFromTerraform(_ context.Context, in tftypes.Value) (attr.V
 	v, err := arn.Parse(s)
 
 	if err != nil {
-		return nil, err
+		return ARNUnknown(), nil //nolint: nilerr // Must not return validation errors
 	}
 
 	return ARNValue(v), nil

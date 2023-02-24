@@ -55,7 +55,7 @@ func (t cidrBlockType) ValueFromTerraform(_ context.Context, in tftypes.Value) (
 	}
 
 	if err := verify.ValidateCIDRBlock(s); err != nil {
-		return nil, err
+		return CIDRBlockUnknown(), nil //nolint: nilerr // Must not return validation errors
 	}
 
 	return CIDRBlockValue(s), nil
