@@ -29,7 +29,7 @@ func TestAccCodePipelineWebhook_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckSupported(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, codepipeline.EndpointsID),
@@ -100,7 +100,7 @@ func TestAccCodePipelineWebhook_ipAuth(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckSupported(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, codepipeline.EndpointsID),
@@ -136,7 +136,7 @@ func TestAccCodePipelineWebhook_unauthenticated(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckSupported(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, codepipeline.EndpointsID),
@@ -170,7 +170,7 @@ func TestAccCodePipelineWebhook_tags(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckSupported(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, codepipeline.EndpointsID),
@@ -235,7 +235,7 @@ func TestAccCodePipelineWebhook_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckSupported(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, codepipeline.EndpointsID),
@@ -265,7 +265,7 @@ func TestAccCodePipelineWebhook_UpdateAuthentication_secretToken(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckSupported(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, codepipeline.EndpointsID),
