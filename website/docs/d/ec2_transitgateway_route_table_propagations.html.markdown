@@ -30,9 +30,6 @@ The following arguments are optional:
 
 * `filter` - (Optional) Custom filter block as described below.
 
-* `tags` - (Optional) Mapping of tags, each pair of which must exactly match
-  a pair on the desired transit gateway route table association.
-
 More complex filters can be expressed using one or more `filter` sub-blocks,
 which take the following arguments:
 
