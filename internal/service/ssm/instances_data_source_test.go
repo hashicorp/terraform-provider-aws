@@ -14,6 +14,7 @@ import (
 )
 
 func TestAccSSMInstancesDataSource_filter(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_ssm_instances.test"
 	resourceName := "aws_instance.test"

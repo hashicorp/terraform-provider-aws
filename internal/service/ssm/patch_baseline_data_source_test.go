@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccSSMPatchBaselineDataSource_existingBaseline(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ssm_patch_baseline.test"
 
 	resource.ParallelTest(t, resource.TestCase{

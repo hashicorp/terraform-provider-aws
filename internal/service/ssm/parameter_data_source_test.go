@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccSSMParameterDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "data.aws_ssm_parameter.test"
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -45,6 +46,7 @@ func TestAccSSMParameterDataSource_basic(t *testing.T) {
 }
 
 func TestAccSSMParameterDataSource_fullPath(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "data.aws_ssm_parameter.test"
 	name := sdkacctest.RandomWithPrefix("/tf-acc-test/tf-acc-test")
 

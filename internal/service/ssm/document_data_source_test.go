@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccSSMDocumentDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "data.aws_ssm_document.test"
 	name := fmt.Sprintf("test_document-%d", sdkacctest.RandInt())
 
@@ -46,6 +47,7 @@ func TestAccSSMDocumentDataSource_basic(t *testing.T) {
 }
 
 func TestAccSSMDocumentDataSource_managed(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "data.aws_ssm_document.test"
 
 	resource.ParallelTest(t, resource.TestCase{

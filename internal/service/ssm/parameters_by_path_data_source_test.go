@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccSSMParametersByPathDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "data.aws_ssm_parameters_by_path.test"
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -69,6 +70,7 @@ data "aws_ssm_parameters_by_path" "test" {
 }
 
 func TestAccSSMParametersByPathDataSource_withRecursion(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "data.aws_ssm_parameters_by_path.recursive"
 	pathPrefix := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
