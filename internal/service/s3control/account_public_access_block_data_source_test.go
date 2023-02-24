@@ -9,6 +9,7 @@ import (
 )
 
 func testAccAccountPublicAccessBlockDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_s3_account_public_access_block.test"
 	dataSourceName := "data.aws_s3_account_public_access_block.test"
 
