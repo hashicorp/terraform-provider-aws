@@ -297,7 +297,7 @@ func testAccMultiplexBaseConfig() string {
 	return `
 data "aws_availability_zones" "available" {
   state         = "available"
-  exclude_names = ["us-west-2-las-1a"]
+  exclude_names = ["us-west-2-las-1a"] # not available in this zone
 
   filter {
     name   = "opt-in-status"
