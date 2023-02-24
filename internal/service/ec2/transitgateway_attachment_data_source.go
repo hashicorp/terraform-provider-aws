@@ -112,8 +112,13 @@ func dataSourceTransitGatewayAttachmentRead(ctx context.Context, d *schema.Resou
 	d.Set("transit_gateway_attachment_id", transitGatewayAttachmentID)
 	d.Set("transit_gateway_id", transitGatewayAttachment.TransitGatewayId)
 	d.Set("transit_gateway_owner_id", transitGatewayAttachment.TransitGatewayOwnerId)
-	d.Set("association_state", transitGatewayAttachment.Association.State)
-	d.Set("association_transit_gateway_route_table_id", transitGatewayAttachment.Association.TransitGatewayRouteTableId)
+	if v := transitGatewayAttachment.Association; v != nil {
+		d.Set("association_state", v.State)
+		d.Set("association_transit_gateway_route_table_id", v.TransitGatewayRouteTableId)
+	} else {
+		d.Set("association_state", nil)
+		d.Set("association_transit_gateway_route_table_id", nil)
+	}
 
 	if err := d.Set("tags", KeyValueTags(ctx, transitGatewayAttachment.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
