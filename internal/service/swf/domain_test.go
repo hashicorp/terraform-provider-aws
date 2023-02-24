@@ -34,7 +34,7 @@ func TestAccSWFDomain_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckDomainTestingEnabled(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, swf.EndpointsID),
@@ -68,7 +68,7 @@ func TestAccSWFDomain_nameGenerated(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckDomainTestingEnabled(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, swf.EndpointsID),
@@ -98,7 +98,7 @@ func TestAccSWFDomain_namePrefix(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckDomainTestingEnabled(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, swf.EndpointsID),
@@ -129,7 +129,7 @@ func TestAccSWFDomain_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckDomainTestingEnabled(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, swf.EndpointsID),
@@ -177,7 +177,7 @@ func TestAccSWFDomain_description(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckDomainTestingEnabled(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, swf.EndpointsID),
