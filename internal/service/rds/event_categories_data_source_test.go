@@ -13,7 +13,7 @@ func TestAccRDSEventCategoriesDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_db_event_categories.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -44,7 +44,7 @@ func TestAccRDSEventCategoriesDataSource_sourceType(t *testing.T) {
 	dataSourceName := "data.aws_db_event_categories.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{

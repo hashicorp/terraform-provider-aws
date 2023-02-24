@@ -23,7 +23,7 @@ func TestAccRDSSubnetGroup_basic(t *testing.T) {
 	resourceName := "aws_db_subnet_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSubnetGroupDestroy(ctx),
@@ -58,7 +58,7 @@ func TestAccRDSSubnetGroup_disappears(t *testing.T) {
 	resourceName := "aws_db_subnet_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSubnetGroupDestroy(ctx),
@@ -82,7 +82,7 @@ func TestAccRDSSubnetGroup_nameGenerated(t *testing.T) {
 	resourceName := "aws_db_subnet_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSubnetGroupDestroy(ctx),
@@ -110,7 +110,7 @@ func TestAccRDSSubnetGroup_namePrefix(t *testing.T) {
 	resourceName := "aws_db_subnet_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSubnetGroupDestroy(ctx),
@@ -139,7 +139,7 @@ func TestAccRDSSubnetGroup_tags(t *testing.T) {
 	resourceName := "aws_db_subnet_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSubnetGroupDestroy(ctx),
@@ -186,7 +186,7 @@ func TestAccRDSSubnetGroup_dualStack(t *testing.T) {
 	rName := fmt.Sprintf("tf-test-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSubnetGroupDestroy(ctx),
@@ -211,7 +211,7 @@ func TestAccRDSSubnetGroup_updateDescription(t *testing.T) {
 	resourceName := "aws_db_subnet_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSubnetGroupDestroy(ctx),
@@ -248,7 +248,7 @@ func TestAccRDSSubnetGroup_updateSubnets(t *testing.T) {
 	resourceName := "aws_db_subnet_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSubnetGroupDestroy(ctx),

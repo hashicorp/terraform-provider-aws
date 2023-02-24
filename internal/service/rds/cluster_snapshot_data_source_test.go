@@ -17,7 +17,7 @@ func TestAccRDSClusterSnapshotDataSource_dbClusterSnapshotIdentifier(t *testing.
 	resourceName := "aws_db_cluster_snapshot.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -54,7 +54,7 @@ func TestAccRDSClusterSnapshotDataSource_dbClusterIdentifier(t *testing.T) {
 	resourceName := "aws_db_cluster_snapshot.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -91,7 +91,7 @@ func TestAccRDSClusterSnapshotDataSource_mostRecent(t *testing.T) {
 	resourceName := "aws_db_cluster_snapshot.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{

@@ -101,7 +101,7 @@ func TestAccRDSGlobalCluster_basic(t *testing.T) {
 	resourceName := "aws_rds_global_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGlobalCluster(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalCluster(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGlobalClusterDestroy(ctx),
@@ -136,7 +136,7 @@ func TestAccRDSGlobalCluster_disappears(t *testing.T) {
 	resourceName := "aws_rds_global_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGlobalCluster(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalCluster(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGlobalClusterDestroy(ctx),
@@ -160,7 +160,7 @@ func TestAccRDSGlobalCluster_databaseName(t *testing.T) {
 	resourceName := "aws_rds_global_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGlobalCluster(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalCluster(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGlobalClusterDestroy(ctx),
@@ -196,7 +196,7 @@ func TestAccRDSGlobalCluster_deletionProtection(t *testing.T) {
 	resourceName := "aws_rds_global_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGlobalCluster(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalCluster(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGlobalClusterDestroy(ctx),
@@ -232,7 +232,7 @@ func TestAccRDSGlobalCluster_Engine_aurora(t *testing.T) {
 	resourceName := "aws_rds_global_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGlobalCluster(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalCluster(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGlobalClusterDestroy(ctx),
@@ -260,7 +260,7 @@ func TestAccRDSGlobalCluster_EngineVersion_aurora(t *testing.T) {
 	resourceName := "aws_rds_global_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGlobalCluster(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalCluster(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGlobalClusterDestroy(ctx),
@@ -292,7 +292,7 @@ func TestAccRDSGlobalCluster_EngineVersion_updateMinor(t *testing.T) {
 	resourceName := "aws_rds_global_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGlobalCluster(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalCluster(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGlobalClusterDestroy(ctx),
@@ -333,7 +333,7 @@ func TestAccRDSGlobalCluster_EngineVersion_updateMajor(t *testing.T) {
 	resourceName := "aws_rds_global_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGlobalCluster(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalCluster(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGlobalClusterDestroy(ctx),
@@ -374,7 +374,7 @@ func TestAccRDSGlobalCluster_EngineVersion_updateMinorMultiRegion(t *testing.T) 
 	resourceName := "aws_rds_global_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGlobalCluster(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalCluster(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckGlobalClusterDestroy(ctx),
@@ -410,7 +410,7 @@ func TestAccRDSGlobalCluster_EngineVersion_updateMajorMultiRegion(t *testing.T) 
 	resourceName := "aws_rds_global_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGlobalCluster(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalCluster(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckGlobalClusterDestroy(ctx),
@@ -440,7 +440,7 @@ func TestAccRDSGlobalCluster_EngineVersion_auroraMySQL(t *testing.T) {
 	resourceName := "aws_rds_global_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGlobalCluster(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalCluster(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGlobalClusterDestroy(ctx),
@@ -468,7 +468,7 @@ func TestAccRDSGlobalCluster_EngineVersion_auroraPostgreSQL(t *testing.T) {
 	resourceName := "aws_rds_global_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGlobalCluster(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalCluster(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGlobalClusterDestroy(ctx),
@@ -497,7 +497,7 @@ func TestAccRDSGlobalCluster_sourceDBClusterIdentifier(t *testing.T) {
 	resourceName := "aws_rds_global_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGlobalCluster(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalCluster(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGlobalClusterDestroy(ctx),
@@ -527,7 +527,7 @@ func TestAccRDSGlobalCluster_SourceDBClusterIdentifier_storageEncrypted(t *testi
 	resourceName := "aws_rds_global_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGlobalCluster(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalCluster(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGlobalClusterDestroy(ctx),
@@ -556,7 +556,7 @@ func TestAccRDSGlobalCluster_storageEncrypted(t *testing.T) {
 	resourceName := "aws_rds_global_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckGlobalCluster(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalCluster(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGlobalClusterDestroy(ctx),
