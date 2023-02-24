@@ -12,6 +12,7 @@ import (
 )
 
 func TestAccIVSStreamKeyDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ivs_stream_key.test"
 	channelResourceName := "aws_ivs_channel.test"
 
