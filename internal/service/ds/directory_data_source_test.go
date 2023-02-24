@@ -52,6 +52,7 @@ func TestAccDSDirectoryDataSource_simpleAD(t *testing.T) {
 }
 
 func TestAccDSDirectoryDataSource_microsoftAD(t *testing.T) {
+	ctx := acctest.Context(t)
 	alias := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_directory_service_directory.test"
 	dataSourceName := "data.aws_directory_service_directory.test"
