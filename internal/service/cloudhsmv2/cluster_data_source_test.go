@@ -11,6 +11,7 @@ import (
 )
 
 func testAccDataSourceCluster_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_cloudhsm_v2_cluster.cluster"
 	dataSourceName := "data.aws_cloudhsm_v2_cluster.default"
 
