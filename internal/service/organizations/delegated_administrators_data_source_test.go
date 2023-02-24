@@ -17,7 +17,7 @@ func TestAccOrganizationsDelegatedAdministratorsDataSource_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
@@ -45,7 +45,7 @@ func TestAccOrganizationsDelegatedAdministratorsDataSource_multiple(t *testing.T
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
@@ -72,7 +72,7 @@ func TestAccOrganizationsDelegatedAdministratorsDataSource_servicePrincipal(t *t
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
@@ -96,7 +96,7 @@ func TestAccOrganizationsDelegatedAdministratorsDataSource_empty(t *testing.T) {
 	servicePrincipal := "config-multiaccountsetup.amazonaws.com"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
