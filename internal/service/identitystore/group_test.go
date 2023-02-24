@@ -25,7 +25,7 @@ func TestAccIdentityStoreGroup_basic(t *testing.T) {
 	displayName := "Acceptance Test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(names.IdentityStoreEndpointID, t)
 			testAccPreCheck(ctx, t)
 		},
@@ -59,7 +59,7 @@ func TestAccIdentityStoreGroup_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(names.IdentityStoreEndpointID, t)
 			testAccPreCheckSSOAdminInstances(ctx, t)
 			testAccPreCheck(ctx, t)

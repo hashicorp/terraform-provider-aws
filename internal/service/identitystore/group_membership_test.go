@@ -32,7 +32,7 @@ func TestAccIdentityStoreGroupMembership_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(names.IdentityStoreEndpointID, t)
 			testAccPreCheck(ctx, t)
 		},
@@ -70,7 +70,7 @@ func TestAccIdentityStoreGroupMembership_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(names.IdentityStoreEndpointID, t)
 			testAccPreCheckSSOAdminInstances(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -104,7 +104,7 @@ func TestAccIdentityStoreGroupMembership_GroupId(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(names.IdentityStoreEndpointID, t)
 			testAccPreCheck(ctx, t)
 		},
@@ -148,7 +148,7 @@ func TestAccIdentityStoreGroupMembership_MemberId(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(names.IdentityStoreEndpointID, t)
 			testAccPreCheck(ctx, t)
 		},
