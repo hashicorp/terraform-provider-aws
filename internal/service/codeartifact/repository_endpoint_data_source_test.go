@@ -11,6 +11,7 @@ import (
 )
 
 func testAccRepositoryEndpointDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_codeartifact_repository_endpoint.test"
 
@@ -52,6 +53,7 @@ func testAccRepositoryEndpointDataSource_basic(t *testing.T) {
 }
 
 func testAccRepositoryEndpointDataSource_owner(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_codeartifact_repository_endpoint.test"
 
