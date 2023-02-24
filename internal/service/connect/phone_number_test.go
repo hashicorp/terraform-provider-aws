@@ -24,7 +24,7 @@ func testAccPhoneNumber_basic(t *testing.T) {
 	resourceName := "aws_connect_phone_number.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPhoneNumberDestroy(ctx),
@@ -59,7 +59,7 @@ func testAccPhoneNumber_description(t *testing.T) {
 	resourceName := "aws_connect_phone_number.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPhoneNumberDestroy(ctx),
@@ -88,7 +88,7 @@ func testAccPhoneNumber_prefix(t *testing.T) {
 	resourceName := "aws_connect_phone_number.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPhoneNumberDestroy(ctx),
@@ -120,7 +120,7 @@ func testAccPhoneNumber_targetARN(t *testing.T) {
 	resourceName := "aws_connect_phone_number.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPhoneNumberDestroy(ctx),
@@ -155,7 +155,7 @@ func testAccPhoneNumber_tags(t *testing.T) {
 	resourceName := "aws_connect_phone_number.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPhoneNumberDestroy(ctx),
@@ -201,7 +201,7 @@ func testAccPhoneNumber_disappears(t *testing.T) {
 	resourceName := "aws_connect_phone_number.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPhoneNumberDestroy(ctx),

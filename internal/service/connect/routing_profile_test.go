@@ -27,7 +27,7 @@ func testAccRoutingProfile_basic(t *testing.T) {
 	updatedDescription := "Updated"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRoutingProfileDestroy(ctx),
@@ -85,7 +85,7 @@ func testAccRoutingProfile_disappears(t *testing.T) {
 	resourceName := "aws_connect_routing_profile.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRoutingProfileDestroy(ctx),
@@ -112,7 +112,7 @@ func testAccRoutingProfile_updateConcurrency(t *testing.T) {
 	description := "testMediaConcurrencies"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRoutingProfileDestroy(ctx),
@@ -166,7 +166,7 @@ func testAccRoutingProfile_updateDefaultOutboundQueue(t *testing.T) {
 	resourceName := "aws_connect_routing_profile.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRoutingProfileDestroy(ctx),
@@ -223,7 +223,7 @@ func testAccRoutingProfile_updateQueues(t *testing.T) {
 	description := "testQueueConfigs"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRoutingProfileDestroy(ctx),
@@ -345,7 +345,7 @@ func testAccRoutingProfile_updateTags(t *testing.T) {
 	resourceName := "aws_connect_routing_profile.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRoutingProfileDestroy(ctx),

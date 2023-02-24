@@ -27,7 +27,7 @@ func testAccHoursOfOperation_basic(t *testing.T) {
 	resourceName := "aws_connect_hours_of_operation.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckHoursOfOperationDestroy(ctx),
@@ -101,7 +101,7 @@ func testAccHoursOfOperation_updateConfig(t *testing.T) {
 	resourceName := "aws_connect_hours_of_operation.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckHoursOfOperationDestroy(ctx),
@@ -166,7 +166,7 @@ func testAccHoursOfOperation_updateTags(t *testing.T) {
 	resourceName := "aws_connect_hours_of_operation.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckHoursOfOperationDestroy(ctx),
@@ -215,7 +215,7 @@ func testAccHoursOfOperation_disappears(t *testing.T) {
 	resourceName := "aws_connect_hours_of_operation.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckHoursOfOperationDestroy(ctx),

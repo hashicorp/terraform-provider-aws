@@ -16,7 +16,7 @@ func testAccInstanceStorageConfigDataSource_KinesisFirehoseConfig(t *testing.T) 
 	datasourceName := "data.aws_connect_instance_storage_config.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -43,7 +43,7 @@ func testAccInstanceStorageConfigDataSource_KinesisStreamConfig(t *testing.T) {
 	datasourceName := "data.aws_connect_instance_storage_config.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -69,7 +69,7 @@ func testAccInstanceStorageConfigDataSource_KinesisVideoStreamConfig(t *testing.
 	datasourceName := "data.aws_connect_instance_storage_config.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -100,7 +100,7 @@ func testAccInstanceStorageConfigDataSource_S3Config(t *testing.T) {
 	datasourceName := "data.aws_connect_instance_storage_config.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
