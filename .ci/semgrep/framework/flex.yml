@@ -1,0 +1,13 @@
+rules:
+  - id: flex-type-from-framework
+    languages: [go]
+    message: Prefer `flex.<type>FromFramework` to `aws.<type>(x.Value<type>())`
+    paths:
+      include:
+        - internal/service/cognitoidp
+    patterns:
+      - pattern: aws.$TYPE($X.$VALFUNC())
+      - metavariable-comparison:
+          metavariable: $VALFUNC
+          comparison: re.match("\AValue", str($VALFUNC))
+    severity: WARNING

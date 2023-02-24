@@ -3,6 +3,8 @@ package cognitoidp
 import (
 	"context"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -219,4 +221,59 @@ func dataSourceUserPoolClientRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	return diags
+}
+
+func flattenUserPoolClientAnalyticsConfig(analyticsConfig *cognitoidentityprovider.AnalyticsConfigurationType) []interface{} {
+	if analyticsConfig == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"user_data_shared": aws.BoolValue(analyticsConfig.UserDataShared),
+	}
+
+	if analyticsConfig.ExternalId != nil {
+		m["external_id"] = aws.StringValue(analyticsConfig.ExternalId)
+	}
+
+	if analyticsConfig.RoleArn != nil {
+		m["role_arn"] = aws.StringValue(analyticsConfig.RoleArn)
+	}
+
+	if analyticsConfig.ApplicationId != nil {
+		m["application_id"] = aws.StringValue(analyticsConfig.ApplicationId)
+	}
+
+	if analyticsConfig.ApplicationArn != nil {
+		m["application_arn"] = aws.StringValue(analyticsConfig.ApplicationArn)
+	}
+
+	return []interface{}{m}
+}
+
+func flattenUserPoolClientTokenValidityUnitsType(tokenValidityConfig *cognitoidentityprovider.TokenValidityUnitsType) []interface{} {
+	if tokenValidityConfig == nil {
+		return nil
+	}
+
+	//tokenValidityConfig is never nil and if everything is empty it causes diffs
+	if tokenValidityConfig.IdToken == nil && tokenValidityConfig.AccessToken == nil && tokenValidityConfig.RefreshToken == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if tokenValidityConfig.IdToken != nil {
+		m["id_token"] = aws.StringValue(tokenValidityConfig.IdToken)
+	}
+
+	if tokenValidityConfig.AccessToken != nil {
+		m["access_token"] = aws.StringValue(tokenValidityConfig.AccessToken)
+	}
+
+	if tokenValidityConfig.RefreshToken != nil {
+		m["refresh_token"] = aws.StringValue(tokenValidityConfig.RefreshToken)
+	}
+
+	return []interface{}{m}
 }

@@ -16,7 +16,11 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
-	return []*types.ServicePackageFrameworkResource{}
+	return []*types.ServicePackageFrameworkResource{
+		{
+			Factory: newResourceUserPoolClient,
+		},
+	}
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
@@ -69,10 +73,6 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceUserPool,
 			TypeName: "aws_cognito_user_pool",
-		},
-		{
-			Factory:  ResourceUserPoolClient,
-			TypeName: "aws_cognito_user_pool_client",
 		},
 		{
 			Factory:  ResourceUserPoolDomain,
