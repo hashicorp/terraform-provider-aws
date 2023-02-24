@@ -10,6 +10,7 @@ import (
 )
 
 func TestAccServiceCatalogPortfolioConstraintsDataSource_Constraint_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_servicecatalog_constraint.test"
 	dataSourceName := "data.aws_servicecatalog_portfolio_constraints.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

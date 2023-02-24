@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccServiceCatalogLaunchPathsDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_servicecatalog_launch_paths.test"
 	resourceNameProduct := "aws_servicecatalog_product.test"
 	resourceNamePortfolio := "aws_servicecatalog_portfolio.test"
