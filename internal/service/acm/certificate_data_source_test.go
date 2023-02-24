@@ -15,6 +15,7 @@ import (
 const certificateRE = `^arn:[^:]+:acm:[^:]+:[^:]+:certificate/.+$`
 
 func TestAccACMCertificateDataSource_singleIssued(t *testing.T) {
+	ctx := acctest.Context(t)
 	if os.Getenv("ACM_CERTIFICATE_ROOT_DOMAIN") == "" {
 		t.Skip("Environment variable ACM_CERTIFICATE_ROOT_DOMAIN is not set")
 	}
@@ -102,6 +103,7 @@ func TestAccACMCertificateDataSource_singleIssued(t *testing.T) {
 }
 
 func TestAccACMCertificateDataSource_multipleIssued(t *testing.T) {
+	ctx := acctest.Context(t)
 	if os.Getenv("ACM_CERTIFICATE_ROOT_DOMAIN") == "" {
 		t.Skip("Environment variable ACM_CERTIFICATE_ROOT_DOMAIN is not set")
 	}
@@ -166,6 +168,7 @@ func TestAccACMCertificateDataSource_multipleIssued(t *testing.T) {
 }
 
 func TestAccACMCertificateDataSource_noMatchReturnsError(t *testing.T) {
+	ctx := acctest.Context(t)
 	if os.Getenv("ACM_CERTIFICATE_ROOT_DOMAIN") == "" {
 		t.Skip("Environment variable ACM_CERTIFICATE_ROOT_DOMAIN is not set")
 	}
@@ -206,6 +209,7 @@ func TestAccACMCertificateDataSource_noMatchReturnsError(t *testing.T) {
 }
 
 func TestAccACMCertificateDataSource_keyTypes(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_acm_certificate.test"
 	dataSourceName := "data.aws_acm_certificate.test"
 	key := acctest.TLSRSAPrivateKeyPEM(t, 4096)
