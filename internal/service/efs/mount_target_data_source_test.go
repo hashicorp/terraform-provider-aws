@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccEFSMountTargetDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_efs_mount_target.test"
 	resourceName := "aws_efs_mount_target.test"
@@ -41,6 +42,7 @@ func TestAccEFSMountTargetDataSource_basic(t *testing.T) {
 }
 
 func TestAccEFSMountTargetDataSource_byAccessPointID(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_efs_mount_target.test"
 	resourceName := "aws_efs_mount_target.test"
@@ -71,6 +73,7 @@ func TestAccEFSMountTargetDataSource_byAccessPointID(t *testing.T) {
 }
 
 func TestAccEFSMountTargetDataSource_byFileSystemID(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_efs_mount_target.test"
 	resourceName := "aws_efs_mount_target.test"
