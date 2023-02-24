@@ -27,7 +27,7 @@ func DataSourceTransitGatewayAttachments() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"filter": DataSourceFiltersSchema(),
+			"filter": CustomFiltersSchema(),
 			"tags":   tftags.TagsSchemaComputed(),
 		},
 	}
