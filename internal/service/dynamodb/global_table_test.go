@@ -26,7 +26,7 @@ func TestAccDynamoDBGlobalTable_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckGlobalTable(ctx, t)
 			testAccGlobalTablePreCheck(t)
 		},
@@ -71,7 +71,7 @@ func TestAccDynamoDBGlobalTable_multipleRegions(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			testAccPreCheckGlobalTable(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 			testAccGlobalTablePreCheck(t)
