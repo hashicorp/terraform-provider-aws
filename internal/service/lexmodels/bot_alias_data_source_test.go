@@ -10,6 +10,7 @@ import (
 )
 
 func testAccBotAliasDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 	dataSourceName := "data.aws_lex_bot_alias.test"
 	resourceName := "aws_lex_bot_alias.test"

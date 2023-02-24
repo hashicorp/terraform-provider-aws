@@ -10,6 +10,7 @@ import (
 )
 
 func TestAccLexModelsBotDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 	dataSourceName := "data.aws_lex_bot.test"
 	resourceName := "aws_lex_bot.test"
@@ -51,6 +52,7 @@ func TestAccLexModelsBotDataSource_basic(t *testing.T) {
 }
 
 func testAccBotDataSource_withVersion(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 	dataSourceName := "data.aws_lex_bot.test"
 	resourceName := "aws_lex_bot.test"

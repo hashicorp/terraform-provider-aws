@@ -10,6 +10,7 @@ import (
 )
 
 func TestAccLexModelsIntentDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 	dataSourceName := "data.aws_lex_intent.test"
 	resourceName := "aws_lex_intent.test"
@@ -42,6 +43,7 @@ func TestAccLexModelsIntentDataSource_basic(t *testing.T) {
 }
 
 func TestAccLexModelsIntentDataSource_withVersion(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 	dataSourceName := "data.aws_lex_intent.test"
 	resourceName := "aws_lex_intent.test"

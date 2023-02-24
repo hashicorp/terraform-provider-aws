@@ -10,6 +10,7 @@ import (
 )
 
 func TestAccLexModelsSlotTypeDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 	dataSourceName := "data.aws_lex_slot_type.test"
 	resourceName := "aws_lex_slot_type.test"
@@ -43,6 +44,7 @@ func TestAccLexModelsSlotTypeDataSource_basic(t *testing.T) {
 }
 
 func TestAccLexModelsSlotTypeDataSource_withVersion(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 	dataSourceName := "data.aws_lex_slot_type.test"
 	resourceName := "aws_lex_slot_type.test"
