@@ -78,11 +78,11 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
 	vpc_id             = aws_vpc.test.id
 }
 resource "aws_ec2_transit_gateway_route_table" "test" {
-  transit_gateway_id = aws_ec2_transit_gateway.test.id
+	transit_gateway_id = aws_ec2_transit_gateway.test.id
 
-  tags = {
-    Name = %[1]q
-  }
+	tags = {
+		Name = %[1]q
+	}
 }
 resource "aws_ec2_transit_gateway_route_table_propagation" "test" {
 	transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.test.id
