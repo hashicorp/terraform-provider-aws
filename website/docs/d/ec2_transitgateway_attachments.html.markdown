@@ -1,37 +1,60 @@
 ---
-subcategory: "EC2 (Elastic Compute Cloud)"
+subcategory: "Transit Gateway"
 layout: "aws"
-page_title: "AWS: aws_ec2_transitgateway_attachments"
+page_title: "AWS: aws_ec2_transit_gateway_attachments"
 description: |-
-  Terraform data source for managing an AWS EC2 (Elastic Compute Cloud) Transitgateway Attachments.
+  Get information on EC2 Transit Gateway Attachments
 ---
 
-# Data Source: aws_ec2_transitgateway_attachments
+# Data Source: aws_ec2_transit_gateway_attachments
 
-Terraform data source for managing an AWS EC2 (Elastic Compute Cloud) Transitgateway Attachments.
+Get information on EC2 Transit Gateway Attachments.
 
 ## Example Usage
 
-### Basic Usage
+### By Filter
 
-```terraform
-data "aws_ec2_transitgateway_attachments" "example" {
+```hcl
+data "aws_ec2_transit_gateway_attachments" "filtered" {
+  filter {
+    name   = "state"
+    values = ["pendingAcceptance"]
+  }
+
+  filter {
+    name   = "resource-type"
+    values = ["vpc"]
+  }
+}
+
+data "aws_ec2_transit_gateway_attachment" "unit" {
+  count = length(data.aws_ec2_transit_gateway_attachments.filtered.ids)
+  id    = data.aws_ec2_transit_gateway_attachments.filtered.ids[count.index]
 }
 ```
 
 ## Argument Reference
 
-The following arguments are required:
+The following arguments are supported:
 
-* `example_arg` - (Required) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `filter` - (Optional) One or more configuration blocks containing name-values filters. Detailed below.
 
-The following arguments are optional:
+### filter Argument Reference
 
-* `optional_arg` - (Optional) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `name` - (Required) Name of the filter check available value on [official documentation][1]
+* `values` - (Required) List of one or more values for the filter.
 
-## Attributes Reference
+## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - ARN of the Transitgateway Attachments. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-* `example_attribute` - Concise description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `ids` A list of all attachments ids matching the filter. You can retrieve more information about the attachment using the [aws_ec2_transit_gateway_attachment][2] data source, searching by identifier.
+
+[1]: https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeTransitGatewayAttachments.html
+[2]: https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/ec2_transit_gateway_attachment
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `read` - (Default `20m`)
