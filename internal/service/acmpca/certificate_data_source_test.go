@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccACMPCACertificateDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_acmpca_certificate.test"
 	dataSourceName := "data.aws_acmpca_certificate.test"
 
