@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccLogsGroupsDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_cloudwatch_log_groups.test"
 	resource1Name := "aws_cloudwatch_log_group.test.0"
@@ -37,6 +38,7 @@ func TestAccLogsGroupsDataSource_basic(t *testing.T) {
 }
 
 func TestAccLogsGroupsDataSource_noPrefix(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_cloudwatch_log_groups.test"
 	resource1Name := "aws_cloudwatch_log_group.test.0"
