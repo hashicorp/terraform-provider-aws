@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccQLDBLedgerDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_qldb_ledger.test"
 	datasourceName := "data.aws_qldb_ledger.test"
