@@ -11,6 +11,7 @@ import (
 )
 
 func testAccWorkspaceAPIKey_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_grafana_workspace_api_key.test"
 	workspaceResourceName := "aws_grafana_workspace.test"
