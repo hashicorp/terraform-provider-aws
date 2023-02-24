@@ -12,6 +12,7 @@ import (
 )
 
 func TestAccECSTaskDefinitionDataSource_ecsTaskDefinition(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "data.aws_ecs_task_definition.mongo"
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(5))
 

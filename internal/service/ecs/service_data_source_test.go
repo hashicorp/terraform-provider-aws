@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccECSServiceDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ecs_service.test"
 	resourceName := "aws_ecs_service.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
