@@ -12,6 +12,7 @@ import (
 )
 
 func TestAccSQSQueueDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix("tf_acc_test_")
 	resourceName := "aws_sqs_queue.test"
 	datasourceName := "data.aws_sqs_queue.by_name"
@@ -33,6 +34,7 @@ func TestAccSQSQueueDataSource_basic(t *testing.T) {
 }
 
 func TestAccSQSQueueDataSource_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix("tf_acc_test_")
 	resourceName := "aws_sqs_queue.test"
 	datasourceName := "data.aws_sqs_queue.by_name"
