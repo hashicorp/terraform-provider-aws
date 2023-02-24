@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccAPIGatewayVPCLinkDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8))
 	resourceName := "aws_api_gateway_vpc_link.vpc_link"
 	dataSourceName := "data.aws_api_gateway_vpc_link.vpc_link"

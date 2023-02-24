@@ -10,6 +10,7 @@ import (
 )
 
 func TestAccAPIGatewayExportDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandString(8)
 	dataSourceName := "data.aws_api_gateway_export.test"
 

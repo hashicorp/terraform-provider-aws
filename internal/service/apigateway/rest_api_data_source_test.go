@@ -10,6 +10,7 @@ import (
 )
 
 func TestAccAPIGatewayRestAPIDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandString(8)
 	dataSourceName := "data.aws_api_gateway_rest_api.test"
 	resourceName := "aws_api_gateway_rest_api.test"
@@ -42,6 +43,7 @@ func TestAccAPIGatewayRestAPIDataSource_basic(t *testing.T) {
 }
 
 func TestAccAPIGatewayRestAPIDataSource_Endpoint_vpcEndpointIDs(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandString(8)
 	dataSourceName := "data.aws_api_gateway_rest_api.test"
 	resourceName := "aws_api_gateway_rest_api.test"

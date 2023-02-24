@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccAPIGatewayAPIKeyDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_api_key.test"
 	dataSourceName := "data.aws_api_gateway_api_key.test"
