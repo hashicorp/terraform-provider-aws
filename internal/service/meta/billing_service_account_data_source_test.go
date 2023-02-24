@@ -9,6 +9,7 @@ import (
 )
 
 func TestAccMetaBillingServiceAccountDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_billing_service_account.test"
 	billingAccountID := "386209384616"
 

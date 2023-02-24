@@ -15,6 +15,7 @@ import (
 )
 
 func TestAccMetaService_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -39,6 +40,7 @@ func TestAccMetaService_basic(t *testing.T) {
 }
 
 func TestAccMetaService_byReverseDNSName(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -61,6 +63,7 @@ func TestAccMetaService_byReverseDNSName(t *testing.T) {
 }
 
 func TestAccMetaService_byDNSName(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -83,6 +86,7 @@ func TestAccMetaService_byDNSName(t *testing.T) {
 }
 
 func TestAccMetaService_byParts(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -103,6 +107,7 @@ func TestAccMetaService_byParts(t *testing.T) {
 }
 
 func TestAccMetaService_unsupported(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{

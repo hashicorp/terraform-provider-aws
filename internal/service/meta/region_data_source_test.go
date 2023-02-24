@@ -80,6 +80,7 @@ func TestFindRegionByName(t *testing.T) {
 }
 
 func TestAccMetaRegionDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_region.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -100,6 +101,7 @@ func TestAccMetaRegionDataSource_basic(t *testing.T) {
 }
 
 func TestAccMetaRegionDataSource_endpoint(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_region.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -120,6 +122,7 @@ func TestAccMetaRegionDataSource_endpoint(t *testing.T) {
 }
 
 func TestAccMetaRegionDataSource_endpointAndName(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_region.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -140,6 +143,7 @@ func TestAccMetaRegionDataSource_endpointAndName(t *testing.T) {
 }
 
 func TestAccMetaRegionDataSource_name(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_region.test"
 
 	resource.ParallelTest(t, resource.TestCase{

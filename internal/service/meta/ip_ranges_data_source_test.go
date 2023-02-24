@@ -17,6 +17,7 @@ import (
 )
 
 func TestAccMetaIPRangesDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ip_ranges.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -37,6 +38,7 @@ func TestAccMetaIPRangesDataSource_basic(t *testing.T) {
 }
 
 func TestAccMetaIPRangesDataSource_none(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ip_ranges.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -56,6 +58,7 @@ func TestAccMetaIPRangesDataSource_none(t *testing.T) {
 }
 
 func TestAccMetaIPRangesDataSource_url(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ip_ranges.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -76,6 +79,7 @@ func TestAccMetaIPRangesDataSource_url(t *testing.T) {
 }
 
 func TestAccMetaIPRangesDataSource_uppercase(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ip_ranges.test"
 
 	resource.ParallelTest(t, resource.TestCase{
