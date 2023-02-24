@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccSNSTopicDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_sns_topic.test"
 	datasourceName := "data.aws_sns_topic.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
