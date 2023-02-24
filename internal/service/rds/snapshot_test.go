@@ -52,6 +52,7 @@ func TestAccRDSSnapshot_basic(t *testing.T) {
 }
 
 func TestAccRDSSnapshot_share(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -64,12 +65,12 @@ func TestAccRDSSnapshot_share(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDBSnapshotDestroy,
+		CheckDestroy:             testAccCheckDBSnapshotDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSnapshotConfig_share(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDBSnapshotExists(resourceName, &v),
+					testAccCheckDBSnapshotExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "shared_accounts.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "shared_accounts.*", "all"),
 				),
@@ -82,7 +83,7 @@ func TestAccRDSSnapshot_share(t *testing.T) {
 			{
 				Config: testAccSnapshotConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDBSnapshotExists(resourceName, &v),
+					testAccCheckDBSnapshotExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "shared_accounts.#", "0"),
 				),
 			},
@@ -179,15 +180,20 @@ func testAccCheckDBSnapshotDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			log.Printf("[DEBUG] Checking if RDS DB Snapshot %s exists", rs.Primary.ID)
 
-			_, err := tfrds.FindSnapshot(context.Background(), conn, rs.Primary.ID)
+			_, err := tfrds.FindDBSnapshotByID(ctx, conn, rs.Primary.ID)
 
-			// verify error is what we want
 			if tfresource.NotFound(err) {
 				continue
 			}
 
-			return err
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("RDS DB Snapshot %s still exists", rs.Primary.ID)
 		}
+
+		return nil
 	}
 }
 
@@ -204,7 +210,7 @@ func testAccCheckDBSnapshotExists(ctx context.Context, n string, v *rds.DBSnapsh
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn()
 
-		out, err := tfrds.FindSnapshot(context.Background(), conn, rs.Primary.ID)
+		out, err := tfrds.FindDBSnapshotByID(context.Background(), conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}

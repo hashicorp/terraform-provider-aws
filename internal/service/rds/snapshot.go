@@ -166,7 +166,7 @@ func resourceSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta in
 			ValuesToAdd:          flex.ExpandStringSet(v.(*schema.Set)),
 		}
 
-		_, err := conn.ModifyDBSnapshotAttribute(attrInput)
+		_, err := conn.ModifyDBSnapshotAttributeWithContext(ctx, attrInput)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "error modifying AWS DB Snapshot Attribute %s: %s", dBInstanceIdentifier, err)
 		}
@@ -233,7 +233,7 @@ func resourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta inte
 		DBSnapshotIdentifier: aws.String(d.Id()),
 	}
 
-	attrResp, err := conn.DescribeDBSnapshotAttributes(attrInput)
+	attrResp, err := conn.DescribeDBSnapshotAttributesWithContext(ctx, attrInput)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "error describing AWS DB Snapshot Attribute %s: %s", d.Id(), err)
 	}
@@ -284,7 +284,7 @@ func resourceSnapshotUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			ValuesToRemove:       flex.ExpandStringSet(removalList),
 		}
 
-		_, err := conn.ModifyDBSnapshotAttribute(attrInput)
+		_, err := conn.ModifyDBSnapshotAttributeWithContext(ctx, attrInput)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "error modifying AWS DB Snapshot Attribute %s: %s", d.Id(), err)
 		}
