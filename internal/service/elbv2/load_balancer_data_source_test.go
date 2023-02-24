@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccELBV2LoadBalancerDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lb.alb_test_with_arn"
 	dataSourceName2 := "data.aws_lb.alb_test_with_name"
@@ -116,6 +117,7 @@ func TestAccELBV2LoadBalancerDataSource_outpost(t *testing.T) {
 }
 
 func TestAccELBV2LoadBalancerDataSource_backwardsCompatibility(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName1 := "data.aws_alb.alb_test_with_arn"
 	dataSourceName2 := "data.aws_alb.alb_test_with_name"
