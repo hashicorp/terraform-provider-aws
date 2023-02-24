@@ -10,6 +10,7 @@ import (
 )
 
 func TestAccRedshiftSubnetGroupDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_redshift_subnet_group.test"
 	resourceName := "aws_redshift_subnet_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

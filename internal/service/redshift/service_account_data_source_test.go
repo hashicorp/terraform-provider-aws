@@ -10,6 +10,7 @@ import (
 )
 
 func TestAccRedshiftServiceAccountDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	expectedAccountID := tfredshift.ServiceAccountPerRegionMap[acctest.Region()]
 
 	dataSourceName := "data.aws_redshift_service_account.main"
@@ -31,6 +32,7 @@ func TestAccRedshiftServiceAccountDataSource_basic(t *testing.T) {
 }
 
 func TestAccRedshiftServiceAccountDataSource_region(t *testing.T) {
+	ctx := acctest.Context(t)
 	expectedAccountID := tfredshift.ServiceAccountPerRegionMap[acctest.Region()]
 
 	dataSourceName := "data.aws_redshift_service_account.regional"

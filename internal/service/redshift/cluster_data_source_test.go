@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccRedshiftClusterDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_redshift_cluster.test"
 	resourceName := "aws_redshift_cluster.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -54,6 +55,7 @@ func TestAccRedshiftClusterDataSource_basic(t *testing.T) {
 }
 
 func TestAccRedshiftClusterDataSource_vpc(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_redshift_cluster.test"
 	subnetGroupResourceName := "aws_redshift_subnet_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -77,6 +79,7 @@ func TestAccRedshiftClusterDataSource_vpc(t *testing.T) {
 }
 
 func TestAccRedshiftClusterDataSource_logging(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_redshift_cluster.test"
 	bucketResourceName := "aws_s3_bucket.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -99,6 +102,7 @@ func TestAccRedshiftClusterDataSource_logging(t *testing.T) {
 }
 
 func TestAccRedshiftClusterDataSource_availabilityZoneRelocationEnabled(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_redshift_cluster.test"
 	resourceName := "aws_redshift_cluster.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
