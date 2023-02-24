@@ -12,6 +12,7 @@ import (
 )
 
 func TestAccEventsSourceDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	key := "EVENT_BRIDGE_PARTNER_EVENT_SOURCE_NAME"
 	busName := os.Getenv(key)
 	if busName == "" {

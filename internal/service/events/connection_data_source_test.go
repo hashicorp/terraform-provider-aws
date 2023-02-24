@@ -9,6 +9,7 @@ import (
 )
 
 func TestAccEventsConnectionDataSource_Connection_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_cloudwatch_event_connection.test"
 	resourceName := "aws_cloudwatch_event_connection.api_key"
 

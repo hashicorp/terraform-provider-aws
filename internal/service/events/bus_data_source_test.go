@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccEventsBusDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	busName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_cloudwatch_event_bus.test"
 	resourceName := "aws_cloudwatch_event_bus.test"
