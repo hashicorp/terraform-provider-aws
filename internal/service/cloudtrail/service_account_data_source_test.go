@@ -9,6 +9,7 @@ import (
 )
 
 func TestAccCloudTrailServiceAccountDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	expectedAccountID := tfcloudtrail.ServiceAccountPerRegionMap[acctest.Region()]
 
 	dataSourceName := "data.aws_cloudtrail_service_account.main"
@@ -30,6 +31,7 @@ func TestAccCloudTrailServiceAccountDataSource_basic(t *testing.T) {
 }
 
 func TestAccCloudTrailServiceAccountDataSource_region(t *testing.T) {
+	ctx := acctest.Context(t)
 	expectedAccountID := tfcloudtrail.ServiceAccountPerRegionMap[acctest.Region()]
 
 	dataSourceName := "data.aws_cloudtrail_service_account.regional"
