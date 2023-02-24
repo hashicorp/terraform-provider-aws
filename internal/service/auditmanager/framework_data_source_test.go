@@ -13,6 +13,7 @@ import (
 func TestAccAuditManagerFrameworkDataSource_standard(t *testing.T) {
 	// Standard frameworks are managed by AWS and will exist in the account automatically
 	// once AuditManager is enabled.
+	ctx := acctest.Context(t)
 	name := "Essential Eight"
 	dataSourceName := "data.aws_auditmanager_framework.test"
 
@@ -36,6 +37,7 @@ func TestAccAuditManagerFrameworkDataSource_standard(t *testing.T) {
 }
 
 func TestAccAuditManagerFrameworkDataSource_custom(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_auditmanager_framework.test"
 
