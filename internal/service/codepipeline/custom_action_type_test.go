@@ -25,7 +25,7 @@ func TestAccCodePipelineCustomActionType_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, codestarconnections.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, codepipeline.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -69,7 +69,7 @@ func TestAccCodePipelineCustomActionType_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, codestarconnections.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, codepipeline.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -96,7 +96,7 @@ func TestAccCodePipelineCustomActionType_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, codestarconnections.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, codepipeline.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -145,7 +145,7 @@ func TestAccCodePipelineCustomActionType_allAttributes(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(codestarconnections.EndpointsID, t)
+			acctest.PreCheckPartitionHasService(t, codestarconnections.EndpointsID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, codepipeline.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
