@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccAPIGatewayV2APIDataSource_http(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_apigatewayv2_api.test"
 	resourceName := "aws_apigatewayv2_api.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -51,6 +52,7 @@ func TestAccAPIGatewayV2APIDataSource_http(t *testing.T) {
 }
 
 func TestAccAPIGatewayV2APIDataSource_webSocket(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_apigatewayv2_api.test"
 	resourceName := "aws_apigatewayv2_api.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

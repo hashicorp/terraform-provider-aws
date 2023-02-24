@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccAPIGatewayV2ExportDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_apigatewayv2_export.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -32,6 +33,7 @@ func TestAccAPIGatewayV2ExportDataSource_basic(t *testing.T) {
 }
 
 func TestAccAPIGatewayV2ExportDataSource_stage(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_apigatewayv2_export.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
