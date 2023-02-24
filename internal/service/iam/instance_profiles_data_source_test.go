@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccIAMInstanceProfilesDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	datasourceName := "data.aws_iam_instance_profiles.test"
 	resourceName := "aws_iam_instance_profile.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

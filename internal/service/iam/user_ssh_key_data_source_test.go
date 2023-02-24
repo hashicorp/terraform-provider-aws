@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccIAMUserSSHKeyDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_iam_user_ssh_key.test"
 	dataSourceName := "data.aws_iam_user_ssh_key.test"
 

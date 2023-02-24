@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccIAMUserDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_iam_user.test"
 	dataSourceName := "data.aws_iam_user.test"
 
@@ -37,6 +38,7 @@ func TestAccIAMUserDataSource_basic(t *testing.T) {
 }
 
 func TestAccIAMUserDataSource_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_iam_user.test"
 	dataSourceName := "data.aws_iam_user.test"
 

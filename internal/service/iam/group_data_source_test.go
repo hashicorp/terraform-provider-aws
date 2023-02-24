@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccIAMGroupDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	groupName := fmt.Sprintf("test-datasource-user-%d", sdkacctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -32,6 +33,7 @@ func TestAccIAMGroupDataSource_basic(t *testing.T) {
 }
 
 func TestAccIAMGroupDataSource_users(t *testing.T) {
+	ctx := acctest.Context(t)
 	groupName := fmt.Sprintf("test-datasource-group-%d", sdkacctest.RandInt())
 	userName := fmt.Sprintf("test-datasource-user-%d", sdkacctest.RandInt())
 	groupMemberShipName := fmt.Sprintf("test-datasource-group-membership-%d", sdkacctest.RandInt())

@@ -15,6 +15,7 @@ func TestAccIAMPolicyDocumentDataSource_basic(t *testing.T) {
 	// This really ought to be able to be a unit test rather than an
 	// acceptance test, but just instantiating the AWS provider requires
 	// some AWS API calls, and so this needs valid AWS credentials to work.
+	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
@@ -33,6 +34,7 @@ func TestAccIAMPolicyDocumentDataSource_basic(t *testing.T) {
 }
 
 func TestAccIAMPolicyDocumentDataSource_singleConditionValue(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_iam_policy_document.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -51,6 +53,7 @@ func TestAccIAMPolicyDocumentDataSource_singleConditionValue(t *testing.T) {
 }
 
 func TestAccIAMPolicyDocumentDataSource_conditionWithBoolValue(t *testing.T) {
+	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
@@ -72,6 +75,7 @@ func TestAccIAMPolicyDocumentDataSource_source(t *testing.T) {
 	// This really ought to be able to be a unit test rather than an
 	// acceptance test, but just instantiating the AWS provider requires
 	// some AWS API calls, and so this needs valid AWS credentials to work.
+	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
@@ -98,6 +102,7 @@ func TestAccIAMPolicyDocumentDataSource_source(t *testing.T) {
 }
 
 func TestAccIAMPolicyDocumentDataSource_sourceList(t *testing.T) {
+	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
@@ -116,6 +121,7 @@ func TestAccIAMPolicyDocumentDataSource_sourceList(t *testing.T) {
 }
 
 func TestAccIAMPolicyDocumentDataSource_sourceConflicting(t *testing.T) {
+	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
@@ -134,6 +140,7 @@ func TestAccIAMPolicyDocumentDataSource_sourceConflicting(t *testing.T) {
 }
 
 func TestAccIAMPolicyDocumentDataSource_sourceListConflicting(t *testing.T) {
+	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
@@ -148,6 +155,7 @@ func TestAccIAMPolicyDocumentDataSource_sourceListConflicting(t *testing.T) {
 }
 
 func TestAccIAMPolicyDocumentDataSource_override(t *testing.T) {
+	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
@@ -166,6 +174,7 @@ func TestAccIAMPolicyDocumentDataSource_override(t *testing.T) {
 }
 
 func TestAccIAMPolicyDocumentDataSource_overrideList(t *testing.T) {
+	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
@@ -184,6 +193,7 @@ func TestAccIAMPolicyDocumentDataSource_overrideList(t *testing.T) {
 }
 
 func TestAccIAMPolicyDocumentDataSource_noStatementMerge(t *testing.T) {
+	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
@@ -202,6 +212,7 @@ func TestAccIAMPolicyDocumentDataSource_noStatementMerge(t *testing.T) {
 }
 
 func TestAccIAMPolicyDocumentDataSource_noStatementOverride(t *testing.T) {
+	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
@@ -220,6 +231,7 @@ func TestAccIAMPolicyDocumentDataSource_noStatementOverride(t *testing.T) {
 }
 
 func TestAccIAMPolicyDocumentDataSource_duplicateSid(t *testing.T) {
+	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
@@ -242,6 +254,7 @@ func TestAccIAMPolicyDocumentDataSource_duplicateSid(t *testing.T) {
 }
 
 func TestAccIAMPolicyDocumentDataSource_sourcePolicyValidJSON(t *testing.T) {
+	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
@@ -264,6 +277,7 @@ func TestAccIAMPolicyDocumentDataSource_sourcePolicyValidJSON(t *testing.T) {
 }
 
 func TestAccIAMPolicyDocumentDataSource_overridePolicyDocumentValidJSON(t *testing.T) {
+	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
@@ -286,6 +300,7 @@ func TestAccIAMPolicyDocumentDataSource_overridePolicyDocumentValidJSON(t *testi
 }
 
 func TestAccIAMPolicyDocumentDataSource_overrideJSONValidJSON(t *testing.T) {
+	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
@@ -308,6 +323,7 @@ func TestAccIAMPolicyDocumentDataSource_overrideJSONValidJSON(t *testing.T) {
 }
 
 func TestAccIAMPolicyDocumentDataSource_sourceJSONValidJSON(t *testing.T) {
+	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
@@ -331,6 +347,7 @@ func TestAccIAMPolicyDocumentDataSource_sourceJSONValidJSON(t *testing.T) {
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/10777
 func TestAccIAMPolicyDocumentDataSource_StatementPrincipalIdentifiers_stringAndSlice(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_iam_policy_document.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -350,6 +367,7 @@ func TestAccIAMPolicyDocumentDataSource_StatementPrincipalIdentifiers_stringAndS
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/10777
 func TestAccIAMPolicyDocumentDataSource_StatementPrincipalIdentifiers_multiplePrincipals(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_iam_policy_document.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -368,6 +386,7 @@ func TestAccIAMPolicyDocumentDataSource_StatementPrincipalIdentifiers_multiplePr
 }
 
 func TestAccIAMPolicyDocumentDataSource_StatementPrincipalIdentifiers_multiplePrincipalsGov(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_iam_policy_document.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -386,6 +405,7 @@ func TestAccIAMPolicyDocumentDataSource_StatementPrincipalIdentifiers_multiplePr
 }
 
 func TestAccIAMPolicyDocumentDataSource_version20081017(t *testing.T) {
+	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),

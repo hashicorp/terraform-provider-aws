@@ -12,6 +12,7 @@ import (
 )
 
 func TestAccIAMUsersDataSource_nameRegex(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_iam_users.test"
 	rCount := strconv.Itoa(sdkacctest.RandIntRange(1, 4))
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -33,6 +34,7 @@ func TestAccIAMUsersDataSource_nameRegex(t *testing.T) {
 }
 
 func TestAccIAMUsersDataSource_pathPrefix(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_iam_users.test"
 	rCount := strconv.Itoa(sdkacctest.RandIntRange(1, 4))
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -55,6 +57,7 @@ func TestAccIAMUsersDataSource_pathPrefix(t *testing.T) {
 }
 
 func TestAccIAMUsersDataSource_nonExistentNameRegex(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_iam_users.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -74,6 +77,7 @@ func TestAccIAMUsersDataSource_nonExistentNameRegex(t *testing.T) {
 }
 
 func TestAccIAMUsersDataSource_nonExistentPathPrefix(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_iam_users.test"
 
 	resource.ParallelTest(t, resource.TestCase{

@@ -57,6 +57,7 @@ func TestPolicySearchDetails(t *testing.T) {
 }
 
 func TestAccIAMPolicyDataSource_arn(t *testing.T) {
+	ctx := acctest.Context(t)
 	datasourceName := "data.aws_iam_policy.test"
 	resourceName := "aws_iam_policy.test"
 	policyName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -83,6 +84,7 @@ func TestAccIAMPolicyDataSource_arn(t *testing.T) {
 }
 
 func TestAccIAMPolicyDataSource_arnTags(t *testing.T) {
+	ctx := acctest.Context(t)
 	datasourceName := "data.aws_iam_policy.test"
 	resourceName := "aws_iam_policy.test"
 	policyName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -110,6 +112,7 @@ func TestAccIAMPolicyDataSource_arnTags(t *testing.T) {
 }
 
 func TestAccIAMPolicyDataSource_name(t *testing.T) {
+	ctx := acctest.Context(t)
 	datasourceName := "data.aws_iam_policy.test"
 	resourceName := "aws_iam_policy.test"
 	policyName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -136,6 +139,7 @@ func TestAccIAMPolicyDataSource_name(t *testing.T) {
 }
 
 func TestAccIAMPolicyDataSource_nameTags(t *testing.T) {
+	ctx := acctest.Context(t)
 	datasourceName := "data.aws_iam_policy.test"
 	resourceName := "aws_iam_policy.test"
 	policyName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -163,6 +167,7 @@ func TestAccIAMPolicyDataSource_nameTags(t *testing.T) {
 }
 
 func TestAccIAMPolicyDataSource_nameAndPathPrefix(t *testing.T) {
+	ctx := acctest.Context(t)
 	datasourceName := "data.aws_iam_policy.test"
 	resourceName := "aws_iam_policy.test"
 
@@ -191,6 +196,7 @@ func TestAccIAMPolicyDataSource_nameAndPathPrefix(t *testing.T) {
 }
 
 func TestAccIAMPolicyDataSource_nameAndPathPrefixTags(t *testing.T) {
+	ctx := acctest.Context(t)
 	datasourceName := "data.aws_iam_policy.test"
 	resourceName := "aws_iam_policy.test"
 
@@ -220,6 +226,7 @@ func TestAccIAMPolicyDataSource_nameAndPathPrefixTags(t *testing.T) {
 }
 
 func TestAccIAMPolicyDataSource_nonExistent(t *testing.T) {
+	ctx := acctest.Context(t)
 	policyName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	policyPath := "/test-path/"
 

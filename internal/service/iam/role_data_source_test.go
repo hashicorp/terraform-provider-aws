@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccIAMRoleDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	roleName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_iam_role.test"
 	resourceName := "aws_iam_role.test"
@@ -39,6 +40,7 @@ func TestAccIAMRoleDataSource_basic(t *testing.T) {
 }
 
 func TestAccIAMRoleDataSource_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	roleName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_iam_role.test"
 	resourceName := "aws_iam_role.test"

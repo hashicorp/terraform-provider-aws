@@ -11,6 +11,7 @@ import (
 )
 
 func TestAccIAMInstanceProfileDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "data.aws_iam_instance_profile.test"
 
 	roleName := fmt.Sprintf("tf-acc-ds-instance-profile-role-%d", sdkacctest.RandInt())
