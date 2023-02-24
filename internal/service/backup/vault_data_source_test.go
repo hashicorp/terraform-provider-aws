@@ -12,6 +12,7 @@ import (
 )
 
 func TestAccBackupVaultDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	datasourceName := "data.aws_backup_vault.test"
 	resourceName := "aws_backup_vault.test"
 	rInt := sdkacctest.RandInt()
