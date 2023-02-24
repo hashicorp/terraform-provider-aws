@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
 func DataSourceTransitGatewayRouteTableAssociations() *schema.Resource {
@@ -34,7 +33,6 @@ func DataSourceTransitGatewayRouteTableAssociations() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"filter": DataSourceFiltersSchema(),
-			"tags":   tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -48,10 +46,6 @@ func dataSourceTransitGatewayRouteTableAssociationsRead(ctx context.Context, d *
 	if v, ok := d.GetOk("transit_gateway_route_table_id"); ok {
 		input.TransitGatewayRouteTableId = aws.String(v.(string))
 	}
-
-	input.Filters = append(input.Filters, BuildTagFilterList(
-		Tags(tftags.New(ctx, d.Get("tags").(map[string]interface{}))),
-	)...)
 
 	input.Filters = append(input.Filters, BuildFiltersDataSource(
 		d.Get("filter").(*schema.Set),
