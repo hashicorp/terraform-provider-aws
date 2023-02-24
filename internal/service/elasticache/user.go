@@ -111,15 +111,23 @@ func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
 	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
 
 	input := &elasticache.CreateUserInput{
-		AccessString: aws.String(d.Get("access_string").(string)),
-		AuthenticationMode: &elasticache.AuthenticationMode{
-			Passwords: flex.ExpandStringSet(d.Get("authentication_mode.0.passwords").(*schema.Set)),
-			Type:      aws.String(d.Get("authentication_mode.0.type").(string)),
-		},
+		AccessString:       aws.String(d.Get("access_string").(string)),
 		Engine:             aws.String(d.Get("engine").(string)),
 		NoPasswordRequired: aws.Bool(d.Get("no_password_required").(bool)),
 		UserId:             aws.String(d.Get("user_id").(string)),
 		UserName:           aws.String(d.Get("user_name").(string)),
+	}
+
+	if v, ok := d.GetOk("authentication_mode"); ok && v != nil {
+		passwords := flex.ExpandStringSet(d.Get("authentication_mode.0.passwords").(*schema.Set))
+		if passwords != nil && len(passwords) < 1 {
+			passwords = nil
+		}
+
+		input.AuthenticationMode = &elasticache.AuthenticationMode{
+			Passwords: passwords,
+			Type:      aws.String(d.Get("authentication_mode.0.type").(string)),
+		}
 	}
 
 	if v, ok := d.GetOk("passwords"); ok {
