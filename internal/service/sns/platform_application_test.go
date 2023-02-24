@@ -182,7 +182,7 @@ func TestAccSNSPlatformApplication_GCM_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPlatformApplicationDestroy(ctx),
@@ -227,7 +227,7 @@ func TestAccSNSPlatformApplication_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPlatformApplicationDestroy(ctx),
@@ -260,7 +260,7 @@ func TestAccSNSPlatformApplication_GCM_allAttributes(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPlatformApplicationDestroy(ctx),
@@ -325,7 +325,7 @@ func TestAccSNSPlatformApplication_basic(t *testing.T) {
 
 		t.Run(platform.Name, func(*testing.T) {
 			resource.ParallelTest(t, resource.TestCase{
-				PreCheck:                 func() { acctest.PreCheck(t) },
+				PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 				ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				CheckDestroy:             testAccCheckPlatformApplicationDestroy(ctx),
@@ -379,7 +379,7 @@ func TestAccSNSPlatformApplication_basicAttributes(t *testing.T) {
 					name := fmt.Sprintf("tf-acc-%d", sdkacctest.RandInt())
 
 					resource.ParallelTest(t, resource.TestCase{
-						PreCheck:                 func() { acctest.PreCheck(t) },
+						PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 						ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
 						ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 						CheckDestroy:             testAccCheckPlatformApplicationDestroy(ctx),
@@ -426,7 +426,7 @@ func TestAccSNSPlatformApplication_basicApnsWithTokenCredentials(t *testing.T) {
 
 		t.Run(platform.Name, func(*testing.T) {
 			resource.ParallelTest(t, resource.TestCase{
-				PreCheck:                 func() { acctest.PreCheck(t) },
+				PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 				ErrorCheck:               acctest.ErrorCheck(t, sns.EndpointsID),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				CheckDestroy:             testAccCheckPlatformApplicationDestroy(ctx),
