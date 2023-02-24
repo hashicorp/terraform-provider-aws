@@ -22,7 +22,7 @@ func testAccFlowDefinition_basic(t *testing.T) {
 	resourceName := "aws_sagemaker_flow_definition.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFlowDefinitionDestroy(ctx),
@@ -65,7 +65,7 @@ func testAccFlowDefinition_humanLoopConfig_publicWorkforce(t *testing.T) {
 	resourceName := "aws_sagemaker_flow_definition.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFlowDefinitionDestroy(ctx),
@@ -98,7 +98,7 @@ func testAccFlowDefinition_humanLoopRequestSource(t *testing.T) {
 	resourceName := "aws_sagemaker_flow_definition.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFlowDefinitionDestroy(ctx),
@@ -131,7 +131,7 @@ func testAccFlowDefinition_tags(t *testing.T) {
 	resourceName := "aws_sagemaker_flow_definition.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFlowDefinitionDestroy(ctx),
@@ -177,7 +177,7 @@ func testAccFlowDefinition_disappears(t *testing.T) {
 	resourceName := "aws_sagemaker_flow_definition.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFlowDefinitionDestroy(ctx),

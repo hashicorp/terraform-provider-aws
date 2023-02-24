@@ -22,7 +22,7 @@ func TestAccSageMakerStudioLifecycleConfig_basic(t *testing.T) {
 	resourceName := "aws_sagemaker_studio_lifecycle_config.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStudioLifecycleDestroyConfig(ctx),
@@ -54,7 +54,7 @@ func TestAccSageMakerStudioLifecycleConfig_tags(t *testing.T) {
 	resourceName := "aws_sagemaker_studio_lifecycle_config.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStudioLifecycleDestroyConfig(ctx),
@@ -100,7 +100,7 @@ func TestAccSageMakerStudioLifecycleConfig_disappears(t *testing.T) {
 	resourceName := "aws_sagemaker_studio_lifecycle_config.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStudioLifecycleDestroyConfig(ctx),

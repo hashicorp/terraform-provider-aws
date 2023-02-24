@@ -23,7 +23,7 @@ func TestAccSageMakerDeviceFleet_basic(t *testing.T) {
 	resourceName := "aws_sagemaker_device_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeviceFleetDestroy(ctx),
@@ -58,7 +58,7 @@ func TestAccSageMakerDeviceFleet_description(t *testing.T) {
 	resourceName := "aws_sagemaker_device_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeviceFleetDestroy(ctx),
@@ -93,7 +93,7 @@ func TestAccSageMakerDeviceFleet_tags(t *testing.T) {
 	resourceName := "aws_sagemaker_device_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeviceFleetDestroy(ctx),
@@ -139,7 +139,7 @@ func TestAccSageMakerDeviceFleet_disappears(t *testing.T) {
 	resourceName := "aws_sagemaker_device_fleet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeviceFleetDestroy(ctx),

@@ -15,7 +15,7 @@ func TestAccSageMakerPrebuiltECRImageDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_sagemaker_prebuilt_ecr_image.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -37,7 +37,7 @@ func TestAccSageMakerPrebuiltECRImageDataSource_region(t *testing.T) {
 	dataSourceName := "data.aws_sagemaker_prebuilt_ecr_image.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
