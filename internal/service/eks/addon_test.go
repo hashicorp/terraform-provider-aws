@@ -623,6 +623,7 @@ func TestAccEKSAddon_DefaultTagsProviderAndResource_overlappingTag(t *testing.T)
 }
 
 func TestAccEKSAddon_DefaultTagsProviderAndResource_duplicateTag(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	addonName := "vpc-cni"
 

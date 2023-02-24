@@ -12,6 +12,7 @@ import (
 )
 
 func TestAccEKSClusterAuthDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceResourceName := "data.aws_eks_cluster_auth.test"
 
 	resource.ParallelTest(t, resource.TestCase{
