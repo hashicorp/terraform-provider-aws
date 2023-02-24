@@ -14,7 +14,7 @@ func TestAccCloudTrailServiceAccountDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_cloudtrail_service_account.main"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -35,7 +35,7 @@ func TestAccCloudTrailServiceAccountDataSource_region(t *testing.T) {
 	dataSourceName := "data.aws_cloudtrail_service_account.regional"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
