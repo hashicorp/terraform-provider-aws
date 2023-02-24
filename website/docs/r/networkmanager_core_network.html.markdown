@@ -107,6 +107,7 @@ The following arguments are supported:
     "asn-ranges": [
       "64512-65534"
     ],
+    "vpn-ecmp-support": false,
     "edge-locations": [
       {
         "location": "us-east-1"
@@ -116,7 +117,9 @@ The following arguments are supported:
   "segments": [
     {
       "name": "segment",
-      "description": "base-policy"
+      "description": "base-policy",
+      "isolate-attachments": false,
+      "require-attachment-acceptance": false
     }
   ]
 }
