@@ -16,7 +16,7 @@ func TestAccAMPWorkspaceDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_prometheus_workspace.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(prometheusservice.EndpointsID, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(prometheusservice.EndpointsID, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, prometheusservice.EndpointsID),
 		CheckDestroy:             nil,
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
